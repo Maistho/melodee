@@ -14,13 +14,13 @@ namespace Melodee.Cli.Command;
 
 public class ShowMpegInfoCommand : CommandBase<ShowMpegInfoSettings>
 {
-    public override async Task<int> ExecuteAsync(CommandContext context, ShowMpegInfoSettings settings)
+    public override async Task<int> ExecuteAsync(CommandContext context, ShowMpegInfoSettings settings, CancellationToken cancellationToken)
     {
         using (var scope = CreateServiceProvider().CreateScope())
         {
             var serializer = scope.ServiceProvider.GetRequiredService<ISerializer>();
             var configFactory = scope.ServiceProvider.GetRequiredService<IMelodeeConfigurationFactory>();
-            var config = await configFactory.GetConfigurationAsync();
+            var config = await configFactory.GetConfigurationAsync(cancellationToken);
 
             var imageValidator = new ImageValidator(config);
             var imageConvertor = new ImageConvertor(config);
@@ -38,7 +38,7 @@ public class ShowMpegInfoCommand : CommandBase<ShowMpegInfoSettings>
 
             Trace.WriteLine($"\ud83d\udcdc Processing File [{settings.Filename}]");
 
-            var tags = await AudioTagManager.ReadAllTagsAsync(fileInfo.FullName, CancellationToken.None);
+            var tags = await AudioTagManager.ReadAllTagsAsync(fileInfo.FullName, cancellationToken);
 
             AnsiConsole.Write(
                 new Panel(new JsonText(serializer.Serialize(tags) ?? string.Empty))

@@ -11,7 +11,7 @@ namespace Melodee.Cli.Command;
 
 public class LibraryMoveOkCommand : CommandBase<LibraryMoveOkSettings>
 {
-    public override async Task<int> ExecuteAsync(CommandContext context, LibraryMoveOkSettings settings)
+    public override async Task<int> ExecuteAsync(CommandContext context, LibraryMoveOkSettings settings, CancellationToken cancellationToken)
     {
         using (var scope = CreateServiceProvider().CreateScope())
         {
@@ -61,7 +61,8 @@ public class LibraryMoveOkCommand : CommandBase<LibraryMoveOkSettings>
             var result = await libraryService.MoveAlbumsFromLibraryToLibrary(settings.LibraryName,
                     settings.ToLibraryName,
                     b => b.Status == AlbumStatus.Ok,
-                    settings.Verbose)
+                    settings.Verbose,
+                    cancellationToken)
                 .ConfigureAwait(false);
 
             if (!result.IsSuccess)

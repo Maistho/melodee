@@ -18,7 +18,7 @@ namespace Melodee.Cli.Command;
 
 public class ProcessInboundCommand : CommandBase<LibraryProcessSettings>
 {
-    public override async Task<int> ExecuteAsync(CommandContext context, LibraryProcessSettings settings)
+    public override async Task<int> ExecuteAsync(CommandContext context, LibraryProcessSettings settings, CancellationToken cancellationToken)
     {
         // var font = FigletFont.Load("Fonts/Elite.flf");        
         //
@@ -36,18 +36,18 @@ public class ProcessInboundCommand : CommandBase<LibraryProcessSettings>
         {
             var serializer = scope.ServiceProvider.GetRequiredService<ISerializer>();
             var melodeeConfigurationFactory = scope.ServiceProvider.GetRequiredService<IMelodeeConfigurationFactory>();
-            var melodeeConfiguration = await melodeeConfigurationFactory.GetConfigurationAsync().ConfigureAwait(false);
+            var melodeeConfiguration = await melodeeConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
 
             var libraryService = scope.ServiceProvider.GetRequiredService<LibraryService>();
 
-            var libraryToProcess = (await libraryService.ListAsync(new PagedRequest())).Data?.FirstOrDefault(x => string.Equals(x.Name, settings.LibraryName, StringComparison.OrdinalIgnoreCase));
+            var libraryToProcess = (await libraryService.ListAsync(new PagedRequest(), cancellationToken)).Data?.FirstOrDefault(x => string.Equals(x.Name, settings.LibraryName, StringComparison.OrdinalIgnoreCase));
             if (libraryToProcess == null)
             {
                 throw new Exception($"Library with name [{settings.LibraryName}] not found.");
             }
 
             var directoryInbound = libraryToProcess.Path;
-            var directoryStaging = (await libraryService.GetStagingLibraryAsync().ConfigureAwait(false)).Data!.Path;
+            var directoryStaging = (await libraryService.GetStagingLibraryAsync(cancellationToken).ConfigureAwait(false)).Data!.Path;
 
             var grid = new Grid()
                 .AddColumn(new GridColumn().NoWrap().PadRight(4))
@@ -73,9 +73,9 @@ public class ProcessInboundCommand : CommandBase<LibraryProcessSettings>
 
             Log.Debug("\ud83d\udcc1 Processing library [{Inbound}]", libraryToProcess.ToString());
 
-            await processor.InitializeAsync();
+            await processor.InitializeAsync(token: cancellationToken);
 
-            var result = await processor.ProcessDirectoryAsync(libraryToProcess.ToFileSystemDirectoryInfo(), settings.ForceMode ? null : libraryToProcess.LastScanAt, settings.ProcessLimit);
+            var result = await processor.ProcessDirectoryAsync(libraryToProcess.ToFileSystemDirectoryInfo(), settings.ForceMode ? null : libraryToProcess.LastScanAt, settings.ProcessLimit, cancellationToken);
 
             Log.Debug("ℹ️ Processed library [{Inbound}] in [{ElapsedTime}]", libraryToProcess.ToString(), Stopwatch.GetElapsedTime(startTicks));
 
@@ -98,4 +98,6 @@ public class ProcessInboundCommand : CommandBase<LibraryProcessSettings>
     {
         return value ? "Yes" : "No";
     }
+
+
 }

@@ -14,7 +14,7 @@ namespace Melodee.Cli.Command;
 /// </summary>
 public class LibraryRebuildCommand : CommandBase<LibraryRebuildSettings>
 {
-    public override async Task<int> ExecuteAsync(CommandContext context, LibraryRebuildSettings settings)
+    public override async Task<int> ExecuteAsync(CommandContext context, LibraryRebuildSettings settings, CancellationToken cancellationToken)
     {
         using (var scope = CreateServiceProvider().CreateScope())
         {
@@ -23,7 +23,7 @@ public class LibraryRebuildCommand : CommandBase<LibraryRebuildSettings>
 
             if (!settings.CreateOnlyMissing)
             {
-                var cleanResult = await libraryService.CleanLibraryAsync(settings.LibraryName);
+                var cleanResult = await libraryService.CleanLibraryAsync(settings.LibraryName, cancellationToken);
                 if (!cleanResult.IsSuccess)
                 {
                     AnsiConsole.Write(
@@ -35,7 +35,7 @@ public class LibraryRebuildCommand : CommandBase<LibraryRebuildSettings>
                 }
             }
 
-            var result = await libraryService.Rebuild(settings.LibraryName, settings.CreateOnlyMissing, settings.Verbose, settings.OnlyPath).ConfigureAwait(false);
+            var result = await libraryService.Rebuild(settings.LibraryName, settings.CreateOnlyMissing, settings.Verbose, settings.OnlyPath, cancellationToken).ConfigureAwait(false);
             if (!result.IsSuccess)
             {
                 AnsiConsole.Write(

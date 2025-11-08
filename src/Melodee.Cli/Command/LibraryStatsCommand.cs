@@ -12,12 +12,12 @@ namespace Melodee.Cli.Command;
 /// </summary>
 public class LibraryStatsCommand : CommandBase<LibraryStatsSettings>
 {
-    public override async Task<int> ExecuteAsync(CommandContext context, LibraryStatsSettings settings)
+    public override async Task<int> ExecuteAsync(CommandContext context, LibraryStatsSettings settings, CancellationToken cancellationToken)
     {
         using (var scope = CreateServiceProvider().CreateScope())
         {
             var libraryService = scope.ServiceProvider.GetRequiredService<LibraryService>();
-            var result = await libraryService.Statistics(settings.LibraryName);
+            var result = await libraryService.Statistics(settings.LibraryName, cancellationToken);
             if (!settings.ReturnRaw)
             {
                 var table = new Table();

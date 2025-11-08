@@ -12,7 +12,7 @@ namespace Melodee.Cli.Command;
 /// </summary>
 public class LibraryAlbumStatusReportCommand : CommandBase<LibraryAlbumStatusReportSettings>
 {
-    public override async Task<int> ExecuteAsync(CommandContext context, LibraryAlbumStatusReportSettings settings)
+    public override async Task<int> ExecuteAsync(CommandContext context, LibraryAlbumStatusReportSettings settings, CancellationToken cancellationToken)
     {
         // var services = new ServiceCollection();
         // services.AddDbContextFactory<MelodeeDbContext>(opt =>
@@ -43,7 +43,7 @@ public class LibraryAlbumStatusReportCommand : CommandBase<LibraryAlbumStatusRep
         using (var scope = CreateServiceProvider().CreateScope())
         {
             var libraryService = scope.ServiceProvider.GetRequiredService<LibraryService>();
-            var result = await libraryService.AlbumStatusReport(settings.LibraryName);
+            var result = await libraryService.AlbumStatusReport(settings.LibraryName, cancellationToken);
 
             if (!settings.ReturnRaw)
             {

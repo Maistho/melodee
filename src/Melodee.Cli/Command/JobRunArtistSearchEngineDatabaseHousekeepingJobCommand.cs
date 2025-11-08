@@ -13,7 +13,7 @@ namespace Melodee.Cli.Command;
 
 public class JobRunArtistSearchEngineDatabaseHousekeepingJobCommand : CommandBase<JobSettings>
 {
-    public override async Task<int> ExecuteAsync(CommandContext context, JobSettings settings)
+    public override async Task<int> ExecuteAsync(CommandContext context, JobSettings settings, CancellationToken cancellationToken)
     {
         using (var scope = CreateServiceProvider().CreateScope())
         {
@@ -24,7 +24,7 @@ public class JobRunArtistSearchEngineDatabaseHousekeepingJobCommand : CommandBas
                 scope.ServiceProvider.GetRequiredService<ArtistSearchEngineService>(),
                 scope.ServiceProvider.GetRequiredService<IDbContextFactory<ArtistSearchEngineServiceDbContext>>()
             );
-            var jc = new MelodeeJobExecutionContext(CancellationToken.None);
+            var jc = new MelodeeJobExecutionContext(cancellationToken);
             if (settings.BatchSize != null)
             {
                 jc.Put(JobMapNameRegistry.BatchSize, settings.BatchSize);

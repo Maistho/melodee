@@ -12,13 +12,13 @@ namespace Melodee.Cli.Command;
 /// </summary>
 public class ConfigurationSetCommand : CommandBase<ConfigurationSetSetting>
 {
-    public override async Task<int> ExecuteAsync(CommandContext context, ConfigurationSetSetting settings)
+    public override async Task<int> ExecuteAsync(CommandContext context, ConfigurationSetSetting settings, CancellationToken cancellationToken)
     {
         using (var scope = CreateServiceProvider().CreateScope())
         {
             var settingService = scope.ServiceProvider.GetRequiredService<SettingService>();
 
-            var config = await settingService.GetAsync(settings.Key).ConfigureAwait(false);
+            var config = await settingService.GetAsync(settings.Key, cancellationToken).ConfigureAwait(false);
             if (!config.IsSuccess || config.Data == null)
             {
                 AnsiConsole.MarkupLine(
@@ -30,7 +30,7 @@ public class ConfigurationSetCommand : CommandBase<ConfigurationSetSetting>
                     Key = settings.Key,
                     Value = settings.Value,
                     CreatedAt = default
-                }).ConfigureAwait(false);
+                }, cancellationToken).ConfigureAwait(false);
                 if (addResult.IsSuccess)
                 {
                     AnsiConsole.MarkupLine(":party_popper: Configuration created.");
@@ -50,7 +50,7 @@ public class ConfigurationSetCommand : CommandBase<ConfigurationSetSetting>
                 config.Data.Value = settings.Value;
             }
 
-            var result = await settingService.UpdateAsync(config.Data).ConfigureAwait(false);
+            var result = await settingService.UpdateAsync(config.Data, cancellationToken).ConfigureAwait(false);
             if (result.IsSuccess)
             {
                 AnsiConsole.MarkupLine(":party_popper: Configuration updated.");

@@ -13,13 +13,13 @@ namespace Melodee.Cli.Command;
 /// </summary>
 public class LibraryCleanCommand : CommandBase<LibraryCleanSettings>
 {
-    public override async Task<int> ExecuteAsync(CommandContext context, LibraryCleanSettings settings)
+    public override async Task<int> ExecuteAsync(CommandContext context, LibraryCleanSettings settings, CancellationToken cancellationToken)
     {
         using (var scope = CreateServiceProvider().CreateScope())
         {
             var serializer = scope.ServiceProvider.GetRequiredService<ISerializer>();
             var libraryService = scope.ServiceProvider.GetRequiredService<LibraryService>();
-            var result = await libraryService.CleanLibraryAsync(settings.LibraryName);
+            var result = await libraryService.CleanLibraryAsync(settings.LibraryName, cancellationToken);
             if (settings.Verbose)
             {
                 AnsiConsole.Write(

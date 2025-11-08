@@ -15,12 +15,12 @@ namespace Melodee.Cli.Command;
 /// </summary>
 public class LibraryPurgeCommand : CommandBase<LibraryScanSettings>
 {
-    public override async Task<int> ExecuteAsync(CommandContext context, LibraryScanSettings settings)
+    public override async Task<int> ExecuteAsync(CommandContext context, LibraryScanSettings settings, CancellationToken cancellationToken)
     {
         using (var scope = CreateServiceProvider().CreateScope())
         {
             var libraryService = scope.ServiceProvider.GetRequiredService<LibraryService>();
-            var libraries = await libraryService.ListAsync(new PagedRequest { PageSize = short.MaxValue }).ConfigureAwait(false);
+            var libraries = await libraryService.ListAsync(new PagedRequest { PageSize = short.MaxValue }, cancellationToken).ConfigureAwait(false);
             var library = libraries.Data.FirstOrDefault(x => x.Name.ToNormalizedString() == settings.LibraryName.ToNormalizedString());
             if (library == null)
             {
@@ -33,7 +33,7 @@ public class LibraryPurgeCommand : CommandBase<LibraryScanSettings>
                 return 0;
             }
 
-            var result = await libraryService.PurgeLibraryAsync(library.Id);
+            var result = await libraryService.PurgeLibraryAsync(library.Id, cancellationToken);
 
             var serializer = scope.ServiceProvider.GetRequiredService<ISerializer>();
 
@@ -65,4 +65,5 @@ public class LibraryPurgeCommand : CommandBase<LibraryScanSettings>
             return 1;
         }
     }
+
 }

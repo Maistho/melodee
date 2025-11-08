@@ -11,7 +11,7 @@ namespace Melodee.Cli.Command;
 
 public class JobRunMusicBrainzUpdateDatabaseJobCommand : CommandBase<JobSettings>
 {
-    public override async Task<int> ExecuteAsync(CommandContext context, JobSettings settings)
+    public override async Task<int> ExecuteAsync(CommandContext context, JobSettings settings, CancellationToken cancellationToken)
     {
         using (var scope = CreateServiceProvider().CreateScope())
         {
@@ -23,7 +23,7 @@ public class JobRunMusicBrainzUpdateDatabaseJobCommand : CommandBase<JobSettings
                 scope.ServiceProvider.GetRequiredService<IHttpClientFactory>(),
                 scope.ServiceProvider.GetRequiredService<IMusicBrainzRepository>()
             );
-            await job.Execute(new MelodeeJobExecutionContext(CancellationToken.None));
+            await job.Execute(new MelodeeJobExecutionContext(cancellationToken));
             return 1;
         }
     }
