@@ -14,7 +14,7 @@ namespace Melodee.Tests.Blazor.Helpers;
 /// <summary>
 /// Base class for Blazor component tests with common setup and mocks
 /// </summary>
-public abstract class TestBase : TestContext, IDisposable
+public abstract class TestBase : BunitContext, IDisposable
 {
     protected Mock<IAuthService> MockAuthService { get; }
     protected Mock<ILocalStorageService> MockLocalStorageService { get; }

@@ -17,7 +17,7 @@
 
 ## 🎵 Overview
 
-Melodee is a comprehensive music management and streaming system built with .NET 9 and Blazor. It provides a complete solution for processing, organizing, and serving large music libraries through both restful and OpenSubsonic-compatible APIs.
+Melodee is a comprehensive music management and streaming system built with .NET 10 and Blazor. It provides a complete solution for processing, organizing, and serving large music libraries through both restful and OpenSubsonic-compatible APIs.
 
 ### Key Capabilities
 
@@ -184,7 +184,7 @@ Full compatibility with Subsonic 1.16.1 and OpenSubsonic specifications:
 
 ### System Requirements
 
-- **.NET 9.0** or later
+- **.NET 10.0** or later
 - **PostgreSQL 17** (included in container deployment)
 - **2GB RAM** minimum (4GB recommended)
 - **Storage**: Varies based on music library size
@@ -201,7 +201,7 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
    cd melodee
    ```
 
-2. **Install .NET 9 SDK**
+2. **Install .NET 10 SDK**
    ```bash
    # Follow instructions at https://dotnet.microsoft.com/download
    ```
@@ -228,7 +228,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- Built with [.NET 9](https://dotnet.microsoft.com/)
+- Built with [.NET 10](https://dotnet.microsoft.com/)
 - UI powered by [Radzen Blazor Components](https://blazor.radzen.com/)
 - Compatible with [OpenSubsonic](https://opensubsonic.netlify.app/) specification
 - Music metadata from [MusicBrainz](https://musicbrainz.org/), [Last.FM](https://last.fm/), and [Spotify](https://spotify.com/)

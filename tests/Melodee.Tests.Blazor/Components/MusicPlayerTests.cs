@@ -20,7 +20,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 
 namespace Melodee.Tests.Blazor.Components;
 
-public class MusicPlayerTests : TestContext
+public class MusicPlayerTests : BunitContext
 {
     private readonly Mock<IBaseUrlService> _mockBaseUrlService;
     private readonly Mock<ScrobbleService> _mockScrobbleService;
@@ -97,7 +97,7 @@ public class MusicPlayerTests : TestContext
         };
 
         // Act & Assert - Component renders without throwing
-        var component = RenderComponent<MusicPlayer>(parameters => parameters
+        var component = Render<MusicPlayer>(parameters => parameters
             .Add(p => p.Songs, songs));
         
         // Verify component renders
@@ -119,7 +119,7 @@ public class MusicPlayerTests : TestContext
         };
 
         // Act & Assert
-        var component = RenderComponent<MusicPlayer>(parameters => parameters
+        var component = Render<MusicPlayer>(parameters => parameters
             .Add(p => p.Songs, songs));
 
         // Component should render but GetStreamUrl would throw when called
@@ -135,7 +135,7 @@ public class MusicPlayerTests : TestContext
         var emptySongs = new List<SongDataInfo>();
 
         // Act & Assert - Should not crash with empty list
-        var component = RenderComponent<MusicPlayer>(parameters => parameters
+        var component = Render<MusicPlayer>(parameters => parameters
             .Add(p => p.Songs, emptySongs));
         
         Assert.NotNull(component);
@@ -156,7 +156,7 @@ public class MusicPlayerTests : TestContext
         };
 
         // Act
-        var component = RenderComponent<MusicPlayer>(parameters => parameters
+        var component = Render<MusicPlayer>(parameters => parameters
             .Add(p => p.Songs, songs));
 
         // Assert - Component renders successfully with different base URLs
@@ -179,7 +179,7 @@ public class MusicPlayerTests : TestContext
         };
 
         // Act
-        var component = RenderComponent<MusicPlayer>(parameters => parameters
+        var component = Render<MusicPlayer>(parameters => parameters
             .Add(p => p.Songs, songs));
 
         // Assert - Component should handle duration formatting
@@ -200,7 +200,7 @@ public class MusicPlayerTests : TestContext
         };
 
         // Act
-        var component = RenderComponent<MusicPlayer>(parameters => parameters
+        var component = Render<MusicPlayer>(parameters => parameters
             .Add(p => p.Songs, songs));
 
         // Assert - Both songs should appear in playlist
@@ -223,7 +223,7 @@ public class MusicPlayerTests : TestContext
         };
 
         // Act
-        var component = RenderComponent<MusicPlayer>(parameters => parameters
+        var component = Render<MusicPlayer>(parameters => parameters
             .Add(p => p.Songs, testSongs));
 
         // Assert
