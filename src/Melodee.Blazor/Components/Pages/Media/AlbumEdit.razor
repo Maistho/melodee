@@ -107,6 +107,17 @@
                         </RadzenRow>
                         <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
                             <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
+                                <RadzenLabel Text="Genre" Component="Genre"/>
+                            </RadzenColumn>
+                            <RadzenColumn Size="12" SizeMD="10">
+                                <RadzenTextBox style="display: block" Name="Genre" @bind-Value="@_album.Genre"
+                                               class="rz-w-100"/>
+                                <RadzenDataAnnotationValidator Component="Genre" Popup="false"
+                                                               Style="position: absolute"/>
+                            </RadzenColumn>
+                        </RadzenRow>
+                        <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
+                            <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
                                 <RadzenLabel Text="Year" Component="Year"/>
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="10">
@@ -294,6 +305,10 @@
                     SearchEngineResultUniqueId = selectedArtist.UniqueId,
                     SpotifyId = selectedArtist.SpotifyId
                 };
+            }
+            else if (!string.IsNullOrWhiteSpace(_artistName) && !string.Equals(_artistName, album.Artist.Name, StringComparison.OrdinalIgnoreCase))
+            {
+                album.Artist = Artist.NewArtistFromName(_artistName);
             }
 
             album.SetTagValue(MetaTagIdentifier.Album, _album.Title);
