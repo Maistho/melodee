@@ -2,7 +2,7 @@
 
 This document aggregates outstanding TODOs and unimplemented methods across the repository. Items are grouped by domain and organized into phases to guide implementation. Check items off as they are completed.
 
-Last updated: 2025-12-13T18:08:41.521Z
+Last updated: 2025-12-13T19:21:12.031Z
 
 ## Solution map (projects in `Melodee.sln`)
 
@@ -220,7 +220,7 @@ These were previously tracked here and are already done:
 
 ### Phase 4 — Service/domain polish (correctness)
 
-- [ ] SongService: implement song deletion
+- [x] SongService: implement song deletion
   - File: `src/Melodee.Common/Services/SongService.cs`
   - Method: `DeleteAsync(int[] songIds, ...)` (currently throws `NotImplementedException`)
   - Policy (decided):
@@ -235,7 +235,7 @@ These were previously tracked here and are already done:
     - All UI call-sites that delete songs succeed for Admin/Editor and are blocked for non-privileged users.
     - Add/adjust tests in `tests/Melodee.Tests.Common` (see SongServiceTests section below).
 
-- [ ] ServiceBase: CRC hash discrepancy
+- [x] ServiceBase: CRC hash discrepancy
   - File: `src/Melodee.Common/Services/ServiceBase.cs`
   - Ground truth (decided):
     - DB column `Song.FileHash` must **always** equal `CRC32.Calculate(...)` computed over the **entire file bytes** (read full stream).
@@ -244,7 +244,7 @@ These were previously tracked here and are already done:
   - Acceptance criteria:
     - Add a focused regression test that validates `CRC32.Calculate(fileBytes)` equals `Song.FileHash` for a known test file.
 
-- [ ] ArtistExtensions: implement OpenSubsonic `artistImageUrl` + `lastFmUrl`
+- [x] ArtistExtensions: implement OpenSubsonic `artistImageUrl` + `lastFmUrl`
   - File: `src/Melodee.Common/Data/Models/Extensions/ArtistExtensions.cs`
   - Decision (decided):
     - OpenSubsonic `artistImageUrl` must be a **directly-renderable image URL** served by Melodee (not an external homepage URL).
@@ -258,12 +258,12 @@ These were previously tracked here and are already done:
 
 ### Phase 5 — Tests & verification
 
-- [ ] SongServiceTests: update DeleteAsync expectations after implementation
+- [x] SongServiceTests: update DeleteAsync expectations after implementation
   - File: `tests/Melodee.Tests.Common/Common/Services/SongServiceTests.cs`
   - Scope:
     - Replace the current `DeleteAsync_ThrowsNotImplementedException` test with assertions matching the new delete behavior.
 
-- [ ] UserServiceTests: verify “bus event published” assertion
+- [x] UserServiceTests: verify “bus event published” assertion
   - File: `tests/Melodee.Tests.Common/Common/Services/UserServiceTests.cs`
   - Acceptance criteria:
     - Tests assert the correct bus publish behavior using the existing test/mocking patterns in the repo.

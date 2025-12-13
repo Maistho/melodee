@@ -178,7 +178,8 @@ public abstract class ServiceBase
                     existingSongs.FirstOrDefault(x => x.SongNumber() == songToMove.SongNumber());
                 if (existingForSongToMove != null)
                 {
-                    // TODO for some reason the song.CrcHash is wrong? 
+                    // Recalculate CRC hash from file to ensure accurate comparison
+                    // Song.FileHash should always equal CRC32.Calculate over entire file bytes
                     var songToMoveCrcHash = Crc32.Calculate(songToMove.File.ToFileInfo(albumToMoveDir));
                     if (existingForSongToMove.CrcHash == songToMoveCrcHash)
                     {

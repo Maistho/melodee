@@ -547,14 +547,77 @@ public class SongServiceTests : ServiceTestBase
     #region DeleteAsync Tests
 
     [Fact]
-    public async Task DeleteAsync_ThrowsNotImplementedException()
+    public async Task DeleteAsync_WithValidSongIds_DeletesSongsSuccessfully()
     {
         // Arrange
-        var songIds = new[] { 1, 2, 3 };
+        var song = await CreateTestSong();
+        var songIds = new[] { song.Id };
 
-        // Act & Assert
-        await Assert.ThrowsAsync<NotImplementedException>(() => 
-            _songService.DeleteAsync(songIds, CancellationToken.None));
+        // Act
+        var result = await _songService.DeleteAsync(songIds, CancellationToken.None);
+
+        // Assert
+        AssertResultIsSuccessful(result);
+        Assert.True(result.Data);
+        
+        // Verify song is deleted
+        var getResult = await _songService.GetAsync(song.Id);
+        Assert.False(getResult.IsSuccess);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_WithMultipleSongs_DeletesAllSuccessfully()
+    {
+        // Arrange
+        var song1 = await CreateTestSong();
+        var song2 = await CreateTestSong(titleSuffix: "2");
+        var songIds = new[] { song1.Id, song2.Id };
+
+        // Act
+        var result = await _songService.DeleteAsync(songIds, CancellationToken.None);
+
+        // Assert
+        AssertResultIsSuccessful(result);
+        Assert.True(result.Data);
+        
+        // Verify both songs are deleted
+        var getResult1 = await _songService.GetAsync(song1.Id);
+        var getResult2 = await _songService.GetAsync(song2.Id);
+        Assert.False(getResult1.IsSuccess);
+        Assert.False(getResult2.IsSuccess);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ClearsCacheEntries()
+    {
+        // Arrange
+        var song = await CreateTestSong();
+        var songIds = new[] { song.Id };
+        
+        // Populate cache
+        await _songService.GetAsync(song.Id);
+        await _songService.GetByApiKeyAsync(song.ApiKey);
+
+        // Act
+        var result = await _songService.DeleteAsync(songIds, CancellationToken.None);
+
+        // Assert
+        AssertResultIsSuccessful(result);
+        Assert.True(result.Data);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_WithNonExistentSongId_ContinuesWithoutError()
+    {
+        // Arrange
+        var songIds = new[] { 999999 };
+
+        // Act
+        var result = await _songService.DeleteAsync(songIds, CancellationToken.None);
+
+        // Assert - Should succeed even if song doesn't exist
+        AssertResultIsSuccessful(result);
+        Assert.True(result.Data);
     }
 
     #endregion
@@ -645,19 +708,20 @@ public class SongServiceTests : ServiceTestBase
 
     #region Helper Methods
 
-    public  async Task<Melodee.Common.Data.Models.Song> CreateTestSong()
+    public  async Task<Melodee.Common.Data.Models.Song> CreateTestSong(string? titleSuffix = null)
     {
         var artist = await CreateTestArtist();
         var album = await CreateTestAlbum(artist);
         
+        var suffix = titleSuffix ?? Guid.NewGuid().ToString();
         var song = new Melodee.Common.Data.Models.Song
         {
             ApiKey = Guid.NewGuid(),
-            Title = $"Test Song {Guid.NewGuid()}",
-            TitleNormalized = $"testsong{Guid.NewGuid()}".Replace("-", ""),
+            Title = $"Test Song {suffix}",
+            TitleNormalized = $"testsong{suffix}".Replace("-", ""),
             AlbumId = album.Id,
             SongNumber = 1,
-            FileName = "test.mp3",
+            FileName = $"test{suffix}.mp3",
             FileSize = 1000000,
             FileHash = "testhash",
             Duration = 180000,

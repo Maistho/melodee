@@ -74,6 +74,9 @@ public static class ArtistExtensions
 
     public static Common.Models.OpenSubsonic.Artist ToApiArtist(this Artist artist, UserArtist? userArtist = null)
     {
+        // artistImageUrl must be a directly-renderable image URL served by Melodee
+        var artistImageUrl = $"/images/{artist.ApiKey}/medium";
+        
         return new Common.Models.OpenSubsonic.Artist(
             artist.ToApiKey(),
             artist.Name,
@@ -81,7 +84,7 @@ public static class ArtistExtensions
             userArtist?.Rating ?? 0,
             artist.CalculatedRating,
             artist.ToCoverArtId(),
-            "Url", // TODO ?
+            artistImageUrl,
             userArtist?.StarredAt.ToString()
         );
     }

@@ -3094,6 +3094,13 @@ public class OpenSubsonicApiService(
                     similarArtistModels = similarArtists.Select(x => x.ToApiArtist()).ToArray();
                 }
 
+                // Construct Last.fm URL if LastFmId is present
+                string? lastFmUrl = null;
+                if (!string.IsNullOrWhiteSpace(artist.LastFmId))
+                {
+                    lastFmUrl = $"https://www.last.fm/music/{Uri.EscapeDataString(artist.LastFmId)}";
+                }
+
                 data = new ArtistInfo(artist.ToApiKey(),
                     artist.Name,
                     configuration.GenerateImageUrl(id, ImageSize.Thumbnail),
@@ -3103,7 +3110,7 @@ public class OpenSubsonicApiService(
                     artist.AlbumCount,
                     artist.Biography,
                     artist.MusicBrainzId,
-                    artist.LastFmId,
+                    lastFmUrl,
                     similarArtistModels,
                     isArtistInfo2);
             }

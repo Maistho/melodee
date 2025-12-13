@@ -1,12 +1,16 @@
 using Melodee.Common.Data.Models;
+using Melodee.Common.Data.Models.Extensions;
 using Melodee.Common.Enums;
 using Melodee.Common.Extensions;
 using Melodee.Common.MessageBus.Events;
 using Melodee.Common.Models;
 using Melodee.Common.Models.Collection;
 using Melodee.Common.Models.Importing;
+using Melodee.Common.Services;
 using Microsoft.EntityFrameworkCore;
+using Moq;
 using NodaTime;
+using Rebus.Bus;
 
 namespace Melodee.Tests.Common.Common.Services;
 
@@ -507,7 +511,7 @@ public class UserServiceTests : ServiceTestBase
     }
 
     [Fact]
-    public async Task UpdateLastLogin_PublishesEvent()
+    public async Task UpdateLastLogin_UpdatesUserLoginTimestamps()
     {
         // Arrange
         var userService = GetUserService();
@@ -518,11 +522,66 @@ public class UserServiceTests : ServiceTestBase
             await context.SaveChangesAsync();
         }
         var eventData = new UserLoginEvent(3, "eventuser");
+        
         // Act
         var result = await userService.UpdateLastLogin(eventData);
+        
         // Assert
         Assert.True(result.IsSuccess);
-        // TODO: Verify bus event published (mock/spy)
+        
+        // Verify the user's last login was updated
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            var updatedUser = await context.Users.FirstAsync(u => u.Id == 3);
+            Assert.NotNull(updatedUser.LastLoginAt);
+            Assert.NotNull(updatedUser.LastActivityAt);
+        }
+    }
+
+    [Fact]
+    public async Task LoginUserAsync_PublishesBusEvent()
+    {
+        // Arrange - Create a mock bus that can be verified
+        var busMock = new Mock<IBus>();
+        busMock.Setup(b => b.SendLocal(It.IsAny<object>(), It.IsAny<Dictionary<string, string>>()))
+            .Returns(Task.CompletedTask);
+
+        // Create user service with the verifiable bus mock
+        var userService = new UserService(
+            Logger,
+            CacheManager,
+            MockFactory(),
+            MockConfigurationFactory(),
+            GetLibraryService(),
+            GetArtistService(),
+            GetAlbumService(),
+            GetSongService(),
+            GetPlaylistService(),
+            busMock.Object);
+
+        // Create test user with known encrypted password
+        // Using "enc:" prefix pattern which bypasses encryption in LoginUserAsync
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            var user = CreateTestUser(4, "logintest", "logintest@example.com");
+            user.PasswordEncrypted = "testencryptedpassword123";
+            context.Users.Add(user);
+            await context.SaveChangesAsync();
+        }
+
+        // Act - Use "enc:" prefix to match the encrypted password directly
+        var result = await userService.LoginUserAsync("logintest@example.com", "enc:testencryptedpassword123");
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+        
+        // Verify that bus.SendLocal was called with a UserLoginEvent
+        busMock.Verify(
+            b => b.SendLocal(
+                It.Is<UserLoginEvent>(e => e.UserId == 4 && e.UserName == "logintest"),
+                It.IsAny<Dictionary<string, string>>()),
+            Times.Once);
     }
 
     [Fact]

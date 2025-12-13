@@ -368,10 +368,108 @@ public class SongService(
         }
     }
 
-    public Task<MelodeeModels.OperationResult<bool>> DeleteAsync(int[] toArray, CancellationToken cancellationToken = default)
+    public async Task<MelodeeModels.OperationResult<bool>> DeleteAsync(int[] songIds, CancellationToken cancellationToken = default)
     {
-        // Deleting songs is not currently supported; ensure callers do not perform destructive operations.
-        throw new NotImplementedException("DeleteAsync for songs is not implemented.");
+        Guard.Against.NullOrEmpty(songIds, nameof(songIds));
+
+        bool result;
+        var albumIds = new List<int>();
+
+        await using (var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
+        {
+            foreach (var songId in songIds)
+            {
+                var song = await scopedContext.Songs
+                    .Include(s => s.Album)
+                    .ThenInclude(a => a.Artist)
+                    .ThenInclude(ar => ar.Library)
+                    .FirstOrDefaultAsync(s => s.Id == songId, cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (song == null)
+                {
+                    Logger.Warning("Song with Id [{SongId}] not found for deletion", songId);
+                    continue;
+                }
+
+                // Delete associated media file from disk if it exists
+                var songFilePath = Path.Combine(
+                    song.Album.Artist.Library.Path,
+                    song.Album.Artist.Directory,
+                    song.Album.Directory,
+                    song.FileName);
+
+                if (File.Exists(songFilePath))
+                {
+                    try
+                    {
+                        File.Delete(songFilePath);
+                        Logger.Debug("Deleted song file [{FilePath}]", songFilePath);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Warning(ex, "Failed to delete song file [{FilePath}]", songFilePath);
+                        // Continue with DB deletion even if file deletion fails
+                    }
+                }
+                else
+                {
+                    Logger.Debug("Song file [{FilePath}] does not exist, skipping file deletion", songFilePath);
+                }
+
+                // Note: NowPlaying is managed separately and songs will be removed when they expire
+                // or when the user stops playing. No direct removal method exists.
+
+                // Clear related cache entries
+                CacheManager.Remove(CacheKeyDetailByApiKeyTemplate.FormatSmart(song.ApiKey));
+                CacheManager.Remove(CacheKeyDetailByTitleNormalizedTemplate.FormatSmart(song.TitleNormalized));
+                CacheManager.Remove(CacheKeyDetailTemplate.FormatSmart(song.Id));
+
+                // Cascade delete will handle:
+                // - Contributors (via foreign key)
+                // - UserSongs (via foreign key)
+                // - PlaylistSongs (via foreign key)
+                // Note: Database is configured with cascade delete for these relationships
+
+                scopedContext.Songs.Remove(song);
+                albumIds.Add(song.AlbumId);
+            }
+
+            await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            Logger.Information("Deleted songs [{SongIds}]", songIds);
+            result = true;
+        }
+
+        // Update album aggregate values for affected albums
+        await using (var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
+        {
+            foreach (var albumId in albumIds.Distinct())
+            {
+                var album = await scopedContext.Albums
+                    .Include(a => a.Songs)
+                    .FirstOrDefaultAsync(a => a.Id == albumId, cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (album != null)
+                {
+                    // Update album song count and duration
+                    album.SongCount = (short?)album.Songs.Count;
+                    album.Duration = album.Songs.Sum(s => s.Duration);
+                    
+                    // If album has no songs left, it should probably be marked as invalid or deleted
+                    // Following the requirements: if all songs are missing, this would be handled
+                    // by the clean operation, not here. We just update the counts.
+                    
+                    await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+                }
+            }
+        }
+
+        return new MelodeeModels.OperationResult<bool>
+        {
+            Data = result
+        };
     }
 
     /// <summary>
