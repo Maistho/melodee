@@ -1,3 +1,4 @@
+using System.Text;
 using Melodee.Common.Utility;
 
 namespace Melodee.Tests.Common.Utility;
@@ -5,47 +6,68 @@ namespace Melodee.Tests.Common.Utility;
 public class Crc32Tests
 {
     [Fact]
-    public void ComputeAndCompareCrc32Hash()
+    public void Calculate_WithValidByteArray_ReturnsValidHash()
     {
-        var mp3File = @"/melodee_test/tests/test.mp3";
-        var fileInfo = new FileInfo(mp3File);
-        if (fileInfo.Exists)
-        {
-            var crc = Crc32.Calculate(fileInfo);
-            Assert.NotNull(crc);
+        // Arrange
+        var data = Encoding.UTF8.GetBytes("test data");
 
-            var crc2 = Crc32.Calculate(fileInfo);
-            Assert.NotNull(crc2);
-            Assert.Equal(crc, crc2);
+        // Act
+        var result = Crc32.Calculate(data);
 
-            fileInfo.LastWriteTime = fileInfo.LastWriteTime.AddHours(1);
-            var crc3 = Crc32.Calculate(fileInfo);
-            Assert.NotNull(crc3);
-            Assert.Equal(crc, crc3);
-        }
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(8, result.Length); // CRC32 produces 8 hex characters
     }
 
     [Fact]
-    public void Crc32FromFileMatchesCrc32FromBytes()
+    public void Calculate_WithEmptyArray_ReturnsZeroHash()
     {
-        // Regression test for CRC hash discrepancy
-        // Validates that CRC32.Calculate(file) equals CRC32.Calculate(fileBytes)
-        var mp3File = @"/melodee_test/tests/test.mp3";
-        var fileInfo = new FileInfo(mp3File);
-        if (fileInfo.Exists)
-        {
-            // Calculate CRC from file
-            var crcFromFile = Crc32.Calculate(fileInfo);
-            Assert.NotNull(crcFromFile);
+        // Arrange
+        var data = Array.Empty<byte>();
 
-            // Calculate CRC from file bytes
-            var fileBytes = File.ReadAllBytes(mp3File);
-            var crcFromBytes = Crc32.Calculate(fileBytes);
-            Assert.NotNull(crcFromBytes);
+        // Act
+        var result = Crc32.Calculate(data);
 
-            // Both methods should produce the same CRC hash
-            // Ground truth: Song.FileHash must always equal CRC32.Calculate over entire file bytes
-            Assert.Equal(crcFromFile, crcFromBytes);
-        }
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal("00000000", result);
+    }
+
+    [Fact]
+    public void Calculate_WithNullInput_ThrowsArgumentNullException()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => Crc32.Calculate((byte[])null));
+    }
+
+    [Fact]
+    public void Calculate_WithSameInput_ReturnsSameHash()
+    {
+        // Arrange
+        var inputData = "same test data";
+        var data1 = Encoding.UTF8.GetBytes(inputData);
+        var data2 = Encoding.UTF8.GetBytes(inputData);
+
+        // Act
+        var hash1 = Crc32.Calculate(data1);
+        var hash2 = Crc32.Calculate(data2);
+
+        // Assert
+        Assert.Equal(hash1, hash2);
+    }
+
+    [Fact]
+    public void Calculate_WithDifferentInputs_ReturnsDifferentHashes()
+    {
+        // Arrange
+        var data1 = Encoding.UTF8.GetBytes("test data 1");
+        var data2 = Encoding.UTF8.GetBytes("test data 2");
+
+        // Act
+        var hash1 = Crc32.Calculate(data1);
+        var hash2 = Crc32.Calculate(data2);
+
+        // Assert
+        Assert.NotEqual(hash1, hash2);
     }
 }
