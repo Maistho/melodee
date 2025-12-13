@@ -1,0 +1,61 @@
+Prioritized List for Test Creation (Most Critical First):
+
+HIGH PRIORITY (Core functionality & business logic):
+1. Services (especially core services):
+   - ServiceBase (low coverage 15%)
+   - AlbumService (incomplete tests)
+   - ArtistService (low coverage 64.3%)
+   - SongService (likely low coverage, check existing tests)
+   - LibraryService (low coverage 27.7%)
+   - UserService (likely missing tests, check existing)
+   - PlaylistService (low coverage 39.9%)
+   - ShareService (likely missing tests)
+   - SettingService (likely has some tests)
+
+2. Data Models & Extensions (business logic):
+   - AlbumExtensions (very low coverage 17.3%)
+   - ArtistExtensions (low coverage 54.3%)
+   - SongExtensions (low coverage 37.7%)
+   - LibraryExtensions (low coverage 40%)
+   - UserExtensions (good coverage 81.3%)
+
+3. Core Utilities/Helpers:
+   - FileSystemService (good coverage 100%, but check for edge cases)
+   - FileHelper (good coverage 65.5%)
+   - ImageConversionService (low coverage 44%)
+   - EncryptionHelper (good coverage 82%)
+   - HashHelper (good coverage 61.5%)
+   - SafeParser (low coverage 54.7%)
+
+MEDIUM PRIORITY (Important for functionality):
+4. Search & API Services:
+   - SearchEngines services (ArtistSearchEngineService low 17.4%, others too)
+   - OpenSubsonicApiService (low coverage 50.7%)
+   - ScrobbleService (low coverage 21.6%)
+
+5. Metadata Processing:
+   - AudioTagManager (likely has good coverage)
+   - Tag readers (Mp4TagReader, Id3TagReader, etc.) - likely have good coverage
+   - MetaData processors (AtlMetaTag low 3.2%, IdSharpMetaTag low 1.9%)
+
+6. Validation:
+   - AlbumValidator (good coverage 71.6% but may need more)
+   - ImageValidator (low coverage 8%)
+
+LOW PRIORITY (Specialized or less critical):
+7. Specialized plugins:
+   - MusicBrainz related services
+   - Spotify, LastFM, iTunes integration
+   - Image conversion plugins
+   - Scripting plugins
+
+8. Extensions & Helpers:
+   - ShellHelper (0% coverage)
+   - Various extension methods for basic types
+   - Regex generators (some 0% coverage)
+
+9. DTOs and Data container models:
+   - Most of these are simple data containers, may not need extensive tests
+   - Only test if they have business logic
+
+Note: Focus first on services that handle data persistence and core business logic. These are most likely to have critical bugs and are most important for stability.
