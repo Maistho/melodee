@@ -9,6 +9,8 @@ using Melodee.Common.Services;
 using Melodee.Common.Services.Caching;
 using Melodee.Common.Utility;
 using Microsoft.EntityFrameworkCore;
+using Polly;
+using Polly.Retry;
 using Serilog;
 using SpotifyAPI.Web;
 using SpotifyAPI.Web.Http;
@@ -25,6 +27,17 @@ public class Spotify(
     : IArtistSearchEnginePlugin, IArtistTopSongsSearchEnginePlugin, IAlbumImageSearchEnginePlugin,
         IArtistImageSearchEnginePlugin
 {
+    private readonly ResiliencePipeline _pipeline = new ResiliencePipelineBuilder()
+        .AddRetry(new RetryStrategyOptions
+        {
+            ShouldHandle = new PredicateBuilder().Handle<Exception>(ex => ex is not APIUnauthorizedException),
+            MaxRetryAttempts = 3,
+            Delay = TimeSpan.FromSeconds(1),
+            BackoffType = DelayBackoffType.Exponential
+        })
+        .AddTimeout(TimeSpan.FromSeconds(10))
+        .Build();
+
     public async Task<OperationResult<ImageSearchResult[]?>> DoAlbumImageSearch(AlbumQuery query, int maxResults,
         CancellationToken cancellationToken = default)
     {
@@ -61,7 +74,8 @@ public class Spotify(
             {
                 if (spotify != null)
                 {
-                    searchResult = await spotify.Search.Item(new SearchRequest(SearchRequest.Types.Album, query.Name),
+                    searchResult = await _pipeline.ExecuteAsync(async token =>
+                            await spotify.Search.Item(new SearchRequest(SearchRequest.Types.Album, query.Name), token),
                         cancellationToken);
                 }
             }
@@ -165,8 +179,8 @@ public class Spotify(
             SearchResponse? searchResult = null;
             try
             {
-                // TODO use Polly to make this more resilient with timeouts 
-                searchResult = await spotify.Search.Item(new SearchRequest(SearchRequest.Types.Artist, query.Name),
+                searchResult = await _pipeline.ExecuteAsync(async token =>
+                        await spotify.Search.Item(new SearchRequest(SearchRequest.Types.Artist, query.Name), token),
                     cancellationToken);
             }
             catch (APIUnauthorizedException)
@@ -278,7 +292,8 @@ public class Spotify(
             SearchResponse? searchResult = null;
             try
             {
-                searchResult = await spotify.Search.Item(new SearchRequest(SearchRequest.Types.Artist, query.Name),
+                searchResult = await _pipeline.ExecuteAsync(async token =>
+                        await spotify.Search.Item(new SearchRequest(SearchRequest.Types.Artist, query.Name), token),
                     cancellationToken);
             }
             catch (APIUnauthorizedException)
@@ -420,8 +435,10 @@ public class Spotify(
                 ArtistsTopTracksResponse? searchResult = null;
                 try
                 {
-                    searchResult = await spotify.Artists.GetTopTracks(artist.SpotifyId!,
-                        new ArtistsTopTracksRequest("US"), cancellationToken);
+                    searchResult = await _pipeline.ExecuteAsync(async token =>
+                            await spotify.Artists.GetTopTracks(artist.SpotifyId!,
+                                new ArtistsTopTracksRequest("US"), token),
+                        cancellationToken);
                 }
                 catch (APIUnauthorizedException)
                 {
@@ -431,8 +448,10 @@ public class Spotify(
                     await settingService.SetAsync(SettingRegistry.SearchEngineSpotifyAccessToken, apiAccessToken,
                         cancellationToken);
                     spotify = new SpotifyClient(config.WithToken(apiAccessToken));
-                    searchResult = await spotify.Artists.GetTopTracks(artist.SpotifyId!,
-                        new ArtistsTopTracksRequest("US"), cancellationToken);
+                    searchResult = await _pipeline.ExecuteAsync(async token =>
+                            await spotify.Artists.GetTopTracks(artist.SpotifyId!,
+                                new ArtistsTopTracksRequest("US"), token),
+                        cancellationToken);
                 }
 
                 var results = new List<SongSearchResult>();

@@ -2,7 +2,7 @@
 
 This document aggregates outstanding TODOs and unimplemented methods across the repository. Items are grouped by domain and organized into phases to guide implementation. Check items off as they are completed.
 
-Last updated: 2025-12-13T19:21:12.031Z
+Last updated: 2025-12-13T19:32:56.426Z
 
 ## Solution map (projects in `Melodee.sln`)
 
@@ -292,7 +292,6 @@ For quick grep reference (current as of last updated), these locations contain `
 - `src/Melodee.Blazor/Components/Pages/Data/Albums.razor` (action handler `NotImplementedException`)
 - `src/Melodee.Blazor/Components/Pages/Data/Songs.razor` (action handler `NotImplementedException`)
 - `src/Melodee.Blazor/Controllers/OpenSubsonic/BrowsingController.cs` (TODO: similar songs endpoints)
-- `src/Melodee.Blazor/Controllers/OpenSubsonic/JukeboxController.cs` (TODO: jukeboxControl)
 - `src/Melodee.Common/Plugins/SearchEngine/ITunes/ITunesSearchEngine.cs` (`NotImplementedException`)
 - `src/Melodee.Common/Plugins/SearchEngine/LastFm/LastFm.cs` (`NotImplementedException`)
 - `src/Melodee.Common/Services/SongService.cs` (`DeleteAsync` throws `NotImplementedException`)

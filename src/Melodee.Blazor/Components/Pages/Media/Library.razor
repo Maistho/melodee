@@ -372,15 +372,14 @@
             
             if (librariesResult.Data.Length > 1)
             {
-                // For multiple libraries, use the first one for now
-                // TODO: implement library selection dialog when time permits
-                NotificationService.Notify(new NotificationMessage
+                // Show library selection dialog
+                targetLibrary = await ShowLibrarySelectionDialog(librariesResult.Data, "Select the destination library for OK albums:");
+                
+                if (targetLibrary == null)
                 {
-                    Severity = NotificationSeverity.Warning,
-                    Summary = "Multiple Libraries",
-                    Detail = $"Multiple storage libraries found. Using first: {librariesResult.Data.First().Name}. Library selection dialog not yet fully implemented."
-                });
-                targetLibrary = librariesResult.Data.First();
+                    // User cancelled the dialog
+                    return;
+                }
             }
             else
             {
@@ -522,6 +521,42 @@
             }, "deleted albums", ToastTime));
             _selectedAlbums.Clear();
         }
+    }
+
+    private async Task<Melodee.Common.Data.Models.Library?> ShowLibrarySelectionDialog(
+        Melodee.Common.Data.Models.Library[] libraries, 
+        string message)
+    {
+        // Use a simple list selection approach with inline component
+        var options = libraries.Select(l => $"{l.Name} ({l.Path})").ToArray();
+        var libraryDict = libraries.ToDictionary(l => $"{l.Name} ({l.Path})", l => l);
+        
+        string? selectedOption = null;
+        
+        await DialogService.OpenAsync("Select Destination Library", ds =>
+            @<div>
+                <RadzenStack Gap="1rem">
+                    <RadzenText>@message</RadzenText>
+                    <RadzenSelectBar @bind-Value="@selectedOption" TValue="string">
+                        <Items>
+                            @foreach (var lib in libraries)
+                            {
+                                var displayText = $"{lib.Name} ({lib.Path})";
+                                <RadzenSelectBarItem Text="@displayText" Value="@displayText" />
+                            }
+                        </Items>
+                    </RadzenSelectBar>
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End">
+                        <RadzenButton Text="Cancel" Click="@(() => ds.Close())" ButtonStyle="ButtonStyle.Secondary" />
+                        <RadzenButton Text="Select" Click="@(() => ds.Close())" ButtonStyle="ButtonStyle.Primary" Disabled="@(selectedOption == null)" />
+                    </RadzenStack>
+                </RadzenStack>
+            </div>,
+            new DialogOptions { Width = "600px", Height = "auto", ShowClose = true });
+        
+        return selectedOption != null && libraryDict.ContainsKey(selectedOption) 
+            ? libraryDict[selectedOption] 
+            : null;
     }
 
 }
