@@ -37,7 +37,7 @@ public class ArtistImageSearchEngineService(
 
         var searchEngines = new List<IArtistImageSearchEnginePlugin>
         {
-            new Spotify(Logger, configuration, spotifyClientBuilder, settingService)
+            new Spotify(Logger, configuration, CacheManager, spotifyClientBuilder, settingService, ContextFactory)
             {
                 IsEnabled = configuration.GetValue<bool>(SettingRegistry.SearchEngineSpotifyEnabled)
             },
@@ -45,7 +45,7 @@ public class ArtistImageSearchEngineService(
             {
                 IsEnabled = configuration.GetValue<bool>(SettingRegistry.SearchEngineDeezerEnabled)
             },
-            new ITunesSearchEngine(Logger, serializer, httpClientFactory)
+            new ITunesSearchEngine(Logger, serializer, httpClientFactory, CacheManager)
             {
                 IsEnabled = configuration.GetValue<bool>(SettingRegistry.SearchEngineITunesEnabled)
             }

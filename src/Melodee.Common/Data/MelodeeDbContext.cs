@@ -917,6 +917,15 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
                 },
                 new Setting
                 {
+                    Id = 1102,
+                    Category = (int)SettingCategory.System,
+                    Key = SettingRegistry.SystemMaxUploadSize,
+                    Comment = "Maximum upload size in bytes for UI uploads.",
+                    Value = (5 * 1024 * 1024).ToString(),
+                    CreatedAt = now
+                },
+                new Setting
+                {
                     Id = 1400,
                     Category = (int)SettingCategory.Jobs,
                     Key = SettingRegistry.JobsArtistHousekeepingCronExpression,

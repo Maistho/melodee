@@ -49,15 +49,15 @@ public class AlbumImageSearchEngineService(
             {
                 IsEnabled = configuration.GetValue<bool>(SettingRegistry.SearchEngineDeezerEnabled)
             },
-            new ITunesSearchEngine(Logger, serializer, httpClientFactory)
+            new ITunesSearchEngine(Logger, serializer, httpClientFactory, CacheManager)
             {
                 IsEnabled = configuration.GetValue<bool>(SettingRegistry.SearchEngineITunesEnabled)
             },
-            new Spotify(Logger, configuration, spotifyClientBuilder, settingService)
+            new Spotify(Logger, configuration, CacheManager, spotifyClientBuilder, settingService, ContextFactory)
             {
                 IsEnabled = configuration.GetValue<bool>(SettingRegistry.SearchEngineSpotifyEnabled)
             },
-            new LastFm(Logger, configuration, serializer, httpClientFactory)
+            new LastFm(Logger, configuration, serializer, httpClientFactory, CacheManager)
             {
                 IsEnabled = configuration.GetValue<bool>(SettingRegistry.SearchEngineLastFmEnabled)
             }

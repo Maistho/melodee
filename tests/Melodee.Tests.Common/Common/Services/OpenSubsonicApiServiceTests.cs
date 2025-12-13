@@ -1643,6 +1643,26 @@ public class OpenSubsonicApiServiceTests : ServiceTestBase
     }
 
     [Fact]
+    public async Task GetSimilarSongs_WithValidRequest_ReturnsResult()
+    {
+        var username = "testUser";
+        var password = "testPassword";
+        await CreateTestUser(username, password);
+
+        var result = await GetOpenSubsonicApiService().GetSimilarSongsAsync(
+            "test_song_id",
+            10,
+            false,
+            GetApiRequest(username, "123456", password),
+            CancellationToken.None);
+
+        Assert.NotNull(result);
+        Assert.True(result.IsSuccess);
+        Assert.Null(result.ResponseData.Error);
+        Assert.NotNull(result.ResponseData);
+    }
+
+    [Fact]
     public async Task GetStarred2_WithValidRequest_ReturnsStarredItems()
     {
         var username = "testUser";

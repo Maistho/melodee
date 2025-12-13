@@ -47,7 +47,7 @@ public class ScrobbleService(
                 });
             }
 
-            scrobblers.Add(new LastFmScrobbler(_configuration)
+            scrobblers.Add(new LastFmScrobbler(_configuration, ContextFactory!, Logger)
             {
                 IsEnabled = _configuration.GetValue<bool>(SettingRegistry.ScrobblingLastFmEnabled)
             });

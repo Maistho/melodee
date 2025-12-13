@@ -100,12 +100,13 @@
     [Parameter] public EventCallback<ImageSearchResult?> OnUpdateCallback { get; set; }
 
     private byte[]? _imageBytes;
+    private long _maxUploadSize;
 
     private async Task SingleUpload(InputFileChangeEventArgs e)
     {
         await using (var ms = new MemoryStream())
         {
-            await e.File.OpenReadStream(MelodeeConfiguration.MaximumUploadFileSize).CopyToAsync(ms);
+            await e.File.OpenReadStream(_maxUploadSize).CopyToAsync(ms);
             _imageBytes = ms.ToArray();
             _selectedResult = new ImageSearchResult(string.Empty, string.Empty, e.File.Name, _doDeleteExistingImages, _imageBytes);
             StateHasChanged();
@@ -128,6 +129,7 @@
     protected override async Task OnInitializedAsync()
     {
         _maxResults = (await SettingService.GetValueAsync<int?>(SettingRegistry.SearchEngineDefaultPageSize)).Data ?? (await SettingService.GetValueAsync<int>(SettingRegistry.DefaultsPageSize)).Data;
+        _maxUploadSize = (await SettingService.GetValueAsync<long?>(SettingRegistry.SystemMaxUploadSize)).Data ?? (5 * 1024 * 1024);
         await DoSearchAsync();
     }
 
@@ -187,14 +189,20 @@
         return SelectOrCancelClicked(true);
     }
 
-    void OnChange(byte[] value, string name)
+    async Task OnChange(byte[] value, string name)
     {
-        throw new NotImplementedException();
+        _imageBytes = value;
+        _selectedResult = new ImageSearchResult(string.Empty, string.Empty, name, _doDeleteExistingImages, _imageBytes);
+        await InvokeAsync(StateHasChanged);
+        if (OnUpdateCallback.HasDelegate && _selectedResult != null)
+        {
+            await OnUpdateCallback.InvokeAsync(_selectedResult);
+        }
     }
 
     void OnError(UploadErrorEventArgs args, string name)
     {
-        throw new NotImplementedException();
+        Logger.Error("Error uploading image [{Name}]: {Message}", name, args.Message);
     }
 
     // private async Task OnChange(byte[] value, string fileinput)

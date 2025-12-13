@@ -394,16 +394,28 @@
         try
         {
             var librariesResult = await LibraryService.GetStorageLibrariesAsync();
+            Melodee.Common.Data.Models.Library? targetLibrary = null;
+            
             if (librariesResult.Data.Length > 1)
             {
-                // TODO If more than one Library type library then prompt for which library to move into
-                throw new NotImplementedException();
+                // For multiple libraries, use the first one for now
+                // TODO: implement library selection dialog when time permits
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Warning,
+                    Summary = "Multiple Libraries",
+                    Detail = $"Multiple storage libraries found. Using first: {librariesResult.Data.First().Name}. Library selection dialog not yet fully implemented."
+                });
+                targetLibrary = librariesResult.Data.First();
+            }
+            else
+            {
+                targetLibrary = librariesResult.Data.First();
             }
 
-            var storageLibrary = librariesResult.Data.First();
             await LibraryService.MoveAlbumsFromLibraryToLibrary(
                 _library.Name,
-                storageLibrary.Name,
+                targetLibrary.Name,
                 a => a.Id == _album.Id,
                 true);
             NavigationManager.NavigateTo($"/media/library/{_library.ApiKey}", true);
@@ -766,8 +778,8 @@
 
     private Task AddNewArtistButtonClick()
     {
-        // Call the ArtistEdit and pass in the albums artist name value to populate a new artist edit form.
-        throw new NotImplementedException();
+        NavigationManager.NavigateTo($"/data/artistedit/new?prefillName={Uri.EscapeDataString(_album.Artist.Name)}");
+        return Task.CompletedTask;
     }
 
 }

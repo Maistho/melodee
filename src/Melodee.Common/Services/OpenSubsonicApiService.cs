@@ -2680,6 +2680,119 @@ public class OpenSubsonicApiService(
         };
     }
 
+    public async Task<ResponseModel> GetSimilarSongsAsync(string id, int? count, bool isV2, ApiRequest apiRequest,
+        CancellationToken cancellationToken)
+    {
+        var authResponse = await AuthenticateSubsonicApiAsync(apiRequest, cancellationToken);
+        if (!authResponse.IsSuccess)
+        {
+            return authResponse with { UserInfo = UserInfo.BlankUserInfo };
+        }
+
+        var maxResults = count.HasValue && count.Value > 0 ? count.Value : 50;
+        var dataPropertyName = isV2 ? "similarSongs2" : "similarSongs";
+        Child[] data = [];
+
+        var apiKey = ApiKeyFromId(id);
+        if (apiKey == null)
+        {
+            return new ResponseModel
+            {
+                UserInfo = authResponse.UserInfo,
+                ResponseData = await DefaultApiResponse() with
+                {
+                    Data = data,
+                    DataPropertyName = dataPropertyName,
+                    DataDetailPropertyName = "song"
+                }
+            };
+        }
+
+        await using (var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
+        {
+            int? artistId = null;
+            Guid? songApiKey = null;
+
+            if (IsApiIdForSong(id))
+            {
+                var song = await scopedContext.Songs
+                    .Include(s => s.Album)
+                    .ThenInclude(a => a.Artist)
+                    .FirstOrDefaultAsync(s => s.ApiKey == apiKey.Value, cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (song?.Album?.ArtistId != null)
+                {
+                    artistId = song.Album.ArtistId;
+                    songApiKey = song.ApiKey;
+                }
+            }
+            else if (IsApiIdForArtist(id))
+            {
+                var artist = await scopedContext.Artists
+                    .FirstOrDefaultAsync(a => a.ApiKey == apiKey.Value, cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (artist != null)
+                {
+                    artistId = artist.Id;
+                }
+            }
+
+            if (artistId == null)
+            {
+                return new ResponseModel
+                {
+                    UserInfo = authResponse.UserInfo,
+                    ResponseData = await DefaultApiResponse() with
+                    {
+                        Data = data,
+                        DataPropertyName = dataPropertyName,
+                        DataDetailPropertyName = "song"
+                    }
+                };
+            }
+
+            var similarArtistIds = await scopedContext.ArtistRelation
+                .Where(ar => ar.ArtistId == artistId.Value && ar.ArtistRelationType == SafeParser.ToNumber<int>(ArtistRelationType.Similar))
+                .Select(ar => ar.RelatedArtistId)
+                .Distinct()
+                .ToArrayAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            if (similarArtistIds.Length > 0)
+            {
+                var songs = await scopedContext.Songs
+                    .Include(s => s.Album)
+                    .ThenInclude(a => a.Artist)
+                    .Include(s => s.UserSongs.Where(us => us.UserId == authResponse.UserInfo.Id))
+                    .Where(s => similarArtistIds.Contains(s.Album.ArtistId))
+                    .Where(s => songApiKey == null || s.ApiKey != songApiKey.Value)
+                    .OrderBy(s => s.Album.Artist.SortName ?? s.Album.Artist.Name)
+                    .ThenBy(s => s.Album.ReleaseDate)
+                    .ThenBy(s => s.SongNumber)
+                    .ThenBy(s => s.TitleSort ?? s.Title)
+                    .Take(maxResults)
+                    .ToArrayAsync(cancellationToken)
+                    .ConfigureAwait(false);
+
+                data = songs.Select(s => s.ToApiChild(s.Album, s.UserSongs.FirstOrDefault())).ToArray();
+            }
+        }
+
+        return new ResponseModel
+        {
+            UserInfo = authResponse.UserInfo,
+
+            ResponseData = await DefaultApiResponse() with
+            {
+                Data = data,
+                DataPropertyName = dataPropertyName,
+                DataDetailPropertyName = "song"
+            }
+        };
+    }
+
     public async Task<ResponseModel> GetStarred2Async(string? musicFolderId, ApiRequest apiRequest,
         CancellationToken cancellationToken)
     {

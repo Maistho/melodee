@@ -7,6 +7,7 @@
 
 @inject UserService UserService
 @inject LibraryService LibraryService
+@inject SettingService SettingService
 @inject NotificationService NotificationService
 @inject NavigationManager NavigationManager
 @inject DefaultImages DefaultImages
@@ -66,8 +67,14 @@
     string _avatarImage = string.Empty;
     string _plainPassword = string.Empty;
     int _roleChoice = 0;
+    long _maxUploadSize;
     class RoleOption { public int Value { get; set; } public string Text { get; set; } = string.Empty; }
     List<RoleOption> _roleOptions = new() { new RoleOption{ Value = 0, Text = "None" }, new RoleOption{ Value = 1, Text = "Editor" }, new RoleOption{ Value = 2, Text = "Admin" } };
+
+    protected override async Task OnInitializedAsync()
+    {
+        _maxUploadSize = (await SettingService.GetValueAsync<long?>(SettingRegistry.SystemMaxUploadSize)).Data ?? (5 * 1024 * 1024);
+    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -116,7 +123,7 @@
     private async Task OnAvatarUpload(InputFileChangeEventArgs e)
     {
         await using var ms = new MemoryStream();
-        await e.File.OpenReadStream(MelodeeConfiguration.MaximumUploadFileSize).CopyToAsync(ms);
+        await e.File.OpenReadStream(_maxUploadSize).CopyToAsync(ms);
         var save = await UserService.SaveProfileImageAsync(_user.Id, ms.ToArray());
         NotificationService.Notify(new NotificationMessage { Severity = save.IsSuccess ? NotificationSeverity.Success : NotificationSeverity.Error, Summary = save.IsSuccess ? "Saved" : "Error", Detail = save.IsSuccess ? "Avatar updated" : string.Join(";", save.Messages ?? []) });
         await OnParametersSetAsync();

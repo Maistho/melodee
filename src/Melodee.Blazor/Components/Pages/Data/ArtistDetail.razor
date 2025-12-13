@@ -13,6 +13,7 @@
 @inject ArtistService ArtistService
 @inject AlbumService AlbumService
 @inject UserService UserService
+@inject SettingService SettingService
 @inject NotificationService NotificationService
 @inject DialogService DialogService
 @inject NavigationManager NavigationManager
@@ -380,17 +381,20 @@
                         </RadzenText>
                     </HeaderTemplate>
                     <ChildContent>
-                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
-                            <RadzenSwitch @bind-Value="@_replaceAllImages" Name="ReplaceAll"/>
-                            <RadzenLabel Text="Replace all images on upload" Component="ReplaceAll"/>
-                            <InputFile multiple OnChange="@OnArtistImageUpload" />
-                            <RadzenButton Icon="checklist" Size="ButtonSize.Small" Text="Select All" Click="@SelectAllImages"/>
-                            <RadzenButton Icon="check_box_outline_blank" Size="ButtonSize.Small" Text="Select None" Click="@SelectNoneImages"/>
-                            <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Text="Delete Selected"
-                                          Disabled="@(!_selectedImagePaths.Any())"
-                                          Visible="CurrentUser?.IsEditor() ?? false"
-                                          Click="@DeleteSelectedArtistImagesButtonClick" />
-                        </RadzenStack>
+                        <div @ref="_dropZoneElement" class="file-drop-zone">
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                                <RadzenSwitch @bind-Value="@_replaceAllImages" Name="ReplaceAll"/>
+                                <RadzenLabel Text="Replace all images on upload" Component="ReplaceAll"/>
+                                <InputFile @ref="_inputFileElement" multiple OnChange="@OnArtistImageUpload" />
+                                <RadzenButton Icon="checklist" Size="ButtonSize.Small" Text="Select All" Click="@SelectAllImages"/>
+                                <RadzenButton Icon="check_box_outline_blank" Size="ButtonSize.Small" Text="Select None" Click="@SelectNoneImages"/>
+                                <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Text="Delete Selected"
+                                              Disabled="@(!_selectedImagePaths.Any())"
+                                              Visible="CurrentUser?.IsEditor() ?? false"
+                                              Click="@DeleteSelectedArtistImagesButtonClick" />
+                            </RadzenStack>
+                            <RadzenText TextStyle="TextStyle.Caption" class="rz-text-secondary">Drag and drop or paste images here</RadzenText>
+                        </div>
                         <RadzenDataList Data="@_artistImageList" TItem="ArtistImageListItem" class="rz-mt-3">
                             <Template Context="item">
                                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
@@ -537,6 +541,10 @@
     bool _isLoading = true;
     int? _currentPage = 1;
     readonly short _pageSize = 50;
+    private long _maxUploadSize;
+    private ElementReference _dropZoneElement;
+    private InputFile? _inputFileElement;
+    private IJSObjectReference? _dropZoneModule;
 
     private readonly List<string> _alertMessages = [];
     private string _debounceAlbumFilterValue = string.Empty;
@@ -606,6 +614,24 @@
 
         var configuration = await ConfigurationFactory.GetConfigurationAsync();
         _biographyNoAvailablePlaceholder = configuration.GetValue<string>(SettingRegistry.ArtistBiographyPlaceHolderText);
+        _maxUploadSize = (await SettingService.GetValueAsync<long?>(SettingRegistry.SystemMaxUploadSize)).Data ?? (5 * 1024 * 1024);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && _inputFileElement != null)
+        {
+            _dropZoneModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/FileDropZone.js");
+            await _dropZoneModule.InvokeVoidAsync("initializeFileDropZone", _dropZoneElement, _inputFileElement.Element);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_dropZoneModule != null)
+        {
+            await _dropZoneModule.DisposeAsync();
+        }
     }
 
     protected override async Task OnParametersSetAsync()
@@ -716,7 +742,7 @@
         foreach (var file in e.GetMultipleFiles())
         {
             await using var ms = new MemoryStream();
-            await file.OpenReadStream(MelodeeConfiguration.MaximumUploadFileSize).CopyToAsync(ms);
+            await file.OpenReadStream(_maxUploadSize).CopyToAsync(ms);
             var save = await ArtistService.SaveImageAsArtistImageAsync(_artist.Id, _replaceAllImages, ms.ToArray());
             if (!save.IsSuccess)
             {

@@ -90,9 +90,12 @@
         }
     }
 
+    private long _maxUploadSize;
+
     protected override async Task OnInitializedAsync()
     {
         _maxResults = (await SettingService.GetValueAsync<int?>(SettingRegistry.SearchEngineDefaultPageSize)).Data ?? (await SettingService.GetValueAsync<int>(SettingRegistry.DefaultsPageSize)).Data;
+        _maxUploadSize = (await SettingService.GetValueAsync<long?>(SettingRegistry.SystemMaxUploadSize)).Data ?? (5 * 1024 * 1024);
         await AlbumSearchEngineService.InitializeAsync();
     }
 
@@ -143,12 +146,13 @@
 
     void OnChange(byte[] value, string name)
     {
-        throw new NotImplementedException();
+        // Upload handling for album identification - not currently implemented via upload UI
+        Logger.Warning("Album identification via upload not yet implemented");
     }
 
     void OnError(UploadErrorEventArgs args, string name)
     {
-        throw new NotImplementedException();
+        Logger.Error("Error uploading album file [{Name}]: {Message}", name, args.Message);
     }
 
     // private async Task OnChange(byte[] value, string fileinput)

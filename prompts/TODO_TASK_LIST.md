@@ -2,7 +2,7 @@
 
 This document aggregates outstanding TODOs and unimplemented methods across the repository. Items are grouped by domain and organized into phases to guide implementation. Check items off as they are completed.
 
-Last updated: 2025-12-13T16:59:21.198Z
+Last updated: 2025-12-13T18:08:41.521Z
 
 ## Solution map (projects in `Melodee.sln`)
 
@@ -41,7 +41,7 @@ These were previously tracked here and are already done:
 
 > Implementation rule: when API keys are missing, return a **successful empty result** with a clear message (don’t throw).
 
-- [ ] iTunes: implement artist search
+- [x] iTunes: implement artist search
   - File: `src/Melodee.Common/Plugins/SearchEngine/ITunes/ITunesSearchEngine.cs`
   - Scope:
     - Implement `DoArtistSearchAsync(...)` and any required internal parsing helpers.
@@ -51,7 +51,7 @@ These were previously tracked here and are already done:
     - Returns `PagedResult<ArtistSearchResult>` ordered by best match.
     - Handles timeouts / non-200 responses gracefully.
 
-- [ ] Last.fm: implement artist search
+- [x] Last.fm: implement artist search
   - File: `src/Melodee.Common/Plugins/SearchEngine/LastFm/LastFm.cs`
   - Scope:
     - Implement `DoArtistSearchAsync(...)`.
@@ -61,7 +61,7 @@ These were previously tracked here and are already done:
     - No `NotImplementedException` remains.
     - If keys are absent → returns empty results + message.
 
-- [ ] Spotify: implement “top songs for artist” search
+- [x] Spotify: implement “top songs for artist” search
   - File: `src/Melodee.Common/Plugins/SearchEngine/Spotify/Spotify.cs`
   - Method: `DoArtistTopSongsSearchAsync(int forArtist, int maxResults, ...)`
   - Notes:
@@ -72,7 +72,7 @@ These were previously tracked here and are already done:
   - Acceptance criteria:
     - Returns a `PagedResult<SongSearchResult>` (even if limited fields) and does not require UI.
 
-- [ ] Last.fm scrobbling: session key support
+- [x] Last.fm scrobbling: session key support
   - File: `src/Melodee.Common/Plugins/Scrobbling/LastFmScrobbler.cs`
   - Decisions:
     - Follow `prompts/ADR-LOG.md` (ADR-0004):
@@ -90,7 +90,7 @@ These were previously tracked here and are already done:
 
 ### Phase 2 — OpenSubsonic endpoints (API completeness)
 
-- [ ] Implement Similar Songs endpoints
+- [x] Implement Similar Songs endpoints
   - File: `src/Melodee.Blazor/Controllers/OpenSubsonic/BrowsingController.cs`
   - Endpoints: `getSimilarSongs`, `getSimilarSongs2` (see TODO at top of controller)
   - Similarity decision (decided): **admin-managed** via `ArtistRelationType.Similar`
@@ -120,14 +120,14 @@ These were previously tracked here and are already done:
 > - Add Setting `system.maxUploadSize` (bytes) default **5MB** and enforce it for all Blazor uploads.
 > - When a user is deleted, delete any uploaded avatar (verified: already implemented in `UserService.DeleteAsync`).
 
-- [ ] System: add `system.maxUploadSize` setting (default 5MB)
+- [x] System: add `system.maxUploadSize` setting (default 5MB)
   - Files:
     - `src/Melodee.Common/Constants/SettingRegistry.cs` (add key)
     - `src/Melodee.Common/Data/MelodeeDbContext.cs` (seed default value)
   - Acceptance criteria:
     - Setting exists in DB after initialization/migrations.
 
-- [ ] Blazor: enforce max upload size from `system.maxUploadSize`
+- [x] Blazor: enforce max upload size from `system.maxUploadSize`
   - Scope:
     - Replace usages of `MelodeeConfiguration.MaximumUploadFileSize` with config-driven value.
     - Affected files include (at least):
@@ -138,19 +138,19 @@ These were previously tracked here and are already done:
   - Acceptance criteria:
     - Uploads larger than the limit fail predictably with a user-visible message.
 
-- [ ] ImageSearchUpload: handle Radzen Upload events
+- [x] ImageSearchUpload: handle Radzen Upload events
   - File: `src/Melodee.Blazor/Components/Components/ImageSearchUpload.razor`
   - Methods: `OnChange(byte[] value, string name)`, `OnError(UploadErrorEventArgs args, string name)`
   - Acceptance criteria:
     - Uploading an image feeds into the existing image-search/selection UI and calls `OnUpdateCallback`.
     - Errors show a user-visible notification (Radzen `NotificationService`).
 
-- [ ] IdentifyAlbum: handle upload events
+- [x] IdentifyAlbum: handle upload events
   - File: `src/Melodee.Blazor/Components/Components/IdentifyAlbum.razor`
   - Acceptance criteria:
     - Upload works end-to-end (store temporarily, trigger identify/search, display results or errors).
 
-- [ ] AlbumDetail: multi-storage move prompt
+- [x] AlbumDetail: multi-storage move prompt
   - File: `src/Melodee.Blazor/Components/Pages/Media/AlbumDetail.razor`
   - Method: `MoveButtonClick()`
   - Decision (decided):
@@ -162,13 +162,13 @@ These were previously tracked here and are already done:
     - No throw when >1 storage library exists.
     - User must explicitly pick a destination each time.
 
-- [ ] AlbumDetail: “Add Artist” button action
+- [x] AlbumDetail: “Add Artist” button action
   - File: `src/Melodee.Blazor/Components/Pages/Media/AlbumDetail.razor`
   - Method: `AddNewArtistButtonClick()`
   - Acceptance criteria:
     - Navigates to (or opens) `ArtistEdit` with pre-filled artist name (and whatever IDs are available).
 
-- [ ] ArtistDetail: drag-and-drop (and paste) upload for artist images
+- [x] ArtistDetail: drag-and-drop (and paste) upload for artist images
   - File: `src/Melodee.Blazor/Components/Pages/Data/ArtistDetail.razor`
   - Related JS: `src/Melodee.Blazor/wwwroot/js/FileDropZone.js` (currently unused)
   - Scope:
@@ -178,21 +178,21 @@ These were previously tracked here and are already done:
     - Dragging files onto the drop zone uploads the same as selecting via `<InputFile>`.
     - Pasting an image (clipboard file) into the drop zone uploads as well.
 
-- [ ] ArtistEdit: external search integration
+- [x] ArtistEdit: external search integration
   - File: `src/Melodee.Blazor/Components/Pages/Data/ArtistEdit.razor`
   - Method: `SearchForExternalButtonClick(string amgid)`
   - Acceptance criteria:
     - Calls into the search engine service layer and populates UI with selectable results.
 
-- [ ] AlbumEdit: external search integration
+- [x] AlbumEdit: external search integration
   - File: `src/Melodee.Blazor/Components/Pages/Media/AlbumEdit.razor`
   - Method: `SearchForExternalButtonClick(string amgid)`
 
-- [ ] PlaylistDetail: image set/lock/unlock
+- [x] PlaylistDetail: image set/lock/unlock
   - File: `src/Melodee.Blazor/Components/Pages/Data/PlaylistDetail.razor`
   - Methods: `SetPlaylistImageButtonClick()`, `UnlockButtonClick()`, `LockButtonClick()`
 
-- [ ] Library page: multi-library move prompt + clean action
+- [x] Library page: multi-library move prompt + clean action
   - File: `src/Melodee.Blazor/Components/Pages/Media/Library.razor`
   - Scope:
     - Prompt for destination when multiple storage libraries exist.
@@ -209,11 +209,11 @@ These were previously tracked here and are already done:
   - Dry run (decided):
     - Provide a **dry-run** option that performs discovery only (no writes) and shows a **summary report** in a dialog (counts + representative examples) before executing the real clean.
 
-- [ ] LibraryDetail: Edit button behavior
+- [x] LibraryDetail: Edit button behavior
   - File: `src/Melodee.Blazor/Components/Pages/Data/LibraryDetail.razor`
   - Method: `EditButtonClick()`
 
-- [ ] Albums/Songs grids: unimplemented actions
+- [x] Albums/Songs grids: unimplemented actions
   - Files: `src/Melodee.Blazor/Components/Pages/Data/Albums.razor`, `src/Melodee.Blazor/Components/Pages/Data/Songs.razor`
   - Acceptance criteria:
     - Any remaining action handlers no longer throw.

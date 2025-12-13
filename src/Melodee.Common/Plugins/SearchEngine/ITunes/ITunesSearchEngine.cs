@@ -3,6 +3,9 @@ using Melodee.Common.Extensions;
 using Melodee.Common.Models;
 using Melodee.Common.Models.SearchEngines;
 using Melodee.Common.Serialization;
+using Melodee.Common.Services;
+using Melodee.Common.Services.Caching;
+using Melodee.Common.Utility;
 using Polly;
 using Polly.Retry;
 using Serilog;
@@ -15,10 +18,11 @@ namespace Melodee.Common.Plugins.SearchEngine.ITunes;
 ///         https://performance-partners.apple.com/search-api
 ///     </remarks>
 /// </summary>
-public class ITunesSearchEngine(
+    public class ITunesSearchEngine(
     ILogger logger,
     ISerializer serializer,
-    IHttpClientFactory httpClientFactory)
+    IHttpClientFactory httpClientFactory,
+    ICacheManager cacheManager)
     : IAlbumImageSearchEnginePlugin, IArtistSearchEnginePlugin, IArtistImageSearchEnginePlugin
 {
     private static readonly int Width = 1200;
@@ -197,50 +201,94 @@ public class ITunesSearchEngine(
         };
     }
 
-    public Task<PagedResult<ArtistSearchResult>> DoArtistSearchAsync(ArtistQuery query, int maxResults,
+    public async Task<PagedResult<ArtistSearchResult>> DoArtistSearchAsync(ArtistQuery query, int maxResults,
         CancellationToken cancellationToken = default)
     {
-        //https://itunes.apple.com/search?term=Colin%2BHay&entity=musicArtist&country=US&media=music
+        if (string.IsNullOrWhiteSpace(query.Name))
+        {
+            return new PagedResult<ArtistSearchResult>(["Query Name value is invalid."]) { Data = [] };
+        }
 
+        var cacheKey = $"itunes:artist:{query.NameNormalized}:{query.Country}:{maxResults}";
 
-        // try
-        // {
-        //     var request = BuildRequest(query, 1, "musicArtist");
-        //     var response = await _client.ExecuteAsync<ITunesSearchResult>(request).ConfigureAwait(false);
-        //     if (response.ResponseStatus == ResponseStatus.Error)
-        //     {
-        //         if (response.StatusCode == HttpStatusCode.Unauthorized)
-        //         {
-        //             throw new AuthenticationException("Unauthorized");
-        //         }
-        //         throw new Exception(string.Format("Request Error Message: {0}. Content: {1}.", response.ErrorMessage, response.Content));
-        //     }
-        //
-        //     var responseData = response?.Data?.results?.FirstOrDefault();
-        //     if (responseData != null)
-        //     {
-        //         var urls = new List<string>();
-        //         if (!string.IsNullOrEmpty(responseData.artistLinkUrl)) urls.Add(responseData.artistLinkUrl);
-        //         if (!string.IsNullOrEmpty(responseData.artistViewUrl)) urls.Add(responseData.artistViewUrl);
-        //         if (!string.IsNullOrEmpty(responseData.collectionViewUrl)) urls.Add(responseData.collectionViewUrl);
-        //         data = new ArtistSearchResult
-        //         {
-        //             ArtistName = responseData.artistName,
-        //             iTunesId = responseData.artistId.ToString(),
-        //             AmgId = responseData.amgArtistId.ToString(),
-        //             ArtistType = responseData.artistType,
-        //             ArtistThumbnailUrl = responseData.artworkUrl100,
-        //             ArtistGenres = new[] { responseData.primaryGenreName },
-        //             Urls = urls
-        //         };
-        //     }
-        // }
-        // catch (Exception ex)
-        // {
-        //     Logger.LogError(ex);
-        // }
+        return await cacheManager.GetAsync(cacheKey, async () =>
+        {
+            var results = new List<ArtistSearchResult>();
+            var httpClient = httpClientFactory.CreateClient();
+            var requestUri =
+                $"https://itunes.apple.com/search?term={Uri.EscapeDataString(query.Name.Trim())}&entity=musicArtist&country={query.Country}&media=music&limit={maxResults}";
 
-        throw new NotImplementedException();
+            try
+            {
+                var response = await httpClient.GetAsync(requestUri, cancellationToken);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return new PagedResult<ArtistSearchResult>([$"iTunes search failed with status {response.StatusCode}"])
+                    {
+                        Data = []
+                    };
+                }
+
+                var jsonResponse = await response.Content.ReadAsStringAsync(cancellationToken);
+                var searchResult = serializer.Deserialize<ITunesSearchResult>(jsonResponse);
+                if (searchResult?.Results?.Any() ?? false)
+                {
+                    var normalizedQuery = query.NameNormalized;
+                    foreach (var sr in searchResult.Results)
+                    {
+                        if (sr.ArtistName.Nullify() == null)
+                        {
+                            continue;
+                        }
+
+                        var isExact = sr.ArtistName.ToNormalizedString() == normalizedQuery;
+                        var rank = isExact ? 10 : 1;
+
+                        results.Add(new ArtistSearchResult
+                        {
+                            Name = sr.ArtistName!,
+                            SortName = sr.ArtistName?.ToNormalizedString(),
+                            FromPlugin = DisplayName,
+                            AlbumCount = sr.TrackCount,
+                            UniqueId = SafeParser.Hash($"{sr.ArtistId}:{sr.AmgArtistId}:{sr.ArtistName}"),
+                            Rank = rank,
+                            ImageUrl = sr.ArtworkUrl100,
+                            ThumbnailUrl = sr.ArtworkUrl60 ?? sr.ArtworkUrl100,
+                            AmgId = sr.AmgArtistId?.ToString(),
+                            ItunesId = sr.ArtistId?.ToString(),
+                            AlternateNames = sr.CollectionName.Nullify() != null
+                                ? [sr.CollectionName.ToNormalizedString() ?? sr.CollectionName ?? string.Empty]
+                                : null
+                        });
+                    }
+
+                    if (results.Count > 0)
+                    {
+                        logger.Debug("[{DisplayName}] found [{Count}] artists for [{Query}]",
+                            DisplayName,
+                            results.Count,
+                            query.ToString());
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, "Error searching for artist url [{Url}] query [{Query}]", requestUri, query.ToString());
+                return new PagedResult<ArtistSearchResult>(["iTunes search failed."]) { Data = [] };
+            }
+
+            var ordered = results.OrderByDescending(x => x.Rank).ThenBy(x => x.SortName ?? x.Name).Take(maxResults)
+                .ToArray();
+
+            return new PagedResult<ArtistSearchResult>
+            {
+                Data = ordered,
+                TotalCount = ordered.Length,
+                TotalPages = 1,
+                CurrentPage = 1
+            };
+        }, cancellationToken, TimeSpan.FromHours(12), ServiceBase.CacheName);
     }
 
     private async Task<string?> GetArtistArtworkUrlAsync(HttpClient client, string artistId,

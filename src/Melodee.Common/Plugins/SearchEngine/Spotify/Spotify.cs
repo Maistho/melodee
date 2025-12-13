@@ -1,11 +1,14 @@
 using Melodee.Common.Configuration;
 using Melodee.Common.Constants;
+using Melodee.Common.Data;
 using Melodee.Common.Enums;
 using Melodee.Common.Extensions;
 using Melodee.Common.Models;
 using Melodee.Common.Models.SearchEngines;
 using Melodee.Common.Services;
+using Melodee.Common.Services.Caching;
 using Melodee.Common.Utility;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 using SpotifyAPI.Web;
 using SpotifyAPI.Web.Http;
@@ -15,8 +18,10 @@ namespace Melodee.Common.Plugins.SearchEngine.Spotify;
 public class Spotify(
     ILogger logger,
     IMelodeeConfiguration configuration,
+    ICacheManager cacheManager,
     ISpotifyClientBuilder spotifyClientBuilder,
-    SettingService settingService)
+    SettingService settingService,
+    IDbContextFactory<MelodeeDbContext> contextFactory)
     : IArtistSearchEnginePlugin, IArtistTopSongsSearchEnginePlugin, IAlbumImageSearchEnginePlugin,
         IArtistImageSearchEnginePlugin
 {
@@ -357,10 +362,114 @@ public class Spotify(
         };
     }
 
-    public Task<PagedResult<SongSearchResult>> DoArtistTopSongsSearchAsync(int forArtist, int maxResults,
+    public async Task<PagedResult<SongSearchResult>> DoArtistTopSongsSearchAsync(int forArtist, int maxResults,
         CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(new PagedResult<SongSearchResult>(["Spotify Not implemented"]) { Data = [] });
+        if (maxResults <= 0)
+        {
+            return new PagedResult<SongSearchResult>(["No results requested."]) { Data = [] };
+        }
+
+        var apiClientId = configuration.GetValue<string>(SettingRegistry.SearchEngineSpotifyApiKey);
+        var apiClientSecret = configuration.GetValue<string>(SettingRegistry.SearchEngineSpotifyClientSecret);
+
+        if (string.IsNullOrWhiteSpace(apiClientId) || string.IsNullOrWhiteSpace(apiClientSecret))
+        {
+            return new PagedResult<SongSearchResult>(["Spotify API key not configured."]) { Data = [] };
+        }
+
+        var cacheKey = $"spotify:artist-top:{forArtist}:{maxResults}";
+
+        return await cacheManager.GetAsync(cacheKey, async () =>
+        {
+            try
+            {
+                await using var scopedContext =
+                    await contextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+                var artist = await scopedContext.Artists.AsNoTracking()
+                    .Where(x => x.Id == forArtist)
+                    .Select(x => new { x.Id, x.Name, x.SpotifyId })
+                    .FirstOrDefaultAsync(cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (artist == null)
+                {
+                    return new PagedResult<SongSearchResult>([$"Artist [{forArtist}] not found"]) { Data = [] };
+                }
+
+                if (artist.SpotifyId.Nullify() == null)
+                {
+                    logger.Warning("[{DisplayName}] artist [{Artist}] missing SpotifyId", DisplayName, artist.Name);
+                    return new PagedResult<SongSearchResult>(["Artist missing SpotifyId"]) { Data = [] };
+                }
+
+                var apiAccessToken = configuration.GetValue<string>(SettingRegistry.SearchEngineSpotifyAccessToken);
+                var config = SpotifyClientConfig.CreateDefault();
+
+                if (string.IsNullOrWhiteSpace(apiAccessToken))
+                {
+                    var request = new ClientCredentialsRequest(apiClientId, apiClientSecret);
+                    var response = await new OAuthClient(config).RequestToken(request, cancellationToken);
+                    apiAccessToken = response.AccessToken;
+                    await settingService.SetAsync(SettingRegistry.SearchEngineSpotifyAccessToken, apiAccessToken,
+                        cancellationToken);
+                }
+
+                var spotify = new SpotifyClient(config.WithToken(apiAccessToken));
+                ArtistsTopTracksResponse? searchResult = null;
+                try
+                {
+                    searchResult = await spotify.Artists.GetTopTracks(artist.SpotifyId!,
+                        new ArtistsTopTracksRequest("US"), cancellationToken);
+                }
+                catch (APIUnauthorizedException)
+                {
+                    var request = new ClientCredentialsRequest(apiClientId, apiClientSecret);
+                    var response = await new OAuthClient(config).RequestToken(request, cancellationToken);
+                    apiAccessToken = response.AccessToken;
+                    await settingService.SetAsync(SettingRegistry.SearchEngineSpotifyAccessToken, apiAccessToken,
+                        cancellationToken);
+                    spotify = new SpotifyClient(config.WithToken(apiAccessToken));
+                    searchResult = await spotify.Artists.GetTopTracks(artist.SpotifyId!,
+                        new ArtistsTopTracksRequest("US"), cancellationToken);
+                }
+
+                var results = new List<SongSearchResult>();
+                if (searchResult?.Tracks?.Any() ?? false)
+                {
+                    var ordered = searchResult.Tracks
+                        .OrderByDescending(x => x.Popularity)
+                        .Take(maxResults)
+                        .Select((track, index) => new SongSearchResult
+                        {
+                            ApiKey = Guid.NewGuid(),
+                            Name = track.Name,
+                            SortName = track.Name.ToNormalizedString() ?? track.Name,
+                            SortOrder = index + 1,
+                            PlayCount = track.Popularity,
+                            InfoUrl = track.ExternalUrls?.FirstOrDefault().Value,
+                            ImageUrl = track.Album?.Images?.FirstOrDefault()?.Url,
+                            ThumbnailUrl = track.Album?.Images?.LastOrDefault()?.Url
+                        }).ToArray();
+
+                    results.AddRange(ordered);
+                }
+
+                return new PagedResult<SongSearchResult>
+                {
+                    Data = results.ToArray(),
+                    TotalCount = results.Count,
+                    TotalPages = 1,
+                    CurrentPage = 1
+                };
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, "Error getting Spotify top songs for artist [{ArtistId}]", forArtist);
+                return new PagedResult<SongSearchResult>(["Spotify top songs search failed."]) { Data = [] };
+            }
+        }, cancellationToken, TimeSpan.FromHours(6), ServiceBase.CacheName);
     }
 }
 

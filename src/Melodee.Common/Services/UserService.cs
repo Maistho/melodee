@@ -1569,6 +1569,38 @@ public sealed class UserService(
         };
     }
 
+    public async Task<MelodeeModels.OperationResult<bool>> SetLastFmSessionKeyAsync(int userId, string? sessionKey,
+        CancellationToken cancellationToken = default)
+    {
+        Guard.Against.Expression(x => x < 1, userId, nameof(userId));
+
+        await using (var scopedContext =
+                     await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
+        {
+            var user = await scopedContext.Users.FirstOrDefaultAsync(x => x.Id == userId, cancellationToken)
+                .ConfigureAwait(false);
+            if (user == null)
+            {
+                return new MelodeeModels.OperationResult<bool>([$"User {userId} not found"])
+                {
+                    Data = false,
+                    Type = MelodeeModels.OperationResponseType.NotFound
+                };
+            }
+
+            user.LastFmSessionKey = sessionKey.Nullify();
+            user.LastUpdatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow);
+            await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            ClearCache(user);
+            await GetAsync(user.Id, cancellationToken).ConfigureAwait(false);
+        }
+
+        return new MelodeeModels.OperationResult<bool>
+        {
+            Data = true
+        };
+    }
+
     public async Task<MelodeeModels.OperationResult<bool>> ToggleAristHatedAsync(int userId, Guid artistApiKey,
         bool isHated, CancellationToken cancellationToken = default)
     {

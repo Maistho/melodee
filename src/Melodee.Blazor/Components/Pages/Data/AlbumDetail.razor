@@ -13,6 +13,8 @@
 @inject MainLayoutProxyService MainLayoutProxyService
 @inject AlbumService AlbumService
 @inject UserService UserService
+@inject SettingService SettingService
+@inject LibraryService LibraryService
 @inject NotificationService NotificationService
 @inject DialogService DialogService
 @inject NavigationManager NavigationManager
@@ -511,9 +513,21 @@
     HashSet<string> _selectedAlbumFilePaths = new();
 
     private long _albumDirectoryFileCount;
+    private long _maxUploadSize;
+    private Library? _library;
 
     private readonly List<string> _alertMessages = [];
     private FileSystemDirectoryInfo _albumDirectory = FileSystemDirectoryInfo.Blank();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _maxUploadSize = (await SettingService.GetValueAsync<long?>(SettingRegistry.SystemMaxUploadSize)).Data ?? (5 * 1024 * 1024);
+        var libraryResult = await LibraryService.GetByApiKeyAsync(_album.Artist.Library.ApiKey);
+        if (libraryResult.IsSuccess && libraryResult.Data != null)
+        {
+            _library = libraryResult.Data;
+        }
+    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -604,7 +618,7 @@
         foreach (var file in e.GetMultipleFiles())
         {
             await using var ms = new MemoryStream();
-            await file.OpenReadStream(MelodeeConfiguration.MaximumUploadFileSize).CopyToAsync(ms);
+            await file.OpenReadStream(_maxUploadSize).CopyToAsync(ms);
             var save = await AlbumService.SaveImageAsAlbumImageAsync(_album.Id, _replaceAllAlbumImages, ms.ToArray());
             if (!save.IsSuccess)
             {
@@ -695,7 +709,7 @@
             {
                 var target = Path.Combine(dir, file.Name);
                 await using var fs = File.Create(target);
-                await file.OpenReadStream(MelodeeConfiguration.MaximumUploadFileSize).CopyToAsync(fs);
+                await file.OpenReadStream(_maxUploadSize).CopyToAsync(fs);
             }
             catch (Exception ex)
             {

@@ -101,6 +101,7 @@ public static class SettingRegistry
     public const string SystemBaseUrl = "system.baseUrl";
     public const string SystemApiVersion = "system.apiVersion";
     public const string SystemIsDownloadingEnabled = "system.isDownloadingEnabled";
+    public const string SystemMaxUploadSize = "system.maxUploadSize";
     // Streaming settings
     public const string StreamingUseBufferedResponses = "streaming.useBufferedResponses"; // bool: fallback to buffered responses
     public const string StreamingMaxConcurrentStreamsGlobal = "streaming.maxConcurrentStreams.global"; // int: 0 or less = unlimited

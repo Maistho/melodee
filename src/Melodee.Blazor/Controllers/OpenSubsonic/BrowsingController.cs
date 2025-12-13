@@ -9,9 +9,23 @@ namespace Melodee.Blazor.Controllers.OpenSubsonic;
 
 public class BrowsingController(ISerializer serializer, EtagRepository etagRepository, OpenSubsonicApiService openSubsonicApiService, IMelodeeConfigurationFactory configurationFactory) : ControllerBase(etagRepository, serializer, configurationFactory)
 {
-    //TODO
-    //getSimilarSongs
-    //getSimilarSongs2
+    [HttpGet]
+    [HttpPost]
+    [Route("/rest/getSimilarSongs.view")]
+    [Route("/rest/getSimilarSongs")]
+    public Task<IActionResult> GetSimilarSongs(string id, int? count, CancellationToken cancellationToken = default)
+    {
+        return MakeResult(openSubsonicApiService.GetSimilarSongsAsync(id, count, false, ApiRequest, cancellationToken));
+    }
+
+    [HttpGet]
+    [HttpPost]
+    [Route("/rest/getSimilarSongs2.view")]
+    [Route("/rest/getSimilarSongs2")]
+    public Task<IActionResult> GetSimilarSongs2(string id, int? count, CancellationToken cancellationToken = default)
+    {
+        return MakeResult(openSubsonicApiService.GetSimilarSongsAsync(id, count, true, ApiRequest, cancellationToken));
+    }
 
     [HttpGet]
     [HttpPost]
