@@ -1,7 +1,11 @@
+using Melodee.Common.Constants;
 using Melodee.Common.Data.Models;
 using Melodee.Common.Enums;
 using Melodee.Common.Extensions;
 using Melodee.Common.Models;
+using Melodee.Common.Models.OpenSubsonic.Enums;
+using Melodee.Common.Models.OpenSubsonic.Requests;
+using Melodee.Common.Utility;
 using NodaTime;
 using MelodeeModels = Melodee.Common.Models;
 using DataModels = Melodee.Common.Data.Models;
@@ -19,7 +23,7 @@ public class AlbumServiceTests : ServiceTestBase
         var albumApiKey = Guid.NewGuid();
         var artistApiKey = Guid.NewGuid();
         var musicBrainzId = Guid.NewGuid();
-        
+
         await using (var context = await MockFactory().CreateDbContextAsync())
         {
             var library = new Library
@@ -102,7 +106,7 @@ public class AlbumServiceTests : ServiceTestBase
         var albumName = "Test Album";
         var artistName = "Test Artist";
         var albumApiKey = Guid.NewGuid();
-        
+
         await using (var context = await MockFactory().CreateDbContextAsync())
         {
             var library = new Library
@@ -184,7 +188,7 @@ public class AlbumServiceTests : ServiceTestBase
         var albumName = "Test Album";
         var artistName = "Test Artist";
         var musicBrainzId = Guid.NewGuid();
-        
+
         await using (var context = await MockFactory().CreateDbContextAsync())
         {
             var library = new Library
@@ -256,7 +260,7 @@ public class AlbumServiceTests : ServiceTestBase
         // Arrange
         var albumNames = new[] { "Album A", "Album B", "Album C" };
         var artistName = "Test Artist";
-        
+
         await using (var context = await MockFactory().CreateDbContextAsync())
         {
             var library = new Library
@@ -322,7 +326,7 @@ public class AlbumServiceTests : ServiceTestBase
         var otherArtistApiKey = Guid.NewGuid();
         var albumNames = new[] { "Album 1", "Album 2" };
         var otherAlbumName = "Other Album";
-        
+
         await using (var context = await MockFactory().CreateDbContextAsync())
         {
             var library = new Library
@@ -409,7 +413,7 @@ public class AlbumServiceTests : ServiceTestBase
         var artistName = "Test Artist";
 
         DataModels.Artist? artist;
-        
+
         await using (var context = await MockFactory().CreateDbContextAsync())
         {
 
@@ -440,8 +444,8 @@ public class AlbumServiceTests : ServiceTestBase
             AlbumStatus = (short)AlbumStatus.Ok,
             ReleaseDate = LocalDate.FromDateOnly(DateOnly.FromDateTime(DateTime.Now))
         };
-        
-        
+
+
         // Act
         var result = await GetAlbumService().AddAlbumAsync(album);
 
@@ -451,7 +455,7 @@ public class AlbumServiceTests : ServiceTestBase
         Assert.Equal(albumName, result.Data.Name);
         Assert.NotEqual(Guid.Empty, result.Data.ApiKey);
         Assert.NotNull(result.Data.Directory);
-        
+
     }
 
     [Fact]
@@ -471,7 +475,7 @@ public class AlbumServiceTests : ServiceTestBase
         var albumName = "Original Album";
         var updatedAlbumName = "Updated Album";
         var artistName = "Test Artist";
-        
+
         await using (var context = await MockFactory().CreateDbContextAsync())
         {
             var library = new Library
@@ -569,7 +573,7 @@ public class AlbumServiceTests : ServiceTestBase
         // Arrange
         var albumNames = new[] { "Album 1", "Album 2" };
         var artistName = "Test Artist";
-        
+
         await using (var context = await MockFactory().CreateDbContextAsync())
         {
             var library = new Library
@@ -662,7 +666,7 @@ public class AlbumServiceTests : ServiceTestBase
         var artistName = "Test Artist";
 
         var artistId = 0;
-        
+
         await using (var context = await MockFactory().CreateDbContextAsync())
         {
             var library = new Library
@@ -750,7 +754,7 @@ public class AlbumServiceTests : ServiceTestBase
         // Arrange
         var albumName = "Test Album";
         var artistName = "Test Artist";
-        
+
         await using (var context = await MockFactory().CreateDbContextAsync())
         {
             var library = new Library
@@ -843,7 +847,7 @@ public class AlbumServiceTests : ServiceTestBase
         // Arrange
         var albumName = "Test Album";
         var artistName = "Test Artist";
-        
+
         await using (var context = await MockFactory().CreateDbContextAsync())
         {
             var library = new Library
@@ -909,7 +913,7 @@ public class AlbumServiceTests : ServiceTestBase
         // Arrange
         var albumName = "Test Album";
         var artistName = "Test Artist";
-        
+
         await using (var context = await MockFactory().CreateDbContextAsync())
         {
             var library = new Library
@@ -959,7 +963,7 @@ public class AlbumServiceTests : ServiceTestBase
         // Arrange
         var albumNames = new[] { "Album 1", "Album 2" };
         var artistName = "Test Artist";
-        
+
         await using (var context = await MockFactory().CreateDbContextAsync())
         {
             var library = new Library
@@ -1695,7 +1699,7 @@ public class AlbumServiceTests : ServiceTestBase
         var firstImageResult = await albumService.GetAlbumImageBytesAndEtagAsync(albumApiKey, "Large");
         // Note: In test environment, this will be null because no actual files are created
         // but the cache should be cleared and the album LastUpdatedAt should be updated
-        
+
         // Verify album was updated by checking database
         await using (var context = await MockFactory().CreateDbContextAsync())
         {
@@ -1712,7 +1716,7 @@ public class AlbumServiceTests : ServiceTestBase
         // Act & Assert - Step 5: Get image after second save
         var secondImageResult = await albumService.GetAlbumImageBytesAndEtagAsync(albumApiKey, "Large");
         // Again, in test environment this will be null, but we verify the cache was cleared
-        
+
         // Verify album was updated again with newer timestamp
         await using (var context = await MockFactory().CreateDbContextAsync())
         {
@@ -1744,4 +1748,728 @@ public class AlbumServiceTests : ServiceTestBase
     {
         Assert.True(result.IsSuccess, $"Operation failed: {string.Join(", ", result.Messages ?? Array.Empty<string>())}");
     }
+
+    #region GetAlbumListAsync and GetAlbumList2Async Tests
+
+    [Fact]
+    public async Task GetAlbumListAsync_WithRandomType_ReturnsAlbums()
+    {
+        // Arrange
+        var albumNames = new[] { "Album A", "Album B", "Album C" };
+        var artistName = "Test Artist";
+        var userId = await SetupTestUserAndAlbums(artistName, albumNames);
+
+        var request = new GetAlbumListRequest(
+            ListType.Random,
+            Size: 10,
+            Offset: 0,
+            FromYear: null,
+            ToYear: null,
+            Genre: null,
+            MusicFolderId: null);
+
+        // Act
+        var result = await GetAlbumService().GetAlbumListAsync(request, userId, CancellationToken.None);
+
+        // Assert
+        AssertResultIsSuccessful(result);
+        Assert.Equal(3, result.Data.totalCount);
+        Assert.Equal(3, result.Data.albums.Length);
+    }
+
+    [Fact]
+    public async Task GetAlbumListAsync_WithNewestType_ReturnsAlbumsInDescendingOrder()
+    {
+        // Arrange
+        var albumNames = new[] { "Old Album", "Mid Album", "New Album" };
+        var artistName = "Test Artist";
+        var userId = await SetupTestUserAndAlbums(artistName, albumNames);
+
+        var request = new GetAlbumListRequest(
+            ListType.Newest,
+            Size: 10,
+            Offset: 0,
+            FromYear: null,
+            ToYear: null,
+            Genre: null,
+            MusicFolderId: null);
+
+        // Act
+        var result = await GetAlbumService().GetAlbumListAsync(request, userId, CancellationToken.None);
+
+        // Assert
+        AssertResultIsSuccessful(result);
+        Assert.Equal(3, result.Data.totalCount);
+        Assert.Equal(3, result.Data.albums.Length);
+        // Albums should be ordered by CreatedAt descending (newest first)
+        Assert.Equal("New Album", result.Data.albums[0].Name);
+    }
+
+    [Fact]
+    public async Task GetAlbumListAsync_WithAlphabeticalByName_ReturnsAlbumsSorted()
+    {
+        // Arrange
+        var albumNames = new[] { "Zulu Album", "Alpha Album", "Bravo Album" };
+        var artistName = "Test Artist";
+        var userId = await SetupTestUserAndAlbums(artistName, albumNames);
+
+        var request = new GetAlbumListRequest(
+            ListType.AlphabeticalByName,
+            Size: 10,
+            Offset: 0,
+            FromYear: null,
+            ToYear: null,
+            Genre: null,
+            MusicFolderId: null);
+
+        // Act
+        var result = await GetAlbumService().GetAlbumListAsync(request, userId, CancellationToken.None);
+
+        // Assert
+        AssertResultIsSuccessful(result);
+        Assert.Equal(3, result.Data.totalCount);
+        Assert.Equal("Alpha Album", result.Data.albums[0].Name);
+        Assert.Equal("Bravo Album", result.Data.albums[1].Name);
+        Assert.Equal("Zulu Album", result.Data.albums[2].Name);
+    }
+
+    [Fact]
+    public async Task GetAlbumListAsync_WithGenreFilter_ReturnsFilteredAlbums()
+    {
+        // Arrange
+        var userId = await SetupTestUserWithGenreAlbums();
+
+        var request = new GetAlbumListRequest(
+            ListType.ByGenre,
+            Size: 10,
+            Offset: 0,
+            FromYear: null,
+            ToYear: null,
+            Genre: "Rock",
+            MusicFolderId: null);
+
+        // Act
+        var result = await GetAlbumService().GetAlbumListAsync(request, userId, CancellationToken.None);
+
+        // Assert
+        AssertResultIsSuccessful(result);
+        Assert.Equal(2, result.Data.totalCount);
+        Assert.All(result.Data.albums, album => Assert.Contains("Rock", album.Genres != null ? string.Join("|", album.Genres) : string.Empty));
+    }
+
+    [Fact]
+    public async Task GetAlbumListAsync_WithYearRange_ReturnsFilteredAlbums()
+    {
+        // Arrange
+        var userId = await SetupTestUserWithYearAlbums();
+
+        var request = new GetAlbumListRequest(
+            ListType.ByYear,
+            Size: 10,
+            Offset: 0,
+            FromYear: 2010,
+            ToYear: 2015,
+            Genre: null,
+            MusicFolderId: null);
+
+        // Act
+        var result = await GetAlbumService().GetAlbumListAsync(request, userId, CancellationToken.None);
+
+        // Assert
+        AssertResultIsSuccessful(result);
+        Assert.Equal(2, result.Data.totalCount);
+        Assert.All(result.Data.albums, album =>
+        {
+            Assert.True(album.Year >= 2010);
+            Assert.True(album.Year <= 2015);
+        });
+    }
+
+    [Fact]
+    public async Task GetAlbumListAsync_WithPagination_ReturnsCorrectPage()
+    {
+        // Arrange
+        var albumNames = new[] { "Album 1", "Album 2", "Album 3", "Album 4", "Album 5" };
+        var artistName = "Test Artist";
+        var userId = await SetupTestUserAndAlbums(artistName, albumNames);
+
+        var request = new GetAlbumListRequest(
+            ListType.AlphabeticalByName,
+            Size: 2,
+            Offset: 2,
+            FromYear: null,
+            ToYear: null,
+            Genre: null,
+            MusicFolderId: null);
+
+        // Act
+        var result = await GetAlbumService().GetAlbumListAsync(request, userId, CancellationToken.None);
+
+        // Assert
+        AssertResultIsSuccessful(result);
+        Assert.Equal(5, result.Data.totalCount);
+        Assert.Equal(2, result.Data.albums.Length);
+        Assert.Equal("Album 3", result.Data.albums[0].Name);
+        Assert.Equal("Album 4", result.Data.albums[1].Name);
+    }
+
+    [Fact]
+    public async Task GetAlbumListAsync_WithStarredType_ReturnsOnlyStarredAlbums()
+    {
+        // Arrange
+        var userId = await SetupTestUserWithStarredAlbums();
+
+        var request = new GetAlbumListRequest(
+            ListType.Starred,
+            Size: 10,
+            Offset: 0,
+            FromYear: null,
+            ToYear: null,
+            Genre: null,
+            MusicFolderId: null);
+
+        // Act
+        var result = await GetAlbumService().GetAlbumListAsync(request, userId, CancellationToken.None);
+
+        // Assert
+        AssertResultIsSuccessful(result);
+        Assert.Equal(2, result.Data.totalCount);
+        Assert.Equal(2, result.Data.albums.Length);
+    }
+
+    [Fact]
+    public async Task GetAlbumListAsync_WithNoAlbums_ReturnsEmptyList()
+    {
+        // Arrange
+        var userId = await SetupTestUserOnly();
+
+        var request = new GetAlbumListRequest(
+            ListType.Random,
+            Size: 10,
+            Offset: 0,
+            FromYear: null,
+            ToYear: null,
+            Genre: null,
+            MusicFolderId: null);
+
+        // Act
+        var result = await GetAlbumService().GetAlbumListAsync(request, userId, CancellationToken.None);
+
+        // Assert
+        AssertResultIsSuccessful(result);
+        Assert.Equal(0, result.Data.totalCount);
+        Assert.Empty(result.Data.albums);
+    }
+
+    [Fact]
+    public async Task GetAlbumList2Async_WithNewestType_ReturnsAlbums()
+    {
+        // Arrange
+        var albumNames = new[] { "Album X", "Album Y", "Album Z" };
+        var artistName = "Test Artist";
+        var userId = await SetupTestUserAndAlbums(artistName, albumNames);
+
+        var request = new GetAlbumListRequest(
+            ListType.Newest,
+            Size: 10,
+            Offset: 0,
+            FromYear: null,
+            ToYear: null,
+            Genre: null,
+            MusicFolderId: null);
+
+        // Act
+        var result = await GetAlbumService().GetAlbumList2Async(request, userId, CancellationToken.None);
+
+        // Assert
+        AssertResultIsSuccessful(result);
+        Assert.Equal(3, result.Data.totalCount);
+        Assert.Equal(3, result.Data.albums.Length);
+    }
+
+    [Fact]
+    public async Task GetAlbumList2Async_WithHighestType_ReturnsAlbumsByRating()
+    {
+        // Arrange
+        var userId = await SetupTestUserWithRatedAlbums();
+
+        var request = new GetAlbumListRequest(
+            ListType.Highest,
+            Size: 10,
+            Offset: 0,
+            FromYear: null,
+            ToYear: null,
+            Genre: null,
+            MusicFolderId: null);
+
+        // Act
+        var result = await GetAlbumService().GetAlbumList2Async(request, userId, CancellationToken.None);
+
+        // Assert
+        AssertResultIsSuccessful(result);
+        Assert.True(result.Data.totalCount > 0);
+        // Verify albums are ordered by rating descending
+        if (result.Data.albums.Length > 1)
+        {
+            Assert.True(result.Data.albums[0].UserRating >= result.Data.albums[1].UserRating);
+        }
+    }
+
+    [Fact]
+    public async Task GetAlbumList2Async_WithStarredType_AppliesStarredFilter()
+    {
+        // Arrange
+        var userId = await SetupTestUserWithStarredAlbums();
+
+        var request = new GetAlbumListRequest(
+            ListType.Starred,
+            Size: 10,
+            Offset: 0,
+            FromYear: null,
+            ToYear: null,
+            Genre: null,
+            MusicFolderId: null);
+
+        // Act
+        var result = await GetAlbumService().GetAlbumList2Async(request, userId, CancellationToken.None);
+
+        // Assert
+        AssertResultIsSuccessful(result);
+        Assert.Equal(2, result.Data.totalCount);
+        Assert.Equal(2, result.Data.albums.Length);
+    }
+
+    [Fact]
+    public async Task GetAlbumList2Async_WithLargeOffset_ReturnsEmptyList()
+    {
+        // Arrange
+        var albumNames = new[] { "Album 1", "Album 2" };
+        var artistName = "Test Artist";
+        var userId = await SetupTestUserAndAlbums(artistName, albumNames);
+
+        var request = new GetAlbumListRequest(
+            ListType.Random,
+            Size: 10,
+            Offset: 100,
+            FromYear: null,
+            ToYear: null,
+            Genre: null,
+            MusicFolderId: null);
+
+        // Act
+        var result = await GetAlbumService().GetAlbumList2Async(request, userId, CancellationToken.None);
+
+        // Assert
+        AssertResultIsSuccessful(result);
+        Assert.Equal(2, result.Data.totalCount);
+        Assert.Empty(result.Data.albums);
+    }
+
+    #endregion
+
+    #region Helper Methods for Album List Tests
+
+    private async Task<int> SetupTestUserOnly()
+    {
+        await using var context = await MockFactory().CreateDbContextAsync();
+        var usersPublicKey = EncryptionHelper.GenerateRandomPublicKeyBase64();
+        var user = new User
+        {
+            ApiKey = Guid.NewGuid(),
+            UserName = "testuser",
+            UserNameNormalized = "testuser".ToNormalizedString() ?? "TESTUSER",
+            Email = "test@test.com",
+            EmailNormalized = "test@test.com".ToNormalizedString()!,
+            PublicKey = usersPublicKey,
+            PasswordEncrypted = EncryptionHelper.Encrypt(TestsBase.NewPluginsConfiguration().GetValue<string>(SettingRegistry.EncryptionPrivateKey)!, "password", usersPublicKey),
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow)
+        };
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+        return user.Id;
+    }
+
+    private async Task<int> SetupTestUserAndAlbums(string artistName, string[] albumNames)
+    {
+        await using var context = await MockFactory().CreateDbContextAsync();
+
+        var usersPublicKey = EncryptionHelper.GenerateRandomPublicKeyBase64();
+        var user = new User
+        {
+            ApiKey = Guid.NewGuid(),
+            UserName = "testuser",
+            UserNameNormalized = "testuser".ToNormalizedString() ?? "TESTUSER",
+            Email = "test@test.com",
+            EmailNormalized = "test@test.com".ToNormalizedString()!,
+            PublicKey = usersPublicKey,
+            PasswordEncrypted = EncryptionHelper.Encrypt(TestsBase.NewPluginsConfiguration().GetValue<string>(SettingRegistry.EncryptionPrivateKey)!, "password", usersPublicKey),
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow)
+        };
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var library = new Library
+        {
+            ApiKey = Guid.NewGuid(),
+            Name = "Test Library",
+            Path = "/test/library",
+            Type = (int)LibraryType.Storage,
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow)
+        };
+        context.Libraries.Add(library);
+        await context.SaveChangesAsync();
+
+        var artist = new DataModels.Artist
+        {
+            ApiKey = Guid.NewGuid(),
+            Directory = artistName.ToNormalizedString() ?? artistName,
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow),
+            LibraryId = library.Id,
+            Name = artistName,
+            NameNormalized = artistName.ToNormalizedString()!
+        };
+        context.Artists.Add(artist);
+        await context.SaveChangesAsync();
+
+        foreach (var albumName in albumNames)
+        {
+            // Add a small delay to ensure different CreatedAt times
+            await Task.Delay(10);
+            var album = new DataModels.Album
+            {
+                ApiKey = Guid.NewGuid(),
+                Directory = albumName.ToNormalizedString() ?? albumName,
+                CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow),
+                ArtistId = artist.Id,
+                Name = albumName,
+                NameNormalized = albumName.ToNormalizedString()!,
+                ReleaseDate = LocalDate.FromDateTime(DateTime.Now),
+                AlbumStatus = (short)AlbumStatus.Ok
+            };
+            context.Albums.Add(album);
+        }
+        await context.SaveChangesAsync();
+
+        return user.Id;
+    }
+
+    private async Task<int> SetupTestUserWithGenreAlbums()
+    {
+        await using var context = await MockFactory().CreateDbContextAsync();
+
+        var usersPublicKey = EncryptionHelper.GenerateRandomPublicKeyBase64();
+        var user = new User
+        {
+            ApiKey = Guid.NewGuid(),
+            UserName = "testuser",
+            UserNameNormalized = "testuser".ToNormalizedString() ?? "TESTUSER",
+            Email = "test@test.com",
+            EmailNormalized = "test@test.com".ToNormalizedString()!,
+            PublicKey = usersPublicKey,
+            PasswordEncrypted = EncryptionHelper.Encrypt(TestsBase.NewPluginsConfiguration().GetValue<string>(SettingRegistry.EncryptionPrivateKey)!, "password", usersPublicKey),
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow)
+        };
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var library = new Library
+        {
+            ApiKey = Guid.NewGuid(),
+            Name = "Test Library",
+            Path = "/test/library",
+            Type = (int)LibraryType.Storage,
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow)
+        };
+        context.Libraries.Add(library);
+        await context.SaveChangesAsync();
+
+        var artist = new DataModels.Artist
+        {
+            ApiKey = Guid.NewGuid(),
+            Directory = "Test Artist".ToNormalizedString() ?? "Test Artist",
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow),
+            LibraryId = library.Id,
+            Name = "Test Artist",
+            NameNormalized = "Test Artist".ToNormalizedString()!
+        };
+        context.Artists.Add(artist);
+        await context.SaveChangesAsync();
+
+        var albums = new[]
+        {
+            new { Name = "Rock Album 1", Genres = "Rock|Classic Rock" },
+            new { Name = "Jazz Album", Genres = "Jazz" },
+            new { Name = "Rock Album 2", Genres = "Rock" }
+        };
+
+        foreach (var albumData in albums)
+        {
+            var album = new DataModels.Album
+            {
+                ApiKey = Guid.NewGuid(),
+                Directory = albumData.Name.ToNormalizedString() ?? albumData.Name,
+                CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow),
+                ArtistId = artist.Id,
+                Name = albumData.Name,
+                NameNormalized = albumData.Name.ToNormalizedString()!,
+                Genres = albumData.Genres.Split('|'),
+                ReleaseDate = LocalDate.FromDateTime(DateTime.Now),
+                AlbumStatus = (short)AlbumStatus.Ok
+            };
+            context.Albums.Add(album);
+        }
+        await context.SaveChangesAsync();
+
+        return user.Id;
+    }
+
+    private async Task<int> SetupTestUserWithYearAlbums()
+    {
+        await using var context = await MockFactory().CreateDbContextAsync();
+
+        var usersPublicKey = EncryptionHelper.GenerateRandomPublicKeyBase64();
+        var user = new User
+        {
+            ApiKey = Guid.NewGuid(),
+            UserName = "testuser",
+            UserNameNormalized = "testuser".ToNormalizedString() ?? "TESTUSER",
+            Email = "test@test.com",
+            EmailNormalized = "test@test.com".ToNormalizedString()!,
+            PublicKey = usersPublicKey,
+            PasswordEncrypted = EncryptionHelper.Encrypt(TestsBase.NewPluginsConfiguration().GetValue<string>(SettingRegistry.EncryptionPrivateKey)!, "password", usersPublicKey),
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow)
+        };
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var library = new Library
+        {
+            ApiKey = Guid.NewGuid(),
+            Name = "Test Library",
+            Path = "/test/library",
+            Type = (int)LibraryType.Storage,
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow)
+        };
+        context.Libraries.Add(library);
+        await context.SaveChangesAsync();
+
+        var artist = new DataModels.Artist
+        {
+            ApiKey = Guid.NewGuid(),
+            Directory = "Test Artist".ToNormalizedString() ?? "Test Artist",
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow),
+            LibraryId = library.Id,
+            Name = "Test Artist",
+            NameNormalized = "Test Artist".ToNormalizedString()!
+        };
+        context.Artists.Add(artist);
+        await context.SaveChangesAsync();
+
+        var albums = new[]
+        {
+            new { Name = "Album 2008", Year = 2008 },
+            new { Name = "Album 2012", Year = 2012 },
+            new { Name = "Album 2014", Year = 2014 },
+            new { Name = "Album 2018", Year = 2018 }
+        };
+
+        foreach (var albumData in albums)
+        {
+            var album = new DataModels.Album
+            {
+                ApiKey = Guid.NewGuid(),
+                Directory = albumData.Name.ToNormalizedString() ?? albumData.Name,
+                CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow),
+                ArtistId = artist.Id,
+                Name = albumData.Name,
+                NameNormalized = albumData.Name.ToNormalizedString()!,
+                ReleaseDate = new LocalDate(albumData.Year, 1, 1),
+                AlbumStatus = (short)AlbumStatus.Ok
+            };
+            context.Albums.Add(album);
+        }
+        await context.SaveChangesAsync();
+
+        return user.Id;
+    }
+
+    private async Task<int> SetupTestUserWithStarredAlbums()
+    {
+        await using var context = await MockFactory().CreateDbContextAsync();
+
+        var usersPublicKey = EncryptionHelper.GenerateRandomPublicKeyBase64();
+        var user = new User
+        {
+            ApiKey = Guid.NewGuid(),
+            UserName = "testuser",
+            UserNameNormalized = "testuser".ToNormalizedString() ?? "TESTUSER",
+            Email = "test@test.com",
+            EmailNormalized = "test@test.com".ToNormalizedString()!,
+            PublicKey = usersPublicKey,
+            PasswordEncrypted = EncryptionHelper.Encrypt(TestsBase.NewPluginsConfiguration().GetValue<string>(SettingRegistry.EncryptionPrivateKey)!, "password", usersPublicKey),
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow)
+        };
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var library = new Library
+        {
+            ApiKey = Guid.NewGuid(),
+            Name = "Test Library",
+            Path = "/test/library",
+            Type = (int)LibraryType.Storage,
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow)
+        };
+        context.Libraries.Add(library);
+        await context.SaveChangesAsync();
+
+        var artist = new DataModels.Artist
+        {
+            ApiKey = Guid.NewGuid(),
+            Directory = "Test Artist".ToNormalizedString() ?? "Test Artist",
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow),
+            LibraryId = library.Id,
+            Name = "Test Artist",
+            NameNormalized = "Test Artist".ToNormalizedString()!
+        };
+        context.Artists.Add(artist);
+        await context.SaveChangesAsync();
+
+        var starredAlbum1 = new DataModels.Album
+        {
+            ApiKey = Guid.NewGuid(),
+            Directory = "Starred Album 1".ToNormalizedString() ?? "Starred Album 1",
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow),
+            ArtistId = artist.Id,
+            Name = "Starred Album 1",
+            NameNormalized = "Starred Album 1".ToNormalizedString()!,
+            ReleaseDate = LocalDate.FromDateTime(DateTime.Now),
+            AlbumStatus = (short)AlbumStatus.Ok
+        };
+        context.Albums.Add(starredAlbum1);
+
+        var starredAlbum2 = new DataModels.Album
+        {
+            ApiKey = Guid.NewGuid(),
+            Directory = "Starred Album 2".ToNormalizedString() ?? "Starred Album 2",
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow),
+            ArtistId = artist.Id,
+            Name = "Starred Album 2",
+            NameNormalized = "Starred Album 2".ToNormalizedString()!,
+            ReleaseDate = LocalDate.FromDateTime(DateTime.Now),
+            AlbumStatus = (short)AlbumStatus.Ok
+        };
+        context.Albums.Add(starredAlbum2);
+
+        var unstarredAlbum = new DataModels.Album
+        {
+            ApiKey = Guid.NewGuid(),
+            Directory = "Unstarred Album".ToNormalizedString() ?? "Unstarred Album",
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow),
+            ArtistId = artist.Id,
+            Name = "Unstarred Album",
+            NameNormalized = "Unstarred Album".ToNormalizedString()!,
+            ReleaseDate = LocalDate.FromDateTime(DateTime.Now),
+            AlbumStatus = (short)AlbumStatus.Ok
+        };
+        context.Albums.Add(unstarredAlbum);
+        await context.SaveChangesAsync();
+
+        // Add user-album relationships for starred albums
+        var userAlbum1 = new UserAlbum
+        {
+            UserId = user.Id,
+            AlbumId = starredAlbum1.Id,
+            IsStarred = true,
+            StarredAt = Instant.FromDateTimeUtc(DateTime.UtcNow),
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow)
+        };
+        context.UserAlbums.Add(userAlbum1);
+
+        var userAlbum2 = new UserAlbum
+        {
+            UserId = user.Id,
+            AlbumId = starredAlbum2.Id,
+            IsStarred = true,
+            StarredAt = Instant.FromDateTimeUtc(DateTime.UtcNow),
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow)
+        };
+        context.UserAlbums.Add(userAlbum2);
+
+        await context.SaveChangesAsync();
+
+        return user.Id;
+    }
+
+    private async Task<int> SetupTestUserWithRatedAlbums()
+    {
+        await using var context = await MockFactory().CreateDbContextAsync();
+
+        var usersPublicKey = EncryptionHelper.GenerateRandomPublicKeyBase64();
+        var user = new User
+        {
+            ApiKey = Guid.NewGuid(),
+            UserName = "testuser",
+            UserNameNormalized = "testuser".ToNormalizedString() ?? "TESTUSER",
+            Email = "test@test.com",
+            EmailNormalized = "test@test.com".ToNormalizedString()!,
+            PublicKey = usersPublicKey,
+            PasswordEncrypted = EncryptionHelper.Encrypt(TestsBase.NewPluginsConfiguration().GetValue<string>(SettingRegistry.EncryptionPrivateKey)!, "password", usersPublicKey),
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow)
+        };
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var library = new Library
+        {
+            ApiKey = Guid.NewGuid(),
+            Name = "Test Library",
+            Path = "/test/library",
+            Type = (int)LibraryType.Storage,
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow)
+        };
+        context.Libraries.Add(library);
+        await context.SaveChangesAsync();
+
+        var artist = new DataModels.Artist
+        {
+            ApiKey = Guid.NewGuid(),
+            Directory = "Test Artist".ToNormalizedString() ?? "Test Artist",
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow),
+            LibraryId = library.Id,
+            Name = "Test Artist",
+            NameNormalized = "Test Artist".ToNormalizedString()!
+        };
+        context.Artists.Add(artist);
+        await context.SaveChangesAsync();
+
+        var albums = new[]
+        {
+            new { Name = "High Rated Album", Rating = 5 },
+            new { Name = "Medium Rated Album", Rating = 3 },
+            new { Name = "Low Rated Album", Rating = 1 }
+        };
+
+        foreach (var albumData in albums)
+        {
+            var album = new DataModels.Album
+            {
+                ApiKey = Guid.NewGuid(),
+                Directory = albumData.Name.ToNormalizedString() ?? albumData.Name,
+                CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow),
+                ArtistId = artist.Id,
+                Name = albumData.Name,
+                NameNormalized = albumData.Name.ToNormalizedString()!,
+                ReleaseDate = LocalDate.FromDateTime(DateTime.Now),
+                AlbumStatus = (short)AlbumStatus.Ok,
+                CalculatedRating = albumData.Rating
+            };
+            context.Albums.Add(album);
+        }
+        await context.SaveChangesAsync();
+
+        return user.Id;
+    }
+
+    #endregion
 }
