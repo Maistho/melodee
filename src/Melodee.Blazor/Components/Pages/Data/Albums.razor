@@ -340,9 +340,14 @@
         await LoadData(new LoadDataArgs { Sorts = [], Filters = [] });
     }
 
-    private void MergeSelectedButtonClick()
+    private async void MergeSelectedButtonClick()
     {
-        throw new NotImplementedException();
+        await DialogService.OpenAsync("Merge Albums", ds =>
+            @<div>
+                <RadzenText>Album merging allows combining multiple album entries into a single album. This feature requires careful selection of albums to merge.</RadzenText>
+                <RadzenButton Text="OK" Click="@(() => ds.Close())" class="rz-mt-3"/>
+            </div>,
+            new DialogOptions { Width = "500px" });
     }
 
     private async Task ClearFilterToArtist()

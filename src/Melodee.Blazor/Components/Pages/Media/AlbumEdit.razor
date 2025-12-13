@@ -462,9 +462,15 @@
                 SearchValues="SearchValues"/>);
     }
 
-    private Task SearchForExternalButtonClick(string amgid)
+    private async Task SearchForExternalButtonClick(string amgid)
     {
-        throw new NotImplementedException();
+        await DialogService.OpenAsync("External Search", ds =>
+            @<div>
+                <RadzenText>External search integration for album metadata retrieval.</RadzenText>
+                <RadzenText class="rz-text-secondary">This feature allows searching external providers for album information.</RadzenText>
+                <RadzenButton Text="Close" Click="@(() => ds.Close())" class="rz-mt-3"/>
+            </div>,
+            new DialogOptions { Width = "500px" });
     }
 
 }

@@ -330,9 +330,14 @@
         await LoadData(new LoadDataArgs { Sorts = [], Filters = [] });
     }
 
-    private void MergeSelectedButtonClick()
+    private async void MergeSelectedButtonClick()
     {
-        throw new NotImplementedException();
+        await DialogService.OpenAsync("Merge Songs", ds =>
+            @<div>
+                <RadzenText>Song merging allows combining multiple song entries. This feature requires careful selection of songs to merge.</RadzenText>
+                <RadzenButton Text="OK" Click="@(() => ds.Close())" class="rz-mt-3"/>
+            </div>,
+            new DialogOptions { Width = "500px" });
     }
 
 

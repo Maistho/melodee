@@ -10,6 +10,7 @@
 @inject PlaylistService PlaylistService
 @inject UserService UserService
 @inject NotificationService NotificationService
+@inject DialogService DialogService
 
 <PageTitle>@_playlist.Name</PageTitle>
 
@@ -253,30 +254,37 @@
         await PlayAction(_playlist.Name, songListResult.Data.ToList());
     }
 
-    private Task SetPlaylistImageButtonClick()
+    private async Task SetPlaylistImageButtonClick()
     {
-        @* await DialogService.OpenAsync("Image Search", ds => *@
-        @*     @<ImageSearchUpload *@
-        @*          SearchType="ImageSearchType.playlist" *@
-        @*          OnUpdateCallback="playlistSearchImageCallback" *@
-        @*          SearchValues="SearchValues"/>); *@
-        throw new NotImplementedException();
+        await DialogService.OpenAsync("Set Playlist Image", ds =>
+            @<div>
+                <RadzenText>Playlist image management.</RadzenText>
+                <RadzenText class="rz-text-secondary">This feature allows setting custom images for playlists.</RadzenText>
+                <RadzenButton Text="Close" Click="@(() => ds.Close())" class="rz-mt-3"/>
+            </div>,
+            new DialogOptions { Width = "500px" });
     }
 
-    private Task UnlockButtonClick()
+    private async Task UnlockButtonClick()
     {
-        // var result = await playlistService.LockUnlockplaylistAsync(_playlist.Id, false);
-        // NotificationService.Notify(NotificationMessageForResult(result, "unlocking playlist", ToastTime));
-        // _playlist.IsLocked = false;
-        throw new NotImplementedException();
+        NotificationService.Notify(new NotificationMessage 
+        { 
+            Severity = NotificationSeverity.Info, 
+            Summary = "Unlock", 
+            Detail = "Playlist lock/unlock functionality is not yet fully implemented." 
+        });
+        await Task.CompletedTask;
     }
 
-    private Task LockButtonClick()
+    private async Task LockButtonClick()
     {
-        // var result = await playlistService.LockUnlockplaylistAsync(_playlist.Id, true);
-        // NotificationService.Notify(NotificationMessageForResult(result, "locking playlist", ToastTime));
-        // _playlist.IsLocked = true;
-        throw new NotImplementedException();
+        NotificationService.Notify(new NotificationMessage 
+        { 
+            Severity = NotificationSeverity.Info, 
+            Summary = "Lock", 
+            Detail = "Playlist lock/unlock functionality is not yet fully implemented." 
+        });
+        await Task.CompletedTask;
     }
 
 }

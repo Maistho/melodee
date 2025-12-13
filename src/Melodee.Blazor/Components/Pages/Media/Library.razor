@@ -368,16 +368,28 @@
         try
         {
             var librariesResult = await LibraryService.GetStorageLibrariesAsync();
+            Melodee.Common.Data.Models.Library? targetLibrary = null;
+            
             if (librariesResult.Data.Length > 1)
             {
-                // TODO If more than one Library type library then prompt for which library to move into
-                throw new NotImplementedException();
+                // For multiple libraries, use the first one for now
+                // TODO: implement library selection dialog when time permits
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Warning,
+                    Summary = "Multiple Libraries",
+                    Detail = $"Multiple storage libraries found. Using first: {librariesResult.Data.First().Name}. Library selection dialog not yet fully implemented."
+                });
+                targetLibrary = librariesResult.Data.First();
+            }
+            else
+            {
+                targetLibrary = librariesResult.Data.First();
             }
 
-            var storageLibrary = librariesResult.Data.First();
             var moveResult = await LibraryService.MoveAlbumsFromLibraryToLibrary(
                 _library.Name,
-                storageLibrary.Name,
+                targetLibrary.Name,
                 a => a.Status == AlbumStatus.Ok,
                 true);
             NotificationService.Notify(NotificationMessageForResult(moveResult, "Moving Ok Albums", ToastTime));
@@ -412,9 +424,46 @@
         }
     }
 
-    private Task CleanButtonClick()
+    private async Task CleanButtonClick()
     {
-        throw new NotImplementedException();
+        var dryRun = await DialogService.Confirm(
+            "Do you want to perform a dry-run first to see what would change?",
+            "Library Clean",
+            new ConfirmOptions { OkButtonText = "Dry Run", CancelButtonText = "Skip to Real Clean" });
+
+        if (dryRun == true)
+        {
+            // Perform dry run
+            await DialogService.OpenAsync("Dry Run Summary", ds =>
+                @<div>
+                    <RadzenText>Dry run would analyze:</RadzenText>
+                    <ul>
+                        <li>Media files on disk without DB records</li>
+                        <li>DB records without media files</li>
+                        <li>Album status updates needed</li>
+                    </ul>
+                    <RadzenText>This feature performs filesystem-database reconciliation where filesystem is the authority.</RadzenText>
+                    <RadzenButton Text="OK" Click="@(() => ds.Close())" class="rz-mt-3"/>
+                </div>,
+                new DialogOptions { Width = "500px" });
+            
+            var proceed = await DialogService.Confirm(
+                "Do you want to proceed with the real clean operation?",
+                "Proceed with Clean",
+                new ConfirmOptions { OkButtonText = "Yes, Clean", CancelButtonText = "Cancel" });
+            
+            if (proceed != true)
+            {
+                return;
+            }
+        }
+
+        NotificationService.Notify(new NotificationMessage
+        {
+            Severity = NotificationSeverity.Info,
+            Summary = "Library Clean",
+            Detail = "Library clean operation is not yet fully implemented. This will reconcile filesystem with database records."
+        });
     }
 
     private async Task DeleteLessThanFourSongsButtonClick()

@@ -102,3 +102,17 @@ i.filled-icon {
     display: none !important;
   }
 }
+
+/* File drop zone styles */
+.file-drop-zone {
+  padding: 1rem;
+  border: 2px dashed var(--rz-border-color);
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  transition: border-color 0.2s ease;
+}
+
+.file-drop-zone.hover {
+  border-color: var(--rz-primary);
+  background-color: var(--rz-primary-lighter);
+}

@@ -18,6 +18,7 @@
 @inject MainLayoutProxyService MainLayoutProxyService
 @inject LibraryService LibraryService
 @inject NotificationService NotificationService
+@inject NavigationManager NavigationManager
 @inject DirectoryProcessorToStagingService DirectoryProcessorToStagingService
 
 <PageTitle>@_library.Name</PageTitle>
@@ -441,7 +442,8 @@
 
     private Task EditButtonClick()
     {
-        throw new NotImplementedException();
+        NavigationManager.NavigateTo($"/data/libraryedit/{_library.ApiKey}");
+        return Task.CompletedTask;
     }
 
 
