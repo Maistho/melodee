@@ -704,7 +704,7 @@ public class OpenSubsonicApiService(
 
         if (isCreatingPlaylist)
         {
-            // creating new with name and songs 
+            // creating new with name and songs
             var songApiKeysForPlaylist = songId?
                 .Where(x => x.Nullify() != null)
                 .Select(ApiKeyFromId)
@@ -754,7 +754,7 @@ public class OpenSubsonicApiService(
         Playlist? data = null;
         var playlistResult = await playlistService.GetByApiKeyAsync(authResponse.UserInfo, apiKey.Value, cancellationToken);
         var playlist = playlistResult.Data;
-         
+
         if (playlist != null)
         {
             data = playlist.ToApiPlaylist(false);
@@ -772,13 +772,13 @@ public class OpenSubsonicApiService(
                 var dbSongsForPlaylist = await scopedContext.Songs
                     .Where(s => playlistSongsResult.Data.Select(ps => ps.ApiKey).Contains(s.ApiKey))
                     .Include(s => s.Album).ThenInclude(x => x.Artist)
-                    .Include(x => x.UserSongs.Where(ua => ua.UserId == authResponse.UserInfo.Id))                    
+                    .Include(x => x.UserSongs.Where(ua => ua.UserId == authResponse.UserInfo.Id))
                     .ToListAsync(cancellationToken)
                     .ConfigureAwait(false);
                 data.Entry = dbSongsForPlaylist.Select(x => x.ToApiChild(x.Album, x.UserSongs.FirstOrDefault())).ToArray();
             }
         }
-        
+
         return new ResponseModel
         {
             UserInfo = authResponse.UserInfo,
@@ -792,7 +792,7 @@ public class OpenSubsonicApiService(
         };
     }
 
-    // TODO: This should be moved to AlbumService in the future.
+    // TODO: This should be moved to AlbumService
     public async Task<ResponseModel> GetAlbumListAsync(
         GetAlbumListRequest albumListRequest,
         ApiRequest apiRequest,
@@ -923,7 +923,7 @@ public class OpenSubsonicApiService(
         };
     }
 
-    // TODO: This should be moved to AlbumService in the future.
+    // TODO: This should be moved to AlbumService
     public async Task<ResponseModel> GetAlbumList2Async(
         GetAlbumListRequest albumListRequest,
         ApiRequest apiRequest,
@@ -1009,8 +1009,8 @@ public class OpenSubsonicApiService(
 
             var userAlbums = await scopedContext.UserAlbums
                 .Where(ua => ua.UserId == authResponse.UserInfo.Id && albums.Select(a => a.Id).Contains(ua.AlbumId))
-                .ToListAsync(cancellationToken);            
-            
+                .ToListAsync(cancellationToken);
+
             data = albums.Select(a => new AlbumList2
             {
                 Id = a.ToApiKey(),
@@ -2031,7 +2031,7 @@ public class OpenSubsonicApiService(
     {
         // Use the new streaming descriptor approach for better implementation
         var descriptorResult = await GetStreamingDescriptorAsync(request, apiRequest, cancellationToken);
-        
+
         if (!descriptorResult.IsSuccess || descriptorResult.Data == null)
         {
             return new StreamResponse(new HeaderDictionary(), false, []);
@@ -2049,11 +2049,11 @@ public class OpenSubsonicApiService(
                 // Read only the requested range
                 await using var fileStream = new FileStream(descriptor.FilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
                 fileStream.Seek(descriptor.Range.Start, SeekOrigin.Begin);
-                
+
                 var bytesToRead = (int)descriptor.Range.GetContentLength(descriptor.FileSize);
                 fileBytes = new byte[bytesToRead];
                 var bytesRead = await fileStream.ReadAsync(fileBytes, 0, bytesToRead, cancellationToken);
-                
+
                 if (bytesRead != bytesToRead)
                 {
                     Array.Resize(ref fileBytes, bytesRead);
@@ -3144,7 +3144,7 @@ public class OpenSubsonicApiService(
 
         if (IsApiIdForSong(id))
         {
-            // Some players send the first song to get an albums details. No idea why. 
+            // Some players send the first song to get an albums details. No idea why.
             var songApiKey = ApiKeyFromId(id);
             if (songApiKey != null)
             {
@@ -3584,7 +3584,7 @@ public class OpenSubsonicApiService(
             Size = (int)song.FileSize,
             ContentType = "audio/mpeg", // Default - not available in SongDataInfo
             Path = "unknown", // Not available in SongDataInfo
-            Suffix = "mp3", // Default - not available in SongDataInfo  
+            Suffix = "mp3", // Default - not available in SongDataInfo
             AlbumId = $"album_{song.AlbumApiKey}",
             ArtistId = $"artist_{song.ArtistApiKey}"
         };

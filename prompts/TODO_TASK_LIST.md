@@ -2,7 +2,7 @@
 
 This document aggregates outstanding TODOs and unimplemented methods across the repository. Items are grouped by domain and organized into phases to guide implementation. Check items off as they are completed.
 
-Last updated: 2025-12-13T19:32:56.426Z
+Last updated: 2025-12-13T19:36:00.367Z
 
 ## Solution map (projects in `Melodee.sln`)
 

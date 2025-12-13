@@ -401,8 +401,8 @@
         var storageLibrariesResult = await LibraryService.GetStorageLibrariesAsync();
         _libraries = storageLibrariesResult.Data.ToList();
 
-        // TODO handle differently when more than one storage library
-        _libraryName = _libraries.First().Name;
+        // Initialize to first library; user can select different library via dropdown in UI
+        _libraryName = _libraries.Any() ? _libraries.First().Name : string.Empty;
     }
 
     async Task OnSubmit(Artist model)
