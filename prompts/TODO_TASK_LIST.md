@@ -2,182 +2,232 @@
 
 This document aggregates outstanding TODOs and unimplemented methods across the repository. Items are grouped by domain and organized into phases to guide implementation. Check items off as they are completed.
 
-Last updated: ${DATE}
+Last updated: 2025-12-13T16:06:22Z
 
-## Phase 1 — Core API & Serialization
+## Solution map (projects in `Melodee.sln`)
 
-- [x] Songs API: implement `SongById(Guid id)`
-  - File: `src/Melodee.Blazor/Controllers/Melodee/SongsController.cs`
-  - Status: Implemented.
-  - Notes: Should authorize, fetch song by ApiKey/Id, return DTO model with pagination metadata alignment.
+- **`src/Melodee.Blazor`**: ASP.NET Core + Blazor UI, controllers for **Melodee** and **OpenSubsonic** REST endpoints.
+- **`src/Melodee.Common`**: Core domain models, services, plugins (search engines, scrobblers), serialization, scanning.
+- **`src/Melodee.Cli`**: CLI utilities (useful for admin/maintenance workflows).
+- **`tests/Melodee.Tests.Common`**: Service/domain tests.
+- **`tests/Melodee.Tests.Blazor`**: Blazor/controller/UI-oriented tests.
+- **`benchmarks/Melodee.Benchmarks`**: Benchmarks (should not be required to complete TODOs).
 
-- [x] Subsonic Auth: handle JWT auth branch
-  - File: `src/Melodee.Common/Services/OpenSubsonicApiService.cs`
-  - Location: `AuthenticateSubsonicApiAsync` (JWT section)
-  - Status: Implemented.
-  - Notes: Follow Navidrome semantics for JWT; verify token, map to user.
+## How to use this list (for coding agents)
 
-- [x] JSON Converter: implement `OpenSubsonicResponseModelConvertor.Read`
-  - File: `src/Melodee.Common/Serialization/Convertors/OpenSubsonicResponseModelConvertor.cs`
-  - Status: Implemented.
-  - Notes: Should deserialize Subsonic format into `ResponseModel` (only needed if reading Subsonic JSON from clients/tests).
+- Prefer implementing each checkbox as a **single, reviewable PR-sized change** (even if you’re working locally).
+- For each item, “done” means:
+  - No `NotImplementedException`/TODO left in the referenced method(s).
+  - Behavior is covered by an existing test or a new test in the appropriate test project.
+  - If the feature depends on external APIs (Spotify/Last.fm/iTunes), it must **fail gracefully** when credentials are missing.
 
-- [x] Song deletion: implement `SongService.DeleteAsync(int[])`
-  - File: `src/Melodee.Common/Services/SongService.cs`
-  - Status: Implemented.
-  - Notes: Respect referential integrity, remove cache and related `UserSong` entries; tests expect NotImplemented currently.
+## Completed (historical reference)
 
-- [x] Library deletion: implement `LibraryService.DeleteAsync(int[])`
-  - File: `src/Melodee.Common/Services/LibraryService.cs`
-  - Status: Implemented.
-  - Notes: Must validate libraries are empty or define cascade/cleanup behavior; ensure cache invalidation.
+These were previously tracked here and are already done:
 
-## Phase 2 — Metadata & Tagging
+- [x] Songs API: implement `SongById(Guid id)` (`src/Melodee.Blazor/Controllers/Melodee/SongsController.cs`)
+- [x] Subsonic Auth: handle JWT auth branch (`src/Melodee.Common/Services/OpenSubsonicApiService.cs`)
+- [x] JSON Converter: implement `OpenSubsonicResponseModelConvertor.Read` (`src/Melodee.Common/Serialization/Convertors/OpenSubsonicResponseModelConvertor.cs`)
+- [x] Library deletion: implement `LibraryService.DeleteAsync(int[])` (`src/Melodee.Common/Services/LibraryService.cs`)
+- [x] ID3v2 writer: ID3v2.4 tag writing (`src/Melodee.Common/Metadata/AudioTags/Writers/Id3v2TagWriter.cs`)
+- [x] IdSharpMetaTag: `UpdateSongAsync(...)` (`src/Melodee.Common/Plugins/MetaData/Song/IdSharpMetaTag.cs`)
+- [x] Fill TODO fields in album/song DTO conversions (`AlbumExtensions.cs`, `SongExtensions.cs`)
 
-- [x] ID3v2 writer: implement writing/updating multiple ID3v2.4 tags
-  - File: `src/Melodee.Common/Metadata/AudioTags/Writers/Id3v2TagWriter.cs`
-  - Status: Implemented (write, remove, images).
-  - Notes: Leverage library in use (ATL/IdSharp) with safe fallbacks.
+## Outstanding work (phased)
 
-- [x] IdSharpMetaTag: implement `UpdateSongAsync(...)`
-  - File: `src/Melodee.Common/Plugins/MetaData/Song/IdSharpMetaTag.cs`
-  - Status: Implemented.
-  - Notes: Update media file tags on disk from domain `Song` instance; integrate with validators.
+### Phase 1 — External search engines & scrobbling (credentials-aware)
 
-- [x] Fill TODO fields in album/song DTO conversions
-  - Files:
-    - `src/Melodee.Common/Data/Models/Extensions/AlbumExtensions.cs` (several `//TODO` array/null placeholders)
-    - `src/Melodee.Common/Data/Models/Extensions/SongExtensions.cs` (several `//TODO` array/null placeholders)
-  - Status: Implemented (genres, artists, contributors, moods, replay gain).
+> Implementation rule: when API keys are missing, return a **successful empty result** with a clear message (don’t throw).
 
-## Phase 3 — Search Engines & Scrobbling
-
-- [ ] iTunes Search: implement `DoArtistSearchAsync`/related pieces
+- [ ] iTunes: implement artist search
   - File: `src/Melodee.Common/Plugins/SearchEngine/ITunes/ITunesSearchEngine.cs`
-  - Status: method ends with `NotImplementedException`.
-  - Notes: Build HTTP client queries, parse results, map to `ArtistSearchResult`.
+  - Scope:
+    - Implement `DoArtistSearchAsync(...)` and any required internal parsing helpers.
+    - Use the existing HTTP/client patterns in the repo (and centralize serialization if possible).
+  - Acceptance criteria:
+    - Returns `PagedResult<ArtistSearchResult>` ordered by best match.
+    - Handles timeouts / non-200 responses gracefully.
 
-- [ ] Last.fm Search: implement `DoArtistSearchAsync`
+- [ ] Last.fm: implement artist search
   - File: `src/Melodee.Common/Plugins/SearchEngine/LastFm/LastFm.cs`
-  - Status: throws `NotImplementedException`.
-  - Notes: Use Last.fm API to return artist results or gracefully disable if API keys missing.
+  - Scope:
+    - Implement `DoArtistSearchAsync(...)`.
+    - Respect configuration-driven API key/secret (see `SettingRegistry` usages in other plugins).
+  - Acceptance criteria:
+    - No `NotImplementedException` remains.
+    - If keys are absent → returns empty results + message.
 
-- [ ] Last.fm Scrobbler: use user session key in `NowPlaying`
+- [ ] Spotify: implement “top songs for artist” search
+  - File: `src/Melodee.Common/Plugins/SearchEngine/Spotify/Spotify.cs`
+  - Method: `DoArtistTopSongsSearchAsync(int forArtist, int maxResults, ...)`
+  - Notes:
+    - This currently returns `"Spotify Not implemented"`.
+    - Decide how `forArtist` maps to Spotify identifiers (likely via stored `SpotifyId` on artist metadata or an intermediate lookup).
+  - Acceptance criteria:
+    - Returns a `PagedResult<SongSearchResult>` (even if limited fields) and does not require UI.
+
+- [ ] Last.fm scrobbling: session key support
   - File: `src/Melodee.Common/Plugins/Scrobbling/LastFmScrobbler.cs`
-  - Status: `// TODO` comment notes session handling.
-  - Notes: Add session management (store `LastFmSessionKey` on user), retry/backoff via Polly.
+  - Scope:
+    - Ensure `NowPlaying`/scrobble calls use a **user-specific session key**.
+    - Add/update persistence for the session key (where user credentials/settings are stored today).
+  - Acceptance criteria:
+    - No TODO about session handling remains.
+    - Network failures retry safely (use existing resiliency approach if present; otherwise minimal retry w/ backoff).
 
-## Phase 4 — OpenSubsonic Endpoints
+### Phase 2 — OpenSubsonic endpoints (API completeness)
 
 - [ ] Implement Similar Songs endpoints
   - File: `src/Melodee.Blazor/Controllers/OpenSubsonic/BrowsingController.cs`
-  - Status: `//TODO getSimilarSongs`, `getSimilarSongs2`.
-  - Notes: Derive similarity from play counts/tags or search engines; keep pagination.
+  - Endpoints: `getSimilarSongs`, `getSimilarSongs2` (see TODO at top of controller)
+  - Scope:
+    - Add controller routes + call(s) into `OpenSubsonicApiService`.
+    - Define how similarity is computed (minimum viable: same artist, same album, shared genres/tags, or play-history based).
+  - Acceptance criteria:
+    - Endpoints return valid OpenSubsonic response models (and honor auth).
+    - Pagination/count parameters behave predictably.
 
-- [ ] Jukebox Control endpoints
+- [ ] Jukebox control endpoint behavior
   - File: `src/Melodee.Blazor/Controllers/OpenSubsonic/JukeboxController.cs`
-  - Status: `//TODO jukeboxControl` placeholder.
-  - Notes: Decide whether to support; if not, keep returning 410 Gone consistently.
+  - Endpoint: `jukeboxControl`
+  - Decision required:
+    - Either implement a minimal server-side jukebox state machine, **or** explicitly return `410 Gone`/"not supported" consistently for all jukebox routes.
+  - Acceptance criteria:
+    - No placeholder-only controller remains; behavior is explicit and documented in-code.
 
-## Phase 5 — Blazor UI Actions
+### Phase 3 — Blazor UI actions (remove `NotImplementedException` + complete flows)
 
 - [ ] ImageSearchUpload: handle Radzen Upload events
   - File: `src/Melodee.Blazor/Components/Components/ImageSearchUpload.razor`
   - Methods: `OnChange(byte[] value, string name)`, `OnError(UploadErrorEventArgs args, string name)`
-  - Status: `NotImplementedException`.
-  - Notes: Wire into selection flow; produce `ImageSearchResult` and close dialog.
+  - Acceptance criteria:
+    - Uploading an image feeds into the existing image-search/selection UI and calls `OnUpdateCallback`.
+    - Errors show a user-visible notification (Radzen `NotificationService`).
 
-- [ ] IdentifyAlbum: handle Upload events
+- [ ] IdentifyAlbum: handle upload events
   - File: `src/Melodee.Blazor/Components/Components/IdentifyAlbum.razor`
-  - Methods: `OnChange(...)`, `OnError(...)`
-  - Status: `NotImplementedException`.
-  - Notes: Similar to ImageSearchUpload; produce temporary image and trigger search.
+  - Acceptance criteria:
+    - Upload works end-to-end (store temporarily, trigger identify/search, display results or errors).
 
-- [ ] ArtistEdit: external search integration button
+- [ ] AlbumDetail: multi-storage move prompt
+  - File: `src/Melodee.Blazor/Components/Pages/Media/AlbumDetail.razor`
+  - Method: `MoveButtonClick()`
+  - Scope:
+    - When `LibraryService.GetStorageLibrariesAsync()` returns more than 1, prompt user to choose target library.
+  - Acceptance criteria:
+    - No throw when >1 storage library exists.
+
+- [ ] AlbumDetail: “Add Artist” button action
+  - File: `src/Melodee.Blazor/Components/Pages/Media/AlbumDetail.razor`
+  - Method: `AddNewArtistButtonClick()`
+  - Acceptance criteria:
+    - Navigates to (or opens) `ArtistEdit` with pre-filled artist name (and whatever IDs are available).
+
+- [ ] ArtistDetail: drag-and-drop (and paste) upload for artist images
+  - File: `src/Melodee.Blazor/Components/Pages/Data/ArtistDetail.razor`
+  - Related JS: `src/Melodee.Blazor/wwwroot/js/FileDropZone.js` (currently unused)
+  - Scope:
+    - Add a visible drop zone in the Artist “Images” section.
+    - Wire JS interop to `initializeFileDropZone(...)` so dropping/pasting images triggers the existing `OnArtistImageUpload` flow.
+  - Acceptance criteria:
+    - Dragging files onto the drop zone uploads the same as selecting via `<InputFile>`.
+    - Pasting an image (clipboard file) into the drop zone uploads as well.
+
+- [ ] ArtistEdit: external search integration
   - File: `src/Melodee.Blazor/Components/Pages/Data/ArtistEdit.razor`
   - Method: `SearchForExternalButtonClick(string amgid)`
-  - Status: `NotImplementedException`.
+  - Acceptance criteria:
+    - Calls into the search engine service layer and populates UI with selectable results.
 
-- [ ] AlbumEdit: external search integration button
+- [ ] AlbumEdit: external search integration
   - File: `src/Melodee.Blazor/Components/Pages/Media/AlbumEdit.razor`
   - Method: `SearchForExternalButtonClick(string amgid)`
-  - Status: `NotImplementedException`.
 
-- [ ] PlaylistDetail: image set/lock/unlock actions
+- [ ] PlaylistDetail: image set/lock/unlock
   - File: `src/Melodee.Blazor/Components/Pages/Data/PlaylistDetail.razor`
   - Methods: `SetPlaylistImageButtonClick()`, `UnlockButtonClick()`, `LockButtonClick()`
-  - Status: `NotImplementedException`.
 
-- [ ] Library page: multi-library move prompt and clean action
+- [ ] Library page: multi-library move prompt + clean action
   - File: `src/Melodee.Blazor/Components/Pages/Media/Library.razor`
-  - Tasks:
-    - When moving albums and multiple Storage libraries exist, prompt for target library.
-    - Implement `CleanButtonClick()`.
-  - Status: `// TODO` + `NotImplementedException`.
+  - Scope:
+    - Prompt for destination when multiple storage libraries exist.
+    - Implement `CleanButtonClick()` (expected to remove missing files / orphan records; align with existing scanning/cleanup services).
 
 - [ ] LibraryDetail: Edit button behavior
   - File: `src/Melodee.Blazor/Components/Pages/Data/LibraryDetail.razor`
   - Method: `EditButtonClick()`
-  - Status: `NotImplementedException`.
 
 - [ ] Albums/Songs grids: unimplemented actions
-  - Files:
-    - `src/Melodee.Blazor/Components/Pages/Data/Albums.razor`
-    - `src/Melodee.Blazor/Components/Pages/Data/Songs.razor`
-  - Status: one or more `NotImplementedException` handlers.
+  - Files: `src/Melodee.Blazor/Components/Pages/Data/Albums.razor`, `src/Melodee.Blazor/Components/Pages/Data/Songs.razor`
+  - Acceptance criteria:
+    - Any remaining action handlers no longer throw.
 
-## Phase 6 — Service/Domain Polish
+### Phase 4 — Service/domain polish (correctness)
 
-- [ ] ServiceBase: verify CRC calculation comment and resolve discrepancy
+- [ ] SongService: implement song deletion
+  - File: `src/Melodee.Common/Services/SongService.cs`
+  - Method: `DeleteAsync(int[] songIds, ...)` (currently throws `NotImplementedException`)
+  - Scope:
+    - Decide policy: DB-only delete vs. also delete media file on disk.
+    - Handle referential integrity (contributors, play history/now playing, user-song relations, caches).
+  - Acceptance criteria:
+    - All UI call-sites that delete songs succeed (e.g., album “Delete song” / “Delete selected songs”).
+    - Add/adjust tests in `tests/Melodee.Tests.Common` (see SongServiceTests section below).
+
+- [ ] ServiceBase: CRC hash discrepancy
   - File: `src/Melodee.Common/Services/ServiceBase.cs`
-  - Status: `// TODO for some reason the song.CrcHash is wrong?`
-  - Notes: Add tests to validate computed CRC versus stored value; fix path resolution if needed.
+  - Goal:
+    - Determine why `song.CrcHash` can differ from the computed CRC and fix root cause (path normalization, stream reading, encoding, etc.).
+  - Acceptance criteria:
+    - Add a focused regression test for CRC computation.
 
-- [ ] ArtistExtensions: verify `Url` placeholder
+- [ ] ArtistExtensions: decide `Url` mapping
   - File: `src/Melodee.Common/Data/Models/Extensions/ArtistExtensions.cs`
-  - Status: `// TODO ?` next to `"Url"` property assignment.
-  - Notes: Confirm whether to populate canonical artist URL from sources.
+  - Goal:
+    - Either populate a canonical URL (and document source), or remove/leave blank intentionally (but no lingering TODO).
 
-## Phase 7 — Testing & Tooling
+### Phase 5 — Tests & verification
+
+- [ ] SongServiceTests: update DeleteAsync expectations after implementation
+  - File: `tests/Melodee.Tests.Common/Common/Services/SongServiceTests.cs`
+  - Scope:
+    - Replace the current `DeleteAsync_ThrowsNotImplementedException` test with assertions matching the new delete behavior.
 
 - [ ] UserServiceTests: verify “bus event published” assertion
   - File: `tests/Melodee.Tests.Common/Common/Services/UserServiceTests.cs`
-  - Status: `// TODO` comment
-  - Notes: Add mock/spies to assert bus publish called on appropriate actions.
+  - Acceptance criteria:
+    - Tests assert the correct bus publish behavior using the existing test/mocking patterns in the repo.
 
 ---
 
 ## Index of References
 
-For quick grep reference, these locations contain TODOs or NotImplementedException:
+For quick grep reference (current as of last updated), these locations contain `NotImplementedException` and/or active TODOs:
 
-- tests/Melodee.Tests.Common/Common/Services/SongServiceTests.cs (NotImplemented expected in Delete test)
-- tests/Melodee.Tests.Common/Common/Services/UserServiceTests.cs (TODO bus event)
-- src/Melodee.Blazor/Controllers/Melodee/SongsController.cs (SongById)
-- src/Melodee.Blazor/Controllers/OpenSubsonic/JukeboxController.cs (jukeboxControl)
-- src/Melodee.Blazor/Controllers/OpenSubsonic/BrowsingController.cs (similar songs)
-- src/Melodee.Common/Serialization/Convertors/OpenSubsonicResponseModelConvertor.cs (Read)
-- src/Melodee.Common/Plugins/MetaData/Song/IdSharpMetaTag.cs (UpdateSongAsync)
-- src/Melodee.Blazor/Components/Components/ImageSearchUpload.razor (Upload handlers)
-- src/Melodee.Blazor/Components/Components/IdentifyAlbum.razor (Upload handlers)
-- src/Melodee.Common/Plugins/Scrobbling/LastFmScrobbler.cs (session key)
-- src/Melodee.Common/Services/ServiceBase.cs (CRC hash comment)
-- src/Melodee.Common/Data/Models/Extensions/SongExtensions.cs (DTO TODO fields)
-- src/Melodee.Common/Data/Models/Extensions/ArtistExtensions.cs (Url TODO)
-- src/Melodee.Common/Services/OpenSubsonicApiService.cs (JWT auth NotImplemented)
-- src/Melodee.Common/Data/Models/Extensions/AlbumExtensions.cs (DTO TODO fields)
-- src/Melodee.Common/Plugins/SearchEngine/ITunes/ITunesSearchEngine.cs (NotImplemented)
-- src/Melodee.Blazor/Components/Pages/Media/ArtistEdit.razor (Search external button)
-- src/Melodee.Common/Plugins/SearchEngine/LastFm/LastFm.cs (NotImplemented search)
-- src/Melodee.Common/Services/SongService.cs (DeleteAsync)
-- src/Melodee.Common/Services/LibraryService.cs (DeleteAsync)
-- src/Melodee.Blazor/Components/Pages/Media/AlbumEdit.razor (Search external button)
-- src/Melodee.Blazor/Components/Pages/Media/AlbumDetail.razor (multi-library prompt TODO)
-- src/Melodee.Blazor/Components/Pages/Media/Library.razor (multi-library move prompt, clean button)
-- src/Melodee.Blazor/Components/Pages/Media/Library.razor (as above)
-- src/Melodee.Blazor/Components/Pages/Data/ArtistEdit.razor (as above)
-- src/Melodee.Blazor/Components/Pages/Data/Albums.razor (NotImplemented handlers)
-- src/Melodee.Blazor/Components/Pages/Data/Songs.razor (NotImplemented handlers)
-- src/Melodee.Blazor/Components/Pages/Data/PlaylistDetail.razor (image/lock/unlock)
-- src/Melodee.Blazor/Components/Pages/Data/AlbumEdit.razor (as above)
-- src/Melodee.Blazor/Components/Pages/Data/LibraryDetail.razor (Edit button)
+**tests**
+- `tests/Melodee.Tests.Common/Common/Services/SongServiceTests.cs` (DeleteAsync test currently expects `NotImplementedException`)
+- `tests/Melodee.Tests.Common/Common/Services/UserServiceTests.cs` (TODO: bus event published assertion)
+
+**src**
+- `src/Melodee.Blazor/Components/Components/ImageSearchUpload.razor` (upload handlers `NotImplementedException`)
+- `src/Melodee.Blazor/Components/Components/IdentifyAlbum.razor` (upload handlers `NotImplementedException`)
+- `src/Melodee.Blazor/Components/Pages/Media/AlbumDetail.razor` (multi-storage move prompt + Add Artist button `NotImplementedException`)
+- `src/Melodee.Blazor/Components/Pages/Media/Library.razor` (multi-storage prompt + clean button `NotImplementedException`)
+- `src/Melodee.Blazor/Components/Pages/Data/ArtistEdit.razor` (external search button `NotImplementedException`)
+- `src/Melodee.Blazor/Components/Pages/Media/ArtistEdit.razor` (external search button `NotImplementedException`)
+- `src/Melodee.Blazor/Components/Pages/Data/AlbumEdit.razor` (external search button `NotImplementedException`)
+- `src/Melodee.Blazor/Components/Pages/Media/AlbumEdit.razor` (external search button `NotImplementedException`)
+- `src/Melodee.Blazor/Components/Pages/Data/PlaylistDetail.razor` (image/lock/unlock `NotImplementedException`)
+- `src/Melodee.Blazor/Components/Pages/Data/LibraryDetail.razor` (Edit button `NotImplementedException`)
+- `src/Melodee.Blazor/Components/Pages/Data/Albums.razor` (action handler `NotImplementedException`)
+- `src/Melodee.Blazor/Components/Pages/Data/Songs.razor` (action handler `NotImplementedException`)
+- `src/Melodee.Blazor/Controllers/OpenSubsonic/BrowsingController.cs` (TODO: similar songs endpoints)
+- `src/Melodee.Blazor/Controllers/OpenSubsonic/JukeboxController.cs` (TODO: jukeboxControl)
+- `src/Melodee.Common/Plugins/SearchEngine/ITunes/ITunesSearchEngine.cs` (`NotImplementedException`)
+- `src/Melodee.Common/Plugins/SearchEngine/LastFm/LastFm.cs` (`NotImplementedException`)
+- `src/Melodee.Common/Services/SongService.cs` (`DeleteAsync` throws `NotImplementedException`)
+- `src/Melodee.Common/Plugins/Scrobbling/LastFmScrobbler.cs` (TODO: session key handling)
+- `src/Melodee.Common/Services/ServiceBase.cs` (TODO: CRC hash discrepancy)
+- `src/Melodee.Common/Services/OpenSubsonicApiService.cs` (TODO/NotImplemented branches remain)
+- `src/Melodee.Common/Data/Models/Extensions/ArtistExtensions.cs` (TODO: Url mapping)
+- `src/Melodee.Common/Plugins/SearchEngine/Spotify/Spotify.cs` (TODO: resiliency; top-songs currently returns "not implemented")
