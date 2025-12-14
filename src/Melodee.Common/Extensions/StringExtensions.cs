@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Globalization;
 using System.Net;
 using System.Security;
@@ -974,12 +974,12 @@ public static partial class StringExtensions
     {
         foreach (var testMatch in testMatches)
         {
-            if (text.Contains(testMatch)) 
+            if (text.Contains(testMatch))
                 return true;
         }
         return false;
-    }    
-    
+    }
+
     [GeneratedRegex("[^a-zA-Z0-9 -.:]")]
     private static partial Regex OnlyAlphaNumericRegex();
 

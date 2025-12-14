@@ -29,7 +29,7 @@ public class CollectionOperationBenchmarks
     {
         var songs = new List<PlaylistSongData>();
         var random = new Random(42);
-        
+
         for (int i = 0; i < count; i++)
         {
             songs.Add(new PlaylistSongData
@@ -41,7 +41,7 @@ public class CollectionOperationBenchmarks
                 Duration = random.Next(120000, 300000)
             });
         }
-        
+
         return songs;
     }
 
@@ -92,7 +92,7 @@ public class CollectionOperationBenchmarks
     {
         var songsArray = _playlistSongs.ToArray();
         var remainingSongsSpan = songsArray.AsSpan();
-        
+
         var writeIndex = 0;
         var totalDuration = 0L;
 
@@ -142,7 +142,7 @@ public class CollectionOperationBenchmarks
     public List<int> ForLoop_Manual()
     {
         var result = new List<int>();
-        
+
         for (int i = 0; i < _numbers.Count; i++)
         {
             var number = _numbers[i];
@@ -151,14 +151,14 @@ public class CollectionOperationBenchmarks
                 result.Add(number);
             }
         }
-        
+
         result.Sort((a, b) => b.CompareTo(a)); // Descending order
-        
+
         if (result.Count > 50)
         {
             result = result.Take(50).ToList();
         }
-        
+
         return result;
     }
 
@@ -177,7 +177,7 @@ public class CollectionOperationBenchmarks
     {
         // Simulate bulk update (efficient)
         var songsToUpdate = _playlistSongs.Take(100).ToList();
-        
+
         // Batch processing
         const int batchSize = 50;
         for (int i = 0; i < songsToUpdate.Count; i += batchSize)
@@ -199,7 +199,7 @@ public class CollectionOperationBenchmarks
     {
         var pool = ArrayPool<byte>.Shared;
         var rentedArray = pool.Rent(arraySize);
-        
+
         try
         {
             // Simulate work with the array
@@ -221,13 +221,13 @@ public class CollectionOperationBenchmarks
     public void NewArray_Allocation(int arraySize)
     {
         var newArray = new byte[arraySize];
-        
+
         // Simulate work with the array
         for (int i = 0; i < arraySize; i++)
         {
             newArray[i] = (byte)(i % 256);
         }
-        
+
         // Array goes out of scope and will be GC'd
     }
 
@@ -235,7 +235,7 @@ public class CollectionOperationBenchmarks
     public void CollectionOperations_MemoryAllocation()
     {
         var lists = new List<List<int>>();
-        
+
         // Create many temporary collections (high allocation)
         for (int i = 0; i < 1000; i++)
         {
@@ -245,7 +245,7 @@ public class CollectionOperationBenchmarks
                 lists.Add(tempList);
             }
         }
-        
+
         var totalItems = lists.Sum(list => list.Count);
     }
 
@@ -254,12 +254,12 @@ public class CollectionOperationBenchmarks
     {
         var totalItems = 0;
         var reusableList = new List<int>();
-        
+
         // Reuse collections to reduce allocation
         for (int i = 0; i < 1000; i++)
         {
             reusableList.Clear();
-            
+
             foreach (var number in _numbers)
             {
                 if (number % (i + 1) == 0)
@@ -267,7 +267,7 @@ public class CollectionOperationBenchmarks
                     reusableList.Add(number);
                 }
             }
-            
+
             totalItems += reusableList.Count;
         }
     }

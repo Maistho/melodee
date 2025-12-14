@@ -14,8 +14,8 @@ public static class FileHelper
         [new byte[] { 0x4F, 0x67, 0x67, 0x53 }] = "audio/ogg", // OGG
         [new byte[] { 0x00, 0x00, 0x00, 0x20, 0x66, 0x74, 0x79, 0x70 }] = "audio/mp4" // M4A
     };
-    
-    
+
+
     private static readonly IEnumerable<string> MediaMetaDataFileTypeExtensions =
     [
         "cue",
@@ -131,7 +131,7 @@ public static class FileHelper
 
         return result;
     }
-    
+
     public static string GetMimeType(string filePath)
     {
         try
@@ -149,8 +149,8 @@ public static class FileHelper
         {
             // Fall back to extension-based detection
         }
-        
+
         return MimeTypes.GetMimeType(Path.GetFileName(filePath));
     }
-    
+
 }

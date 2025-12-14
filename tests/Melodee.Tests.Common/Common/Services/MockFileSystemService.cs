@@ -28,7 +28,7 @@ public class MockFileSystemService : IFileSystemService
             .Select(d => new DirectoryInfo(d));
     }
 
-    public DateTime GetFileCreationTimeUtc(string filePath) 
+    public DateTime GetFileCreationTimeUtc(string filePath)
     {
         return _fileCreationTimes.TryGetValue(filePath, out var time) ? time : DateTime.UtcNow;
     }
@@ -168,8 +168,8 @@ public class MockFileSystemService : IFileSystemService
         {
             _files.Remove(file);
         }
-    }    
-    
+    }
+
     /// <summary>
     /// Resets the mock file system to its initial empty state.
     /// </summary>

@@ -17,7 +17,7 @@ public class SearchServiceTests : ServiceTestBase
         var service = GetSearchService();
         var userApiKey = Guid.NewGuid();
         var searchTerm = "test"; // Use "test" which should match all normalized strings
-        
+
         // Create test data
         await using (var context = await MockFactory().CreateDbContextAsync())
         {
@@ -41,7 +41,7 @@ public class SearchServiceTests : ServiceTestBase
         Assert.NotNull(result);
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Data);
-        
+
         Assert.True(result.Data.Artists.Length > 0, $"Expected artists but found {result.Data.Artists.Length}");
         Assert.True(result.Data.Albums.Length > 0, $"Expected albums but found {result.Data.Albums.Length}");
         Assert.True(result.Data.Songs.Length > 0, $"Expected songs but found {result.Data.Songs.Length}");
@@ -52,7 +52,7 @@ public class SearchServiceTests : ServiceTestBase
     {
         var service = GetSearchService();
         var userApiKey = Guid.NewGuid();
-        
+
         var result = await service.DoSearchAsync(
             userApiKey,
             "TestAgent",
@@ -78,7 +78,7 @@ public class SearchServiceTests : ServiceTestBase
         var service = GetSearchService();
         var userApiKey = Guid.NewGuid();
         var searchTerm = "test";
-        
+
         // Create test data
         await using var context = await MockFactory().CreateDbContextAsync();
         await CreateTestUser(context, userApiKey);
@@ -108,7 +108,7 @@ public class SearchServiceTests : ServiceTestBase
         var service = GetSearchService();
         var userApiKey = Guid.NewGuid();
         var searchTerm = "test";
-        
+
         // Create test data
         await using var context = await MockFactory().CreateDbContextAsync();
         await CreateTestUser(context, userApiKey);
@@ -139,7 +139,7 @@ public class SearchServiceTests : ServiceTestBase
         var service = GetSearchService();
         var userApiKey = Guid.NewGuid();
         var searchTerm = "test";
-        
+
         // Create test data
         await using var context = await MockFactory().CreateDbContextAsync();
         await CreateTestUser(context, userApiKey);
@@ -171,12 +171,12 @@ public class SearchServiceTests : ServiceTestBase
         var service = GetSearchService();
         var userApiKey = Guid.NewGuid();
         var searchTerm = "test";
-        
+
         // Create test data
         await using var context = await MockFactory().CreateDbContextAsync();
         await CreateTestUser(context, userApiKey);
         var library = await CreateTestLibrary(context);
-        
+
         // Create multiple artists to test pagination
         for (int i = 0; i < 5; i++)
         {
@@ -206,7 +206,7 @@ public class SearchServiceTests : ServiceTestBase
         var service = GetSearchService();
         var userApiKey = Guid.NewGuid();
         var searchQuery = "test";
-        
+
         // Create test data
         await using var context = await MockFactory().CreateDbContextAsync();
         await CreateTestUser(context, userApiKey);
@@ -259,7 +259,7 @@ public class SearchServiceTests : ServiceTestBase
     {
         var service = GetSearchService();
         var userApiKey = Guid.NewGuid();
-        
+
         // Create test data
         await using var context = await MockFactory().CreateDbContextAsync();
         await CreateTestUser(context, userApiKey);
@@ -284,7 +284,7 @@ public class SearchServiceTests : ServiceTestBase
         var service = GetSearchService();
         var userApiKey = Guid.NewGuid();
         var searchQuery = "test";
-        
+
         // Create test data
         await using var context = await MockFactory().CreateDbContextAsync();
         await CreateTestUser(context, userApiKey);
@@ -313,12 +313,12 @@ public class SearchServiceTests : ServiceTestBase
         var service = GetSearchService();
         var userApiKey = Guid.NewGuid();
         var searchQuery = "test";
-        
+
         // Create test data
         await using var context = await MockFactory().CreateDbContextAsync();
         await CreateTestUser(context, userApiKey);
         var library = await CreateTestLibrary(context);
-        
+
         // Create multiple artists for pagination testing
         for (int i = 0; i < 10; i++)
         {
@@ -350,7 +350,7 @@ public class SearchServiceTests : ServiceTestBase
         var service = GetSearchService();
         var userApiKey = Guid.NewGuid();
         var searchQuery = "test";
-        
+
         // Create test data
         await using var context = await MockFactory().CreateDbContextAsync();
         await CreateTestUser(context, userApiKey);
@@ -375,7 +375,7 @@ public class SearchServiceTests : ServiceTestBase
         Assert.NotNull(result);
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Data);
-        
+
         // Artists should be ordered by name
         if (result.Data.Artists.Length > 1)
         {
@@ -384,7 +384,7 @@ public class SearchServiceTests : ServiceTestBase
                 Assert.True(string.Compare(result.Data.Artists[i - 1].Name, result.Data.Artists[i].Name, StringComparison.Ordinal) <= 0);
             }
         }
-        
+
         // Albums should be ordered by name
         if (result.Data.Albums.Length > 1)
         {
@@ -393,7 +393,7 @@ public class SearchServiceTests : ServiceTestBase
                 Assert.True(string.Compare(result.Data.Albums[i - 1].Name, result.Data.Albums[i].Name, StringComparison.Ordinal) <= 0);
             }
         }
-        
+
         // Songs should be ordered by artist name, then album name
         if (result.Data.Songs.Length > 1)
         {
@@ -420,7 +420,7 @@ public class SearchServiceTests : ServiceTestBase
         var service = GetSearchService();
         var userApiKey = Guid.NewGuid();
         var searchTerm = "test";
-        
+
         // Create test data
         await using var context = await MockFactory().CreateDbContextAsync();
         await CreateTestUser(context, userApiKey);
@@ -460,7 +460,7 @@ public class SearchServiceTests : ServiceTestBase
         var userApiKey = Guid.NewGuid();
         var searchTerm = "test";
         var nonExistentArtistId = Guid.NewGuid();
-        
+
         // Create test data
         await using var context = await MockFactory().CreateDbContextAsync();
         await CreateTestUser(context, userApiKey);
@@ -493,7 +493,7 @@ public class SearchServiceTests : ServiceTestBase
         var userApiKey = Guid.NewGuid();
         var searchTerm = "test";
         var nonExistentArtistId = Guid.NewGuid();
-        
+
         // Create test data
         await using var context = await MockFactory().CreateDbContextAsync();
         await CreateTestUser(context, userApiKey);
@@ -523,7 +523,7 @@ public class SearchServiceTests : ServiceTestBase
         var service = GetSearchService();
         var userApiKey = Guid.NewGuid();
         var searchTerm = "test";
-        
+
         // Create test data
         await using var context = await MockFactory().CreateDbContextAsync();
         await CreateTestUser(context, userApiKey);
@@ -560,7 +560,7 @@ public class SearchServiceTests : ServiceTestBase
         var service = GetSearchService();
         var userApiKey = Guid.NewGuid();
         var searchTerm = "rock";
-        
+
         // Create test data
         await using var context = await MockFactory().CreateDbContextAsync();
         await CreateTestUser(context, userApiKey);
@@ -594,7 +594,7 @@ public class SearchServiceTests : ServiceTestBase
         var service = GetSearchService();
         var userApiKey = Guid.NewGuid();
         var searchTerm = "test";
-        
+
         // Create test data
         await using var context = await MockFactory().CreateDbContextAsync();
         await CreateTestUser(context, userApiKey);
@@ -623,7 +623,7 @@ public class SearchServiceTests : ServiceTestBase
         var service = GetSearchService();
         var userApiKey = Guid.NewGuid();
         var searchTerm = "rock & roll"; // Special characters
-        
+
         // Create test data
         await using var context = await MockFactory().CreateDbContextAsync();
         await CreateTestUser(context, userApiKey);
@@ -651,12 +651,12 @@ public class SearchServiceTests : ServiceTestBase
         var service = GetSearchService();
         var userApiKey = Guid.NewGuid();
         var searchTerm = "test";
-        
+
         // Create test data
         await using var context = await MockFactory().CreateDbContextAsync();
         await CreateTestUser(context, userApiKey);
         var library = await CreateTestLibrary(context);
-        
+
         // Create multiple test items
         for (int i = 0; i < 100; i++)
         {
@@ -686,7 +686,7 @@ public class SearchServiceTests : ServiceTestBase
         var service = GetSearchService();
         var userApiKey = Guid.NewGuid();
         var searchTerm = "test";
-        
+
         // Create test data
         await using var context = await MockFactory().CreateDbContextAsync();
         await CreateTestUser(context, userApiKey);
@@ -715,7 +715,7 @@ public class SearchServiceTests : ServiceTestBase
         var service = GetSearchService();
         var userApiKey = Guid.NewGuid();
         var searchTerm = "test";
-        
+
         // Create test data
         await using var context = await MockFactory().CreateDbContextAsync();
         await CreateTestUser(context, userApiKey);
@@ -742,7 +742,7 @@ public class SearchServiceTests : ServiceTestBase
         var service = GetSearchService();
         var userApiKey = Guid.NewGuid();
         var searchTerm = "   "; // Only whitespace
-        
+
         // Create test data
         await using var context = await MockFactory().CreateDbContextAsync();
         await CreateTestUser(context, userApiKey);
@@ -768,7 +768,7 @@ public class SearchServiceTests : ServiceTestBase
         var service = GetSearchService();
         var userApiKey = Guid.NewGuid();
         var searchTerm = ""; // Empty string
-        
+
         // Create test data
         await using var context = await MockFactory().CreateDbContextAsync();
         await CreateTestUser(context, userApiKey);
@@ -794,7 +794,7 @@ public class SearchServiceTests : ServiceTestBase
         var service = GetSearchService();
         var userApiKey = Guid.NewGuid();
         var searchTerm = "TEST"; // Uppercase
-        
+
         // Create test data
         await using var context = await MockFactory().CreateDbContextAsync();
         await CreateTestUser(context, userApiKey);
@@ -823,7 +823,7 @@ public class SearchServiceTests : ServiceTestBase
         var service = GetSearchService();
         var userApiKey = Guid.NewGuid();
         var searchTerm = "café"; // Unicode characters
-        
+
         // Create test data
         await using var context = await MockFactory().CreateDbContextAsync();
         await CreateTestUser(context, userApiKey);
@@ -851,14 +851,14 @@ public class SearchServiceTests : ServiceTestBase
         var service = GetSearchService();
         var userApiKey = Guid.NewGuid();
         var searchTerm = "album";
-        
+
         // Create test data
         await using var context = await MockFactory().CreateDbContextAsync();
         await CreateTestUser(context, userApiKey);
         var library = await CreateTestLibrary(context);
         var artist1 = await CreateTestArtist(context, library, "Artist One");
         var artist2 = await CreateTestArtist(context, library, "Artist Two");
-        
+
         // Create multiple albums for each artist
         var album1a = await CreateTestAlbum(context, artist1, "Album Alpha");
         var album1b = await CreateTestAlbum(context, artist1, "Album Beta");
@@ -881,13 +881,13 @@ public class SearchServiceTests : ServiceTestBase
         Assert.NotNull(result.Data);
         Assert.Empty(result.Data.Artists);
         Assert.Empty(result.Data.Songs);
-        
+
         // Debug output to understand what's happening
         foreach (var album in result.Data.Albums)
         {
             Console.WriteLine($"Album: {album.Name}, ArtistApiKey: {album.ArtistApiKey}, Expected: {artist1.ApiKey}");
         }
-        
+
         // The search service might not be implementing filtering correctly
         // Let's first check if filtering is working at all
         if (result.Data.Albums.Length == 0)
@@ -919,7 +919,7 @@ public class SearchServiceTests : ServiceTestBase
         var service = GetSearchService();
         var userApiKey = Guid.NewGuid();
         var searchTerm = "song";
-        
+
         // Create test data
         await using var context = await MockFactory().CreateDbContextAsync();
         await CreateTestUser(context, userApiKey);
@@ -928,7 +928,7 @@ public class SearchServiceTests : ServiceTestBase
         var artist2 = await CreateTestArtist(context, library, "Artist Two");
         var album1 = await CreateTestAlbum(context, artist1, "Album One");
         var album2 = await CreateTestAlbum(context, artist2, "Album Two");
-        
+
         // Create multiple songs for each artist with different song numbers
         var song1a = await CreateTestSong(context, album1, "Song Alpha", 1);
         var song1b = await CreateTestSong(context, album1, "Song Beta", 2);
@@ -951,7 +951,7 @@ public class SearchServiceTests : ServiceTestBase
         Assert.NotNull(result.Data);
         Assert.Empty(result.Data.Artists);
         Assert.Empty(result.Data.Albums);
-        
+
         // Should only return songs from artist1
         Assert.All(result.Data.Songs, s => Assert.Equal(artist1.ApiKey, s.ArtistApiKey));
         Assert.Contains(result.Data.Songs, s => s.Id == song1a.Id);
@@ -966,7 +966,7 @@ public class SearchServiceTests : ServiceTestBase
         var service = GetSearchService();
         var userApiKey = Guid.NewGuid();
         var searchTerm = "test";
-        
+
         // Create test data
         await using var context = await MockFactory().CreateDbContextAsync();
         await CreateTestUser(context, userApiKey);
@@ -993,11 +993,11 @@ public class SearchServiceTests : ServiceTestBase
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Data);
         Assert.Empty(result.Data.Artists);
-        
+
         // Both albums and songs should be filtered by artist
         Assert.All(result.Data.Albums, a => Assert.Equal(artist1.ApiKey, a.ArtistApiKey));
         Assert.All(result.Data.Songs, s => Assert.Equal(artist1.ApiKey, s.ArtistApiKey));
-        
+
         Assert.Contains(result.Data.Albums, a => a.Id == album1.Id);
         Assert.DoesNotContain(result.Data.Albums, a => a.Id == album2.Id);
         Assert.Contains(result.Data.Songs, s => s.Id == song1.Id);

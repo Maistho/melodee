@@ -5,7 +5,7 @@ public enum ImageSize
     NotSet = 0,
 
     Thumbnail = 50,
-    
+
     Small = 300,
 
     Medium = 600,

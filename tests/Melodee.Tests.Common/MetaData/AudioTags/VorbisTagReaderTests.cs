@@ -28,16 +28,16 @@ public class VorbisTagReaderTests
     {
         // OGG/Vorbis format is complex, so instead of relying on external files,
         // we'll test that the Vorbis reader handles non-OGG files without crashing
-        
+
         var tempFile = Path.GetTempFileName();
         try
         {
             // Create a file that's not an OGG file
             await File.WriteAllTextAsync(tempFile, "This is not an OGG file");
-            
+
             var reader = new VorbisTagReader();
             var tags = await reader.ReadTagsAsync(tempFile, CancellationToken.None);
-            
+
             // Vorbis reader should return empty tags for non-OGG files
             Assert.NotNull(tags);
             Assert.Empty(tags);

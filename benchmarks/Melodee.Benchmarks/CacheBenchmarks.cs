@@ -1,9 +1,9 @@
 using System.Collections.Concurrent;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
-using Microsoft.Extensions.Caching.Memory;
-using Melodee.Common.Services.Caching;
 using Melodee.Common.Serialization;
+using Melodee.Common.Services.Caching;
+using Microsoft.Extensions.Caching.Memory;
 using Serilog;
 
 namespace Melodee.Benchmarks;
@@ -48,14 +48,14 @@ public class CacheBenchmarks
     public async Task MemoryCacheManager_GetOrAdd()
     {
         var tasks = new List<Task>();
-        
+
         for (int i = 0; i < CacheSize; i++)
         {
             var key = $"key_{i}";
             var task = _memoryCacheManager.GetAsync(key, () => Task.FromResult($"value_{i}"), CancellationToken.None);
             tasks.Add(task);
         }
-        
+
         await Task.WhenAll(tasks);
     }
 
@@ -63,14 +63,14 @@ public class CacheBenchmarks
     public void ConcurrentDictionary_GetOrAdd()
     {
         var tasks = new List<Task>();
-        
+
         for (int i = 0; i < CacheSize; i++)
         {
             var key = $"key_{i}";
             var task = Task.Run(() => _concurrentDictionary.GetOrAdd(key, k => $"value_{k}"));
             tasks.Add(task);
         }
-        
+
         Task.WaitAll(tasks.ToArray());
     }
 
@@ -94,22 +94,22 @@ public class CacheBenchmarks
     {
         const int cacheLimit = 1000;
         var cache = new Dictionary<string, (string value, DateTime lastAccess)>();
-        
+
         // Fill cache beyond limit to test eviction
         for (int i = 0; i < CacheSize; i++)
         {
             var key = $"key_{i}";
             var value = $"value_{i}";
-            
+
             if (cache.Count >= cacheLimit)
             {
                 // Find and remove oldest entry (LRU simulation)
                 var oldestKey = cache.OrderBy(kvp => kvp.Value.lastAccess).First().Key;
                 cache.Remove(oldestKey);
             }
-            
+
             cache[key] = (value, DateTime.UtcNow);
-            
+
             // Simulate some access pattern
             if (i % 100 == 0)
             {
@@ -122,7 +122,7 @@ public class CacheBenchmarks
     public void UnboundedCache_GrowthSimulation()
     {
         var unboundedCache = new ConcurrentDictionary<string, object>();
-        
+
         // Simulate unbounded cache growth (memory leak pattern)
         for (int i = 0; i < CacheSize; i++)
         {
@@ -130,7 +130,7 @@ public class CacheBenchmarks
             var value = new byte[1024]; // 1KB per entry
             unboundedCache.TryAdd(key, value);
         }
-        
+
         // Memory should grow linearly with CacheSize
     }
 
@@ -140,12 +140,12 @@ public class CacheBenchmarks
         const int maxCacheSize = 1000;
         var cache = new Dictionary<string, object>();
         var accessOrder = new Queue<string>();
-        
+
         for (int i = 0; i < CacheSize; i++)
         {
             var key = $"key_{i % (maxCacheSize * 2)}"; // Reuse some keys
             var value = new byte[1024];
-            
+
             if (cache.ContainsKey(key))
             {
                 // Update existing entry
@@ -160,7 +160,7 @@ public class CacheBenchmarks
                     var oldestKey = accessOrder.Dequeue();
                     cache.Remove(oldestKey);
                 }
-                
+
                 cache[key] = value;
                 accessOrder.Enqueue(key);
             }
@@ -176,20 +176,20 @@ public class CacheBenchmarks
         var cache = new ConcurrentDictionary<string, string>();
         var hitCount = 0;
         var missCount = 0;
-        
+
         // Pre-populate cache
         for (int i = 0; i < 100; i++)
         {
             cache.TryAdd($"key_{i}", $"value_{i}");
         }
-        
+
         // Simulate access pattern
         for (int repeat = 0; repeat < accessPatternRepeat; repeat++)
         {
             for (int i = 0; i < CacheSize; i++)
             {
                 var key = $"key_{i % 150}"; // 100 keys exist, 50 don't (66% hit rate expected)
-                
+
                 if (cache.TryGetValue(key, out _))
                 {
                     Interlocked.Increment(ref hitCount);
@@ -200,14 +200,14 @@ public class CacheBenchmarks
                     // Cache miss - add to cache
                     cache.TryAdd(key, $"value_{key}");
                 }
-                
+
                 if (i % 1000 == 0)
                 {
                     await Task.Yield(); // Allow other work
                 }
             }
         }
-        
+
         // Hit ratio calculation would be: hitCount / (hitCount + missCount)
     }
 
@@ -216,7 +216,7 @@ public class CacheBenchmarks
     {
         var cache = new ConcurrentDictionary<string, Task<string>>();
         var concurrentTasks = new List<Task>();
-        
+
         for (int i = 0; i < 100; i++)
         {
             var taskIndex = i;
@@ -230,14 +230,14 @@ public class CacheBenchmarks
                         await Task.Delay(1); // Simulate async work
                         return $"value_{k}";
                     });
-                    
+
                     await valueTask;
                 }
             });
-            
+
             concurrentTasks.Add(task);
         }
-        
+
         await Task.WhenAll(concurrentTasks);
     }
 
@@ -246,25 +246,25 @@ public class CacheBenchmarks
     {
         var eTags = new ConcurrentDictionary<string, (string etag, DateTime created)>();
         const int maxETags = 10000;
-        
+
         for (int i = 0; i < CacheSize; i++)
         {
             var key = $"resource_{i}";
             var etag = $"etag_{Guid.NewGuid()}";
-            
+
             // Simulate ETag repository behavior
             if (eTags.Count >= maxETags)
             {
                 // Remove oldest entries (time-based eviction simulation)
                 var cutoffTime = DateTime.UtcNow.AddMinutes(-30);
                 var keysToRemove = eTags.Where(kvp => kvp.Value.created < cutoffTime).Select(kvp => kvp.Key).ToList();
-                
+
                 foreach (var keyToRemove in keysToRemove.Take(100)) // Remove in batches
                 {
                     eTags.TryRemove(keyToRemove, out _);
                 }
             }
-            
+
             eTags.TryAdd(key, (etag, DateTime.UtcNow));
         }
     }

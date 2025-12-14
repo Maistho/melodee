@@ -13,7 +13,7 @@ public class HttpClientFactoryExtensionsTests
     {
         // Arrange - Create a mock factory (the real implementation will fail, but let's just test the null case)
         var mockFactory = new Mock<IHttpClientFactory>();
-        
+
         // Act
         var result = await mockFactory.Object.BytesForImageUrlAsync("test-agent", null);
 
@@ -34,7 +34,7 @@ public class HttpClientFactoryExtensionsTests
         // Assert
         Assert.True(true); // Simply verifying the test compiles and runs
     }
-    
+
     [Fact]
     public async Task BytesForImageUrlAsync_WithWhiteSpaceUrl_ReturnsNull()
     {

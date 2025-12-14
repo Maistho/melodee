@@ -157,7 +157,7 @@ public static class FileSystemDirectoryInfoExtensions
 
     public static string FullName(this FileSystemDirectoryInfo fileSystemDirectoryInfo)
     {
-        if(fileSystemDirectoryInfo.Path.Nullify() == null)
+        if (fileSystemDirectoryInfo.Path.Nullify() == null)
         {
             throw new ArgumentNullException(nameof(fileSystemDirectoryInfo.Path), "Path cannot be null");
         }
@@ -320,10 +320,10 @@ public static class FileSystemDirectoryInfoExtensions
         var modifiedSinceValue = modifiedSince?.ToDateTimeUtc() ?? DateTime.MinValue;
         result.AddRange(from dir in dirInfo.EnumerateDirectories("*.*", searchOption)
                 .OrderBy(x => x.LastWriteTimeUtc)
-            where dir.LastWriteTimeUtc >= modifiedSinceValue &&
-                  dir.EnumerateFiles("*.*", SearchOption.TopDirectoryOnly)
-                      .Any(x => FileHelper.IsFileMediaType(x.Extension))
-            select dir.ToFileSystemDirectoryInfo());
+                        where dir.LastWriteTimeUtc >= modifiedSinceValue &&
+                              dir.EnumerateFiles("*.*", SearchOption.TopDirectoryOnly)
+                                  .Any(x => FileHelper.IsFileMediaType(x.Extension))
+                        select dir.ToFileSystemDirectoryInfo());
         if (dirInfo.EnumerateFiles("*.*", SearchOption.TopDirectoryOnly)
             .Any(x => x.LastWriteTimeUtc >= modifiedSinceValue && FileHelper.IsFileMediaType(x.Extension)))
         {

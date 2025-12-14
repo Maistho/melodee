@@ -279,12 +279,12 @@ public class LibraryService : ServiceBase
         {
             // Build base query with proper joins using EF Core includes
             var baseQuery = from h in scopedContext.LibraryScanHistories.AsNoTracking()
-                join ar in scopedContext.Artists on h.ForArtistId equals ar.Id into artistJoin
-                from artist in artistJoin.DefaultIfEmpty()
-                join al in scopedContext.Albums on h.ForAlbumId equals al.Id into albumJoin
-                from album in albumJoin.DefaultIfEmpty()
-                where h.LibraryId == libraryId
-                select new { h, artist, album };
+                            join ar in scopedContext.Artists on h.ForArtistId equals ar.Id into artistJoin
+                            from artist in artistJoin.DefaultIfEmpty()
+                            join al in scopedContext.Albums on h.ForAlbumId equals al.Id into albumJoin
+                            from album in albumJoin.DefaultIfEmpty()
+                            where h.LibraryId == libraryId
+                            select new { h, artist, album };
 
             // Apply filters on the entity properties before projection
             var filteredQuery = ApplyHistoryFiltersBeforeProjection(baseQuery, pagedRequest);

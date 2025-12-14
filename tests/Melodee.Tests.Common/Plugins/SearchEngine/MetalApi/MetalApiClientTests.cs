@@ -36,7 +36,7 @@ public class MetalApiClientTests : ServiceTestBase
 
         // Assert
         Assert.Null(result);
-        
+
         // Verify no HTTP calls were made
         handlerMock.Protected().Verify(
             "SendAsync",

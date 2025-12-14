@@ -2,8 +2,8 @@ using Melodee.Common.Data.Models;
 using Melodee.Common.Enums;
 using Melodee.Common.Models;
 using Melodee.Common.Models.Collection;
-using NodaTime;
 using Microsoft.EntityFrameworkCore;
+using NodaTime;
 
 namespace Melodee.Tests.Common.Common.Services;
 
@@ -33,13 +33,13 @@ public class PlaylistServiceTests : ServiceTestBase
     {
         var service = GetPlaylistService();
         var userInfo = new UserInfo(5, Guid.NewGuid(), "testuser", "test@melodee.net", string.Empty, string.Empty);
-        
+
         var firstPageResult = await service.ListAsync(userInfo, new PagedRequest
         {
             PageSize = 5,
             Page = 0
         });
-        
+
         var secondPageResult = await service.ListAsync(userInfo, new PagedRequest
         {
             PageSize = 5,
@@ -110,7 +110,7 @@ public class PlaylistServiceTests : ServiceTestBase
     {
         var service = GetPlaylistService();
         var userInfo = new UserInfo(5, Guid.NewGuid(), "testuser", "test@melodee.net", string.Empty, string.Empty);
-        
+
         var result = await service.ListAsync(userInfo, new PagedRequest
         {
             IsTotalCountOnlyRequest = true
@@ -144,7 +144,7 @@ public class PlaylistServiceTests : ServiceTestBase
     {
         var service = GetPlaylistService();
         var userInfo = new UserInfo(5, Guid.NewGuid(), "testuser", "test@melodee.net", string.Empty, string.Empty);
-        
+
         var result = await service.DynamicListAsync(userInfo, new PagedRequest
         {
             PageSize = 5,
@@ -159,7 +159,7 @@ public class PlaylistServiceTests : ServiceTestBase
     public async Task GetAsync_WithValidId_ReturnsPlaylist()
     {
         var service = GetPlaylistService();
-        
+
         // First create a test user and playlist in the database
         await using var context = await MockFactory().CreateDbContextAsync();
         var testUser = new User
@@ -177,7 +177,7 @@ public class PlaylistServiceTests : ServiceTestBase
         };
         context.Users.Add(testUser);
         await context.SaveChangesAsync();
-        
+
         var testPlaylist = new Playlist
         {
             ApiKey = Guid.NewGuid(),
@@ -203,10 +203,10 @@ public class PlaylistServiceTests : ServiceTestBase
     {
         var service = GetPlaylistService();
 
-        await Assert.ThrowsAsync<ArgumentException>(async () => 
+        await Assert.ThrowsAsync<ArgumentException>(async () =>
             await service.GetAsync(0));
-        
-        await Assert.ThrowsAsync<ArgumentException>(async () => 
+
+        await Assert.ThrowsAsync<ArgumentException>(async () =>
             await service.GetAsync(-1));
     }
 
@@ -226,7 +226,7 @@ public class PlaylistServiceTests : ServiceTestBase
     {
         var service = GetPlaylistService();
         var userInfo = new UserInfo(5, Guid.NewGuid(), "testuser", "test@melodee.net", string.Empty, string.Empty);
-        
+
         // First create a test user and playlist in the database
         await using var context = await MockFactory().CreateDbContextAsync();
         var testUser = new User
@@ -244,7 +244,7 @@ public class PlaylistServiceTests : ServiceTestBase
         };
         context.Users.Add(testUser);
         await context.SaveChangesAsync();
-        
+
         var testApiKey = Guid.NewGuid();
         var testPlaylist = new Playlist
         {
@@ -272,7 +272,7 @@ public class PlaylistServiceTests : ServiceTestBase
         var service = GetPlaylistService();
         var userInfo = new UserInfo(5, Guid.NewGuid(), "testuser", "test@melodee.net", string.Empty, string.Empty);
 
-        await Assert.ThrowsAsync<ArgumentException>(async () => 
+        await Assert.ThrowsAsync<ArgumentException>(async () =>
             await service.GetByApiKeyAsync(userInfo, Guid.Empty));
     }
 
@@ -295,7 +295,7 @@ public class PlaylistServiceTests : ServiceTestBase
     {
         var service = GetPlaylistService();
         var userInfo = new UserInfo(5, Guid.NewGuid(), "testuser", "test@melodee.net", string.Empty, string.Empty);
-        
+
         // Create a test user and playlist with songs
         await using var context = await MockFactory().CreateDbContextAsync();
         var testUser = new User
@@ -313,7 +313,7 @@ public class PlaylistServiceTests : ServiceTestBase
         };
         context.Users.Add(testUser);
         await context.SaveChangesAsync();
-        
+
         var testApiKey = Guid.NewGuid();
         var testPlaylist = new Playlist
         {
@@ -343,7 +343,7 @@ public class PlaylistServiceTests : ServiceTestBase
         var service = GetPlaylistService();
         var userInfo = new UserInfo(5, Guid.NewGuid(), "testuser", "test@melodee.net", string.Empty, string.Empty);
 
-        await Assert.ThrowsAsync<ArgumentException>(async () => 
+        await Assert.ThrowsAsync<ArgumentException>(async () =>
             await service.SongsForPlaylistAsync(Guid.Empty, userInfo, new PagedRequest()));
     }
 
@@ -366,7 +366,7 @@ public class PlaylistServiceTests : ServiceTestBase
     {
         var service = GetPlaylistService();
         var userInfo = new UserInfo(5, Guid.NewGuid(), "testuser", "test@melodee.net", string.Empty, string.Empty);
-        
+
         // Create a test user and playlist
         await using var context = await MockFactory().CreateDbContextAsync();
         var testUser = new User
@@ -384,7 +384,7 @@ public class PlaylistServiceTests : ServiceTestBase
         };
         context.Users.Add(testUser);
         await context.SaveChangesAsync();
-        
+
         var testApiKey = Guid.NewGuid();
         var testPlaylist = new Playlist
         {
@@ -413,7 +413,7 @@ public class PlaylistServiceTests : ServiceTestBase
     {
         var service = GetPlaylistService();
         var userInfo = new UserInfo(5, Guid.NewGuid(), "testuser", "test@melodee.net", string.Empty, string.Empty);
-        
+
         // Create a test user and playlist
         await using var context = await MockFactory().CreateDbContextAsync();
         var testUser = new User
@@ -431,7 +431,7 @@ public class PlaylistServiceTests : ServiceTestBase
         };
         context.Users.Add(testUser);
         await context.SaveChangesAsync();
-        
+
         var testApiKey = Guid.NewGuid();
         var testPlaylist = new Playlist
         {
@@ -452,16 +452,16 @@ public class PlaylistServiceTests : ServiceTestBase
         Assert.NotNull(result.Data);
         Assert.True(result.TotalCount >= 0);
     }
-    
+
     [Fact]
     public async Task SongsForPlaylistAsync_WithSongs()
     {
         var service = GetPlaylistService();
         var userInfo = new UserInfo(5, Guid.NewGuid(), "testuser", "test@melodee.net", string.Empty, string.Empty);
-        
+
         // Create everything in the same context to avoid FK constraint issues
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         // Create library first
         var library = new Library
         {
@@ -474,7 +474,7 @@ public class PlaylistServiceTests : ServiceTestBase
         };
         context.Libraries.Add(library);
         await context.SaveChangesAsync();
-        
+
         // Create artist
         var artist = new Melodee.Common.Data.Models.Artist
         {
@@ -488,7 +488,7 @@ public class PlaylistServiceTests : ServiceTestBase
         };
         context.Artists.Add(artist);
         await context.SaveChangesAsync();
-        
+
         // Create album
         var album = new Melodee.Common.Data.Models.Album
         {
@@ -503,7 +503,7 @@ public class PlaylistServiceTests : ServiceTestBase
         };
         context.Albums.Add(album);
         await context.SaveChangesAsync();
-        
+
         // Create 10 test songs
         var testSongs = new List<Melodee.Common.Data.Models.Song>();
         for (int i = 0; i < 10; i++)
@@ -531,7 +531,7 @@ public class PlaylistServiceTests : ServiceTestBase
         }
         context.Songs.AddRange(testSongs);
         await context.SaveChangesAsync();
-        
+
         // Create test user
         var testUser = new User
         {
@@ -548,7 +548,7 @@ public class PlaylistServiceTests : ServiceTestBase
         };
         context.Users.Add(testUser);
         await context.SaveChangesAsync();
-        
+
         // Create playlist with songs
         var testApiKey = Guid.NewGuid();
         var testPlaylist = new Playlist
@@ -581,7 +581,7 @@ public class PlaylistServiceTests : ServiceTestBase
         Assert.Equal(10, firstPageResult.TotalCount);
         Assert.NotNull(firstPageResult.Data);
         Assert.Equal(5, firstPageResult.Data.Count());
-        
+
         // Test second page (page 1) 
         var secondPageResult = await service.SongsForPlaylistAsync(testApiKey, userInfo, new PagedRequest
         {
@@ -593,21 +593,21 @@ public class PlaylistServiceTests : ServiceTestBase
         Assert.Equal(10, secondPageResult.TotalCount);
         Assert.NotNull(secondPageResult.Data);
         Assert.Equal(5, secondPageResult.Data.Count());
-        
+
         // Verify songs have correct data
         var allSongsResult = await service.SongsForPlaylistAsync(testApiKey, userInfo, new PagedRequest
         {
             PageSize = 100,
             Page = 0
         });
-        
+
         AssertResultIsSuccessful(allSongsResult);
         Assert.Equal(10, allSongsResult.TotalCount);
         Assert.Equal(10, allSongsResult.Data.Count());
-        
+
         // Verify songs are returned with proper data
         var returnedSongs = allSongsResult.Data.ToArray();
-        Assert.All(returnedSongs, song => 
+        Assert.All(returnedSongs, song =>
         {
             Assert.NotNull(song.Title);
             Assert.NotEqual(Guid.Empty, song.ApiKey);
@@ -620,7 +620,7 @@ public class PlaylistServiceTests : ServiceTestBase
     {
         var service = GetPlaylistService();
         var userInfo = new UserInfo(5, Guid.NewGuid(), "testuser", "test@melodee.net", string.Empty, string.Empty);
-        
+
         // Create a test user and empty playlist
         await using var context = await MockFactory().CreateDbContextAsync();
         var testUser = new User
@@ -638,7 +638,7 @@ public class PlaylistServiceTests : ServiceTestBase
         };
         context.Users.Add(testUser);
         await context.SaveChangesAsync();
-        
+
         var testApiKey = Guid.NewGuid();
         var testPlaylist = new Playlist
         {
@@ -677,7 +677,7 @@ public class PlaylistServiceTests : ServiceTestBase
     {
         var service = GetPlaylistService();
         var userInfo = new UserInfo(5, Guid.NewGuid(), "testuser", "test@melodee.net", string.Empty, string.Empty);
-        
+
         // Create a test user and playlist
         await using var context = await MockFactory().CreateDbContextAsync();
         var testUser = new User
@@ -695,7 +695,7 @@ public class PlaylistServiceTests : ServiceTestBase
         };
         context.Users.Add(testUser);
         await context.SaveChangesAsync();
-        
+
         var testApiKey = Guid.NewGuid();
         var testPlaylist = new Playlist
         {
@@ -725,7 +725,7 @@ public class PlaylistServiceTests : ServiceTestBase
     {
         var service = GetPlaylistService();
         var userInfo = new UserInfo(5, Guid.NewGuid(), "testuser", "test@melodee.net", string.Empty, string.Empty);
-        
+
         // Create a test user and playlist
         await using var context = await MockFactory().CreateDbContextAsync();
         var testUser = new User
@@ -743,7 +743,7 @@ public class PlaylistServiceTests : ServiceTestBase
         };
         context.Users.Add(testUser);
         await context.SaveChangesAsync();
-        
+
         var testApiKey = Guid.NewGuid();
         var testPlaylist = new Playlist
         {
@@ -768,7 +768,7 @@ public class PlaylistServiceTests : ServiceTestBase
         Assert.IsType<SongDataInfo[]>(result.Data);
         Assert.True(result.TotalCount >= 0);
         Assert.True(result.TotalPages >= 0);
-        
+
         // For empty playlist, verify expected values
         Assert.Empty(result.Data);
         Assert.Equal(0, result.TotalCount);
@@ -779,7 +779,7 @@ public class PlaylistServiceTests : ServiceTestBase
     public async Task DeleteAsync_WithValidPlaylistIds_DeletesPlaylists()
     {
         var service = GetPlaylistService();
-        
+
         // Create test user and playlists
         await using var context = await MockFactory().CreateDbContextAsync();
         var testUser = new User
@@ -821,7 +821,7 @@ public class PlaylistServiceTests : ServiceTestBase
 
         AssertResultIsSuccessful(result);
         Assert.True(result.Data);
-        
+
         // Verify playlists were deleted using a fresh context
         await using var verifyContext = await MockFactory().CreateDbContextAsync();
         var deletedPlaylist1 = await verifyContext.Playlists.FindAsync(testPlaylist1.Id);
@@ -835,7 +835,7 @@ public class PlaylistServiceTests : ServiceTestBase
     {
         var service = GetPlaylistService();
 
-        await Assert.ThrowsAsync<ArgumentException>(async () => 
+        await Assert.ThrowsAsync<ArgumentException>(async () =>
             await service.DeleteAsync(1, []));
     }
 
@@ -844,7 +844,7 @@ public class PlaylistServiceTests : ServiceTestBase
     {
         var service = GetPlaylistService();
 
-        await Assert.ThrowsAsync<ArgumentNullException>(async () => 
+        await Assert.ThrowsAsync<ArgumentNullException>(async () =>
             await service.DeleteAsync(1, null!));
     }
 
@@ -865,7 +865,7 @@ public class PlaylistServiceTests : ServiceTestBase
     public async Task DeleteAsync_WithNonExistentPlaylist_ReturnsError()
     {
         var service = GetPlaylistService();
-        
+
         await using var context = await MockFactory().CreateDbContextAsync();
         var testUser = new User
         {
@@ -882,7 +882,7 @@ public class PlaylistServiceTests : ServiceTestBase
         };
         context.Users.Add(testUser);
         await context.SaveChangesAsync();
-        
+
         var nonExistentPlaylistId = 999999;
 
         var result = await service.DeleteAsync(testUser.Id, [nonExistentPlaylistId]);
@@ -896,7 +896,7 @@ public class PlaylistServiceTests : ServiceTestBase
     public async Task DeleteAsync_WithUnauthorizedUser_ReturnsError()
     {
         var service = GetPlaylistService();
-        
+
         // Create two users and a playlist for one user and try to delete with another user
         await using var context = await MockFactory().CreateDbContextAsync();
         var playlistOwner = new User
@@ -927,7 +927,7 @@ public class PlaylistServiceTests : ServiceTestBase
         };
         context.Users.AddRange(playlistOwner, unauthorizedUser);
         await context.SaveChangesAsync();
-        
+
         var testPlaylist = new Playlist
         {
             ApiKey = Guid.NewGuid(),
@@ -950,7 +950,7 @@ public class PlaylistServiceTests : ServiceTestBase
     public async Task CacheInvalidation_AfterDelete_ClearsCache()
     {
         var service = GetPlaylistService();
-        
+
         // Create a test user and playlist
         await using var context = await MockFactory().CreateDbContextAsync();
         var testUser = new User
@@ -1010,7 +1010,7 @@ public class PlaylistServiceTests : ServiceTestBase
         var results = await Task.WhenAll(tasks);
 
         // All should succeed
-        Assert.All(results, result => 
+        Assert.All(results, result =>
         {
             AssertResultIsSuccessful(result);
             Assert.NotNull(result.Data);

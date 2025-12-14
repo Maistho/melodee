@@ -24,7 +24,7 @@ public sealed record ArtistRelation
 
     public required int ArtistRelationType { get; set; }
 
-    [NotMapped] 
+    [NotMapped]
     public ArtistRelationType ArtistRelationTypeValue => SafeParser.ToEnum<ArtistRelationType>(ArtistRelationType);
 
     public int SortOrder { get; init; }

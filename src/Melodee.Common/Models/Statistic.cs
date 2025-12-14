@@ -15,6 +15,6 @@ public sealed record Statistic(
     StatisticCategory? Category = StatisticCategory.NotSet)
 {
     public int? DataAsInt => SafeParser.ToNumber<int>(Data);
-    
+
     public long? DataAsLong => SafeParser.ToNumber<long>(Data);
 }

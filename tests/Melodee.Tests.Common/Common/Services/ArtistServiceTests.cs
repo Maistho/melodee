@@ -522,7 +522,7 @@ public class ArtistServiceTests : ServiceTestBase
         // Assert
         Assert.NotNull(result);
         Assert.NotEmpty(result.Data);
-        
+
         // Verify ordering
         var names = result.Data.Select(a => a.Name).ToArray();
         var sortedNames = names.OrderBy(n => n).ToArray();
@@ -802,7 +802,7 @@ public class ArtistServiceTests : ServiceTestBase
         var service = GetArtistService();
 
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentException>(() => 
+        await Assert.ThrowsAsync<ArgumentException>(() =>
             service.SaveImageAsArtistImageAsync(artist.Id, false, Array.Empty<byte>()));
     }
 
@@ -814,9 +814,9 @@ public class ArtistServiceTests : ServiceTestBase
         var service = GetArtistService();
 
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentException>(() => 
+        await Assert.ThrowsAsync<ArgumentException>(() =>
             service.SaveImageAsArtistImageAsync(0, false, imageBytes));
-        await Assert.ThrowsAsync<ArgumentException>(() => 
+        await Assert.ThrowsAsync<ArgumentException>(() =>
             service.SaveImageAsArtistImageAsync(-1, false, imageBytes));
     }
 
@@ -876,7 +876,7 @@ public class ArtistServiceTests : ServiceTestBase
         var service = GetArtistService();
 
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentException>(() => 
+        await Assert.ThrowsAsync<ArgumentException>(() =>
             service.SaveImageUrlAsArtistImageAsync(artist.Id, string.Empty, false));
     }
 
@@ -888,9 +888,9 @@ public class ArtistServiceTests : ServiceTestBase
         var service = GetArtistService();
 
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentException>(() => 
+        await Assert.ThrowsAsync<ArgumentException>(() =>
             service.SaveImageUrlAsArtistImageAsync(0, imageUrl, false));
-        await Assert.ThrowsAsync<ArgumentException>(() => 
+        await Assert.ThrowsAsync<ArgumentException>(() =>
             service.SaveImageUrlAsArtistImageAsync(-1, imageUrl, false));
     }
 
@@ -960,9 +960,9 @@ public class ArtistServiceTests : ServiceTestBase
         var service = GetArtistService();
 
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentException>(() => 
+        await Assert.ThrowsAsync<ArgumentException>(() =>
             service.MergeArtistsAsync(0, artistIdsToMerge));
-        await Assert.ThrowsAsync<ArgumentException>(() => 
+        await Assert.ThrowsAsync<ArgumentException>(() =>
             service.MergeArtistsAsync(-1, artistIdsToMerge));
     }
 
@@ -974,7 +974,7 @@ public class ArtistServiceTests : ServiceTestBase
         var service = GetArtistService();
 
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentException>(() => 
+        await Assert.ThrowsAsync<ArgumentException>(() =>
             service.MergeArtistsAsync(targetArtist.Id, Array.Empty<int>()));
     }
 
@@ -1019,9 +1019,9 @@ public class ArtistServiceTests : ServiceTestBase
         var service = GetArtistService();
 
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentException>(() => 
+        await Assert.ThrowsAsync<ArgumentException>(() =>
             service.DeleteAlbumsForArtist(0, albumIdsToDelete));
-        await Assert.ThrowsAsync<ArgumentException>(() => 
+        await Assert.ThrowsAsync<ArgumentException>(() =>
             service.DeleteAlbumsForArtist(-1, albumIdsToDelete));
     }
 
@@ -1081,7 +1081,7 @@ public class ArtistServiceTests : ServiceTestBase
         var service = GetArtistService();
 
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentNullException>(() => 
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
             service.GetArtistImageBytesAndEtagAsync(null));
     }
 
@@ -1092,7 +1092,7 @@ public class ArtistServiceTests : ServiceTestBase
         var service = GetArtistService();
 
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentException>(() => 
+        await Assert.ThrowsAsync<ArgumentException>(() =>
             service.GetArtistImageBytesAndEtagAsync(Guid.Empty));
     }
 
@@ -1127,7 +1127,7 @@ public class ArtistServiceTests : ServiceTestBase
         var service = GetArtistService();
 
         // Act & Assert
-        await Assert.ThrowsAsync<NullReferenceException>(() => 
+        await Assert.ThrowsAsync<NullReferenceException>(() =>
             service.ClearCacheAsync(999999, CancellationToken.None));
     }
 
@@ -1222,7 +1222,7 @@ public class ArtistServiceTests : ServiceTestBase
         // Assert
         Assert.NotNull(result);
         Assert.NotEmpty(result.Data);
-        
+
         var names = result.Data.Select(a => a.Name).ToArray();
         var sortedNames = names.OrderByDescending(n => n).ToArray();
         Assert.Equal(sortedNames, names);
@@ -1323,7 +1323,7 @@ public class ArtistServiceTests : ServiceTestBase
     private async Task SeedTestArtistsWithAlternateNames(int count = 3)
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var library = new Library
         {
             Name = "Test Library",
@@ -1378,7 +1378,7 @@ public class ArtistServiceTests : ServiceTestBase
     private async Task<Artist> CreateTestArtistWithLibrary(string artistName = "Test Artist")
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var library = new Library
         {
             Name = "Test Library",
@@ -1408,7 +1408,7 @@ public class ArtistServiceTests : ServiceTestBase
     private async Task SeedTestArtists(int count = 5)
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var library = new Library
         {
             Name = "Test Library",

@@ -28,7 +28,7 @@ public class MelodeeArtistSearchEnginePlugin(IDbContextFactory<MelodeeDbContext>
     public int SortOrder { get; } = 0;
 
     public async Task<PagedResult<ArtistSearchResult>> DoArtistSearchAsync(
-        ArtistQuery query, 
+        ArtistQuery query,
         int maxResults,
         CancellationToken cancellationToken = default)
     {
@@ -45,10 +45,23 @@ public class MelodeeArtistSearchEnginePlugin(IDbContextFactory<MelodeeDbContext>
                     .Where(x => x.MusicBrainzId == query.MusicBrainzIdValue)
                     .Select(x => new
                     {
-                        x.Id, x.Name, x.ApiKey, x.MusicBrainzId, x.SortName, x.RealName, x.AlbumCount, x.AlternateNames,
+                        x.Id,
+                        x.Name,
+                        x.ApiKey,
+                        x.MusicBrainzId,
+                        x.SortName,
+                        x.RealName,
+                        x.AlbumCount,
+                        x.AlternateNames,
                         Albums = x.Albums.Select(a => new
                         {
-                            a.ApiKey, a.AlbumType, a.ReleaseDate, a.MusicBrainzId, a.Name, a.NameNormalized, a.SortName
+                            a.ApiKey,
+                            a.AlbumType,
+                            a.ReleaseDate,
+                            a.MusicBrainzId,
+                            a.Name,
+                            a.NameNormalized,
+                            a.SortName
                         })
                     })
                     .FirstOrDefaultAsync(cancellationToken)
@@ -96,12 +109,25 @@ public class MelodeeArtistSearchEnginePlugin(IDbContextFactory<MelodeeDbContext>
                     .Take(maxResults)
                     .Select(x => new
                     {
-                        x.Id, x.Name, x.ApiKey, x.MusicBrainzId, x.SortName, x.RealName, x.AlbumCount, x.AlternateNames,
+                        x.Id,
+                        x.Name,
+                        x.ApiKey,
+                        x.MusicBrainzId,
+                        x.SortName,
+                        x.RealName,
+                        x.AlbumCount,
+                        x.AlternateNames,
                         x.NameNormalized,
                         Albums = x.Albums.Select(a => new
                         {
-                            a.AlbumType, a.AlternateNames, a.ReleaseDate, a.MusicBrainzId, a.NameNormalized, a.Name,
-                            a.SortName, a.ApiKey
+                            a.AlbumType,
+                            a.AlternateNames,
+                            a.ReleaseDate,
+                            a.MusicBrainzId,
+                            a.NameNormalized,
+                            a.Name,
+                            a.SortName,
+                            a.ApiKey
                         })
                     })
                     .ToArrayAsync(cancellationToken)
@@ -161,12 +187,25 @@ public class MelodeeArtistSearchEnginePlugin(IDbContextFactory<MelodeeDbContext>
                     .Take(maxResults)
                     .Select(x => new
                     {
-                        x.Id, x.Name, x.ApiKey, x.MusicBrainzId, x.SortName, x.RealName, x.AlbumCount, x.AlternateNames,
+                        x.Id,
+                        x.Name,
+                        x.ApiKey,
+                        x.MusicBrainzId,
+                        x.SortName,
+                        x.RealName,
+                        x.AlbumCount,
+                        x.AlternateNames,
                         x.NameNormalized,
                         Albums = x.Albums.Select(a => new
                         {
-                            a.AlbumType, a.AlternateNames, a.ReleaseDate, a.MusicBrainzId, a.NameNormalized, a.Name,
-                            a.SortName, a.ApiKey
+                            a.AlbumType,
+                            a.AlternateNames,
+                            a.ReleaseDate,
+                            a.MusicBrainzId,
+                            a.NameNormalized,
+                            a.Name,
+                            a.SortName,
+                            a.ApiKey
                         })
                     })
                     .ToArrayAsync(cancellationToken)
@@ -212,7 +251,7 @@ public class MelodeeArtistSearchEnginePlugin(IDbContextFactory<MelodeeDbContext>
     }
 
     public async Task<PagedResult<SongSearchResult>> DoArtistTopSongsSearchAsync(
-        int forArtist, 
+        int forArtist,
         int maxResults,
         CancellationToken cancellationToken = default)
     {
@@ -227,7 +266,7 @@ public class MelodeeArtistSearchEnginePlugin(IDbContextFactory<MelodeeDbContext>
                 .AsNoTracking()
                 .AnyAsync(x => x.Id == forArtist, cancellationToken)
                 .ConfigureAwait(false);
-                
+
             if (artistExists)
             {
                 // Use EF Core to get top songs with proper ordering and ranking

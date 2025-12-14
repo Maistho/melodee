@@ -168,7 +168,7 @@ public sealed class AlbumsController(
         {
             return NotFound(new { error = "Album not found" });
         }
-        
+
         var userSongsForAlbum = await userService.UserSongsForAlbumAsync(userResult.Data.Id, albumResult.Data!.ApiKey, cancellationToken);
         if (userSongsForAlbum != null)
         {

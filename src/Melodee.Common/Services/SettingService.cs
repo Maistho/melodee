@@ -57,26 +57,26 @@ public class SettingService : ServiceBase
     {
         var settingsCount = 0;
         Setting[] settings = [];
-        
+
         await using (var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
         {
             try
             {
                 // Build base query with AsNoTracking for performance
                 var query = scopedContext.Settings.AsNoTracking().AsQueryable();
-                
+
                 // Apply dynamic filtering using EF Core
                 query = ApplyFilters(query, pagedRequest);
-                
+
                 // Get total count efficiently
                 settingsCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);
-                
+
                 if (!pagedRequest.IsTotalCountOnlyRequest)
                 {
                     // Apply ordering, pagination and execute query
                     query = ApplyOrdering(query, pagedRequest);
                     query = query.Skip(pagedRequest.SkipValue).Take(pagedRequest.TakeValue);
-                    
+
                     settings = await query.ToArrayAsync(cancellationToken).ConfigureAwait(false);
 
                     // Apply environment variable overrides
@@ -121,13 +121,13 @@ public class SettingService : ServiceBase
                 FilterOperator.IsNotNull => query.Where(s => EF.Property<string>(s, filter.PropertyName) != null),
                 FilterOperator.IsEmpty => query.Where(s => EF.Property<string>(s, filter.PropertyName) == string.Empty),
                 FilterOperator.IsNotEmpty => query.Where(s => EF.Property<string>(s, filter.PropertyName) != string.Empty),
-                FilterOperator.GreaterThan when filter.Value.IsNumericType() => 
+                FilterOperator.GreaterThan when filter.Value.IsNumericType() =>
                     query.Where(s => EF.Property<int>(s, filter.PropertyName) > Convert.ToInt32(filter.Value)),
-                FilterOperator.GreaterThanOrEquals when filter.Value.IsNumericType() => 
+                FilterOperator.GreaterThanOrEquals when filter.Value.IsNumericType() =>
                     query.Where(s => EF.Property<int>(s, filter.PropertyName) >= Convert.ToInt32(filter.Value)),
-                FilterOperator.LessThan when filter.Value.IsNumericType() => 
+                FilterOperator.LessThan when filter.Value.IsNumericType() =>
                     query.Where(s => EF.Property<int>(s, filter.PropertyName) < Convert.ToInt32(filter.Value)),
-                FilterOperator.LessThanOrEquals when filter.Value.IsNumericType() => 
+                FilterOperator.LessThanOrEquals when filter.Value.IsNumericType() =>
                     query.Where(s => EF.Property<int>(s, filter.PropertyName) <= Convert.ToInt32(filter.Value)),
                 _ => query
             };

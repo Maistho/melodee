@@ -29,7 +29,7 @@ public class Program
         }
 
         var category = args[0].ToLower();
-        
+
         // Parse BenchmarkDotNet arguments (everything after the first argument)
         var benchmarkArgs = args.Skip(1).ToArray();
         var config = CreateConfig(benchmarkArgs);
@@ -64,7 +64,7 @@ public class Program
     private static IConfig CreateConfig(string[] args)
     {
         var config = DefaultConfig.Instance;
-        
+
         // Parse custom arguments
         string? artifactsPath = null;
         string[]? exporters = null;
@@ -92,7 +92,7 @@ public class Program
         if (exporters != null && exporters.Length > 0)
         {
             var exporterList = new List<IExporter>();
-            
+
             foreach (var exporter in exporters)
             {
                 switch (exporter.Trim().ToLower())
@@ -114,7 +114,7 @@ public class Program
                         break;
                 }
             }
-            
+
             if (exporterList.Count > 0)
             {
                 config = config.AddExporter(exporterList.ToArray());

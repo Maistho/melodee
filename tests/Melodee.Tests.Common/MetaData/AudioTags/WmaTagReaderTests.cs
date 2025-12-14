@@ -28,16 +28,16 @@ public class WmaTagReaderTests
     {
         // WMA format is complex and proprietary, so instead of relying on external files,
         // we'll test that the WMA reader handles non-WMA files without crashing
-        
+
         var tempFile = Path.GetTempFileName();
         try
         {
             // Create a file that's not a WMA file
             await File.WriteAllTextAsync(tempFile, "This is not a WMA file");
-            
+
             var reader = new WmaTagReader();
             var tags = await reader.ReadTagsAsync(tempFile, CancellationToken.None);
-            
+
             // WMA reader should return empty tags for non-WMA files
             Assert.NotNull(tags);
             Assert.Empty(tags);

@@ -5,9 +5,9 @@ namespace Melodee.Tests.Common.Common.Services;
 
 public class MockFileSystemTests : IDisposable
 {
-    
+
     private readonly MockFileSystemService _mockFileSystem = new();
-    
+
     [Fact]
     public void MockFileSystem_EnumerateFiles_ReturnsCorrectFiles()
     {
@@ -59,7 +59,7 @@ public class MockFileSystemTests : IDisposable
         // Arrange
         var testAlbum = AlbumDiscoveryServiceTests.CreateTestAlbum();
         var filePath = "/music/test/melodee.json";
-        
+
         _mockFileSystem.SetAlbumForFile(filePath, testAlbum);
 
         // Act
@@ -70,7 +70,7 @@ public class MockFileSystemTests : IDisposable
         Assert.Equal(testAlbum.Id, result.Id);
         Assert.Equal(testAlbum.AlbumTitle(), result.AlbumTitle());
     }
-    
+
     [Fact]
     public void MockFileSystem_GetDirectoryName_ReturnsCorrectDirectoryName()
     {
@@ -122,5 +122,5 @@ public class MockFileSystemTests : IDisposable
     public void Dispose()
     {
         _mockFileSystem.Reset();
-    }    
+    }
 }

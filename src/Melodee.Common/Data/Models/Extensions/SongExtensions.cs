@@ -1,13 +1,13 @@
 using Melodee.Common.Configuration;
 using Melodee.Common.Constants;
 using Melodee.Common.Data.Constants;
+using Melodee.Common.Enums;
 using Melodee.Common.Extensions;
 using Melodee.Common.Models.Collection;
 using Melodee.Common.Models.OpenSubsonic;
 using Melodee.Common.Models.Scrobbling;
 using Melodee.Common.Models.SearchEngines;
 using Melodee.Common.Utility;
-using Melodee.Common.Enums;
 
 namespace Melodee.Common.Data.Models.Extensions;
 
@@ -56,7 +56,7 @@ public static class SongExtensions
     public static string ToApiStreamUrl(this Song song, IMelodeeConfiguration configuration, Microsoft.AspNetCore.Http.HttpContext? httpContext)
     {
         var configuredBaseUrl = configuration.GetValue<string>(SettingRegistry.SystemBaseUrl);
-        
+
         string baseUrl;
         if (configuredBaseUrl.Nullify() == null || configuredBaseUrl == MelodeeConfiguration.RequiredNotSetValue)
         {
@@ -64,7 +64,7 @@ public static class SongExtensions
             {
                 throw new Exception($"Configuration setting [{SettingRegistry.SystemBaseUrl}] is invalid and no HttpContext provided for fallback.");
             }
-            
+
             baseUrl = $"{httpContext.Request.Scheme}://{httpContext.Request.Host.Value}";
         }
         else

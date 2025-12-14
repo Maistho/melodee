@@ -13,7 +13,7 @@ public class MetalApiAlbumImageSearchEngineTests : ServiceTestBase
     {
         // Arrange
         var mockClient = new Mock<IMetalApiClient>();
-        
+
         var engine = new MetalApiAlbumImageSearchEngine(
             mockClient.Object,
             Logger,
@@ -34,7 +34,7 @@ public class MetalApiAlbumImageSearchEngineTests : ServiceTestBase
     {
         // Arrange
         var mockClient = new Mock<IMetalApiClient>();
-        
+
         var engine = new MetalApiAlbumImageSearchEngine(
             mockClient.Object,
             Logger,
@@ -62,7 +62,7 @@ public class MetalApiAlbumImageSearchEngineTests : ServiceTestBase
     {
         // Arrange
         var mockClient = new Mock<IMetalApiClient>();
-        
+
         var engine = new MetalApiAlbumImageSearchEngine(
             mockClient.Object,
             Logger,
@@ -90,7 +90,7 @@ public class MetalApiAlbumImageSearchEngineTests : ServiceTestBase
     {
         // Arrange
         var mockClient = new Mock<IMetalApiClient>();
-        
+
         mockClient.Setup(c => c.SearchAlbumsByTitleAsync(
             It.IsAny<string>(),
             It.IsAny<CancellationToken>()))
@@ -298,13 +298,13 @@ public class MetalApiAlbumImageSearchEngineTests : ServiceTestBase
 
         // Act - Test with value above max
         var result1 = await engine.DoAlbumImageSearch(query, 100);
-        
+
         // Assert - Should be clamped
         Assert.NotNull(result1);
 
         // Act - Test with value below min
         var result2 = await engine.DoAlbumImageSearch(query, 0);
-        
+
         // Assert - Should be clamped to 1
         Assert.NotNull(result2);
     }

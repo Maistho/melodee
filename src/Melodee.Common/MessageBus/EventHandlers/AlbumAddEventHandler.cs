@@ -50,7 +50,7 @@ public sealed class AlbumAddEventHandler(
                              await contextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
                 {
                     var now = Instant.FromDateTimeUtc(DateTime.UtcNow);
-                    
+
                     // Validate configuration
                     IMelodeeConfiguration configuration;
                     try
@@ -287,7 +287,7 @@ public sealed class AlbumAddEventHandler(
 
                     if (!newAlbumSongs.Any())
                     {
-                        logger.Warning("[{Name}] No valid songs found for album [{Album}]", 
+                        logger.Warning("[{Name}] No valid songs found for album [{Album}]",
                             nameof(AlbumAddEventHandler), albumTitle);
                         return;
                     }
@@ -298,7 +298,7 @@ public sealed class AlbumAddEventHandler(
                     {
                         newAlbum.Songs = newAlbumSongs;
                         newAlbum.SongCount = SafeParser.ToNumber<short>(newAlbumSongs.Count);
-                        
+
                         scopedContext.Albums.Add(newAlbum);
                         await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
@@ -328,7 +328,7 @@ public sealed class AlbumAddEventHandler(
                                         ignoreProduction,
                                         ignorePublishers,
                                         cancellationToken);
-                                        
+
                                     foreach (var cfs in contributorsForSong)
                                     {
                                         if (!dbContributorsToAdd.Any(x => x.AlbumId == cfs.AlbumId &&

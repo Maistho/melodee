@@ -93,13 +93,13 @@ public class ArtistSearchEngineService(
     {
         int totalCount;
         Artist[] artists = [];
-        
+
         await using (var scopedContext = await artistSearchEngineServiceDbContextFactory
                          .CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
         {
             // Build the base query with filters
             var query = scopedContext.Artists.AsNoTracking();
-            
+
             // Apply filters from PagedRequest.FilterBy if any
             if (pagedRequest.FilterBy?.Length > 0)
             {
@@ -107,7 +107,7 @@ public class ArtistSearchEngineService(
                 {
                     var filterValue = filter.Value?.ToString() ?? string.Empty;
                     var filterValuePattern = filter.ValuePattern()?.ToString() ?? string.Empty;
-                    
+
                     // Apply filters based on property name and operator
                     query = filter.PropertyName.ToLower() switch
                     {
@@ -149,10 +149,10 @@ public class ArtistSearchEngineService(
                     };
                 }
             }
-            
+
             // Get total count
             totalCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);
-            
+
             if (!pagedRequest.IsTotalCountOnlyRequest)
             {
                 // Apply ordering
@@ -160,7 +160,7 @@ public class ArtistSearchEngineService(
                 {
                     var firstOrderBy = pagedRequest.OrderBy.First();
                     var isDescending = firstOrderBy.Value.ToUpper() == "DESC";
-                    
+
                     query = firstOrderBy.Key.ToLower() switch
                     {
                         "id" => isDescending ? query.OrderByDescending(x => x.Id) : query.OrderBy(x => x.Id),
@@ -169,13 +169,13 @@ public class ArtistSearchEngineService(
                         "sortname" => isDescending ? query.OrderByDescending(x => x.SortName) : query.OrderBy(x => x.SortName),
                         _ => isDescending ? query.OrderByDescending(x => x.Id) : query.OrderBy(x => x.Id)
                     };
-                    
+
                     // Apply additional ordering if present
                     foreach (var orderBy in pagedRequest.OrderBy.Skip(1))
                     {
                         var isDesc = orderBy.Value.ToUpper() == "DESC";
                         var orderedQuery = (IOrderedQueryable<Artist>)query;
-                        
+
                         query = orderBy.Key.ToLower() switch
                         {
                             "id" => isDesc ? orderedQuery.ThenByDescending(x => x.Id) : orderedQuery.ThenBy(x => x.Id),
@@ -190,7 +190,7 @@ public class ArtistSearchEngineService(
                 {
                     query = query.OrderBy(x => x.Id);
                 }
-                
+
                 // Apply pagination and get results with album counts in a single query
                 artists = await query
                     .Skip(pagedRequest.SkipValue)
@@ -217,7 +217,7 @@ public class ArtistSearchEngineService(
                     .ConfigureAwait(false);
             }
         }
-        
+
         return new PagedResult<Artist>
         {
             TotalCount = totalCount,
@@ -783,7 +783,7 @@ public class ArtistSearchEngineService(
                     .Where(a => a.ArtistId == artist.Id)
                     .ToListAsync(cancellationToken)
                     .ConfigureAwait(false);
-                    
+
                 scopedContext.Albums.RemoveRange(albumsToDelete);
             }
             await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

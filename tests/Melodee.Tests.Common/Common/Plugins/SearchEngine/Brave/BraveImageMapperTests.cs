@@ -1,5 +1,5 @@
-using Melodee.Common.Plugins.SearchEngine.Brave;
 using Melodee.Common.Models.SearchEngines;
+using Melodee.Common.Plugins.SearchEngine.Brave;
 
 namespace Melodee.Tests.Common.Common.Plugins.SearchEngine.Brave;
 

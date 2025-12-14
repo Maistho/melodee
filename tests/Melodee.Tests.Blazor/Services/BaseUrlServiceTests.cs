@@ -19,10 +19,10 @@ public class BaseUrlServiceTests
         _mockHttpContextAccessor = new Mock<IHttpContextAccessor>();
         _mockConfigurationFactory = new Mock<IMelodeeConfigurationFactory>();
         _mockConfiguration = new Mock<IMelodeeConfiguration>();
-        
+
         _mockConfigurationFactory.Setup(x => x.GetConfigurationAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(_mockConfiguration.Object);
-            
+
         _service = new BaseUrlService(_mockHttpContextAccessor.Object, _mockConfigurationFactory.Object);
     }
 

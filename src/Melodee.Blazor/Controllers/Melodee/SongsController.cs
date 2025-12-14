@@ -5,6 +5,7 @@ using Melodee.Blazor.Filters;
 using Melodee.Blazor.Services;
 using Melodee.Common.Configuration;
 using Melodee.Common.Constants;
+using Melodee.Common.Data.Models;
 using Melodee.Common.Data.Models.Extensions;
 using Melodee.Common.Extensions;
 using Melodee.Common.Models;
@@ -15,7 +16,6 @@ using Melodee.Common.Serialization;
 using Melodee.Common.Services;
 using Melodee.Common.Utility;
 using Microsoft.AspNetCore.Mvc;
-using Melodee.Common.Data.Models;
 
 namespace Melodee.Blazor.Controllers.Melodee;
 
@@ -199,7 +199,7 @@ public class SongsController(
 
         return BadRequest("Unable to toggle star for song for user.");
     }
-    
+
     [HttpPost]
     [Route("setrating/{apiKey:guid}/{rating:int}")]
     public async Task<IActionResult>? ToggleSongStarred(Guid apiKey, int rating, CancellationToken cancellationToken = default)
@@ -230,7 +230,7 @@ public class SongsController(
         {
             return Ok();
         }
-        
+
         return BadRequest("Unable to toggle star for song for user.");
     }
 
@@ -275,7 +275,7 @@ public class SongsController(
 
         // Parse range header if present
         var rangeHeader = Request.Headers["Range"].ToString();
-        
+
         var melodeeConfig = await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
         var useBuffered = melodeeConfig.GetValue<bool?>(SettingRegistry.StreamingUseBufferedResponses) ?? false;
 
@@ -323,25 +323,25 @@ public class SongsController(
         }
 
         var descriptorResult = await songService.GetStreamingDescriptorAsync(
-            userResult.Data.ToUserInfo(), 
-            apiKey, 
+            userResult.Data.ToUserInfo(),
+            apiKey,
             rangeHeader,
             false, // not a download
             cancellationToken).ConfigureAwait(false);
-            
+
         if (!descriptorResult.IsSuccess || descriptorResult.Data == null)
         {
             return BadRequest(new { error = "Unable to load song" });
         }
 
         var descriptor = descriptorResult.Data;
-        
+
         // Determine status code
         var statusCode = descriptor.Range != null ? 206 : 200; // 206 for partial content, 200 for full
 
         // Create response headers using the helper
         var responseHeaders = RangeParser.CreateResponseHeaders(descriptor, statusCode);
-        
+
         // Set response headers (don't clear existing headers, just set/append required ones)
         foreach (var header in responseHeaders)
         {
@@ -357,13 +357,13 @@ public class SongsController(
             // For range requests, use FileStreamResult with range support
             var fileStream = new FileStream(descriptor.FilePath, FileMode.Open, FileAccess.Read, FileShare.Read,
                 bufferSize: 65536, FileOptions.Asynchronous | FileOptions.SequentialScan);
-            
+
             // Seek to start position
             fileStream.Seek(descriptor.Range.Start, SeekOrigin.Begin);
-            
+
             // Create a bounded stream for the range
             var rangeStream = new BoundedStream(fileStream, descriptor.Range.GetContentLength(descriptor.FileSize));
-            
+
             return new FileStreamResult(rangeStream, descriptor.ContentType)
             {
                 EnableRangeProcessing = true,

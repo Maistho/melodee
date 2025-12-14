@@ -144,7 +144,8 @@ public class Mp3Files(
                             {
                                 newAlbumTags.Add(new MetaTag<object?>
                                 {
-                                    Identifier = MetaTagIdentifier.AlbumDate, Value = albumDate,
+                                    Identifier = MetaTagIdentifier.AlbumDate,
+                                    Value = albumDate,
                                     SortOrder = 100
                                 });
                             }

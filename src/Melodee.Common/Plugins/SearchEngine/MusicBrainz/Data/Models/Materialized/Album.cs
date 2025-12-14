@@ -37,7 +37,7 @@ public sealed record Album
 
     public int ReleaseType { get; init; }
 
-    [NotMapped] 
+    [NotMapped]
     public ReleaseType ReleaseTypeValue => SafeParser.ToEnum<ReleaseType>(ReleaseType);
 
     [NotMapped]
@@ -46,13 +46,13 @@ public sealed record Album
     [MaxLength(MusicBrainzRepositoryBase.MaxIndexSize)]
     public required string MusicBrainzIdRaw { get; init; }
 
-    [NotMapped] 
+    [NotMapped]
     public Guid MusicBrainzId => SafeParser.ToGuid(MusicBrainzIdRaw) ?? Guid.Empty;
 
     [MaxLength(MusicBrainzRepositoryBase.MaxIndexSize)]
     public required string ReleaseGroupMusicBrainzIdRaw { get; init; }
 
-    [NotMapped] 
+    [NotMapped]
     public Guid ReleaseGroupMusicBrainzId => SafeParser.ToGuid(ReleaseGroupMusicBrainzIdRaw) ?? Guid.Empty;
 
     public required DateTime ReleaseDate { get; init; }

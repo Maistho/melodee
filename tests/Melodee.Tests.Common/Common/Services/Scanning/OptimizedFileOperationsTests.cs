@@ -1,7 +1,7 @@
-using Melodee.Common.Services.Scanning;
-using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Text;
+using Melodee.Common.Services.Scanning;
+using Microsoft.Extensions.Logging;
 
 namespace Melodee.Tests.Common.Common.Services.Scanning;
 
@@ -28,7 +28,7 @@ public class OptimizedFileOperationsTests : IDisposable
             {
                 File.Delete(file);
             }
-            
+
             foreach (var dir in _createdDirectories.Where(Directory.Exists).OrderByDescending(d => d.Length))
             {
                 Directory.Delete(dir, true);
@@ -49,7 +49,7 @@ public class OptimizedFileOperationsTests : IDisposable
             Directory.CreateDirectory(directory);
             _createdDirectories.Add(directory);
         }
-        
+
         File.WriteAllText(filePath, content);
         _createdFiles.Add(filePath);
         return filePath;
@@ -63,7 +63,7 @@ public class OptimizedFileOperationsTests : IDisposable
         var sourceFile2 = CreateTestFile("source2.txt", "content2");
         var destFile1 = Path.Combine(_testDirectory, "dest1.txt");
         var destFile2 = Path.Combine(_testDirectory, "dest2.txt");
-        
+
         var filePairs = new[]
         {
             (sourceFile1, destFile1),
@@ -79,7 +79,7 @@ public class OptimizedFileOperationsTests : IDisposable
         Assert.True(File.Exists(destFile2));
         Assert.Equal("content1", File.ReadAllText(destFile1));
         Assert.Equal("content2", File.ReadAllText(destFile2));
-        
+
         _createdFiles.AddRange(new[] { destFile1, destFile2 });
     }
 
@@ -99,7 +99,7 @@ public class OptimizedFileOperationsTests : IDisposable
         Assert.False(File.Exists(sourceFile));
         Assert.True(File.Exists(destFile));
         Assert.Equal("test content", File.ReadAllText(destFile));
-        
+
         _createdFiles.Remove(sourceFile);
         _createdFiles.Add(destFile);
     }
@@ -110,7 +110,7 @@ public class OptimizedFileOperationsTests : IDisposable
         // Arrange
         var sourceFiles = new List<string>();
         var filePairs = new List<(string, string)>();
-        
+
         // Create enough files to exceed processor count to trigger cancellation check
         var fileCount = Math.Max(Environment.ProcessorCount + 1, 10);
         for (int i = 0; i < fileCount; i++)
@@ -169,11 +169,11 @@ public class OptimizedFileOperationsTests : IDisposable
         // Arrange
         var sourceFile = CreateTestFile("source.txt", "content");
         var destFile = CreateTestFile("dest.txt", "content");
-        
+
         // Set same timestamps to simulate identical files
         var sourceInfo = new FileInfo(sourceFile);
         File.SetLastWriteTime(destFile, sourceInfo.LastWriteTime);
-        
+
         var filePairs = new[] { (sourceFile, destFile) };
 
         // Act
@@ -199,7 +199,7 @@ public class OptimizedFileOperationsTests : IDisposable
         Assert.Equal(2, result);
         Assert.False(File.Exists(file1));
         Assert.False(File.Exists(file2));
-        
+
         _createdFiles.RemoveAll(f => filesToDelete.Contains(f));
     }
 
@@ -217,7 +217,7 @@ public class OptimizedFileOperationsTests : IDisposable
         // Assert
         Assert.Equal(1, result); // Only existing file was deleted
         Assert.False(File.Exists(existingFile));
-        
+
         _createdFiles.Remove(existingFile);
     }
 
@@ -285,10 +285,10 @@ public class OptimizedFileOperationsTests : IDisposable
     {
         // Arrange
         var file = CreateTestFile("test.txt");
-        
+
         // First call to cache the file
         OptimizedFileOperations.UpdateFileHashCache(file);
-        
+
         // Act
         var result = OptimizedFileOperations.HasFileChanged(file);
 
@@ -369,7 +369,7 @@ public class OptimizedFileOperationsTests : IDisposable
         var subDir = Path.Combine(_testDirectory, "subdir");
         Directory.CreateDirectory(subDir);
         _createdDirectories.Add(subDir);
-        
+
         CreateTestFile("file1.txt");
         CreateTestFile(Path.Combine("subdir", "file2.txt"));
 
@@ -438,7 +438,7 @@ public class OptimizedFileOperationsTests : IDisposable
         // Assert
         Assert.True(File.Exists(filePath));
         Assert.Equal(content, File.ReadAllText(filePath));
-        
+
         _createdFiles.Add(filePath);
     }
 
@@ -475,7 +475,7 @@ public class OptimizedFileOperationsTests : IDisposable
         Assert.Equal(1, result);
         Assert.True(File.Exists(destFile));
         Assert.Equal("test content", File.ReadAllText(destFile));
-        
+
         _createdFiles.Add(destFile);
     }
 
@@ -495,7 +495,7 @@ public class OptimizedFileOperationsTests : IDisposable
         Assert.True(Directory.Exists(destDir));
         Assert.True(File.Exists(destFile));
         Assert.Equal("content", File.ReadAllText(destFile));
-        
+
         _createdDirectories.Add(destDir);
         _createdDirectories.Add(Path.GetDirectoryName(destDir)!);
         _createdFiles.Add(destFile);

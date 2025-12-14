@@ -15,7 +15,7 @@ public record Album
 
     [RequiredGreaterThanZero] public required int ArtistId { get; init; }
 
-    [Required] [MaxLength(2000)] public required string SortName { get; init; }
+    [Required][MaxLength(2000)] public required string SortName { get; init; }
 
     [RequiredGreaterThanZero] public required int AlbumType { get; init; }
 
@@ -29,9 +29,9 @@ public record Album
 
     [MaxLength(2000)] public string? CoverUrl { get; init; }
 
-    [Required] [MaxLength(2000)] public required string Name { get; init; }
+    [Required][MaxLength(2000)] public required string Name { get; init; }
 
-    [Required] [MaxLength(2000)] public required string NameNormalized { get; init; }
+    [Required][MaxLength(2000)] public required string NameNormalized { get; init; }
 
     [RequiredGreaterThanZero] public required int Year { get; init; }
 }

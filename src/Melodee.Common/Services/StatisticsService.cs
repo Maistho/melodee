@@ -70,7 +70,7 @@ public sealed class StatisticsService(
             Data = stats.Data.FirstOrDefault(x => x is { Type: StatisticType.Count, Category: StatisticCategory.CountAlbum })
         };
     }
-    
+
     public async Task<OperationResult<Statistic?>> GetArtistCountAsync(CancellationToken cancellationToken = default)
     {
         var stats = await GetStatisticsAsync(cancellationToken).ConfigureAwait(false);
@@ -85,8 +85,8 @@ public sealed class StatisticsService(
         {
             Data = stats.Data.FirstOrDefault(x => x is { Type: StatisticType.Count, Category: StatisticCategory.CountArtist })
         };
-    }    
-    
+    }
+
     public async Task<OperationResult<Statistic?>> GetSongCountAsync(CancellationToken cancellationToken = default)
     {
         var stats = await GetStatisticsAsync(cancellationToken).ConfigureAwait(false);
@@ -101,8 +101,8 @@ public sealed class StatisticsService(
         {
             Data = stats.Data.FirstOrDefault(x => x is { Type: StatisticType.Count, Category: StatisticCategory.CountSong })
         };
-    }      
-    
+    }
+
     public async Task<OperationResult<Statistic[]>> GetStatisticsAsync(CancellationToken cancellationToken = default)
     {
         var results = new List<Statistic>();
@@ -234,7 +234,7 @@ public sealed class StatisticsService(
         CancellationToken cancellationToken = default)
     {
         await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
-        
+
         // Use AsNoTracking for performance and run queries in parallel
         var baseQuery = scopedContext.UserSongs
             .AsNoTracking()
@@ -267,7 +267,7 @@ public sealed class StatisticsService(
         CancellationToken cancellationToken = default)
     {
         await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
-        
+
         // Use AsNoTracking for performance
         var favoriteAlbumsCount = await scopedContext.UserAlbums
             .AsNoTracking()
@@ -290,7 +290,7 @@ public sealed class StatisticsService(
         CancellationToken cancellationToken = default)
     {
         await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
-        
+
         // Use AsNoTracking for performance
         var favoriteArtistsCount = await scopedContext.UserArtists
             .AsNoTracking()

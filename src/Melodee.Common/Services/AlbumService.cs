@@ -64,12 +64,12 @@ public class AlbumService(
             }
         }
     }
-    
+
     public async Task ClearCacheAsync(int albumId, CancellationToken cancellationToken = default)
     {
         var album = await GetAsync(albumId, cancellationToken).ConfigureAwait(false);
         ClearCache(album.Data!);
-    }    
+    }
 
     public void ClearCache(Album album)
     {
@@ -723,7 +723,7 @@ public class AlbumService(
     }
 
     public async Task<MelodeeModels.OperationResult<bool>> LockUnlockAlbumAsync(
-        int albumId, 
+        int albumId,
         bool doLock,
         CancellationToken cancellationToken = default)
     {
@@ -808,8 +808,8 @@ public class AlbumService(
     }
 
     public async Task<MelodeeModels.ImageBytesAndEtag> GetAlbumImageBytesAndEtagAsync(
-        Guid? apiKey, 
-        string? size = null, 
+        Guid? apiKey,
+        string? size = null,
         CancellationToken cancellationToken = default)
     {
         Guard.Against.Null(apiKey, nameof(apiKey));
@@ -893,7 +893,7 @@ public class AlbumService(
         var imageConvertor = new ImageConvertor(configuration);
 
         var albumPath = album.ToFileSystemDirectoryInfo();
-        var albumImages = albumPath.FileInfosForExtension("jpg", false).ToArray();        
+        var albumImages = albumPath.FileInfosForExtension("jpg", false).ToArray();
         if (deleteAllImages)
         {
             fileSystemService.DeleteAllFilesForExtension(albumPath, "*.jpg");
@@ -927,7 +927,7 @@ public class AlbumService(
 
         await ClearCacheAsync(album.Id, cancellationToken).ConfigureAwait(false);
         Logger.Information("Saved image for album [{ArtistId}] with {ImageCount} images.",
-            album.Id, totalAlbumImageCount);        
+            album.Id, totalAlbumImageCount);
         return true;
     }
 
@@ -1349,7 +1349,7 @@ public class AlbumService(
                 case ListType.AlphabeticalByArtist:
                     albumsQuery = albumsQuery.OrderBy(a => a.Artist.Name);
                     break;
-                // ByYear and ByGenre already filtered above
+                    // ByYear and ByGenre already filtered above
             }
 
             totalCount = await albumsQuery.CountAsync(cancellationToken);

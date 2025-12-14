@@ -448,7 +448,7 @@ public sealed class DirectoryProcessorToStagingService(
 
         var numberOfValidAlbumsProcessed = 0;
         var numberOfAlbumsProcessed = 0;
-        
+
         Trace.WriteLine($"DirectoryInfoToProcess: [{directoryInfoToProcess}]");
         try
         {
@@ -533,7 +533,7 @@ public sealed class DirectoryProcessorToStagingService(
                     break;
                 }
             }
-            
+
             var convertedSongFiles = false;
 
             // Run Enabled Conversion scripts on each file in directory
@@ -653,7 +653,7 @@ public sealed class DirectoryProcessorToStagingService(
             Trace.WriteLine("Loading images for album...");
             var processingResult = await ProcessAlbumsAsync(directoryInfoToProcess, albumsForDirectory, processingMessages, artistsIdsSeen, albumsIdsSeen, songsIdsSeen, cancellationToken);
             numberOfAlbumsProcessed += processingResult.Item1;
-            numberOfValidAlbumsProcessed += processingResult.Item2;            
+            numberOfValidAlbumsProcessed += processingResult.Item2;
         }
         catch (Exception e)
         {
@@ -1022,7 +1022,7 @@ public sealed class DirectoryProcessorToStagingService(
                 if (jsonName.Nullify() != null)
                 {
                     var jsonFilePath = fileSystemService.CombinePath(albumDirectorySystemInfo.FullName(), jsonName);
-                    await fileSystemService.WriteAllBytesAsync(jsonFilePath, 
+                    await fileSystemService.WriteAllBytesAsync(jsonFilePath,
                         System.Text.Encoding.UTF8.GetBytes(serialized ?? ""), cancellationToken).ConfigureAwait(false);
 
                     artistsIdsSeen.Add(album.Artist.ArtistUniqueId());
@@ -1100,6 +1100,6 @@ public sealed class DirectoryProcessorToStagingService(
                     e);
             }
         }
-        return new ValueTuple<int, int>(numberOfAlbumsProcessed, numberOfValidAlbumsProcessed);        
+        return new ValueTuple<int, int>(numberOfAlbumsProcessed, numberOfValidAlbumsProcessed);
     }
 }

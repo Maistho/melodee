@@ -159,32 +159,32 @@ public class MediaRetrievalController(ISerializer serializer, EtagRepository eta
         }
 
         var descriptorResult = await openSubsonicApiService.GetStreamingDescriptorAsync(request, ApiRequest, cancellationToken).ConfigureAwait(false);
-        
+
         if (descriptorResult.IsSuccess && descriptorResult.Data != null)
         {
             var descriptor = descriptorResult.Data;
-            
+
             // Create response headers
             var statusCode = descriptor.Range != null ? 206 : 200;
             var responseHeaders = RangeParser.CreateResponseHeaders(descriptor, statusCode);
-            
+
             foreach (var header in responseHeaders)
             {
                 Response.Headers[header.Key] = header.Value;
             }
-            
+
             Response.StatusCode = statusCode;
-            
+
             // Return efficient file streaming result
             if (descriptor.Range != null)
             {
                 // For range requests
                 var fileStream = new FileStream(descriptor.FilePath, FileMode.Open, FileAccess.Read, FileShare.Read,
                     bufferSize: 65536, FileOptions.Asynchronous | FileOptions.SequentialScan);
-                
+
                 fileStream.Seek(descriptor.Range.Start, SeekOrigin.Begin);
                 var rangeStream = new BoundedStream(fileStream, descriptor.Range.GetContentLength(descriptor.FileSize));
-                
+
                 return new FileStreamResult(rangeStream, descriptor.ContentType)
                 {
                     EnableRangeProcessing = true,
@@ -275,32 +275,32 @@ public class MediaRetrievalController(ISerializer serializer, EtagRepository eta
         }
 
         var descriptorResult = await openSubsonicApiService.GetStreamingDescriptorAsync(request, ApiRequest, cancellationToken).ConfigureAwait(false);
-        
+
         if (descriptorResult.IsSuccess && descriptorResult.Data != null)
         {
             var descriptor = descriptorResult.Data;
-            
+
             // Create response headers
             var statusCode = descriptor.Range != null ? 206 : 200;
             var responseHeaders = RangeParser.CreateResponseHeaders(descriptor, statusCode);
-            
+
             foreach (var header in responseHeaders)
             {
                 Response.Headers[header.Key] = header.Value;
             }
-            
+
             Response.StatusCode = statusCode;
-            
+
             // Return efficient file streaming result
             if (descriptor.Range != null)
             {
                 // For range requests
                 var fileStream = new FileStream(descriptor.FilePath, FileMode.Open, FileAccess.Read, FileShare.Read,
                     bufferSize: 65536, FileOptions.Asynchronous | FileOptions.SequentialScan);
-                
+
                 fileStream.Seek(descriptor.Range.Start, SeekOrigin.Begin);
                 var rangeStream = new BoundedStream(fileStream, descriptor.Range.GetContentLength(descriptor.FileSize));
-                
+
                 return new FileStreamResult(rangeStream, descriptor.ContentType)
                 {
                     EnableRangeProcessing = true,

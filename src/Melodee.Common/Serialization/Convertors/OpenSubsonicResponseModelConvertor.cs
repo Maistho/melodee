@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Melodee.Common.Models.OpenSubsonic.Responses;
 using Melodee.Common.Models;
+using Melodee.Common.Models.OpenSubsonic.Responses;
 
 namespace Melodee.Common.Serialization.Convertors;
 

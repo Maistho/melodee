@@ -29,7 +29,7 @@ public static class MetalApiImageMapper
         }
 
         var rank = CalculateRank(isExactMatch, isArtistFallback);
-        var title = isArtistFallback 
+        var title = isArtistFallback
             ? $"{bandName ?? album.Band?.Name ?? "Unknown"} album art"
             : album.Name ?? "Unknown Album";
 

@@ -63,7 +63,7 @@ public static class RangeParser
             {
                 // Clamp end position to file size
                 endPos = Math.Min(parsedEnd, fileSize - 1);
-                
+
                 // Validate end >= start
                 if (endPos < startPos)
                     return null;
@@ -109,7 +109,7 @@ public static class RangeParser
 
         // Split by comma for multipart ranges, but only process the first one
         var ranges = rangeHeader.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        
+
         foreach (var range in ranges)
         {
             var parsed = ParseRange($"bytes={range.Replace("bytes=", "")}", fileSize);
@@ -124,14 +124,14 @@ public static class RangeParser
     /// Create appropriate response headers for range or full content
     /// </summary>
     public static Dictionary<string, StringValues> CreateResponseHeaders(
-        StreamingDescriptor descriptor, 
+        StreamingDescriptor descriptor,
         int statusCode = 200)
     {
         var headers = new Dictionary<string, StringValues>(descriptor.ResponseHeaders);
 
         // Set content type
         headers["Content-Type"] = descriptor.ContentType;
-        
+
         // Set accept-ranges
         headers["Accept-Ranges"] = "bytes";
 

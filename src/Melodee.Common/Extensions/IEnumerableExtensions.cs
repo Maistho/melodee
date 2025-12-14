@@ -1,4 +1,4 @@
-﻿namespace Melodee.Common.Extensions;
+namespace Melodee.Common.Extensions;
 
 public static class EnumerableExtensions
 {

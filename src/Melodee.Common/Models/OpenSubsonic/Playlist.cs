@@ -65,7 +65,7 @@ public record Playlist : IOpenSubsonicToXml
     /// </summary>
     public Child[]? Entry { get; set; }
 
-    
+
     public string ToXml(string? nodeName = null)
     {
         var result = new StringBuilder(

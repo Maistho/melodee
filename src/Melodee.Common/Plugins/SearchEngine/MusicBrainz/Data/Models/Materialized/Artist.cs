@@ -36,11 +36,11 @@ public sealed record Artist
     [MaxLength(MusicBrainzRepositoryBase.MaxIndexSize)]
     public required string MusicBrainzIdRaw { get; init; }
 
-    [NotMapped] 
+    [NotMapped]
     public Guid MusicBrainzId => SafeParser.ToGuid(MusicBrainzIdRaw) ?? Guid.Empty;
 
     public string? AlternateNames { get; init; }
 
-    [NotMapped] 
+    [NotMapped]
     public string[] AlternateNamesValues => _alternateNames ??= AlternateNames?.ToTags()?.ToArray() ?? [];
 }

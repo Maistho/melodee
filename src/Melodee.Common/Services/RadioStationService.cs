@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Ardalis.GuardClauses;
 using Melodee.Common.Data;
 using Melodee.Common.Data.Models;
@@ -7,7 +8,6 @@ using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using Serilog;
 using SmartFormat;
-using System.Linq.Expressions;
 using MelodeeModels = Melodee.Common.Models;
 
 namespace Melodee.Common.Services;
@@ -26,24 +26,24 @@ public class RadioStationService(
     {
         int radioStationCount;
         RadioStation[] radioStations = [];
-        
+
         await using (var scopedContext =
                      await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
         {
             // Start with base query and apply performance optimizations
             var query = scopedContext.RadioStations.AsNoTracking();
-            
+
             // Apply filters if specified
             query = ApplyFilters(query, pagedRequest);
-            
+
             // Get total count with filters applied
             radioStationCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);
-            
+
             if (!pagedRequest.IsTotalCountOnlyRequest)
             {
                 // Apply ordering
                 query = ApplyOrdering(query, pagedRequest);
-                
+
                 // Apply pagination
                 radioStations = await query
                     .Skip(pagedRequest.SkipValue)
@@ -179,7 +179,7 @@ public class RadioStationService(
         {
             var filter = pagedRequest.FilterBy[0];
             var filterValue = filter.Value?.ToString()?.ToLowerInvariant() ?? string.Empty;
-            
+
             return filter.PropertyName.ToLowerInvariant() switch
             {
                 "name" => filter.Operator switch
@@ -239,7 +239,7 @@ public class RadioStationService(
 
         // Multiple filters - build expression tree for complex OR/AND logic
         var filterPredicates = new List<Expression<Func<RadioStation, bool>>>();
-        
+
         foreach (var filter in pagedRequest.FilterBy)
         {
             var filterValue = filter.Value?.ToString()?.ToLowerInvariant() ?? string.Empty;
@@ -265,7 +265,7 @@ public class RadioStationService(
                 },
                 _ => null
             };
-            
+
             if (predicate != null)
             {
                 filterPredicates.Add(predicate);
@@ -385,7 +385,7 @@ public class RadioStationService(
         Guard.Against.Expression(_ => apiKey == Guid.Empty, apiKey, nameof(apiKey));
 
         await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
-        
+
         var radioStation = await scopedContext.RadioStations
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.ApiKey == apiKey, cancellationToken)
@@ -448,9 +448,9 @@ public class RadioStationService(
     }
 
     public async Task<MelodeeModels.OperationResult<bool>> UpdateByApiKeyAsync(
-        Guid apiKey, 
-        string name, 
-        string streamUrl, 
+        Guid apiKey,
+        string name,
+        string streamUrl,
         string? homePageUrl,
         CancellationToken cancellationToken = default)
     {

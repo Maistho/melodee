@@ -40,10 +40,10 @@ public class StreamingBenchmarks
     [Benchmark(Baseline = true)]
     public async Task FileStreamToMemoryStream_NewBuffer()
     {
-        using var fileStream = new FileStream(_testFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, 
+        using var fileStream = new FileStream(_testFilePath, FileMode.Open, FileAccess.Read, FileShare.Read,
             BufferSize, FileOptions.Asynchronous | FileOptions.SequentialScan);
         using var memoryStream = new MemoryStream();
-        
+
         var buffer = new byte[BufferSize];
         int bytesRead;
         while ((bytesRead = await fileStream.ReadAsync(buffer)) > 0)
@@ -58,7 +58,7 @@ public class StreamingBenchmarks
         using var fileStream = new FileStream(_testFilePath, FileMode.Open, FileAccess.Read, FileShare.Read,
             BufferSize, FileOptions.Asynchronous | FileOptions.SequentialScan);
         using var memoryStream = new MemoryStream();
-        
+
         var buffer = ArrayPool<byte>.Shared.Rent(BufferSize);
         try
         {
@@ -80,7 +80,7 @@ public class StreamingBenchmarks
         using var fileStream = new FileStream(_testFilePath, FileMode.Open, FileAccess.Read, FileShare.Read,
             BufferSize, FileOptions.Asynchronous | FileOptions.SequentialScan);
         using var memoryStream = new MemoryStream();
-        
+
         await fileStream.CopyToAsync(memoryStream, BufferSize);
     }
 
@@ -104,18 +104,18 @@ public class StreamingBenchmarks
         {
             long totalBytesRead = 0;
             int bytesRead;
-            
+
             while ((bytesRead = await fileStream.ReadAsync(buffer)) > 0)
             {
-                var bytesToWrite = length > 0 ? 
-                    Math.Min(bytesRead, (int)(length - totalBytesRead)) : 
+                var bytesToWrite = length > 0 ?
+                    Math.Min(bytesRead, (int)(length - totalBytesRead)) :
                     bytesRead;
-                    
+
                 if (bytesToWrite <= 0) break;
-                
+
                 await memoryStream.WriteAsync(buffer.AsMemory(0, bytesToWrite));
                 totalBytesRead += bytesToWrite;
-                
+
                 if (length > 0 && totalBytesRead >= length) break;
             }
         }
@@ -152,7 +152,7 @@ public class StreamingBenchmarks
 
         var range = rangeHeader.Substring(6); // Remove "bytes="
         var parts = range.Split('-');
-        
+
         if (parts.Length != 2)
         {
             return "invalid";

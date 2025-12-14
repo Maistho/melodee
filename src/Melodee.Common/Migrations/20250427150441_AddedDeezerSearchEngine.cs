@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 using NodaTime;
 
@@ -35,7 +35,7 @@ namespace Melodee.Common.Migrations
                 table: "Albums",
                 type: "integer",
                 nullable: true);
-            
+
             migrationBuilder.InsertData(
                 table: "Settings",
                 columns: new[] { "Id", "ApiKey", "Category", "Comment", "CreatedAt", "Description", "IsLocked", "Key", "LastUpdatedAt", "Notes", "SortOrder", "Tags", "Value" },

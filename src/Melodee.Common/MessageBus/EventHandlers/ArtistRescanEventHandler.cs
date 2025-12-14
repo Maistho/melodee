@@ -106,7 +106,7 @@ public class ArtistRescanEventHandler(
                             message.ArtistDirectory);
                         return;
                     }
-                    
+
                     // Add log entry with number of albums found for artist in database
                     logger.Information("[{JobName}] Rescanning artist [{ArtistName}] with id [{ArtistId}] found [{AlbumCount}] albums in database.",
                         nameof(ArtistRescanEventHandler),
@@ -165,10 +165,10 @@ public class ArtistRescanEventHandler(
                                 artistDirectoryInfos.Length
                             );
                             await Parallel.ForEachAsync(artistDirectoryInfos, new ParallelOptions
-                                {
-                                    CancellationToken = cancellationToken,
-                                    MaxDegreeOfParallelism = safeParallelism
-                                },
+                            {
+                                CancellationToken = cancellationToken,
+                                MaxDegreeOfParallelism = safeParallelism
+                            },
                                 async (artistDirectoryInfo, _) =>
                                 {
                                     var dbArtistAlbum = dbArtist.Albums.FirstOrDefault(x => artistDirectoryInfo.IsSameDirectory(x.Directory));

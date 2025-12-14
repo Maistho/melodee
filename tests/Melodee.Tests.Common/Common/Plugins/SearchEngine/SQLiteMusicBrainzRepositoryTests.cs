@@ -34,14 +34,14 @@ public class SQLiteMusicBrainzRepositoryTests : ServiceTestBase
         var mockFactory = new Mock<IDbContextFactory<MusicBrainzDbContext>>();
         // Ensure all contexts share the same SQLite connection
         mockFactory.Setup(f => f.CreateDbContextAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(() => 
+            .ReturnsAsync(() =>
             {
                 return new MusicBrainzDbContext(_dbContextOptions);
             });
         mockFactory.Setup(f => f.CreateDbContext())
             .Returns(() => new MusicBrainzDbContext(_dbContextOptions));
         var dbContextFactory = mockFactory.Object;
-        
+
         _repository = new SQLiteMusicBrainzRepository(
             Logger,
             MockConfigurationFactory(),
@@ -99,7 +99,7 @@ public class SQLiteMusicBrainzRepositoryTests : ServiceTestBase
     public async Task SearchArtist_WithMusicBrainzId_ReturnsCorrectArtist()
     {
         SetupTestArtistData();
-        
+
         var artistId = Guid.Parse("12345678-1234-1234-1234-123456789012");
         var query = new ArtistQuery { Name = "Test Artist", MusicBrainzId = artistId.ToString() };
 
@@ -115,9 +115,9 @@ public class SQLiteMusicBrainzRepositoryTests : ServiceTestBase
     public async Task SearchArtist_WithNormalizedName_ReturnsMatchingArtists()
     {
         SetupTestArtistData();
-        
-        var query = new ArtistQuery 
-        { 
+
+        var query = new ArtistQuery
+        {
             Name = "Test Artist"
         };
 
@@ -145,9 +145,9 @@ public class SQLiteMusicBrainzRepositoryTests : ServiceTestBase
     public async Task SearchArtist_WithMaxResults_LimitsResults()
     {
         SetupMultipleTestArtists();
-        
-        var query = new ArtistQuery 
-        { 
+
+        var query = new ArtistQuery
+        {
             Name = "Artist"
         };
 
@@ -162,9 +162,9 @@ public class SQLiteMusicBrainzRepositoryTests : ServiceTestBase
     public async Task SearchArtist_WithAlbumKeyValues_IncludesAlbumMatching()
     {
         SetupTestArtistWithAlbums();
-        
-        var query = new ArtistQuery 
-        { 
+
+        var query = new ArtistQuery
+        {
             Name = "Artist With Albums",
             AlbumKeyValues = new[] { new KeyValue("2023", "Test Album") }
         };
@@ -174,7 +174,7 @@ public class SQLiteMusicBrainzRepositoryTests : ServiceTestBase
         Assert.NotNull(result);
         Assert.True(result.IsSuccess);
         Assert.NotEmpty(result.Data);
-        
+
         var artist = result.Data.First();
         Assert.NotNull(artist.Releases);
         Assert.NotEmpty(artist.Releases);
@@ -200,12 +200,12 @@ public class SQLiteMusicBrainzRepositoryTests : ServiceTestBase
         context.Artists.RemoveRange(context.Artists);
         context.Albums.RemoveRange(context.Albums);
         await context.SaveChangesAsync();
-        
+
         context.Artists.Add(testArtist);
         await context.SaveChangesAsync();
 
-        var query = new ArtistQuery 
-        { 
+        var query = new ArtistQuery
+        {
             Name = "Ac/Dc"
         };
 
@@ -218,8 +218,8 @@ public class SQLiteMusicBrainzRepositoryTests : ServiceTestBase
     [Fact]
     public async Task SearchArtist_WithNullName_HandlesGracefully()
     {
-        var query = new ArtistQuery 
-        { 
+        var query = new ArtistQuery
+        {
             Name = ""
         };
 
@@ -234,9 +234,9 @@ public class SQLiteMusicBrainzRepositoryTests : ServiceTestBase
     public async Task SearchArtist_WithZeroMaxResults_ReturnsEmpty()
     {
         SetupTestArtistData();
-        
-        var query = new ArtistQuery 
-        { 
+
+        var query = new ArtistQuery
+        {
             Name = "Test Artist"
         };
 
@@ -251,9 +251,9 @@ public class SQLiteMusicBrainzRepositoryTests : ServiceTestBase
     public async Task SearchArtist_WithNegativeMaxResults_ReturnsEmpty()
     {
         SetupTestArtistData();
-        
-        var query = new ArtistQuery 
-        { 
+
+        var query = new ArtistQuery
+        {
             Name = "Test Artist"
         };
 
@@ -267,8 +267,8 @@ public class SQLiteMusicBrainzRepositoryTests : ServiceTestBase
     [Fact]
     public async Task SearchArtist_DatabaseException_ReturnsEmptyResult()
     {
-        var query = new ArtistQuery 
-        { 
+        var query = new ArtistQuery
+        {
             Name = "Test Artist"
         };
 
@@ -286,8 +286,8 @@ public class SQLiteMusicBrainzRepositoryTests : ServiceTestBase
         using var cts = new CancellationTokenSource();
         await cts.CancelAsync();
 
-        var query = new ArtistQuery 
-        { 
+        var query = new ArtistQuery
+        {
             Name = "Test Artist"
         };
 
@@ -309,7 +309,7 @@ public class SQLiteMusicBrainzRepositoryTests : ServiceTestBase
     {
         var artist1Id = Guid.NewGuid();
         var artist2Id = Guid.NewGuid();
-        
+
         var exactMatchArtist = new Artist
         {
             Id = 1,
@@ -337,13 +337,13 @@ public class SQLiteMusicBrainzRepositoryTests : ServiceTestBase
         context.Artists.RemoveRange(context.Artists);
         context.Albums.RemoveRange(context.Albums);
         await context.SaveChangesAsync();
-        
+
         context.Artists.Add(exactMatchArtist);
         context.Artists.Add(partialMatchArtist);
         await context.SaveChangesAsync();
 
-        var query = new ArtistQuery 
-        { 
+        var query = new ArtistQuery
+        {
             Name = "Beatles"
         };
 
@@ -352,7 +352,7 @@ public class SQLiteMusicBrainzRepositoryTests : ServiceTestBase
         Assert.NotNull(result);
         Assert.True(result.IsSuccess);
         Assert.NotEmpty(result.Data);
-        
+
         var topResult = result.Data.First();
         Assert.Equal("Beatles", topResult.Name);
         Assert.True(topResult.Rank > 0);
@@ -379,12 +379,12 @@ public class SQLiteMusicBrainzRepositoryTests : ServiceTestBase
         context.Artists.RemoveRange(context.Artists);
         context.Albums.RemoveRange(context.Albums);
         await context.SaveChangesAsync();
-        
+
         context.Artists.Add(testArtist);
         await context.SaveChangesAsync();
 
-        var query = new ArtistQuery 
-        { 
+        var query = new ArtistQuery
+        {
             Name = "The Artist Formerly Known As Prince"
         };
 
@@ -393,7 +393,7 @@ public class SQLiteMusicBrainzRepositoryTests : ServiceTestBase
         Assert.NotNull(result);
         Assert.True(result.IsSuccess);
         Assert.NotEmpty(result.Data);
-        
+
         var artist = result.Data.First();
         Assert.Equal("Prince", artist.Name);
         Assert.Contains("the artist formerly known as prince", artist.AlternateNames ?? []);
@@ -417,7 +417,7 @@ public class SQLiteMusicBrainzRepositoryTests : ServiceTestBase
         // Clear any existing data to avoid conflicts
         context.Artists.RemoveRange(context.Artists);
         context.SaveChanges();
-        
+
         context.Artists.Add(testArtist);
         context.SaveChanges();
     }
@@ -463,7 +463,7 @@ public class SQLiteMusicBrainzRepositoryTests : ServiceTestBase
         context.Artists.RemoveRange(context.Artists);
         context.Albums.RemoveRange(context.Albums);
         context.SaveChanges();
-        
+
         context.Artists.AddRange(artists);
         context.SaveChanges();
     }
@@ -472,7 +472,7 @@ public class SQLiteMusicBrainzRepositoryTests : ServiceTestBase
     {
         var artistId = Guid.NewGuid();
         var albumId = Guid.NewGuid();
-        
+
         var testArtist = new Artist
         {
             Id = 1,
@@ -489,7 +489,7 @@ public class SQLiteMusicBrainzRepositoryTests : ServiceTestBase
             Id = 1,
             MusicBrainzIdRaw = albumId.ToString(),
             Name = "Test Album",
-            NameNormalized = "Test Album".ToNormalizedString()?? string.Empty,
+            NameNormalized = "Test Album".ToNormalizedString() ?? string.Empty,
             SortName = "Test Album",
             ReleaseDate = new DateTime(2023, 1, 1),
             ReleaseType = 1,
@@ -502,7 +502,7 @@ public class SQLiteMusicBrainzRepositoryTests : ServiceTestBase
         context.Artists.RemoveRange(context.Artists);
         context.Albums.RemoveRange(context.Albums);
         context.SaveChanges();
-        
+
         context.Artists.Add(testArtist);
         context.Albums.Add(testAlbum);
         context.SaveChanges();
@@ -519,7 +519,7 @@ public class SQLiteMusicBrainzRepositoryTests : ServiceTestBase
     public override async ValueTask DisposeAsync()
     {
         _connection.Close();
-        await _connection.DisposeAsync();        
+        await _connection.DisposeAsync();
         await base.DisposeAsync();
     }
 }

@@ -1,8 +1,8 @@
 using Melodee.Common.Data.Models;
 using Melodee.Common.Models;
+using Melodee.Tests.Common.Common.Services;
 using NBomber.CSharp;
 using NodaTime;
-using Melodee.Tests.Common.Common.Services;
 
 namespace Melodee.Tests.Common.Common.LoadTests;
 

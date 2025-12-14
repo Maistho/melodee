@@ -57,7 +57,7 @@ public class RadioStationServiceTests : ServiceTestBase
     public async Task ListAsync_ShouldReturnCorrectPagination_WhenMultipleRadioStations()
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         // Create test radio stations
         var stations = new[]
         {
@@ -65,7 +65,7 @@ public class RadioStationServiceTests : ServiceTestBase
             CreateValidRadioStation("Station 2", "http://stream2.com"),
             CreateValidRadioStation("Station 3", "http://stream3.com")
         };
-        
+
         context.RadioStations.AddRange(stations);
         await context.SaveChangesAsync();
 
@@ -84,7 +84,7 @@ public class RadioStationServiceTests : ServiceTestBase
     public async Task ListAsync_ShouldReturnTotalCountOnly_WhenTotalCountOnlyRequest()
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var station = CreateValidRadioStation();
         context.RadioStations.Add(station);
         await context.SaveChangesAsync();
@@ -310,7 +310,7 @@ public class RadioStationServiceTests : ServiceTestBase
     public async Task GetAsync_ShouldReturnRadioStation_WhenExists()
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var radioStation = CreateValidRadioStation();
         context.RadioStations.Add(radioStation);
         await context.SaveChangesAsync();
@@ -359,13 +359,13 @@ public class RadioStationServiceTests : ServiceTestBase
     public async Task GetAsync_ShouldUseCaching_WhenCalledMultipleTimes()
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var radioStation = CreateValidRadioStation();
         context.RadioStations.Add(radioStation);
         await context.SaveChangesAsync();
 
         var service = GetRadioStationService();
-        
+
         // First call should hit database
         var result1 = await service.GetAsync(radioStation.Id);
         // Second call should hit cache
@@ -396,7 +396,7 @@ public class RadioStationServiceTests : ServiceTestBase
     public async Task DeleteAsync_ShouldDeleteRadioStation_WhenUserIsAdminAndStationExists()
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var user = await CreateTestUserAsync(isAdmin: true);
         var radioStation = CreateValidRadioStation();
         context.RadioStations.Add(radioStation);
@@ -407,7 +407,7 @@ public class RadioStationServiceTests : ServiceTestBase
 
         Assert.True(result.IsSuccess);
         Assert.True(result.Data);
-        
+
         // Verify station is deleted - use a fresh context to ensure we see committed changes
         await using var verifyContext = await MockFactory().CreateDbContextAsync();
         var deletedStation = await verifyContext.RadioStations.FindAsync(radioStation.Id);
@@ -418,7 +418,7 @@ public class RadioStationServiceTests : ServiceTestBase
     public async Task DeleteAsync_ShouldDeleteMultipleRadioStations_WhenUserIsAdminAndStationsExist()
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var user = await CreateTestUserAsync(isAdmin: true);
         var station1 = CreateValidRadioStation("Station 1", "http://stream1.com");
         var station2 = CreateValidRadioStation("Station 2", "http://stream2.com");
@@ -430,7 +430,7 @@ public class RadioStationServiceTests : ServiceTestBase
 
         Assert.True(result.IsSuccess);
         Assert.True(result.Data);
-        
+
         // Verify stations are deleted - use a fresh context to ensure we see committed changes
         await using var verifyContext = await MockFactory().CreateDbContextAsync();
         var deletedStation1 = await verifyContext.RadioStations.FindAsync(station1.Id);
@@ -443,7 +443,7 @@ public class RadioStationServiceTests : ServiceTestBase
     public async Task DeleteAsync_ShouldReturnAccessDenied_WhenUserIsNotAdmin()
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var user = await CreateTestUserAsync(isAdmin: false);
         var radioStation = CreateValidRadioStation();
         context.RadioStations.Add(radioStation);
@@ -456,7 +456,7 @@ public class RadioStationServiceTests : ServiceTestBase
         Assert.Equal(OperationResponseType.AccessDenied, result.Type);
         Assert.False(result.Data);
         Assert.Contains("Non admin users cannot delete RadioStations.", result.Messages ?? []);
-        
+
         // Verify station still exists
         await using var verifyContext1 = await MockFactory().CreateDbContextAsync();
         var existingStation = await verifyContext1.RadioStations.FindAsync(radioStation.Id);
@@ -523,11 +523,11 @@ public class RadioStationServiceTests : ServiceTestBase
     public async Task UpdateAsync_ShouldUpdateRadioStation_WhenValidData()
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var radioStation = CreateValidRadioStation();
         context.RadioStations.Add(radioStation);
         await context.SaveChangesAsync();
-        
+
         // Reload the entity to get the generated ID
         context.Entry(radioStation).Reload();
 
@@ -551,7 +551,7 @@ public class RadioStationServiceTests : ServiceTestBase
 
         Assert.True(result.IsSuccess);
         Assert.True(result.Data);
-        
+
         // Verify updates in database - use a fresh context to ensure we see committed changes
         await using var verifyContext = await MockFactory().CreateDbContextAsync();
         var dbStation = await verifyContext.RadioStations.FindAsync(radioStation.Id);
@@ -571,14 +571,14 @@ public class RadioStationServiceTests : ServiceTestBase
     public async Task UpdateAsync_ShouldSetLastUpdatedAt_WhenUpdating()
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var radioStation = CreateValidRadioStation();
         context.RadioStations.Add(radioStation);
         await context.SaveChangesAsync();
 
         var service = GetRadioStationService();
         var beforeUpdate = SystemClock.Instance.GetCurrentInstant();
-        
+
         var updatedStation = new RadioStation
         {
             Id = radioStation.Id,
@@ -592,7 +592,7 @@ public class RadioStationServiceTests : ServiceTestBase
         var afterUpdate = SystemClock.Instance.GetCurrentInstant();
 
         Assert.True(result.IsSuccess);
-        
+
         await using var verifyContext2 = await MockFactory().CreateDbContextAsync();
         var dbStation = await verifyContext2.RadioStations.FindAsync(radioStation.Id);
         Assert.NotNull(dbStation!.LastUpdatedAt);
@@ -640,7 +640,7 @@ public class RadioStationServiceTests : ServiceTestBase
     public async Task UpdateAsync_ShouldReturnValidationFailure_WhenNameIsEmpty()
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var radioStation = CreateValidRadioStation();
         context.RadioStations.Add(radioStation);
         await context.SaveChangesAsync();
@@ -662,7 +662,7 @@ public class RadioStationServiceTests : ServiceTestBase
     public async Task UpdateAsync_ShouldReturnValidationFailure_WhenStreamUrlIsEmpty()
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var radioStation = CreateValidRadioStation();
         context.RadioStations.Add(radioStation);
         await context.SaveChangesAsync();
@@ -684,16 +684,16 @@ public class RadioStationServiceTests : ServiceTestBase
     public async Task UpdateAsync_ShouldClearCache_WhenUpdateSuccessful()
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var radioStation = CreateValidRadioStation();
         context.RadioStations.Add(radioStation);
         await context.SaveChangesAsync();
 
         var service = GetRadioStationService();
-        
+
         // First, get the station to populate cache
         await service.GetAsync(radioStation.Id);
-        
+
         // Update the station
         var updatedStation = CreateValidRadioStation();
         updatedStation.Id = radioStation.Id;
@@ -703,7 +703,7 @@ public class RadioStationServiceTests : ServiceTestBase
 
         Assert.True(result.IsSuccess);
         Assert.True(result.Data);
-        
+
         // Get again - should reflect the update (cache should be cleared)
         var getResult = await service.GetAsync(radioStation.Id);
         Assert.Equal("Updated Station", getResult.Data!.Name);
@@ -747,7 +747,7 @@ public class RadioStationServiceTests : ServiceTestBase
     public async Task UpdateAsync_ShouldNotUpdateApiKey_WhenUpdating()
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var radioStation = CreateValidRadioStation();
         context.RadioStations.Add(radioStation);
         await context.SaveChangesAsync();
@@ -761,7 +761,7 @@ public class RadioStationServiceTests : ServiceTestBase
         var result = await service.UpdateAsync(updatedStation);
 
         Assert.True(result.IsSuccess);
-        
+
         // Verify API key was not changed
         await using var verifyContext3 = await MockFactory().CreateDbContextAsync();
         var dbStation = await verifyContext3.RadioStations.FindAsync(radioStation.Id);
@@ -772,7 +772,7 @@ public class RadioStationServiceTests : ServiceTestBase
     public async Task UpdateAsync_ShouldNotUpdateCreatedAt_WhenUpdating()
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var radioStation = CreateValidRadioStation();
         context.RadioStations.Add(radioStation);
         await context.SaveChangesAsync();
@@ -786,7 +786,7 @@ public class RadioStationServiceTests : ServiceTestBase
         var result = await service.UpdateAsync(updatedStation);
 
         Assert.True(result.IsSuccess);
-        
+
         // Verify CreatedAt was not changed
         await using var verifyContext4 = await MockFactory().CreateDbContextAsync();
         var dbStation = await verifyContext4.RadioStations.FindAsync(radioStation.Id);
@@ -797,21 +797,21 @@ public class RadioStationServiceTests : ServiceTestBase
     public async Task DeleteAsync_ShouldValidateAllStationsExist_BeforeDeleting()
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var user = await CreateTestUserAsync(isAdmin: true);
         var station = CreateValidRadioStation();
         context.RadioStations.Add(station);
         await context.SaveChangesAsync();
 
         var service = GetRadioStationService();
-        
+
         // Try to delete one existing and one non-existing station
         var result = await service.DeleteAsync(user.Id, [station.Id, 999]);
 
         Assert.False(result.IsSuccess);
         Assert.False(result.Data);
         Assert.Contains("Unknown RadioStation.", result.Messages ?? []);
-        
+
         // Verify existing station was not deleted
         await using var verifyContext5 = await MockFactory().CreateDbContextAsync();
         var existingStation = await verifyContext5.RadioStations.FindAsync(station.Id);

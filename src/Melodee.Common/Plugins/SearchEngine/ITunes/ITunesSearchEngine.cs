@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using Melodee.Common.Extensions;
 using Melodee.Common.Models;
 using Melodee.Common.Models.SearchEngines;
@@ -18,12 +18,12 @@ namespace Melodee.Common.Plugins.SearchEngine.ITunes;
 ///         https://performance-partners.apple.com/search-api
 ///     </remarks>
 /// </summary>
-    public class ITunesSearchEngine(
-    ILogger logger,
-    ISerializer serializer,
-    IHttpClientFactory httpClientFactory,
-    ICacheManager cacheManager)
-    : IAlbumImageSearchEnginePlugin, IArtistSearchEnginePlugin, IArtistImageSearchEnginePlugin
+public class ITunesSearchEngine(
+ILogger logger,
+ISerializer serializer,
+IHttpClientFactory httpClientFactory,
+ICacheManager cacheManager)
+: IAlbumImageSearchEnginePlugin, IArtistSearchEnginePlugin, IArtistImageSearchEnginePlugin
 {
     private static readonly int Width = 1200;
     private static readonly int Height = 1200;
@@ -74,7 +74,7 @@ namespace Melodee.Common.Plugins.SearchEngine.ITunes;
             {
                 var na = query.Artist.ToNormalizedString();
                 foreach (var sr in searchResult.Results.Where(x => x is
-                             { ArtworkUrl100: not null, ArtworkUrl60: not null }))
+                { ArtworkUrl100: not null, ArtworkUrl60: not null }))
                 {
                     if (sr.ArtistName.ToNormalizedString() == na)
                     {

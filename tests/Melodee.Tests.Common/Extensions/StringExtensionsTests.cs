@@ -1,4 +1,4 @@
-﻿using Melodee.Common.Enums;
+using Melodee.Common.Enums;
 using Melodee.Common.Extensions;
 using Melodee.Common.Utility;
 

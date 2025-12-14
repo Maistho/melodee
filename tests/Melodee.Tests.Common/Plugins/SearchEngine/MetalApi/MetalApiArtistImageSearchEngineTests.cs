@@ -13,7 +13,7 @@ public class MetalApiArtistImageSearchEngineTests : ServiceTestBase
     {
         // Arrange
         var mockClient = new Mock<IMetalApiClient>();
-        
+
         var engine = new MetalApiArtistImageSearchEngine(
             mockClient.Object,
             Logger,
@@ -34,7 +34,7 @@ public class MetalApiArtistImageSearchEngineTests : ServiceTestBase
     {
         // Arrange
         var mockClient = new Mock<IMetalApiClient>();
-        
+
         var engine = new MetalApiArtistImageSearchEngine(
             mockClient.Object,
             Logger,
@@ -60,7 +60,7 @@ public class MetalApiArtistImageSearchEngineTests : ServiceTestBase
     {
         // Arrange
         var mockClient = new Mock<IMetalApiClient>();
-        
+
         var engine = new MetalApiArtistImageSearchEngine(
             mockClient.Object,
             Logger,
@@ -86,7 +86,7 @@ public class MetalApiArtistImageSearchEngineTests : ServiceTestBase
     {
         // Arrange
         var mockClient = new Mock<IMetalApiClient>();
-        
+
         mockClient.Setup(c => c.SearchBandsByNameAsync(
             It.IsAny<string>(),
             It.IsAny<CancellationToken>()))

@@ -1,5 +1,5 @@
-using Melodee.Common.Plugins.SearchEngine.MetalApi;
 using Melodee.Common.Models.SearchEngines;
+using Melodee.Common.Plugins.SearchEngine.MetalApi;
 
 namespace Melodee.Tests.Common.Plugins.SearchEngine.MetalApi;
 

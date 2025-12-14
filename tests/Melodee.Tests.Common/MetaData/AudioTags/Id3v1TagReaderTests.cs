@@ -32,8 +32,8 @@ public class Id3v1TagReaderTests
         };
 
         var filePath = await BlankMusicFileGenerator.CreateMinimalMp3FileWithVersionAsync(
-            _testOutputPath, 
-            BlankMusicFileGenerator.Id3Version.Id3v1_1, 
+            _testOutputPath,
+            BlankMusicFileGenerator.Id3Version.Id3v1_1,
             metadata);
 
         try

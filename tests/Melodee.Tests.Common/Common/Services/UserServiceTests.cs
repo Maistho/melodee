@@ -21,7 +21,7 @@ public class UserServiceTests : ServiceTestBase
     {
         // Arrange
         var pagedRequest = new PagedRequest { Page = 1, PageSize = 10 };
-        
+
         await using (var context = await MockFactory().CreateDbContextAsync())
         {
             var user1 = CreateTestUser(1, "user1", "user1@test.com");
@@ -40,7 +40,7 @@ public class UserServiceTests : ServiceTestBase
         Assert.True(result.TotalCount >= 2);
         Assert.NotEmpty(result.Data);
         Assert.IsType<UserDataInfo[]>(result.Data);
-        
+
         // Verify UserDataInfo properties are correctly mapped
         var firstUser = result.Data.First();
         Assert.True(firstUser.Id > 0);
@@ -75,7 +75,7 @@ public class UserServiceTests : ServiceTestBase
     {
         // Arrange
         var userService = GetUserService();
-        
+
         await using (var context = await MockFactory().CreateDbContextAsync())
         {
             // Check if UserImages library already exists
@@ -92,7 +92,7 @@ public class UserServiceTests : ServiceTestBase
                 context.Libraries.Add(library);
                 await context.SaveChangesAsync();
             }
-            
+
             var user = CreateTestUser(1, "testuser", "test@example.com");
             context.Users.Add(user);
             await context.SaveChangesAsync();
@@ -124,7 +124,7 @@ public class UserServiceTests : ServiceTestBase
         // Arrange
         var email = "test@example.com";
         var userService = GetUserService();
-        
+
         await using (var context = await MockFactory().CreateDbContextAsync())
         {
             var user = CreateTestUser(1, "testuser", email);
@@ -165,7 +165,7 @@ public class UserServiceTests : ServiceTestBase
         // Arrange
         var username = "testuser";
         var userService = GetUserService();
-        
+
         await using (var context = await MockFactory().CreateDbContextAsync())
         {
             var user = CreateTestUser(1, username, "test@example.com");
@@ -188,7 +188,7 @@ public class UserServiceTests : ServiceTestBase
         // Arrange
         var username = "adminuser";
         var userService = GetUserService();
-        
+
         await using (var context = await MockFactory().CreateDbContextAsync())
         {
             var adminUser = CreateTestUser(1, username, "admin@example.com");
@@ -210,7 +210,7 @@ public class UserServiceTests : ServiceTestBase
         // Arrange
         var username = "regularuser";
         var userService = GetUserService();
-        
+
         await using (var context = await MockFactory().CreateDbContextAsync())
         {
             var user = CreateTestUser(1, username, "user@example.com");
@@ -243,7 +243,7 @@ public class UserServiceTests : ServiceTestBase
         // Arrange
         var apiKey = Guid.NewGuid();
         var userService = GetUserService();
-        
+
         await using (var context = await MockFactory().CreateDbContextAsync())
         {
             var user = CreateTestUser(1, "testuser", "test@example.com");
@@ -278,7 +278,7 @@ public class UserServiceTests : ServiceTestBase
         // Arrange
         var id = 1;
         var userService = GetUserService();
-        
+
         await using (var context = await MockFactory().CreateDbContextAsync())
         {
             var user = CreateTestUser(id, "testuser", "test@example.com");
@@ -337,7 +337,7 @@ public class UserServiceTests : ServiceTestBase
         // Arrange
         var userService = GetUserService();
         var apiKey = Guid.NewGuid();
-        
+
         await using (var context = await MockFactory().CreateDbContextAsync())
         {
             var user = CreateTestUser(1, "testuser", "test@example.com");
@@ -350,7 +350,7 @@ public class UserServiceTests : ServiceTestBase
             "/nonexistent/file.csv",
             apiKey,
             "Artist",
-            "Album", 
+            "Album",
             "Song",
             false);
 
@@ -469,7 +469,7 @@ public class UserServiceTests : ServiceTestBase
     {
         // Arrange
         var userService = GetUserService();
-        
+
         await using (var context = await MockFactory().CreateDbContextAsync())
         {
             var user = CreateTestUser(1, "testuser", "test@example.com");
@@ -522,13 +522,13 @@ public class UserServiceTests : ServiceTestBase
             await context.SaveChangesAsync();
         }
         var eventData = new UserLoginEvent(3, "eventuser");
-        
+
         // Act
         var result = await userService.UpdateLastLogin(eventData);
-        
+
         // Assert
         Assert.True(result.IsSuccess);
-        
+
         // Verify the user's last login was updated
         await using (var context = await MockFactory().CreateDbContextAsync())
         {
@@ -575,7 +575,7 @@ public class UserServiceTests : ServiceTestBase
         // Assert
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Data);
-        
+
         // Verify that bus.SendLocal was called with a UserLoginEvent
         busMock.Verify(
             b => b.SendLocal(

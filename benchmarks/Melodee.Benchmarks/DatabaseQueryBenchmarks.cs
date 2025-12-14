@@ -1,12 +1,12 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
+using Melodee.Common.Data;
+using Melodee.Common.Data.Models;
+using Melodee.Common.Enums;
+using Melodee.Common.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Melodee.Common.Data;
-using Melodee.Common.Data.Models;
-using Melodee.Common.Extensions;
-using Melodee.Common.Enums;
 using NodaTime;
 
 namespace Melodee.Benchmarks;
@@ -26,7 +26,7 @@ public class DatabaseQueryBenchmarks
     public async Task Setup()
     {
         var services = new ServiceCollection();
-        
+
         // Add logging
         services.AddLogging(builder => builder.SetMinimumLevel(LogLevel.Warning));
 
@@ -65,7 +65,7 @@ public class DatabaseQueryBenchmarks
     private async Task SeedTestData()
     {
         await using var context = await _contextFactory.CreateDbContextAsync();
-        
+
         // Create test user
         var user = CreateTestUser(1, "benchmarkuser", "benchmark@test.com");
         context.Users.Add(user);
@@ -179,7 +179,7 @@ public class DatabaseQueryBenchmarks
     public async Task PlaylistQuery_BasicPagination(int pageSize)
     {
         await using var context = await _contextFactory.CreateDbContextAsync();
-        
+
         var playlists = await context.Playlists
             .AsNoTracking()
             .OrderBy(p => p.Name)
@@ -194,7 +194,7 @@ public class DatabaseQueryBenchmarks
     public async Task PlaylistQuery_WithIncludes(int pageSize)
     {
         await using var context = await _contextFactory.CreateDbContextAsync();
-        
+
         var playlists = await context.Playlists
             .Include(p => p.User)
             .AsNoTracking()
@@ -210,7 +210,7 @@ public class DatabaseQueryBenchmarks
     public async Task PlaylistQuery_OptimizedProjection(int pageSize)
     {
         await using var context = await _contextFactory.CreateDbContextAsync();
-        
+
         var playlists = await context.Playlists
             .AsNoTracking()
             .OrderBy(p => p.Name)
@@ -234,7 +234,7 @@ public class DatabaseQueryBenchmarks
     public async Task SongQuery_WithMultipleIncludes(int takeCount)
     {
         await using var context = await _contextFactory.CreateDbContextAsync();
-        
+
         var songs = await context.Songs
             .Include(s => s.Album).ThenInclude(a => a.Artist)
             .AsNoTracking()
@@ -250,7 +250,7 @@ public class DatabaseQueryBenchmarks
     public async Task SongQuery_OptimizedWithSplitQuery(int takeCount)
     {
         await using var context = await _contextFactory.CreateDbContextAsync();
-        
+
         var songs = await context.Songs
             .Include(s => s.Album).ThenInclude(a => a.Artist)
             .AsSplitQuery()
@@ -264,7 +264,7 @@ public class DatabaseQueryBenchmarks
     public async Task UnboundedQuery_ToArrayAsync_AllPlaylists()
     {
         await using var context = await _contextFactory.CreateDbContextAsync();
-        
+
         var playlists = await context.Playlists
             .Include(p => p.User)
             .AsNoTracking()
@@ -275,7 +275,7 @@ public class DatabaseQueryBenchmarks
     public async Task BatchQuery_vs_MultipleQueries()
     {
         await using var context = await _contextFactory.CreateDbContextAsync();
-        
+
         // Simulate N+1 problem - multiple individual queries
         var playlistIds = await context.Playlists
             .AsNoTracking()
@@ -298,7 +298,7 @@ public class DatabaseQueryBenchmarks
     public async Task BatchQuery_SingleQuery()
     {
         await using var context = await _contextFactory.CreateDbContextAsync();
-        
+
         // Optimized - single query with includes
         var playlists = await context.Playlists
             .Include(p => p.User)
@@ -314,7 +314,7 @@ public class DatabaseQueryBenchmarks
     public async Task PaginatedQuery_vs_FullDataset(int page, int pageSize)
     {
         await using var context = await _contextFactory.CreateDbContextAsync();
-        
+
         var songs = await context.Songs
             .Include(s => s.Album).ThenInclude(a => a.Artist)
             .AsNoTracking()
@@ -330,7 +330,7 @@ public class DatabaseQueryBenchmarks
     public async Task ComplexQuery_MultipleToListAsync(int songCount)
     {
         await using var context = await _contextFactory.CreateDbContextAsync();
-        
+
         // Simulate multiple ToList calls - inefficient pattern
         var songsWithArtistA = await context.Songs
             .Include(s => s.Album).ThenInclude(a => a.Artist)
@@ -354,7 +354,7 @@ public class DatabaseQueryBenchmarks
     public async Task ComplexQuery_OptimizedSinglePass(int songCount)
     {
         await using var context = await _contextFactory.CreateDbContextAsync();
-        
+
         // Optimized - single query with all conditions
         var songs = await context.Songs
             .Include(s => s.Album).ThenInclude(a => a.Artist)

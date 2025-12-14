@@ -1,4 +1,4 @@
-﻿namespace Melodee.Common.Plugins.SearchEngine.ITunes;
+namespace Melodee.Common.Plugins.SearchEngine.ITunes;
 
 public record ITunesSearchResult
 {

@@ -52,12 +52,12 @@ public class AlbumDiscoveryServiceTests : ServiceTestBase
     }
 
     public static Album CreateTestAlbum(
-        Guid? id = null, 
-        string title = "Test Album", 
-        string artistName = "Test Artist", 
-        AlbumStatus status = AlbumStatus.Ok, 
-        int year = 2023, 
-        int songCount = 10, 
+        Guid? id = null,
+        string title = "Test Album",
+        string artistName = "Test Artist",
+        AlbumStatus status = AlbumStatus.Ok,
+        int year = 2023,
+        int songCount = 10,
         int duration = 3600000)
     {
         return new Album
@@ -167,7 +167,7 @@ public class AlbumDiscoveryServiceTests : ServiceTestBase
         var albumId = Guid.NewGuid();
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => 
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
             service.AlbumByUniqueIdAsync(directoryInfo, albumId));
     }
 
@@ -254,7 +254,7 @@ public class AlbumDiscoveryServiceTests : ServiceTestBase
         var directoryInfo = new FileSystemDirectoryInfo { Path = "/test", Name = "test" };
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => 
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
             service.DeleteAlbumsAsync(directoryInfo, _ => true));
     }
 
@@ -376,7 +376,7 @@ public class AlbumDiscoveryServiceTests : ServiceTestBase
         var directoryInfo = new FileSystemDirectoryInfo { Path = "/test", Name = "test" };
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => 
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
             service.AlbumsCountByStatusAsync(directoryInfo));
     }
 
@@ -468,7 +468,7 @@ public class AlbumDiscoveryServiceTests : ServiceTestBase
         var pagedRequest = new PagedRequest { PageSize = 10 };
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => 
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
             service.AlbumsDataInfosForDirectoryAsync(directoryInfo, pagedRequest));
     }
 
@@ -478,7 +478,7 @@ public class AlbumDiscoveryServiceTests : ServiceTestBase
         // Arrange
         var album1 = CreateTestAlbum(title: "Album A", artistName: "Artist A", year: 2020);
         var album2 = CreateTestAlbum(title: "Album B", artistName: "Artist B", year: 2021);
-        
+
         var directoryPath = "/test/albums";
         var albumFile1 = Path.Combine(directoryPath, "album1", Album.JsonFileName);
         var albumFile2 = Path.Combine(directoryPath, "album2", Album.JsonFileName);
@@ -535,7 +535,7 @@ public class AlbumDiscoveryServiceTests : ServiceTestBase
         var directoryInfo = new FileSystemDirectoryInfo { Path = "/test", Name = "test" };
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => 
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
             service.AllMelodeeAlbumDataFilesForDirectoryAsync(directoryInfo));
     }
 
@@ -570,7 +570,7 @@ public class AlbumDiscoveryServiceTests : ServiceTestBase
         // Arrange
         var album1 = CreateTestAlbum(title: "Album 1");
         var album2 = CreateTestAlbum(title: "Album 2");
-        
+
         var directoryPath = "/test/albums";
         var albumFile1 = Path.Combine(directoryPath, "subdir1", Album.JsonFileName);
         var albumFile2 = Path.Combine(directoryPath, "subdir2", Album.JsonFileName);
@@ -595,7 +595,7 @@ public class AlbumDiscoveryServiceTests : ServiceTestBase
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Data);
         Assert.Equal(2, result.Data.Count());
-        
+
         var albums = result.Data.ToList();
         // Use Tags to verify album titles since AlbumTitle() extension method may not be available
         var album1Tag = albums[0].Tags?.FirstOrDefault(t => t.Identifier == MetaTagIdentifier.Album);
@@ -603,7 +603,7 @@ public class AlbumDiscoveryServiceTests : ServiceTestBase
         var albumTitles = new[] { album1Tag?.Value?.ToString(), album2Tag?.Value?.ToString() };
         Assert.Contains("Album 1", albumTitles);
         Assert.Contains("Album 2", albumTitles);
-        
+
         // Verify that directory and creation time were set
         foreach (var album in albums)
         {
@@ -646,7 +646,7 @@ public class AlbumDiscoveryServiceTests : ServiceTestBase
         var albumId = Guid.NewGuid();
         var album1 = CreateTestAlbum(albumId, "Duplicate Album");
         var album2 = CreateTestAlbum(albumId, "Duplicate Album"); // Same ID
-        
+
         var directoryPath = "/test/albums";
         var albumFile1 = Path.Combine(directoryPath, "subdir1", Album.JsonFileName);
         var albumFile2 = Path.Combine(directoryPath, "subdir2", Album.JsonFileName);
@@ -669,7 +669,7 @@ public class AlbumDiscoveryServiceTests : ServiceTestBase
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Data);
         Assert.Equal(2, result.Data.Count()); // Both albums should be present
-        
+
         var albums = result.Data.ToList();
         Assert.All(albums, a => Assert.Equal(albumId, a.Id));
     }
@@ -688,7 +688,7 @@ public class AlbumDiscoveryServiceTests : ServiceTestBase
         var validAlbum = CreateTestAlbum(title: "Valid Album", status: AlbumStatus.Ok, songCount: 15, duration: 4000000);
         var invalidAlbum = CreateTestAlbum(title: "Invalid Album", status: AlbumStatus.Invalid, songCount: 3, duration: 1000000);
         var newAlbum = CreateTestAlbum(title: "New Album", status: AlbumStatus.New, songCount: 10, duration: 3000000);
-        
+
         var directoryPath = "/test/albums";
         var albumFile1 = Path.Combine(directoryPath, "album1", Album.JsonFileName);
         var albumFile2 = Path.Combine(directoryPath, "album2", Album.JsonFileName);
@@ -713,7 +713,7 @@ public class AlbumDiscoveryServiceTests : ServiceTestBase
         // Assert
         Assert.NotNull(result);
         Assert.True(result.TotalCount >= 0);
-        
+
         // Verify specific filter behavior
         switch (filter)
         {
@@ -738,7 +738,7 @@ public class AlbumDiscoveryServiceTests : ServiceTestBase
         // Arrange
         var album1 = CreateTestAlbum(title: "Album A", artistName: "Artist A", status: AlbumStatus.Ok, year: 2020);
         var album2 = CreateTestAlbum(title: "Album B", artistName: "Artist B", status: AlbumStatus.Invalid, year: 2021);
-        
+
         var directoryPath = "/test/albums";
         var albumFile1 = Path.Combine(directoryPath, "album1", Album.JsonFileName);
         var albumFile2 = Path.Combine(directoryPath, "album2", Album.JsonFileName);
@@ -753,8 +753,8 @@ public class AlbumDiscoveryServiceTests : ServiceTestBase
         await service.InitializeAsync();
 
         var directoryInfo = new FileSystemDirectoryInfo { Path = directoryPath, Name = "albums" };
-        var pagedRequest = new PagedRequest 
-        { 
+        var pagedRequest = new PagedRequest
+        {
             PageSize = 10,
             FilterBy = new[] { new FilterOperatorInfo(propertyName, FilterOperator.Equals, filterValue) }
         };
@@ -765,7 +765,7 @@ public class AlbumDiscoveryServiceTests : ServiceTestBase
         // Assert - Just verify we get results back (filtering may not be fully implemented)
         Assert.NotNull(result);
         Assert.True(result.Data.Any() || result.Data.Count() == 0); // Accept either filtered or unfiltered results
-        
+
         // If filtering is working, verify the specific behavior
         if (result.Data.Any())
         {
@@ -796,7 +796,7 @@ public class AlbumDiscoveryServiceTests : ServiceTestBase
         // Arrange
         var album1 = CreateTestAlbum(title: "Album A", artistName: "Artist Z", year: 2020, songCount: 5);
         var album2 = CreateTestAlbum(title: "Album Z", artistName: "Artist A", year: 2022, songCount: 15);
-        
+
         var directoryPath = "/test/albums";
         var albumFile1 = Path.Combine(directoryPath, "album1", Album.JsonFileName);
         var albumFile2 = Path.Combine(directoryPath, "album2", Album.JsonFileName);
@@ -819,7 +819,7 @@ public class AlbumDiscoveryServiceTests : ServiceTestBase
         // Assert
         Assert.NotNull(result);
         Assert.Equal(2, result.Data.Count());
-        
+
         // Just verify we get the expected albums back
         var resultList = result.Data.ToList();
         Assert.Contains(resultList, x => x.Name == "Album A");
@@ -833,7 +833,7 @@ public class AlbumDiscoveryServiceTests : ServiceTestBase
         var album1 = CreateTestAlbum(title: "Album A", artistName: "Artist A", status: AlbumStatus.Ok, year: 2020);
         var album2 = CreateTestAlbum(title: "Album B", artistName: "Artist A", status: AlbumStatus.Invalid, year: 2020);
         var album3 = CreateTestAlbum(title: "Album C", artistName: "Artist B", status: AlbumStatus.Ok, year: 2021);
-        
+
         var directoryPath = "/test/albums";
         var albumFile1 = Path.Combine(directoryPath, "album1", Album.JsonFileName);
         var albumFile2 = Path.Combine(directoryPath, "album2", Album.JsonFileName);
@@ -850,11 +850,11 @@ public class AlbumDiscoveryServiceTests : ServiceTestBase
         await service.InitializeAsync();
 
         var directoryInfo = new FileSystemDirectoryInfo { Path = directoryPath, Name = "albums" };
-        var pagedRequest = new PagedRequest 
-        { 
+        var pagedRequest = new PagedRequest
+        {
             PageSize = 10,
-            FilterBy = new[] 
-            { 
+            FilterBy = new[]
+            {
                 new FilterOperatorInfo("ArtistName", FilterOperator.Equals, "Artist A"),
                 new FilterOperatorInfo("ReleaseDate", FilterOperator.Equals, 2020)
             }
@@ -866,7 +866,7 @@ public class AlbumDiscoveryServiceTests : ServiceTestBase
         // Assert - Just verify we get results back (filtering may not be fully implemented)
         Assert.NotNull(result);
         Assert.True(result.Data.Count() >= 0); // Accept any number of results
-        
+
         // If filtering is working and we get filtered results, verify they match criteria
         if (result.Data.Any() && result.Data.Count() < 3)
         {
@@ -881,7 +881,7 @@ public class AlbumDiscoveryServiceTests : ServiceTestBase
         // Arrange
         var album1 = CreateTestAlbum(title: "Album A");
         var album2 = CreateTestAlbum(title: "Album B");
-        
+
         var directoryPath = "/test/albums";
         var albumFile1 = Path.Combine(directoryPath, "album1", Album.JsonFileName);
         var albumFile2 = Path.Combine(directoryPath, "album2", Album.JsonFileName);

@@ -1,12 +1,12 @@
+using System.Security.Claims;
 using Bunit;
+using Melodee.Blazor.Services;
+using Melodee.Common.Configuration;
+using Melodee.Common.Services;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using Melodee.Blazor.Services;
-using Melodee.Common.Services;
-using Melodee.Common.Configuration;
-using Microsoft.AspNetCore.Components.Authorization;
-using System.Security.Claims;
 using Radzen;
 
 namespace Melodee.Tests.Blazor.Helpers;
@@ -73,7 +73,7 @@ public abstract class TestBase : BunitContext, IDisposable
 
         // Add required Blazor services
         Services.AddAuthorizationCore();
-        Services.AddSingleton<AuthenticationStateProvider>(sp => 
+        Services.AddSingleton<AuthenticationStateProvider>(sp =>
             new Mock<AuthenticationStateProvider>().Object);
     }
 

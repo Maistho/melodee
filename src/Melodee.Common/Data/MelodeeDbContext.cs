@@ -69,15 +69,15 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
                 .HasFilter("\"Type\" != 3"); // Exclude LibraryType.Storage (value 3) from unique constraint
 
             s.HasData(new Library
-                {
-                    Id = 1,
-                    Name = "Inbound",
-                    Description =
+            {
+                Id = 1,
+                Name = "Inbound",
+                Description =
                         "Files in this directory are scanned and Album information is gathered via processing.",
-                    Path = "/storage/inbound/",
-                    Type = (int)LibraryType.Inbound,
-                    CreatedAt = now
-                },
+                Path = "/storage/inbound/",
+                Type = (int)LibraryType.Inbound,
+                CreatedAt = now
+            },
                 new Library
                 {
                     Id = 2,

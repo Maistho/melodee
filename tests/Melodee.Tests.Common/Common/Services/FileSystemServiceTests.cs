@@ -1,11 +1,11 @@
+using System.Text;
 using Melodee.Common.Enums;
 using Melodee.Common.Models;
+using Melodee.Common.Models.Extensions;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services;
-using Xunit;
 using Serilog;
-using System.Text;
-using Melodee.Common.Models.Extensions;
+using Xunit;
 
 namespace Melodee.Tests.Common.Common.Services;
 

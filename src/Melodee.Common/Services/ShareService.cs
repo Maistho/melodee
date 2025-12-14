@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Ardalis.GuardClauses;
 using Melodee.Common.Data;
 using Melodee.Common.Data.Models;
@@ -8,7 +9,6 @@ using NodaTime;
 using Serilog;
 using SmartFormat;
 using Sqids;
-using System.Linq.Expressions;
 using MelodeeModels = Melodee.Common.Models;
 
 namespace Melodee.Common.Services;
@@ -26,18 +26,18 @@ public class ShareService(
         CancellationToken cancellationToken = default)
     {
         await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
-        
+
         // Create base query with optimized includes
         var baseQuery = scopedContext.Shares
             .Include(s => s.User)
             .AsNoTracking();
-        
+
         // Apply filters using EF Core
         var filteredQuery = ApplyFilters(baseQuery, pagedRequest);
-        
+
         // Get total count efficiently
         var shareCount = await filteredQuery.CountAsync(cancellationToken).ConfigureAwait(false);
-        
+
         Share[] shares = [];
         if (!pagedRequest.IsTotalCountOnlyRequest)
         {
@@ -97,7 +97,7 @@ public class ShareService(
         Guard.Against.NullOrEmpty(id, nameof(id));
 
         await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
-        
+
         // Use EF Core to find the share by unique ID with optimized query
         var share = await scopedContext.Shares
             .Include(s => s.User)
@@ -117,7 +117,7 @@ public class ShareService(
         Guard.Against.Default(apiKey, nameof(apiKey));
 
         await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
-        
+
         var share = await scopedContext.Shares
             .Include(s => s.User)
             .AsNoTracking()
@@ -288,13 +288,13 @@ public class ShareService(
             }
 
             var normalizedValue = value.ToNormalizedString() ?? value;
-            
+
             query = filter.PropertyName.ToLowerInvariant() switch
             {
                 "userid" => int.TryParse(value, out var userIdValue)
                     ? query.Where(s => s.UserId == userIdValue)
                     : query,
-                "shareid" => int.TryParse(value, out var shareIdValue) 
+                "shareid" => int.TryParse(value, out var shareIdValue)
                     ? query.Where(s => s.ShareId == shareIdValue)
                     : query,
                 "sharetype" => int.TryParse(value, out var shareTypeValue)
@@ -336,7 +336,7 @@ public class ShareService(
         foreach (var orderBy in pagedRequest.OrderBy)
         {
             var isDescending = orderBy.Value.Equals("DESC", StringComparison.OrdinalIgnoreCase);
-            
+
             Expression<Func<Share, object>> keySelector = orderBy.Key.ToLowerInvariant() switch
             {
                 "id" => s => s.Id,
@@ -362,7 +362,7 @@ public class ShareService(
 
             if (isFirst)
             {
-                orderedQuery = isDescending 
+                orderedQuery = isDescending
                     ? query.OrderByDescending(keySelector)
                     : query.OrderBy(keySelector);
                 isFirst = false;

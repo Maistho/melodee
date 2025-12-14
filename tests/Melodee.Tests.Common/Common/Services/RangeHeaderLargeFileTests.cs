@@ -1,5 +1,5 @@
-using Microsoft.Extensions.Primitives;
 using Melodee.Common.Models.Streaming;
+using Microsoft.Extensions.Primitives;
 
 namespace Melodee.Tests.Common.Common.Services;
 

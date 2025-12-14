@@ -23,8 +23,8 @@ using Quartz;
 using Rebus.Bus;
 using Serilog;
 using SmartFormat;
-using SearchOption = System.IO.SearchOption;
 using dbModels = Melodee.Common.Data.Models;
+using SearchOption = System.IO.SearchOption;
 
 namespace Melodee.Common.Jobs;
 

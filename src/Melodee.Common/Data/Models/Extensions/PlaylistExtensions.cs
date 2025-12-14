@@ -31,7 +31,7 @@ public static class PlaylistExtensions
     }
 
     public static Common.Models.OpenSubsonic.Playlist ToApiPlaylist(
-        this Playlist playlist, 
+        this Playlist playlist,
         bool includeSongs = true,
         bool? isDynamicPlaylist = false)
     {

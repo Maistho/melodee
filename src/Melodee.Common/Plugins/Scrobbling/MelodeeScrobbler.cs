@@ -90,7 +90,7 @@ public class MelodeeScrobbler(
                     ApiKey = Guid.NewGuid(),
                     CreatedAt = now
                 };
-                
+
                 scopedContext.UserSongs.Add(newUserSong);
                 await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             }

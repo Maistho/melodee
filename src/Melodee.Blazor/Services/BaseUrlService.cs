@@ -22,20 +22,20 @@ public class BaseUrlService : IBaseUrlService
     {
         var configuration = _configurationFactory.GetConfigurationAsync().GetAwaiter().GetResult();
         var configuredBaseUrl = configuration.GetValue<string>(SettingRegistry.SystemBaseUrl);
-        
+
         // If configuration is valid, use it
         if (configuredBaseUrl.Nullify() != null && configuredBaseUrl != MelodeeConfiguration.RequiredNotSetValue)
         {
             return configuredBaseUrl!.TrimEnd('/');
         }
-        
+
         // Try to get from HttpContextAccessor
         var httpContext = _httpContextAccessor.HttpContext;
         if (httpContext != null)
         {
             return $"{httpContext.Request.Scheme}://{httpContext.Request.Host.Value}";
         }
-        
+
         // No base URL available
         return null;
     }

@@ -1,4 +1,4 @@
-﻿using Melodee.Common.Configuration;
+using Melodee.Common.Configuration;
 using Melodee.Common.Constants;
 using Melodee.Common.Serialization;
 using Melodee.Common.Utility;

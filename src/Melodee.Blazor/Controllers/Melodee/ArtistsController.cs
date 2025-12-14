@@ -135,7 +135,7 @@ public sealed class ArtistsController(
             return Forbid("User is locked");
         }
 
-        
+
         var artistRecentResult = await artistService.ListAsync(new PagedRequest
         {
             Page = 1,
@@ -175,16 +175,16 @@ public sealed class ArtistsController(
         if (userResult.Data.IsLocked)
         {
             return Forbid("User is locked");
-        }        
-        
+        }
+
         var artistResult = await artistService.GetByApiKeyAsync(id, cancellationToken).ConfigureAwait(false);
         if (!artistResult.IsSuccess || artistResult.Data == null)
         {
             return NotFound(new { error = "Artist not found" });
         }
-     
+
         var pageValue = page > 0 ? page : (short)1;
-        
+
         var artistAlbumsResult = await albumService.ListAsync(new PagedRequest
         {
             Page = pageValue,
@@ -194,8 +194,8 @@ public sealed class ArtistsController(
                 new FilterOperatorInfo("ArtistId", FilterOperator.Equals, artistResult.Data.Id)
             ],
             OrderBy = new Dictionary<string, string> { { nameof(AlbumDataInfo.CreatedAt), PagedRequest.OrderDescDirection } }
-        },  cancellationToken).ConfigureAwait(false);        
-        
+        }, cancellationToken).ConfigureAwait(false);
+
         var baseUrl = GetBaseUrl(await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false));
 
         return Ok(new
@@ -228,15 +228,15 @@ public sealed class ArtistsController(
         if (userResult.Data.IsLocked)
         {
             return Forbid("User is locked");
-        }        
-        
+        }
+
         var artistResult = await artistService.GetByApiKeyAsync(id, cancellationToken).ConfigureAwait(false);
         if (!artistResult.IsSuccess || artistResult.Data == null)
         {
             return NotFound(new { error = "Artist not found" });
         }
-     
-        var searchTermNormalized = q?.ToNormalizedString() ?? q ?? string.Empty;        
+
+        var searchTermNormalized = q?.ToNormalizedString() ?? q ?? string.Empty;
         var pageValue = page > 0 ? page : (short)1;
         var songsResult = await songService.ListAsync(new PagedRequest
         {
@@ -250,7 +250,7 @@ public sealed class ArtistsController(
             OrderBy = new Dictionary<string, string> { { nameof(SongDataInfo.CreatedAt), PagedRequest.OrderDescDirection } }
         }, userResult.Data.Id, cancellationToken).ConfigureAwait(false);
         var baseUrl = GetBaseUrl(await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false));
-        
+
         return Ok(new
         {
             meta = new PaginationMetadata(
@@ -260,6 +260,6 @@ public sealed class ArtistsController(
                 songsResult.TotalPages
             ),
             data = songsResult.Data.Select(x => x.ToSongModel(baseUrl, userResult.Data.ToUserModel(baseUrl), userResult.Data.PublicKey)).ToArray()
-        });        
+        });
     }
 }

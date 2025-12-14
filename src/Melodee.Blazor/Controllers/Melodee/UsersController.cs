@@ -51,7 +51,7 @@ public class UsersController(
         }
         else
         {
-            authResult = await userService.LoginUserAsync(model.Email ?? string.Empty, model.Password, cancellationToken).ConfigureAwait(false);            
+            authResult = await userService.LoginUserAsync(model.Email ?? string.Empty, model.Password, cancellationToken).ConfigureAwait(false);
         }
         if (!authResult.IsSuccess || authResult.Data == null)
         {

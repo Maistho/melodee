@@ -19,7 +19,7 @@ public class UserManagementController(ISerializer serializer, EtagRepository eta
     [Route("/rest/changePassword.view")]
     [Route("/rest/changePassword")]
     [Route("/rest/getUsers.view")]
-    [Route("/rest/getUsers")]    
+    [Route("/rest/getUsers")]
     public IActionResult NotImplemented()
     {
         HttpContext.Response.Headers.Append("Cache-Control", "no-cache");

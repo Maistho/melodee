@@ -1,8 +1,8 @@
+using System.Security.Claims;
 using FluentAssertions;
+using Melodee.Blazor.Services;
 using Microsoft.Extensions.Configuration;
 using Moq;
-using Melodee.Blazor.Services;
-using System.Security.Claims;
 
 namespace Melodee.Tests.Blazor.Services;
 
@@ -20,13 +20,13 @@ public class AuthServiceSimpleTests
     {
         _mockLocalStorage = new Mock<ILocalStorageService>();
         _mockConfiguration = new Mock<IConfiguration>();
-        
+
         // Setup configuration mocks
         var mockTokenSection = new Mock<IConfigurationSection>();
         mockTokenSection.Setup(x => x.Value).Returns(TestToken);
         var mockHoursSection = new Mock<IConfigurationSection>();
         mockHoursSection.Setup(x => x.Value).Returns("24");
-        
+
         _mockConfiguration.Setup(x => x.GetSection("MelodeeAuthSettings:Token")).Returns(mockTokenSection.Object);
         _mockConfiguration.Setup(x => x.GetSection("MelodeeAuthSettings:TokenHours")).Returns(mockHoursSection.Object);
 

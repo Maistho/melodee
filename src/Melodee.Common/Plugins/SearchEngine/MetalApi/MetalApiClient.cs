@@ -260,7 +260,7 @@ public sealed class MetalApiClient : IMetalApiClient
             }
 
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
-            
+
             // Return raw JSON since schema is uncertain
             return content;
         }
@@ -285,7 +285,7 @@ public sealed class MetalApiClient : IMetalApiClient
         try
         {
             var errorContent = await response.Content.ReadAsStringAsync();
-            
+
             // Try to extract traceId from error response
             string? traceId = null;
             try

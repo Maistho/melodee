@@ -1,4 +1,4 @@
-﻿using Melodee.Common.Plugins.Validation;
+using Melodee.Common.Plugins.Validation;
 using Melodee.Common.Utility;
 
 namespace Melodee.Tests.Common.Utility;

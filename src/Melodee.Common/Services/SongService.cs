@@ -40,7 +40,7 @@ public class SongService(
     //         .ToArrayAsync(cancellationToken)
     //         .ConfigureAwait(false);
     // }    
-    
+
     public async Task<MelodeeModels.PagedResult<SongDataInfo>> ListNowPlayingAsync(MelodeeModels.PagedRequest pagedRequest, CancellationToken cancellationToken = default)
     {
         var songCount = 0;
@@ -456,11 +456,11 @@ public class SongService(
                     // Update album song count and duration
                     album.SongCount = (short?)album.Songs.Count;
                     album.Duration = album.Songs.Sum(s => s.Duration);
-                    
+
                     // If album has no songs left, it should probably be marked as invalid or deleted
                     // Following the requirements: if all songs are missing, this would be handled
                     // by the clean operation, not here. We just update the counts.
-                    
+
                     await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
                 }
             }
@@ -476,8 +476,8 @@ public class SongService(
     /// Get streaming descriptor for song - memory-efficient approach without loading file contents
     /// </summary>
     public async Task<MelodeeModels.OperationResult<StreamingDescriptor>> GetStreamingDescriptorAsync(
-        MelodeeModels.UserInfo user, 
-        Guid apiKey, 
+        MelodeeModels.UserInfo user,
+        Guid apiKey,
         string? rangeHeader = null,
         bool isDownload = false,
         CancellationToken cancellationToken = default)
@@ -668,8 +668,8 @@ public class SongService(
     /// </summary>
     [Obsolete("Use GetStreamingDescriptorAsync instead for memory-efficient streaming")]
     public async Task<MelodeeModels.OperationResult<StreamResponse>> GetStreamForSongAsync(
-        MelodeeModels.UserInfo user, 
-        Guid apiKey, 
+        MelodeeModels.UserInfo user,
+        Guid apiKey,
         long rangeBegin = 0,
         long rangeEnd = 0,
         string? format = null,
@@ -790,7 +790,7 @@ public class SongService(
     /// Get song with full path info for lyrics processing
     /// </summary>
     public async Task<MelodeeModels.OperationResult<(Song song, string libraryPath, string artistDirectory)>> GetSongWithPathInfoAsync(
-        Guid apiKey, 
+        Guid apiKey,
         CancellationToken cancellationToken = default)
     {
         await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
@@ -820,7 +820,7 @@ public class SongService(
     /// Get song by artist and title for lyrics processing
     /// </summary>
     public async Task<MelodeeModels.OperationResult<(Song song, string libraryPath, string artistDirectory)>> GetSongByArtistAndTitleAsync(
-        string artistName, 
+        string artistName,
         string songTitle,
         CancellationToken cancellationToken = default)
     {

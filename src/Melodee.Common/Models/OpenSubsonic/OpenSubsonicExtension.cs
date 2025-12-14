@@ -6,6 +6,6 @@ public record OpenSubsonicExtension(string Name, int[] Versions) : IOpenSubsonic
 {
     public virtual string ToXml(string? nodeName = null)
     {
-        return $"name=\"{Name.ToSafeXmlString()}\" versions=\"{ Versions.ToCsv() } \"/>";
+        return $"name=\"{Name.ToSafeXmlString()}\" versions=\"{Versions.ToCsv()} \"/>";
     }
 }

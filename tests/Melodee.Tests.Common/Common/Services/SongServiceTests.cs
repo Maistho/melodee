@@ -11,7 +11,7 @@ namespace Melodee.Tests.Common.Common.Services;
 public class SongServiceTests : ServiceTestBase
 {
     private readonly SongService _songService;
-    
+
     public SongServiceTests()
     {
         _songService = GetSongService();
@@ -148,7 +148,7 @@ public class SongServiceTests : ServiceTestBase
         AssertResultIsSuccessful(result);
         Assert.Contains(result.Data, s => s.Title.Contains(specificTitle, StringComparison.OrdinalIgnoreCase));
     }
-    
+
     [Fact]
     public async Task ListAsync_WithFilterByTitle_Contains_ReturnsFilteredResults()
     {
@@ -169,7 +169,7 @@ public class SongServiceTests : ServiceTestBase
         // Assert
         AssertResultIsSuccessful(result);
         Assert.Contains(result.Data, s => s.Title.Contains(specificTitle, StringComparison.OrdinalIgnoreCase));
-    }    
+    }
 
     [Fact]
     public async Task ListAsync_WithUserStarredFilter_HandlesUserSpecificData()
@@ -415,7 +415,7 @@ public class SongServiceTests : ServiceTestBase
         Assert.NotNull(result);
         Assert.NotNull(result.Data);
         Assert.NotNull(result.Data.ResponseHeaders);
-        
+
         // File may not exist in test environment, so we check for expected failure pattern
         if (result.IsSuccess && result.Data.IsSuccess)
         {
@@ -459,7 +459,7 @@ public class SongServiceTests : ServiceTestBase
         Assert.NotNull(result);
         Assert.NotNull(result.Data);
         Assert.NotNull(result.Data.ResponseHeaders);
-        
+
         // Check Content-Range header format (baseline)
         if (result.Data.ResponseHeaders.ContainsKey("Content-Range"))
         {
@@ -492,12 +492,12 @@ public class SongServiceTests : ServiceTestBase
         // Assert - Capture baseline download behavior
         Assert.NotNull(result);
         Assert.NotNull(result.Data);
-        
+
         // File may not exist in test environment, handle both cases
         if (result.IsSuccess && result.Data.IsSuccess)
         {
             // Content-Disposition or filename should be set for downloads
-            Assert.True(!string.IsNullOrEmpty(result.Data.FileName) || 
+            Assert.True(!string.IsNullOrEmpty(result.Data.FileName) ||
                        result.Data.ResponseHeaders.ContainsKey("Content-Disposition"));
         }
         else
@@ -559,7 +559,7 @@ public class SongServiceTests : ServiceTestBase
         // Assert
         AssertResultIsSuccessful(result);
         Assert.True(result.Data);
-        
+
         // Verify song is deleted
         var getResult = await _songService.GetAsync(song.Id);
         Assert.False(getResult.IsSuccess);
@@ -579,7 +579,7 @@ public class SongServiceTests : ServiceTestBase
         // Assert
         AssertResultIsSuccessful(result);
         Assert.True(result.Data);
-        
+
         // Verify both songs are deleted
         var getResult1 = await _songService.GetAsync(song1.Id);
         var getResult2 = await _songService.GetAsync(song2.Id);
@@ -593,7 +593,7 @@ public class SongServiceTests : ServiceTestBase
         // Arrange
         var song = await CreateTestSong();
         var songIds = new[] { song.Id };
-        
+
         // Populate cache
         await _songService.GetAsync(song.Id);
         await _songService.GetByApiKeyAsync(song.ApiKey);
@@ -670,7 +670,7 @@ public class SongServiceTests : ServiceTestBase
         await cts.CancelAsync();
 
         // Act & Assert
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => 
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
             _songService.ListAsync(pagedRequest, userId, cts.Token));
     }
 
@@ -682,7 +682,7 @@ public class SongServiceTests : ServiceTestBase
         await cts.CancelAsync();
 
         // Act & Assert
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => 
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
             _songService.GetAsync(1, cts.Token));
     }
 
@@ -708,11 +708,11 @@ public class SongServiceTests : ServiceTestBase
 
     #region Helper Methods
 
-    public  async Task<Melodee.Common.Data.Models.Song> CreateTestSong(string? titleSuffix = null)
+    public async Task<Melodee.Common.Data.Models.Song> CreateTestSong(string? titleSuffix = null)
     {
         var artist = await CreateTestArtist();
         var album = await CreateTestAlbum(artist);
-        
+
         var suffix = titleSuffix ?? Guid.NewGuid().ToString();
         var song = new Melodee.Common.Data.Models.Song
         {
@@ -779,7 +779,7 @@ public class SongServiceTests : ServiceTestBase
     public async Task<Melodee.Common.Data.Models.Song> CreateTestSongWithContributor(string contributorName)
     {
         var song = await CreateTestSong();
-        
+
         // Add contributor
         var contributor = new Contributor
         {
@@ -794,14 +794,14 @@ public class SongServiceTests : ServiceTestBase
         await using var context = await MockFactory().CreateDbContextAsync();
         context.Contributors.Add(contributor);
         await context.SaveChangesAsync();
-        
+
         return song;
     }
 
-    public  async Task<Melodee.Common.Data.Models.Artist> CreateTestArtist()
+    public async Task<Melodee.Common.Data.Models.Artist> CreateTestArtist()
     {
         var library = await CreateTestLibrary();
-        
+
         var artist = new Melodee.Common.Data.Models.Artist
         {
             ApiKey = Guid.NewGuid(),
@@ -857,7 +857,7 @@ public class SongServiceTests : ServiceTestBase
         {
             return existingLibrary;
         }
-        
+
         context.Libraries.Add(library);
         await context.SaveChangesAsync();
         return library;

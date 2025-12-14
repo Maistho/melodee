@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.IO.Compression;
 using Asp.Versioning;
-using Microsoft.AspNetCore.HttpOverrides;
 using Blazored.SessionStorage;
 using Melodee.Blazor.Components;
 using Melodee.Blazor.Constants;
@@ -9,7 +8,6 @@ using Melodee.Blazor.Filters;
 using Melodee.Blazor.Middleware;
 using Melodee.Blazor.Services;
 using Melodee.Common.Configuration;
-using Microsoft.AspNetCore.ResponseCompression;
 using Melodee.Common.Constants;
 using Melodee.Common.Data;
 using Melodee.Common.Enums;
@@ -31,7 +29,12 @@ using Melodee.Common.Services.SearchEngines;
 using Melodee.Common.Utility;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
+using Npgsql;
 using Quartz;
 using Quartz.AspNetCore;
 using Radzen;
@@ -42,9 +45,6 @@ using Rebus.Transport.InMem;
 using Serilog;
 using SpotifyAPI.Web;
 using ILogger = Serilog.ILogger;
-using Npgsql;
-using Microsoft.OpenApi.Models;
-using Microsoft.AspNetCore.Mvc.Controllers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -343,7 +343,7 @@ if (app.Environment.IsDevelopment())
 else
 {
     // Enable HTTPS redirection (addresses Lighthouse: HTTPS issues)
-    app.UseHttpsRedirection();   
+    app.UseHttpsRedirection();
 }
 
 
@@ -457,16 +457,16 @@ app.UseStaticFiles(new StaticFileOptions
         // Cache static files for 1 year
         const int durationInSeconds = 60 * 60 * 24 * 365; // 1 year
         ctx.Context.Response.Headers.CacheControl = $"public,max-age={durationInSeconds}";
-        
+
         // Add ETag for better cache validation
         ctx.Context.Response.Headers.ETag = $"\"{ctx.File.LastModified:yyyyMMddHHmmss}\"";
-        
+
         // Add security headers
         ctx.Context.Response.Headers["X-Content-Type-Options"] = "nosniff";
         ctx.Context.Response.Headers["X-Frame-Options"] = "SAMEORIGIN";
-        
+
         // Add Content Security Policy (addresses Lighthouse: CSP XSS protection)
-        ctx.Context.Response.Headers["Content-Security-Policy"] = 
+        ctx.Context.Response.Headers["Content-Security-Policy"] =
             "default-src 'self'; " +
             "script-src 'self' 'unsafe-eval' 'unsafe-inline'; " +
             "style-src 'self' 'unsafe-inline'; " +

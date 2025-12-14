@@ -20,7 +20,7 @@ public class LocalDateExtensionTests
         Assert.Equal(5, result.Month);
         Assert.Equal(15, result.Day);
     }
-    
+
     [Fact]
     public void ToItemDate_WithDifferentDate_ShouldReturnCorrectValues()
     {
@@ -35,7 +35,7 @@ public class LocalDateExtensionTests
         Assert.Equal(12, result.Month);
         Assert.Equal(31, result.Day);
     }
-    
+
     [Fact]
     public void ToItemDate_WithLeapYearDate_ShouldReturnCorrectValues()
     {

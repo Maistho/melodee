@@ -17,16 +17,16 @@ public static class DialogServiceExtensions
     /// <param name="title">Title of dialog</param>
     /// <param name="options">Dialog options</param>
     /// <returns>True if confirmed, otherwise false</returns>
-    public static async Task<bool?> ConfirmHtml(this DialogService dialogService, 
-        string htmlContent, 
-        string title = "Confirm", 
+    public static async Task<bool?> ConfirmHtml(this DialogService dialogService,
+        string htmlContent,
+        string title = "Confirm",
         ConfirmOptions? options = null)
     {
         return await dialogService.Confirm(builder =>
         {
             builder.OpenElement(0, "div");
             builder.AddMarkupContent(1, htmlContent);
-            builder.CloseElement();  
+            builder.CloseElement();
         }, title, options ?? new ConfirmOptions());
     }
 }

@@ -1,5 +1,5 @@
-using Melodee.Common.Data.Constants;
 using Melodee.Common.Data;
+using Melodee.Common.Data.Constants;
 using Melodee.Common.Data.Models.Extensions;
 using Melodee.Common.Models.OpenSubsonic;
 using Melodee.Common.Services.Caching;
@@ -25,7 +25,7 @@ public class UserQueueService(
         CancellationToken cancellationToken = default)
     {
         await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
-        
+
         var user = await userService.GetByUsernameAsync(username, cancellationToken).ConfigureAwait(false);
         if (!user.IsSuccess || user.Data == null)
         {
@@ -60,9 +60,9 @@ public class UserQueueService(
     {
         var apiKeys = apiIds?.Select(ApiKeyFromId).Where(x => x.HasValue).Select(x => x!.Value).ToArray();
         var current = ApiKeyFromId(currentApiId);
-        
+
         await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
-        
+
         // If the apikey is blank then remove any current saved que
         if (apiKeys == null)
         {
@@ -73,7 +73,7 @@ public class UserQueueService(
                     .Where(pq => pq.UserId == user.Data.Id)
                     .ToArrayAsync(cancellationToken)
                     .ConfigureAwait(false);
-                
+
                 scopedContext.PlayQues.RemoveRange(playQuesToDelete);
                 await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             }
@@ -84,7 +84,7 @@ public class UserQueueService(
             var foundQuesSongApiKeys = new List<Guid>();
             var user = await userService.GetByUsernameAsync(username, cancellationToken)
                 .ConfigureAwait(false);
-            
+
             if (!user.IsSuccess || user.Data == null)
             {
                 return false;

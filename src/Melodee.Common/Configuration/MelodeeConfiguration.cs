@@ -69,13 +69,13 @@ public record MelodeeConfiguration(Dictionary<string, object?> Configuration) : 
     public string GenerateImageUrl(string apiKey, ImageSize imageSize)
     {
         var baseUrl = GetValue<string>(SettingRegistry.SystemBaseUrl);
-        
+
         if (baseUrl.Nullify() == null || baseUrl == RequiredNotSetValue)
         {
             // Fall back to relative path when not configured in DB.
             // Many clients accept relative URLs; avoids 500s during bootstrap.
             return $"/images/{apiKey}/{imageSize.ToString().ToLower()}";
-        }        
+        }
         return $"{baseUrl!.TrimEnd('/')}/images/{apiKey}/{imageSize.ToString().ToLower()}";
     }
 
@@ -83,7 +83,7 @@ public record MelodeeConfiguration(Dictionary<string, object?> Configuration) : 
     {
         Configuration[key] = value;
     }
-    
+
     public TimeSpan? CacheDuration()
     {
         var cacheDuration = GetValue<int?>(SettingRegistry.DefaultCacheDurationInMinutes);

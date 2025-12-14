@@ -764,8 +764,8 @@ public sealed class UserService(
     }
 
     public async Task<MelodeeModels.OperationResult<bool>> SetSongRatingAsync(
-        int userId, 
-        Guid songApiKey, 
+        int userId,
+        Guid songApiKey,
         int rating,
         CancellationToken cancellationToken = default)
     {
@@ -945,7 +945,7 @@ public sealed class UserService(
     }
 
     public async Task<MelodeeModels.OperationResult<User?>> LoginUserByUsernameAsync(
-        string userName, 
+        string userName,
         string? password,
         CancellationToken cancellationToken = default)
     {
@@ -963,7 +963,7 @@ public sealed class UserService(
     }
 
     public async Task<MelodeeModels.OperationResult<User?>> LoginUserAsync(
-        string emailAddress, 
+        string emailAddress,
         string? password,
         CancellationToken cancellationToken = default)
     {
@@ -1069,7 +1069,7 @@ public sealed class UserService(
     }
 
     public async Task<MelodeeModels.OperationResult<int>> ImportUserFavoriteSongs(
-        UserFavoriteSongConfiguration configuration, 
+        UserFavoriteSongConfiguration configuration,
         CancellationToken cancellationToken = default)
     {
         Guard.Against.Null(configuration, nameof(configuration));

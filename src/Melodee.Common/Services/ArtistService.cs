@@ -13,9 +13,9 @@ using Melodee.Common.Models.Collection;
 using Melodee.Common.Models.Extensions;
 using Melodee.Common.Plugins.Conversion.Image;
 using Melodee.Common.Serialization;
-using Melodee.Common.Utility;
 using Melodee.Common.Services.Caching;
 using Melodee.Common.Services.Extensions;
+using Melodee.Common.Utility;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using Rebus.Bus;
@@ -297,11 +297,11 @@ public class ArtistService(
     ///     Find the Artist using various given Ids.
     /// </summary>
     public async Task<MelodeeModels.OperationResult<Artist?>> FindArtistAsync(
-        int? byId, 
-        Guid byApiKey, 
+        int? byId,
+        Guid byApiKey,
         string? byName,
-        Guid? byMusicBrainzId, 
-        string? bySpotifyId, 
+        Guid? byMusicBrainzId,
+        string? bySpotifyId,
         CancellationToken cancellationToken = default)
     {
         int? id = null;
@@ -424,7 +424,7 @@ public class ArtistService(
 
         // This is needed because the OpenSubsonicApiService caches the image bytes after potentially resizing
         CacheManager.ClearRegion(OpenSubsonicApiService.ImageCacheRegion);
-    
+
         await albumService.ClearCacheForArtist(artist.Id, cancellationToken);
     }
 
@@ -1059,9 +1059,9 @@ public class ArtistService(
     /// Get artist with similar artists for OpenSubsonic API
     /// </summary>
     public async Task<MelodeeModels.OperationResult<(Artist artist, Artist[] similarArtists)>> GetArtistWithRelatedAsync(
-        Guid apiKey, 
-        int? numberOfSimilarArtists = null, 
-        ArtistRelationType? artistRelationType = null, 
+        Guid apiKey,
+        int? numberOfSimilarArtists = null,
+        ArtistRelationType? artistRelationType = null,
         CancellationToken cancellationToken = default)
     {
         await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
@@ -1081,7 +1081,7 @@ public class ArtistService(
         }
 
         Artist[] similarArtists = [];
-        
+
         if (numberOfSimilarArtists > 0)
         {
             var similarArtistRelationType = SafeParser.ToNumber<int>(artistRelationType ?? ArtistRelationType.Similar);
@@ -1094,7 +1094,7 @@ public class ArtistService(
                 .AsNoTracking()
                 .ToArrayAsync(cancellationToken)
                 .ConfigureAwait(false);
-                
+
             if (similarDbArtists.Any())
             {
                 similarArtists = similarDbArtists.Select(x => x.RelatedArtist).ToArray();

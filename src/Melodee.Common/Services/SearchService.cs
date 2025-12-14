@@ -94,17 +94,17 @@ public sealed class SearchService(
         if (include.HasFlag(SearchInclude.Albums))
         {
             var albumFilters = new List<FilterOperatorInfo>();
-            
+
             // Add search term filters (these should be OR'd together)
             albumFilters.Add(new FilterOperatorInfo(nameof(AlbumDataInfo.NameNormalized), FilterOperator.Contains, searchTermNormalized, FilterOperatorInfo.OrJoinOperator));
             albumFilters.Add(new FilterOperatorInfo(nameof(AlbumDataInfo.AlternateNames), FilterOperator.Contains, searchTermNormalized, FilterOperatorInfo.OrJoinOperator));
-            
+
             // Add artist filter separately (this should be AND'd with the search results)
             if (filterByArtistId.HasValue)
             {
                 albumFilters.Add(new FilterOperatorInfo(nameof(AlbumDataInfo.ArtistApiKey), FilterOperator.Equals, filterByArtistId.Value, FilterOperatorInfo.AndJoinOperator));
             }
-            
+
             var albumResult = await albumService.ListAsync(new PagedRequest
             {
                 Page = albumPage,
@@ -261,7 +261,7 @@ public sealed class SearchService(
 
             if (searchQuery.Nullify() != null)
             {
-                artistRequest.FilterBy = 
+                artistRequest.FilterBy =
                 [
                     new FilterOperatorInfo(nameof(ArtistDataInfo.NameNormalized), FilterOperator.Contains, searchTermNormalized),
                     new FilterOperatorInfo(nameof(ArtistDataInfo.AlternateNames), FilterOperator.Contains, searchTermNormalized, FilterOperatorInfo.OrJoinOperator)
@@ -283,7 +283,7 @@ public sealed class SearchService(
 
             if (searchQuery.Nullify() != null)
             {
-                albumRequest.FilterBy = 
+                albumRequest.FilterBy =
                 [
                     new FilterOperatorInfo(nameof(AlbumDataInfo.NameNormalized), FilterOperator.Contains, searchTermNormalized),
                     new FilterOperatorInfo(nameof(AlbumDataInfo.AlternateNames), FilterOperator.Contains, searchTermNormalized, FilterOperatorInfo.OrJoinOperator)
@@ -305,7 +305,7 @@ public sealed class SearchService(
 
             if (searchQuery.Nullify() != null)
             {
-                songRequest.FilterBy = 
+                songRequest.FilterBy =
                 [
                     new FilterOperatorInfo(nameof(SongDataInfo.TitleNormalized), FilterOperator.Contains, searchTermNormalized)
                 ];

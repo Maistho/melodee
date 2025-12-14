@@ -1,22 +1,22 @@
+using System.Security.Claims;
 using Bunit;
 using Melodee.Blazor.Components.Pages;
 using Melodee.Blazor.Services;
+using Melodee.Common.Configuration;
+using Melodee.Common.Data;
 using Melodee.Common.Models.Collection;
+using Melodee.Common.Models.Scrobbling;
+using Melodee.Common.Plugins.Scrobbling;
+using Melodee.Common.Services;
+using Melodee.Common.Services.Caching;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
 using Moq;
-using Xunit;
-using Melodee.Common.Services;
-using Melodee.Common.Configuration;
-using System.Security.Claims;
 using NodaTime;
-using Melodee.Common.Services.Caching;
 using Serilog;
-using Microsoft.EntityFrameworkCore;
-using Melodee.Common.Data;
-using Melodee.Common.Plugins.Scrobbling;
-using Melodee.Common.Models.Scrobbling;
-using Microsoft.AspNetCore.Components.Authorization;
+using Xunit;
 
 namespace Melodee.Tests.Blazor.Components;
 
@@ -88,7 +88,7 @@ public class MusicPlayerTests : BunitContext
     {
         // Arrange
         const string expectedBaseUrl = "https://test.com";
-        
+
         _mockBaseUrlService.Setup(x => x.GetBaseUrl()).Returns(expectedBaseUrl);
 
         var songs = new List<SongDataInfo>
@@ -99,7 +99,7 @@ public class MusicPlayerTests : BunitContext
         // Act & Assert - Component renders without throwing
         var component = Render<MusicPlayer>(parameters => parameters
             .Add(p => p.Songs, songs));
-        
+
         // Verify component renders
         Assert.NotNull(component);
         Assert.Contains("Test Song", component.Markup);
@@ -137,7 +137,7 @@ public class MusicPlayerTests : BunitContext
         // Act & Assert - Should not crash with empty list
         var component = Render<MusicPlayer>(parameters => parameters
             .Add(p => p.Songs, emptySongs));
-        
+
         Assert.NotNull(component);
     }
 
@@ -169,7 +169,7 @@ public class MusicPlayerTests : BunitContext
     {
         // This test verifies the time formatting functionality
         // We can't directly test private methods, so we test through component behavior
-        
+
         // Arrange
         _mockBaseUrlService.Setup(x => x.GetBaseUrl()).Returns("https://test.com");
 
@@ -187,7 +187,7 @@ public class MusicPlayerTests : BunitContext
         Assert.Contains("Long Song", component.Markup);
     }
 
-    [Fact] 
+    [Fact]
     public void MusicPlayer_WithMultipleSongs_DisplaysPlaylist()
     {
         // Arrange

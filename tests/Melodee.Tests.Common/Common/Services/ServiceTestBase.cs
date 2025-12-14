@@ -97,7 +97,7 @@ public abstract class ServiceTestBase : IDisposable, IAsyncDisposable
     }
 
     protected IFileSystemService MockFileSystemService() => new MockFileSystemService();
-    
+
     protected AlbumDiscoveryService GetAlbumDiscoveryService()
     {
         return new AlbumDiscoveryService(
@@ -258,11 +258,11 @@ public abstract class ServiceTestBase : IDisposable, IAsyncDisposable
         var mockScheduler = new Mock<IScheduler>();
         mockScheduler.Setup(x => x.GetCurrentlyExecutingJobs(It.IsAny<CancellationToken>()))
                     .ReturnsAsync(new List<IJobExecutionContext>());
-        
+
         var mockSchedulerFactory = new Mock<ISchedulerFactory>();
         mockSchedulerFactory.Setup(x => x.GetScheduler(It.IsAny<CancellationToken>()))
                            .ReturnsAsync(mockScheduler.Object);
-        
+
         return mockSchedulerFactory.Object;
     }
 
@@ -402,9 +402,9 @@ public abstract class ServiceTestBase : IDisposable, IAsyncDisposable
             .ReturnsAsync(TestsBase.TestLibraries());
         mock.Setup(f
             => f.GetStorageLibrariesAsync(It.Is<CancellationToken>(_ => true))).ReturnsAsync(new OperationResult<Library[]>
-        {
-            Data = TestsBase.TestLibraries().Data.Where(x => x.TypeValue == LibraryType.Storage).ToArray()
-        });
+            {
+                Data = TestsBase.TestLibraries().Data.Where(x => x.TypeValue == LibraryType.Storage).ToArray()
+            });
         mock.Setup(f
             => f.GetStagingLibraryAsync(It.Is<CancellationToken>(_ => true))).ReturnsAsync(TestsBase.TestStagingLibrary());
         return mock.Object;

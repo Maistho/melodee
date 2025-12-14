@@ -213,7 +213,7 @@ public class AlbumImageSearchEngineServiceTests : ServiceTestBase
         // Assert
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Data);
-        
+
         // If there are multiple results, verify they are ordered by rank descending
         if (result.Data.Length > 1)
         {

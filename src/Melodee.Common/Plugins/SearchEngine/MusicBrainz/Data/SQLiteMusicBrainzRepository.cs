@@ -42,14 +42,14 @@ public class SQLiteMusicBrainzRepository(
     {
         await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var musicBrainzIdRaw = musicBrainzId.ToString();
-        
+
         return await context.Albums
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.MusicBrainzIdRaw == musicBrainzIdRaw, cancellationToken);
     }
 
     public override async Task<PagedResult<ArtistSearchResult>> SearchArtist(
-        ArtistQuery query, 
+        ArtistQuery query,
         int maxResults,
         CancellationToken cancellationToken = default)
     {
@@ -68,7 +68,7 @@ public class SQLiteMusicBrainzRepository(
 
         // For tests and when no Lucene index exists, use direct database search
         var shouldUseDirectSearch = query.MusicBrainzIdValue == null;
-        
+
         if (query.MusicBrainzIdValue != null)
         {
             musicBrainzIdsFromLucene.Add(query.MusicBrainzIdValue.Value.ToString());
@@ -112,7 +112,7 @@ public class SQLiteMusicBrainzRepository(
                        nameof(SQLiteMusicBrainzRepository), query))
             {
                 await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-                
+
                 // Use direct search when Lucene is not available or found no results
                 if (shouldUseDirectSearch && !string.IsNullOrEmpty(query.NameNormalized))
                 {
@@ -123,7 +123,7 @@ public class SQLiteMusicBrainzRepository(
                                    (a.AlternateNames != null && a.AlternateNames.Contains(query.NameNormalized)))
                         .OrderBy(a => a.SortName)
                         .ToArrayAsync(cancellationToken);
-                    
+
                     foreach (var artist in directArtists)
                     {
                         var rank = artist.NameNormalized == query.NameNormalized ? 10 : 1;
@@ -145,8 +145,8 @@ public class SQLiteMusicBrainzRepository(
                         // Get artist albums like in the normal path
                         var artistAlbums = await context.Albums
                             .AsNoTracking()
-                            .Where(a => a.MusicBrainzArtistId == artist.MusicBrainzArtistId && 
-                                       a.ReleaseDate > DateTime.MinValue) 
+                            .Where(a => a.MusicBrainzArtistId == artist.MusicBrainzArtistId &&
+                                       a.ReleaseDate > DateTime.MinValue)
                             .ToArrayAsync(cancellationToken);
 
                         if (artistAlbums.Length > 0)
@@ -200,7 +200,7 @@ public class SQLiteMusicBrainzRepository(
                                 }).ToArray()
                         });
                     }
-                    
+
                     totalCount = directArtists.Length;
                 }
                 else
@@ -233,7 +233,7 @@ public class SQLiteMusicBrainzRepository(
                         // Optimized EF Core query for albums with proper joins and filtering
                         var artistAlbums = await context.Albums
                             .AsNoTracking()
-                            .Where(a => a.MusicBrainzArtistId == artist.MusicBrainzArtistId && 
+                            .Where(a => a.MusicBrainzArtistId == artist.MusicBrainzArtistId &&
                                        a.ReleaseDate > DateTime.MinValue) // DoIncludeInArtistSearch condition
                             .ToArrayAsync(cancellationToken);
 
@@ -339,7 +339,7 @@ public class SQLiteMusicBrainzRepository(
             }
 
             await LoadDataFromMusicBrainzFiles(cancellationToken).ConfigureAwait(false);
-            
+
             // Create Lucene Index
             using (Operation.At(LogEventLevel.Debug).Time("MusicBrainzRepository: Created Lucene Index"))
             {
@@ -379,7 +379,7 @@ public class SQLiteMusicBrainzRepository(
 
             // Import data using EF Core with optimized bulk operations
             await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-            
+
             // Ensure database is created
             await context.Database.EnsureCreatedAsync(cancellationToken);
 
@@ -387,17 +387,17 @@ public class SQLiteMusicBrainzRepository(
             {
                 var batches = batchSize > 0 && LoadedMaterializedArtists.Count > 0 ? (LoadedMaterializedArtists.Count + batchSize - 1) / batchSize : 0;
                 Logger.Debug("MusicBrainzRepository: Importing [{BatchCount}] Artist batches...", batches);
-                
+
                 for (var batch = 0; batch < batches; batch++)
                 {
                     var batchItems = LoadedMaterializedArtists.Skip(batch * batchSize).Take(batchSize);
-                    
+
                     await context.Artists.AddRangeAsync(batchItems, cancellationToken);
                     await context.SaveChangesAsync(cancellationToken);
-                    
+
                     // Clear change tracker to free memory for large imports
                     context.ChangeTracker.Clear();
-                    
+
                     if (batch * batchSize > maxToProcess)
                     {
                         break;
@@ -415,17 +415,17 @@ public class SQLiteMusicBrainzRepository(
             {
                 var batches = batchSize > 0 && LoadedMaterializedArtistRelations.Count > 0 ? (LoadedMaterializedArtistRelations.Count + batchSize - 1) / batchSize : 0;
                 Logger.Debug("MusicBrainzRepository: Importing [{BatchCount}] Artist Relations batches...", batches);
-                
+
                 for (var batch = 0; batch < batches; batch++)
                 {
                     var batchItems = LoadedMaterializedArtistRelations.Skip(batch * batchSize).Take(batchSize);
-                    
+
                     await context.ArtistRelations.AddRangeAsync(batchItems, cancellationToken);
                     await context.SaveChangesAsync(cancellationToken);
-                    
+
                     // Clear change tracker to free memory for large imports
                     context.ChangeTracker.Clear();
-                    
+
                     if (batch * batchSize > maxToProcess)
                     {
                         break;
@@ -442,17 +442,17 @@ public class SQLiteMusicBrainzRepository(
             {
                 var batches = batchSize > 0 && LoadedMaterializedAlbums.Count > 0 ? (LoadedMaterializedAlbums.Count + batchSize - 1) / batchSize : 0;
                 Logger.Debug("MusicBrainzRepository: Importing [{BatchCount}] Album batches...", batches);
-                
+
                 for (var batch = 0; batch < batches; batch++)
                 {
                     var batchItems = LoadedMaterializedAlbums.Skip(batch * batchSize).Take(batchSize);
-                    
+
                     await context.Albums.AddRangeAsync(batchItems, cancellationToken);
                     await context.SaveChangesAsync(cancellationToken);
-                    
+
                     // Clear change tracker to free memory for large imports
                     context.ChangeTracker.Clear();
-                    
+
                     if (batch * batchSize > maxToProcess)
                     {
                         break;

@@ -116,7 +116,7 @@ public class EtagRepositoryTests
 
         // Force cleanup to ensure eviction happens
         repository.ForceCleanup();
-        
+
         // Assert - Should not exceed the limit significantly
         Assert.True(repository.CurrentCount <= 50);
     }
@@ -128,7 +128,7 @@ public class EtagRepositoryTests
         var repository = new EtagRepository(entryMaxAge: TimeSpan.FromMilliseconds(10));
         const string apiKeyId = "test-key";
         const string etag = "test-etag";
-        
+
         // Add entry and verify it exists
         Assert.True(repository.AddEtag(apiKeyId, etag));
         Assert.True(repository.EtagMatch(apiKeyId, etag));
@@ -146,7 +146,7 @@ public class EtagRepositoryTests
     {
         // Arrange
         var repository = new EtagRepository(maxEntries: 5, entryMaxAge: TimeSpan.FromHours(1));
-        
+
         // Act & Assert - Should work with custom configuration
         Assert.True(repository.AddEtag("key1", "etag1"));
         Assert.True(repository.EtagMatch("key1", "etag1"));

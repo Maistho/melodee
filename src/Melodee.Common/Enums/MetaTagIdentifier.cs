@@ -23,13 +23,15 @@ public enum MetaTagIdentifier
     /// <summary>
     ///     Doesn't look like an official ID3 tag but often used for multiple value artists on a Song.
     /// </summary>
-    [Description("[TT1]")] [MetaTagMultiValue(true)]
+    [Description("[TT1]")]
+    [MetaTagMultiValue(true)]
     Artists,
 
     /// <summary>
     ///     Composer [TCM, TCOM]
     /// </summary>
-    [Description("[TCM, TCOM]")] [MetaTagMultiValue(true)]
+    [Description("[TCM, TCOM]")]
+    [MetaTagMultiValue(true)]
     Composer,
 
     /// <summary>
@@ -115,7 +117,8 @@ public enum MetaTagIdentifier
     /// <summary>
     ///     Original artist [TOA, TOPE]
     /// </summary>
-    [MetaTagMultiValue(true)] [Description("[TOA, TOPE]")]
+    [MetaTagMultiValue(true)]
+    [Description("[TOA, TOPE]")]
     OriginalArtist,
 
     /// <summary>
@@ -303,7 +306,8 @@ public enum MetaTagIdentifier
     /// <summary>
     ///     Language [TLA, TLAN]
     /// </summary>
-    [MetaTagMultiValue(true)] [Description("[TLA, TLAN]")]
+    [MetaTagMultiValue(true)]
+    [Description("[TLA, TLAN]")]
     Language,
 
     /// <summary>
@@ -324,7 +328,8 @@ public enum MetaTagIdentifier
     /// <summary>
     ///     Lyricist [TXT, TEXT]
     /// </summary>
-    [MetaTagMultiValue(true)] [Description("[TXT, TEXT]")]
+    [MetaTagMultiValue(true)]
+    [Description("[TXT, TEXT]")]
     Lyricist,
 
     /// <summary>
@@ -456,7 +461,8 @@ public enum MetaTagIdentifier
     /// <summary>
     ///     [TOL, TOLY]
     /// </summary>
-    [MetaTagMultiValue(true)] [Description("[TOL, TOLY]")]
+    [MetaTagMultiValue(true)]
+    [Description("[TOL, TOLY]")]
     OriginalLyricist,
 
     /// <summary>

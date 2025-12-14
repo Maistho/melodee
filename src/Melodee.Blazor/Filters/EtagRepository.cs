@@ -12,7 +12,7 @@ public class EtagRepository
     private readonly object _cleanupLock = new object();
     private long _hitCount;
     private long _missCount;
-    
+
     private readonly record struct ETagEntry(string ETag, DateTime CreatedAt);
 
     public EtagRepository(int maxEntries = 10000, TimeSpan? entryMaxAge = null)
@@ -28,18 +28,18 @@ public class EtagRepository
         {
             var entry = new ETagEntry(etag, DateTime.UtcNow);
             var added = _eTags.TryAdd(apiKeyId!, entry);
-            
+
             if (added)
             {
                 Interlocked.Increment(ref _currentCount);
-                
+
                 // Trigger cleanup if needed (simple heuristic)
                 if (_currentCount > _maxEntries || ShouldCleanup())
                 {
                     _ = Task.Run(CleanupExpiredEntries);
                 }
             }
-            
+
             return added;
         }
 
@@ -85,26 +85,26 @@ public class EtagRepository
 
         return false;
     }
-    
+
     private bool ShouldCleanup()
     {
         var now = DateTime.UtcNow;
         return now - _lastCleanup > TimeSpan.FromMinutes(10); // Cleanup every 10 minutes
     }
-    
+
     private void CleanupExpiredEntries()
     {
         if (!Monitor.TryEnter(_cleanupLock, TimeSpan.FromSeconds(1)))
         {
             return; // Another cleanup is running
         }
-        
+
         try
         {
             var now = DateTime.UtcNow;
             var expiredKeys = new List<string>();
             var entriesRemoved = 0;
-            
+
             // Find expired entries
             foreach (var kvp in _eTags)
             {
@@ -113,7 +113,7 @@ public class EtagRepository
                     expiredKeys.Add(kvp.Key);
                 }
             }
-            
+
             // Remove expired entries
             foreach (var key in expiredKeys)
             {
@@ -122,7 +122,7 @@ public class EtagRepository
                     entriesRemoved++;
                 }
             }
-            
+
             // If still over capacity, remove oldest entries (LRU-style)
             if (_currentCount > _maxEntries)
             {
@@ -132,7 +132,7 @@ public class EtagRepository
                     .Take(entriesToRemove)
                     .Select(kvp => kvp.Key)
                     .ToArray();
-                
+
                 foreach (var key in oldestEntries)
                 {
                     if (_eTags.TryRemove(key, out _))
@@ -141,7 +141,7 @@ public class EtagRepository
                     }
                 }
             }
-            
+
             // Update counters
             Interlocked.Add(ref _currentCount, -entriesRemoved);
             _lastCleanup = now;
@@ -151,7 +151,7 @@ public class EtagRepository
             Monitor.Exit(_cleanupLock);
         }
     }
-    
+
     // For testing purposes
     public int CurrentCount => _currentCount;
     public void ForceCleanup() => CleanupExpiredEntries();

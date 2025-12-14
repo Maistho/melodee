@@ -31,8 +31,8 @@ using Rebus.Bus;
 using Serilog;
 using Serilog.Events;
 using SerilogTimings;
-using dbModels = Melodee.Common.Data.Models;
 using Artist = Melodee.Common.Models.OpenSubsonic.Artist;
+using dbModels = Melodee.Common.Data.Models;
 using Directory = Melodee.Common.Models.OpenSubsonic.Directory;
 using License = Melodee.Common.Models.OpenSubsonic.License;
 using Playlist = Melodee.Common.Models.OpenSubsonic.Playlist;
@@ -1079,11 +1079,11 @@ public class OpenSubsonicApiService(
                 {
                     var counts = genreCounts.TryGetValue(genre, out var count) ? count : (0, 0);
                     data.Add(new Genre
-                        {
-                            Value = genre.CleanString() ?? genre,
-                            SongCount = counts.Item1,
-                            AlbumCount = counts.Item2
-                        }
+                    {
+                        Value = genre.CleanString() ?? genre,
+                        SongCount = counts.Item1,
+                        AlbumCount = counts.Item2
+                    }
                     );
                 }
             }
@@ -1962,23 +1962,23 @@ public class OpenSubsonicApiService(
             var nowPlayingSongApiKeys = nowPlaying.Data.Select(x => x.Scrobble.SongApiKey).ToList();
             var nowPlayingSongs = await (from s in scopedContext
                         .Songs.Include(x => x.Album)
-                    where nowPlayingSongApiKeys.Contains(s.ApiKey)
-                    select s)
+                                         where nowPlayingSongApiKeys.Contains(s.ApiKey)
+                                         select s)
                 .AsNoTrackingWithIdentityResolution()
                 .ToArrayAsync(cancellationToken)
                 .ConfigureAwait(false);
             var nowPlayingSongIds = nowPlayingSongs.Select(x => x.Id).ToArray();
             var nowPlayingAlbumIds = nowPlayingSongs.Select(x => x.AlbumId).Distinct().ToArray();
             var nowPlayingSongsAlbums = await (from a in scopedContext.Albums.Include(x => x.Artist)
-                    where nowPlayingAlbumIds.Contains(a.Id)
-                    select a)
+                                               where nowPlayingAlbumIds.Contains(a.Id)
+                                               select a)
                 .AsNoTrackingWithIdentityResolution()
                 .ToArrayAsync(cancellationToken)
                 .ConfigureAwait(false);
             var nowPlayingUserSongs = await (from us in scopedContext.UserSongs
-                    where us.UserId == authResponse.UserInfo.Id
-                    where nowPlayingSongIds.Contains(us.Id)
-                    select us)
+                                             where us.UserId == authResponse.UserInfo.Id
+                                             where nowPlayingSongIds.Contains(us.Id)
+                                             select us)
                 .AsNoTrackingWithIdentityResolution()
                 .ToArrayAsync(cancellationToken)
                 .ConfigureAwait(false);

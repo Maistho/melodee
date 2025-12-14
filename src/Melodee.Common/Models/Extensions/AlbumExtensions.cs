@@ -177,7 +177,7 @@ public static class AlbumExtensions
             {
                 vv = vv.ToString() ?? string.Empty;
             }
-// Handle string conversion specially to avoid StringConverter issues
+            // Handle string conversion specially to avoid StringConverter issues
             if (typeof(T?) == typeof(string))
             {
                 return (T?)(object)(vv.ToString() ?? string.Empty);
@@ -470,7 +470,7 @@ public static class AlbumExtensions
         var minimumAlbumYear = SafeParser.ToNumber<int>(configuration[SettingRegistry.ValidationMinimumAlbumYear]);
         var maximumValidAlbumYear = SafeParser.ToNumber<int>(configuration[SettingRegistry.ValidationMaximumAlbumYear]);
         var albumYear = album.AlbumYear();
-        
+
         // If album year is invalid, use a default value instead of throwing an exception
         if (albumYear.HasValue && (albumYear < minimumAlbumYear || albumYear > maximumValidAlbumYear))
         {

@@ -69,7 +69,7 @@ public class ShareServiceTests : ServiceTestBase
     public async Task ListAsync_ShouldReturnCorrectPagination_WhenMultipleShares()
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var user = await CreateTestUserAsync();
         var shares = new[]
         {
@@ -77,7 +77,7 @@ public class ShareServiceTests : ServiceTestBase
             CreateValidShare(user.Id, "share-2", ShareType.Album, 2),
             CreateValidShare(user.Id, "share-3", ShareType.Playlist, 3)
         };
-        
+
         context.Shares.AddRange(shares);
         await context.SaveChangesAsync();
 
@@ -96,7 +96,7 @@ public class ShareServiceTests : ServiceTestBase
     public async Task ListAsync_ShouldReturnTotalCountOnly_WhenTotalCountOnlyRequest()
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var user = await CreateTestUserAsync();
         var share = CreateValidShare(user.Id);
         context.Shares.Add(share);
@@ -304,7 +304,7 @@ public class ShareServiceTests : ServiceTestBase
     public async Task GetByUniqueIdAsync_ShouldReturnShare_WhenExists()
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var user = await CreateTestUserAsync();
         var share = CreateValidShare(user.Id, "unique-test-123");
         context.Shares.Add(share);
@@ -380,7 +380,7 @@ public class ShareServiceTests : ServiceTestBase
     public async Task GetAsync_ShouldReturnShare_WhenExists()
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var user = await CreateTestUserAsync();
         var share = CreateValidShare(user.Id);
         context.Shares.Add(share);
@@ -432,14 +432,14 @@ public class ShareServiceTests : ServiceTestBase
     public async Task GetAsync_ShouldUseCaching_WhenCalledMultipleTimes()
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var user = await CreateTestUserAsync();
         var share = CreateValidShare(user.Id);
         context.Shares.Add(share);
         await context.SaveChangesAsync();
 
         var service = GetShareService();
-        
+
         // First call should hit database
         var result1 = await service.GetAsync(share.Id);
         // Second call should hit cache
@@ -470,7 +470,7 @@ public class ShareServiceTests : ServiceTestBase
     public async Task DeleteAsync_ShouldDeleteShare_WhenUserOwnsShare()
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var user = await CreateTestUserAsync();
         var share = CreateValidShare(user.Id);
         context.Shares.Add(share);
@@ -481,7 +481,7 @@ public class ShareServiceTests : ServiceTestBase
 
         Assert.True(result.IsSuccess);
         Assert.True(result.Data);
-        
+
         // Verify share is deleted - use a fresh context to ensure we see committed changes
         await using var verifyContext = await MockFactory().CreateDbContextAsync();
         var deletedShare = await verifyContext.Shares.FindAsync(share.Id);
@@ -492,7 +492,7 @@ public class ShareServiceTests : ServiceTestBase
     public async Task DeleteAsync_ShouldDeleteMultipleShares_WhenUserOwnsShares()
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var user = await CreateTestUserAsync();
         var share1 = CreateValidShare(user.Id, "share-1", ShareType.Song, 1);
         var share2 = CreateValidShare(user.Id, "share-2", ShareType.Album, 2);
@@ -504,7 +504,7 @@ public class ShareServiceTests : ServiceTestBase
 
         Assert.True(result.IsSuccess);
         Assert.True(result.Data);
-        
+
         // Verify shares are deleted - use a fresh context to ensure we see committed changes
         await using var verifyContext = await MockFactory().CreateDbContextAsync();
         var deletedShare1 = await verifyContext.Shares.FindAsync(share1.Id);
@@ -517,7 +517,7 @@ public class ShareServiceTests : ServiceTestBase
     public async Task DeleteAsync_ShouldDeleteOtherUsersShare_WhenUserIsAdmin()
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var regularUser = await CreateTestUserAsync(isAdmin: false);
         var adminUser = await CreateTestUserAsync(isAdmin: true);
         var share = CreateValidShare(regularUser.Id);
@@ -529,7 +529,7 @@ public class ShareServiceTests : ServiceTestBase
 
         Assert.True(result.IsSuccess);
         Assert.True(result.Data);
-        
+
         // Verify share is deleted
         await using var verifyContext = await MockFactory().CreateDbContextAsync();
         var deletedShare = await verifyContext.Shares.FindAsync(share.Id);
@@ -540,7 +540,7 @@ public class ShareServiceTests : ServiceTestBase
     public async Task DeleteAsync_ShouldReturnAccessDenied_WhenUserTriesToDeleteOtherUsersShare()
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var user1 = await CreateTestUserAsync(isAdmin: false);
         var user2 = await CreateTestUserAsync(isAdmin: false);
         var share = CreateValidShare(user1.Id);
@@ -554,7 +554,7 @@ public class ShareServiceTests : ServiceTestBase
         Assert.Equal(OperationResponseType.AccessDenied, result.Type);
         Assert.False(result.Data);
         Assert.Contains("Non admin users cannot delete other users shares.", result.Messages ?? []);
-        
+
         // Verify share still exists
         await using var verifyContext1 = await MockFactory().CreateDbContextAsync();
         var existingShare = await verifyContext1.Shares.FindAsync(share.Id);
@@ -605,21 +605,21 @@ public class ShareServiceTests : ServiceTestBase
     public async Task DeleteAsync_ShouldValidateAllSharesExist_BeforeDeleting()
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var user = await CreateTestUserAsync();
         var share = CreateValidShare(user.Id);
         context.Shares.Add(share);
         await context.SaveChangesAsync();
 
         var service = GetShareService();
-        
+
         // Try to delete one existing and one non-existing share
         var result = await service.DeleteAsync(user.Id, [share.Id, 999]);
 
         Assert.False(result.IsSuccess);
         Assert.False(result.Data);
         Assert.Contains("Unknown share.", result.Messages ?? []);
-        
+
         // Verify existing share was not deleted
         await using var verifyContext5 = await MockFactory().CreateDbContextAsync();
         var existingShare = await verifyContext5.Shares.FindAsync(share.Id);
@@ -646,22 +646,22 @@ public class ShareServiceTests : ServiceTestBase
     public async Task UpdateAsync_ShouldUpdateShare_WhenValidData()
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var user = await CreateTestUserAsync();
         var share = CreateValidShare(user.Id);
         context.Shares.Add(share);
         await context.SaveChangesAsync();
-        
+
         // Reload the entity to get the generated ID
         context.Entry(share).Reload();
 
         var service = GetShareService();
-        
+
         // Get the existing share first to ensure proper values
         var existingShareResult = await service.GetAsync(share.Id);
         Assert.True(existingShareResult.IsSuccess);
         var existingShare = existingShareResult.Data!;
-        
+
         var updatedShare = new Share
         {
             Id = existingShare.Id,
@@ -686,17 +686,17 @@ public class ShareServiceTests : ServiceTestBase
             var messages = string.Join(", ", result.Messages ?? []);
             Assert.True(result.IsSuccess, $"Update failed. Type: {result.Type}, Messages: [{messages}]");
         }
-        
+
         Assert.True(result.IsSuccess);
-        
+
         // Debug the Data value to understand why it's false
         if (!result.Data)
         {
             Assert.True(result.Data, $"Update returned success but Data is false. This means no rows were affected by SaveChanges.");
         }
-        
+
         Assert.True(result.Data);
-        
+
         // Verify updates in database - use a fresh context to ensure we see committed changes
         await using var verifyContext = await MockFactory().CreateDbContextAsync();
         var dbShare = await verifyContext.Shares.FindAsync(share.Id);
@@ -715,17 +715,17 @@ public class ShareServiceTests : ServiceTestBase
     public async Task UpdateAsync_ShouldSetLastUpdatedAt_WhenUpdating()
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var user = await CreateTestUserAsync();
         var share = CreateValidShare(user.Id);
         context.Shares.Add(share);
         await context.SaveChangesAsync();
-        
+
         context.Entry(share).Reload();
 
         var service = GetShareService();
         var beforeUpdate = SystemClock.Instance.GetCurrentInstant();
-        
+
         var updatedShare = new Share
         {
             Id = share.Id,
@@ -742,7 +742,7 @@ public class ShareServiceTests : ServiceTestBase
         var afterUpdate = SystemClock.Instance.GetCurrentInstant();
 
         Assert.True(result.IsSuccess);
-        
+
         await using var verifyContext2 = await MockFactory().CreateDbContextAsync();
         var dbShare = await verifyContext2.Shares.FindAsync(share.Id);
         Assert.NotNull(dbShare!.LastUpdatedAt);
@@ -790,7 +790,7 @@ public class ShareServiceTests : ServiceTestBase
     public async Task UpdateAsync_ShouldReturnValidationFailure_WhenShareIdIsZero()
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var user = await CreateTestUserAsync();
         var share = CreateValidShare(user.Id);
         context.Shares.Add(share);
@@ -813,7 +813,7 @@ public class ShareServiceTests : ServiceTestBase
     public async Task UpdateAsync_ShouldReturnValidationFailure_WhenShareTypeIsZero()
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var user = await CreateTestUserAsync();
         var share = CreateValidShare(user.Id);
         context.Shares.Add(share);
@@ -836,7 +836,7 @@ public class ShareServiceTests : ServiceTestBase
     public async Task UpdateAsync_ShouldReturnValidationFailure_WhenShareUniqueIdTooLong()
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var user = await CreateTestUserAsync();
         var share = CreateValidShare(user.Id);
         context.Shares.Add(share);
@@ -859,17 +859,17 @@ public class ShareServiceTests : ServiceTestBase
     public async Task UpdateAsync_ShouldClearCache_WhenUpdateSuccessful()
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var user = await CreateTestUserAsync();
         var share = CreateValidShare(user.Id);
         context.Shares.Add(share);
         await context.SaveChangesAsync();
 
         var service = GetShareService();
-        
+
         // First, get the share to populate cache
         await service.GetAsync(share.Id);
-        
+
         // Update the share
         var updatedShare = CreateValidShare(user.Id);
         updatedShare.Id = share.Id;
@@ -879,7 +879,7 @@ public class ShareServiceTests : ServiceTestBase
 
         Assert.True(result.IsSuccess);
         Assert.True(result.Data);
-        
+
         // Get again - should reflect the update (cache should be cleared)
         var getResult = await service.GetAsync(share.Id);
         Assert.Equal("Updated description", getResult.Data!.Description);
@@ -889,7 +889,7 @@ public class ShareServiceTests : ServiceTestBase
     public async Task UpdateAsync_ShouldNotUpdateApiKey_WhenUpdating()
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var user = await CreateTestUserAsync();
         var share = CreateValidShare(user.Id);
         context.Shares.Add(share);
@@ -904,7 +904,7 @@ public class ShareServiceTests : ServiceTestBase
         var result = await service.UpdateAsync(updatedShare);
 
         Assert.True(result.IsSuccess);
-        
+
         // Verify API key was not changed (it's not updated in the UpdateAsync method)
         await using var verifyContext3 = await MockFactory().CreateDbContextAsync();
         var dbShare = await verifyContext3.Shares.FindAsync(share.Id);
@@ -915,7 +915,7 @@ public class ShareServiceTests : ServiceTestBase
     public async Task UpdateAsync_ShouldNotUpdateCreatedAt_WhenUpdating()
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var user = await CreateTestUserAsync();
         var share = CreateValidShare(user.Id);
         context.Shares.Add(share);
@@ -930,7 +930,7 @@ public class ShareServiceTests : ServiceTestBase
         var result = await service.UpdateAsync(updatedShare);
 
         Assert.True(result.IsSuccess);
-        
+
         // Verify CreatedAt was not changed (it's not updated in the UpdateAsync method)
         await using var verifyContext4 = await MockFactory().CreateDbContextAsync();
         var dbShare = await verifyContext4.Shares.FindAsync(share.Id);
@@ -990,7 +990,7 @@ public class ShareServiceTests : ServiceTestBase
     public async Task ShareTypeValue_ShouldReturnNotSet_WhenShareTypeIsInvalid()
     {
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var user = await CreateTestUserAsync();
         var share = CreateValidShare(user.Id);
         share.ShareType = 999; // Invalid value

@@ -35,7 +35,7 @@ public class MemoryCacheManagerTests
         var key = "test-key";
 
         // Act - Add item to cache and then clear it
-         await _cacheManager.GetAsync(key, () => Task.FromResult(testData), CancellationToken.None);
+        await _cacheManager.GetAsync(key, () => Task.FromResult(testData), CancellationToken.None);
         _cacheManager.Clear();
 
         // Re-fetch the item - should cause cache miss and new fetch

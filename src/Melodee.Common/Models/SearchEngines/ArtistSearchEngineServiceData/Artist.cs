@@ -18,9 +18,9 @@ public sealed class Artist
 {
     [Key] public int Id { get; set; }
 
-    [Required] [MaxLength(2000)] public required string Name { get; set; }
+    [Required][MaxLength(2000)] public required string Name { get; set; }
 
-    [Required] [MaxLength(2000)] public required string NameNormalized { get; set; }
+    [Required][MaxLength(2000)] public required string NameNormalized { get; set; }
 
     /// <summary>
     ///     Alternate names in tag form
@@ -28,7 +28,7 @@ public sealed class Artist
     [MaxLength(4000)]
     public string? AlternateNames { get; set; }
 
-    [Required] [MaxLength(2000)] public required string SortName { get; set; }
+    [Required][MaxLength(2000)] public required string SortName { get; set; }
 
     [MaxLength(255)] public string? ItunesId { get; set; }
 

@@ -26,7 +26,7 @@ public class MusicBrainzDbContext : DbContext
             entity.ToTable("Artist");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedOnAdd();
-            
+
             entity.HasIndex(e => e.MusicBrainzIdRaw)
                 .HasDatabaseName("IX_Artist_MusicBrainzIdRaw");
             entity.HasIndex(e => e.NameNormalized)
@@ -54,7 +54,7 @@ public class MusicBrainzDbContext : DbContext
             entity.ToTable("Album");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedOnAdd();
-            
+
             entity.HasIndex(e => e.MusicBrainzIdRaw)
                 .HasDatabaseName("IX_Album_MusicBrainzIdRaw");
             entity.HasIndex(e => e.MusicBrainzArtistId)
@@ -85,7 +85,7 @@ public class MusicBrainzDbContext : DbContext
             entity.ToTable("ArtistRelation");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedOnAdd();
-            
+
             entity.HasIndex(e => e.ArtistId)
                 .HasDatabaseName("IX_ArtistRelation_ArtistId");
             entity.HasIndex(e => e.RelatedArtistId)

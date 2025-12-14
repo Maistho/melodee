@@ -241,7 +241,7 @@ public static class AlbumExtensions
             nowPlayingInfo?.Scrobble.PlayerName
         );
     }
-    
+
     public static FileSystemDirectoryInfo ToFileSystemDirectoryInfo(this Album album, string? libraryPath = null)
     {
         return new FileSystemDirectoryInfo
@@ -249,6 +249,6 @@ public static class AlbumExtensions
             Path = Path.Combine(libraryPath ?? album.Artist.Library.Path, album.Artist.Directory),
             Name = album.Directory
         };
-    }    
-    
+    }
+
 }

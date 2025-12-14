@@ -43,7 +43,7 @@ public static class SongDataInfoExtensions
     public static string ToApiStreamUrl(this SongDataInfo song, IMelodeeConfiguration configuration, Microsoft.AspNetCore.Http.HttpContext? httpContext)
     {
         var configuredBaseUrl = configuration.GetValue<string>(SettingRegistry.SystemBaseUrl);
-        
+
         string baseUrl;
         if (configuredBaseUrl.Nullify() == null || configuredBaseUrl == MelodeeConfiguration.RequiredNotSetValue)
         {
@@ -51,7 +51,7 @@ public static class SongDataInfoExtensions
             {
                 throw new Exception($"Configuration setting [{SettingRegistry.SystemBaseUrl}] is invalid and no HttpContext provided for fallback.");
             }
-            
+
             baseUrl = $"{httpContext.Request.Scheme}://{httpContext.Request.Host.Value}";
         }
         else

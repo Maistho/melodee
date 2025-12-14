@@ -68,7 +68,7 @@ public class DeezerSearchEngine(
             if (searchResult.Data.Length != 0)
             {
                 var na = query.Artist.ToNormalizedString();
-                foreach (var sr in searchResult.Data.Where(x => x is { Cover_Small : not null, Cover_Xl: not null }))
+                foreach (var sr in searchResult.Data.Where(x => x is { Cover_Small: not null, Cover_Xl: not null }))
                 {
                     if (sr.Artist?.Name.ToNormalizedString() == na)
                     {

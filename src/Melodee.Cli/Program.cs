@@ -1,4 +1,4 @@
-﻿using Melodee.Cli.Command;
+using Melodee.Cli.Command;
 using Melodee.Cli.CommandSettings;
 using Spectre.Console;
 using Spectre.Console.Cli;
