@@ -395,12 +395,12 @@
         {
             var librariesResult = await LibraryService.GetStorageLibrariesAsync();
             Melodee.Common.Data.Models.Library? targetLibrary = null;
-            
+
             if (librariesResult.Data.Length > 1)
             {
                 // Show library selection dialog
                 targetLibrary = await ShowLibrarySelectionDialog(librariesResult.Data, "Select the destination library for this album:");
-                
+
                 if (targetLibrary == null)
                 {
                     // User cancelled the dialog
@@ -746,6 +746,44 @@
                     }
                 }
 
+                if ((_album.Images?.Any() ?? false) && selectedImageSearchResult.DoDeleteAllOtherImages)
+                {
+                    // Delete any other images
+                    foreach (var image in _album.Directory.AllFileImageTypeFileInfos())
+                    {
+                      if (image.Name != _album.Images.First()?.FileInfo?.Name && image.Exists)
+                      {
+                        try
+                        {
+                          File.Delete(image.FullName);
+                        }
+                        catch (Exception ex)
+                        {
+                          NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Error", Detail = ex.Message });
+                        }
+                      }
+                    }
+                    // Rename image to be first
+                    var newAlbumImageFromSearchFileName = Path.Combine(_album.Directory.FullName(), $"{ImageInfo.ImageFilePrefix}{1.ToStringPadLeft(MelodeeConfiguration.ImageNameNumberPadding)}-{Common.Data.Models.Album.FrontImageType}.jpg");
+                    File.Move(albumImageFromSearchFileName, newAlbumImageFromSearchFileName);
+                    var newImageInfo = new FileInfo(newAlbumImageFromSearchFileName);
+                    var imageInfo = await Image.IdentifyAsync(newAlbumImageFromSearchFileName).ConfigureAwait(false);
+                    _album.Images = new List<ImageInfo>
+                    {
+                      new()
+                      {
+                        FileInfo = newImageInfo.ToFileSystemInfo(),
+                        PictureIdentifier = PictureIdentifier.Front,
+                        CrcHash = Crc32.Calculate(newImageInfo),
+                        Width = imageInfo.Width,
+                        Height = imageInfo.Height,
+                        SortOrder = 1,
+                        WasEmbeddedInSong = false
+                      }
+                    };
+                }
+
+
                 var result = await MediaEditService.SaveMelodeeAlbum(_album);
                 if (result.Data)
                 {
@@ -782,15 +820,15 @@
     }
 
     private async Task<Melodee.Common.Data.Models.Library?> ShowLibrarySelectionDialog(
-        Melodee.Common.Data.Models.Library[] libraries, 
+        Melodee.Common.Data.Models.Library[] libraries,
         string message)
     {
         // Use a simple list selection approach with inline component
         var options = libraries.Select(l => $"{l.Name} ({l.Path})").ToArray();
         var libraryDict = libraries.ToDictionary(l => $"{l.Name} ({l.Path})", l => l);
-        
+
         string? selectedOption = null;
-        
+
         await DialogService.OpenAsync("Select Destination Library", ds =>
             @<div>
                 <RadzenStack Gap="1rem">
@@ -811,9 +849,9 @@
                 </RadzenStack>
             </div>,
             new DialogOptions { Width = "600px", Height = "auto", ShowClose = true });
-        
-        return selectedOption != null && libraryDict.ContainsKey(selectedOption) 
-            ? libraryDict[selectedOption] 
+
+        return selectedOption != null && libraryDict.ContainsKey(selectedOption)
+            ? libraryDict[selectedOption]
             : null;
     }
 

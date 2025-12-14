@@ -522,11 +522,11 @@
                 OperationResult<bool>? saveResult = null;
                 if (selectedImageSearchResult.ImageBytes != null)
                 {
-                    saveResult = await ArtistService.SaveImageAsArtistImageAsync(_artist.Id, selectedImageSearchResult.DoDeleteAllOtherArtistImages, selectedImageSearchResult.ImageBytes);
+                    saveResult = await ArtistService.SaveImageAsArtistImageAsync(_artist.Id, selectedImageSearchResult.DoDeleteAllOtherImages, selectedImageSearchResult.ImageBytes);
                 }
                 else
                 {
-                    saveResult = await ArtistService.SaveImageUrlAsArtistImageAsync(_artist.Id, selectedImageSearchResult.Url, selectedImageSearchResult.DoDeleteAllOtherArtistImages);
+                    saveResult = await ArtistService.SaveImageUrlAsArtistImageAsync(_artist.Id, selectedImageSearchResult.Url, selectedImageSearchResult.DoDeleteAllOtherImages);
                 }
 
                 if (saveResult.IsSuccess)

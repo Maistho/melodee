@@ -923,11 +923,11 @@
                 OperationResult<bool>? saveResult = null;
                 if (selectedImageSearchResult.ImageBytes != null)
                 {
-                    saveResult = await AlbumService.SaveImageAsAlbumImageAsync(_album.Id, selectedImageSearchResult.DoDeleteAllOtherArtistImages, selectedImageSearchResult.ImageBytes);
+                    saveResult = await AlbumService.SaveImageAsAlbumImageAsync(_album.Id, selectedImageSearchResult.DoDeleteAllOtherImages, selectedImageSearchResult.ImageBytes);
                 }
                 else
                 {
-                    saveResult = await AlbumService.SaveImageUrlAsAlbumImageAsync(_album.Id, selectedImageSearchResult.Url, selectedImageSearchResult.DoDeleteAllOtherArtistImages);
+                    saveResult = await AlbumService.SaveImageUrlAsAlbumImageAsync(_album.Id, selectedImageSearchResult.Url, selectedImageSearchResult.DoDeleteAllOtherImages);
                 }
 
                 if (saveResult.IsSuccess)

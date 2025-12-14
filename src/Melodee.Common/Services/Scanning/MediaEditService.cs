@@ -274,7 +274,7 @@ public sealed class MediaEditService(
         {
             var serialized = serializer.Serialize(album);
             var albumDirectory = new DirectoryInfo(directoryInfo.FullName());
-            
+
             // Ensure the directory exists
             if (!albumDirectory.Exists)
             {
@@ -294,9 +294,9 @@ public sealed class MediaEditService(
                     // For testing purposes, when we can't create the directory, just continue
                 }
             }
-            
+
             var jsonName = Path.Combine(albumDirectory.FullName, album.ToMelodeeJsonName(_configuration, true));
-            
+
             try
             {
                 await File.WriteAllTextAsync(jsonName, serialized, cancellationToken);
@@ -921,8 +921,7 @@ public sealed class MediaEditService(
     }
 
 
-    public async Task<OperationResult<bool>> SaveMelodeeAlbum(Album album, bool? forceIsOk = null,
-        CancellationToken cancellationToken = default)
+    public async Task<OperationResult<bool>> SaveMelodeeAlbum(Album album, bool? forceIsOk = null, CancellationToken cancellationToken = default)
     {
         album.Modified = DateTimeOffset.UtcNow;
         if (!(forceIsOk ?? false))

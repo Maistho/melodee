@@ -333,8 +333,7 @@ public static class FileSystemDirectoryInfoExtensions
         return result.ToArray();
     }
 
-    public static (string, int) GetNextFileNameForType(this FileSystemDirectoryInfo fileSystemDirectoryInfo,
-        string imageType)
+    public static (string, int) GetNextFileNameForType(this FileSystemDirectoryInfo fileSystemDirectoryInfo, string imageType)
     {
         var highestNumberFound = 0;
         var allImagesInDirectory = fileSystemDirectoryInfo.AllFileImageTypeFileInfos().ToArray();
@@ -499,9 +498,9 @@ public static class FileSystemDirectoryInfoExtensions
     ///     This exists because in some systems where data is on one mapped drive it cannot be "Moved" to another mapped drive
     ///     ("Cross link" error), it must be copied and then deleted.
     /// </summary>
-    public static void MoveToDirectory(this FileSystemDirectoryInfo fileSystemDirectoryInfo, 
+    public static void MoveToDirectory(this FileSystemDirectoryInfo fileSystemDirectoryInfo,
         string destination,
-        string? dontMoveFileName = null, 
+        string? dontMoveFileName = null,
         bool? isNestedDirectory = false)
     {
         if (!Directory.Exists(destination))
