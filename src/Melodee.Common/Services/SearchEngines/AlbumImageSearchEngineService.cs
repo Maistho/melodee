@@ -72,6 +72,7 @@ public class AlbumImageSearchEngineService(
                 new MetalApiOptions { Enabled = configuration.GetValue<bool>(SettingRegistry.SearchEngineMetalApiEnabled) })
             {
                 IsEnabled = configuration.GetValue<bool>(SettingRegistry.SearchEngineMetalApiEnabled)
+            },
             new BraveAlbumImageSearchEnginePlugin(Logger, httpClientFactory, configuration)
             {
                 IsEnabled = configuration.GetValue<bool>(SettingRegistry.SearchEngineBraveEnabled)
