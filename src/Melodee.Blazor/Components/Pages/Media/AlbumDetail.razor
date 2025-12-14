@@ -783,13 +783,15 @@
                     };
                 }
 
-
                 var result = await MediaEditService.SaveMelodeeAlbum(_album);
                 if (result.Data)
                 {
                     NotificationService.Notify(NotificationMessageForResult(result, "set cover image", ToastTime));
                 }
-
+                else
+                {
+                  NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Warning, Summary = "Warning", Detail = "No images were added to the album. Likely the image you selected was invalid." });
+                }
                 NavigationManager.Refresh(true);
             }
         }

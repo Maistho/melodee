@@ -64,6 +64,7 @@
                             src="@result.ThumbnailUrl"
                             alt="@result.Title"/>
                         <div class="cover-search-image-title">@result.Title</div>
+                        <div class="cover-search-image-dimensions">@result.Width x @result.Height</div>
                     </div>
                 }
             </div>
@@ -101,6 +102,7 @@
 
     private byte[]? _imageBytes;
     private long _maxUploadSize;
+    private int _minimumImageSize;
 
     private async Task SingleUpload(InputFileChangeEventArgs e)
     {
@@ -108,7 +110,7 @@
         {
             await e.File.OpenReadStream(_maxUploadSize).CopyToAsync(ms);
             _imageBytes = ms.ToArray();
-            _selectedResult = new ImageSearchResult(string.Empty, string.Empty, e.File.Name, _doDeleteExistingImages, _imageBytes);
+            _selectedResult = new ImageSearchResult(string.Empty, string.Empty, e.File.Name, _doDeleteExistingImages, 0, 0, _imageBytes);
             StateHasChanged();
         }
     }
@@ -130,6 +132,7 @@
     {
         _maxResults = (await SettingService.GetValueAsync<int?>(SettingRegistry.SearchEngineDefaultPageSize)).Data ?? (await SettingService.GetValueAsync<int>(SettingRegistry.DefaultsPageSize)).Data;
         _maxUploadSize = (await SettingService.GetValueAsync<long?>(SettingRegistry.SystemMaxUploadSize)).Data ?? (5 * 1024 * 1024);
+        _minimumImageSize = (await SettingService.GetValueAsync<int?>(SettingRegistry.ImagingMinimumImageSize)).Data ?? 0;
         await DoSearchAsync();
     }
 
@@ -151,7 +154,9 @@
                     }, _maxResults))
                     .Data
                     .Where(x => x.ThumbnailUrlValue.Nullify() != null)
-                    .Select(x => new ImageSearchResult(x.ThumbnailUrlValue, x.MediaUrl, x.Title ?? string.Empty, _doDeleteExistingImages))
+                    .Where(x => x.Width >= _minimumImageSize && x.Height >= _minimumImageSize)
+                    .OrderByDescending(x => x.Width * x.Height)
+                    .Select(x => new ImageSearchResult(x.ThumbnailUrlValue, x.MediaUrl, x.Title ?? string.Empty, _doDeleteExistingImages, x.Width, x.Height))
                     .ToArray();
             }
             else if (SearchType != ImageSearchType.Profile)
@@ -163,7 +168,9 @@
                         Name = SearchValues.OrderBy(x => x.SortOrder).Skip(2).First().Value
                     }, _maxResults))
                     .Data
-                    .Select(x => new ImageSearchResult(x.ThumbnailUrlValue, x.MediaUrl, x.Title ?? string.Empty, _doDeleteExistingImages))
+                    .Where(x => x.Width >= _minimumImageSize && x.Height >= _minimumImageSize)
+                    .OrderByDescending(x => x.Width * x.Height)
+                    .Select(x => new ImageSearchResult(x.ThumbnailUrlValue, x.MediaUrl, x.Title ?? string.Empty, _doDeleteExistingImages, x.Width, x.Height))
                     .ToArray();
             }
         }
@@ -192,7 +199,7 @@
     async Task OnChange(byte[] value, string name)
     {
         _imageBytes = value;
-        _selectedResult = new ImageSearchResult(string.Empty, string.Empty, name, _doDeleteExistingImages, _imageBytes);
+        _selectedResult = new ImageSearchResult(string.Empty, string.Empty, name, _doDeleteExistingImages, 0, 0, _imageBytes);
         await InvokeAsync(StateHasChanged);
         if (OnUpdateCallback.HasDelegate && _selectedResult != null)
         {
