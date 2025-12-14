@@ -41,6 +41,7 @@ services:
       - staging:/app/staging
       - user_images:/app/user-images
       - playlists:/app/playlists
+      - logs:/app/Logs
     ports:
       - "${MELODEE_PORT:-8080}:8080"
     restart: unless-stopped
@@ -70,3 +71,5 @@ volumes:
     name: melodee_user_images
   playlists:
     name: melodee_playlists
+  logs:
+    name: melodee_logs

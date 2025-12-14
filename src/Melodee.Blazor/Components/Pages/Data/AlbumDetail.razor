@@ -292,14 +292,14 @@
                                                 <RadzenIcon
                                                     Icon="thumb_down"
                                                     class="filled-icon"
-                                                    IconColor="@(_userSongs.FirstOrDefault(x => x.SongId == song.Id)?.IsHated ?? false ? "#A2A415" : "#C9C9C7")"
+                                                    IconColor="@(IsSongHated(song) ? "#A2A415" : "#C9C9C7")"
                                                     title="I hate this"
                                                     @onclick="@(() => IsSongHatedClicked(song))"
                                                     Style="cursor:pointer;font-size:14px;"/>
                                                 <RadzenIcon
                                                     Icon="favorite"
                                                     class="filled-icon"
-                                                    IconColor="@(_userSongs.FirstOrDefault(x => x.SongId == song.Id)?.IsStarred ?? false ? "#FA0202" : "#C9C9C7")"
+                                                    IconColor="@(IsSongStarred(song) ? "#FA0202" : "#C9C9C7")"
                                                     title="I like this"
                                                     @onclick="@(() => IsSongStarredClicked(song))"
                                                     Style="cursor:pointer;font-size:14px;"/>
@@ -521,6 +521,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await base.OnInitializedAsync();
+
         _maxUploadSize = (await SettingService.GetValueAsync<long?>(SettingRegistry.SystemMaxUploadSize)).Data ?? (5 * 1024 * 1024);
         var libraryResult = await LibraryService.GetByApiKeyAsync(_album.Artist.Library.ApiKey);
         if (libraryResult.IsSuccess && libraryResult.Data != null)
@@ -833,64 +835,19 @@
         NotificationService.Notify(NotificationMessageForResult(result, "Toggling Album Favorite", ToastTime));
     }
 
+    private bool IsSongHated(Song song) => _userSongs.FirstOrDefault(x => x.SongId == song.Id)?.IsHated ?? false;
+
+    private bool IsSongStarred(Song song) => _userSongs.FirstOrDefault(x => x.SongId == song.Id)?.IsStarred ?? false;
 
     private async Task IsSongStarredClicked(Song song)
     {
-        var userSong = _userSongs.FirstOrDefault(x => x.SongId == song.Id);
-        if (userSong == null)
-        {
-            userSong = new UserSong
-            {
-                CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow),
-                UserId = CurrentUsersId,
-                SongId = song.Id,
-                IsStarred = true
-            };
-            var allUserSongs = _userSongs.ToList();
-            allUserSongs.Add(userSong);
-            _userSongs = allUserSongs.ToArray();
-        }
-        else
-        {
-            userSong.IsStarred = !userSong.IsStarred;
-        }
-
-        if (userSong.IsStarred)
-        {
-            userSong.IsHated = false;
-        }
-
-        var result = await UserService.ToggleSongStarAsync(CurrentUsersId, song.ApiKey, userSong.IsStarred);
+        var result = await UserService.ToggleSongStarAsync(CurrentUsersId, song.ApiKey, IsSongStarred(song));
         NotificationService.Notify(NotificationMessageForResult(result, "Toggling Song Favorite", ToastTime));
     }
 
     private async Task IsSongHatedClicked(Song song)
     {
-        var userSong = _userSongs.FirstOrDefault(x => x.SongId == song.Id);
-        if (userSong == null)
-        {
-            userSong = new UserSong
-            {
-                CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow),
-                UserId = CurrentUsersId,
-                SongId = song.Id,
-                IsHated = true
-            };
-            var allUserSongs = _userSongs.ToList();
-            allUserSongs.Add(userSong);
-            _userSongs = allUserSongs.ToArray();
-        }
-        else
-        {
-            userSong.IsHated = !userSong.IsHated;
-        }
-
-        if (userSong.IsHated)
-        {
-            userSong.IsStarred = false;
-        }
-
-        var result = await UserService.ToggleSongHatedAsync(CurrentUsersId, song.ApiKey, userSong.IsStarred);
+        var result = await UserService.ToggleSongHatedAsync(CurrentUsersId, song.ApiKey, IsSongHated(song));
         NotificationService.Notify(NotificationMessageForResult(result, "Toggling Song Hatred", ToastTime));
     }
 
@@ -1026,25 +983,6 @@
 
     private async Task UserSongRatingChange(Song song, int arg)
     {
-        var userSong = _userSongs.FirstOrDefault(x => x.SongId == song.Id);
-        if (userSong == null)
-        {
-            userSong = new UserSong
-            {
-                CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow),
-                UserId = CurrentUsersId,
-                SongId = song.Id,
-                Rating = arg
-            };
-            var allUserSongs = _userSongs.ToList();
-            allUserSongs.Add(userSong);
-            _userSongs = allUserSongs.ToArray();
-        }
-        else
-        {
-            userSong.Rating = arg;
-        }
-
         var result = await UserService.SetSongRatingAsync(CurrentUsersId, song.Id, arg);
         NotificationService.Notify(NotificationMessageForResult(result, "Set song rating", ToastTime));
     }

@@ -97,6 +97,8 @@ else if (_jobs.Count == 0)
 
     protected override async Task OnInitializedAsync()
     {
+        await base.OnInitializedAsync();
+        
         await RefreshJobs();
     }
 
