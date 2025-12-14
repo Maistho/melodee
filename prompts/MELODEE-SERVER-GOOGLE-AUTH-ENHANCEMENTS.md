@@ -1,260 +1,205 @@
-# Melodee Server — Google Auth Enhancements
+# Melodee Server — Google Auth Enhancements (Client → Server → JWT)
 
-## 0. Strategy B: Access + Refresh Tokens with Rotation
+**Last updated:** 2025-12-13
+**Status:** Proposed requirements
 
-This document captures the architectural decisions for introducing Google Sign-In alongside the existing username/password authentication, and for adopting a short-lived access token plus refresh-token-with-rotation model ("Strategy B").
+## 1. Purpose
 
-### 0.1 Token Lifetimes and Session Model
+Melodee’s API is secured with **Bearer JWT** tokens.
 
-Unless overridden per environment:
+This document specifies the **server-side enhancements** required to support **Google Sign-In** as an alternative to username/email + password, while still issuing a **Melodee JWT** that is used for all authenticated API calls.
 
-- **Access token (JWT) lifetime:** 15 minutes.
-- **Refresh token lifetime:** 30 days.
-- **Maximum session lifetime per device/session:** 90 days total from first issuance (absolute cap, regardless of individual refresh-token lifetimes).
+The intent is that **Android and other clients** can:
+- Offer Google Sign-In as a login option
+- Exchange a Google credential for a Melodee-issued JWT
+- Use the JWT in `Authorization: Bearer <token>` for all protected endpoints
 
-Behavior:
+## 2. Background / Current State
 
-- Clients receive a short-lived JWT and a long-lived refresh token.
-- The access token is used for API requests; refresh is used only with the `/auth/refresh` endpoint.
-- After 90 days from first use for a given token family, the backend will no longer issue new tokens for that family and will require full re-auth.
+The OpenAPI spec currently documents password authentication endpoints:
+- `POST /api/v1/Users/authenticate`
+- `POST /api/v1/Users/auth` (alias)
 
-### 0.2 Refresh Tokens, Rotation, and Replay Detection
+Both return `AuthResponse`:
+- `user`
+- `serverVersion`
+- `token` (Melodee JWT)
 
-- Refresh tokens are issued as opaque, unguessable strings.
-- On the server, **only a hashed form** of the refresh token is stored, never the raw token.
-- Each refresh token record stores at least:
-  - `UserId`
-  - `TokenId` (stable identifier for this token)
-  - `HashedToken`
-  - `IssuedAt`
-  - `ExpiresAt`
-  - `RevokedAt` (nullable)
-  - `PreviousTokenId` (nullable, to track rotation chains)
+The spec does **not** currently document a Google credential exchange endpoint, refresh behavior, or token lifetime semantics.
 
-**Rotation rules:**
+## 3. Design Principles
 
-- On every successful refresh:
-  - Validate the current refresh token (user, not expired, not revoked, token family not compromised).
-  - Issue a **new** JWT and **new** refresh token.
-  - Persist the new refresh token (hashed) and link it back via `PreviousTokenId`.
-  - Mark the old refresh token as superseded/revoked so it cannot be reused.
+1. **Google auth is a login mechanism, not an API auth mechanism.**
+   - Google tokens should not be sent to every API request.
+   - The server issues a Melodee JWT after verifying Google credentials.
 
-**Replay detection:**
+2. **One auth model for the rest of the API:** Bearer JWT.
 
-- If a refresh token that should have been superseded is used again, treat this as a **replay** event:
-  - Reject the request with a `401` and error code `refresh_token_replayed`.
-  - Optionally revoke the entire token family (all descendants/ancestors) according to configuration.
-  - Emit a telemetry/security event so operators can investigate.
+3. **Client portability:** The flow must work for Android, web, desktop, and other clients.
 
-**Revocation:**
+4. **Security-first defaults:**
+   - Validate token signatures and claims strictly.
+   - Avoid long-lived, non-revocable tokens.
 
-- Admins and security processes can revoke refresh tokens by:
-  - `UserId` (revoke all user sessions),
-  - `TokenId` (revoke a specific session), or
-  - Token-family (via `PreviousTokenId` chain).
-- A revoked token or token family must always result in a `401` with `refresh_token_invalid` on refresh attempts.
+## 4. Required Client Capabilities (Android + other clients)
 
-## 1. Data Model and Relationships
+Clients MUST be able to:
+- Configure server base URL (self-hosted) and validate reachability.
+- Perform Google Sign-In and obtain one of:
+  - a Google **ID token** (preferred for simplicity), OR
+  - an OAuth **authorization code** (preferred when you want server-side refresh with Google), depending on server implementation.
+- Call the server’s Google exchange endpoint to obtain a Melodee JWT.
+- Store Melodee tokens securely (Android: Keystore-backed storage).
+- Attach `Authorization: Bearer <melodee_jwt>` on every protected request.
+- Handle `401` by re-authenticating (silent Google sign-in) and retrying when safe.
 
-The following entities and relationships are expected. Exact EF Core model names may differ but should preserve these semantics.
+Clients SHOULD be able to:
+- Surface actionable error states (e.g., “Google account not linked”, “Server rejected credential”, “Please login again”).
 
-### 1.1 UserSocialLogin
+## 5. Server Requirements
 
-Represents a social/third-party login mapping for a user (initially Google; extensible to others later):
+### 5.1 Google OAuth client configuration
+The server MUST support configuration per deployment:
+- Allowed Google OAuth Client IDs (Android/web/desktop)
+- Expected `aud` (audience) values for token validation
+- Optional allowed `hd` (hosted domain) restrictions
 
-- `Id` (primary key)
-- `UserId` (FK to `User`)
-- `Provider` (e.g., `"Google"`)
-- `Subject` (the provider-specific stable subject identifier, e.g. Google `sub` claim)
-- `Email` (last known verified email address)
-- `LastLoginAt` (timestamp of last login via this provider)
+### 5.2 Credential verification
+The server MUST validate Google credentials:
+- If using **ID token**:
+  - verify signature against Google’s published keys
+  - verify issuer (`iss`) is Google
+  - verify audience (`aud`) matches configured client ID
+  - verify token is not expired
+  - extract stable subject identifier (`sub`) and optional email
 
-Constraints and behavior:
+- If using **authorization code**:
+  - exchange code at Google token endpoint
+  - validate returned tokens equivalently
 
-- `(Provider, Subject)` is unique.
-- There is a one-to-many relationship from `User` to `UserSocialLogin`.
-- `LastLoginAt` is updated on successful logins via that provider.
+### 5.3 Account linking / provisioning
+The server MUST define behavior for mapping Google identity → Melodee user.
 
-### 1.2 RefreshToken (or equivalent)
+Recommended rules:
+- Identify Google account by `sub` (stable subject ID).
+- Store linkage: `googleSubject`, `googleEmail`, `lastGoogleLoginAt`.
+- If an existing user matches verified email and email is verified:
+  - MAY auto-link on first Google login (configurable)
+- Otherwise:
+  - create a new user (if server allows self-signup), OR
+  - reject with a clear error indicating that the account is not linked
 
-Represents a single refresh token instance in a rotation chain:
+### 5.4 JWT issuance
+After successful verification and user mapping, the server MUST issue a **Melodee JWT**.
 
-- `Id` / `TokenId` (primary key)
-- `UserId` (FK to `User`)
-- `HashedToken` (hash of the refresh token string)
-- `IssuedAt`
-- `ExpiresAt`
-- `RevokedAt` (nullable)
-- `PreviousTokenId` (nullable FK to another refresh token in the same chain)
-- Optional: `DeviceName`, `IpAddress`, `UserAgent` for audits (if stored, treat as PII and protect accordingly).
+JWT MUST include:
+- subject (Melodee user ID)
+- issued-at (`iat`), expiration (`exp`)
+- roles/claims required by the API
 
-Constraints and behavior:
+JWT SHOULD include:
+- token identifier (`jti`) to support revocation
 
-- Lookups should be optimized by `UserId` and possibly `TokenId`.
-- Business logic must never read or write raw token values from/to the database.
-- Rotation and replay detection logic is implemented in a service layer, not in controllers.
+### 5.5 Token lifetime and refresh
+The server MUST define one of these strategies:
 
-## 2. Logging, PII, and Rate Limiting
+**Strategy A — Short-lived JWT + re-exchange Google credential (simplest):**
+- JWT expires relatively quickly.
+- Client performs silent Google sign-in to obtain a fresh Google ID token and re-exchanges it.
+- No refresh token stored by Melodee.
 
-### 2.1 Logging & PII Policy
+**Strategy B — JWT + refresh token (recommended for best UX):**
+- Server issues access JWT + refresh token.
+- Client uses refresh token to get new JWT without hitting Google.
+- Server supports refresh token rotation and revocation.
 
-Never log:
+This repository’s OpenAPI currently only exposes `token` (single JWT). If Strategy B is adopted, `AuthResponse` must be extended (backwards compat) or a new response schema introduced.
 
-- Raw Google ID tokens.
-- Raw access tokens.
-- Raw refresh tokens.
-- Full email addresses or other highly identifying PII unless absolutely necessary and guarded (e.g., debug-only logs in non-prod, with strict controls).
+## 6. Proposed API Additions (OpenAPI)
 
-Allowed in logs (examples):
+Add a new endpoint:
 
-- High-level event categories (e.g., `"Auth.Login.Google.Success"`, `"Auth.Refresh.Replayed"`).
-- User identifiers that are already internal (e.g., `UserId`, not email) where permitted by policy.
-- Error codes without sensitive context (e.g., `invalid_google_token`, `refresh_token_invalid`).
-- Truncated/hashed identifiers for correlation (e.g., first 8 characters of a token hash, not the token itself).
+### 6.1 Exchange Google credential for JWT
+**Endpoint:** `POST /api/v1/Users/auth/google`
 
-Guidelines:
+**Request (example):**
+```json
+{
+  "idToken": "<google_id_token>",
+  "provider": "google",
+  "clientInfo": {
+    "platform": "android",
+    "appVersion": "0.1.0"
+  }
+}
+```
 
-- Prefer **structured logging** with fields like `userId`, `provider`, `authMethod`, and `errorCode`.
-- Do not include secrets or tokens in exception messages.
-- Ensure log levels are tuned so that auth failures do not generate overly verbose logs in production.
+**Response:** existing `AuthResponse` (or a new auth response that also includes refresh token if Strategy B is used).
 
-### 2.2 Rate Limiting (High-Level)
+**Errors:**
+- `400` invalid request (missing token)
+- `401` invalid / expired Google credential
+- `403` user locked / blacklisted / signup disabled
 
-Exact implementation can vary, but the following endpoints should be protected with reasonable per-IP and per-user limits:
+### 6.2 Optional: refresh endpoint (Strategy B)
+**Endpoint:** `POST /api/v1/Users/auth/refresh`
 
-- `POST /api/v1/Users/auth/google`
-- `POST /api/v1/Users/auth/refresh`
+**Request:**
+```json
+{ "refreshToken": "<refresh_token>" }
+```
+
+**Response:**
+```json
+{ "token": "<new_jwt>", "refreshToken": "<rotated_refresh_token>" }
+```
+
+### 6.3 Optional: link/unlink endpoints
+If you do not auto-link by email, consider:
 - `POST /api/v1/Users/me/link/google`
+- `DELETE /api/v1/Users/me/link/google`
 
-Example starting points (tunable per deployment):
+These require the user to be logged in already and enable attaching a Google identity to an existing account.
 
-- `/auth/google`: ~10 requests/minute per IP and per subject/email.
-- `/auth/refresh`: ~30 requests/minute per refresh token family.
-- `/me/link/google`: ~5 requests/hour per authenticated user.
+## 7. Non-Functional Requirements
 
-These values should be surfaced as configuration where practical, and they should be validated in Phase 2/4 integration and load tests.
+### 7.1 Security
+- Rate limit auth endpoints.
+- Log auth failures with safe redaction (no raw tokens).
+- Support token revocation (at least server-side invalidation for refresh tokens; ideally `jti` allowlist/denylist).
+- Ensure clock skew tolerance when validating tokens.
 
-## 3. Testability Notes (Decision → Test Mapping)
+### 7.2 Privacy
+- Store only necessary Google fields (`sub`, email, emailVerified).
+- Avoid storing access tokens from Google unless required.
 
-This section ties key security and behavior decisions to specific test plans and projects, aligned with the WBS.
+### 7.3 Backwards compatibility
+- Password login MUST continue to work.
+- Existing JWT-only clients MUST continue to work.
 
-### 3.1 Token Lifetimes & Session Behavior
+## 8. Acceptance Criteria
 
-Decision:
+- Client can choose either:
+  - username/email + password login, OR
+  - Google Sign-In
+- Google Sign-In results in a valid Melodee JWT, usable on protected endpoints.
+- Invalid Google credentials return a clear 401 error.
+- Server supports configurable policies (auto-link, self-signup, domain restrictions).
 
-- Access tokens expire after 15 minutes.
-- Refresh tokens expire after 30 days.
-- Maximum session lifetime of 90 days per device/session.
+## 9. Open Questions
 
-Tests:
+- Which strategy will Melodee adopt for refresh?
+  - A: re-exchange Google credentials (simple)
+  - B: refresh tokens (best UX)
+- Will self-signup be allowed on self-hosted instances by default?
+- Should linking require explicit confirmation even if email matches?
 
-- **Project:** `tests/Melodee.Tests.Common`
-- **Areas:** `*.Security.RefreshTokenFlowTests`
-- **Phases:** 1, 2
-- **Scenarios:**
-  - Issuing tokens with the configured lifetimes.
-  - Refresh attempts before and after `ExpiresAt`.
-  - Enforcing the 90-day absolute max session (even if individual refresh tokens are technically not expired).
+## 10. Strategy B Detailed Design & Testability Notes
 
-### 3.2 Refresh Token Rotation & Replay Detection
+For the adopted Strategy B (short-lived access tokens plus refresh tokens with rotation, revocation, and replay detection), see the consolidated architectural and testability details in `MELODEE-SERVER-GOOGLE-AUTH-ENHANCEMENTS.md`. That document describes:
 
-Decision:
-
-- Every successful refresh call must rotate the refresh token.
-- Old tokens cannot be reused; reuse is treated as a replay and may revoke the token family.
-
-Tests:
-
-- **Project:** `tests/Melodee.Tests.Common`
-- **Areas:** `*.Security.RefreshTokenFlowTests`
-- **Phases:** 1, 2, 4
-- **Scenarios:**
-  - Initial issuance of a token pair.
-  - Multiple sequential refreshes with proper rotation and persistence of `PreviousTokenId`.
-  - Reusing an old refresh token → `401` with `refresh_token_replayed` and appropriate revocation of the chain.
-  - Admin-triggered revocation, followed by failed refresh attempts (`refresh_token_invalid`).
-
-### 3.3 Google Token Validation & Hosted-Domain Policies
-
-Decision:
-
-- Google ID tokens are validated using Google’s public keys with caching and clock-skew tolerance.
-- Optional restriction by allowed hosted domains (e.g., `Auth:Google:AllowedHostedDomains`).
-
-Tests:
-
-- **Project:** `tests/Melodee.Tests.Common`
-- **Areas:** `*.Security.GoogleTokenServiceTests`
-- **Phases:** 1, 2
-- **Scenarios:**
-  - Valid token → accepted, correct claims extracted.
-  - Invalid signature/audience/issuer → `invalid_google_token`.
-  - Expired token → `expired_google_token`.
-  - Hosted domain allowed vs. disallowed → success vs. `forbidden_tenant`.
-  - JWKS cache hit vs. miss; failure to fetch keys results in safe failure (no logins, telemetry event).
-
-### 3.4 Account Creation, Auto-Linking, and Manual Linking
-
-Decision:
-
-- New accounts can be created on first Google sign-in when `Auth:SelfRegistrationEnabled` is true.
-- Auto-link by email is disabled by default (`Auth:Google:AutoLinkEnabled = false`).
-- Manual linking requires a password-authenticated session and a valid Google token.
-
-Tests:
-
-- **Projects:**
-  - Server controllers: `Melodee.Tests.Server` (or an equivalent server test project).
-  - Blazor UI: `tests/Melodee.Tests.Blazor`.
-- **Phases:** 2, 3, 3A
-- **Scenarios:**
-  - New user via Google when self-registration is enabled vs. disabled (`signup_disabled`).
-  - Existing user with `UserSocialLogin` entry logs in via Google successfully.
-  - Auto-link enabled + unique verified email → account auto-linked.
-  - Auto-link disabled or ambiguous email → `google_account_not_linked` with UI prompting password + manual link.
-  - Manual link endpoint requires existing authenticated session and rejects attempts that would hijack another account.
-
-### 3.5 Logging & PII Redaction
-
-Decision:
-
-- No raw tokens or sensitive PII in logs.
-- Use structured events with redacted identifiers and error codes.
-
-Tests:
-
-- **Projects:**
-  - Core services: `tests/Melodee.Tests.Common` (security and logging-focused tests).
-  - Server integration: `Melodee.Tests.Server` for end-to-end failure scenarios.
-- **Phases:** 1, 2, 4
-- **Scenarios:**
-  - Simulate auth failures and verify logs contain error codes and non-sensitive identifiers only.
-  - Ensure exceptions and failure paths do not leak tokens or email addresses.
-
-### 3.6 Configuration & Environment Behavior
-
-Decision:
-
-- All auth-related policies (Google enabled, auto-link, self-registration, lifetimes, allowed domains) are configurable via `appsettings.json` + `appsettings.{Environment}.json` + environment variables.
-
-Tests:
-
-- **Projects:** `tests/Melodee.Tests.Common` (configuration binding and validation tests), server integration tests for startup.
-- **Phases:** 1, 2, 4
-- **Scenarios:**
-  - Binding strongly-typed options from different configuration layers.
-  - Startup succeeds or fails fast when required Google config is missing or inconsistent.
-  - Effective behavior changes when environment-specific settings are toggled.
-
-## 4. Configuration Matrix Template
-
-Use this template to track environment-specific Google Auth configuration and policies. Real secrets should be stored securely (e.g., environment variables, secret stores) and not committed.
-
-| Environment | Auth:Google:Enabled | Auth:Google:ClientId | Auth:Google:AllowedHostedDomains | Auth:Google:AutoLinkEnabled | Auth:SelfRegistrationEnabled | Notes |
-|------------|---------------------|-----------------------|----------------------------------|-----------------------------|-----------------------------|-------|
-| Development |                     |                       |                                  |                             |                             |       |
-| Staging     |                     |                       |                                  |                             |                             |       |
-| Production  |                     |                       |                                  |                             |                             |       |
-
-This matrix is referenced by WBS Phase 0 task 0.2 and should be maintained by the team responsible for environment configuration.
-
+- Token lifetimes, session model, and rotation rules.
+- Data model changes for `UserSocialLogin` and refresh-token storage.
+- Logging, PII, and rate-limiting guidance.
+- Testability mapping across server, Blazor, CLI, and integration tests.
+- Environment-specific configuration matrix and rollout considerations.

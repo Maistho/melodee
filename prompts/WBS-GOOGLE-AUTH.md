@@ -5,7 +5,7 @@
 - [x] Phase 0 — Architecture & Decisions
 - [ ] Phase 1 — Server Foundations
 - [ ] Phase 2 — API Endpoints & Account Linking
-- [ ] Phase 3 — Client Integration
+- [ ] Phase 3 — Client Integratio~~~~n
 - [ ] Phase 3A — Application Login Experience
 - [ ] Phase 4 — Testing, Security, and Rollout
 
@@ -30,19 +30,19 @@ Unless otherwise overridden per-environment, the following defaults apply:
   - One refresh token per device/session, stored **hashed** with metadata (`UserId`, `TokenId`, `IssuedAt`, `ExpiresAt`, `RevokedAt`, `PreviousTokenId`).
   - Rotation on every successful refresh; reuse of an old token is treated as a replay attempt and revokes the token family.
 
-These defaults should be recorded in `MELODEE-SERVER-GOOGLE-AUTH-ENHANCANCEMENTS.md` as part of task 0.1.
+These defaults should be recorded in `MELODEE-SERVER-GOOGLE-AUTH-ENHANCEMENTS.md` as part of task 0.1.
 
 | Task | Description | Owner | Deliverables | Dependencies |
 | --- | --- | --- | --- | --- |
-| 0.1 Confirm Strategy B | Ratify that Melodee will issue short-lived access JWTs plus refresh tokens with rotation, revocation, and replay detection. Document token TTLs, rotation rules, and storage requirements. | Security + Backend leads | Decision note appended to `MELODEE-SERVER-GOOGLE-AUTH-ENHANCANCEMENTS.md`; token lifetime matrix | None |
+| 0.1 Confirm Strategy B | Ratify that Melodee will issue short-lived access JWTs plus refresh tokens with rotation, revocation, and replay detection. Document token TTLs, rotation rules, and storage requirements. | Security + Backend leads | Decision note appended to `MELODEE-SERVER-GOOGLE-AUTH-ENHANCEMENTS.md`; token lifetime matrix | None |
 | 0.2 Inventory Google OAuth Clients | Gather Android/web/desktop client IDs, signing certificates, and hosted domain policies; plan configuration exposure per environment. | Infra lead | Config matrix + secrets management plan | 0.1 |
 | 0.3 Data Model Impact Review | Identify new entities/columns (`UserSocialLogin`, refresh token tables), indexing, and migration sequencing. | Backend lead | ERD update + migration checklist | 0.1 |
 | 0.4 Compliance & Logging Requirements | Define PII handling, logging redaction, retry/rate limits, and audit requirements for auth events. | Security lead | Logging spec + rate limit policy | 0.1 |
-| 0.5 Testability & Threat-Model Mapping | For each auth decision (lifetimes, rotation, account linking, rate limits, logging), document how it will be validated by unit, integration, and E2E tests in later phases. Update this WBS with explicit test tasks per phase and add a "Testability Notes" section to `MELODEE-SERVER-GOOGLE-AUTH-ENHANCANCEMENTS.md`. | Security + QA + Backend leads | Updated WBS test rows; `Testability Notes` addendum clearly mapping decisions to tests | 0.1–0.4 |
+| 0.5 Testability & Threat-Model Mapping | For each auth decision (lifetimes, rotation, account linking, rate limits, logging), document how it will be validated by unit, integration, and E2E tests in later phases. Update this WBS with explicit test tasks per phase and add a "Testability Notes" section to `MELODEE-SERVER-GOOGLE-AUTH-ENHANCEMENTS.md`. | Security + QA + Backend leads | Updated WBS test rows; `Testability Notes` addendum clearly mapping decisions to tests | 0.1–0.4 |
 
 **Phase 0 Testing & Quality Notes**
 
-- Deliver a short matrix in `MELODEE-SERVER-GOOGLE-AUTH-ENHANCANCEMENTS.md` mapping:
+- Deliver a short matrix in `MELODEE-SERVER-GOOGLE-AUTH-ENHANCEMENTS.md` mapping:
   - Token lifetimes → Phase 1/2 JWT & refresh tests.
   - Rotation and replay detection → Phase 1/2 refresh tests, Phase 4 load/security tests.
   - Account creation/linking policies → Phase 2 controller + integration tests, Phase 3/3A UX tests.
