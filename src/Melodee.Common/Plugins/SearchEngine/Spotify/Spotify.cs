@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Melodee.Common.Configuration;
 using Melodee.Common.Constants;
 using Melodee.Common.Data;
@@ -9,8 +10,6 @@ using Melodee.Common.Services;
 using Melodee.Common.Services.Caching;
 using Melodee.Common.Utility;
 using Microsoft.EntityFrameworkCore;
-using Polly;
-using Polly.Retry;
 using Serilog;
 using SpotifyAPI.Web;
 using SpotifyAPI.Web.Http;
@@ -27,16 +26,71 @@ public class Spotify(
     : IArtistSearchEnginePlugin, IArtistTopSongsSearchEnginePlugin, IAlbumImageSearchEnginePlugin,
         IArtistImageSearchEnginePlugin
 {
-    private readonly ResiliencePipeline _pipeline = new ResiliencePipelineBuilder()
-        .AddRetry(new RetryStrategyOptions
+    private readonly ConcurrentDictionary<string, PagedResult<ArtistSearchResult>> _artistSearchCache = new();
+    private readonly SemaphoreSlim _spotifySemaphore = new(2);
+    private DateTimeOffset _cooldownUntil = DateTimeOffset.MinValue;
+    private int _consecutive429;
+
+    private bool IsCoolingDown => DateTimeOffset.UtcNow < _cooldownUntil;
+
+    private static TimeSpan ExtractRetryAfter(APITooManyRequestsException ex)
+    {
+        var property = ex.GetType().GetProperty("RetryAfter");
+        if (property?.GetValue(ex) is int retrySeconds && retrySeconds > 0)
         {
-            ShouldHandle = new PredicateBuilder().Handle<Exception>(ex => ex is not APIUnauthorizedException),
-            MaxRetryAttempts = 3,
-            Delay = TimeSpan.FromSeconds(1),
-            BackoffType = DelayBackoffType.Exponential
-        })
-        .AddTimeout(TimeSpan.FromSeconds(10))
-        .Build();
+            return TimeSpan.FromSeconds(retrySeconds);
+        }
+
+        if (property?.GetValue(ex) is double retryDouble && retryDouble > 0)
+        {
+            return TimeSpan.FromSeconds(retryDouble);
+        }
+
+        return TimeSpan.Zero;
+    }
+
+    private async Task<T?> ExecuteSpotifyAsync<T>(
+        Func<CancellationToken, Task<T>> operation,
+        string operationName,
+        CancellationToken cancellationToken)
+    {
+        if (IsCoolingDown)
+        {
+            logger.Warning("[{DisplayName}] Spotify cooling down until [{Until}] for [{Operation}]",
+                DisplayName,
+                _cooldownUntil,
+                operationName);
+            return default;
+        }
+
+        await _spotifySemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var result = await operation(cancellationToken).ConfigureAwait(false);
+            _consecutive429 = 0;
+            return result;
+        }
+        catch (APITooManyRequestsException ex)
+        {
+            var retryAfter = ExtractRetryAfter(ex);
+            _consecutive429++;
+            var cooldown = retryAfter > TimeSpan.Zero
+                ? retryAfter
+                : TimeSpan.FromSeconds(Math.Min(60, Math.Pow(2, _consecutive429)));
+
+            _cooldownUntil = DateTimeOffset.UtcNow.Add(cooldown);
+            logger.Warning(ex,
+                "[{DisplayName}] Spotify rate limit during [{Operation}], cooling down for {Cooldown}s",
+                DisplayName,
+                operationName,
+                cooldown.TotalSeconds);
+            return default;
+        }
+        finally
+        {
+            _spotifySemaphore.Release();
+        }
+    }
 
     public async Task<OperationResult<ImageSearchResult[]?>> DoAlbumImageSearch(AlbumQuery query, int maxResults,
         CancellationToken cancellationToken = default)
@@ -61,9 +115,9 @@ public class Spotify(
             if (string.IsNullOrWhiteSpace(apiAccessToken))
             {
                 var request = new ClientCredentialsRequest(apiClientId, apiClientSecret);
-                var response =
+                var tokenResponse =
                     await new OAuthClient(spotifyClientBuilder.Config).RequestToken(request, cancellationToken);
-                apiAccessToken = response.AccessToken;
+                apiAccessToken = tokenResponse.AccessToken;
                 await settingService.SetAsync(SettingRegistry.SearchEngineSpotifyAccessToken, apiAccessToken,
                     cancellationToken);
             }
@@ -74,17 +128,18 @@ public class Spotify(
             {
                 if (spotify != null)
                 {
-                    searchResult = await _pipeline.ExecuteAsync(async token =>
-                            await spotify.Search.Item(new SearchRequest(SearchRequest.Types.Album, query.Name), token),
+                    searchResult = await ExecuteSpotifyAsync(
+                        token => spotify.Search.Item(new SearchRequest(SearchRequest.Types.Album, query.Name), token),
+                        "album-search",
                         cancellationToken);
                 }
             }
             catch (APIUnauthorizedException)
             {
                 var request = new ClientCredentialsRequest(apiClientId, apiClientSecret);
-                var response =
+                var refreshResponse =
                     await new OAuthClient(spotifyClientBuilder.Config).RequestToken(request, cancellationToken);
-                apiAccessToken = response.AccessToken;
+                apiAccessToken = refreshResponse.AccessToken;
                 await settingService.SetAsync(SettingRegistry.SearchEngineSpotifyAccessToken, apiAccessToken,
                     cancellationToken);
             }
@@ -169,8 +224,8 @@ public class Spotify(
             if (string.IsNullOrWhiteSpace(apiAccessToken))
             {
                 var request = new ClientCredentialsRequest(apiClientId, apiClientSecret);
-                var response = await new OAuthClient(config).RequestToken(request, cancellationToken);
-                apiAccessToken = response.AccessToken;
+                var tokenResponse = await new OAuthClient(config).RequestToken(request, cancellationToken);
+                apiAccessToken = tokenResponse.AccessToken;
                 await settingService.SetAsync(SettingRegistry.SearchEngineSpotifyAccessToken, apiAccessToken,
                     cancellationToken);
             }
@@ -179,15 +234,16 @@ public class Spotify(
             SearchResponse? searchResult = null;
             try
             {
-                searchResult = await _pipeline.ExecuteAsync(async token =>
-                        await spotify.Search.Item(new SearchRequest(SearchRequest.Types.Artist, query.Name), token),
+                searchResult = await ExecuteSpotifyAsync(
+                    token => spotify.Search.Item(new SearchRequest(SearchRequest.Types.Artist, query.Name), token),
+                    "artist-image-search",
                     cancellationToken);
             }
             catch (APIUnauthorizedException)
             {
                 var request = new ClientCredentialsRequest(apiClientId, apiClientSecret);
-                var response = await new OAuthClient(config).RequestToken(request, cancellationToken);
-                apiAccessToken = response.AccessToken;
+                var refreshResponse = await new OAuthClient(config).RequestToken(request, cancellationToken);
+                apiAccessToken = refreshResponse.AccessToken;
                 await settingService.SetAsync(SettingRegistry.SearchEngineSpotifyAccessToken, apiAccessToken,
                     cancellationToken);
             }
@@ -253,6 +309,7 @@ public class Spotify(
         CancellationToken cancellationToken = default)
     {
         var results = new List<ArtistSearchResult>();
+        var cacheKey = query.NameNormalized ?? query.Name ?? string.Empty;
 
         try
         {
@@ -275,6 +332,11 @@ public class Spotify(
                 };
             }
 
+            if (!string.IsNullOrWhiteSpace(cacheKey) && _artistSearchCache.TryGetValue(cacheKey, out var cachedResult))
+            {
+                return cachedResult;
+            }
+
             var apiAccessToken = configuration.GetValue<string>(SettingRegistry.SearchEngineSpotifyAccessToken);
 
             var config = SpotifyClientConfig.CreateDefault(); //.WithRetryHandler(new MelodeeRetryHandler());
@@ -282,8 +344,8 @@ public class Spotify(
             if (string.IsNullOrWhiteSpace(apiAccessToken))
             {
                 var request = new ClientCredentialsRequest(apiClientId, apiClientSecret);
-                var response = await new OAuthClient(config).RequestToken(request, cancellationToken);
-                apiAccessToken = response.AccessToken;
+                var tokenResponse = await new OAuthClient(config).RequestToken(request, cancellationToken);
+                apiAccessToken = tokenResponse.AccessToken;
                 await settingService.SetAsync(SettingRegistry.SearchEngineSpotifyAccessToken, apiAccessToken,
                     cancellationToken);
             }
@@ -292,15 +354,18 @@ public class Spotify(
             SearchResponse? searchResult = null;
             try
             {
-                searchResult = await _pipeline.ExecuteAsync(async token =>
-                        await spotify.Search.Item(new SearchRequest(SearchRequest.Types.Artist, query.Name), token),
+                searchResult = await ExecuteSpotifyAsync(
+                    token => spotify.Search.Item(
+                        new SearchRequest(SearchRequest.Types.Artist, query.Name ?? query.NameNormalized ?? string.Empty),
+                        token),
+                    "artist-search",
                     cancellationToken);
             }
             catch (APIUnauthorizedException)
             {
                 var request = new ClientCredentialsRequest(apiClientId, apiClientSecret);
-                var response = await new OAuthClient(config).RequestToken(request, cancellationToken);
-                apiAccessToken = response.AccessToken;
+                var refreshResponse = await new OAuthClient(config).RequestToken(request, cancellationToken);
+                apiAccessToken = refreshResponse.AccessToken;
                 await settingService.SetAsync(SettingRegistry.SearchEngineSpotifyAccessToken, apiAccessToken,
                     cancellationToken);
             }
@@ -371,10 +436,17 @@ public class Spotify(
             logger.Error(ex, "Error searching for artist query [{Query}]", query.ToString());
         }
 
-        return new PagedResult<ArtistSearchResult>
+        var response = new PagedResult<ArtistSearchResult>
         {
             Data = results.OrderBy(x => x.Rank).ToArray()
         };
+
+        if (!string.IsNullOrWhiteSpace(cacheKey))
+        {
+            _artistSearchCache.TryAdd(cacheKey, response);
+        }
+
+        return response;
     }
 
     public async Task<PagedResult<SongSearchResult>> DoArtistTopSongsSearchAsync(int forArtist, int maxResults,
@@ -425,8 +497,8 @@ public class Spotify(
                 if (string.IsNullOrWhiteSpace(apiAccessToken))
                 {
                     var request = new ClientCredentialsRequest(apiClientId, apiClientSecret);
-                    var response = await new OAuthClient(config).RequestToken(request, cancellationToken);
-                    apiAccessToken = response.AccessToken;
+                    var tokenResponse = await new OAuthClient(config).RequestToken(request, cancellationToken);
+                    apiAccessToken = tokenResponse.AccessToken;
                     await settingService.SetAsync(SettingRegistry.SearchEngineSpotifyAccessToken, apiAccessToken,
                         cancellationToken);
                 }
@@ -435,22 +507,24 @@ public class Spotify(
                 ArtistsTopTracksResponse? searchResult = null;
                 try
                 {
-                    searchResult = await _pipeline.ExecuteAsync(async token =>
-                            await spotify.Artists.GetTopTracks(artist.SpotifyId!,
-                                new ArtistsTopTracksRequest("US"), token),
+                    searchResult = await ExecuteSpotifyAsync(
+                        token => spotify.Artists.GetTopTracks(artist.SpotifyId!,
+                            new ArtistsTopTracksRequest("US"), token),
+                        "artist-top-tracks",
                         cancellationToken);
                 }
                 catch (APIUnauthorizedException)
                 {
                     var request = new ClientCredentialsRequest(apiClientId, apiClientSecret);
-                    var response = await new OAuthClient(config).RequestToken(request, cancellationToken);
-                    apiAccessToken = response.AccessToken;
+                    var refreshResponse = await new OAuthClient(config).RequestToken(request, cancellationToken);
+                    apiAccessToken = refreshResponse.AccessToken;
                     await settingService.SetAsync(SettingRegistry.SearchEngineSpotifyAccessToken, apiAccessToken,
                         cancellationToken);
                     spotify = new SpotifyClient(config.WithToken(apiAccessToken));
-                    searchResult = await _pipeline.ExecuteAsync(async token =>
-                            await spotify.Artists.GetTopTracks(artist.SpotifyId!,
-                                new ArtistsTopTracksRequest("US"), token),
+                    searchResult = await ExecuteSpotifyAsync(
+                        token => spotify.Artists.GetTopTracks(artist.SpotifyId!,
+                            new ArtistsTopTracksRequest("US"), token),
+                        "artist-top-tracks",
                         cancellationToken);
                 }
 

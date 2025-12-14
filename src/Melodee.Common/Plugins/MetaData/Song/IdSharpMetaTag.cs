@@ -8,6 +8,7 @@ using Melodee.Common.Extensions;
 using Melodee.Common.Models;
 using Melodee.Common.Models.Extensions;
 using Melodee.Common.Plugins.Processor;
+using Melodee.Common.Services.Scanning;
 using Melodee.Common.Utility;
 using Serilog;
 using Serilog.Events;
@@ -54,6 +55,20 @@ public sealed class IdSharpMetaTag(
                 if (fileSystemInfo.Exists(directoryInfo))
                 {
                     var fullname = fileSystemInfo.FullName(directoryInfo);
+                    if (!await OptimizedFileOperations.WaitForFileStabilityAsync(fullname, cancellationToken: cancellationToken)
+                            .ConfigureAwait(false))
+                    {
+                        Log.Warning("[{Plugin}] File [{File}] not stable for read, skipping.", DisplayName, fullname);
+                        return new OperationResult<Models.Song>(["File not stable for read"])
+                        {
+                            Data = new Models.Song
+                            {
+                                CrcHash = string.Empty,
+                                File = fileSystemInfo
+                            }
+                        };
+                    }
+
                     if (ID3v1Tag.DoesTagExist(fullname))
                     {
                         var id3V1 = new ID3v1Tag(fullname);
@@ -235,6 +250,17 @@ public sealed class IdSharpMetaTag(
     {
         // Use ATL to write common tags back to the media file
         var fullPath = song.File.FullName(directoryInfo);
+        if (!OptimizedFileOperations.WaitForFileStabilityAsync(fullPath, cancellationToken: cancellationToken)
+                .GetAwaiter()
+                .GetResult())
+        {
+            Log.Warning("[{Plugin}] File [{File}] not stable for write, skipping.", DisplayName, fullPath);
+            return Task.FromResult(new OperationResult<bool>(["File not stable for write"])
+            {
+                Data = false
+            });
+        }
+
         var track = new Track(fullPath);
 
         try

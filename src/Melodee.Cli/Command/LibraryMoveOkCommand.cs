@@ -45,7 +45,7 @@ public class LibraryMoveOkCommand : CommandBase<LibraryMoveOkSettings>
                     case ProcessingEventType.Stop:
                         if (e.Max > 0)
                         {
-                            AnsiConsole.MarkupLine("[green]= completed moving albums.[/]");
+                            AnsiConsole.MarkupLine($"[green]= {Markup.Escape(e.Message)}[/]");
                         }
 
                         break;

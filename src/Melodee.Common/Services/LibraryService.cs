@@ -414,7 +414,11 @@ public class LibraryService : ServiceBase
         return query.OrderBy(orderByClause);
     }
 
-    private async Task<MelodeeModels.OperationResult<bool>> MoveAlbumsToLibrary(Library library, MelodeeModels.Album[] albums, CancellationToken cancellationToken = default)
+    private async Task<MelodeeModels.OperationResult<bool>> MoveAlbumsToLibrary(
+        Library library,
+        MelodeeModels.Album[] albums,
+        Action<bool>? onAlbumHandled = null,
+        CancellationToken cancellationToken = default)
     {
         var configuration = await _configurationFactory.GetConfigurationAsync(cancellationToken);
         configuration.GetValue<short>(SettingRegistry.ImagingMaximumNumberOfArtistImages);
@@ -441,6 +445,7 @@ public class LibraryService : ServiceBase
                             libraryAlbumPath,
                             cancellationToken)
                         .ConfigureAwait(false);
+                    onAlbumHandled?.Invoke(true);
                     continue;
                 }
 
@@ -453,6 +458,7 @@ public class LibraryService : ServiceBase
                     .ConfigureAwait(false);
                 melodeeFile!.Directory.Path = libraryAlbumPath.TrimEnd(Path.DirectorySeparatorChar);
                 melodeeFile.Directory.Name = albumDirectory.TrimEnd(Path.DirectorySeparatorChar);
+                melodeeFile.Modified = DateTimeOffset.UtcNow;
                 if (album.Artist.Images?.Any() ?? false)
                 {
                     var existingArtistImages = libraryArtistDirectoryInfo.AllFileImageTypeFileInfos()
@@ -511,6 +517,7 @@ public class LibraryService : ServiceBase
                 await File.WriteAllTextAsync(melodeeFileName, _serializer.Serialize(melodeeFile), cancellationToken);
 
                 movedCount++;
+                onAlbumHandled?.Invoke(false);
 
                 OnProcessingProgressEvent?.Invoke(this,
                     new ProcessingEvent(ProcessingEventType.Processing,
@@ -886,6 +893,11 @@ public class LibraryService : ServiceBase
             var albumsToMove = new List<MelodeeModels.Album>(Math.Min(albumsForFromLibrary.Length, maxAlbumProcessingCount));
             var albumDeserializationTasks = new List<Task<(string filePath, MelodeeModels.Album? album)>>(Math.Min(50, albumsForFromLibrary.Length));
             var batchSize = 50; // Process albums in batches to control memory usage
+            var skippedByDuplicatePrefix = 0;
+            var skippedByStatus = 0;
+            var deserializationFailures = 0;
+            var mergedExistingCount = 0;
+            var movedAlbumCount = 0;
 
             for (var i = 0; i < albumsForFromLibrary.Length; i += batchSize)
             {
@@ -905,6 +917,10 @@ public class LibraryService : ServiceBase
 
                     if (!dirInfo.Exists || (duplicateDirPrefix != null && dirInfo.Name.StartsWith(duplicateDirPrefix)))
                     {
+                        if (dirInfo.Exists && duplicateDirPrefix != null && dirInfo.Name.StartsWith(duplicateDirPrefix))
+                        {
+                            skippedByDuplicatePrefix++;
+                        }
                         continue;
                     }
 
@@ -942,6 +958,14 @@ public class LibraryService : ServiceBase
                                 break;
                             }
                         }
+                        else if (rr.album == null)
+                        {
+                            deserializationFailures++;
+                        }
+                        else
+                        {
+                            skippedByStatus++;
+                        }
                     }
                 }
 
@@ -961,7 +985,21 @@ public class LibraryService : ServiceBase
                     "Starting processing"
                 ));
 
-            var result = await MoveAlbumsToLibrary(toLibrary, albumsToMove.ToArray(), cancellationToken)
+            var result = await MoveAlbumsToLibrary(
+                    toLibrary,
+                    albumsToMove.ToArray(),
+                    isMerge =>
+                    {
+                        if (isMerge)
+                        {
+                            mergedExistingCount++;
+                        }
+                        else
+                        {
+                            movedAlbumCount++;
+                        }
+                    },
+                    cancellationToken)
                 .ConfigureAwait(false);
 
             if (!result.IsSuccess)
@@ -978,7 +1016,7 @@ public class LibraryService : ServiceBase
                     nameof(MoveAlbumsFromLibraryToLibrary),
                     numberOfAlbumsToMove,
                     numberOfAlbumsToMove,
-                    "Completed processing"
+                    $"Completed processing. Found [{albumsForFromLibrary.Length}] melodee files, ready [{numberOfAlbumsToMove}], moved [{movedAlbumCount}], merged [{mergedExistingCount}], skipped status/condition [{skippedByStatus}], duplicate directories [{skippedByDuplicatePrefix}], failed to load [{deserializationFailures}]."
                 ));
             return new MelodeeModels.OperationResult<bool>
             {

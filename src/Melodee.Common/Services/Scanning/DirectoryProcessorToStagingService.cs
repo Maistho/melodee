@@ -755,7 +755,8 @@ public sealed class DirectoryProcessorToStagingService(
                         continue;
                     }
 
-                    var newImageFileName = fileSystemService.CombinePath(albumDirectorySystemInfo.FullName(), image.FileInfo.Name);
+                    var imageTypeForName = image.PictureIdentifier.ToString();
+                    var newImageFileName = albumDirectorySystemInfo.GetNextFileNameForType(imageTypeForName).Item1;
                     if (!string.Equals(oldImageFileName, newImageFileName, StringComparison.OrdinalIgnoreCase))
                     {
                         filesToCopy.Add((oldImageFileName, newImageFileName));
@@ -1015,6 +1016,7 @@ public sealed class DirectoryProcessorToStagingService(
                 album.Status = validationResult.Data.AlbumStatus;
                 album.StatusReasons = validationResult.Data.AlbumStatusReasons;
 
+                album.Modified = DateTimeOffset.UtcNow;
                 var serialized = serializer.Serialize(album);
                 var jsonName = album.ToMelodeeJsonName(_configuration, true);
                 if (jsonName.Nullify() != null)
@@ -1051,6 +1053,13 @@ public sealed class DirectoryProcessorToStagingService(
                         albumCouldBeMagicfied = await fileSystemService.DeserializeAlbumAsync(jsonPath, cancellationToken)
                             .ConfigureAwait(false) ?? album;
                     }
+
+                    albumCouldBeMagicfied.Modified = DateTimeOffset.UtcNow;
+                    await fileSystemService.WriteAllBytesAsync(
+                            jsonFilePath,
+                            System.Text.Encoding.UTF8.GetBytes(serializer.Serialize(albumCouldBeMagicfied) ?? string.Empty),
+                            cancellationToken)
+                        .ConfigureAwait(false);
 
                     if (albumCouldBeMagicfied.IsValid)
                     {

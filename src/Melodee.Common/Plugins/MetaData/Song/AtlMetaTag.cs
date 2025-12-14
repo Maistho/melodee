@@ -12,6 +12,7 @@ using Melodee.Common.Plugins.MetaData.Directory;
 using Melodee.Common.Plugins.MetaData.Song.Extensions;
 using Melodee.Common.Plugins.Processor;
 using Melodee.Common.Plugins.Validation;
+using Melodee.Common.Services.Scanning;
 using Melodee.Common.Utility;
 using Serilog;
 using Serilog.Events;
@@ -163,7 +164,22 @@ public sealed class AtlMetaTag(
         {
             if (fileSystemFileInfo.Exists(directoryInfo))
             {
-                var fileAtl = new Track(fileSystemFileInfo.FullName(directoryInfo));
+                var songPath = fileSystemFileInfo.FullName(directoryInfo);
+                if (!await OptimizedFileOperations.WaitForFileStabilityAsync(songPath, cancellationToken: cancellationToken)
+                        .ConfigureAwait(false))
+                {
+                    Log.Warning("[{Plugin}] File [{File}] not stable for read, skipping.", DisplayName, songPath);
+                    return new OperationResult<Models.Song>(["File not stable for read"])
+                    {
+                        Data = new Models.Song
+                        {
+                            CrcHash = string.Empty,
+                            File = fileSystemFileInfo
+                        }
+                    };
+                }
+
+                var fileAtl = new Track(songPath);
                 if (!fileAtl.MetadataFormats.Any(x => x.ID < 0) && IsAtlTrackForAudioFile(fileAtl))
                 {
                     var atlDictionary = fileAtl.ToDictionary()
@@ -516,6 +532,16 @@ public sealed class AtlMetaTag(
 
             try
             {
+                if (!await OptimizedFileOperations.WaitForFileStabilityAsync(songFileName, cancellationToken: cancellationToken)
+                        .ConfigureAwait(false))
+                {
+                    Log.Warning("[{Plugin}] File [{File}] not stable for write, skipping.", DisplayName, songFileName);
+                    return new OperationResult<bool>(["File not stable for write"])
+                    {
+                        Data = false
+                    };
+                }
+
                 var doDeleteComment = MelodeeConfiguration.GetValue<bool?>(SettingRegistry.ProcessingDoDeleteComments) ?? true;
 
                 var fileAtl = new Track(songFileName)

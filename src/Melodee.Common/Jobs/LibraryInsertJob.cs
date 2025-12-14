@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Threading;
 using IdSharp.Common.Utils;
 using Melodee.Common.Configuration;
 using Melodee.Common.Constants;
@@ -15,6 +16,7 @@ using Melodee.Common.Services;
 using Melodee.Common.Services.Models;
 using Melodee.Common.Services.Scanning;
 using Melodee.Common.Utility;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using Quartz;
@@ -55,6 +57,10 @@ public class LibraryInsertJob(
     private int _totalAlbumsInserted;
     private int _totalArtistsInserted;
     private int _totalSongsInserted;
+    private int _melodeeFilesDiscovered;
+    private int _melodeeFilesFiltered;
+    private int _invalidMelodeeFiles;
+    private int _albumsAlreadyInDatabase;
 
 
     /// <summary>
@@ -87,6 +93,10 @@ public class LibraryInsertJob(
             _totalAlbumsInserted = 0;
             _totalArtistsInserted = 0;
             _totalSongsInserted = 0;
+            _melodeeFilesDiscovered = 0;
+            _melodeeFilesFiltered = 0;
+            _invalidMelodeeFiles = 0;
+            _albumsAlreadyInDatabase = 0;
             _maxSongsToProcess = _configuration.GetValue<int?>(SettingRegistry.ProcessingMaximumProcessingCount) ?? 0;
             _batchSize = _configuration.BatchProcessingSize();
             var messagesForJobRun = new List<string>();
@@ -131,7 +141,7 @@ public class LibraryInsertJob(
                     "Started library processing libraries."));
 
             var totalMelodeeFilesProcessed = 0;
-            
+
             // Process each library with its own scope to avoid long-lived contexts
             foreach (var libraryIndex in librariesToProcess.Select((library, index) => new { library, index }))
             {
@@ -155,10 +165,14 @@ public class LibraryInsertJob(
                     : libraryIndex.library.LastScanAt ?? defaultNeverScannedDate;
 
                 // Pre-filter melodee files more efficiently
+                Logger.Information("[{JobName}] Starting to find melodee files for library [{LibraryName}] at path [{Path}]",
+                    nameof(LibraryInsertJob), libraryIndex.library.Name, libraryIndex.library.Path);
                 var melodeeFilesToProcess = GetMelodeeFilesToProcess(
                     libraryIndex.library,
                     scanJustDirectory,
                     lastScanAt.ToDateTimeUtc());
+                Logger.Information("[{JobName}] Found [{Count}] melodee files to process for library [{LibraryName}]",
+                    nameof(LibraryInsertJob), melodeeFilesToProcess.Count, libraryIndex.library.Name);
 
                 if (melodeeFilesToProcess.Count == 0)
                 {
@@ -178,7 +192,7 @@ public class LibraryInsertJob(
                 for (var batch = 0; batch < batches; batch++)
                 {
                     var batchFiles = melodeeFilesToProcess.Skip(_batchSize * batch).Take(_batchSize).ToList();
-                    
+
                     // Load albums in parallel for better I/O performance
                     var melodeeAlbumsForBatch = await LoadAlbumsInParallelAsync(
                         batchFiles,
@@ -193,7 +207,7 @@ public class LibraryInsertJob(
                     // Process artists and albums with dedicated contexts for each operation
                     var processedArtistsResult = await ProcessArtistsAsync(
                         libraryIndex.library,
-                        melodeeAlbumsForBatch, 
+                        melodeeAlbumsForBatch,
                         context.CancellationToken);
                     if (!processedArtistsResult)
                     {
@@ -248,14 +262,16 @@ public class LibraryInsertJob(
             _dataMap.Put(JobMapNameRegistry.ScanStatus, nameof(ScanStatus.Idle));
             _dataMap.Put(JobMapNameRegistry.Count, _totalAlbumsInserted + _totalArtistsInserted + _totalSongsInserted);
 
+            var stopSummary =
+                $"Processed [{totalMelodeeFilesProcessed}] melodee data albums (found [{_melodeeFilesDiscovered}], filtered [{_melodeeFilesFiltered}], invalid [{_invalidMelodeeFiles}], already in db [{_albumsAlreadyInDatabase}]) and inserted [{_totalAlbumsInserted}] db albums, [{_totalSongsInserted}] db songs in [{Stopwatch.GetElapsedTime(startTicks)}]";
+
             OnProcessingEvent?.Invoke(
                 this,
                 new ProcessingEvent(ProcessingEventType.Stop,
                     nameof(LibraryInsertJob),
                     0,
                     0,
-                    "Processed [{0}] albums, [{1}] songs in [{2}]".FormatSmart(_totalAlbumsInserted,
-                        _totalSongsInserted, Stopwatch.GetElapsedTime(startTicks))));
+                    stopSummary));
 
             foreach (var message in messagesForJobRun)
             {
@@ -267,13 +283,9 @@ public class LibraryInsertJob(
                 Log.Error(exception, "[{JobName}] Processing Exception", nameof(LibraryInsertJob));
             }
 
-            Log.Information(
-                "ℹ️ [{JobName}] Completed. Processed [{NumberOfMelodeeAlbumsSeen}] melodee data albums and inserted [{NumberOfAlbumsUpdated}] db albums, [{NumberOfSongsUpdated}] db songs in [{ElapsedTime}]",
+            Log.Information("ℹ️ [{JobName}] Completed. {StopSummary}",
                 nameof(LibraryInsertJob),
-                totalMelodeeFilesProcessed,
-                _totalAlbumsInserted,
-                _totalSongsInserted,
-                Stopwatch.GetElapsedTime(startTicks));
+                stopSummary);
         }
         catch (Exception e)
         {
@@ -342,6 +354,7 @@ public class LibraryInsertJob(
                     var albumDirectory = melodeeAlbum.AlbumDirectoryName(_configuration.Configuration);
                     if (dbAlbum != null)
                     {
+                        _albumsAlreadyInDatabase++;
                         Trace.WriteLine(
                             $"[{nameof(LibraryInsertJob)}] Artist [{dbArtist.Id}] Album [{dbAlbum.Name}] already exists in db. Skipping.");
                     }
@@ -476,6 +489,39 @@ public class LibraryInsertJob(
                             .ConfigureAwait(false);
                         await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
                     }
+                    catch (DbUpdateException ex) when (IsAlbumUniqueConstraint(ex))
+                    {
+                        Logger.Warning(ex,
+                            "[{JobName}] Duplicate album detected during insert, reloading existing albums.",
+                            nameof(LibraryInsertJob));
+                        scopedContext.ChangeTracker.Clear();
+
+                        var retryList = new List<dbModels.Album>();
+                        foreach (var pendingAlbum in dbAlbumsToAdd)
+                        {
+                            var existing = await scopedContext.Albums.AsNoTracking()
+                                .FirstOrDefaultAsync(x =>
+                                        x.ArtistId == pendingAlbum.ArtistId &&
+                                        x.NameNormalized == pendingAlbum.NameNormalized &&
+                                        x.ReleaseDate == pendingAlbum.ReleaseDate,
+                                    cancellationToken)
+                                .ConfigureAwait(false);
+
+                            if (existing != null)
+                            {
+                                _albumsAlreadyInDatabase++;
+                                continue;
+                            }
+
+                            retryList.Add(pendingAlbum);
+                        }
+
+                        if (retryList.Count > 0)
+                        {
+                            await scopedContext.Albums.AddRangeAsync(retryList, cancellationToken).ConfigureAwait(false);
+                            await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+                        }
+                    }
                     catch (Exception e)
                     {
                         Logger.Error(e, "Unable to insert albums into db.");
@@ -591,6 +637,13 @@ public class LibraryInsertJob(
             _totalSongsInserted);
     }
 
+    private static bool IsAlbumUniqueConstraint(DbUpdateException ex)
+    {
+        return ex.InnerException is SqliteException sqlite &&
+               sqlite.SqliteErrorCode == 19 &&
+               sqlite.Message.Contains("Albums.ArtistId", StringComparison.OrdinalIgnoreCase);
+    }
+
     /// <summary>
     ///     For given albums, add to the db album and db song artists.
     /// </summary>
@@ -642,14 +695,14 @@ public class LibraryInsertJob(
                 foreach (var artist in artists)
                 {
                     currentArtist = artist;
-                    
+
                     // Try to find existing artist using cached lookup
-                    if (artist.MusicBrainzId.HasValue && 
+                    if (artist.MusicBrainzId.HasValue &&
                         existingArtistLookup.TryGetValue($"mb:{artist.MusicBrainzId.Value}", out var existingArtist))
                     {
                         // Found by MusicBrainz ID (highest priority)
                     }
-                    else if (!string.IsNullOrEmpty(artist.SpotifyId) && 
+                    else if (!string.IsNullOrEmpty(artist.SpotifyId) &&
                              existingArtistLookup.TryGetValue($"sp:{artist.SpotifyId}", out existingArtist))
                     {
                         // Found by Spotify ID
@@ -694,9 +747,9 @@ public class LibraryInsertJob(
                             SpotifyId = artist.SpotifyId?.CleanStringAsIs(),
                             WikiDataId = artist.WikiDataId?.CleanStringAsIs()
                         };
-                        
+
                         dbArtistsToAdd.Add(newArtist);
-                        
+
                         // Add to lookup cache for subsequent lookups within this batch
                         existingArtistLookup.TryAdd($"name:{artist.NameNormalized}", newArtist);
                         if (artist.MusicBrainzId.HasValue)
@@ -733,40 +786,68 @@ public class LibraryInsertJob(
     {
         ConcurrentBag<FileInfo> melodeeFilesToProcess = new();
 
+        Logger.Debug("[{JobName}] Starting to enumerate melodee.json files in library [{LibraryName}] at path [{Path}]",
+            nameof(LibraryInsertJob), library.Name, scanJustDirectory.Nullify() ?? library.Path);
+
         string[] allMelodeeFilesInLibrary;
         if (scanJustDirectory.Nullify() != null)
         {
             var scanJustDir = scanJustDirectory!.ToFileSystemDirectoryInfo();
             if (scanJustDir.Exists())
             {
+                Logger.Debug("[{JobName}] Scanning just directory [{ScanDir}] for melodee.json files",
+                    nameof(LibraryInsertJob), scanJustDir.FullName);
                 allMelodeeFilesInLibrary = Directory.GetFiles(scanJustDir.FullName(), Album.JsonFileName,
                     SearchOption.AllDirectories);
             }
             else
             {
+                Logger.Warning("[{JobName}] Scan directory [{ScanDir}] does not exist, skipping",
+                    nameof(LibraryInsertJob), scanJustDirectory);
                 return melodeeFilesToProcess.ToList();
             }
         }
         else
         {
+            Logger.Debug("[{JobName}] Scanning entire library path [{Path}] for melodee.json files",
+                nameof(LibraryInsertJob), library.Path);
             allMelodeeFilesInLibrary = Directory.GetFiles(library.Path, Album.JsonFileName,
                 SearchOption.AllDirectories);
         }
 
+        _melodeeFilesDiscovered = allMelodeeFilesInLibrary.Length;
+
+        Logger.Information("[{JobName}] Found [{TotalCount}] total melodee.json files in library [{LibraryName}], filtering by last scan date [{LastScanAt}]",
+            nameof(LibraryInsertJob), allMelodeeFilesInLibrary.Length, library.Name, lastScanAtUtc);
+
+        Logger.Debug("[{JobName}] Starting parallel filtering of [{Count}] files by LastWriteTimeUtc >= [{LastScanAt}]",
+            nameof(LibraryInsertJob), allMelodeeFilesInLibrary.Length, lastScanAtUtc);
+
+        var processedCount = 0;
         Parallel.ForEach(allMelodeeFilesInLibrary, melodeeFile =>
         {
             var f = new FileInfo(melodeeFile);
             if (f is { Directory: not null, Name.Length: > 3 })
             {
-                // Use the album directory (parent of the .json file) for recursive check
-                var albumDir = f.Directory.FullName;
-                var latestWrite = GetLatestWriteTimeRecursive(albumDir);
-                if (latestWrite >= lastScanAtUtc)
+                // Check if the melodee.json file itself has been modified since last scan
+                if (f.LastWriteTimeUtc >= lastScanAtUtc)
                 {
                     melodeeFilesToProcess.Add(f);
                 }
             }
+            // Log progress every 1000 files
+            var currentProcessed = Interlocked.Increment(ref processedCount);
+            if (currentProcessed % 1000 == 0)
+            {
+                Logger.Debug("[{JobName}] Processed [{Processed}/{Total}] melodee.json files for filtering",
+                    nameof(LibraryInsertJob), currentProcessed, allMelodeeFilesInLibrary.Length);
+            }
         });
+
+        Logger.Information("[{JobName}] Filtered to [{FilteredCount}] melodee.json files that have been modified since last scan",
+            nameof(LibraryInsertJob), melodeeFilesToProcess.Count);
+
+        _melodeeFilesFiltered = melodeeFilesToProcess.Count;
 
         return melodeeFilesToProcess.ToList();
     }
@@ -797,6 +878,7 @@ public class LibraryInsertJob(
                         melodeeFileInfo.FullName, cancellationToken).ConfigureAwait(false);
                     if (melodeeAlbum == null)
                     {
+                        Interlocked.Increment(ref _invalidMelodeeFiles);
                         Logger.Warning("[{JobName}] Unable to load melodee file [{MelodeeFile}]",
                             nameof(LibraryInsertJob),
                             melodeeAlbum?.ToString() ?? melodeeFileInfo.FullName);
@@ -806,6 +888,7 @@ public class LibraryInsertJob(
                     var validationResult = _albumValidator.ValidateAlbum(melodeeAlbum);
                     if (!validationResult.Data.IsValid)
                     {
+                        Interlocked.Increment(ref _invalidMelodeeFiles);
                         Logger.Warning(
                             "[{JobName}] Invalid Melodee file [{MelodeeFile}] validation result [{ValidationResult}]",
                             nameof(LibraryInsertJob),
@@ -857,42 +940,5 @@ public class LibraryInsertJob(
         }, cancellationToken))).ConfigureAwait(false);
 
         return melodeeAlbums.ToList();
-    }
-
-    /// <summary>
-    /// Recursively gets the latest LastWriteTimeUtc or CreationTimeUtc for all files and directories under a given directory.
-    /// </summary>
-    public static DateTime GetLatestWriteTimeRecursive(string directoryPath)
-    {
-        if (!Directory.Exists(directoryPath))
-            return DateTime.MinValue;
-
-        DateTime latest = Directory.GetLastWriteTimeUtc(directoryPath);
-
-        try
-        {
-            foreach (var file in Directory.EnumerateFiles(directoryPath, "*", SearchOption.AllDirectories))
-            {
-                var fileInfo = new FileInfo(file);
-                if (fileInfo.LastWriteTimeUtc > latest)
-                    latest = fileInfo.LastWriteTimeUtc;
-                if (fileInfo.CreationTimeUtc > latest)
-                    latest = fileInfo.CreationTimeUtc;
-            }
-            foreach (var dir in Directory.EnumerateDirectories(directoryPath, "*", SearchOption.AllDirectories))
-            {
-                var dirWrite = Directory.GetLastWriteTimeUtc(dir);
-                var dirCreate = Directory.GetCreationTimeUtc(dir);
-                if (dirWrite > latest)
-                    latest = dirWrite;
-                if (dirCreate > latest)
-                    latest = dirCreate;
-            }
-        }
-        catch (Exception)
-        {
-            // Optionally log or handle exceptions for access denied, etc.
-        }
-        return latest;
     }
 }

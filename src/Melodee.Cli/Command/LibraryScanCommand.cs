@@ -42,7 +42,7 @@ public class LibraryScanCommand : CommandBase<LibraryScanSettings>
             jobExecutionContext.Put(MelodeeJobExecutionContext.ForceMode, settings.ForceMode);
             jobExecutionContext.Put(MelodeeJobExecutionContext.Verbose, settings.Verbose);
             await job.Execute(jobExecutionContext);
-            return 1;
+            return 0;
         }
     }
 }

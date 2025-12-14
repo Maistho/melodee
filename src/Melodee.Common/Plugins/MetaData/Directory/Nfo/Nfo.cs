@@ -209,7 +209,12 @@ public sealed partial class Nfo(
     private static readonly string[] _lineIgnores =
     [
         "length",
-        "runtime"
+        "runtime",
+        "playtime",
+        "kbps",
+        "khz",
+        "quality",
+        "bitrate"
     ];
 
     public static bool IsLineForSong(string line)
@@ -217,8 +222,13 @@ public sealed partial class Nfo(
         var l = line.Nullify();
         if (!string.IsNullOrWhiteSpace(l))
         {
-            return IsLineForSongRegex().IsMatch(l) &&
-                   _lineIgnores.All(x => !l.Contains(x, StringComparison.OrdinalIgnoreCase));
+            var trimmed = l.Trim();
+            if (_lineIgnores.Any(x => trimmed.Contains(x, StringComparison.OrdinalIgnoreCase)))
+            {
+                return false;
+            }
+
+            return TrackLineRegex().IsMatch(trimmed);
         }
 
         return false;
@@ -242,6 +252,7 @@ public sealed partial class Nfo(
             var splitChar = ':';
             var albumTags = new List<MetaTag<object?>>();
             var songs = new List<Common.Models.Song>();
+            var missingSongFiles = new List<string>();
 
             var metaTagsToParseFromFile = new List<MetaTagIdentifier>
             {
@@ -351,8 +362,7 @@ public sealed partial class Nfo(
                             StringComparison.OrdinalIgnoreCase));
                     if (fileForSong == null)
                     {
-                        Log.Warning("[{Plugin}] Could not find file for song [{SongTitle}] in [{DirName}]", DisplayName,
-                            songTitle, fileInfo.Directory?.FullName);
+                        missingSongFiles.Add(songTitle);
                         continue;
                     }
 
@@ -432,6 +442,16 @@ public sealed partial class Nfo(
                 .FirstOrDefault(x => x.Identifier is MetaTagIdentifier.Artist or MetaTagIdentifier.AlbumArtist)?.Value
                 ?.ToString();
             var albumName = albumTags.FirstOrDefault(x => x.Identifier is MetaTagIdentifier.Album)?.Value?.ToString();
+
+            if (missingSongFiles.Count > 0)
+            {
+                Log.Warning("[{Plugin}] NFO parse missing [{MissingCount}] tracks in [{Dir}] (examples: {Samples})",
+                    DisplayName,
+                    missingSongFiles.Count,
+                    fileInfo.Directory?.FullName,
+                    string.Join(", ", missingSongFiles.Take(3)));
+            }
+
             var result = new Album
             {
                 AlbumType = albumName.TryToDetectAlbumType(),
@@ -482,8 +502,8 @@ public sealed partial class Nfo(
     }
 
     //[GeneratedRegex(@"[0-9]+[a-z]+[0-9]{3,4}")]
-    [GeneratedRegex(@".*([0-9]+:[0-9]+).*")]
-    private static partial Regex IsLineForSongRegex();
+    [GeneratedRegex(@"\d{1,3}\s*[>\.\-)]?\s*[^\r\n]*\d{1,2}:\d{2}", RegexOptions.IgnoreCase)]
+    private static partial Regex TrackLineRegex();
 
     [GeneratedRegex(@"\.{2,}")]
     private static partial Regex ReplaceMultiplePeriodsRegex();

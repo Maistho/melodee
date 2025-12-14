@@ -17,6 +17,7 @@ using Melodee.Common.Plugins.SearchEngine.MusicBrainz.Data;
 using Melodee.Common.Plugins.SearchEngine.Spotify;
 using Melodee.Common.Services.Caching;
 using Melodee.Common.Utility;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Events;
@@ -587,18 +588,34 @@ public class ArtistSearchEngineService(
                                 }
 
                                 artist.Albums = albumsToAdd.ToArray();
-                                await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-                                Logger.Debug("[{Name}] Updated existing artist [{Artist}] added [{Count}] albums.",
-                                    nameof(ArtistSearchEngineService),
-                                    artist,
-                                    artist.Albums.Count
-                                );
-                                var artistId = artist.Id;
-                                artist = await scopedContext
-                                    .Artists
-                                    .Include(x => x.Albums)
-                                    .FirstAsync(x => x.Id == artistId, cancellationToken)
-                                    .ConfigureAwait(false);
+                                try
+                                {
+                                    await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+                                    Logger.Debug("[{Name}] Updated existing artist [{Artist}] added [{Count}] albums.",
+                                        nameof(ArtistSearchEngineService),
+                                        artist,
+                                        artist.Albums.Count
+                                    );
+                                    var artistId = artist.Id;
+                                    artist = await scopedContext
+                                        .Artists
+                                        .Include(x => x.Albums)
+                                        .FirstAsync(x => x.Id == artistId, cancellationToken)
+                                        .ConfigureAwait(false);
+                                }
+                                catch (DbUpdateException ex) when (IsAlbumUniqueConstraint(ex))
+                                {
+                                    Logger.Warning(ex,
+                                        "[{Name}] Duplicate album detected while updating artist [{Artist}] - using existing records.",
+                                        nameof(ArtistSearchEngineService),
+                                        artist.NameNormalized);
+                                    scopedContext.ChangeTracker.Clear();
+                                    artist = await scopedContext
+                                        .Artists
+                                        .Include(x => x.Albums)
+                                        .FirstAsync(x => x.Id == artist.Id, cancellationToken)
+                                        .ConfigureAwait(false);
+                                }
                             }
                         }
 
@@ -692,7 +709,34 @@ public class ArtistSearchEngineService(
                                 }
 
                                 scopedContext.Artists.Add(newDbArtist);
-                                await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+                                try
+                                {
+                                    await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+                                }
+                                catch (DbUpdateException ex) when (IsAlbumUniqueConstraint(ex))
+                                {
+                                    Logger.Warning(ex,
+                                        "[{Name}] Duplicate album detected while adding artist [{Artist}], reloading existing artist.",
+                                        nameof(ArtistSearchEngineService),
+                                        newDbArtist.NameNormalized);
+                                    scopedContext.ChangeTracker.Clear();
+                                    var existingArtist = await scopedContext
+                                        .Artists
+                                        .Include(x => x.Albums)
+                                        .FirstOrDefaultAsync(
+                                            x => x.NameNormalized == newDbArtist.NameNormalized,
+                                            cancellationToken)
+                                        .ConfigureAwait(false);
+                                    if (existingArtist != null)
+                                    {
+                                        newDbArtist = existingArtist;
+                                    }
+                                    else
+                                    {
+                                        scopedContext.Artists.Add(newDbArtist);
+                                        await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+                                    }
+                                }
                                 newArtist = newArtist with
                                 {
                                     UniqueId = newDbArtist.Id,
@@ -911,5 +955,12 @@ public class ArtistSearchEngineService(
         {
             Data = result
         };
+    }
+
+    private static bool IsAlbumUniqueConstraint(DbUpdateException ex)
+    {
+        return ex.InnerException is SqliteException sqlite &&
+               sqlite.SqliteErrorCode == 19 &&
+               sqlite.Message.Contains("Albums.ArtistId", StringComparison.OrdinalIgnoreCase);
     }
 }

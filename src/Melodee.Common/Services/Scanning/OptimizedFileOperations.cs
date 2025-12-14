@@ -11,6 +11,8 @@ public static class OptimizedFileOperations
 {
     private static readonly SemaphoreSlim FileOperationSemaphore = new(Environment.ProcessorCount * 2);
     private static readonly ConcurrentDictionary<string, DateTime> FileHashCache = new();
+    private const int MaxIoRetries = 5;
+    private static readonly TimeSpan MaxIoBackoff = TimeSpan.FromSeconds(8);
 
     /// <summary>
     ///     Asynchronously copy files in batches with optimized performance
@@ -95,42 +97,132 @@ public static class OptimizedFileOperations
         int bufferSize,
         CancellationToken cancellationToken)
     {
-        // Ensure destination directory exists
-        var destinationDir = Path.GetDirectoryName(destinationPath);
-        if (!string.IsNullOrEmpty(destinationDir) && !Directory.Exists(destinationDir))
+        var attempt = 0;
+
+        while (true)
         {
-            Directory.CreateDirectory(destinationDir);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!await WaitForFileStabilityAsync(sourcePath, cancellationToken: cancellationToken).ConfigureAwait(false))
+            {
+                Log.Warning("File [{Source}] not stable for copy, skipping.", sourcePath);
+                return;
+            }
+
+            try
+            {
+                // Ensure destination directory exists
+                var destinationDir = Path.GetDirectoryName(destinationPath);
+                if (!string.IsNullOrEmpty(destinationDir) && !Directory.Exists(destinationDir))
+                {
+                    Directory.CreateDirectory(destinationDir);
+                }
+
+                // Skip if files are identical
+                if (string.Equals(sourcePath, destinationPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    return;
+                }
+
+                var sourceInfo = new FileInfo(sourcePath);
+                if (!sourceInfo.Exists)
+                {
+                    return;
+                }
+
+                // Check if destination exists and has same size/date (quick duplicate check)
+                var destInfo = new FileInfo(destinationPath);
+                if (destInfo.Exists && destInfo.Length == sourceInfo.Length &&
+                    Math.Abs((destInfo.LastWriteTime - sourceInfo.LastWriteTime).TotalSeconds) < 2)
+                {
+                    return; // Files appear to be identical
+                }
+
+                // Use optimized async file copy
+                await using var sourceStream = new FileStream(sourcePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, bufferSize, FileOptions.SequentialScan);
+                await using var destStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize, FileOptions.SequentialScan);
+
+                await sourceStream.CopyToAsync(destStream, bufferSize, cancellationToken).ConfigureAwait(false);
+
+                // Preserve timestamps
+                File.SetLastWriteTime(destinationPath, sourceInfo.LastWriteTime);
+                File.SetCreationTime(destinationPath, sourceInfo.CreationTime);
+                return;
+            }
+            catch (IOException ex) when (IsSharingViolation(ex) && attempt < MaxIoRetries)
+            {
+                attempt++;
+                var delay = IoBackoff(attempt);
+                Log.Warning(ex,
+                    "Retrying copy for locked file [{Source}] -> [{Destination}] attempt [{Attempt}/{MaxAttempts}] after {Delay}ms",
+                    sourcePath,
+                    destinationPath,
+                    attempt,
+                    MaxIoRetries,
+                    delay.TotalMilliseconds);
+                await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
+            }
+            catch (IOException ex) when (IsSharingViolation(ex))
+            {
+                Log.Warning(ex,
+                    "Giving up copy for locked file [{Source}] -> [{Destination}] after [{Attempts}] attempts",
+                    sourcePath,
+                    destinationPath,
+                    attempt);
+                return;
+            }
+        }
+    }
+
+    private static bool IsSharingViolation(IOException ex)
+    {
+        var hresult = ex.HResult & 0xFFFF;
+        return hresult is 32 or 33 or 5 || ex.Message.Contains("used by another process", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static TimeSpan IoBackoff(int attempt)
+    {
+        var baseDelayMs = Math.Min(MaxIoBackoff.TotalMilliseconds, Math.Pow(2, attempt) * 100);
+        var jitter = Random.Shared.Next(50, 200);
+        return TimeSpan.FromMilliseconds(baseDelayMs + jitter);
+    }
+
+    public static async Task<bool> WaitForFileStabilityAsync(
+        string path,
+        int checks = 2,
+        int delayMs = 120,
+        CancellationToken cancellationToken = default)
+    {
+        if (!File.Exists(path))
+        {
+            return false;
         }
 
-        // Skip if files are identical
-        if (string.Equals(sourcePath, destinationPath, StringComparison.OrdinalIgnoreCase))
+        long? previousLength = null;
+        DateTime? previousWrite = null;
+
+        for (var i = 0; i < checks; i++)
         {
-            return;
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var info = new FileInfo(path);
+            if (!info.Exists)
+            {
+                return false;
+            }
+
+            if (previousLength.HasValue && previousWrite.HasValue &&
+                info.Length == previousLength && info.LastWriteTime == previousWrite)
+            {
+                return true;
+            }
+
+            previousLength = info.Length;
+            previousWrite = info.LastWriteTime;
+
+            await Task.Delay(delayMs, cancellationToken).ConfigureAwait(false);
         }
 
-        var sourceInfo = new FileInfo(sourcePath);
-        if (!sourceInfo.Exists)
-        {
-            return;
-        }
-
-        // Check if destination exists and has same size/date (quick duplicate check)
-        var destInfo = new FileInfo(destinationPath);
-        if (destInfo.Exists && destInfo.Length == sourceInfo.Length &&
-            Math.Abs((destInfo.LastWriteTime - sourceInfo.LastWriteTime).TotalSeconds) < 2)
-        {
-            return; // Files appear to be identical
-        }
-
-        // Use optimized async file copy
-        await using var sourceStream = new FileStream(sourcePath, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize, FileOptions.SequentialScan);
-        await using var destStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize, FileOptions.SequentialScan);
-
-        await sourceStream.CopyToAsync(destStream, bufferSize, cancellationToken).ConfigureAwait(false);
-
-        // Preserve timestamps
-        File.SetLastWriteTime(destinationPath, sourceInfo.LastWriteTime);
-        File.SetCreationTime(destinationPath, sourceInfo.CreationTime);
+        return false;
     }
 
     /// <summary>
