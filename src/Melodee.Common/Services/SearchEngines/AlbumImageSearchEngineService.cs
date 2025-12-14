@@ -4,6 +4,7 @@ using Melodee.Common.Data;
 using Melodee.Common.Models;
 using Melodee.Common.Models.SearchEngines;
 using Melodee.Common.Plugins.SearchEngine;
+using Melodee.Common.Plugins.SearchEngine.Brave;
 using Melodee.Common.Plugins.SearchEngine.Deezer;
 using Melodee.Common.Plugins.SearchEngine.ITunes;
 using Melodee.Common.Plugins.SearchEngine.LastFm;
@@ -71,6 +72,9 @@ public class AlbumImageSearchEngineService(
                 new MetalApiOptions { Enabled = configuration.GetValue<bool>(SettingRegistry.SearchEngineMetalApiEnabled) })
             {
                 IsEnabled = configuration.GetValue<bool>(SettingRegistry.SearchEngineMetalApiEnabled)
+            new BraveAlbumImageSearchEnginePlugin(Logger, httpClientFactory, configuration)
+            {
+                IsEnabled = configuration.GetValue<bool>(SettingRegistry.SearchEngineBraveEnabled)
             }
         };
         var result = new List<ImageSearchResult>();

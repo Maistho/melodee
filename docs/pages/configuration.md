@@ -38,14 +38,32 @@ Ensure sufficient disk and backup strategy, especially for storage volume.
 
 ### Metadata & Enrichment
 
-Providers: MusicBrainz (local cache), Last.FM, Spotify, iTunes.
+Providers: MusicBrainz (local cache), Last.FM, Spotify, iTunes, Brave Search.
 
 Typical options (UI section):
 
 - Enable/disable provider.
-- API keys / tokens.
+- API keys / tokens (Spotify, Last.FM, Brave Search).
 - Artwork size preferences.
 - Local MusicBrainz database refresh interval.
+
+#### Brave Search API Configuration
+
+To enable image search via Brave Search API, you'll need to:
+
+1. Get a free API key from [Brave Search API](https://brave.com/search/api/)
+2. Set the following environment variables:
+   ```
+   BRAVE_SEARCH__ENABLED=true
+   BRAVE_SEARCH__APIKEY=your_brave_api_key_here
+   ```
+3. Optionally configure base URL and search path (defaults are usually fine):
+   ```
+   BRAVE_SEARCH__BASEURL=https://api.search.brave.com
+   BRAVE_SEARCH__IMAGESEARCHPATH=/res/v1/images/search
+   ```
+
+Brave Search provides high-quality image results for both artist portraits and album covers.
 
 ### Ingestion Rules
 
