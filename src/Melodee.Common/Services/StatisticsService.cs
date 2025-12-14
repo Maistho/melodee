@@ -44,6 +44,17 @@ public sealed class StatisticsService(
         return results.ToArray();
     }
 
+    private static async Task<int?> ResolveUserIdAsync(MelodeeDbContext context, Guid userApiKey,
+        CancellationToken cancellationToken)
+    {
+        return await context.Users
+            .AsNoTracking()
+            .Where(x => x.ApiKey == userApiKey)
+            .Select(x => (int?)x.Id)
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+    }
+
     public async Task<OperationResult<Statistic?>> GetAlbumCountAsync(CancellationToken cancellationToken = default)
     {
         var stats = await GetStatisticsAsync(cancellationToken).ConfigureAwait(false);
@@ -325,6 +336,265 @@ public sealed class StatisticsService(
         return new OperationResult<TimeSeriesPoint[]>
         {
             Data = ZeroFillDailySeries(points, startDay, endDay)
+        };
+    }
+
+    public async Task<OperationResult<TimeSeriesPoint[]>> GetUserSongPlaysPerDayAsync(
+        Guid userApiKey,
+        LocalDate startDay,
+        LocalDate endDay,
+        string? timeZoneId,
+        CancellationToken cancellationToken = default)
+    {
+        var zone = ResolveZone(timeZoneId);
+        var startInstant = startDay.AtStartOfDayInZone(zone).ToInstant();
+        var endExclusiveInstant = endDay.PlusDays(1).AtStartOfDayInZone(zone).ToInstant();
+
+        await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        var userId = await ResolveUserIdAsync(context, userApiKey, cancellationToken).ConfigureAwait(false);
+        if (userId == null)
+        {
+            return new OperationResult<TimeSeriesPoint[]>
+            {
+                Data = ZeroFillDailySeries([], startDay, endDay)
+            };
+        }
+
+        var played = await context.UserSongPlayHistories
+            .AsNoTracking()
+            .Where(x => x.UserId == userId.Value && x.PlayedAt >= startInstant && x.PlayedAt < endExclusiveInstant)
+            .Select(x => x.PlayedAt)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var points = played.Select(i => (Day: i.InZone(zone).Date, Value: 1d));
+
+        return new OperationResult<TimeSeriesPoint[]>
+        {
+            Data = ZeroFillDailySeries(points, startDay, endDay)
+        };
+    }
+
+    public async Task<OperationResult<TopItemStat[]>> GetUserTopPlayedSongsAsync(
+        Guid userApiKey,
+        LocalDate startDay,
+        LocalDate endDay,
+        string? timeZoneId,
+        int topN = 10,
+        CancellationToken cancellationToken = default)
+    {
+        var zone = ResolveZone(timeZoneId);
+        var startInstant = startDay.AtStartOfDayInZone(zone).ToInstant();
+        var endExclusiveInstant = endDay.PlusDays(1).AtStartOfDayInZone(zone).ToInstant();
+
+        await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        var userId = await ResolveUserIdAsync(context, userApiKey, cancellationToken).ConfigureAwait(false);
+        if (userId == null)
+        {
+            return new OperationResult<TopItemStat[]> { Data = [] };
+        }
+
+        var query = await context.UserSongPlayHistories
+            .AsNoTracking()
+            .Where(x => x.UserId == userId.Value && x.PlayedAt >= startInstant && x.PlayedAt < endExclusiveInstant)
+            .GroupBy(x => x.SongId)
+            .Select(g => new { SongId = g.Key, Count = g.Count() })
+            .OrderByDescending(x => x.Count)
+            .Take(topN)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var songIds = query.Select(x => x.SongId).ToArray();
+        var songs = await context.Songs
+            .AsNoTracking()
+            .Where(x => songIds.Contains(x.Id))
+            .Select(x => new { x.Id, x.Title, x.ApiKey })
+            .ToDictionaryAsync(x => x.Id, cancellationToken)
+            .ConfigureAwait(false);
+
+        var result = query
+            .Select(x =>
+            {
+                songs.TryGetValue(x.SongId, out var song);
+                return new TopItemStat(song?.Title ?? $"Song {x.SongId}", x.Count, song?.ApiKey, x.SongId);
+            })
+            .ToArray();
+
+        return new OperationResult<TopItemStat[]>
+        {
+            Data = result
+        };
+    }
+
+    public async Task<OperationResult<TopItemStat[]>> GetUserRecentlyPlayedSongsAsync(
+        Guid userApiKey,
+        int topN = 10,
+        CancellationToken cancellationToken = default)
+    {
+        await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        var userId = await ResolveUserIdAsync(context, userApiKey, cancellationToken).ConfigureAwait(false);
+        if (userId == null)
+        {
+            return new OperationResult<TopItemStat[]> { Data = [] };
+        }
+
+        var histories = await context.UserSongPlayHistories
+            .AsNoTracking()
+            .Where(x => x.UserId == userId.Value)
+            .OrderByDescending(x => x.PlayedAt)
+            .Take(topN)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var songIds = histories.Select(x => x.SongId).Distinct().ToArray();
+        var songs = await context.Songs
+            .AsNoTracking()
+            .Where(x => songIds.Contains(x.Id))
+            .Select(x => new { x.Id, x.Title, x.ApiKey })
+            .ToDictionaryAsync(x => x.Id, cancellationToken)
+            .ConfigureAwait(false);
+
+        var result = histories.Select(x =>
+        {
+            songs.TryGetValue(x.SongId, out var song);
+            return new TopItemStat(song?.Title ?? $"Song {x.SongId}", x.PlayedAt.ToUnixTimeTicks(), song?.ApiKey, x.SongId, x.PlayedAt.ToString());
+        }).ToArray();
+
+        return new OperationResult<TopItemStat[]>
+        {
+            Data = result
+        };
+    }
+
+    public async Task<OperationResult<TopItemStat[]>> GetUserTopGenresByPlaysAsync(
+        Guid userApiKey,
+        LocalDate startDay,
+        LocalDate endDay,
+        string? timeZoneId,
+        int topN = 10,
+        CancellationToken cancellationToken = default)
+    {
+        var zone = ResolveZone(timeZoneId);
+        var startInstant = startDay.AtStartOfDayInZone(zone).ToInstant();
+        var endExclusiveInstant = endDay.PlusDays(1).AtStartOfDayInZone(zone).ToInstant();
+
+        await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        var userId = await ResolveUserIdAsync(context, userApiKey, cancellationToken).ConfigureAwait(false);
+        if (userId == null)
+        {
+            return new OperationResult<TopItemStat[]> { Data = [] };
+        }
+
+        var query = await context.UserSongPlayHistories
+            .AsNoTracking()
+            .Where(x => x.UserId == userId.Value && x.PlayedAt >= startInstant && x.PlayedAt < endExclusiveInstant)
+            .Select(x => x.SongId)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var songGenres = await context.Songs
+            .AsNoTracking()
+            .Where(x => query.Contains(x.Id) && x.Genres != null && x.Genres.Length > 0)
+            .Select(x => x.Genres)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var flattened = songGenres
+            .SelectMany(g => g ?? Array.Empty<string>())
+            .Where(g => !string.IsNullOrWhiteSpace(g))
+            .Select(g => g.Trim())
+            .GroupBy(g => g, StringComparer.OrdinalIgnoreCase)
+            .Select(g => new TopItemStat(g.Key, g.Count()))
+            .OrderByDescending(x => x.Value)
+            .Take(topN)
+            .ToArray();
+
+        return new OperationResult<TopItemStat[]>
+        {
+            Data = flattened
+        };
+    }
+
+    public async Task<OperationResult<Statistic[]>> GetUserKpisAsync(
+        Guid userApiKey,
+        LocalDate startDay,
+        LocalDate endDay,
+        string? timeZoneId,
+        CancellationToken cancellationToken = default)
+    {
+        var zone = ResolveZone(timeZoneId);
+        var startInstant = startDay.AtStartOfDayInZone(zone).ToInstant();
+        var endExclusiveInstant = endDay.PlusDays(1).AtStartOfDayInZone(zone).ToInstant();
+
+        await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        var userId = await ResolveUserIdAsync(context, userApiKey, cancellationToken).ConfigureAwait(false);
+        if (userId == null)
+        {
+            return new OperationResult<Statistic[]> { Data = [] };
+        }
+
+        var totalPlays = await context.UserSongPlayHistories
+            .AsNoTracking()
+            .CountAsync(x => x.UserId == userId.Value && x.PlayedAt >= startInstant && x.PlayedAt < endExclusiveInstant,
+                cancellationToken)
+            .ConfigureAwait(false);
+
+        var favoritesSongs = await context.UserSongs
+            .AsNoTracking()
+            .CountAsync(x => x.UserId == userId.Value && x.StarredAt != null, cancellationToken)
+            .ConfigureAwait(false);
+
+        var favoritesAlbums = await context.UserAlbums
+            .AsNoTracking()
+            .CountAsync(x => x.UserId == userId.Value && x.StarredAt != null, cancellationToken)
+            .ConfigureAwait(false);
+
+        var favoritesArtists = await context.UserArtists
+            .AsNoTracking()
+            .CountAsync(x => x.UserId == userId.Value && x.StarredAt != null, cancellationToken)
+            .ConfigureAwait(false);
+
+        var ratedSongs = await context.UserSongs
+            .AsNoTracking()
+            .CountAsync(x => x.UserId == userId.Value && x.Rating > 0, cancellationToken)
+            .ConfigureAwait(false);
+
+        var stats = new Statistic[]
+        {
+            new(StatisticType.Count, "Total plays", totalPlays, null, null, 1, "bar_chart"),
+            new(StatisticType.Count, "Favorites: Songs", favoritesSongs, null, null, 2, "favorite"),
+            new(StatisticType.Count, "Favorites: Albums", favoritesAlbums, null, null, 3, "album"),
+            new(StatisticType.Count, "Favorites: Artists", favoritesArtists, null, null, 4, "artist"),
+            new(StatisticType.Count, "Rated Songs", ratedSongs, null, null, 5, "star")
+        };
+
+        return new OperationResult<Statistic[]>
+        {
+            Data = stats
+        };
+    }
+
+    public async Task<OperationResult<Statistic[]>> GetMissingImagesAsync(CancellationToken cancellationToken = default)
+    {
+        await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var missingArtists = await context.Artists.AsNoTracking()
+            .CountAsync(x => x.ImageCount == null || x.ImageCount == 0, cancellationToken).ConfigureAwait(false);
+        var missingAlbums = await context.Albums.AsNoTracking()
+            .CountAsync(x => x.ImageCount == null || x.ImageCount == 0, cancellationToken).ConfigureAwait(false);
+        var missingSongs = await context.Songs.AsNoTracking()
+            .CountAsync(x => x.ImageCount == null || x.ImageCount == 0, cancellationToken).ConfigureAwait(false);
+
+        var stats = new Statistic[]
+        {
+            new(StatisticType.Count, "Artists missing images", missingArtists, null, null, 1, "image_not_supported"),
+            new(StatisticType.Count, "Albums missing images", missingAlbums, null, null, 2, "image_not_supported"),
+            new(StatisticType.Count, "Songs missing images", missingSongs, null, null, 3, "image_not_supported")
+        };
+
+        return new OperationResult<Statistic[]>
+        {
+            Data = stats
         };
     }
 

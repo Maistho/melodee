@@ -697,4 +697,231 @@ public class StatisticsServiceTests : ServiceTestBase
         Assert.Equal(1, result.Data.Single(x => x.Day == start.PlusDays(1)).Value);
         Assert.Equal(0, result.Data.Single(x => x.Day == start.PlusDays(2)).Value);
     }
+
+    [Fact]
+    public async Task GetUserSongPlaysPerDayAsync_ShouldZeroFillAndBucket()
+    {
+        var tz = "America/New_York";
+        var start = new LocalDate(2025, 12, 14);
+        var end = new LocalDate(2025, 12, 16);
+        var userApiKey = Guid.NewGuid();
+
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            context.UserSongPlayHistories.RemoveRange(context.UserSongPlayHistories);
+            context.Users.RemoveRange(context.Users);
+            context.Songs.RemoveRange(context.Songs);
+            context.Albums.RemoveRange(context.Albums);
+            context.Artists.RemoveRange(context.Artists);
+            context.Libraries.RemoveRange(context.Libraries);
+            await context.SaveChangesAsync();
+
+            var library = new Library
+            {
+                Name = "Test Library",
+                Path = "/test/path",
+                Type = (int)LibraryType.Storage,
+                CreatedAt = Instant.FromUtc(2025, 12, 1, 0, 0)
+            };
+            context.Libraries.Add(library);
+            await context.SaveChangesAsync();
+
+            var artist = new Artist
+            {
+                ApiKey = Guid.NewGuid(),
+                Directory = "artist",
+                Name = "Artist",
+                NameNormalized = "ARTIST",
+                LibraryId = library.Id,
+                CreatedAt = Instant.FromUtc(2025, 12, 1, 0, 0)
+            };
+            context.Artists.Add(artist);
+            await context.SaveChangesAsync();
+
+            var album = new Album
+            {
+                ApiKey = Guid.NewGuid(),
+                ArtistId = artist.Id,
+                Artist = artist,
+                Name = "Album",
+                NameNormalized = "ALBUM",
+                Directory = "/album/",
+                ReleaseDate = new LocalDate(2025, 1, 1),
+                CreatedAt = Instant.FromUtc(2025, 12, 1, 0, 0)
+            };
+            context.Albums.Add(album);
+            await context.SaveChangesAsync();
+
+            var user = new User
+            {
+                ApiKey = userApiKey,
+                UserName = "testuser",
+                UserNameNormalized = "TESTUSER",
+                Email = "test@example.com",
+                EmailNormalized = "TEST@EXAMPLE.COM",
+                PublicKey = "pk",
+                PasswordEncrypted = "enc",
+                TimeZoneId = tz,
+                CreatedAt = Instant.FromUtc(2025, 12, 1, 0, 0)
+            };
+            context.Users.Add(user);
+
+            var song = new Song
+            {
+                AlbumId = album.Id,
+                Title = "Song A",
+                TitleNormalized = "song a",
+                SongNumber = 1,
+                FileName = "a.flac",
+                FileSize = 1,
+                FileHash = "hash-a",
+                Duration = 1000,
+                SamplingRate = 44100,
+                BitRate = 320,
+                BitDepth = 16,
+                BPM = 120,
+                ContentType = "audio/flac",
+                CreatedAt = Instant.FromUtc(2025, 12, 1, 0, 0)
+            };
+            context.Songs.Add(song);
+            await context.SaveChangesAsync();
+
+            var a = Instant.FromUtc(2025, 12, 14, 6, 0);
+            var b = Instant.FromUtc(2025, 12, 15, 4, 30);
+            context.UserSongPlayHistories.AddRange(
+                new UserSongPlayHistory { UserId = user.Id, SongId = song.Id, PlayedAt = a, Client = "test", Source = 1 },
+                new UserSongPlayHistory { UserId = user.Id, SongId = song.Id, PlayedAt = b, Client = "test", Source = 1 });
+
+            await context.SaveChangesAsync();
+        }
+
+        var service = GetStatisticsService();
+        var result = await service.GetUserSongPlaysPerDayAsync(userApiKey, start, end, tz);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+        Assert.Equal(2, result.Data[0].Value);
+        Assert.Equal(0, result.Data[1].Value);
+        Assert.Equal(0, result.Data[2].Value);
+    }
+
+    [Fact]
+    public async Task GetUserTopPlayedSongsAsync_ShouldReturnTopN()
+    {
+        var userApiKey = Guid.NewGuid();
+        var start = new LocalDate(2025, 12, 14);
+        var end = new LocalDate(2025, 12, 16);
+
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            context.UserSongPlayHistories.RemoveRange(context.UserSongPlayHistories);
+            context.Users.RemoveRange(context.Users);
+            context.Songs.RemoveRange(context.Songs);
+            context.Albums.RemoveRange(context.Albums);
+            context.Artists.RemoveRange(context.Artists);
+            context.Libraries.RemoveRange(context.Libraries);
+            await context.SaveChangesAsync();
+
+            var library = new Library
+            {
+                Name = "Test Library",
+                Path = "/test/path",
+                Type = (int)LibraryType.Storage,
+                CreatedAt = Instant.FromUtc(2025, 12, 1, 0, 0)
+            };
+            context.Libraries.Add(library);
+            await context.SaveChangesAsync();
+
+            var artist = new Artist
+            {
+                ApiKey = Guid.NewGuid(),
+                Directory = "artist",
+                Name = "Artist",
+                NameNormalized = "ARTIST",
+                LibraryId = library.Id,
+                CreatedAt = Instant.FromUtc(2025, 12, 1, 0, 0)
+            };
+            context.Artists.Add(artist);
+            await context.SaveChangesAsync();
+
+            var album = new Album
+            {
+                ApiKey = Guid.NewGuid(),
+                ArtistId = artist.Id,
+                Artist = artist,
+                Name = "Album",
+                NameNormalized = "ALBUM",
+                Directory = "/album/",
+                ReleaseDate = new LocalDate(2025, 1, 1),
+                CreatedAt = Instant.FromUtc(2025, 12, 1, 0, 0)
+            };
+            context.Albums.Add(album);
+            await context.SaveChangesAsync();
+
+            var user = new User
+            {
+                ApiKey = userApiKey,
+                UserName = "testuser",
+                UserNameNormalized = "TESTUSER",
+                Email = "test@example.com",
+                EmailNormalized = "TEST@EXAMPLE.COM",
+                PublicKey = "pk",
+                PasswordEncrypted = "enc",
+                TimeZoneId = "UTC",
+                CreatedAt = Instant.FromUtc(2025, 12, 1, 0, 0)
+            };
+            context.Users.Add(user);
+            var song1 = new Song
+            {
+                AlbumId = album.Id,
+                Title = "Song A",
+                TitleNormalized = "song a",
+                SongNumber = 1,
+                FileName = "a.flac",
+                FileSize = 1,
+                FileHash = "hash-a",
+                Duration = 1000,
+                SamplingRate = 44100,
+                BitRate = 320,
+                BitDepth = 16,
+                BPM = 120,
+                ContentType = "audio/flac",
+                CreatedAt = Instant.FromUtc(2025, 12, 1, 0, 0)
+            };
+            var song2 = new Song
+            {
+                AlbumId = album.Id,
+                Title = "Song B",
+                TitleNormalized = "song b",
+                SongNumber = 2,
+                FileName = "b.flac",
+                FileSize = 1,
+                FileHash = "hash-b",
+                Duration = 1000,
+                SamplingRate = 44100,
+                BitRate = 320,
+                BitDepth = 16,
+                BPM = 120,
+                ContentType = "audio/flac",
+                CreatedAt = Instant.FromUtc(2025, 12, 1, 0, 0)
+            };
+            context.Songs.AddRange(song1, song2);
+            await context.SaveChangesAsync();
+
+            context.UserSongPlayHistories.AddRange(
+                new UserSongPlayHistory { UserId = user.Id, SongId = song1.Id, PlayedAt = Instant.FromUtc(2025, 12, 14, 0, 0), Client = "test", Source = 1 },
+                new UserSongPlayHistory { UserId = user.Id, SongId = song1.Id, PlayedAt = Instant.FromUtc(2025, 12, 14, 1, 0), Client = "test", Source = 1 },
+                new UserSongPlayHistory { UserId = user.Id, SongId = song2.Id, PlayedAt = Instant.FromUtc(2025, 12, 14, 2, 0), Client = "test", Source = 1 });
+            await context.SaveChangesAsync();
+        }
+
+        var service = GetStatisticsService();
+        var result = await service.GetUserTopPlayedSongsAsync(userApiKey, start, end, "UTC", 2);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+        Assert.Equal(2, result.Data.Length);
+        Assert.Equal("Song A", result.Data[0].Label);
+        Assert.Equal(2, result.Data[0].Value);
+    }
 }

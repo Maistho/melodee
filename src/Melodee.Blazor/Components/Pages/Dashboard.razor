@@ -6,7 +6,6 @@
 @using TextStyle = Radzen.Blazor.TextStyle
 @inherits MelodeeComponentBase
 
-@inject StatisticsService StatisticsService
 @inject UserService UserService
 @inject ArtistService ArtistService
 @inject AlbumService AlbumService
@@ -41,44 +40,6 @@
             </RadzenPanel>
         </RadzenRow>
     }
-    <RadzenRow>
-        <RadzenPanel class="hide-below-1024" AllowCollapse="true">
-            <HeaderTemplate>
-                <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-align-items-center rz-m-0">
-                    <RadzenIcon Icon="monitoring" class="rz-me-1"/>
-                    Statistics
-                </RadzenText>
-            </HeaderTemplate>
-            <ChildContent>
-                <RadzenStack
-                    Orientation="Orientation.Horizontal"
-                    Wrap="FlexWrap.Wrap"
-                    JustifyContent="JustifyContent.Left"
-                    class="rz-p-2"
-                    Gap="8px">
-                    @foreach (var statistic in _statistics)
-                    {
-                        <RadzenBadge BadgeStyle="BadgeStyle.Info" Shade="Shade.Dark" Style="min-width: 200px;">
-                            <RadzenIcon Icon="@statistic.Icon"/>
-                            <div style="width:120px;display:inline-block;text-transform:none;text-align:left;">
-                                @($"{statistic.Title}")
-                            </div>
-                            <div style="width:100px;display:inline-block;text-align:right;" title="@statistic.Message">
-                                @if (statistic.Type == StatisticType.Count)
-                                {
-                                    @($"{((int)statistic.Data).ToStringPadLeft(ViewConstants.StatisticNumberPadLength)}")
-                                }
-                                else
-                                {
-                                    @statistic.Data
-                                }
-                            </div>
-                        </RadzenBadge>
-                    }
-                </RadzenStack>
-            </ChildContent>
-        </RadzenPanel>
-    </RadzenRow>
     <RadzenPanel AllowCollapse="true">
         <HeaderTemplate>
             <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-m-0">
@@ -125,8 +86,6 @@
 
 @code {
 
-    Statistic[] _statistics = [];
-
     AlbumDataInfo[] _latestAlbums = [];
     ArtistDataInfo[] _latestArtists = [];
     UserPin[] _userPins = [];
@@ -139,9 +98,6 @@
 
         var configuration = await ConfigurationFactory.GetConfigurationAsync();
         _latestPageSize = configuration.GetValue<short?>(SettingRegistry.DefaultsDashboardLatestPageSize) ?? configuration.GetValue<short?>(SettingRegistry.DefaultsPageSize) ?? 50;
-
-        var statResult = await StatisticsService.GetStatisticsAsync();
-        _statistics = statResult.Data;
 
         var albumLatestResult = await AlbumService.ListAsync(new PagedRequest
         {

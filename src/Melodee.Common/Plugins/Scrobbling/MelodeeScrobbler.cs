@@ -95,6 +95,16 @@ public class MelodeeScrobbler(
                 await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             }
 
+            scopedContext.UserSongPlayHistories.Add(new UserSongPlayHistory
+            {
+                UserId = user.Id,
+                SongId = scrobble.SongId,
+                PlayedAt = now,
+                Client = string.IsNullOrWhiteSpace(scrobble.PlayerName) ? nameof(MelodeeScrobbler) : scrobble.PlayerName,
+                Source = 1
+            });
+            await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
             await nowPlayingRepository
                 .RemoveNowPlayingAsync(SafeParser.Hash(user.ApiKey.ToString(), scrobble.SongApiKey.ToString()),
                     cancellationToken)

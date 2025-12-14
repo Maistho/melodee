@@ -43,6 +43,8 @@ using Serilog;
 using SpotifyAPI.Web;
 using ILogger = Serilog.ILogger;
 using Npgsql;
+using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.Mvc.Controllers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -62,6 +64,24 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddControllers(options => { options.Filters.Add<ETagFilter>(); });
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("melodee", new OpenApiInfo { Title = "Melodee API", Version = "v1" });
+    options.SwaggerDoc("opensubsonic", new OpenApiInfo { Title = "OpenSubsonic API", Version = "v1" });
+    options.DocInclusionPredicate((docName, desc) =>
+    {
+        var controllerActionDescriptor = desc.ActionDescriptor as ControllerActionDescriptor;
+        var ns = controllerActionDescriptor?.ControllerTypeInfo?.Namespace ?? string.Empty;
+        return docName switch
+        {
+            "melodee" => ns.Contains(".Controllers.Melodee", StringComparison.OrdinalIgnoreCase),
+            "opensubsonic" => ns.Contains(".Controllers.OpenSubsonic", StringComparison.OrdinalIgnoreCase),
+            _ => false
+        };
+    });
+});
 
 // Build connection string with optional pool-size overrides via environment variables
 var defaultConnString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -300,6 +320,13 @@ if (useForwardedHeaders)
 
 // Enable response compression early in the pipeline
 app.UseResponseCompression();
+
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/melodee/swagger.json", "Melodee API v1");
+    c.SwaggerEndpoint("/swagger/opensubsonic/swagger.json", "OpenSubsonic API v1");
+});
 
 if (!app.Environment.IsDevelopment())
 {

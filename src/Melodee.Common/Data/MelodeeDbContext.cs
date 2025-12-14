@@ -55,6 +55,8 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
 
     public DbSet<UserSong> UserSongs { get; set; }
 
+    public DbSet<UserSongPlayHistory> UserSongPlayHistories { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         var now = Instant.FromDateTimeUtc(DateTime.UtcNow);
@@ -984,6 +986,13 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
                     CreatedAt = now
                 }
             );
+        });
+
+        modelBuilder.Entity<UserSongPlayHistory>(s =>
+        {
+            s.HasIndex(x => new { x.UserId, x.PlayedAt });
+            s.HasIndex(x => new { x.SongId, x.PlayedAt });
+            s.HasIndex(x => x.PlayedAt);
         });
 
         // sph; left here for example of GIN FTS. More info here https://www.npgsql.org/efcore/mapping/full-text-search.html?tabs=pg12%2Cv5
