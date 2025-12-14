@@ -4,7 +4,7 @@ using Melodee.Common.Utility;
 
 namespace Melodee.Common.Plugins.SearchEngine.Brave;
 
-internal static class BraveImageMapper
+public static class BraveImageMapper
 {
     public static ImageSearchResult? ToImageSearchResult(BraveImageResult source, string fromPlugin)
     {
