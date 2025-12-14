@@ -141,7 +141,7 @@ podman volume import melodee_db_data melodee_db_backup.tar
 ### 🔌 Plugin Architecture
 
 - **Media Format Support**: AAC, AC3, M4A, FLAC, OGG, APE, MP3, WAV, WMA, and more
-- **Metadata Sources**: iTunes, Last.FM, MusicBrainz, Spotify
+- **Metadata Sources**: iTunes, Last.FM, MusicBrainz, Spotify, Brave Search
 - **File Parsers**: NFO, M3U, SFV metadata files
 
 ### 🌐 OpenSubsonic API
@@ -231,7 +231,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Built with [.NET 10](https://dotnet.microsoft.com/)
 - UI powered by [Radzen Blazor Components](https://blazor.radzen.com/)
 - Compatible with [OpenSubsonic](https://opensubsonic.netlify.app/) specification
-- Music metadata from [MusicBrainz](https://musicbrainz.org/), [Last.FM](https://last.fm/), and [Spotify](https://spotify.com/)
+- Music metadata from [MusicBrainz](https://musicbrainz.org/), [Last.FM](https://last.fm/), [Spotify](https://spotify.com/), and [Brave Search](https://brave.com/search/api/)
 
 ---
 

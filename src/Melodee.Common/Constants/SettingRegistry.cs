@@ -81,6 +81,10 @@ public static class SettingRegistry
     public const string ScrobblingLastFmEnabled = "scrobbling.lastFm.Enabled";
     public const string SearchEngineDefaultPageSize = "searchEngine.defaultPageSize";
     public const string SearchEngineMaximumAllowedPageSize = "searchEngine.maximumAllowedPageSize";
+    public const string SearchEngineBraveEnabled = "searchEngine.brave.enabled";
+    public const string SearchEngineBraveApiKey = "searchEngine.brave.apiKey";
+    public const string SearchEngineBraveBaseUrl = "searchEngine.brave.baseUrl";
+    public const string SearchEngineBraveImageSearchPath = "searchEngine.brave.imageSearchPath";
     public const string SearchEngineDeezerEnabled = "searchEngine.deezer.enabled";
     public const string SearchEngineITunesEnabled = "searchEngine.itunes.enabled";
     public const string SearchEngineLastFmEnabled = "searchEngine.lastFm.Enabled";
