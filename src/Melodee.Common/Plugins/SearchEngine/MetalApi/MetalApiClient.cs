@@ -8,7 +8,7 @@ namespace Melodee.Common.Plugins.SearchEngine.MetalApi;
 /// <summary>
 ///     HTTP client for interacting with the Metal API
 /// </summary>
-public sealed class MetalApiClient
+public sealed class MetalApiClient : IMetalApiClient
 {
     private readonly HttpClient _httpClient;
     private readonly MetalApiOptions _options;

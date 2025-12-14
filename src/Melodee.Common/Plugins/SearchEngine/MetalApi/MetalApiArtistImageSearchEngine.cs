@@ -10,11 +10,11 @@ namespace Melodee.Common.Plugins.SearchEngine.MetalApi;
 /// </summary>
 public sealed class MetalApiArtistImageSearchEngine : IArtistImageSearchEnginePlugin
 {
-    private readonly MetalApiClient _client;
+    private readonly IMetalApiClient _client;
     private readonly ILogger _logger;
     private readonly MetalApiOptions _options;
 
-    public MetalApiArtistImageSearchEngine(MetalApiClient client, ILogger logger, MetalApiOptions options)
+    public MetalApiArtistImageSearchEngine(IMetalApiClient client, ILogger logger, MetalApiOptions options)
     {
         _client = client;
         _logger = logger;

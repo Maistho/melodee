@@ -7,7 +7,7 @@ namespace Melodee.Common.Plugins.SearchEngine.MetalApi;
 /// <summary>
 ///     Maps Metal API responses to ImageSearchResult
 /// </summary>
-internal static class MetalApiImageMapper
+public static class MetalApiImageMapper
 {
     /// <summary>
     ///     Map a Metal album to an ImageSearchResult
