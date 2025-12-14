@@ -756,6 +756,15 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
                 },
                 new Setting
                 {
+                    Id = 919,
+                    Category = (int)SettingCategory.SearchEngine,
+                    Key = SettingRegistry.SearchEngineMetalApiEnabled,
+                    Comment = "Is Metal API search engine enabled.",
+                    Value = "false",
+                    CreatedAt = now
+                },
+                new Setting
+                {
                     Id = 400,
                     Category = (int)SettingCategory.Imaging,
                     Key = SettingRegistry.ImagingDoLoadEmbeddedImages,
