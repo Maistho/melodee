@@ -36,8 +36,10 @@ public class Crc32Tests
     [Fact]
     public void Calculate_WithNullInput_ThrowsArgumentNullException()
     {
+        byte[]? data = null;
+
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => Crc32.Calculate((byte[])null));
+        Assert.Throws<ArgumentNullException>(() => Crc32.Calculate(data!));
     }
 
     [Fact]

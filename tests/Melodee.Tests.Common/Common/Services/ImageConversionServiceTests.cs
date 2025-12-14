@@ -13,7 +13,7 @@ public class ImageConversionServiceTests : ServiceTestBase
         // Arrange
         var mockConfigFactory = new Mock<IMelodeeConfigurationFactory>();
         mockConfigFactory.Setup(f => f.GetConfigurationAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync((IMelodeeConfiguration?)null);
+            .ReturnsAsync((IMelodeeConfiguration)null!);
         
         var service = new ImageConversionService(
             Logger,
