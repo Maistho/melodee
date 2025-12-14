@@ -1451,6 +1451,9 @@ public sealed class UserService(
             dbDetail.Notes = detailToUpdate.Notes;
             dbDetail.SortOrder = detailToUpdate.SortOrder;
             dbDetail.Tags = detailToUpdate.Tags;
+            dbDetail.TimeZoneId = string.IsNullOrWhiteSpace(detailToUpdate.TimeZoneId)
+                ? "UTC"
+                : detailToUpdate.TimeZoneId.Trim();
             dbDetail.UserName = detailToUpdate.UserName;
             dbDetail.UserNameNormalized = detailToUpdate.UserName.ToUpperInvariant();
 

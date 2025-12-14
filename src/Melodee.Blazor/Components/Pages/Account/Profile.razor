@@ -1,10 +1,14 @@
 @page "/account/profile"
 @using System.ComponentModel.DataAnnotations
 @using Melodee.Common.Data.Models.Extensions
+@using NodaTime
 @inherits MelodeeComponentBase
 @inject NotificationService NotificationService
 @inject DialogService DialogService
 @inject UserService UserService
+@inject LibraryService LibraryService
+@inject IAuthService AuthService
+@inject IMelodeeConfigurationFactory ConfigurationFactory
 
 <RadzenCard class="profile-card">
     <div class="profile-container">
@@ -56,6 +60,16 @@
                                 <RadzenFormField Text="Bio" Variant="Variant.Outlined">
                                     <RadzenTextArea @bind-Value="@UserProfile.Bio" Name="Bio" Rows="4" MaxLength="500"/>
                                 </RadzenFormField>
+
+                                <RadzenFormField Text="Time Zone" Variant="Variant.Outlined">
+                                    <RadzenDropDown @bind-Value="@UserProfile.TimeZoneId"
+                                                    Name="TimeZoneId"
+                                                    Data="@_timeZoneIds"
+                                                    AllowFiltering="true"
+                                                    FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                                    Style="width: 100%"/>
+                                    <RadzenText TextStyle="TextStyle.Caption">Defaults to UTC.</RadzenText>
+                                </RadzenFormField>
                             </RadzenStack>
                         </RadzenFieldset>
 
@@ -73,6 +87,7 @@
 </RadzenCard>
 
 @code {
+    private string[] _timeZoneIds = [];
     private UserProfileModel UserProfile { get; set; } = new();
     private bool _isSaving;
     private string? _errorMessage;
@@ -81,12 +96,16 @@
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
+
+        _timeZoneIds = DateTimeZoneProviders.Tzdb.Ids.OrderBy(x => x).ToArray();
+
         var user = await UserService.GetAsync(CurrentUser!.UserId());
         UserProfile = new UserProfileModel
         {
             Username = user.Data!.UserName,
             Email = user.Data!.Email,
             Bio = user.Data!.Description ?? string.Empty,
+            TimeZoneId = string.IsNullOrWhiteSpace(user.Data!.TimeZoneId) ? "UTC" : user.Data.TimeZoneId,
             ProfilePicturePath = $"/images/{user.Data.ToApiKey()}/{MelodeeConfiguration.DefaultThumbNailSize}"
         };
     }
@@ -114,20 +133,49 @@
 
             var user = await UserService.GetAsync(CurrentUser!.UserId());
 
+            var tz = string.IsNullOrWhiteSpace(model.TimeZoneId) ? "UTC" : model.TimeZoneId.Trim();
+            if (DateTimeZoneProviders.Tzdb.GetZoneOrNull(tz) == null)
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Invalid Time Zone",
+                    Detail = $"'{tz}' is not a valid IANA timezone id.",
+                    Duration = 5000
+                });
+                return;
+            }
+
             user.Data!.UserName = UserProfile.Username;
             user.Data!.Email = UserProfile.Email;
             user.Data!.Description = UserProfile.Bio;
+            user.Data!.TimeZoneId = tz;
 
             var saveResult = await UserService.UpdateAsync(user.Data, user.Data);
+            if (!saveResult.IsSuccess || !saveResult.Data)
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Update Failed",
+                    Detail = string.Join("; ", saveResult.Messages ?? []),
+                    Duration = 5000
+                });
+                return;
+            }
 
-            if (saveResult.IsSuccess && _newSelectedProfileImage?.ImageBytes != null)
+            // Ensure server-side cache is refreshed and UI will re-read the updated timezone on next load.
+            await UserService.GetAsync(user.Data.Id);
+
+            var configuration = await ConfigurationFactory.GetConfigurationAsync();
+            var userImageLibrary = await LibraryService.GetUserImagesLibraryAsync();
+            await AuthService.Login(user.Data.ToUserInfo().ToClaimsPrincipal(configuration, userImageLibrary.Data.Path));
+
+            if (_newSelectedProfileImage?.ImageBytes != null)
             {
                 await UserService.SaveProfileImageAsync(user.Data.Id, _newSelectedProfileImage.ImageBytes);
             }
 
-            _isSaving = false;
-
-            // Show success notification
             NotificationService.Notify(new NotificationMessage
             {
                 Severity = NotificationSeverity.Success,
@@ -139,7 +187,6 @@
         catch (Exception ex)
         {
             _errorMessage = $"Error saving profile: {ex.Message}";
-            _isSaving = false;
 
             NotificationService.Notify(new NotificationMessage
             {
@@ -148,6 +195,10 @@
                 Detail = _errorMessage,
                 Duration = 5000
             });
+        }
+        finally
+        {
+            _isSaving = false;
         }
     }
 
@@ -164,6 +215,9 @@
 
         [StringLength(500, ErrorMessage = "Bio cannot exceed 500 characters")]
         public string Bio { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Time zone is required")]
+        public string TimeZoneId { get; set; } = "UTC";
 
         public string? ProfilePicturePath { get; init; }
     }

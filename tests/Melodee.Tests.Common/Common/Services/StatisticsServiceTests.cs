@@ -1,5 +1,8 @@
+using Melodee.Common.Data.Models;
 using Melodee.Common.Enums;
+using Melodee.Common.Extensions;
 using Melodee.Common.Services;
+using NodaTime;
 
 namespace Melodee.Tests.Common.Common.Services;
 
@@ -306,5 +309,392 @@ public class StatisticsServiceTests : ServiceTestBase
         {
             Assert.Contains(expectedTitle, titles);
         }
+    }
+
+    [Fact]
+    public async Task GetSongsAddedPerDayAsync_ShouldZeroFill_AndBucketByUserTimeZone()
+    {
+        var tz = "America/New_York";
+        var start = new LocalDate(2025, 12, 14);
+        var end = new LocalDate(2025, 12, 16);
+
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            var library = new Library
+            {
+                Name = "Test Library",
+                Path = "/test/path",
+                Type = (int)LibraryType.Storage,
+                CreatedAt = Instant.FromUtc(2025, 12, 1, 0, 0)
+            };
+            context.Libraries.Add(library);
+            await context.SaveChangesAsync();
+
+            var artistName = "Test Artist";
+            var artist = new Artist
+            {
+                ApiKey = Guid.NewGuid(),
+                Directory = "test-artist",
+                CreatedAt = Instant.FromUtc(2025, 12, 1, 0, 0),
+                LibraryId = library.Id,
+                Name = artistName,
+                NameNormalized = artistName.ToNormalizedString()!,
+                Library = library
+            };
+            context.Artists.Add(artist);
+            await context.SaveChangesAsync();
+
+            var albumName = "Test Album";
+            var album = new Album
+            {
+                ApiKey = Guid.NewGuid(),
+                ArtistId = artist.Id,
+                Artist = artist,
+                Name = albumName,
+                NameNormalized = albumName.ToNormalizedString()!,
+                Directory = "/test/album/",
+                ReleaseDate = new LocalDate(2025, 1, 1),
+                CreatedAt = Instant.FromUtc(2025, 12, 1, 0, 0)
+            };
+            context.Albums.Add(album);
+            await context.SaveChangesAsync();
+
+            // A: 2025-12-14 06:00Z -> 2025-12-14 01:00 America/New_York
+            var songAInstant = Instant.FromUtc(2025, 12, 14, 6, 0);
+            // B: 2025-12-15 04:30Z -> 2025-12-14 23:30 America/New_York
+            var songBInstant = Instant.FromUtc(2025, 12, 15, 4, 30);
+
+            context.Songs.AddRange(
+                new Song
+                {
+                    AlbumId = album.Id,
+                    Album = album,
+                    Title = "Song A",
+                    TitleNormalized = "song a",
+                    SongNumber = 1,
+                    FileName = "a.flac",
+                    FileSize = 1,
+                    FileHash = "hash-a",
+                    Duration = 1000,
+                    SamplingRate = 44100,
+                    BitRate = 320,
+                    BitDepth = 16,
+                    BPM = 120,
+                    ContentType = "audio/flac",
+                    CreatedAt = songAInstant
+                },
+                new Song
+                {
+                    AlbumId = album.Id,
+                    Album = album,
+                    Title = "Song B",
+                    TitleNormalized = "song b",
+                    SongNumber = 2,
+                    FileName = "b.flac",
+                    FileSize = 1,
+                    FileHash = "hash-b",
+                    Duration = 1000,
+                    SamplingRate = 44100,
+                    BitRate = 320,
+                    BitDepth = 16,
+                    BPM = 120,
+                    ContentType = "audio/flac",
+                    CreatedAt = songBInstant
+                });
+
+            await context.SaveChangesAsync();
+        }
+
+        var service = GetStatisticsService();
+        var result = await service.GetSongsAddedPerDayAsync(start, end, tz);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+        Assert.Equal(3, result.Data.Length);
+
+        Assert.Equal(start, result.Data[0].Day);
+        Assert.Equal(2, result.Data[0].Value);
+
+        Assert.Equal(start.PlusDays(1), result.Data[1].Day);
+        Assert.Equal(0, result.Data[1].Value);
+
+        Assert.Equal(start.PlusDays(2), result.Data[2].Day);
+        Assert.Equal(0, result.Data[2].Value);
+    }
+
+    [Fact]
+    public async Task GetSongsAddedPerDayAsync_ShouldBucketDifferently_InUtc()
+    {
+        var start = new LocalDate(2025, 12, 14);
+        var end = new LocalDate(2025, 12, 16);
+
+        // Data already seeded by prior tests runs is isolated by test instance, but be explicit.
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            context.Songs.RemoveRange(context.Songs);
+            context.Albums.RemoveRange(context.Albums);
+            context.Artists.RemoveRange(context.Artists);
+            context.Libraries.RemoveRange(context.Libraries);
+            await context.SaveChangesAsync();
+
+            var library = new Library
+            {
+                Name = "Test Library",
+                Path = "/test/path",
+                Type = (int)LibraryType.Storage,
+                CreatedAt = Instant.FromUtc(2025, 12, 1, 0, 0)
+            };
+            context.Libraries.Add(library);
+            await context.SaveChangesAsync();
+
+            var artistName = "Test Artist";
+            var artist = new Artist
+            {
+                ApiKey = Guid.NewGuid(),
+                Directory = "test-artist",
+                CreatedAt = Instant.FromUtc(2025, 12, 1, 0, 0),
+                LibraryId = library.Id,
+                Name = artistName,
+                NameNormalized = artistName.ToNormalizedString()!,
+                Library = library
+            };
+            context.Artists.Add(artist);
+            await context.SaveChangesAsync();
+
+            var albumName = "Test Album";
+            var album = new Album
+            {
+                ApiKey = Guid.NewGuid(),
+                ArtistId = artist.Id,
+                Artist = artist,
+                Name = albumName,
+                NameNormalized = albumName.ToNormalizedString()!,
+                Directory = "/test/album/",
+                ReleaseDate = new LocalDate(2025, 1, 1),
+                CreatedAt = Instant.FromUtc(2025, 12, 1, 0, 0)
+            };
+            context.Albums.Add(album);
+            await context.SaveChangesAsync();
+
+            var songAInstant = Instant.FromUtc(2025, 12, 14, 6, 0);
+            var songBInstant = Instant.FromUtc(2025, 12, 15, 4, 30);
+
+            context.Songs.AddRange(
+                new Song
+                {
+                    AlbumId = album.Id,
+                    Album = album,
+                    Title = "Song A",
+                    TitleNormalized = "song a",
+                    SongNumber = 1,
+                    FileName = "a.flac",
+                    FileSize = 1,
+                    FileHash = "hash-a",
+                    Duration = 1000,
+                    SamplingRate = 44100,
+                    BitRate = 320,
+                    BitDepth = 16,
+                    BPM = 120,
+                    ContentType = "audio/flac",
+                    CreatedAt = songAInstant
+                },
+                new Song
+                {
+                    AlbumId = album.Id,
+                    Album = album,
+                    Title = "Song B",
+                    TitleNormalized = "song b",
+                    SongNumber = 2,
+                    FileName = "b.flac",
+                    FileSize = 1,
+                    FileHash = "hash-b",
+                    Duration = 1000,
+                    SamplingRate = 44100,
+                    BitRate = 320,
+                    BitDepth = 16,
+                    BPM = 120,
+                    ContentType = "audio/flac",
+                    CreatedAt = songBInstant
+                });
+
+            await context.SaveChangesAsync();
+        }
+
+        var service = GetStatisticsService();
+        var result = await service.GetSongsAddedPerDayAsync(start, end, "UTC");
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+
+        var day14 = result.Data.Single(x => x.Day == start).Value;
+        var day15 = result.Data.Single(x => x.Day == start.PlusDays(1)).Value;
+        var day16 = result.Data.Single(x => x.Day == start.PlusDays(2)).Value;
+
+        Assert.Equal(1, day14);
+        Assert.Equal(1, day15);
+        Assert.Equal(0, day16);
+    }
+
+    [Fact]
+    public async Task GetUserSearchesPerDayAsync_ShouldZeroFill_AndBucketByUserTimeZone()
+    {
+        var tz = "America/New_York";
+        var start = new LocalDate(2025, 12, 14);
+        var end = new LocalDate(2025, 12, 16);
+
+        var userApiKey = Guid.NewGuid();
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            context.SearchHistories.RemoveRange(context.SearchHistories);
+            context.Users.RemoveRange(context.Users);
+            await context.SaveChangesAsync();
+
+            var user = new User
+            {
+                ApiKey = userApiKey,
+                UserName = "testuser",
+                UserNameNormalized = "TESTUSER",
+                Email = "test@example.com",
+                EmailNormalized = "TEST@EXAMPLE.COM",
+                PublicKey = "pk",
+                PasswordEncrypted = "enc",
+                TimeZoneId = tz,
+                CreatedAt = Instant.FromUtc(2025, 12, 1, 0, 0)
+            };
+            context.Users.Add(user);
+            await context.SaveChangesAsync();
+
+            // A: 2025-12-14 06:00Z -> 2025-12-14 01:00 America/New_York
+            var a = Instant.FromUtc(2025, 12, 14, 6, 0);
+            // B: 2025-12-15 04:30Z -> 2025-12-14 23:30 America/New_York
+            var b = Instant.FromUtc(2025, 12, 15, 4, 30);
+
+            context.SearchHistories.AddRange(
+                new SearchHistory { ByUserId = user.Id, SearchDurationInMs = 1, CreatedAt = a },
+                new SearchHistory { ByUserId = user.Id, SearchDurationInMs = 1, CreatedAt = b });
+
+            await context.SaveChangesAsync();
+        }
+
+        var service = GetStatisticsService();
+        var result = await service.GetUserSearchesPerDayAsync(userApiKey, start, end, tz);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+        Assert.Equal(3, result.Data.Length);
+
+        Assert.Equal(start, result.Data[0].Day);
+        Assert.Equal(2, result.Data[0].Value);
+        Assert.Equal(start.PlusDays(1), result.Data[1].Day);
+        Assert.Equal(0, result.Data[1].Value);
+        Assert.Equal(start.PlusDays(2), result.Data[2].Day);
+        Assert.Equal(0, result.Data[2].Value);
+    }
+
+    [Fact]
+    public async Task GetShareViewsPerDayAsync_ShouldZeroFill_AndBucketByUserTimeZone()
+    {
+        var tz = "America/New_York";
+        var start = new LocalDate(2025, 12, 14);
+        var end = new LocalDate(2025, 12, 16);
+
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            context.ShareActivities.RemoveRange(context.ShareActivities);
+            context.Shares.RemoveRange(context.Shares);
+            context.Users.RemoveRange(context.Users);
+            await context.SaveChangesAsync();
+
+            var user = new User
+            {
+                UserName = "testuser",
+                UserNameNormalized = "TESTUSER",
+                Email = "test@example.com",
+                EmailNormalized = "TEST@EXAMPLE.COM",
+                PublicKey = "pk",
+                PasswordEncrypted = "enc",
+                CreatedAt = Instant.FromUtc(2025, 12, 1, 0, 0)
+            };
+            context.Users.Add(user);
+            await context.SaveChangesAsync();
+
+            var share = new Share
+            {
+                UserId = user.Id,
+                ShareId = 1,
+                ShareType = (int)ShareType.Song,
+                ShareUniqueId = "abc",
+                CreatedAt = Instant.FromUtc(2025, 12, 1, 0, 0)
+            };
+            context.Shares.Add(share);
+            await context.SaveChangesAsync();
+
+            var a = Instant.FromUtc(2025, 12, 14, 6, 0);
+            var b = Instant.FromUtc(2025, 12, 15, 4, 30);
+
+            context.ShareActivities.AddRange(
+                new ShareActivity { ShareId = share.Id, Client = "c", CreatedAt = a },
+                new ShareActivity { ShareId = share.Id, Client = "c", CreatedAt = b });
+
+            await context.SaveChangesAsync();
+        }
+
+        var service = GetStatisticsService();
+        var result = await service.GetShareViewsPerDayAsync(start, end, tz);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+        Assert.Equal(3, result.Data.Length);
+
+        Assert.Equal(start, result.Data[0].Day);
+        Assert.Equal(2, result.Data[0].Value);
+        Assert.Equal(start.PlusDays(1), result.Data[1].Day);
+        Assert.Equal(0, result.Data[1].Value);
+        Assert.Equal(start.PlusDays(2), result.Data[2].Day);
+        Assert.Equal(0, result.Data[2].Value);
+    }
+
+    [Fact]
+    public async Task GetLibraryScansPerDayAsync_ShouldZeroFill_AndBucketByUserTimeZone()
+    {
+        var tz = "America/New_York";
+        var start = new LocalDate(2025, 12, 14);
+        var end = new LocalDate(2025, 12, 16);
+
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            context.LibraryScanHistories.RemoveRange(context.LibraryScanHistories);
+            context.Libraries.RemoveRange(context.Libraries);
+            await context.SaveChangesAsync();
+
+            var library = new Library
+            {
+                Name = "Test Library",
+                Path = "/test/path",
+                Type = (int)LibraryType.Storage,
+                CreatedAt = Instant.FromUtc(2025, 12, 1, 0, 0)
+            };
+            context.Libraries.Add(library);
+            await context.SaveChangesAsync();
+
+            var a = Instant.FromUtc(2025, 12, 14, 6, 0);  // local 12/14
+            var b = Instant.FromUtc(2025, 12, 15, 5, 0);  // local 12/15
+
+            context.LibraryScanHistories.AddRange(
+                new LibraryScanHistory { LibraryId = library.Id, Library = library, DurationInMs = 1, CreatedAt = a },
+                new LibraryScanHistory { LibraryId = library.Id, Library = library, DurationInMs = 1, CreatedAt = b });
+
+            await context.SaveChangesAsync();
+        }
+
+        var service = GetStatisticsService();
+        var result = await service.GetLibraryScansPerDayAsync(start, end, tz);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+
+        Assert.Equal(1, result.Data.Single(x => x.Day == start).Value);
+        Assert.Equal(1, result.Data.Single(x => x.Day == start.PlusDays(1)).Value);
+        Assert.Equal(0, result.Data.Single(x => x.Day == start.PlusDays(2)).Value);
     }
 }

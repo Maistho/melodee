@@ -8,11 +8,11 @@ using Melodee.Common.Utility;
 
 namespace Melodee.Common.Models;
 
-public record UserInfo(int Id, Guid ApiKey, string UserName, string Email, string PublicKey, string PasswordEncrypted)
+public record UserInfo(int Id, Guid ApiKey, string UserName, string Email, string PublicKey, string PasswordEncrypted, string TimeZoneId = "UTC")
 {
     public List<string>? Roles { get; init; }
 
-    public static UserInfo BlankUserInfo => new(0, Guid.Empty, string.Empty, string.Empty, string.Empty, string.Empty);
+    public static UserInfo BlankUserInfo => new(0, Guid.Empty, string.Empty, string.Empty, string.Empty, string.Empty, "UTC");
 
     public ClaimsPrincipal ToClaimsPrincipal(IMelodeeConfiguration configuration, string userAvatarPath)
     {
@@ -29,7 +29,8 @@ public record UserInfo(int Id, Guid ApiKey, string UserName, string Email, strin
                 new(ClaimTypeRegistry.UserSalt, userSalt),
                 new(ClaimTypeRegistry.UserPublicKey, PublicKey),
                 new(ClaimTypeRegistry.UserToken, userToken),
-                new(ClaimTypeRegistry.PasswordEncrypted, PasswordEncrypted)
+                new(ClaimTypeRegistry.PasswordEncrypted, PasswordEncrypted),
+                new(ClaimTypeRegistry.UserTimeZoneId, string.IsNullOrWhiteSpace(TimeZoneId) ? "UTC" : TimeZoneId)
             }.Concat(Roles?.Select(r => new Claim(ClaimTypes.Role, r)).ToArray() ?? []),
             "Melodee"));
     }
@@ -43,7 +44,8 @@ public record UserInfo(int Id, Guid ApiKey, string UserName, string Email, strin
             principal.FindFirst(ClaimTypes.Name)?.Value ?? "",
             principal.FindFirst(ClaimTypes.Email)?.Value ?? "",
             principal.FindFirst(ClaimTypeRegistry.UserPublicKey)?.Value ?? "",
-            principal.FindFirst(ClaimTypeRegistry.PasswordEncrypted)?.Value ?? ""
+            principal.FindFirst(ClaimTypeRegistry.PasswordEncrypted)?.Value ?? "",
+            principal.FindFirst(ClaimTypeRegistry.UserTimeZoneId)?.Value ?? "UTC"
         )
         {
             Roles = principal.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList()

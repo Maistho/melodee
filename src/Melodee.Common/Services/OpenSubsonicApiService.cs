@@ -1493,7 +1493,7 @@ public class OpenSubsonicApiService(
                 apiRequest.ToString());
             return new ResponseModel
             {
-                UserInfo = new UserInfo(0, Guid.Empty, string.Empty, string.Empty, string.Empty, string.Empty),
+                UserInfo = new UserInfo(0, Guid.Empty, string.Empty, string.Empty, string.Empty, string.Empty, "UTC"),
                 IsSuccess = false,
                 ResponseData = await NewApiResponse(false, string.Empty, string.Empty, Error.AuthError)
             };

@@ -80,6 +80,12 @@ public class User : DataModelBase
     public string? LastFmSessionKey { get; set; }
 
     /// <summary>
+    ///     IANA timezone id (e.g. "America/New_York"). Defaults to "UTC".
+    /// </summary>
+    [MaxLength(64)]
+    public string TimeZoneId { get; set; } = "UTC";
+
+    /// <summary>
     ///     Pipe seperated list. Don't randomize songs in these genres. e.g. 'HOLIDAY|CHRISTMAS'
     /// </summary>
     [MaxLength(MaxLengthDefinitions.MaxIndexableLength)]
@@ -111,6 +117,7 @@ public class User : DataModelBase
         EmailNormalized = string.Empty,
         PublicKey = string.Empty,
         PasswordEncrypted = string.Empty,
+        TimeZoneId = "UTC",
         CreatedAt = default
     };
 }

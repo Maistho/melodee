@@ -1,38 +1,86 @@
 @page "/about"
+@using System.Globalization
 @using System.Runtime.InteropServices
 @using System.Security.Claims
+@using Melodee.Blazor.Security.Extensions
+@using NodaTime
 @inherits MelodeeComponentBase
 
 @inject IMelodeeConfigurationFactory MelodeeConfigurationFactory
 
 <PageTitle>About</PageTitle>
 
-<RadzenStack Orientation="Orientation.Vertical">
-    <RadzenText TextStyle="TextStyle.H4">
-        @_siteTitle
-    </RadzenText>
+<RadzenStack Gap="1rem">
+    <RadzenText TextStyle="TextStyle.H4">@_siteTitle</RadzenText>
+
+    <RadzenRow>
+        <RadzenColumn Size="12" SizeMD="4">
+            <RadzenCard>
+                <RadzenStack Gap="0.25rem">
+                    <RadzenText TextStyle="TextStyle.Overline">Time</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Caption">Server (UTC)</RadzenText>
+                    <RadzenText TextStyle="TextStyle.H6">@_serverNowUtc.InUtc().LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Caption">You (@CurrentUser?.TimeZoneId())</RadzenText>
+                    <RadzenText TextStyle="TextStyle.H6">@(CurrentUser?.FormatInstant(_serverNowUtc) ?? MelodeeConfiguration.DefaultNoValuePlaceHolder)</RadzenText>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+
+        <RadzenColumn Size="12" SizeMD="4">
+            <RadzenCard>
+                <RadzenStack Gap="0.25rem">
+                    <RadzenText TextStyle="TextStyle.Overline">Melodee (UI Version)</RadzenText>
+                    <RadzenText TextStyle="TextStyle.H5">@_uiVersion</RadzenText>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+
+        <RadzenColumn Size="12" SizeMD="4">
+            <RadzenCard>
+                <RadzenStack Gap="0.5rem">
+                    <RadzenText TextStyle="TextStyle.Overline">Your Security</RadzenText>
+                    <RadzenBadge BadgeStyle="@_securityBadgeStyle" Shade="Shade.Light" Text="@_securityLabel"/>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+    </RadzenRow>
+
     <RadzenCard>
-        <RadzenStack>
-            <RadzenText TextStyle="TextStyle.H6" Text="About Server"/>
-            <dl>
-                @foreach (var serverStat in _serverStats.OrderBy(x => x.Key))
-                {
-                    <dt>@serverStat.Key</dt>
-                    <dd>@((MarkupString)(serverStat.Value ?? string.Empty))</dd>
-                }
-            </dl>
+        <RadzenStack Gap="0.5rem">
+            <RadzenText TextStyle="TextStyle.H6" Text="Server"/>
+            <RadzenDataGrid TItem="KeyValue"
+                            Data="@_serverStats.Where(x => x.Key != "UI Version").OrderBy(x => x.Key)"
+                            AllowPaging="false"
+                            AllowSorting="false"
+                            AllowFiltering="true"
+                            FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                            Density="Density.Compact">
+                <Columns>
+                    <RadzenDataGridColumn TItem="KeyValue" Property="Key" Title="Key" Width="320px" />
+                    <RadzenDataGridColumn TItem="KeyValue" Title="Value">
+                        <Template Context="kv">@((MarkupString)(kv.Value ?? string.Empty))</Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
         </RadzenStack>
     </RadzenCard>
+
     <RadzenCard>
-        <RadzenStack>
-            <RadzenText TextStyle="TextStyle.H6" Text="About You"/>
-            <dl>
-                @foreach (var claim in _userClaimsToDisplay)
-                {
-                    <dt>@claim.Type</dt>
-                    <dd>@claim.Value</dd>
-                }
-            </dl>
+        <RadzenStack Gap="0.5rem">
+            <RadzenText TextStyle="TextStyle.H6" Text="Your Roles"/>
+            <RadzenDataGrid TItem="string"
+                            Data="@_userRoles"
+                            AllowPaging="false"
+                            AllowSorting="false"
+                            AllowFiltering="true"
+                            FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                            Density="Density.Compact">
+                <Columns>
+                    <RadzenDataGridColumn TItem="string" Title="Role">
+                        <Template Context="role">@role</Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
         </RadzenStack>
     </RadzenCard>
 </RadzenStack>
@@ -40,31 +88,55 @@
 @code {
 
     string _siteTitle = string.Empty;
+    string _uiVersion = string.Empty;
+    BadgeStyle _securityBadgeStyle = BadgeStyle.Secondary;
+    string _securityLabel = "user";
+    Instant _serverNowUtc;
     readonly List<KeyValue> _serverStats = [];
-    readonly List<Claim> _userClaimsToDisplay = [];
+    readonly List<string> _userRoles = [];
 
-    readonly string[] _showClaimTypes =
-    [
-        "HTTP://SCHEMAS.MICROSOFT.COM/WS/2008/06/IDENTITY/CLAIMS/ROLE",
-        "HTTP://SCHEMAS.XMLSOAP.ORG/WS/2005/05/IDENTITY/CLAIMS/SID",
-        "HTTP://SCHEMAS.XMLSOAP.ORG/WS/2005/05/IDENTITY/CLAIMS/NAME",
-        "HTTP://SCHEMAS.XMLSOAP.ORG/WS/2005/05/IDENTITY/CLAIMS/EMAILADDRESS"
-    ];
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
 
+        _serverNowUtc = SystemClock.Instance.GetCurrentInstant();
+
         var configuration = await MelodeeConfigurationFactory.GetConfigurationAsync();
         _siteTitle = configuration.GetValue<string>(SettingRegistry.OpenSubsonicServerType) ?? string.Empty;
+
+        _uiVersion = typeof(Program).Assembly.GetName().Version?.ToString() ?? string.Empty;
 
         _serverStats.Add(new KeyValue("API: Melodee Version", configuration.ApiVersion()));
         _serverStats.Add(new KeyValue("API: OpenSubsonic/SubSonic API Version", configuration.GetValue<string>(SettingRegistry.OpenSubsonicServerVersion) ?? string.Empty));
         _serverStats.Add(new KeyValue("dotnet core version", RuntimeInformation.FrameworkDescription));
         _serverStats.Add(new KeyValue("Melodee", "Melodee music system <a target=\"_blank\" href=\"https://github.com/melodee-project\">GitHub</a>"));
-        _serverStats.Add(new KeyValue("UI Version", typeof(Program).Assembly.GetName().Version?.ToString() ?? string.Empty));
+        _serverStats.Add(new KeyValue("UI Version", _uiVersion));
 
-        _userClaimsToDisplay.AddRange(CurrentUser?.Claims.Where(x => _showClaimTypes.Contains(x.Type.ToUpper())) ?? []);
+        if (CurrentUser?.IsAdmin() ?? false)
+        {
+            _securityLabel = "admin";
+            _securityBadgeStyle = BadgeStyle.Danger;
+        }
+        else if (CurrentUser?.IsEditor() ?? false)
+        {
+            _securityLabel = "editor";
+            _securityBadgeStyle = BadgeStyle.Info;
+        }
+        else
+        {
+            _securityLabel = "user";
+            _securityBadgeStyle = BadgeStyle.Secondary;
+        }
+
+        if (CurrentUser != null)
+        {
+            _userRoles.AddRange(CurrentUser.Claims
+                .Where(x => string.Equals(x.Type, ClaimTypes.Role, StringComparison.OrdinalIgnoreCase))
+                .Select(x => x.Value)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(x => x));
+        }
     }
 
 }

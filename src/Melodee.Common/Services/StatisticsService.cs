@@ -4,6 +4,8 @@ using Melodee.Common.Extensions;
 using Melodee.Common.Models;
 using Melodee.Common.Services.Caching;
 using Microsoft.EntityFrameworkCore;
+using NodaTime;
+using NodaTime.TimeZones;
 using Serilog;
 
 namespace Melodee.Common.Services;
@@ -14,6 +16,34 @@ public sealed class StatisticsService(
     IDbContextFactory<MelodeeDbContext> contextFactory)
     : ServiceBase(logger, cacheManager, contextFactory)
 {
+    private static DateTimeZone ResolveZone(string? timeZoneId)
+    {
+        if (string.IsNullOrWhiteSpace(timeZoneId))
+        {
+            return DateTimeZone.Utc;
+        }
+
+        return DateTimeZoneProviders.Tzdb.GetZoneOrNull(timeZoneId) ?? DateTimeZone.Utc;
+    }
+
+    private static TimeSeriesPoint[] ZeroFillDailySeries(
+        IEnumerable<(LocalDate Day, double Value)> points,
+        LocalDate startDay,
+        LocalDate endDay)
+    {
+        var map = points
+            .GroupBy(x => x.Day)
+            .ToDictionary(g => g.Key, g => g.Sum(x => x.Value));
+
+        var results = new List<TimeSeriesPoint>();
+        for (var day = startDay; day <= endDay; day = day.PlusDays(1))
+        {
+            results.Add(new TimeSeriesPoint(day, map.TryGetValue(day, out var v) ? v : 0));
+        }
+
+        return results.ToArray();
+    }
+
     public async Task<OperationResult<Statistic?>> GetAlbumCountAsync(CancellationToken cancellationToken = default)
     {
         var stats = await GetStatisticsAsync(cancellationToken).ConfigureAwait(false);
@@ -265,6 +295,153 @@ public sealed class StatisticsService(
         return new OperationResult<Statistic[]>
         {
             Data = results
+        };
+    }
+
+    public async Task<OperationResult<TimeSeriesPoint[]>> GetSongsAddedPerDayAsync(
+        LocalDate startDay,
+        LocalDate endDay,
+        string? timeZoneId,
+        CancellationToken cancellationToken = default)
+    {
+        var zone = ResolveZone(timeZoneId);
+
+        // Query window based on local day boundaries.
+        var startInstant = startDay.AtStartOfDayInZone(zone).ToInstant();
+        var endExclusiveInstant = endDay.PlusDays(1).AtStartOfDayInZone(zone).ToInstant();
+
+        await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var createdAts = await context.Songs
+            .AsNoTracking()
+            .Where(x => x.CreatedAt >= startInstant && x.CreatedAt < endExclusiveInstant)
+            .Select(x => x.CreatedAt)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var points = createdAts
+            .Select(i => (Day: i.InZone(zone).Date, Value: 1d));
+
+        return new OperationResult<TimeSeriesPoint[]>
+        {
+            Data = ZeroFillDailySeries(points, startDay, endDay)
+        };
+    }
+
+    public async Task<OperationResult<TimeSeriesPoint[]>> GetSearchesPerDayAsync(
+        LocalDate startDay,
+        LocalDate endDay,
+        string? timeZoneId,
+        CancellationToken cancellationToken = default)
+    {
+        var zone = ResolveZone(timeZoneId);
+        var startInstant = startDay.AtStartOfDayInZone(zone).ToInstant();
+        var endExclusiveInstant = endDay.PlusDays(1).AtStartOfDayInZone(zone).ToInstant();
+
+        await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var createdAts = await context.SearchHistories
+            .AsNoTracking()
+            .Where(x => x.CreatedAt >= startInstant && x.CreatedAt < endExclusiveInstant)
+            .Select(x => x.CreatedAt)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var points = createdAts.Select(i => (Day: i.InZone(zone).Date, Value: 1d));
+
+        return new OperationResult<TimeSeriesPoint[]>
+        {
+            Data = ZeroFillDailySeries(points, startDay, endDay)
+        };
+    }
+
+    public async Task<OperationResult<TimeSeriesPoint[]>> GetUserSearchesPerDayAsync(
+        Guid userApiKey,
+        LocalDate startDay,
+        LocalDate endDay,
+        string? timeZoneId,
+        CancellationToken cancellationToken = default)
+    {
+        var zone = ResolveZone(timeZoneId);
+        var startInstant = startDay.AtStartOfDayInZone(zone).ToInstant();
+        var endExclusiveInstant = endDay.PlusDays(1).AtStartOfDayInZone(zone).ToInstant();
+
+        await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var userId = await context.Users
+            .AsNoTracking()
+            .Where(x => x.ApiKey == userApiKey)
+            .Select(x => x.Id)
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var createdAts = await context.SearchHistories
+            .AsNoTracking()
+            .Where(x => x.ByUserId == userId)
+            .Where(x => x.CreatedAt >= startInstant && x.CreatedAt < endExclusiveInstant)
+            .Select(x => x.CreatedAt)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var points = createdAts.Select(i => (Day: i.InZone(zone).Date, Value: 1d));
+
+        return new OperationResult<TimeSeriesPoint[]>
+        {
+            Data = ZeroFillDailySeries(points, startDay, endDay)
+        };
+    }
+
+    public async Task<OperationResult<TimeSeriesPoint[]>> GetShareViewsPerDayAsync(
+        LocalDate startDay,
+        LocalDate endDay,
+        string? timeZoneId,
+        CancellationToken cancellationToken = default)
+    {
+        var zone = ResolveZone(timeZoneId);
+        var startInstant = startDay.AtStartOfDayInZone(zone).ToInstant();
+        var endExclusiveInstant = endDay.PlusDays(1).AtStartOfDayInZone(zone).ToInstant();
+
+        await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var createdAts = await context.ShareActivities
+            .AsNoTracking()
+            .Where(x => x.CreatedAt >= startInstant && x.CreatedAt < endExclusiveInstant)
+            .Select(x => x.CreatedAt)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var points = createdAts.Select(i => (Day: i.InZone(zone).Date, Value: 1d));
+
+        return new OperationResult<TimeSeriesPoint[]>
+        {
+            Data = ZeroFillDailySeries(points, startDay, endDay)
+        };
+    }
+
+    public async Task<OperationResult<TimeSeriesPoint[]>> GetLibraryScansPerDayAsync(
+        LocalDate startDay,
+        LocalDate endDay,
+        string? timeZoneId,
+        CancellationToken cancellationToken = default)
+    {
+        var zone = ResolveZone(timeZoneId);
+        var startInstant = startDay.AtStartOfDayInZone(zone).ToInstant();
+        var endExclusiveInstant = endDay.PlusDays(1).AtStartOfDayInZone(zone).ToInstant();
+
+        await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var createdAts = await context.LibraryScanHistories
+            .AsNoTracking()
+            .Where(x => x.CreatedAt >= startInstant && x.CreatedAt < endExclusiveInstant)
+            .Select(x => x.CreatedAt)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var points = createdAts.Select(i => (Day: i.InZone(zone).Date, Value: 1d));
+
+        return new OperationResult<TimeSeriesPoint[]>
+        {
+            Data = ZeroFillDailySeries(points, startDay, endDay)
         };
     }
 }

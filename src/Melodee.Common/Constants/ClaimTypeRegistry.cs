@@ -9,4 +9,6 @@ public static class ClaimTypeRegistry
     public const string PasswordEncrypted = "urn:user:password:encrypted";
 
     public const string UserPublicKey = "urn:token:publickey";
+
+    public const string UserTimeZoneId = "urn:user:timezone";
 }

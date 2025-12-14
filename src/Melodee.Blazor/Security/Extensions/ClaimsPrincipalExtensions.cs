@@ -26,9 +26,21 @@ public static class ClaimsPrincipalExtensions
         return number?.ToStringPadLeft(5) ?? MelodeeConfiguration.DefaultNoValuePlaceHolder;
     }
 
+    public static string TimeZoneId(this ClaimsPrincipal principal)
+    {
+        return principal.FindFirstValue(ClaimTypeRegistry.UserTimeZoneId) ?? "UTC";
+    }
+
     public static string? FormatInstant(this ClaimsPrincipal principal, Instant? instant)
     {
-        return instant?.ToString("yyyy-MM-dd HH:mm:ss", principal.GetCulture()) ?? MelodeeConfiguration.DefaultNoValuePlaceHolder;
+        if (instant == null)
+        {
+            return MelodeeConfiguration.DefaultNoValuePlaceHolder;
+        }
+
+        var timeZone = DateTimeZoneProviders.Tzdb.GetZoneOrNull(principal.TimeZoneId()) ?? DateTimeZone.Utc;
+        var localDateTime = instant.Value.InZone(timeZone).LocalDateTime;
+        return localDateTime.ToString("yyyy-MM-dd HH:mm:ss", principal.GetCulture());
     }
 
     public static string? FormatDateTimeOffset(this ClaimsPrincipal principal, DateTimeOffset? dateTime)
