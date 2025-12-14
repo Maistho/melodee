@@ -6,6 +6,7 @@ using Melodee.Common.Models.SearchEngines;
 using Melodee.Common.Plugins.SearchEngine;
 using Melodee.Common.Plugins.SearchEngine.Deezer;
 using Melodee.Common.Plugins.SearchEngine.ITunes;
+using Melodee.Common.Plugins.SearchEngine.MetalApi;
 using Melodee.Common.Plugins.SearchEngine.Spotify;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services.Caching;
@@ -48,6 +49,16 @@ public class ArtistImageSearchEngineService(
             new ITunesSearchEngine(Logger, serializer, httpClientFactory, CacheManager)
             {
                 IsEnabled = configuration.GetValue<bool>(SettingRegistry.SearchEngineITunesEnabled)
+            },
+            new MetalApiArtistImageSearchEngine(
+                new MetalApiClient(
+                    httpClientFactory.CreateClient(),
+                    Logger,
+                    new MetalApiOptions { Enabled = configuration.GetValue<bool>(SettingRegistry.SearchEngineMetalApiEnabled) }),
+                Logger,
+                new MetalApiOptions { Enabled = configuration.GetValue<bool>(SettingRegistry.SearchEngineMetalApiEnabled) })
+            {
+                IsEnabled = configuration.GetValue<bool>(SettingRegistry.SearchEngineMetalApiEnabled)
             }
         };
         var result = new List<ImageSearchResult>();
