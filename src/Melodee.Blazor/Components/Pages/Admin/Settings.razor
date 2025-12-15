@@ -13,12 +13,11 @@
 
 <PageTitle>Settings</PageTitle>
 
-<RadzenBreadCrumb Class="rz-pb-5">
-    <RadzenBreadCrumbItem Path="/" Text="Dashboard"/>
-    <RadzenBreadCrumbItem Icon="settings" Text="Settings"/>
-</RadzenBreadCrumb>
-
-<RadzenStack>
+<RadzenStack Style="height: 100%">
+    <RadzenBreadCrumb Class="rz-pb-5">
+        <RadzenBreadCrumbItem Path="/" Text="Dashboard"/>
+        <RadzenBreadCrumbItem Icon="settings" Text="Settings"/>
+    </RadzenBreadCrumb>
     <DebounceInput class="rz-textbox rz-w-100"
                    autocomplete="off"
                    @bind-Value="@_debounceInputValue"
@@ -31,7 +30,7 @@
 
     <RadzenDataGrid
         @ref="_grid"
-        style="height: 500px;"
+        Style="flex: 1; overflow: hidden;"
         IsLoading="@_isLoading"
         Count="@_count"
         Data="@_settings"

@@ -17,12 +17,11 @@
 
 <PageTitle>Shares</PageTitle>
 
-<RadzenBreadCrumb Class="rz-pb-5">
-    <RadzenBreadCrumbItem Path="/" Text="Dashboard"/>
-    <RadzenBreadCrumbItem Icon="share" Text="Shares"/>
-</RadzenBreadCrumb>
-
-<RadzenStack>
+<RadzenStack Style="height: 100%">
+    <RadzenBreadCrumb Class="rz-pb-5">
+        <RadzenBreadCrumbItem Path="/" Text="Dashboard"/>
+        <RadzenBreadCrumbItem Icon="share" Text="Shares"/>
+    </RadzenBreadCrumb>
     <RadzenRow AlignItems="AlignItems.Center">
         <RadzenColumn Size="12" SizeMD="6">
             <RadzenText Text="Shares" TextStyle="TextStyle.DisplayH6" TagName="TagName.H1" style="margin: 0"/>
@@ -49,10 +48,10 @@
                    OnValueChanged="@DoSearchAsync"
                    ForceNotifyByEnter="true"
                    ForceNotifyOnBlur="true"/>
-    <RadzenRow>
+    <RadzenRow Style="flex: 1; overflow: hidden;">
         <RadzenDataGrid
             @ref="_grid"
-            style="height: 500px;"
+            Style="height: 100%"
             IsLoading="@_isLoading"
             Count="@_count"
             Data="@_shares"

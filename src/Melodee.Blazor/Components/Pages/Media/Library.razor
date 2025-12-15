@@ -24,12 +24,11 @@
 
 <PageTitle>@_library.Name</PageTitle>
 
-<RadzenBreadCrumb Class="rz-pb-5">
-    <RadzenBreadCrumbItem Path="/" Text="Dashboard"/>
-    <RadzenBreadCrumbItem Icon="folder" Text="@_library.Name"/>
-</RadzenBreadCrumb>
-
-<RadzenStack>
+<RadzenStack Style="height: 100%">
+    <RadzenBreadCrumb Class="rz-pb-5">
+        <RadzenBreadCrumbItem Path="/" Text="Dashboard"/>
+        <RadzenBreadCrumbItem Icon="folder" Text="@_library.Name"/>
+    </RadzenBreadCrumb>
     <RadzenMenu>
         <RadzenMenuItem Text="Clean" Disabled="_library.IsLocked" Click="CleanButtonClick"
                         title="Clean this media library directory." IconColor="@Colors.Warning"
@@ -68,20 +67,23 @@
         TagName="TagName.H1"
         style="margin: 0"/>
 
-    <DebounceInput class="rz-textbox rz-w-100"
-                   autocomplete="off"
-                   @bind-Value="@_debounceInputValue"
-                   @bind-Value:event="OnInput"
-                   DebounceTime="800"
-                   MinLength="3"
-                   OnValueChanged="@DoSearchAsync"
-                   ForceNotifyByEnter="true"
-                   ForceNotifyOnBlur="true"/>
+    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+        <DebounceInput class="rz-textbox rz-w-100"
+                       autocomplete="off"
+                       @bind-Value="@_debounceInputValue"
+                       @bind-Value:event="OnInput"
+                       DebounceTime="800"
+                       MinLength="3"
+                       OnValueChanged="@DoSearchAsync"
+                       ForceNotifyByEnter="true"
+                       ForceNotifyOnBlur="true"/>
+        <RadzenDropDown Data="@_uniqueStatusReasons" @bind-Value="@_selectedStatusReason" Change="@OnStatusReasonChange" Placeholder="Filter by status..." AllowClear="true" Style="width: 300px" />
+    </RadzenStack>
 
-    <RadzenRow>
+    <RadzenRow Style="flex: 1; overflow: hidden;">
         <RadzenDataGrid
             @ref="_grid"
-            style="height: 500px;"
+            Style="height: 100%"
             IsLoading="@_isLoading"
             Count="@_count"
             Data="@_albums"
@@ -212,6 +214,8 @@
     };
 
     Dictionary<string, int> _librariesAlbumsGroupedByStatus = new();
+    List<string> _uniqueStatusReasons = [];
+    string? _selectedStatusReason;
 
     string _debounceInputValue = "";
     private int _numberOfAlbumsWithStatusOk;
@@ -237,6 +241,11 @@
     {
         await base.OnInitializedAsync();
         await AlbumDiscoveryService.InitializeAsync();
+    }
+
+    async Task OnStatusReasonChange(object? value)
+    {
+        await LoadData(new LoadDataArgs { Sorts = [], Filters = [] });
     }
 
     async Task LoadData(LoadDataArgs args)
@@ -272,6 +281,21 @@
                     .ToArray();
             }
 
+            if (_selectedStatusReason != null)
+            {
+                var statusFilter = new FilterOperatorInfo("NeedsAttentionReasons", FilterOperator.Equals, _selectedStatusReason);
+                if (filters == null)
+                {
+                    filters = [statusFilter];
+                }
+                else
+                {
+                    var list = filters.ToList();
+                    list.Add(statusFilter);
+                    filters = list.ToArray();
+                }
+            }
+
             var result = await AlbumDiscoveryService.AlbumsDataInfosForDirectoryAsync(_library.ToFileSystemDirectoryInfo(),
                 new PagedRequest
                 {
@@ -289,6 +313,20 @@
                 .Where(x => x.Status != AlbumStatus.Ok)
                 .GroupBy(x => x.StatusReasons)
                 .ToDictionary(x => x.Key.ToString(), x => x.Count()) ?? new Dictionary<string, int>();
+
+            var allFlags = new HashSet<AlbumNeedsAttentionReasons>();
+            foreach (var key in _librariesAlbumsGroupedByStatus.Keys)
+            {
+                var reason = SafeParser.ToEnum<AlbumNeedsAttentionReasons>(key);
+                foreach (AlbumNeedsAttentionReasons value in Enum.GetValues(typeof(AlbumNeedsAttentionReasons)))
+                {
+                    if (value != AlbumNeedsAttentionReasons.NotSet && reason.HasFlag(value))
+                    {
+                        allFlags.Add(value);
+                    }
+                }
+            }
+            _uniqueStatusReasons = allFlags.Select(x => x.ToString()).OrderBy(x => x).ToList();
 
             _numberOfAlbumsWithStatusOk = await AlbumDiscoveryService.NumberOfOkAlbumsAsync(_library.ToFileSystemDirectoryInfo());
         }

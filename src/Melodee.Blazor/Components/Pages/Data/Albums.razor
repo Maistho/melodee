@@ -21,12 +21,11 @@
 
 <PageTitle>Albums</PageTitle>
 
-<RadzenBreadCrumb Class="rz-pb-5">
-    <RadzenBreadCrumbItem Path="/" Text="Dashboard"/>
-    <RadzenBreadCrumbItem Icon="album" Text="Albums"/>
-</RadzenBreadCrumb>
-
-<RadzenStack>
+<RadzenStack Style="height: 100%">
+    <RadzenBreadCrumb Class="rz-pb-5">
+        <RadzenBreadCrumbItem Path="/" Text="Dashboard"/>
+        <RadzenBreadCrumbItem Icon="album" Text="Albums"/>
+    </RadzenBreadCrumb>
     <RadzenRow>
         <RadzenPanel class="rz-w-100" AllowCollapse="true">
             <HeaderTemplate>
@@ -112,10 +111,10 @@
                        ForceNotifyByEnter="true"
                        ForceNotifyOnBlur="true"/>
     }
-    <RadzenRow>
+    <RadzenRow Style="flex: 1; overflow: hidden;">
         <RadzenDataGrid
             @ref="_grid"
-            style="height: 500px;"
+            Style="height: 100%"
             IsLoading="@_isLoading"
             Count="@_count"
             Data="@_albums"

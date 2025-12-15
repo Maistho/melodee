@@ -281,6 +281,9 @@ public sealed class AlbumDiscoveryService(
             "AlbumStatus" => albums.Where(x =>
                 x.Status == SafeParser.ToEnum<AlbumStatus>(filterBy.Value)).ToList(),
 
+            "NeedsAttentionReasons" => albums.Where(x =>
+                x.StatusReasons.HasFlag(SafeParser.ToEnum<AlbumNeedsAttentionReasons>(filterBy.Value))).ToList(),
+
             "NameNormalized" => FilterByNameNormalized(albums, filterBy.Value.ToString() ?? string.Empty),
 
             "ReleaseDate" => albums.Where(x =>
