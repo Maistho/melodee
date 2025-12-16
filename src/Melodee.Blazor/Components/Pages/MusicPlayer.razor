@@ -49,6 +49,9 @@
             <button class="control-btn" @onclick="NextSong">
                 <span class="icon">⏭</span>
             </button>
+            <button class="control-btn @(IsRepeatEnabled ? "active" : "")" @onclick="ToggleRepeat" title="@(IsRepeatEnabled ? "Repeat On" : "Repeat Off")">
+                <span class="icon">🔁</span>
+            </button>
         </div>
 
         <div class="volume-container">
@@ -107,7 +110,7 @@
     private double Duration { get; set; }
     private double Volume { get; set; } = 100;
     private bool IsMuted { get; set; }
-
+    private bool IsRepeatEnabled { get; set; }
 
     private bool _nowPlayingRecordedForCurrentSong;
     private string? _userAgent;
@@ -189,7 +192,18 @@
             Configuration.GetValue<string>(SettingRegistry.OpenSubsonicServerType) ?? "Melodee",
             _userAgent,
             ipAddress);
-        await NextSong();
+        
+        // Check if we should continue to next song
+        if (IsRepeatEnabled || CurrentSongIndex < Songs.Count - 1)
+        {
+            await NextSong();
+        }
+        else
+        {
+            // Last song and repeat is off - stop playing
+            IsPlaying = false;
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     private async Task LoadSong()
@@ -263,7 +277,15 @@
         CurrentSongIndex++;
         if (CurrentSongIndex >= Songs.Count)
         {
-            CurrentSongIndex = 0;
+            if (IsRepeatEnabled)
+            {
+                CurrentSongIndex = 0;
+            }
+            else
+            {
+                CurrentSongIndex = Songs.Count - 1;
+                return;
+            }
         }
 
         await LoadSong();
@@ -271,6 +293,12 @@
         {
             await PlaySong();
         }
+    }
+
+    private async Task ToggleRepeat()
+    {
+        IsRepeatEnabled = !IsRepeatEnabled;
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task ForwardTenSec()
