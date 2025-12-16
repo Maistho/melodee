@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Text;
+using System.Threading.RateLimiting;
 using Asp.Versioning;
 using Blazored.SessionStorage;
 using Melodee.Blazor.Components;
@@ -33,8 +34,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc.Controllers;
-using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Npgsql;
@@ -48,7 +49,6 @@ using Rebus.Transport.InMem;
 using Serilog;
 using SpotifyAPI.Web;
 using ILogger = Serilog.ILogger;
-using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 

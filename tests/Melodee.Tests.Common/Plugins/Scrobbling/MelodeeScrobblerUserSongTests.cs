@@ -7,8 +7,8 @@ using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using Serilog;
 using Xunit;
-using DbArtist = Melodee.Common.Data.Models.Artist;
 using DbAlbum = Melodee.Common.Data.Models.Album;
+using DbArtist = Melodee.Common.Data.Models.Artist;
 using DbSong = Melodee.Common.Data.Models.Song;
 using DbUser = Melodee.Common.Data.Models.User;
 
@@ -172,12 +172,12 @@ public class MelodeeScrobblerUserSongTests : IDisposable
 
         // Assert
         Assert.True(result.IsSuccess);
-        
+
         // Verify UserSong was created
         var userSong = await _dbContext.UserSongs
             .FirstOrDefaultAsync(us => us.UserId == _testUser.Id && us.SongId == 1);
         Assert.NotNull(userSong);
-        
+
         // Verify UserSongPlayHistory was also created
         var playHistory = await _dbContext.UserSongPlayHistories
             .FirstOrDefaultAsync(h => h.UserId == _testUser.Id && h.SongId == 1);
@@ -238,7 +238,7 @@ public class MelodeeScrobblerUserSongTests : IDisposable
         // This test verifies the order of operations:
         // 1. UserSong must be created first
         // 2. Then UserSongPlayHistory is created
-        
+
         // Arrange
         var scrobbleInfo = CreateScrobbleInfo(secondsPlayed: 10);
 
@@ -247,7 +247,7 @@ public class MelodeeScrobblerUserSongTests : IDisposable
 
         // Assert
         Assert.True(result.IsSuccess);
-        
+
         var userSong = await _dbContext.UserSongs
             .FirstOrDefaultAsync(us => us.UserId == _testUser.Id && us.SongId == 1);
         var playHistory = await _dbContext.UserSongPlayHistories
@@ -256,7 +256,7 @@ public class MelodeeScrobblerUserSongTests : IDisposable
         // Both should exist
         Assert.NotNull(userSong);
         Assert.NotNull(playHistory);
-        
+
         // UserSong should have been created at or before the play history
         Assert.True(userSong.CreatedAt <= playHistory.PlayedAt);
     }

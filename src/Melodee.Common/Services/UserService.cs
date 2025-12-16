@@ -34,18 +34,18 @@ namespace Melodee.Common.Services;
 /// <summary>
 ///     User data domain service.
 /// </summary>
-    public sealed class UserService(
-        ILogger logger,
-        ICacheManager cacheManager,
-        IDbContextFactory<MelodeeDbContext> contextFactory,
-    IMelodeeConfigurationFactory configurationFactory,
-    LibraryService libraryService,
-    ArtistService artistService,
-    AlbumService albumService,
-    SongService songService,
-    PlaylistService playlistService,
-    IBus bus)
-    : ServiceBase(logger, cacheManager, contextFactory)
+public sealed class UserService(
+    ILogger logger,
+    ICacheManager cacheManager,
+    IDbContextFactory<MelodeeDbContext> contextFactory,
+IMelodeeConfigurationFactory configurationFactory,
+LibraryService libraryService,
+ArtistService artistService,
+AlbumService albumService,
+SongService songService,
+PlaylistService playlistService,
+IBus bus)
+: ServiceBase(logger, cacheManager, contextFactory)
 {
     private const string CacheKeyDetailByApiKeyTemplate = "urn:user:apikey:{0}";
     private const string CacheKeyDetailByEmailAddressKeyTemplate = "urn:user:emailaddress:{0}";
