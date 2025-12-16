@@ -312,8 +312,12 @@ public static class SongExtensions
         }
 
         var songNumber = song.SongNumber();
+        var maximumSongNumber = configuration.ContainsKey(SettingRegistry.ValidationMaximumSongNumber)
+            ? SafeParser.ToNumber<int>(configuration[SettingRegistry.ValidationMaximumSongNumber])
+            : 1000;
+
         return songNumber > 0 &&
-               songNumber < SafeParser.ToNumber<int>(configuration[SettingRegistry.ValidationMaximumSongNumber]) &&
+               songNumber < maximumSongNumber &&
                song.Title().Nullify() != null;
     }
 

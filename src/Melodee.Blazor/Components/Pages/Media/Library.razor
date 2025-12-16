@@ -254,6 +254,7 @@
     {
         await base.OnInitializedAsync();
         await AlbumDiscoveryService.InitializeAsync();
+        await MediaEditService.InitializeAsync();
     }
 
     async Task OnStatusReasonChange(object? value)
@@ -402,7 +403,7 @@
                 var allAlbumsResult = await AlbumDiscoveryService.AllMelodeeAlbumDataFilesForDirectoryAsync(_library.ToFileSystemDirectoryInfo());
                 if (allAlbumsResult.Data == null) return;
 
-                var albumsWithNoImages = allAlbumsResult.Data.Where(x => x.Images == null || !x.Images.Any()).ToList();
+                var albumsWithNoImages = allAlbumsResult.Data.Where(x => x.CoverImage() == null).ToList();
                 var count = 0;
                 var total = albumsWithNoImages.Count;
 
@@ -411,21 +412,41 @@
                 var imageValidator = new ImageValidator(configuration);
                 var maxResults = configuration.GetValue<short?>(SettingRegistry.SearchEngineDefaultPageSize) ?? configuration.GetValue<short>(SettingRegistry.DefaultsPageSize);
 
+                var albumsProcessed = 0;
                 foreach (var album in albumsWithNoImages)
                 {
                     try
                     {
-                        var imageSearch = await AlbumImageSearchEngineService.DoSearchAsync(album.ToAlbumQuery(), maxResults);
-                        if (imageSearch.Data?.Length > 0)
+                        albumsProcessed++;
+                        var albumQuery = album.ToAlbumQuery();
+                        Logger.Debug("Processing album [{Album}] ({Index}/{Total}) - Query: [{Query}]", album.AlbumTitle(), albumsProcessed, total, albumQuery);
+                        
+                        var imageSearch = await AlbumImageSearchEngineService.DoSearchAsync(albumQuery, maxResults);
+                        
+                        if (!imageSearch.IsSuccess)
                         {
+                            Logger.Warning("Image search failed for album [{Album}]: [{Errors}]", 
+                                album.AlbumTitle(), string.Join(", ", imageSearch.Errors ?? []));
+                        }
+                        else if (imageSearch.Data?.Length > 0)
+                        {
+                            Logger.Information("Found [{Count}] image(s) for album [{Album}], attempting to download and validate", 
+                                imageSearch.Data.Length, album.AlbumTitle());
+                            
                             foreach (var imageSearchResult in imageSearch.Data.OrderByDescending(x => x.Rank))
                             {
+                                Logger.Debug("Attempting to download image from [{Url}] for album [{Album}]", 
+                                    imageSearchResult.MediaUrl, album.AlbumTitle());
+                                
                                 var albumImageFromSearchFileName = Path.Combine(album.Directory.FullName(), album.Directory.GetNextFileNameForType(Melodee.Common.Data.Models.Album.FrontImageType).Item1);
                                 if (await httpClient.DownloadFileAsync(
                                         imageSearchResult.MediaUrl,
                                         albumImageFromSearchFileName,
                                         async (_, newFileInfo, _) => (await imageValidator.ValidateImage(newFileInfo, PictureIdentifier.Front)).Data.IsValid).ConfigureAwait(false))
                                 {
+                                    Logger.Information("Successfully downloaded and validated image for album [{Album}] from [{Url}]", 
+                                        album.AlbumTitle(), imageSearchResult.MediaUrl);
+                                    
                                     var newImageInfo = new FileInfo(albumImageFromSearchFileName);
                                     var imageInfo = await Image.IdentifyAsync(albumImageFromSearchFileName).ConfigureAwait(false);
                                     album.Images = new List<ImageInfo>
@@ -446,7 +467,16 @@
                                     count++;
                                     break;
                                 }
+                                else
+                                {
+                                    Logger.Warning("Failed to download or validate image from [{Url}] for album [{Album}]", 
+                                        imageSearchResult.MediaUrl, album.AlbumTitle());
+                                }
                             }
+                        }
+                        else
+                        {
+                            Logger.Debug("No images found for album [{Album}]", album.AlbumTitle());
                         }
                     }
                     catch (Exception ex)
@@ -455,18 +485,18 @@
                     }
                 }
 
-                NotificationService.Notify(new NotificationMessage
+                await InvokeAsync(() => NotificationService.Notify(new NotificationMessage
                 {
                     Severity = NotificationSeverity.Success,
                     Summary = "Find Missing Images",
                     Detail = $"Found and set images for {count} out of {total} albums."
-                });
+                }));
 
-                if (_grid != null) await _grid.RefreshDataAsync();
+                if (_grid != null) await InvokeAsync(_grid.RefreshDataAsync);
             }
             finally
             {
-                MainLayoutProxyService.ToggleSpinnerVisible(false);
+                await InvokeAsync(() => MainLayoutProxyService.ToggleSpinnerVisible(false));
             }
         }
     }

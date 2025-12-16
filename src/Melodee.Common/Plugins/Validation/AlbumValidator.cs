@@ -141,7 +141,9 @@ public sealed partial class AlbumValidator(IMelodeeConfiguration configuration) 
 
     private void ValidateMinimums(Album album)
     {
-        var minimumSongCount = SafeParser.ToNumber<int>(_configuration[SettingRegistry.ValidationMinimumSongCount]);
+        var minimumSongCount = _configuration.ContainsKey(SettingRegistry.ValidationMinimumSongCount)
+            ? SafeParser.ToNumber<int>(_configuration[SettingRegistry.ValidationMinimumSongCount])
+            : SettingDefaults.ValidationMinimumSongCount;
         if (minimumSongCount > 0 && album.Songs?.Count() < minimumSongCount)
         {
             _validationMessages.Add(new ValidationResultMessage
@@ -152,8 +154,9 @@ public sealed partial class AlbumValidator(IMelodeeConfiguration configuration) 
             _albumNeedsAttentionReasons |= AlbumNeedsAttentionReasons.HasLessThanMinimumSongs;
         }
 
-        var minimumAlbumDuration =
-            SafeParser.ToNumber<int>(_configuration[SettingRegistry.ValidationMinimumAlbumDuration]);
+        var minimumAlbumDuration = _configuration.ContainsKey(SettingRegistry.ValidationMinimumAlbumDuration)
+            ? SafeParser.ToNumber<int>(_configuration[SettingRegistry.ValidationMinimumAlbumDuration])
+            : SettingDefaults.ValidationMinimumAlbumDuration;
         if (minimumAlbumDuration > 0 && album.TotalDurationInMinutes() < minimumAlbumDuration)
         {
             _validationMessages.Add(new ValidationResultMessage
@@ -419,7 +422,9 @@ public sealed partial class AlbumValidator(IMelodeeConfiguration configuration) 
             result = false;
         }
 
-        var maximumSongNumber = SafeParser.ToNumber<int>(_configuration[SettingRegistry.ValidationMaximumSongNumber]);
+        var maximumSongNumber = _configuration.ContainsKey(SettingRegistry.ValidationMaximumSongNumber)
+            ? SafeParser.ToNumber<int>(_configuration[SettingRegistry.ValidationMaximumSongNumber])
+            : SettingDefaults.ValidationMaximumSongNumber;
         if (songNumbers.Any(x => x > maximumSongNumber))
         {
             _albumNeedsAttentionReasons |= AlbumNeedsAttentionReasons.HasSongsWithNumberGreaterThanMaximumAllowed;

@@ -923,6 +923,8 @@ public sealed class MediaEditService(
 
     public async Task<OperationResult<bool>> SaveMelodeeAlbum(Album album, bool? forceIsOk = null, CancellationToken cancellationToken = default)
     {
+        CheckInitialized();
+
         album.Modified = DateTimeOffset.UtcNow;
         if (!(forceIsOk ?? false))
         {

@@ -295,9 +295,16 @@ public static class AlbumExtensions
     public static bool HasValidAlbumYear(this Album album, Dictionary<string, object?> configuration)
     {
         var albumYear = album.AlbumYear() ?? 0;
+        var minimumAlbumYear = configuration.ContainsKey(SettingRegistry.ValidationMinimumAlbumYear)
+            ? SafeParser.ToNumber<int>(configuration[SettingRegistry.ValidationMinimumAlbumYear])
+            : SettingDefaults.ValidationMinimumAlbumYear;
+        var maximumAlbumYear = configuration.ContainsKey(SettingRegistry.ValidationMaximumAlbumYear)
+            ? SafeParser.ToNumber<int>(configuration[SettingRegistry.ValidationMaximumAlbumYear])
+            : DateTime.Now.Year + 1;
+
         return albumYear > DateTime.MinValue.Year && albumYear < DateTime.MaxValue.Year &&
-               albumYear >= SafeParser.ToNumber<int>(configuration[SettingRegistry.ValidationMinimumAlbumYear]) &&
-               albumYear <= SafeParser.ToNumber<int>(configuration[SettingRegistry.ValidationMaximumAlbumYear]);
+               albumYear >= minimumAlbumYear &&
+               albumYear <= maximumAlbumYear;
     }
 
     public static long TotalBytes(this Album album)
@@ -467,8 +474,12 @@ public static class AlbumExtensions
             albumPathTitle = albumPathTitle.Substring(0, maxFnLength);
         }
 
-        var minimumAlbumYear = SafeParser.ToNumber<int>(configuration[SettingRegistry.ValidationMinimumAlbumYear]);
-        var maximumValidAlbumYear = SafeParser.ToNumber<int>(configuration[SettingRegistry.ValidationMaximumAlbumYear]);
+        var minimumAlbumYear = configuration.ContainsKey(SettingRegistry.ValidationMinimumAlbumYear)
+            ? SafeParser.ToNumber<int>(configuration[SettingRegistry.ValidationMinimumAlbumYear])
+            : SettingDefaults.ValidationMinimumAlbumYear;
+        var maximumValidAlbumYear = configuration.ContainsKey(SettingRegistry.ValidationMaximumAlbumYear)
+            ? SafeParser.ToNumber<int>(configuration[SettingRegistry.ValidationMaximumAlbumYear])
+            : DateTime.Now.Year + 1;
         var albumYear = album.AlbumYear();
 
         // If album year is invalid, use a default value instead of throwing an exception

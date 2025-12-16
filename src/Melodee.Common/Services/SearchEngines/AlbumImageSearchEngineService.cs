@@ -79,18 +79,41 @@ public class AlbumImageSearchEngineService(
             }
         };
         var result = new List<ImageSearchResult>();
-        foreach (var searchEngine in searchEngines.Where(x => x.IsEnabled).OrderBy(x => x.SortOrder))
+        var enabledEngines = searchEngines.Where(x => x.IsEnabled).OrderBy(x => x.SortOrder).ToArray();
+        
+        Logger.Debug("Starting album image search for query [{Query}] with [{Count}] enabled search engines: [{Engines}]", 
+            query, enabledEngines.Length, string.Join(", ", enabledEngines.Select(x => x.DisplayName)));
+        
+        foreach (var searchEngine in enabledEngines)
         {
             try
             {
+                Logger.Debug("[{Plugin}] searching for album images with query [{Query}]", searchEngine.DisplayName, query);
                 var searchResult = await searchEngine.DoAlbumImageSearch(query, maxResultsValue, token);
                 if (searchResult.IsSuccess)
                 {
-                    result.AddRange(searchResult.Data ?? []);
+                    var foundCount = searchResult.Data?.Length ?? 0;
+                    if (foundCount > 0)
+                    {
+                        Logger.Debug("[{Plugin}] found [{Count}] image(s) for query [{Query}]", 
+                            searchEngine.DisplayName, foundCount, query);
+                        result.AddRange(searchResult.Data ?? []);
+                    }
+                    else
+                    {
+                        Logger.Debug("[{Plugin}] found no images for query [{Query}]", searchEngine.DisplayName, query);
+                    }
+                }
+                else
+                {
+                    Logger.Warning("[{Plugin}] search failed for query [{Query}]: [{Errors}]", 
+                        searchEngine.DisplayName, query, string.Join(", ", searchResult.Errors ?? []));
                 }
 
                 if (searchEngine.StopProcessing || result.Count >= maxResultsValue)
                 {
+                    Logger.Debug("[{Plugin}] stopping search - StopProcessing: {Stop}, ResultCount: {Count}/{Max}", 
+                        searchEngine.DisplayName, searchEngine.StopProcessing, result.Count, maxResultsValue);
                     break;
                 }
             }
@@ -99,6 +122,8 @@ public class AlbumImageSearchEngineService(
                 Logger.Error(e, "[{Plugin}] threw error with query [{Query}]", searchEngine.DisplayName, query);
             }
         }
+        
+        Logger.Debug("Album image search completed for query [{Query}] with [{Count}] total result(s)", query, result.Count);
 
         return new OperationResult<ImageSearchResult[]>
         {
