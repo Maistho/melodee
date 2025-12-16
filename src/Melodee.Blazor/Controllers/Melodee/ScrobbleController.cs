@@ -1,6 +1,11 @@
+using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using Asp.Versioning;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using Melodee.Blazor.Controllers.Melodee.Models;
 using Melodee.Blazor.Filters;
 using Melodee.Blazor.Services;
@@ -18,6 +23,10 @@ using ILogger = Serilog.ILogger;
 namespace Melodee.Blazor.Controllers.Melodee;
 
 [ApiController]
+[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+[ServiceFilter(typeof(MelodeeApiAuthFilter))]
+[RequireCapability(UserCapability.Scrobble)]
+[EnableRateLimiting("melodee-api")]
 [ApiVersion(1)]
 [Route("api/v{version:apiVersion}/[controller]")]
 public class ScrobbleController(
@@ -28,29 +37,54 @@ public class ScrobbleController(
     SongService songService,
     ScrobbleService scrobbleService,
     IConfiguration configuration,
+    IHttpClientFactory httpClientFactory,
     IMelodeeConfigurationFactory configurationFactory) : ControllerBase(
     etagRepository,
     serializer,
     configuration,
     configurationFactory)
 {
+    private static readonly SemaphoreSlim ScrobbleInitLock = new(1, 1);
+    private static bool ScrobbleInitialized;
+
+    private async Task EnsureScrobbleInitializedAsync(IMelodeeConfiguration config, CancellationToken cancellationToken)
+    {
+        if (ScrobbleInitialized)
+        {
+            return;
+        }
+
+        await ScrobbleInitLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            if (!ScrobbleInitialized)
+            {
+                await scrobbleService.InitializeAsync(config, cancellationToken).ConfigureAwait(false);
+                ScrobbleInitialized = true;
+            }
+        }
+        finally
+        {
+            ScrobbleInitLock.Release();
+        }
+    }
     [HttpPost]
     public async Task<IActionResult> ScrobbleSong([FromBody] ScrobbleRequest scrobbleRequest, CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)
         {
-            return Unauthorized(new { error = "Authorization token is invalid" });
+            return ApiUnauthorized();
         }
 
-        var userResult = await userService.GetByApiKeyAsync(SafeParser.ToGuid(ApiRequest.ApiKey) ?? Guid.Empty, cancellationToken).ConfigureAwait(false);
-        if (!userResult.IsSuccess || userResult.Data == null)
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
         {
-            return Unauthorized(new { error = "Authorization token is invalid" });
+            return ApiUnauthorized();
         }
 
-        if (userResult.Data.IsLocked)
+        if (user.IsLocked)
         {
-            return Forbid("User is locked");
+            return ApiUserLocked();
         }
 
         var songRequest = await songService.GetByApiKeyAsync(scrobbleRequest.SongId, cancellationToken).ConfigureAwait(false);
@@ -60,21 +94,21 @@ public class ScrobbleController(
                 nameof(ScrobbleController),
                 nameof(ScrobbleSong),
                 scrobbleRequest);
-            return BadRequest(new { error = "Unknown song" });
+            return ApiBadRequest("Unknown song");
         }
 
-        var configuration = await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
-        await scrobbleService.InitializeAsync(configuration, cancellationToken).ConfigureAwait(false);
+        var configuration = await GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
+        await EnsureScrobbleInitializedAsync(configuration, cancellationToken).ConfigureAwait(false);
 
         OperationResult<bool>? result = null;
 
         if (scrobbleRequest.ScrobbleTypeValue == ScrobbleRequestType.NowPlaying)
         {
             result = await scrobbleService.NowPlaying(
-                    userResult.Data.ToUserInfo(),
-                    scrobbleRequest.SongId,
-                    scrobbleRequest.PlayedDuration,
-                    scrobbleRequest.PlayerName,
+                     user.ToUserInfo(),
+                     scrobbleRequest.SongId,
+                     scrobbleRequest.PlayedDuration,
+                     scrobbleRequest.PlayerName,
                     ApiRequest.ApiRequestPlayer?.UserAgent,
                     ApiRequest.IpAddress,
                     cancellationToken)
@@ -83,10 +117,10 @@ public class ScrobbleController(
         else if (scrobbleRequest.ScrobbleTypeValue == ScrobbleRequestType.Played)
         {
             result = await scrobbleService.Scrobble(
-                    userResult.Data.ToUserInfo(),
-                    scrobbleRequest.SongId,
-                    false,
-                    scrobbleRequest.PlayerName,
+                     user.ToUserInfo(),
+                     scrobbleRequest.SongId,
+                     false,
+                     scrobbleRequest.PlayerName,
                     ApiRequest.ApiRequestPlayer?.UserAgent,
                     ApiRequest.IpAddress,
                     cancellationToken)
@@ -105,7 +139,7 @@ public class ScrobbleController(
                 nameof(ScrobbleSong),
                 scrobbleRequest,
                 result.Messages?.First() ?? "Unknown error");
-            return BadRequest(result.Messages?.First() ?? "Unknown error");
+            return ApiBadRequest(result.Messages?.First() ?? "Unknown error");
         }
 
         logger.Warning("[{ControllerName}] [{MethodName}] Scrobble request for unknown song [{Request}] Message [{Message}",
@@ -113,7 +147,7 @@ public class ScrobbleController(
             nameof(ScrobbleSong),
             scrobbleRequest,
             $"Unknown scrobble type: {scrobbleRequest.ScrobbleType}");
-        return BadRequest($"Unknown scrobble type: {scrobbleRequest.ScrobbleType}");
+        return ApiBadRequest($"Unknown scrobble type: {scrobbleRequest.ScrobbleType}");
     }
 
     [HttpGet]
@@ -122,17 +156,22 @@ public class ScrobbleController(
     {
         if (!ApiRequest.IsAuthorized)
         {
-            return Unauthorized(new { error = "Authorization token is invalid" });
+            return ApiUnauthorized();
         }
 
-        var config = await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
+        if (!Uri.TryCreate(callback, UriKind.Absolute, out var callbackUri) || (callbackUri.Scheme != Uri.UriSchemeHttps && callbackUri.Scheme != Uri.UriSchemeHttp))
+        {
+            return ApiValidationError("Invalid callback url");
+        }
+
+        var config = await GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
         var apiKey = config.GetValue<string>(SettingRegistry.ScrobblingLastFmApiKey);
         if (apiKey.Nullify() == null)
         {
-            return BadRequest(new { error = "Last.fm not configured" });
+            return ApiBadRequest("Last.fm not configured");
         }
 
-        var url = $"https://www.last.fm/api/auth/?api_key={apiKey}&cb={callback}";
+        var url = $"https://www.last.fm/api/auth/?api_key={apiKey}&cb={Uri.EscapeDataString(callbackUri.ToString())}";
         return Ok(new { url });
     }
 
@@ -142,26 +181,26 @@ public class ScrobbleController(
     {
         if (!ApiRequest.IsAuthorized)
         {
-            return Unauthorized(new { error = "Authorization token is invalid" });
+            return ApiUnauthorized();
         }
 
-        var userResult = await userService.GetByApiKeyAsync(SafeParser.ToGuid(ApiRequest.ApiKey) ?? Guid.Empty, cancellationToken).ConfigureAwait(false);
-        if (!userResult.IsSuccess || userResult.Data == null)
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
         {
-            return Unauthorized(new { error = "Authorization token is invalid" });
+            return ApiUnauthorized();
         }
 
         var sessionKey = await GetLastFmSessionKeyAsync(request.Token, cancellationToken).ConfigureAwait(false);
         if (sessionKey.Nullify() == null)
         {
-            return BadRequest(new { error = "Unable to exchange Last.fm session key" });
+            return ApiBadRequest("Unable to exchange Last.fm session key");
         }
 
-        var updateResult = await userService.SetLastFmSessionKeyAsync(userResult.Data.Id, sessionKey, cancellationToken)
+        var updateResult = await userService.SetLastFmSessionKeyAsync(user.Id, sessionKey, cancellationToken)
             .ConfigureAwait(false);
         if (!updateResult.IsSuccess)
         {
-            return BadRequest(updateResult.Messages?.FirstOrDefault() ?? "Unable to save Last.fm session key");
+            return ApiBadRequest(updateResult.Messages?.FirstOrDefault() ?? "Unable to save Last.fm session key");
         }
 
         return Ok(new { message = "Last.fm linked" });
@@ -173,16 +212,16 @@ public class ScrobbleController(
     {
         if (!ApiRequest.IsAuthorized)
         {
-            return Unauthorized(new { error = "Authorization token is invalid" });
+            return ApiUnauthorized();
         }
 
-        var userResult = await userService.GetByApiKeyAsync(SafeParser.ToGuid(ApiRequest.ApiKey) ?? Guid.Empty, cancellationToken).ConfigureAwait(false);
-        if (!userResult.IsSuccess || userResult.Data == null)
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
         {
-            return Unauthorized(new { error = "Authorization token is invalid" });
+            return ApiUnauthorized();
         }
 
-        await userService.SetLastFmSessionKeyAsync(userResult.Data.Id, null, cancellationToken).ConfigureAwait(false);
+        await userService.SetLastFmSessionKeyAsync(user.Id, null, cancellationToken).ConfigureAwait(false);
         return Ok(new { message = "Last.fm disconnected" });
     }
 
@@ -198,9 +237,9 @@ public class ScrobbleController(
 
         var signature = BuildApiSignature(apiKey!, secret!, token);
         var requestUri =
-            $"https://ws.audioscrobbler.com/2.0/?method=auth.getSession&api_key={apiKey}&token={token}&api_sig={signature}&format=json";
+            $"2.0/?method=auth.getSession&api_key={Uri.EscapeDataString(apiKey!)}&token={Uri.EscapeDataString(token)}&api_sig={signature}&format=json";
 
-        using var httpClient = new HttpClient();
+        using var httpClient = httpClientFactory.CreateClient("LastFm");
         try
         {
             var response = await httpClient.GetAsync(requestUri, cancellationToken).ConfigureAwait(false);

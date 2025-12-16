@@ -1,4 +1,7 @@
 using Asp.Versioning;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using Melodee.Blazor.Controllers.Melodee.Extensions;
 using Melodee.Blazor.Controllers.Melodee.Models;
 using Melodee.Blazor.Filters;
@@ -13,6 +16,10 @@ using Microsoft.AspNetCore.Mvc;
 namespace Melodee.Blazor.Controllers.Melodee;
 
 [ApiController]
+[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+[ServiceFilter(typeof(MelodeeApiAuthFilter))]
+[RequireCapability(UserCapability.Playlist)]
+[EnableRateLimiting("melodee-api")]
 [ApiVersion(1)]
 [Route("api/v{version:apiVersion}/[controller]")]
 public sealed class PlaylistsController(
@@ -33,29 +40,30 @@ public sealed class PlaylistsController(
     {
         if (!ApiRequest.IsAuthorized)
         {
-            return Unauthorized(new { error = "Authorization token is invalid" });
+            return ApiUnauthorized();
         }
 
-        var userResult = await userService.GetByApiKeyAsync(SafeParser.ToGuid(ApiRequest.ApiKey) ?? Guid.Empty, cancellationToken).ConfigureAwait(false);
-        if (!userResult.IsSuccess || userResult.Data == null)
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
         {
-            return Unauthorized(new { error = "Authorization token is invalid" });
+            return ApiUnauthorized();
         }
 
-        if (userResult.Data.IsLocked)
+        if (user.IsLocked)
         {
-            return Forbid("User is locked");
+            return ApiUserLocked();
         }
 
-        var playlistResult = await playlistService.GetByApiKeyAsync(userResult.Data.ToUserInfo(), id, cancellationToken).ConfigureAwait(false);
+        var playlistResult = await playlistService.GetByApiKeyAsync(user.ToUserInfo(), id, cancellationToken).ConfigureAwait(false);
         if (!playlistResult.IsSuccess || playlistResult.Data == null)
         {
-            return NotFound(new { error = "Playlist not found" });
+            return ApiNotFound("Playlist");
         }
 
+        var baseUrl = await GetBaseUrlAsync(cancellationToken).ConfigureAwait(false);
         return Ok(playlistResult.Data.ToPlaylistModel(
-            GetBaseUrl(await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false)),
-            userResult.Data.ToUserModel(GetBaseUrl(await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false)))));
+            baseUrl,
+            user.ToUserModel(baseUrl)));
     }
 
     [HttpGet]
@@ -63,31 +71,36 @@ public sealed class PlaylistsController(
     {
         if (!ApiRequest.IsAuthorized)
         {
-            return Unauthorized(new { error = "Authorization token is invalid" });
+            return ApiUnauthorized();
         }
 
-        var userResult = await userService.GetByApiKeyAsync(SafeParser.ToGuid(ApiRequest.ApiKey) ?? Guid.Empty, cancellationToken).ConfigureAwait(false);
-        if (!userResult.IsSuccess || userResult.Data == null)
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
         {
-            return Unauthorized(new { error = "Authorization token is invalid" });
+            return ApiUnauthorized();
         }
 
-        if (userResult.Data.IsLocked)
+        if (user.IsLocked)
         {
-            return Forbid("User is locked");
+            return ApiUserLocked();
         }
 
-        var playlists = await playlistService.ListAsync(userResult.Data.ToUserInfo(), new PagedRequest { Page = page, PageSize = pageSize }, cancellationToken).ConfigureAwait(false);
-        var baseUrl = GetBaseUrl(await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false));
+        if (!TryValidatePaging(page, pageSize, out var validatedPage, out var validatedPageSize, out var pagingError))
+        {
+            return pagingError!;
+        }
+
+        var playlists = await playlistService.ListAsync(user.ToUserInfo(), new PagedRequest { Page = validatedPage, PageSize = validatedPageSize }, cancellationToken).ConfigureAwait(false);
+        var baseUrl = await GetBaseUrlAsync(cancellationToken).ConfigureAwait(false);
         return Ok(new
         {
             meta = new PaginationMetadata(
                 playlists.TotalCount,
-                page,
-                pageSize,
+                validatedPageSize,
+                validatedPage,
                 playlists.TotalPages
             ),
-            data = playlists.Data.Select(x => x.ToPlaylistModel(baseUrl, userResult.Data.ToUserModel(baseUrl))).ToArray()
+            data = playlists.Data.Select(x => x.ToPlaylistModel(baseUrl, user.ToUserModel(baseUrl))).ToArray()
         });
     }
 
@@ -97,47 +110,52 @@ public sealed class PlaylistsController(
     {
         if (!ApiRequest.IsAuthorized)
         {
-            return Unauthorized(new { error = "Authorization token is invalid" });
+            return ApiUnauthorized();
         }
 
-        var userResult = await userService.GetByApiKeyAsync(SafeParser.ToGuid(ApiRequest.ApiKey) ?? Guid.Empty, cancellationToken).ConfigureAwait(false);
-        if (!userResult.IsSuccess || userResult.Data == null)
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
         {
-            return Unauthorized(new { error = "Authorization token is invalid" });
+            return ApiUnauthorized();
         }
 
-        if (userResult.Data.IsLocked)
+        if (user.IsLocked)
         {
-            return Forbid("User is locked");
+            return ApiUserLocked();
         }
 
-        var userInfo = userResult.Data.ToUserInfo();
+        var normalizedPage = page ?? 1;
+        var normalizedPageSize = pageSize ?? 50;
+        if (!TryValidatePaging((short)normalizedPage, (short)normalizedPageSize, out var validatedPage, out var validatedPageSize, out var pagingError))
+        {
+            return pagingError!;
+        }
+
+        var userInfo = user.ToUserInfo();
         var playlistResult = await playlistService.GetByApiKeyAsync(userInfo, apiKey, cancellationToken).ConfigureAwait(false);
         if (!playlistResult.IsSuccess || playlistResult.Data == null)
         {
-            return BadRequest(new { error = "Playlist not found" });
+            return ApiNotFound("Playlist");
         }
 
-        var pageValue = page ?? 1;
-        var pageSizeValue = pageSize ?? 50;
         var songsForPlaylistResult = await playlistService.SongsForPlaylistAsync(apiKey,
             userInfo,
             new PagedRequest
             {
-                PageSize = pageSizeValue,
-                Page = pageValue
+                PageSize = validatedPageSize,
+                Page = validatedPage
             },
             cancellationToken).ConfigureAwait(false);
-        var baseUrl = GetBaseUrl(await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false));
+        var baseUrl = await GetBaseUrlAsync(cancellationToken).ConfigureAwait(false);
         return Ok(new
         {
             meta = new PaginationMetadata(
                 songsForPlaylistResult.TotalCount,
-                pageSizeValue,
-                pageValue,
+                validatedPageSize,
+                validatedPage,
                 songsForPlaylistResult.TotalPages
             ),
-            data = songsForPlaylistResult.Data.Select(x => x.ToSongModel(baseUrl, userResult.Data.ToUserModel(baseUrl), userResult.Data.PublicKey))
+            data = songsForPlaylistResult.Data.Select(x => x.ToSongModel(baseUrl, user.ToUserModel(baseUrl), user.PublicKey, GetClientBinding()))
         });
     }
 }

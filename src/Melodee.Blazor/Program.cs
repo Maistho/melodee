@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO.Compression;
+using System.Text;
 using Asp.Versioning;
 using Blazored.SessionStorage;
 using Melodee.Blazor.Components;
@@ -28,10 +29,12 @@ using Melodee.Common.Services.Scanning;
 using Melodee.Common.Services.SearchEngines;
 using Melodee.Common.Utility;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Npgsql;
@@ -45,6 +48,7 @@ using Rebus.Transport.InMem;
 using Serilog;
 using SpotifyAPI.Web;
 using ILogger = Serilog.ILogger;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -146,6 +150,11 @@ if (useForwardedHeaders)
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
+builder.Services.AddHttpClient("LastFm", client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(10);
+    client.BaseAddress = new Uri("https://ws.audioscrobbler.com");
+});
 
 builder.Services.AddAntiforgery(opt =>
 {
@@ -199,16 +208,71 @@ builder.Services.AddHsts(options =>
 });
 
 builder.Services.AddAuthorization();
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    })
     .AddCookie(x =>
     {
         x.Cookie.SameSite = SameSiteMode.Strict;
         x.Cookie.Name = "melodee_auth";
+    })
+    .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+    {
+        var jwtKey = builder.Configuration.GetValue<string>("Jwt:Key");
+        var issuer = builder.Configuration.GetValue<string>("Jwt:Issuer");
+        var audience = builder.Configuration.GetValue<string>("Jwt:Audience");
+        if (string.IsNullOrWhiteSpace(jwtKey) || string.IsNullOrWhiteSpace(issuer) || string.IsNullOrWhiteSpace(audience))
+        {
+            throw new InvalidOperationException("JWT configuration (Jwt:Key, Jwt:Issuer, Jwt:Audience) is required.");
+        }
+
+        options.RequireHttpsMetadata = true;
+        options.SaveToken = true;
+        options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            ValidateIssuer = true,
+            ValidIssuer = issuer,
+            ValidateAudience = true,
+            ValidAudience = audience,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
     });
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("melodee-api", context =>
+        RateLimitPartition.GetTokenBucketLimiter(context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new TokenBucketRateLimiterOptions
+            {
+                TokenLimit = 30,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 10,
+                ReplenishmentPeriod = TimeSpan.FromSeconds(30),
+                TokensPerPeriod = 30,
+                AutoReplenishment = true
+            }));
+    options.AddPolicy("melodee-auth", context =>
+        RateLimitPartition.GetTokenBucketLimiter(context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new TokenBucketRateLimiterOptions
+            {
+                TokenLimit = 10,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 5,
+                ReplenishmentPeriod = TimeSpan.FromMinutes(1),
+                TokensPerPeriod = 10,
+                AutoReplenishment = true
+            }));
+});
 
 // Health checks
 builder.Services.AddHealthChecks();
@@ -271,6 +335,7 @@ builder.Services
 #endregion
 
 builder.Services.AddSingleton<IBlacklistService, BlacklistService>();
+builder.Services.AddScoped<MelodeeApiAuthFilter>();
 
 #region Quartz Related
 
@@ -480,6 +545,9 @@ app.UseStaticFiles(new StaticFileOptions
 });
 
 app.UseAntiforgery();
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseRateLimiter();
 
 // Add security headers to all responses
 app.Use(async (context, next) =>

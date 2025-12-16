@@ -1,4 +1,7 @@
 using Asp.Versioning;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using Melodee.Blazor.Controllers.Melodee.Extensions;
 using Melodee.Blazor.Controllers.Melodee.Models;
 using Melodee.Blazor.Filters;
@@ -19,6 +22,9 @@ using Artist = Melodee.Blazor.Controllers.Melodee.Models.Artist;
 namespace Melodee.Blazor.Controllers.Melodee;
 
 [ApiController]
+[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+[ServiceFilter(typeof(MelodeeApiAuthFilter))]
+[EnableRateLimiting("melodee-api")]
 [ApiVersion(1)]
 [Route("api/v{version:apiVersion}/[controller]")]
 public sealed class ArtistsController(
@@ -35,35 +41,42 @@ public sealed class ArtistsController(
     configuration,
     configurationFactory)
 {
+    private static readonly HashSet<string> ArtistOrderFields =
+    [
+        nameof(AlbumDataInfo.CreatedAt),
+        nameof(ArtistDataInfo.Name)
+    ];
+
     [HttpGet]
     [Route("{id:guid}")]
     public async Task<IActionResult> ArtistById(Guid id, CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)
         {
-            return Unauthorized(new { error = "Authorization token is invalid" });
+            return ApiUnauthorized();
         }
 
-        var userResult = await userService.GetByApiKeyAsync(SafeParser.ToGuid(ApiRequest.ApiKey) ?? Guid.Empty, cancellationToken).ConfigureAwait(false);
-        if (!userResult.IsSuccess || userResult.Data == null)
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
         {
-            return Unauthorized(new { error = "Authorization token is invalid" });
+            return ApiUnauthorized();
         }
 
-        if (userResult.Data.IsLocked)
+        if (user.IsLocked)
         {
-            return Forbid("User is locked");
+            return ApiUserLocked();
         }
 
         var artistResult = await artistService.GetByApiKeyAsync(id, cancellationToken).ConfigureAwait(false);
         if (!artistResult.IsSuccess || artistResult.Data == null)
         {
-            return NotFound(new { error = "Artist not found" });
+            return ApiNotFound("Artist");
         }
 
+        var baseUrl = await GetBaseUrlAsync(cancellationToken).ConfigureAwait(false);
         return Ok(artistResult.Data.ToArtistDataInfo().ToArtistModel(
-            GetBaseUrl(await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false)),
-            userResult.Data.ToUserModel(GetBaseUrl(await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false)))));
+            baseUrl,
+            user.ToUserModel(baseUrl)));
     }
 
     [HttpGet]
@@ -71,22 +84,29 @@ public sealed class ArtistsController(
     {
         if (!ApiRequest.IsAuthorized)
         {
-            return Unauthorized(new { error = "Authorization token is invalid" });
+            return ApiUnauthorized();
         }
 
-        var userResult = await userService.GetByApiKeyAsync(SafeParser.ToGuid(ApiRequest.ApiKey) ?? Guid.Empty, cancellationToken).ConfigureAwait(false);
-        if (!userResult.IsSuccess || userResult.Data == null)
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
         {
-            return Unauthorized(new { error = "Authorization token is invalid" });
+            return ApiUnauthorized();
         }
 
-        if (userResult.Data.IsLocked)
+        if (user.IsLocked)
         {
-            return Forbid("User is locked");
+            return ApiUserLocked();
         }
 
-        var orderByValue = orderBy ?? nameof(AlbumDataInfo.CreatedAt);
-        var orderDirectionValue = orderDirection ?? PagedRequest.OrderDescDirection;
+        if (!TryValidatePaging(page, pageSize, out var validatedPage, out var validatedPageSize, out var pagingError))
+        {
+            return pagingError!;
+        }
+
+        if (!TryValidateOrdering(orderBy, orderDirection, ArtistOrderFields, out var validatedOrder, out var orderError))
+        {
+            return orderError!;
+        }
 
         var filterBy = new List<FilterOperatorInfo>();
         if (q.Nullify() != null)
@@ -96,22 +116,22 @@ public sealed class ArtistsController(
         var listResult = await artistService.ListAsync(new PagedRequest
         {
             Page = page,
-            PageSize = pageSize,
+            PageSize = validatedPageSize,
             FilterBy = filterBy.ToArray(),
-            OrderBy = new Dictionary<string, string> { { orderByValue, orderDirectionValue } }
+            OrderBy = new Dictionary<string, string> { { validatedOrder.field, validatedOrder.direction } }
         }, cancellationToken).ConfigureAwait(false);
 
-        var baseUrl = GetBaseUrl(await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false));
+        var baseUrl = await GetBaseUrlAsync(cancellationToken).ConfigureAwait(false);
 
         return Ok(new
         {
             meta = new PaginationMetadata(
                 listResult.TotalCount,
-                pageSize,
-                page,
+                validatedPageSize,
+                validatedPage,
                 listResult.TotalPages
             ),
-            data = listResult.Data.Select(x => x.ToArtistModel(baseUrl, userResult.Data.ToUserModel(baseUrl))).ToArray()
+            data = listResult.Data.Select(x => x.ToArtistModel(baseUrl, user.ToUserModel(baseUrl))).ToArray()
         });
     }
 
@@ -121,39 +141,44 @@ public sealed class ArtistsController(
     {
         if (!ApiRequest.IsAuthorized)
         {
-            return Unauthorized(new { error = "Authorization token is invalid" });
+            return ApiUnauthorized();
         }
 
-        var userResult = await userService.GetByApiKeyAsync(SafeParser.ToGuid(ApiRequest.ApiKey) ?? Guid.Empty, cancellationToken).ConfigureAwait(false);
-        if (!userResult.IsSuccess || userResult.Data == null)
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
         {
-            return Unauthorized(new { error = "Authorization token is invalid" });
+            return ApiUnauthorized();
         }
 
-        if (userResult.Data.IsLocked)
+        if (user.IsLocked)
         {
-            return Forbid("User is locked");
+            return ApiUserLocked();
         }
 
+
+        if (!TryValidateLimit(limit, out var validatedLimit, out var limitError))
+        {
+            return limitError!;
+        }
 
         var artistRecentResult = await artistService.ListAsync(new PagedRequest
         {
             Page = 1,
-            PageSize = limit,
+            PageSize = validatedLimit,
             OrderBy = new Dictionary<string, string> { { nameof(AlbumDataInfo.CreatedAt), PagedRequest.OrderDescDirection } }
         }, cancellationToken).ConfigureAwait(false);
 
-        var baseUrl = GetBaseUrl(await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false));
+        var baseUrl = await GetBaseUrlAsync(cancellationToken).ConfigureAwait(false);
 
         return Ok(new
         {
             meta = new PaginationMetadata(
                 artistRecentResult.TotalCount,
-                limit,
+                validatedLimit,
                 1,
                 artistRecentResult.TotalPages
             ),
-            data = artistRecentResult.Data.Select(x => x.ToArtistModel(baseUrl, userResult.Data.ToUserModel(baseUrl))).ToArray()
+            data = artistRecentResult.Data.Select(x => x.ToArtistModel(baseUrl, user.ToUserModel(baseUrl))).ToArray()
         });
     }
 
@@ -163,32 +188,35 @@ public sealed class ArtistsController(
     {
         if (!ApiRequest.IsAuthorized)
         {
-            return Unauthorized(new { error = "Authorization token is invalid" });
+            return ApiUnauthorized();
         }
 
-        var userResult = await userService.GetByApiKeyAsync(SafeParser.ToGuid(ApiRequest.ApiKey) ?? Guid.Empty, cancellationToken).ConfigureAwait(false);
-        if (!userResult.IsSuccess || userResult.Data == null)
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
         {
-            return Unauthorized(new { error = "Authorization token is invalid" });
+            return ApiUnauthorized();
         }
 
-        if (userResult.Data.IsLocked)
+        if (user.IsLocked)
         {
-            return Forbid("User is locked");
+            return ApiUserLocked();
+        }
+
+        if (!TryValidatePaging(page, pageSize, out var validatedPage, out var validatedPageSize, out var pagingError))
+        {
+            return pagingError!;
         }
 
         var artistResult = await artistService.GetByApiKeyAsync(id, cancellationToken).ConfigureAwait(false);
         if (!artistResult.IsSuccess || artistResult.Data == null)
         {
-            return NotFound(new { error = "Artist not found" });
+            return ApiNotFound("Artist");
         }
-
-        var pageValue = page > 0 ? page : (short)1;
 
         var artistAlbumsResult = await albumService.ListAsync(new PagedRequest
         {
-            Page = pageValue,
-            PageSize = pageSize,
+            Page = validatedPage,
+            PageSize = validatedPageSize,
             FilterBy =
             [
                 new FilterOperatorInfo("ArtistId", FilterOperator.Equals, artistResult.Data.Id)
@@ -196,17 +224,17 @@ public sealed class ArtistsController(
             OrderBy = new Dictionary<string, string> { { nameof(AlbumDataInfo.CreatedAt), PagedRequest.OrderDescDirection } }
         }, cancellationToken).ConfigureAwait(false);
 
-        var baseUrl = GetBaseUrl(await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false));
+        var baseUrl = await GetBaseUrlAsync(cancellationToken).ConfigureAwait(false);
 
         return Ok(new
         {
             meta = new PaginationMetadata(
                 artistAlbumsResult.TotalCount,
-                pageSize,
-                page,
+                validatedPageSize,
+                validatedPage,
                 artistAlbumsResult.TotalPages
             ),
-            data = artistAlbumsResult.Data.Select(x => x.ToAlbumModel(baseUrl, userResult.Data.ToUserModel(baseUrl))).ToArray()
+            data = artistAlbumsResult.Data.Select(x => x.ToAlbumModel(baseUrl, user.ToUserModel(baseUrl))).ToArray()
         });
     }
 
@@ -216,50 +244,54 @@ public sealed class ArtistsController(
     {
         if (!ApiRequest.IsAuthorized)
         {
-            return Unauthorized(new { error = "Authorization token is invalid" });
+            return ApiUnauthorized();
         }
 
-        var userResult = await userService.GetByApiKeyAsync(SafeParser.ToGuid(ApiRequest.ApiKey) ?? Guid.Empty, cancellationToken).ConfigureAwait(false);
-        if (!userResult.IsSuccess || userResult.Data == null)
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
         {
-            return Unauthorized(new { error = "Authorization token is invalid" });
+            return ApiUnauthorized();
         }
 
-        if (userResult.Data.IsLocked)
+        if (user.IsLocked)
         {
-            return Forbid("User is locked");
+            return ApiUserLocked();
+        }
+
+        if (!TryValidatePaging(page, pageSize, out var validatedPage, out var validatedPageSize, out var pagingError))
+        {
+            return pagingError!;
         }
 
         var artistResult = await artistService.GetByApiKeyAsync(id, cancellationToken).ConfigureAwait(false);
         if (!artistResult.IsSuccess || artistResult.Data == null)
         {
-            return NotFound(new { error = "Artist not found" });
+            return ApiNotFound("Artist");
         }
 
         var searchTermNormalized = q?.ToNormalizedString() ?? q ?? string.Empty;
-        var pageValue = page > 0 ? page : (short)1;
         var songsResult = await songService.ListAsync(new PagedRequest
         {
-            Page = pageValue,
-            PageSize = pageSize,
+            Page = validatedPage,
+            PageSize = validatedPageSize,
             FilterBy =
             [
                 new FilterOperatorInfo(nameof(SongDataInfo.ArtistApiKey), FilterOperator.Equals, artistResult.Data.ApiKey),
                 new FilterOperatorInfo(nameof(SongDataInfo.TitleNormalized), FilterOperator.Contains, searchTermNormalized)
             ],
             OrderBy = new Dictionary<string, string> { { nameof(SongDataInfo.CreatedAt), PagedRequest.OrderDescDirection } }
-        }, userResult.Data.Id, cancellationToken).ConfigureAwait(false);
-        var baseUrl = GetBaseUrl(await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false));
+        }, user.Id, cancellationToken).ConfigureAwait(false);
+        var baseUrl = await GetBaseUrlAsync(cancellationToken).ConfigureAwait(false);
 
         return Ok(new
         {
             meta = new PaginationMetadata(
                 songsResult.TotalCount,
-                pageSize,
-                page,
+                validatedPageSize,
+                validatedPage,
                 songsResult.TotalPages
             ),
-            data = songsResult.Data.Select(x => x.ToSongModel(baseUrl, userResult.Data.ToUserModel(baseUrl), userResult.Data.PublicKey)).ToArray()
+            data = songsResult.Data.Select(x => x.ToSongModel(baseUrl, user.ToUserModel(baseUrl), user.PublicKey, GetClientBinding())).ToArray()
         });
     }
 }

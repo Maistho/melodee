@@ -85,13 +85,20 @@ public class HmacTokenService
     /// <returns>True if token is valid and not expired</returns>
     public bool ValidateTimedToken(string tokenData)
     {
+        return TryValidateTimedToken(tokenData, out _, out _);
+    }
+
+    public bool TryValidateTimedToken(string tokenData, out string data, out DateTimeOffset expiration)
+    {
+        data = string.Empty;
+        expiration = default;
         var parts = tokenData.Split('|');
         if (parts.Length != 3)
         {
             return false;
         }
 
-        var data = parts[0];
+        data = parts[0];
         var timestamp = parts[1];
         var token = parts[2];
 
@@ -101,7 +108,9 @@ public class HmacTokenService
             return false;
         }
 
-        if (DateTimeOffset.UtcNow.ToUnixTimeSeconds() > expirationTime)
+        expiration = DateTimeOffset.FromUnixTimeSeconds(expirationTime);
+
+        if (DateTimeOffset.UtcNow > expiration)
         {
             return false;
         }

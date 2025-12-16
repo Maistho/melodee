@@ -1,15 +1,20 @@
 using System.Diagnostics;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text;
+using Melodee.Blazor.Controllers.Melodee.Models;
 using Melodee.Blazor.Filters;
 using Melodee.Common.Configuration;
+using Melodee.Common.Data.Models;
 using Melodee.Common.Models;
 using Melodee.Common.Models.OpenSubsonic.Requests;
 using Melodee.Common.Models.Scrobbling;
 using Melodee.Common.Serialization;
+using Melodee.Common.Utility;
+using Melodee.Common.Extensions;
+using Melodee.Common.Services;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Logging;
+using System.Text.RegularExpressions;
 
 namespace Melodee.Blazor.Controllers.Melodee;
 
@@ -19,130 +24,34 @@ public abstract class ControllerBase(
     IConfiguration configuration,
     IMelodeeConfigurationFactory configurationFactory) : CommonBase
 {
+    private const string ConfigCacheKey = "__melodee_config_cache";
+    private const string CachedBaseUrlKey = "__melodee_base_url";
+    private const string CachedUserKey = "MelodeeAuthenticatedUser";
     public EtagRepository EtagRepository { get; } = etagRepository;
     public ISerializer Serializer { get; } = serializer;
     protected IConfiguration Configuration { get; } = configuration;
     public IMelodeeConfigurationFactory ConfigurationFactory { get; } = configurationFactory;
 
-    /// <summary>
-    ///     Validates a JWT token, ensures it's not expired, and returns the claims if valid.
-    /// </summary>
-    /// <param name="token">The JWT token to validate</param>
-    /// <returns>A result object containing validation status and claims if valid</returns>
-    protected TokenValidationResult ValidateToken(string token)
-    {
-        if (string.IsNullOrEmpty(token))
-        {
-            return new TokenValidationResult
-            {
-                IsValid = false,
-                ErrorMessage = "Token is null or empty"
-            };
-        }
-
-        try
-        {
-            var tokenHandler = new JwtSecurityTokenHandler();
-
-            // Use either MelodeeAuthSettings:Token or Jwt:Key based on configuration
-            var secretKey = Configuration.GetSection("MelodeeAuthSettings:Token").Value;
-            if (string.IsNullOrEmpty(secretKey))
-            {
-                secretKey = Configuration.GetSection("Jwt:Key").Value;
-            }
-
-            if (string.IsNullOrEmpty(secretKey))
-            {
-                return new TokenValidationResult
-                {
-                    IsValid = false,
-                    ErrorMessage = "JWT secret key is not configured"
-                };
-            }
-
-            var key = Encoding.UTF8.GetBytes(secretKey);
-
-            // Token validation parameters
-            var validationParameters = new TokenValidationParameters
-            {
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(key),
-                ValidateIssuer = false, // Set to true and configure if issuer validation is needed
-                ValidateAudience = false, // Set to true and configure if audience validation is needed
-                ValidateLifetime = true, // Validate token expiration
-                ClockSkew = TimeSpan.Zero // No tolerance for token expiration time
-            };
-
-            // Validate the token and get the principal (contains claims)
-            var principal = tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
-
-            // Additional check to ensure the token is not expired
-            if (validatedToken.ValidTo < DateTime.UtcNow)
-            {
-                return new TokenValidationResult
-                {
-                    IsValid = false,
-                    ErrorMessage = "Token has expired"
-                };
-            }
-
-            return new TokenValidationResult
-            {
-                IsValid = true,
-                ClaimsPrincipal = principal,
-                Claims = principal.Claims.ToList(),
-                Expiration = validatedToken.ValidTo
-            };
-        }
-        catch (SecurityTokenExpiredException)
-        {
-            return new TokenValidationResult
-            {
-                IsValid = false,
-                ErrorMessage = "Token has expired"
-            };
-        }
-        catch (SecurityTokenInvalidSignatureException)
-        {
-            return new TokenValidationResult
-            {
-                IsValid = false,
-                ErrorMessage = "Invalid token signature"
-            };
-        }
-        catch (Exception ex)
-        {
-            return new TokenValidationResult
-            {
-                IsValid = false,
-                ErrorMessage = $"Token validation failed: {ex.Message}"
-            };
-        }
-    }
-
     public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
-        var values = new List<KeyValue>();
-        foreach (var header in context.HttpContext.Request.Headers)
+        var headers = new List<KeyValue>
         {
-            values.Add(new KeyValue(header.Key, header.Value.ToString()));
-        }
+            new("Path", context.HttpContext.Request.Path),
+            new("User-Agent", context.HttpContext.Request.Headers.UserAgent.ToString())
+        };
 
-        var token = values.FirstOrDefault(x => x.Key == "Authorization")?.Value?.Replace("Bearer ", "", StringComparison.OrdinalIgnoreCase) ?? string.Empty;
-        var tokenValidationResult = ValidateToken(token);
-        if (tokenValidationResult.IsValid)
+        var principal = context.HttpContext.User;
+        if (principal?.Identity?.IsAuthenticated ?? false)
         {
-            values.Add(new KeyValue("QueryString", context.HttpContext.Request.QueryString.ToString()));
-            var ipAddress = GetRequestIp(context.HttpContext);
-
+            var ipAddress = GetRequestIp(context.HttpContext, tryUseXForwardHeader: false);
             ApiRequest = new ApiRequest
             (
-                values.ToArray(),
+                headers.ToArray(),
                 true,
-                tokenValidationResult.GetClaimValue(ClaimTypes.Name),
+                principal.Identity?.Name,
                 null,
                 null,
-                tokenValidationResult.GetClaimValue(ClaimTypes.Sid),
+                principal.FindFirstValue(ClaimTypes.Sid),
                 null,
                 null,
                 null,
@@ -150,57 +59,177 @@ public abstract class ControllerBase(
                 null,
                 new UserPlayer
                 (
-                    values.FirstOrDefault(x => x.Key == "User-Agent")?.Value,
-                    values.FirstOrDefault(x => x.Key == "c")?.Value,
-                    values.FirstOrDefault(x => x.Key == "Host")?.Value,
+                    context.HttpContext.Request.Headers.UserAgent.ToString(),
+                    context.HttpContext.Request.Headers["c"].ToString(),
+                    context.HttpContext.Request.Headers.Host.ToString(),
                     ipAddress
                 ),
                 ipAddress
             );
-            Trace.WriteLine($"-*-> User [{ApiRequest.Username}] : {Serializer.Serialize(ApiRequest)}");
+
+            var logger = context.HttpContext.RequestServices.GetService(typeof(ILogger<ControllerBase>)) as ILogger<ControllerBase>;
+            logger?.LogInformation("Authenticated request {Path} user {User} from {Ip}", context.HttpContext.Request.Path, ApiRequest.Username, ipAddress);
         }
 
         await next().ConfigureAwait(false);
     }
 
-    /// <summary>
-    ///     Class to hold token validation results
-    /// </summary>
-    protected record TokenValidationResult
+    protected async Task<IMelodeeConfiguration> GetConfigurationAsync(CancellationToken cancellationToken)
     {
-        /// <summary>
-        ///     Indicates whether the token is valid
-        /// </summary>
-        public bool IsValid { get; init; }
-
-        /// <summary>
-        ///     Error message if validation fails
-        /// </summary>
-        public string? ErrorMessage { get; init; }
-
-        /// <summary>
-        ///     The ClaimsPrincipal extracted from the token if valid
-        /// </summary>
-        public ClaimsPrincipal? ClaimsPrincipal { get; init; }
-
-        /// <summary>
-        ///     List of claims from the token if valid
-        /// </summary>
-        public List<Claim>? Claims { get; init; }
-
-        /// <summary>
-        ///     Token expiration date
-        /// </summary>
-        public DateTime Expiration { get; init; }
-
-        /// <summary>
-        ///     Gets a specific claim value by type
-        /// </summary>
-        /// <param name="claimType">The type of claim to retrieve</param>
-        /// <returns>The claim value or null if not found</returns>
-        public string? GetClaimValue(string claimType)
+        if (HttpContext.Items.TryGetValue(ConfigCacheKey, out var cached) && cached is IMelodeeConfiguration config)
         {
-            return Claims?.FirstOrDefault(c => c.Type == claimType)?.Value;
+            return config;
         }
+
+        var resolved = await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
+        HttpContext.Items[ConfigCacheKey] = resolved;
+        return resolved;
     }
+
+    protected async Task<string> GetBaseUrlAsync(CancellationToken cancellationToken)
+    {
+        if (HttpContext.Items.TryGetValue(CachedBaseUrlKey, out var cached) && cached is string baseUrl)
+        {
+            return baseUrl;
+        }
+
+        var config = await GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
+        var resolved = GetBaseUrl(config);
+        HttpContext.Items[CachedBaseUrlKey] = resolved;
+        return resolved;
+    }
+
+    protected async Task<Common.Data.Models.User?> ResolveUserAsync(UserService userService, CancellationToken cancellationToken)
+    {
+        if (HttpContext.Items.TryGetValue(CachedUserKey, out var cachedUser) && cachedUser is Common.Data.Models.User cached)
+        {
+            return cached;
+        }
+
+        var apiKey = SafeParser.ToGuid(ApiRequest.ApiKey) ?? Guid.Empty;
+        if (apiKey == Guid.Empty)
+        {
+            return null;
+        }
+
+        var result = await userService.GetByApiKeyAsync(apiKey, cancellationToken).ConfigureAwait(false);
+        if (!result.IsSuccess || result.Data == null)
+        {
+            return null;
+        }
+
+        HttpContext.Items[CachedUserKey] = result.Data;
+        return result.Data;
+    }
+
+    protected bool TryValidatePaging(int page, int pageSize, out short normalizedPage, out short normalizedPageSize, out IActionResult? error)
+    {
+        normalizedPage = (short)Math.Max(page, 1);
+        normalizedPageSize = (short)Math.Clamp(pageSize, 1, 200);
+        error = null;
+
+        if (page < 1)
+        {
+            error = BadRequest(new ApiError(ApiError.Codes.ValidationError, "page must be >= 1", GetCorrelationId()));
+        }
+        else if (pageSize < 1 || pageSize > 200)
+        {
+            error = BadRequest(new ApiError(ApiError.Codes.ValidationError, "pageSize must be between 1 and 200", GetCorrelationId()));
+        }
+
+        return error == null;
+    }
+
+    protected bool TryValidateLimit(int limit, out short normalizedLimit, out IActionResult? error)
+    {
+        normalizedLimit = (short)Math.Clamp(limit, 1, 200);
+        error = null;
+        if (limit < 1 || limit > 200)
+        {
+            error = BadRequest(new ApiError(ApiError.Codes.ValidationError, "limit must be between 1 and 200", GetCorrelationId()));
+        }
+
+        return error == null;
+    }
+
+    protected bool TryValidateOrdering(string? orderBy, string? orderDirection, IReadOnlySet<string> allowedFields, out (string field, string direction) validated, out IActionResult? error)
+    {
+        error = null;
+        var candidateField = orderBy.Nullify() ?? allowedFields.First();
+        if (!allowedFields.Contains(candidateField) || !Regex.IsMatch(candidateField, @"^[A-Za-z0-9_]+$"))
+        {
+            error = BadRequest(new ApiError(ApiError.Codes.ValidationError, "Invalid orderBy value", GetCorrelationId()));
+            validated = default;
+            return false;
+        }
+
+        var direction = (orderDirection.Nullify() ?? PagedRequest.OrderDescDirection).ToUpperInvariant();
+        if (direction is not (PagedRequest.OrderAscDirection or PagedRequest.OrderDescDirection))
+        {
+            error = BadRequest(new ApiError(ApiError.Codes.ValidationError, "Invalid orderDirection value", GetCorrelationId()));
+            validated = default;
+            return false;
+        }
+
+        validated = (candidateField, direction);
+        return true;
+    }
+
+    protected string GetClientBinding()
+    {
+        if (HttpContext.Items.TryGetValue("MelodeeClientIp", out var ipObj) && ipObj is string ipFromFilter && !string.IsNullOrWhiteSpace(ipFromFilter))
+        {
+            return ipFromFilter;
+        }
+
+        return GetRequestIp(HttpContext, tryUseXForwardHeader: false);
+    }
+
+    /// <summary>
+    /// Gets the correlation ID from the current request context for error tracing.
+    /// </summary>
+    protected string? GetCorrelationId() =>
+        HttpContext.TraceIdentifier;
+
+    /// <summary>
+    /// Creates a standardized unauthorized error response.
+    /// </summary>
+    protected IActionResult ApiUnauthorized(string message = "Authorization token is invalid") =>
+        Unauthorized(new ApiError(ApiError.Codes.Unauthorized, message, GetCorrelationId()));
+
+    /// <summary>
+    /// Creates a standardized forbidden error response for locked users.
+    /// </summary>
+    protected IActionResult ApiUserLocked() =>
+        StatusCode(StatusCodes.Status403Forbidden, new ApiError(ApiError.Codes.UserLocked, "User is locked", GetCorrelationId()));
+
+    /// <summary>
+    /// Creates a standardized forbidden error response for blacklisted users.
+    /// </summary>
+    protected IActionResult ApiBlacklisted() =>
+        StatusCode(StatusCodes.Status403Forbidden, new ApiError(ApiError.Codes.Blacklisted, "User is blacklisted", GetCorrelationId()));
+
+    /// <summary>
+    /// Creates a standardized not found error response.
+    /// </summary>
+    protected IActionResult ApiNotFound(string resource) =>
+        NotFound(new ApiError(ApiError.Codes.NotFound, $"{resource} not found", GetCorrelationId()));
+
+    /// <summary>
+    /// Creates a standardized bad request error response.
+    /// </summary>
+    protected IActionResult ApiBadRequest(string message) =>
+        BadRequest(new ApiError(ApiError.Codes.BadRequest, message, GetCorrelationId()));
+
+    /// <summary>
+    /// Creates a standardized validation error response.
+    /// </summary>
+    protected IActionResult ApiValidationError(string message) =>
+        BadRequest(new ApiError(ApiError.Codes.ValidationError, message, GetCorrelationId()));
+
+    /// <summary>
+    /// Creates a standardized too many requests error response.
+    /// </summary>
+    protected IActionResult ApiTooManyRequests(string message = "Too many concurrent requests") =>
+        StatusCode(StatusCodes.Status429TooManyRequests, new ApiError(ApiError.Codes.TooManyRequests, message, GetCorrelationId()));
 }

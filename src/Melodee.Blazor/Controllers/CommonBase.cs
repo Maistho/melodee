@@ -3,7 +3,9 @@ using Melodee.Common.Constants;
 using Melodee.Common.Extensions;
 using Melodee.Common.Models.OpenSubsonic.Requests;
 using Melodee.Common.Models.Scrobbling;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace Melodee.Blazor.Controllers;
 
@@ -31,23 +33,31 @@ public abstract class CommonBase : Controller
         return (configuredDomain.Nullify() ?? baseUrl).TrimEnd('/');
     }
 
-    protected static string GetRequestIp(HttpContext? context, bool tryUseXForwardHeader = true)
+    protected internal static string GetRequestIp(HttpContext? context, bool tryUseXForwardHeader = true)
     {
-        string? ip = null;
+        if (context == null)
+        {
+            throw new ArgumentNullException(nameof(context));
+        }
+
+        var ip = context.Connection.RemoteIpAddress?.ToString();
         if (tryUseXForwardHeader)
         {
-            ip = GetHeaderValueAs<string>(context, "X-Forwarded-For").FromDelimitedList(delimiter: ',')?.FirstOrDefault();
+            var forwardedOptions = context.RequestServices.GetService<IOptions<ForwardedHeadersOptions>>();
+            var trustForwardedHeaders = forwardedOptions?.Value != null &&
+                                        (forwardedOptions.Value.KnownIPNetworks.Count > 0 ||
+                                         forwardedOptions.Value.KnownProxies.Count > 0);
+
+            if (trustForwardedHeaders)
+            {
+                ip = GetHeaderValueAs<string>(context, "X-Forwarded-For")
+                    .FromDelimitedList(delimiter: ',')
+                    ?.FirstOrDefault()
+                    .Nullify() ?? ip;
+            }
         }
 
-        if (string.IsNullOrWhiteSpace(ip) && context?.Connection.RemoteIpAddress != null)
-        {
-            ip = context.Connection.RemoteIpAddress.ToString();
-        }
-
-        if (string.IsNullOrWhiteSpace(ip))
-        {
-            ip = GetHeaderValueAs<string>(context, "REMOTE_ADDR");
-        }
+        ip ??= GetHeaderValueAs<string>(context, "REMOTE_ADDR");
 
         if (string.IsNullOrWhiteSpace(ip))
         {

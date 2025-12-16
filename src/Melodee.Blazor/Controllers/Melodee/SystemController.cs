@@ -1,4 +1,6 @@
 using Asp.Versioning;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Melodee.Blazor.Controllers.Melodee.Extensions;
 using Melodee.Blazor.Controllers.Melodee.Models;
 using Melodee.Blazor.Filters;
@@ -15,6 +17,8 @@ namespace Melodee.Blazor.Controllers.Melodee;
 ///     This controller is used to get meta-information about the API.
 /// </summary>
 [ApiController]
+[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+[ServiceFilter(typeof(MelodeeApiAuthFilter))]
 [ApiVersion(1)]
 [Route("api/v{version:apiVersion}/[controller]")]
 public sealed class SystemController(
@@ -31,6 +35,7 @@ public sealed class SystemController(
 {
     [HttpGet]
     [Route("info")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetServerInfo(CancellationToken cancellationToken = default)
     {
         var configuration = await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
@@ -39,7 +44,7 @@ public sealed class SystemController(
         var versionParts = versionInfo.Split('.');
         if (versionParts.Length < 3)
         {
-            return BadRequest(new { error = "Invalid version format" });
+            return ApiBadRequest("Invalid version format");
         }
 
         var majorVersion = SafeParser.ToNumber<int?>(versionParts[0]) ?? 0;
@@ -58,22 +63,13 @@ public sealed class SystemController(
     /// </summary>
     [HttpGet]
     [Route("stats")]
+    [RequireCapability(UserCapability.Admin)]
     public async Task<IActionResult> GetSystemStatsAsync(CancellationToken cancellationToken = default)
     {
-        if (!ApiRequest.IsAuthorized)
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
         {
-            return Unauthorized(new { error = "Authorization token is invalid" });
-        }
-
-        var userResult = await userService.GetByApiKeyAsync(SafeParser.ToGuid(ApiRequest.ApiKey) ?? Guid.Empty, cancellationToken).ConfigureAwait(false);
-        if (!userResult.IsSuccess || userResult.Data == null)
-        {
-            return Unauthorized(new { error = "Authorization token is invalid" });
-        }
-
-        if (userResult.Data.IsLocked)
-        {
-            return Forbid("User is locked");
+            return ApiUnauthorized();
         }
 
         var statsResult = await statisticsService.GetStatisticsAsync(cancellationToken).ConfigureAwait(false);

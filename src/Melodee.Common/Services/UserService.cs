@@ -34,10 +34,10 @@ namespace Melodee.Common.Services;
 /// <summary>
 ///     User data domain service.
 /// </summary>
-public sealed class UserService(
-    ILogger logger,
-    ICacheManager cacheManager,
-    IDbContextFactory<MelodeeDbContext> contextFactory,
+    public sealed class UserService(
+        ILogger logger,
+        ICacheManager cacheManager,
+        IDbContextFactory<MelodeeDbContext> contextFactory,
     IMelodeeConfigurationFactory configurationFactory,
     LibraryService libraryService,
     ArtistService artistService,
@@ -99,6 +99,16 @@ public sealed class UserService(
             TotalPages = pagedRequest.TotalPages(userCount),
             Data = users
         };
+    }
+
+    public async Task<UserSong?> GetUserSongAsync(int userId, Guid songApiKey, CancellationToken cancellationToken = default)
+    {
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        return await scopedContext.UserSongs
+            .AsNoTracking()
+            .Include(us => us.Song)
+            .FirstOrDefaultAsync(us => us.UserId == userId && us.Song.ApiKey == songApiKey, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     private static IQueryable<User> ApplyFilters(IQueryable<User> query, MelodeeModels.PagedRequest pagedRequest)

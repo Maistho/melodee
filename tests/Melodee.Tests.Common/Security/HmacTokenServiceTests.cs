@@ -163,6 +163,20 @@ public class HmacTokenServiceTests
     }
 
     [Fact]
+    public void TryValidateTimedToken_ReturnsDataAndExpiration()
+    {
+        var service = new HmacTokenService(TestSecretKey);
+        var testData = "UserId:Seed:127.0.0.1";
+        var timedToken = service.GenerateTimedToken(testData, 1);
+
+        var isValid = service.TryValidateTimedToken(timedToken, out var parsedData, out var expiration);
+
+        Assert.True(isValid);
+        Assert.Equal(testData, parsedData);
+        Assert.True(expiration > DateTimeOffset.UtcNow);
+    }
+
+    [Fact]
     public void ValidateTimedToken_WithExpiredToken_ReturnsFalse()
     {
         // Arrange

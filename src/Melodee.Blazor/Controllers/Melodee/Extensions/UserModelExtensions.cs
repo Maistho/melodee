@@ -25,9 +25,10 @@ public static class UserModelExtensions
         return instant?.ToString("yyyy-MM-dd HH:mm:ss", user.GetCulture()) ?? MelodeeConfiguration.DefaultNoValuePlaceHolder;
     }
 
-    public static string CreateAuthUrlFragment(this User user, string secret, string seed)
+    public static string CreateAuthUrlFragment(this User user, string secret, string seed, string? binding = null)
     {
         var hmacService = new HmacTokenService(secret);
-        return HttpUtility.UrlEncode(hmacService.GenerateTimedToken($"{user.Id}:{seed}").ToBase64());
+        var bindingValue = binding ?? string.Empty;
+        return HttpUtility.UrlEncode(hmacService.GenerateTimedToken($"{user.Id}:{seed}:{bindingValue}").ToBase64());
     }
 }

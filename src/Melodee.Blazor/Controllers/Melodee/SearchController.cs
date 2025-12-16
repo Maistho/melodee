@@ -1,8 +1,10 @@
 using Asp.Versioning;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using Melodee.Blazor.Controllers.Melodee.Extensions;
 using Melodee.Blazor.Controllers.Melodee.Models;
 using Melodee.Blazor.Filters;
-using Melodee.Blazor.Services;
 using Melodee.Common.Configuration;
 using Melodee.Common.Models.Search;
 using Melodee.Common.Serialization;
@@ -13,6 +15,9 @@ using Microsoft.AspNetCore.Mvc;
 namespace Melodee.Blazor.Controllers.Melodee;
 
 [ApiController]
+[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+[ServiceFilter(typeof(MelodeeApiAuthFilter))]
+[EnableRateLimiting("melodee-api")]
 [ApiVersion(1)]
 [Route("api/v{version:apiVersion}/[controller]")]
 public class SearchController(
@@ -21,7 +26,6 @@ public class SearchController(
     UserService userService,
     SearchService searchService,
     IConfiguration configuration,
-    IBlacklistService blacklistService,
     IMelodeeConfigurationFactory configurationFactory) : ControllerBase(
     etagRepository,
     serializer,
@@ -31,29 +35,28 @@ public class SearchController(
     [HttpPost]
     public async Task<IActionResult> SearchAsync([FromBody] SearchRequest searchRequest, CancellationToken cancellationToken = default)
     {
-        if (!ApiRequest.IsAuthorized)
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
         {
-            return Unauthorized(new { error = "Authorization token is invalid" });
+            return ApiUnauthorized();
         }
 
-        var userResult = await userService.GetByApiKeyAsync(SafeParser.ToGuid(ApiRequest.ApiKey) ?? Guid.Empty, cancellationToken).ConfigureAwait(false);
-        if (!userResult.IsSuccess || userResult.Data == null)
+        var requestedPageSize = searchRequest.PageSize ?? 50;
+        if (!TryValidateLimit(requestedPageSize, out var pageSizeValue, out var pagingError))
         {
-            return Unauthorized(new { error = "Authorization token is invalid" });
+            return pagingError!;
         }
 
-        if (userResult.Data.IsLocked)
+        // Short-circuit for empty or too-short queries to reduce unnecessary DB load
+        var query = searchRequest.Query?.Trim();
+        if (string.IsNullOrEmpty(query) || query.Length < 2)
         {
-            return Forbid("User is locked");
+            return Ok(new
+            {
+                meta = new PaginationMetadata(0, pageSizeValue, 1, 0),
+                data = new Models.SearchResult(0, [], 0, [], 0, [], 0, [], 0)
+            });
         }
-
-        if (await blacklistService.IsEmailBlacklistedAsync(userResult.Data.Email).ConfigureAwait(false) ||
-            await blacklistService.IsIpBlacklistedAsync(GetRequestIp(HttpContext)).ConfigureAwait(false))
-        {
-            return StatusCode(StatusCodes.Status403Forbidden, new { error = "User is blacklisted" });
-        }
-
-        var pageSizeValue = searchRequest.PageSize ?? 50;
 
         var includedTyped = SearchInclude.Data;
         var typeValue = searchRequest.Type?.Split(',');
@@ -69,7 +72,7 @@ public class SearchController(
             }
         }
 
-        var searchResult = await searchService.DoSearchAsync(userResult.Data.ApiKey,
+        var searchResult = await searchService.DoSearchAsync(user.ApiKey,
                 ApiRequest.ApiRequestPlayer.UserAgent,
                 searchRequest.Query,
                 searchRequest.AlbumPageValue,
@@ -80,7 +83,7 @@ public class SearchController(
                 searchRequest.FilterByArtistId,
                 cancellationToken)
             .ConfigureAwait(false);
-        var baseUrl = GetBaseUrl(await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false));
+        var baseUrl = await GetBaseUrlAsync(cancellationToken).ConfigureAwait(false);
         return Ok(new
         {
             meta = new PaginationMetadata(
@@ -89,7 +92,7 @@ public class SearchController(
                 1,
                 searchResult.Data.TotalCount < 1 ? 0 : (searchResult.Data.TotalCount + pageSizeValue - 1) / pageSizeValue
             ),
-            data = searchResult.Data.ToSearchResultModel(baseUrl, userResult.Data.ToUserModel(baseUrl), userResult.Data.PublicKey)
+            data = searchResult.Data.ToSearchResultModel(baseUrl, user.ToUserModel(baseUrl), user.PublicKey, GetClientBinding())
         });
     }
 
@@ -97,53 +100,51 @@ public class SearchController(
     [Route("songs")]
     public async Task<IActionResult> SearchSongsAsync(string q, short? page, short? pageSize, Guid? filterByArtistApiKey, CancellationToken cancellationToken = default)
     {
-        if (!ApiRequest.IsAuthorized)
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
         {
-            return Unauthorized(new { error = "Authorization token is invalid" });
-        }
-
-        var userResult = await userService.GetByApiKeyAsync(SafeParser.ToGuid(ApiRequest.ApiKey) ?? Guid.Empty, cancellationToken).ConfigureAwait(false);
-        if (!userResult.IsSuccess || userResult.Data == null)
-        {
-            return Unauthorized(new { error = "Authorization token is invalid" });
-        }
-
-        if (userResult.Data.IsLocked)
-        {
-            return Forbid("User is locked");
-        }
-
-        if (await blacklistService.IsEmailBlacklistedAsync(userResult.Data.Email).ConfigureAwait(false) ||
-            await blacklistService.IsIpBlacklistedAsync(GetRequestIp(HttpContext)).ConfigureAwait(false))
-        {
-            return StatusCode(StatusCodes.Status403Forbidden, new { error = "User is blacklisted" });
+            return ApiUnauthorized();
         }
 
         var pageValue = page ?? 1;
-        var pageSizeValue = pageSize ?? 50;
+        var requestedPageSize = pageSize ?? 50;
+        if (!TryValidatePaging(pageValue, requestedPageSize, out var validatedPage, out var validatedPageSize, out var pageError))
+        {
+            return pageError!;
+        }
 
+        // Short-circuit for empty or too-short queries to reduce unnecessary DB load
+        var query = q?.Trim();
+        if (string.IsNullOrEmpty(query) || query.Length < 2)
+        {
+            return Ok(new
+            {
+                meta = new PaginationMetadata(0, validatedPageSize, validatedPage, 0),
+                data = Array.Empty<Models.Song>()
+            });
+        }
 
-        var searchResult = await searchService.DoSearchAsync(userResult.Data.ApiKey,
+        var searchResult = await searchService.DoSearchAsync(user.ApiKey,
                 ApiRequest.ApiRequestPlayer.UserAgent,
                 q,
                 0,
                 0,
-                pageValue,
-                pageSizeValue,
+                validatedPage,
+                validatedPageSize,
                 SearchInclude.Songs,
                 filterByArtistApiKey,
                 cancellationToken)
             .ConfigureAwait(false);
-        var baseUrl = GetBaseUrl(await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false));
+        var baseUrl = await GetBaseUrlAsync(cancellationToken).ConfigureAwait(false);
         return Ok(new
         {
             meta = new PaginationMetadata(
                 searchResult.Data.TotalCount,
-                pageSizeValue,
-                pageValue,
-                searchResult.Data.TotalCount < 1 ? 0 : (searchResult.Data.TotalCount + pageSizeValue - 1) / pageSizeValue
+                validatedPageSize,
+                validatedPage,
+                searchResult.Data.TotalCount < 1 ? 0 : (searchResult.Data.TotalCount + validatedPageSize - 1) / validatedPageSize
             ),
-            data = searchResult.Data.Songs.Select(x => x.ToSongModel(baseUrl, userResult.Data.ToUserModel(baseUrl), userResult.Data.PublicKey))
+            data = searchResult.Data.Songs.Select(x => x.ToSongModel(baseUrl, user.ToUserModel(baseUrl), user.PublicKey, GetClientBinding()))
         });
     }
 }

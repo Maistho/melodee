@@ -2,6 +2,9 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Asp.Versioning;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using Melodee.Blazor.Controllers.Melodee.Extensions;
 using Melodee.Blazor.Controllers.Melodee.Models;
 using Melodee.Blazor.Filters;
@@ -20,6 +23,9 @@ using Data = Melodee.Common.Data.Models;
 namespace Melodee.Blazor.Controllers.Melodee;
 
 [ApiController]
+[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+[ServiceFilter(typeof(MelodeeApiAuthFilter))]
+[EnableRateLimiting("melodee-api")]
 [ApiVersion(1)]
 [Route("api/v{version:apiVersion}/[controller]")]
 public class UsersController(
@@ -38,11 +44,13 @@ public class UsersController(
     [HttpPost]
     [Route("authenticate")]
     [Route("auth")]
+    [AllowAnonymous]
+    [EnableRateLimiting("melodee-auth")]
     public async Task<IActionResult> AuthenticateUserAsync([FromBody] LoginModel model, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(model.Email) && string.IsNullOrWhiteSpace(model.Password))
         {
-            return BadRequest(new { error = "Email or password are required" });
+            return ApiValidationError("Email or password are required");
         }
         OperationResult<Data.User?> authResult;
         if (model.UserName.Nullify() != null)
@@ -55,22 +63,25 @@ public class UsersController(
         }
         if (!authResult.IsSuccess || authResult.Data == null)
         {
-            return Unauthorized();
+            return ApiUnauthorized("Invalid credentials");
         }
 
         if (authResult.Data.IsLocked)
         {
-            return Forbid("User is locked");
+            return ApiUserLocked();
         }
 
         if (await blacklistService.IsEmailBlacklistedAsync(authResult.Data.Email).ConfigureAwait(false) ||
             await blacklistService.IsIpBlacklistedAsync(GetRequestIp(HttpContext)).ConfigureAwait(false))
         {
-            return StatusCode(StatusCodes.Status403Forbidden, new { error = "User is blacklisted" });
+            return ApiBlacklisted();
         }
 
         var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.UTF8.GetBytes(Configuration.GetSection("MelodeeAuthSettings:Token").Value!);
+        var jwtKey = Configuration.GetValue<string>("Jwt:Key") ?? throw new InvalidOperationException("JWT signing key is not configured");
+        var issuer = Configuration.GetValue<string>("Jwt:Issuer") ?? throw new InvalidOperationException("JWT issuer is not configured");
+        var audience = Configuration.GetValue<string>("Jwt:Audience") ?? throw new InvalidOperationException("JWT audience is not configured");
+        var key = Encoding.UTF8.GetBytes(jwtKey);
         var tokenHoursString = Configuration.GetSection("MelodeeAuthSettings:TokenHours").Value;
         var tokenHours = SafeParser.ToNumber<int>(tokenHoursString);
         var tokenDescriptor = new SecurityTokenDescriptor
@@ -80,7 +91,9 @@ public class UsersController(
                 new Claim(ClaimTypes.Name, authResult.Data.UserName),
                 new Claim(ClaimTypes.Sid, authResult.Data.ApiKey.ToString())
             ]),
-            Expires = DateTime.Now.AddHours(tokenHours),
+            Expires = DateTime.UtcNow.AddHours(tokenHours),
+            Issuer = issuer,
+            Audience = audience,
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
         };
         var token = tokenHandler.CreateToken(tokenDescriptor);
@@ -101,18 +114,13 @@ public class UsersController(
     [Route("me")]
     public async Task<IActionResult> AboutMeAsync(CancellationToken cancellationToken = default)
     {
-        if (!ApiRequest.IsAuthorized)
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
         {
-            return Unauthorized(new { error = "Authorization token is invalid" });
+            return ApiUnauthorized();
         }
 
-        var userResult = await userService.GetByApiKeyAsync(SafeParser.ToGuid(ApiRequest.ApiKey) ?? Guid.Empty, cancellationToken).ConfigureAwait(false);
-        if (!userResult.IsSuccess || userResult.Data == null)
-        {
-            return Unauthorized(new { error = "Authorization token is invalid" });
-        }
-
-        return Ok(userResult.Data.ToUserModel(GetBaseUrl(await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false))));
+        return Ok(user.ToUserModel(await GetBaseUrlAsync(cancellationToken).ConfigureAwait(false)));
     }
 
     /// <summary>
@@ -122,30 +130,19 @@ public class UsersController(
     [Route("lastPlayed")]
     public async Task<IActionResult> Last3PlayedSongsForUserAsync(short page, short pageSize, CancellationToken cancellationToken = default)
     {
-        if (!ApiRequest.IsAuthorized)
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
         {
-            return Unauthorized(new { error = "Authorization token is invalid" });
+            return ApiUnauthorized();
         }
 
-        var userResult = await userService.GetByApiKeyAsync(SafeParser.ToGuid(ApiRequest.ApiKey) ?? Guid.Empty, cancellationToken).ConfigureAwait(false);
-        if (!userResult.IsSuccess || userResult.Data == null)
+        if (!TryValidatePaging(page, pageSize, out _, out _, out var pagingError))
         {
-            return Unauthorized(new { error = "Authorization token is invalid" });
-        }
-
-        if (userResult.Data.IsLocked)
-        {
-            return Forbid("User is locked");
-        }
-
-        if (await blacklistService.IsEmailBlacklistedAsync(userResult.Data.Email).ConfigureAwait(false) ||
-            await blacklistService.IsIpBlacklistedAsync(GetRequestIp(HttpContext)).ConfigureAwait(false))
-        {
-            return StatusCode(StatusCodes.Status403Forbidden, new { error = "User is blacklisted" });
+            return pagingError!;
         }
 
         short numberOfLastPlayedSongs = 3;
-        var userLastPlayedResult = await userService.UserLastPlayedSongsAsync(userResult.Data.Id, numberOfLastPlayedSongs, cancellationToken).ConfigureAwait(false);
+        var userLastPlayedResult = await userService.UserLastPlayedSongsAsync(user.Id, numberOfLastPlayedSongs, cancellationToken).ConfigureAwait(false);
         return Ok(new
         {
             meta = new PaginationMetadata(
@@ -160,43 +157,32 @@ public class UsersController(
 
     [HttpGet]
     [Route("playlists")]
+    [RequireCapability(UserCapability.Playlist)]
     public async Task<IActionResult> UsersPlaylistsAsync(int? page, short? pageSize, CancellationToken cancellationToken = default)
     {
-        if (!ApiRequest.IsAuthorized)
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
         {
-            return Unauthorized(new { error = "Authorization token is invalid" });
-        }
-
-        var userResult = await userService.GetByApiKeyAsync(SafeParser.ToGuid(ApiRequest.ApiKey) ?? Guid.Empty, cancellationToken).ConfigureAwait(false);
-        if (!userResult.IsSuccess || userResult.Data == null)
-        {
-            return Unauthorized(new { error = "Authorization token is invalid" });
-        }
-
-        if (userResult.Data.IsLocked)
-        {
-            return Forbid("User is locked");
-        }
-
-        if (await blacklistService.IsEmailBlacklistedAsync(userResult.Data.Email).ConfigureAwait(false) ||
-            await blacklistService.IsIpBlacklistedAsync(GetRequestIp(HttpContext)).ConfigureAwait(false))
-        {
-            return StatusCode(StatusCodes.Status403Forbidden, new { error = "User is blacklisted" });
+            return ApiUnauthorized();
         }
 
         var pageValue = page ?? 1;
         var pageSizeValue = pageSize ?? 50;
-        var playlists = await playlistService.ListAsync(userResult.Data.ToUserInfo(), new PagedRequest { Page = pageValue, PageSize = pageSizeValue }, cancellationToken).ConfigureAwait(false);
-        var baseUrl = GetBaseUrl(await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false));
+        if (!TryValidatePaging(pageValue, pageSizeValue, out var validatedPage, out var validatedPageSize, out var pagingError))
+        {
+            return pagingError!;
+        }
+        var playlists = await playlistService.ListAsync(user.ToUserInfo(), new PagedRequest { Page = validatedPage, PageSize = validatedPageSize }, cancellationToken).ConfigureAwait(false);
+        var baseUrl = await GetBaseUrlAsync(cancellationToken).ConfigureAwait(false);
         return Ok(new
         {
             meta = new PaginationMetadata(
                 playlists.TotalCount,
-                pageSizeValue,
-                pageValue,
+                validatedPageSize,
+                validatedPage,
                 playlists.TotalPages
             ),
-            data = playlists.Data.Select(x => x.ToPlaylistModel(baseUrl, userResult.Data.ToUserModel(baseUrl))).ToArray()
+            data = playlists.Data.Select(x => x.ToPlaylistModel(baseUrl, user.ToUserModel(baseUrl))).ToArray()
         });
     }
 }
