@@ -75,6 +75,8 @@ public class ScrobbleController(
                     scrobbleRequest.SongId,
                     scrobbleRequest.PlayedDuration,
                     scrobbleRequest.PlayerName,
+                    ApiRequest.ApiRequestPlayer?.UserAgent,
+                    ApiRequest.IpAddress,
                     cancellationToken)
                 .ConfigureAwait(false);
         }
@@ -85,6 +87,8 @@ public class ScrobbleController(
                     scrobbleRequest.SongId,
                     false,
                     scrobbleRequest.PlayerName,
+                    ApiRequest.ApiRequestPlayer?.UserAgent,
+                    ApiRequest.IpAddress,
                     cancellationToken)
                 .ConfigureAwait(false);
         }

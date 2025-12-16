@@ -133,6 +133,8 @@ public abstract class ControllerBase(EtagRepository etagRepository, ISerializer 
 
 
         values.Add(new KeyValue("QueryString", context.HttpContext.Request.QueryString.ToString()));
+        var ipAddress = GetRequestIp(context.HttpContext);
+
         ApiRequest = new ApiRequest
         (
             values.ToArray(),
@@ -151,8 +153,9 @@ public abstract class ControllerBase(EtagRepository etagRepository, ISerializer 
                 values.FirstOrDefault(x => x.Key == "User-Agent")?.Value,
                 values.FirstOrDefault(x => x.Key == "c")?.Value,
                 values.FirstOrDefault(x => x.Key == "Host")?.Value,
-                GetRequestIp(context.HttpContext)
-            )
+                ipAddress
+            ),
+            ipAddress
         );
         Trace.WriteLine($"-*-> User [{ApiRequest.Username}] : {Serializer.Serialize(ApiRequest)}");
         await next().ConfigureAwait(false);

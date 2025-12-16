@@ -185,7 +185,7 @@ namespace Melodee.Common.Migrations
                     b.HasIndex("ArtistId", "SortName")
                         .IsUnique();
 
-                    b.ToTable("Albums");
+                    b.ToTable("Albums", (string)null);
                 });
 
             modelBuilder.Entity("Melodee.Common.Data.Models.Artist", b =>
@@ -329,7 +329,7 @@ namespace Melodee.Common.Migrations
                     b.HasIndex("SpotifyId")
                         .IsUnique();
 
-                    b.ToTable("Artists");
+                    b.ToTable("Artists", (string)null);
                 });
 
             modelBuilder.Entity("Melodee.Common.Data.Models.ArtistRelation", b =>
@@ -392,7 +392,7 @@ namespace Melodee.Common.Migrations
                     b.HasIndex("ArtistId", "RelatedArtistId")
                         .IsUnique();
 
-                    b.ToTable("ArtistRelation");
+                    b.ToTable("ArtistRelation", (string)null);
                 });
 
             modelBuilder.Entity("Melodee.Common.Data.Models.Bookmark", b =>
@@ -499,7 +499,7 @@ namespace Melodee.Common.Migrations
                     b.HasIndex("UserId", "SongId")
                         .IsUnique();
 
-                    b.ToTable("Bookmarks");
+                    b.ToTable("Bookmarks", (string)null);
                 });
 
             modelBuilder.Entity("Melodee.Common.Data.Models.Contributor", b =>
@@ -580,7 +580,7 @@ namespace Melodee.Common.Migrations
                     b.HasIndex("ContributorName", "MetaTagIdentifier", "SongId")
                         .IsUnique();
 
-                    b.ToTable("Contributors");
+                    b.ToTable("Contributors", (string)null);
                 });
 
             modelBuilder.Entity("Melodee.Common.Data.Models.Library", b =>
@@ -652,7 +652,7 @@ namespace Melodee.Common.Migrations
                         .IsUnique()
                         .HasFilter("\"Type\" != 3");
 
-                    b.ToTable("Libraries");
+                    b.ToTable("Libraries", (string)null);
 
                     b.HasData(
                         new
@@ -753,7 +753,7 @@ namespace Melodee.Common.Migrations
 
                     b.HasIndex("LibraryId");
 
-                    b.ToTable("LibraryScanHistories");
+                    b.ToTable("LibraryScanHistories", (string)null);
                 });
 
             modelBuilder.Entity("Melodee.Common.Data.Models.PlayQueue", b =>
@@ -823,7 +823,7 @@ namespace Melodee.Common.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("PlayQues");
+                    b.ToTable("PlayQues", (string)null);
                 });
 
             modelBuilder.Entity("Melodee.Common.Data.Models.Player", b =>
@@ -906,7 +906,7 @@ namespace Melodee.Common.Migrations
 
                     b.HasIndex("UserId", "Client", "UserAgent");
 
-                    b.ToTable("Players");
+                    b.ToTable("Players", (string)null);
                 });
 
             modelBuilder.Entity("Melodee.Common.Data.Models.Playlist", b =>
@@ -982,7 +982,7 @@ namespace Melodee.Common.Migrations
                     b.HasIndex("UserId", "Name")
                         .IsUnique();
 
-                    b.ToTable("Playlists");
+                    b.ToTable("Playlists", (string)null);
                 });
 
             modelBuilder.Entity("Melodee.Common.Data.Models.PlaylistSong", b =>
@@ -1006,7 +1006,7 @@ namespace Melodee.Common.Migrations
                     b.HasIndex("SongId", "PlaylistId")
                         .IsUnique();
 
-                    b.ToTable("PlaylistSong");
+                    b.ToTable("PlaylistSong", (string)null);
                 });
 
             modelBuilder.Entity("Melodee.Common.Data.Models.RadioStation", b =>
@@ -1063,7 +1063,7 @@ namespace Melodee.Common.Migrations
                     b.HasIndex("ApiKey")
                         .IsUnique();
 
-                    b.ToTable("RadioStations");
+                    b.ToTable("RadioStations", (string)null);
                 });
 
             modelBuilder.Entity("Melodee.Common.Data.Models.SearchHistory", b =>
@@ -1105,7 +1105,7 @@ namespace Melodee.Common.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("SearchHistories");
+                    b.ToTable("SearchHistories", (string)null);
                 });
 
             modelBuilder.Entity("Melodee.Common.Data.Models.Setting", b =>
@@ -1170,7 +1170,7 @@ namespace Melodee.Common.Migrations
                     b.HasIndex("Key")
                         .IsUnique();
 
-                    b.ToTable("Settings");
+                    b.ToTable("Settings", (string)null);
 
                     b.HasData(
                         new
@@ -2368,7 +2368,7 @@ namespace Melodee.Common.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Shares");
+                    b.ToTable("Shares", (string)null);
                 });
 
             modelBuilder.Entity("Melodee.Common.Data.Models.ShareActivity", b =>
@@ -2403,7 +2403,7 @@ namespace Melodee.Common.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ShareActivities");
+                    b.ToTable("ShareActivities", (string)null);
                 });
 
             modelBuilder.Entity("Melodee.Common.Data.Models.Song", b =>
@@ -2585,7 +2585,7 @@ namespace Melodee.Common.Migrations
                     b.HasIndex("AlbumId", "SongNumber")
                         .IsUnique();
 
-                    b.ToTable("Songs");
+                    b.ToTable("Songs", (string)null);
                 });
 
             modelBuilder.Entity("Melodee.Common.Data.Models.User", b =>
@@ -2722,7 +2722,7 @@ namespace Melodee.Common.Migrations
                     b.HasIndex("UserName")
                         .IsUnique();
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("Melodee.Common.Data.Models.UserAlbum", b =>
@@ -2794,7 +2794,7 @@ namespace Melodee.Common.Migrations
                     b.HasIndex("UserId", "AlbumId")
                         .IsUnique();
 
-                    b.ToTable("UserAlbums");
+                    b.ToTable("UserAlbums", (string)null);
                 });
 
             modelBuilder.Entity("Melodee.Common.Data.Models.UserArtist", b =>
@@ -2860,7 +2860,7 @@ namespace Melodee.Common.Migrations
                     b.HasIndex("UserId", "ArtistId")
                         .IsUnique();
 
-                    b.ToTable("UserArtists");
+                    b.ToTable("UserArtists", (string)null);
                 });
 
             modelBuilder.Entity("Melodee.Common.Data.Models.UserPin", b =>
@@ -2915,7 +2915,7 @@ namespace Melodee.Common.Migrations
                     b.HasIndex("UserId", "PinId", "PinType")
                         .IsUnique();
 
-                    b.ToTable("UserPins");
+                    b.ToTable("UserPins", (string)null);
                 });
 
             modelBuilder.Entity("Melodee.Common.Data.Models.UserSong", b =>
@@ -2987,7 +2987,7 @@ namespace Melodee.Common.Migrations
                     b.HasIndex("UserId", "SongId")
                         .IsUnique();
 
-                    b.ToTable("UserSongs");
+                    b.ToTable("UserSongs", (string)null);
                 });
 
             modelBuilder.Entity("Melodee.Common.Data.Models.UserSongPlayHistory", b =>
@@ -3034,7 +3034,7 @@ namespace Melodee.Common.Migrations
 
                     b.HasIndex("UserId", "PlayedAt");
 
-                    b.ToTable("UserSongPlayHistories");
+                    b.ToTable("UserSongPlayHistories", (string)null);
                 });
 
             modelBuilder.Entity("Melodee.Common.Data.Models.Album", b =>

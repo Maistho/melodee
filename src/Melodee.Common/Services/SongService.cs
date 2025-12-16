@@ -529,12 +529,17 @@ public class SongService(
             range = RangeParser.ParseRange(rangeHeader, songStreamInfo.FileSize);
             if (range == null)
             {
+                Logger.Warning("[{ServiceName}] Invalid range request for song [{ApiKey}]. RangeHeader: [{RangeHeader}], FileSize: [{FileSize}]",
+                    nameof(SongService), apiKey, rangeHeader, songStreamInfo.FileSize);
                 return new MelodeeModels.OperationResult<StreamingDescriptor>("Invalid range request")
                 {
                     Type = MelodeeModels.OperationResponseType.Error,
                     Data = null!
                 };
             }
+
+            Logger.Debug("[{ServiceName}] Parsed range for song [{ApiKey}]: Start={Start}, End={End}, FileSize={FileSize}",
+                nameof(SongService), apiKey, range.Start, range.End, songStreamInfo.FileSize);
         }
 
         // Create base headers

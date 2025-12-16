@@ -1764,7 +1764,10 @@ public class OpenSubsonicApiService(
             {
                 await scrobbleService.NowPlaying(authResponse.UserInfo, ApiKeyFromId(idAndIndex.id) ?? Guid.Empty,
                     times?.Length > idAndIndex.index ? times[idAndIndex.index] : null,
-                    apiRequest.ApiRequestPlayer?.Client ?? string.Empty, cancellationToken).ConfigureAwait(false);
+                    apiRequest.ApiRequestPlayer?.Client ?? string.Empty,
+                    apiRequest.ApiRequestPlayer?.UserAgent,
+                    apiRequest.IpAddress,
+                    cancellationToken).ConfigureAwait(false);
             }
         }
         else
@@ -1781,7 +1784,9 @@ public class OpenSubsonicApiService(
                     await scrobbleService.Scrobble(authResponse.UserInfo,
                             id,
                             false,
-                            apiRequest.ApiRequestPlayer.Client ?? string.Empty,
+                            apiRequest.ApiRequestPlayer?.Client ?? string.Empty,
+                            apiRequest.ApiRequestPlayer?.UserAgent,
+                            apiRequest.IpAddress,
                             cancellationToken)
                         .ConfigureAwait(false);
                 }

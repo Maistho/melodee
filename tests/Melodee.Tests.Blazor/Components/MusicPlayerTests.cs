@@ -10,6 +10,7 @@ using Melodee.Common.Plugins.Scrobbling;
 using Melodee.Common.Services;
 using Melodee.Common.Services.Caching;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.JSInterop;
@@ -48,8 +49,10 @@ public class MusicPlayerTests : BunitContext
         // Register mocks and required services in DI container
         Services.AddSingleton(_mockBaseUrlService.Object);
         Services.AddSingleton(_mockScrobbleService.Object);
+        Services.AddSingleton<IHttpContextAccessor>(new Mock<IHttpContextAccessor>().Object);
         Services.AddSingleton(_mockJSRuntime.Object);
         Services.AddSingleton(_mockConfiguration.Object);
+        Services.AddSingleton<ILogger>(logger);
         Services.AddSingleton<AuthenticationStateProvider>(new TestAuthStateProvider());
         Services.AddSingleton<Radzen.DialogService>();
         Services.AddSingleton<Radzen.NotificationService>();

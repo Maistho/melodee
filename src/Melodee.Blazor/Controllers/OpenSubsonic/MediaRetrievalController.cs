@@ -276,58 +276,65 @@ public class MediaRetrievalController(ISerializer serializer, EtagRepository eta
 
         var descriptorResult = await openSubsonicApiService.GetStreamingDescriptorAsync(request, ApiRequest, cancellationToken).ConfigureAwait(false);
 
-        if (descriptorResult.IsSuccess && descriptorResult.Data != null)
+        if (!descriptorResult.IsSuccess || descriptorResult.Data == null)
         {
-            var descriptor = descriptorResult.Data;
-
-            // Create response headers
-            var statusCode = descriptor.Range != null ? 206 : 200;
-            var responseHeaders = RangeParser.CreateResponseHeaders(descriptor, statusCode);
-
-            foreach (var header in responseHeaders)
+            // Check if this is a range error - return 416 Range Not Satisfiable
+            if (descriptorResult.Messages?.Any(m => m.Contains("range", StringComparison.OrdinalIgnoreCase)) == true)
             {
-                Response.Headers[header.Key] = header.Value;
+                Response.StatusCode = (int)HttpStatusCode.RequestedRangeNotSatisfiable;
+                return StatusCode((int)HttpStatusCode.RequestedRangeNotSatisfiable);
             }
 
-            Response.StatusCode = statusCode;
-
-            // Return efficient file streaming result
-            if (descriptor.Range != null)
+            Response.StatusCode = (int)HttpStatusCode.NotFound;
+            return new JsonStringResult(Serializer.Serialize(new ResponseModel
             {
-                // For range requests
-                var fileStream = new FileStream(descriptor.FilePath, FileMode.Open, FileAccess.Read, FileShare.Read,
-                    bufferSize: 65536, FileOptions.Asynchronous | FileOptions.SequentialScan);
-
-                fileStream.Seek(descriptor.Range.Start, SeekOrigin.Begin);
-                var rangeStream = new BoundedStream(fileStream, descriptor.Range.GetContentLength(descriptor.FileSize));
-
-                return new FileStreamResult(rangeStream, descriptor.ContentType)
-                {
-                    EnableRangeProcessing = true,
-                    FileDownloadName = descriptor.IsDownload ? descriptor.FileName : null
-                };
-            }
-            else
-            {
-                // For full file streaming
-                return new PhysicalFileResult(descriptor.FilePath, descriptor.ContentType)
-                {
-                    EnableRangeProcessing = true,
-                    FileDownloadName = descriptor.IsDownload ? descriptor.FileName : null
-                };
-            }
+                UserInfo = UserInfo.BlankUserInfo,
+                IsSuccess = false,
+                ResponseData = await openSubsonicApiService.NewApiResponse(
+                    false,
+                    string.Empty,
+                    string.Empty,
+                    Error.DataNotFoundError)
+            })!);
         }
 
-        Response.StatusCode = (int)HttpStatusCode.NotFound;
-        return new JsonStringResult(Serializer.Serialize(new ResponseModel
+        var descriptor = descriptorResult.Data;
+
+        // Create response headers
+        var statusCode = descriptor.Range != null ? 206 : 200;
+        var responseHeaders = RangeParser.CreateResponseHeaders(descriptor, statusCode);
+
+        foreach (var header in responseHeaders)
         {
-            UserInfo = UserInfo.BlankUserInfo,
-            IsSuccess = false,
-            ResponseData = await openSubsonicApiService.NewApiResponse(
-                false,
-                string.Empty,
-                string.Empty,
-                Error.DataNotFoundError)
-        })!);
+            Response.Headers[header.Key] = header.Value;
+        }
+
+        Response.StatusCode = statusCode;
+
+        // Return efficient file streaming result
+        if (descriptor.Range != null)
+        {
+            // For range requests
+            var fileStream = new FileStream(descriptor.FilePath, FileMode.Open, FileAccess.Read, FileShare.Read,
+                bufferSize: 65536, FileOptions.Asynchronous | FileOptions.SequentialScan);
+
+            fileStream.Seek(descriptor.Range.Start, SeekOrigin.Begin);
+            var rangeStream = new BoundedStream(fileStream, descriptor.Range.GetContentLength(descriptor.FileSize));
+
+            return new FileStreamResult(rangeStream, descriptor.ContentType)
+            {
+                EnableRangeProcessing = true,
+                FileDownloadName = descriptor.IsDownload ? descriptor.FileName : null
+            };
+        }
+        else
+        {
+            // For full file streaming
+            return new PhysicalFileResult(descriptor.FilePath, descriptor.ContentType)
+            {
+                EnableRangeProcessing = true,
+                FileDownloadName = descriptor.IsDownload ? descriptor.FileName : null
+            };
+        }
     }
 }

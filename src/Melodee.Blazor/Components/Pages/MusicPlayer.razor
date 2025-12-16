@@ -7,6 +7,8 @@
 @inject ScrobbleService ScrobbleService
 @inject IJSRuntime JsRuntime
 @inject IBaseUrlService BaseUrlService
+@inject Serilog.ILogger Logger
+@inject IHttpContextAccessor HttpContextAccessor
 @implements IAsyncDisposable
 
 <div class="music-player-container">
@@ -108,13 +110,27 @@
 
 
     private bool _nowPlayingRecordedForCurrentSong;
+    private string? _userAgent;
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
         _objRef = DotNetObjectReference.Create(this);
 
+        Logger.Information("[MusicPlayer] Initializing ScrobbleService for user [{User}]", 
+            CurrentUser?.Identity?.Name ?? "Unknown");
         await ScrobbleService.InitializeAsync(Configuration);
+        
+        // Get user agent from browser
+        try
+        {
+            _userAgent = await JsRuntime.InvokeAsync<string>("getUserAgent");
+            Logger.Information("[MusicPlayer] User agent: [{UserAgent}]", _userAgent);
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning(ex, "[MusicPlayer] Failed to get user agent");
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -139,15 +155,40 @@
         await InvokeAsync(StateHasChanged);
         if (!_nowPlayingRecordedForCurrentSong && currentTime > MinimumForNowPlaying && CurrentUser != null)
         {
-            await ScrobbleService.NowPlaying(UserInfo.FromClaimsPrincipal(CurrentUser), CurrentSong.ApiKey, currentTime, Configuration.GetValue<string>(SettingRegistry.OpenSubsonicServerType) ?? "Melodee");
-            _nowPlayingRecordedForCurrentSong = true;
+            _nowPlayingRecordedForCurrentSong = true; // Set flag immediately to prevent race condition
+            Logger.Information("[MusicPlayer] OnTimeUpdate triggering NowPlaying for song [{SongId}] at [{Time}] seconds",
+                CurrentSong.ApiKey, currentTime);
+            
+            var ipAddress = HttpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString() 
+                ?? HttpContextAccessor.HttpContext?.Request?.Headers["X-Forwarded-For"].FirstOrDefault()
+                ?? HttpContextAccessor.HttpContext?.Request?.Headers["X-Real-IP"].FirstOrDefault();
+            
+            await ScrobbleService.NowPlaying(
+                UserInfo.FromClaimsPrincipal(CurrentUser), 
+                CurrentSong.ApiKey, 
+                currentTime, 
+                Configuration.GetValue<string>(SettingRegistry.OpenSubsonicServerType) ?? "Melodee",
+                _userAgent,
+                ipAddress);
         }
     }
 
     [JSInvokable]
     public async Task OnSongEnded()
     {
-        await ScrobbleService.Scrobble(UserInfo.FromClaimsPrincipal(CurrentUser!), CurrentSong.ApiKey, false, Configuration.GetValue<string>(SettingRegistry.OpenSubsonicServerType) ?? "Melodee");
+        Logger.Information("[MusicPlayer] OnSongEnded triggering Scrobble for song [{SongId}]", CurrentSong.ApiKey);
+        
+        var ipAddress = HttpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString() 
+            ?? HttpContextAccessor.HttpContext?.Request?.Headers["X-Forwarded-For"].FirstOrDefault()
+            ?? HttpContextAccessor.HttpContext?.Request?.Headers["X-Real-IP"].FirstOrDefault();
+        
+        await ScrobbleService.Scrobble(
+            UserInfo.FromClaimsPrincipal(CurrentUser!), 
+            CurrentSong.ApiKey, 
+            false, 
+            Configuration.GetValue<string>(SettingRegistry.OpenSubsonicServerType) ?? "Melodee",
+            _userAgent,
+            ipAddress);
         await NextSong();
     }
 

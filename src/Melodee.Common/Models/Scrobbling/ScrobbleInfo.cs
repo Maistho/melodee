@@ -28,7 +28,10 @@ public record ScrobbleInfo(
     int? SongNumber,
     string? SongArtist,
     Instant CreatedAt,
-    string PlayerName
+    string PlayerName,
+    string? UserAgent = null,
+    string? IpAddress = null,
+    int? SecondsPlayed = null
 )
 {
     public Instant LastScrobbledAt { get; set; } = Instant.FromDateTimeOffset(DateTimeOffset.UtcNow);

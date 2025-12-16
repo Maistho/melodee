@@ -21,7 +21,8 @@ public abstract class CommonBase : Controller
         null,
         null,
         null,
-        new UserPlayer(null, null, null, null));
+        new UserPlayer(null, null, null, null),
+        null);
 
     protected string GetBaseUrl(IMelodeeConfiguration configuration)
     {
