@@ -9,6 +9,7 @@ using Melodee.Common.Extensions;
 using Melodee.Common.Models;
 using Melodee.Common.Models.Collection;
 using Melodee.Common.Models.Extensions;
+using Melodee.Common.Plugins.Conversion.Image;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services.Caching;
 using Melodee.Common.Utility;
@@ -157,26 +158,29 @@ public class PlaylistService(
 
         await using (var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
         {
-            var query = scopedContext.Playlists.AsNoTracking();
+            var baseQuery = scopedContext.Playlists
+                .AsNoTracking()
+                .Include(p => p.User);
 
             // Get total count
-            playlistCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);
+            playlistCount = await baseQuery.CountAsync(cancellationToken).ConfigureAwait(false);
 
             if (!pagedRequest.IsTotalCountOnlyRequest)
             {
                 // Apply ordering (default by Name if no order specified)
                 var orderBy = pagedRequest.OrderByValue();
+                IQueryable<Playlist> orderedQuery;
                 if (string.IsNullOrEmpty(orderBy) || orderBy == "\"Id\" ASC")
                 {
-                    query = query.OrderBy(p => p.Name);
+                    orderedQuery = baseQuery.OrderBy(p => p.Name);
                 }
                 else
                 {
                     // For complex ordering, fall back to the existing pattern if needed
-                    query = query.OrderBy(p => p.Id); // Simple fallback
+                    orderedQuery = baseQuery.OrderBy(p => p.Id); // Simple fallback
                 }
 
-                playlists = await query
+                playlists = await orderedQuery
                     .Skip(pagedRequest.SkipValue)
                     .Take(pagedRequest.TakeValue)
                     .ToListAsync(cancellationToken)
@@ -660,7 +664,9 @@ public class PlaylistService(
 
         var playlistImageFilename = playlist.ToImageFileName(playlistLibrary.Data.Path);
 
-        await File.WriteAllBytesAsync(playlistImageFilename, imageBytes, cancellationToken).ConfigureAwait(false);
+        // Convert to GIF format to support animations
+        var gifImageBytes = await ImageConvertor.ConvertToGifFormat(imageBytes, cancellationToken).ConfigureAwait(false);
+        await File.WriteAllBytesAsync(playlistImageFilename, gifImageBytes, cancellationToken).ConfigureAwait(false);
 
         playlist.LastUpdatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow);
         await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

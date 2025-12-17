@@ -49,8 +49,14 @@ public sealed class ArtistsController(
         nameof(ArtistDataInfo.Name)
     ];
 
+    /// <summary>
+    /// Get an artist by ID.
+    /// </summary>
     [HttpGet]
     [Route("{id:guid}")]
+    [ProducesResponseType(typeof(Artist), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ArtistById(Guid id, CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)
@@ -81,7 +87,13 @@ public sealed class ArtistsController(
             user.ToUserModel(baseUrl)));
     }
 
+    /// <summary>
+    /// List all artists with pagination and ordering.
+    /// </summary>
     [HttpGet]
+    [ProducesResponseType(typeof(ArtistPagedResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ListAsync(string? q, short page, short pageSize, string? orderBy, string? orderDirection, CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)
@@ -137,8 +149,14 @@ public sealed class ArtistsController(
         });
     }
 
+    /// <summary>
+    /// Get recently added artists.
+    /// </summary>
     [HttpGet]
     [Route("recent")]
+    [ProducesResponseType(typeof(ArtistPagedResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> RecentlyAddedAsync(short limit, CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)
@@ -184,8 +202,15 @@ public sealed class ArtistsController(
         });
     }
 
+    /// <summary>
+    /// Get albums for an artist with pagination.
+    /// </summary>
     [HttpGet]
     [Route("{id:guid}/albums")]
+    [ProducesResponseType(typeof(AlbumPagedResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ArtistAlbumsAsync(Guid id, short page, short pageSize, CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)
@@ -240,8 +265,15 @@ public sealed class ArtistsController(
         });
     }
 
+    /// <summary>
+    /// Get songs for an artist with pagination and search.
+    /// </summary>
     [HttpGet]
     [Route("{id:guid}/songs")]
+    [ProducesResponseType(typeof(SongPagedResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ArtistSongsAsync(Guid id, string? q, short page, short pageSize, CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)
@@ -297,8 +329,14 @@ public sealed class ArtistsController(
         });
     }
 
+    /// <summary>
+    /// Toggle starred status for an artist.
+    /// </summary>
     [HttpPost]
     [Route("starred/{apiKey:guid}/{isStarred:bool}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ToggleArtistStarred(Guid apiKey, bool isStarred, CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)
@@ -332,8 +370,14 @@ public sealed class ArtistsController(
         return ApiBadRequest("Unable to toggle star for artist for user.");
     }
 
+    /// <summary>
+    /// Set rating for an artist.
+    /// </summary>
     [HttpPost]
     [Route("setrating/{apiKey:guid}/{rating:int}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> SetArtistRating(Guid apiKey, int rating, CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)
@@ -367,8 +411,14 @@ public sealed class ArtistsController(
         return ApiBadRequest("Unable to set rating for artist for user.");
     }
 
+    /// <summary>
+    /// Toggle hated status for an artist.
+    /// </summary>
     [HttpPost]
     [Route("hated/{apiKey:guid}/{isHated:bool}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ToggleArtistHated(Guid apiKey, bool isHated, CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)

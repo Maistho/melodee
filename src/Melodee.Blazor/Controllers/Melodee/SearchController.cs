@@ -32,7 +32,13 @@ public class SearchController(
     configuration,
     configurationFactory)
 {
+    /// <summary>
+    /// Search for artists, albums, songs, and playlists.
+    /// </summary>
     [HttpPost]
+    [ProducesResponseType(typeof(SearchResultResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> SearchAsync([FromBody] SearchRequest searchRequest, CancellationToken cancellationToken = default)
     {
         var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
@@ -96,8 +102,14 @@ public class SearchController(
         });
     }
 
+    /// <summary>
+    /// Search for songs with pagination.
+    /// </summary>
     [HttpGet]
     [Route("songs")]
+    [ProducesResponseType(typeof(SongPagedResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> SearchSongsAsync(string q, short? page, short? pageSize, Guid? filterByArtistApiKey, CancellationToken cancellationToken = default)
     {
         var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);

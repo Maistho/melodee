@@ -124,17 +124,22 @@ public abstract class ControllerBase(
 
     protected bool TryValidatePaging(int page, int pageSize, out short normalizedPage, out short normalizedPageSize, out IActionResult? error)
     {
+        const int maxPageSize = 200;
         normalizedPage = (short)Math.Max(page, 1);
-        normalizedPageSize = (short)Math.Clamp(pageSize, 1, 200);
+        normalizedPageSize = (short)Math.Clamp(pageSize, 1, maxPageSize);
         error = null;
 
         if (page < 1)
         {
             error = BadRequest(new ApiError(ApiError.Codes.ValidationError, "page must be >= 1", GetCorrelationId()));
         }
-        else if (pageSize < 1 || pageSize > 200)
+        else if (pageSize < 1)
         {
-            error = BadRequest(new ApiError(ApiError.Codes.ValidationError, "pageSize must be between 1 and 200", GetCorrelationId()));
+            error = BadRequest(new ApiError(ApiError.Codes.ValidationError, "pageSize must be >= 1", GetCorrelationId()));
+        }
+        else if (pageSize > maxPageSize)
+        {
+            error = BadRequest(new ApiError(ApiError.Codes.ValidationError, $"pageSize {pageSize} exceeds maximum allowed value of {maxPageSize}", GetCorrelationId()));
         }
 
         return error == null;

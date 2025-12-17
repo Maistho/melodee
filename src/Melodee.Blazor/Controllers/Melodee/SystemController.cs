@@ -33,9 +33,14 @@ public sealed class SystemController(
     configuration,
     configurationFactory)
 {
+    /// <summary>
+    /// Get server information.
+    /// </summary>
     [HttpGet]
     [Route("info")]
     [AllowAnonymous]
+    [ProducesResponseType(typeof(ServerInfo), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetServerInfo(CancellationToken cancellationToken = default)
     {
         var configuration = await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
@@ -64,6 +69,8 @@ public sealed class SystemController(
     [HttpGet]
     [Route("stats")]
     [RequireCapability(UserCapability.Admin)]
+    [ProducesResponseType(typeof(Statistic[]), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetSystemStatsAsync(CancellationToken cancellationToken = default)
     {
         var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);

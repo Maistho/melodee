@@ -51,8 +51,14 @@ public class SongsController(
         nameof(SongDataInfo.PlayedCount)
     ];
 
+    /// <summary>
+    /// Get a song by ID.
+    /// </summary>
     [HttpGet]
     [Route("{id:guid}")]
+    [ProducesResponseType(typeof(Models.Song), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> SongById(Guid id, CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)
@@ -95,7 +101,13 @@ public class SongsController(
             .ToSongModel(baseUrl, user.ToUserModel(baseUrl), user.PublicKey, GetClientBinding()));
     }
 
+    /// <summary>
+    /// List all songs with pagination and ordering.
+    /// </summary>
     [HttpGet]
+    [ProducesResponseType(typeof(SongPagedResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ListAsync(short page, short pageSize, string? orderBy, string? orderDirection, CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)
@@ -145,8 +157,14 @@ public class SongsController(
         });
     }
 
+    /// <summary>
+    /// Get recently added songs.
+    /// </summary>
     [HttpGet]
     [Route("recent")]
+    [ProducesResponseType(typeof(SongPagedResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> RecentlyAddedAsync(short limit, CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)
@@ -191,8 +209,14 @@ public class SongsController(
         });
     }
 
+    /// <summary>
+    /// Toggle starred status for a song.
+    /// </summary>
     [HttpPost]
     [Route("starred/{apiKey:guid}/{isStarred:bool}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult>? ToggleSongStarred(Guid apiKey, bool isStarred, CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)
@@ -226,9 +250,15 @@ public class SongsController(
         return ApiBadRequest("Unable to toggle star for song for user.");
     }
 
+    /// <summary>
+    /// Set rating for a song.
+    /// </summary>
     [HttpPost]
     [Route("setrating/{apiKey:guid}/{rating:int}")]
-    public async Task<IActionResult>? ToggleSongStarred(Guid apiKey, int rating, CancellationToken cancellationToken = default)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult>? SetSongRating(Guid apiKey, int rating, CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)
         {
@@ -260,8 +290,14 @@ public class SongsController(
         return ApiBadRequest("Unable to set rating for song for user.");
     }
 
+    /// <summary>
+    /// Toggle hated status for a song.
+    /// </summary>
     [HttpPost]
     [Route("hated/{apiKey:guid}/{isHated:bool}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ToggleSongHated(Guid apiKey, bool isHated, CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)
@@ -295,10 +331,17 @@ public class SongsController(
         return ApiBadRequest("Unable to toggle hated for song for user.");
     }
 
+    /// <summary>
+    /// Stream a song. Requires a valid auth token.
+    /// </summary>
     [HttpGet]
     [HttpHead]
     [AllowAnonymous]
     [Route("/song/stream/{apiKey:guid}/{userApiKey:guid}/{authToken}")]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status206PartialContent)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> StreamSong(Guid apiKey, Guid userApiKey, string authToken, CancellationToken cancellationToken = default)
     {
         var userResult = await userService.GetByApiKeyAsync(userApiKey, cancellationToken).ConfigureAwait(false);

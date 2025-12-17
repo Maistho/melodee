@@ -7,7 +7,7 @@ public static class PlaylistExtensions
 {
     public static string ToImageFileName(this Playlist playlist, string libraryPath)
     {
-        return Path.Combine(libraryPath, Playlist.ImagesDirectoryName, $"{playlist.Id.ToStringPadLeft(8)}.gif");
+        return Path.Combine(libraryPath, Playlist.ImagesDirectoryName, $"{playlist.ApiKey}.gif");
     }
 
     public static string ToCoverArtId(this Playlist playlist, bool? isDynamicPlaylist = false)

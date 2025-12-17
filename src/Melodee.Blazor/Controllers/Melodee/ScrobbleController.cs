@@ -68,7 +68,14 @@ public class ScrobbleController(
             _scrobbleInitLock.Release();
         }
     }
+
+    /// <summary>
+    /// Scrobble a song (now playing or played).
+    /// </summary>
     [HttpPost]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ScrobbleSong([FromBody] ScrobbleRequest scrobbleRequest, CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)
@@ -150,8 +157,14 @@ public class ScrobbleController(
         return ApiBadRequest($"Unknown scrobble type: {scrobbleRequest.ScrobbleType}");
     }
 
+    /// <summary>
+    /// Get Last.fm authentication URL.
+    /// </summary>
     [HttpGet]
     [Route("lastfm/auth-url")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetLastFmAuthUrl([FromQuery] string callback, CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)
@@ -175,8 +188,14 @@ public class ScrobbleController(
         return Ok(new { url });
     }
 
+    /// <summary>
+    /// Exchange Last.fm token for session key.
+    /// </summary>
     [HttpPost]
     [Route("lastfm/session")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ExchangeLastFmSession([FromBody] LastFmSessionRequest request, CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)
@@ -206,8 +225,13 @@ public class ScrobbleController(
         return Ok(new { message = "Last.fm linked" });
     }
 
+    /// <summary>
+    /// Disconnect Last.fm account.
+    /// </summary>
     [HttpPost]
     [Route("lastfm/disconnect")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> DisconnectLastFm(CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)

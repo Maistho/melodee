@@ -43,8 +43,14 @@ public sealed class AlbumsController(
         nameof(AlbumDataInfo.Name)
     ];
 
+    /// <summary>
+    /// Get an album by ID.
+    /// </summary>
     [HttpGet]
     [Route("{id:guid}")]
+    [ProducesResponseType(typeof(Models.Album), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> AlbumById(Guid id, CancellationToken cancellationToken = default)
     {
         var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
@@ -65,7 +71,13 @@ public sealed class AlbumsController(
             user.ToUserModel(baseUrl)));
     }
 
+    /// <summary>
+    /// List all albums with pagination and ordering.
+    /// </summary>
     [HttpGet]
+    [ProducesResponseType(typeof(AlbumPagedResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ListAsync(short page, short pageSize, string? orderBy, string? orderDirection, CancellationToken cancellationToken = default)
     {
         var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
@@ -105,8 +117,14 @@ public sealed class AlbumsController(
         });
     }
 
+    /// <summary>
+    /// Get recently added albums.
+    /// </summary>
     [HttpGet]
     [Route("recent")]
+    [ProducesResponseType(typeof(AlbumPagedResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> RecentlyAddedAsync(short limit, CancellationToken cancellationToken = default)
     {
         var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
@@ -141,8 +159,14 @@ public sealed class AlbumsController(
         });
     }
 
+    /// <summary>
+    /// Get songs for an album.
+    /// </summary>
     [HttpGet]
     [Route("{id:guid}/songs")]
+    [ProducesResponseType(typeof(SongPagedResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> AlbumSongsAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
@@ -185,8 +209,14 @@ public sealed class AlbumsController(
         });
     }
 
+    /// <summary>
+    /// Toggle starred status for an album.
+    /// </summary>
     [HttpPost]
     [Route("starred/{apiKey:guid}/{isStarred:bool}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ToggleAlbumStarred(Guid apiKey, bool isStarred, CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)
@@ -220,8 +250,14 @@ public sealed class AlbumsController(
         return ApiBadRequest("Unable to toggle star for album for user.");
     }
 
+    /// <summary>
+    /// Set rating for an album.
+    /// </summary>
     [HttpPost]
     [Route("setrating/{apiKey:guid}/{rating:int}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> SetAlbumRating(Guid apiKey, int rating, CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)
@@ -255,8 +291,14 @@ public sealed class AlbumsController(
         return ApiBadRequest("Unable to set rating for album for user.");
     }
 
+    /// <summary>
+    /// Toggle hated status for an album.
+    /// </summary>
     [HttpPost]
     [Route("hated/{apiKey:guid}/{isHated:bool}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ToggleAlbumHated(Guid apiKey, bool isHated, CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)

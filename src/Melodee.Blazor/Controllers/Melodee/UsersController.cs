@@ -41,11 +41,17 @@ public class UsersController(
     configuration,
     configurationFactory)
 {
+    /// <summary>
+    /// Authenticate a user and return a JWT token.
+    /// </summary>
     [HttpPost]
     [Route("authenticate")]
     [Route("auth")]
     [AllowAnonymous]
     [EnableRateLimiting("melodee-auth")]
+    [ProducesResponseType(typeof(AuthenticationResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> AuthenticateUserAsync([FromBody] LoginModel model, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(model.Email) && string.IsNullOrWhiteSpace(model.Password))
@@ -112,6 +118,8 @@ public class UsersController(
     /// </summary>
     [HttpGet]
     [Route("me")]
+    [ProducesResponseType(typeof(User), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> AboutMeAsync(CancellationToken cancellationToken = default)
     {
         var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
@@ -128,6 +136,9 @@ public class UsersController(
     /// </summary>
     [HttpGet]
     [Route("lastPlayed")]
+    [ProducesResponseType(typeof(SongPagedResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Last3PlayedSongsForUserAsync(short page, short pageSize, CancellationToken cancellationToken = default)
     {
         var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
@@ -155,9 +166,15 @@ public class UsersController(
         });
     }
 
+    /// <summary>
+    /// Get playlists for the current user.
+    /// </summary>
     [HttpGet]
     [Route("playlists")]
     [RequireCapability(UserCapability.Playlist)]
+    [ProducesResponseType(typeof(PlaylistPagedResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> UsersPlaylistsAsync(int? page, short? pageSize, CancellationToken cancellationToken = default)
     {
         var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);

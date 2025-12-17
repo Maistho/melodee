@@ -36,8 +36,14 @@ public sealed class PlaylistsController(
     configuration,
     configurationFactory)
 {
+    /// <summary>
+    /// Get a playlist by ID.
+    /// </summary>
     [HttpGet]
     [Route("{id:guid}")]
+    [ProducesResponseType(typeof(Playlist), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> PlaylistById(Guid id, CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)
@@ -68,7 +74,13 @@ public sealed class PlaylistsController(
             user.ToUserModel(baseUrl)));
     }
 
+    /// <summary>
+    /// List all playlists with pagination.
+    /// </summary>
     [HttpGet]
+    [ProducesResponseType(typeof(PlaylistPagedResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ListAsync(short page, short pageSize, CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)
@@ -106,8 +118,14 @@ public sealed class PlaylistsController(
         });
     }
 
+    /// <summary>
+    /// Get songs for a playlist with pagination.
+    /// </summary>
     [HttpGet]
     [Route("{apiKey:guid}/songs")]
+    [ProducesResponseType(typeof(SongPagedResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> SongsForPlaylist(Guid apiKey, int? page, short? pageSize, CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)
@@ -165,6 +183,9 @@ public sealed class PlaylistsController(
     /// Create a new playlist.
     /// </summary>
     [HttpPost]
+    [ProducesResponseType(typeof(Playlist), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreatePlaylist([FromBody] CreatePlaylistRequest request, CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)
@@ -219,6 +240,11 @@ public sealed class PlaylistsController(
     /// </summary>
     [HttpPut]
     [Route("{apiKey:guid}")]
+    [ProducesResponseType(typeof(Playlist), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> UpdatePlaylist(Guid apiKey, [FromBody] UpdatePlaylistRequest request, CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)
@@ -274,6 +300,11 @@ public sealed class PlaylistsController(
     /// </summary>
     [HttpDelete]
     [Route("{apiKey:guid}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> DeletePlaylist(Guid apiKey, CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)
@@ -315,6 +346,11 @@ public sealed class PlaylistsController(
     /// </summary>
     [HttpPost]
     [Route("{apiKey:guid}/songs")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> AddSongsToPlaylist(Guid apiKey, [FromBody] Guid[] songIds, CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)
@@ -365,6 +401,11 @@ public sealed class PlaylistsController(
     /// </summary>
     [HttpDelete]
     [Route("{apiKey:guid}/songs")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> RemoveSongsFromPlaylist(Guid apiKey, [FromBody] Guid[] songIds, CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)
@@ -415,6 +456,11 @@ public sealed class PlaylistsController(
     /// </summary>
     [HttpPut]
     [Route("{apiKey:guid}/songs/reorder")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ReorderPlaylistSongs(Guid apiKey, [FromBody] ReorderPlaylistSongsRequest request, CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)
@@ -461,6 +507,11 @@ public sealed class PlaylistsController(
     /// </summary>
     [HttpPost]
     [Route("{apiKey:guid}/image")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> UploadPlaylistImage(Guid apiKey, IFormFile file, CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)
@@ -529,6 +580,11 @@ public sealed class PlaylistsController(
     /// </summary>
     [HttpDelete]
     [Route("{apiKey:guid}/image")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> DeletePlaylistImage(Guid apiKey, CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)
