@@ -158,4 +158,298 @@ public sealed class PlaylistsController(
             data = songsForPlaylistResult.Data.Select(x => x.ToSongModel(baseUrl, user.ToUserModel(baseUrl), user.PublicKey, GetClientBinding()))
         });
     }
+
+    /// <summary>
+    /// Create a new playlist.
+    /// </summary>
+    [HttpPost]
+    public async Task<IActionResult> CreatePlaylist([FromBody] CreatePlaylistRequest request, CancellationToken cancellationToken = default)
+    {
+        if (!ApiRequest.IsAuthorized)
+        {
+            return ApiUnauthorized();
+        }
+
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
+        {
+            return ApiUnauthorized();
+        }
+
+        if (user.IsLocked)
+        {
+            return ApiUserLocked();
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Name))
+        {
+            return ApiValidationError("Playlist name is required.");
+        }
+
+        var createResult = await playlistService.CreatePlaylistAsync(
+            request.Name,
+            user.Id,
+            request.Comment,
+            request.IsPublic,
+            request.SongIds,
+            cancellationToken).ConfigureAwait(false);
+
+        if (!createResult.IsSuccess || string.IsNullOrEmpty(createResult.Data))
+        {
+            return ApiBadRequest("Unable to create playlist.");
+        }
+
+        // Fetch the created playlist to return full details
+        var playlistApiKey = Guid.Parse(createResult.Data);
+        var playlistResult = await playlistService.GetByApiKeyAsync(user.ToUserInfo(), playlistApiKey, cancellationToken).ConfigureAwait(false);
+        if (!playlistResult.IsSuccess || playlistResult.Data == null)
+        {
+            return ApiBadRequest("Playlist created but unable to retrieve details.");
+        }
+
+        var baseUrl = await GetBaseUrlAsync(cancellationToken).ConfigureAwait(false);
+        return Ok(playlistResult.Data.ToPlaylistModel(baseUrl, user.ToUserModel(baseUrl)));
+    }
+
+    /// <summary>
+    /// Update an existing playlist's metadata.
+    /// </summary>
+    [HttpPut]
+    [Route("{apiKey:guid}")]
+    public async Task<IActionResult> UpdatePlaylist(Guid apiKey, [FromBody] UpdatePlaylistRequest request, CancellationToken cancellationToken = default)
+    {
+        if (!ApiRequest.IsAuthorized)
+        {
+            return ApiUnauthorized();
+        }
+
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
+        {
+            return ApiUnauthorized();
+        }
+
+        if (user.IsLocked)
+        {
+            return ApiUserLocked();
+        }
+
+        var updateResult = await playlistService.UpdatePlaylistMetadataAsync(
+            apiKey,
+            user.Id,
+            request.Name,
+            request.Comment,
+            request.IsPublic,
+            cancellationToken).ConfigureAwait(false);
+
+        if (!updateResult.IsSuccess)
+        {
+            if (updateResult.Type == OperationResponseType.NotFound)
+            {
+                return ApiNotFound("Playlist");
+            }
+            if (updateResult.Type == OperationResponseType.AccessDenied)
+            {
+                return ApiForbidden("You do not have permission to update this playlist.");
+            }
+            return ApiBadRequest("Unable to update playlist.");
+        }
+
+        // Fetch the updated playlist to return full details
+        var playlistResult = await playlistService.GetByApiKeyAsync(user.ToUserInfo(), apiKey, cancellationToken).ConfigureAwait(false);
+        if (!playlistResult.IsSuccess || playlistResult.Data == null)
+        {
+            return ApiBadRequest("Playlist updated but unable to retrieve details.");
+        }
+
+        var baseUrl = await GetBaseUrlAsync(cancellationToken).ConfigureAwait(false);
+        return Ok(playlistResult.Data.ToPlaylistModel(baseUrl, user.ToUserModel(baseUrl)));
+    }
+
+    /// <summary>
+    /// Delete a playlist.
+    /// </summary>
+    [HttpDelete]
+    [Route("{apiKey:guid}")]
+    public async Task<IActionResult> DeletePlaylist(Guid apiKey, CancellationToken cancellationToken = default)
+    {
+        if (!ApiRequest.IsAuthorized)
+        {
+            return ApiUnauthorized();
+        }
+
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
+        {
+            return ApiUnauthorized();
+        }
+
+        if (user.IsLocked)
+        {
+            return ApiUserLocked();
+        }
+
+        var deleteResult = await playlistService.DeleteByApiKeyAsync(apiKey, user.Id, cancellationToken).ConfigureAwait(false);
+
+        if (!deleteResult.IsSuccess)
+        {
+            if (deleteResult.Messages?.Any(m => m.Contains("not found", StringComparison.OrdinalIgnoreCase)) == true)
+            {
+                return ApiNotFound("Playlist");
+            }
+            if (deleteResult.Messages?.Any(m => m.Contains("not authorized", StringComparison.OrdinalIgnoreCase)) == true)
+            {
+                return ApiForbidden("You do not have permission to delete this playlist.");
+            }
+            return ApiBadRequest("Unable to delete playlist.");
+        }
+
+        return Ok();
+    }
+
+    /// <summary>
+    /// Add songs to a playlist.
+    /// </summary>
+    [HttpPost]
+    [Route("{apiKey:guid}/songs")]
+    public async Task<IActionResult> AddSongsToPlaylist(Guid apiKey, [FromBody] Guid[] songIds, CancellationToken cancellationToken = default)
+    {
+        if (!ApiRequest.IsAuthorized)
+        {
+            return ApiUnauthorized();
+        }
+
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
+        {
+            return ApiUnauthorized();
+        }
+
+        if (user.IsLocked)
+        {
+            return ApiUserLocked();
+        }
+
+        if (songIds == null || songIds.Length == 0)
+        {
+            return ApiValidationError("At least one song ID is required.");
+        }
+
+        // Check if user owns the playlist
+        var playlistResult = await playlistService.GetByApiKeyAsync(user.ToUserInfo(), apiKey, cancellationToken).ConfigureAwait(false);
+        if (!playlistResult.IsSuccess || playlistResult.Data == null)
+        {
+            return ApiNotFound("Playlist");
+        }
+
+        if (playlistResult.Data.UserId != user.Id)
+        {
+            return ApiForbidden("You do not have permission to modify this playlist.");
+        }
+
+        var addResult = await playlistService.AddSongsToPlaylistAsync(apiKey, songIds, cancellationToken).ConfigureAwait(false);
+
+        if (!addResult.IsSuccess)
+        {
+            return ApiBadRequest(addResult.Messages?.FirstOrDefault() ?? "Unable to add songs to playlist.");
+        }
+
+        return Ok();
+    }
+
+    /// <summary>
+    /// Remove songs from a playlist by song IDs.
+    /// </summary>
+    [HttpDelete]
+    [Route("{apiKey:guid}/songs")]
+    public async Task<IActionResult> RemoveSongsFromPlaylist(Guid apiKey, [FromBody] Guid[] songIds, CancellationToken cancellationToken = default)
+    {
+        if (!ApiRequest.IsAuthorized)
+        {
+            return ApiUnauthorized();
+        }
+
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
+        {
+            return ApiUnauthorized();
+        }
+
+        if (user.IsLocked)
+        {
+            return ApiUserLocked();
+        }
+
+        if (songIds == null || songIds.Length == 0)
+        {
+            return ApiValidationError("At least one song ID is required.");
+        }
+
+        // Check if user owns the playlist
+        var playlistResult = await playlistService.GetByApiKeyAsync(user.ToUserInfo(), apiKey, cancellationToken).ConfigureAwait(false);
+        if (!playlistResult.IsSuccess || playlistResult.Data == null)
+        {
+            return ApiNotFound("Playlist");
+        }
+
+        if (playlistResult.Data.UserId != user.Id)
+        {
+            return ApiForbidden("You do not have permission to modify this playlist.");
+        }
+
+        var removeResult = await playlistService.RemoveSongsFromPlaylistAsync(apiKey, songIds, cancellationToken).ConfigureAwait(false);
+
+        if (!removeResult.IsSuccess)
+        {
+            return ApiBadRequest(removeResult.Messages?.FirstOrDefault() ?? "Unable to remove songs from playlist.");
+        }
+
+        return Ok();
+    }
+
+    /// <summary>
+    /// Reorder songs in a playlist. The SongIds array represents the new order of songs.
+    /// </summary>
+    [HttpPut]
+    [Route("{apiKey:guid}/songs/reorder")]
+    public async Task<IActionResult> ReorderPlaylistSongs(Guid apiKey, [FromBody] ReorderPlaylistSongsRequest request, CancellationToken cancellationToken = default)
+    {
+        if (!ApiRequest.IsAuthorized)
+        {
+            return ApiUnauthorized();
+        }
+
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
+        {
+            return ApiUnauthorized();
+        }
+
+        if (user.IsLocked)
+        {
+            return ApiUserLocked();
+        }
+
+        if (request.SongIds == null || request.SongIds.Length == 0)
+        {
+            return ApiValidationError("At least one song ID is required.");
+        }
+
+        var reorderResult = await playlistService.ReorderPlaylistSongsAsync(apiKey, user.Id, request.SongIds, cancellationToken).ConfigureAwait(false);
+
+        if (!reorderResult.IsSuccess)
+        {
+            if (reorderResult.Type == OperationResponseType.NotFound)
+            {
+                return ApiNotFound("Playlist");
+            }
+            if (reorderResult.Type == OperationResponseType.AccessDenied)
+            {
+                return ApiForbidden("You do not have permission to modify this playlist.");
+            }
+            return ApiBadRequest(reorderResult.Messages?.FirstOrDefault() ?? "Unable to reorder songs in playlist.");
+        }
+
+        return Ok();
+    }
 }

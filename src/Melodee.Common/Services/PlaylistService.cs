@@ -786,6 +786,81 @@ public class PlaylistService(
     }
 
     /// <summary>
+    /// Reorder songs in a playlist. The songApiKeys array represents the new order of songs.
+    /// </summary>
+    public async Task<OperationResult<bool>> ReorderPlaylistSongsAsync(
+        Guid playlistApiKey,
+        int userId,
+        Guid[] songApiKeysInNewOrder,
+        CancellationToken cancellationToken = default)
+    {
+        Guard.Against.Expression(x => x == Guid.Empty, playlistApiKey, nameof(playlistApiKey));
+        Guard.Against.NullOrEmpty(songApiKeysInNewOrder, nameof(songApiKeysInNewOrder));
+
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var playlist = await scopedContext.Playlists
+            .Include(x => x.Songs)
+            .FirstOrDefaultAsync(x => x.ApiKey == playlistApiKey, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (playlist == null)
+        {
+            return new OperationResult<bool>("Playlist not found.")
+            {
+                Data = false,
+                Type = OperationResponseType.NotFound
+            };
+        }
+
+        if (playlist.UserId != userId)
+        {
+            return new OperationResult<bool>("Access denied.")
+            {
+                Data = false,
+                Type = OperationResponseType.AccessDenied
+            };
+        }
+
+        // Build a map of song API key to playlist song
+        var songMap = playlist.Songs.ToDictionary(s => s.SongApiKey, s => s);
+
+        // Validate that all provided song API keys exist in the playlist
+        var missingKeys = songApiKeysInNewOrder.Where(k => !songMap.ContainsKey(k)).ToArray();
+        if (missingKeys.Length > 0)
+        {
+            return new OperationResult<bool>($"Songs not found in playlist: {string.Join(", ", missingKeys)}")
+            {
+                Data = false,
+                Type = OperationResponseType.ValidationFailure
+            };
+        }
+
+        // Update the order based on the new array
+        for (var i = 0; i < songApiKeysInNewOrder.Length; i++)
+        {
+            if (songMap.TryGetValue(songApiKeysInNewOrder[i], out var playlistSong))
+            {
+                playlistSong.PlaylistOrder = i;
+            }
+        }
+
+        playlist.LastUpdatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow);
+
+        var result = await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false) > 0;
+
+        if (result)
+        {
+            await ClearCacheAsync(playlist.Id, cancellationToken).ConfigureAwait(false);
+        }
+
+        return new OperationResult<bool>
+        {
+            Data = result
+        };
+    }
+
+    /// <summary>
     /// Get playlists for a user with full include structure needed for OpenSubsonic API
     /// </summary>
     public async Task<OperationResult<Playlist[]>> GetPlaylistsForUserAsync(
@@ -1003,6 +1078,8 @@ public class PlaylistService(
     public async Task<OperationResult<string?>> CreatePlaylistAsync(
         string name,
         int userId,
+        string? comment = null,
+        bool isPublic = false,
         IEnumerable<Guid>? songApiKeys = null,
         CancellationToken cancellationToken = default)
     {
@@ -1025,6 +1102,8 @@ public class PlaylistService(
         {
             CreatedAt = now,
             Name = name,
+            Comment = comment,
+            IsPublic = isPublic,
             UserId = userId,
             SongCount = SafeParser.ToNumber<short>(songsForPlaylist.Length),
             Duration = songsForPlaylist.Sum(x => x.Duration),

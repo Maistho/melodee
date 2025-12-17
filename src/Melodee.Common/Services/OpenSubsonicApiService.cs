@@ -712,7 +712,7 @@ public class OpenSubsonicApiService(
                 .Select(x => x!.Value)
                 .ToArray() ?? Array.Empty<Guid>();
 
-            var createResult = await playlistService.CreatePlaylistAsync(name!, authResponse.UserInfo.Id, songApiKeysForPlaylist, cancellationToken);
+            var createResult = await playlistService.CreatePlaylistAsync(name!, authResponse.UserInfo.Id, null, false, songApiKeysForPlaylist, cancellationToken);
             if (createResult.IsSuccess && createResult.Data != null)
             {
                 playListId = createResult.Data;

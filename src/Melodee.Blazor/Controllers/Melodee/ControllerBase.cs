@@ -232,4 +232,10 @@ public abstract class ControllerBase(
     /// </summary>
     protected IActionResult ApiTooManyRequests(string message = "Too many concurrent requests") =>
         StatusCode(StatusCodes.Status429TooManyRequests, new ApiError(ApiError.Codes.TooManyRequests, message, GetCorrelationId()));
+
+    /// <summary>
+    /// Creates a standardized forbidden error response.
+    /// </summary>
+    protected IActionResult ApiForbidden(string message) =>
+        StatusCode(StatusCodes.Status403Forbidden, new ApiError(ApiError.Codes.Forbidden, message, GetCorrelationId()));
 }
