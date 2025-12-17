@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using Melodee.Blazor.Controllers.Melodee.Models;
 using Melodee.Blazor.Filters;
 using Melodee.Common.Configuration;
+using Melodee.Common.Constants;
 using Melodee.Common.Data.Models;
 using Melodee.Common.Extensions;
 using Melodee.Common.Models;
@@ -124,9 +125,8 @@ public abstract class ControllerBase(
 
     protected bool TryValidatePaging(int page, int pageSize, out short normalizedPage, out short normalizedPageSize, out IActionResult? error)
     {
-        const int maxPageSize = 200;
         normalizedPage = (short)Math.Max(page, 1);
-        normalizedPageSize = (short)Math.Clamp(pageSize, 1, maxPageSize);
+        normalizedPageSize = (short)Math.Clamp(pageSize, 1, ApiDefaults.MaxPageSize);
         error = null;
 
         if (page < 1)
@@ -137,9 +137,9 @@ public abstract class ControllerBase(
         {
             error = BadRequest(new ApiError(ApiError.Codes.ValidationError, "pageSize must be >= 1", GetCorrelationId()));
         }
-        else if (pageSize > maxPageSize)
+        else if (pageSize > ApiDefaults.MaxPageSize)
         {
-            error = BadRequest(new ApiError(ApiError.Codes.ValidationError, $"pageSize {pageSize} exceeds maximum allowed value of {maxPageSize}", GetCorrelationId()));
+            error = BadRequest(new ApiError(ApiError.Codes.ValidationError, $"pageSize {pageSize} exceeds maximum allowed value of {ApiDefaults.MaxPageSize}", GetCorrelationId()));
         }
 
         return error == null;
@@ -147,11 +147,11 @@ public abstract class ControllerBase(
 
     protected bool TryValidateLimit(int limit, out short normalizedLimit, out IActionResult? error)
     {
-        normalizedLimit = (short)Math.Clamp(limit, 1, 200);
+        normalizedLimit = (short)Math.Clamp(limit, 1, ApiDefaults.MaxPageSize);
         error = null;
-        if (limit < 1 || limit > 200)
+        if (limit < 1 || limit > ApiDefaults.MaxPageSize)
         {
-            error = BadRequest(new ApiError(ApiError.Codes.ValidationError, "limit must be between 1 and 200", GetCorrelationId()));
+            error = BadRequest(new ApiError(ApiError.Codes.ValidationError, $"limit must be between 1 and {ApiDefaults.MaxPageSize}", GetCorrelationId()));
         }
 
         return error == null;
