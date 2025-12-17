@@ -608,6 +608,136 @@ public class PlaylistService(
     }
 
     /// <summary>
+    /// Uploads an image for a playlist.
+    /// </summary>
+    public async Task<OperationResult<bool>> UploadPlaylistImageAsync(
+        Guid playlistApiKey,
+        int userId,
+        byte[] imageBytes,
+        CancellationToken cancellationToken = default)
+    {
+        Guard.Against.Expression(x => x == Guid.Empty, playlistApiKey, nameof(playlistApiKey));
+        Guard.Against.NullOrEmpty(imageBytes, nameof(imageBytes));
+
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var playlist = await scopedContext.Playlists
+            .FirstOrDefaultAsync(x => x.ApiKey == playlistApiKey, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (playlist == null)
+        {
+            return new OperationResult<bool>("Playlist not found.")
+            {
+                Data = false,
+                Type = OperationResponseType.NotFound
+            };
+        }
+
+        if (playlist.UserId != userId)
+        {
+            return new OperationResult<bool>("Access denied.")
+            {
+                Data = false,
+                Type = OperationResponseType.AccessDenied
+            };
+        }
+
+        var playlistLibrary = await libraryService.GetPlaylistLibraryAsync(cancellationToken).ConfigureAwait(false);
+        if (!playlistLibrary.IsSuccess || playlistLibrary.Data == null)
+        {
+            return new OperationResult<bool>("Playlist library not found.")
+            {
+                Data = false
+            };
+        }
+
+        var imagesDirectory = Path.Combine(playlistLibrary.Data.Path, Playlist.ImagesDirectoryName);
+        if (!Directory.Exists(imagesDirectory))
+        {
+            Directory.CreateDirectory(imagesDirectory);
+        }
+
+        var playlistImageFilename = playlist.ToImageFileName(playlistLibrary.Data.Path);
+
+        await File.WriteAllBytesAsync(playlistImageFilename, imageBytes, cancellationToken).ConfigureAwait(false);
+
+        playlist.LastUpdatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow);
+        await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        await ClearCacheAsync(playlist.Id, cancellationToken).ConfigureAwait(false);
+
+        Logger.Information("User [{UserId}] uploaded image for playlist [{PlaylistName}]", userId, playlist.Name);
+
+        return new OperationResult<bool>
+        {
+            Data = true
+        };
+    }
+
+    /// <summary>
+    /// Deletes the image for a playlist.
+    /// </summary>
+    public async Task<OperationResult<bool>> DeletePlaylistImageAsync(
+        Guid playlistApiKey,
+        int userId,
+        CancellationToken cancellationToken = default)
+    {
+        Guard.Against.Expression(x => x == Guid.Empty, playlistApiKey, nameof(playlistApiKey));
+
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var playlist = await scopedContext.Playlists
+            .FirstOrDefaultAsync(x => x.ApiKey == playlistApiKey, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (playlist == null)
+        {
+            return new OperationResult<bool>("Playlist not found.")
+            {
+                Data = false,
+                Type = OperationResponseType.NotFound
+            };
+        }
+
+        if (playlist.UserId != userId)
+        {
+            return new OperationResult<bool>("Access denied.")
+            {
+                Data = false,
+                Type = OperationResponseType.AccessDenied
+            };
+        }
+
+        var playlistLibrary = await libraryService.GetPlaylistLibraryAsync(cancellationToken).ConfigureAwait(false);
+        if (!playlistLibrary.IsSuccess || playlistLibrary.Data == null)
+        {
+            return new OperationResult<bool>("Playlist library not found.")
+            {
+                Data = false
+            };
+        }
+
+        var playlistImageFilename = playlist.ToImageFileName(playlistLibrary.Data.Path);
+
+        if (File.Exists(playlistImageFilename))
+        {
+            File.Delete(playlistImageFilename);
+            Logger.Information("User [{UserId}] deleted image for playlist [{PlaylistName}]", userId, playlist.Name);
+        }
+
+        playlist.LastUpdatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow);
+        await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        await ClearCacheAsync(playlist.Id, cancellationToken).ConfigureAwait(false);
+
+        return new OperationResult<bool>
+        {
+            Data = true
+        };
+    }
+
+    /// <summary>
     /// Adds songs to a playlist.
     /// </summary>
     public async Task<OperationResult<bool>> AddSongsToPlaylistAsync(

@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Melodee.Blazor.Controllers.Melodee;
 using Melodee.Blazor.Controllers.Melodee.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Melodee.Tests.Blazor.Controllers.Melodee;
@@ -346,6 +347,120 @@ public class PlaylistsControllerTests
     {
         // Arrange
         var method = typeof(PlaylistsController).GetMethod(nameof(PlaylistsController.ReorderPlaylistSongs));
+
+        // Assert
+        method.Should().NotBeNull();
+        method!.ReturnType.Should().Be(typeof(Task<IActionResult>));
+    }
+
+    #endregion
+
+    #region Upload Playlist Image Tests
+
+    [Fact]
+    public void UploadPlaylistImage_HasCorrectRouteAttribute()
+    {
+        // Arrange
+        var method = typeof(PlaylistsController).GetMethod(nameof(PlaylistsController.UploadPlaylistImage));
+
+        // Assert
+        method.Should().NotBeNull();
+        var routeAttribute = method!.GetCustomAttributes(typeof(RouteAttribute), false).FirstOrDefault() as RouteAttribute;
+        routeAttribute.Should().NotBeNull();
+        routeAttribute!.Template.Should().Be("{apiKey:guid}/image");
+    }
+
+    [Fact]
+    public void UploadPlaylistImage_HasHttpPostAttribute()
+    {
+        // Arrange
+        var method = typeof(PlaylistsController).GetMethod(nameof(PlaylistsController.UploadPlaylistImage));
+
+        // Assert
+        method.Should().NotBeNull();
+        var httpPostAttribute = method!.GetCustomAttributes(typeof(HttpPostAttribute), false).FirstOrDefault();
+        httpPostAttribute.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void UploadPlaylistImage_HasCorrectParameters()
+    {
+        // Arrange
+        var method = typeof(PlaylistsController).GetMethod(nameof(PlaylistsController.UploadPlaylistImage));
+
+        // Assert
+        method.Should().NotBeNull();
+        var parameters = method!.GetParameters();
+        parameters.Should().HaveCount(3);
+        parameters[0].Name.Should().Be("apiKey");
+        parameters[0].ParameterType.Should().Be(typeof(Guid));
+        parameters[1].Name.Should().Be("file");
+        parameters[1].ParameterType.Should().Be(typeof(IFormFile));
+        parameters[2].Name.Should().Be("cancellationToken");
+        parameters[2].ParameterType.Should().Be(typeof(CancellationToken));
+    }
+
+    [Fact]
+    public void UploadPlaylistImage_ReturnsTaskOfIActionResult()
+    {
+        // Arrange
+        var method = typeof(PlaylistsController).GetMethod(nameof(PlaylistsController.UploadPlaylistImage));
+
+        // Assert
+        method.Should().NotBeNull();
+        method!.ReturnType.Should().Be(typeof(Task<IActionResult>));
+    }
+
+    #endregion
+
+    #region Delete Playlist Image Tests
+
+    [Fact]
+    public void DeletePlaylistImage_HasCorrectRouteAttribute()
+    {
+        // Arrange
+        var method = typeof(PlaylistsController).GetMethod(nameof(PlaylistsController.DeletePlaylistImage));
+
+        // Assert
+        method.Should().NotBeNull();
+        var routeAttribute = method!.GetCustomAttributes(typeof(RouteAttribute), false).FirstOrDefault() as RouteAttribute;
+        routeAttribute.Should().NotBeNull();
+        routeAttribute!.Template.Should().Be("{apiKey:guid}/image");
+    }
+
+    [Fact]
+    public void DeletePlaylistImage_HasHttpDeleteAttribute()
+    {
+        // Arrange
+        var method = typeof(PlaylistsController).GetMethod(nameof(PlaylistsController.DeletePlaylistImage));
+
+        // Assert
+        method.Should().NotBeNull();
+        var httpDeleteAttribute = method!.GetCustomAttributes(typeof(HttpDeleteAttribute), false).FirstOrDefault();
+        httpDeleteAttribute.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void DeletePlaylistImage_HasCorrectParameters()
+    {
+        // Arrange
+        var method = typeof(PlaylistsController).GetMethod(nameof(PlaylistsController.DeletePlaylistImage));
+
+        // Assert
+        method.Should().NotBeNull();
+        var parameters = method!.GetParameters();
+        parameters.Should().HaveCount(2);
+        parameters[0].Name.Should().Be("apiKey");
+        parameters[0].ParameterType.Should().Be(typeof(Guid));
+        parameters[1].Name.Should().Be("cancellationToken");
+        parameters[1].ParameterType.Should().Be(typeof(CancellationToken));
+    }
+
+    [Fact]
+    public void DeletePlaylistImage_ReturnsTaskOfIActionResult()
+    {
+        // Arrange
+        var method = typeof(PlaylistsController).GetMethod(nameof(PlaylistsController.DeletePlaylistImage));
 
         // Assert
         method.Should().NotBeNull();

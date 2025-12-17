@@ -3,7 +3,9 @@ using Melodee.Blazor.Controllers.Melodee.Extensions;
 using Melodee.Blazor.Controllers.Melodee.Models;
 using Melodee.Blazor.Filters;
 using Melodee.Common.Configuration;
+using Melodee.Common.Constants;
 using Melodee.Common.Data.Models.Extensions;
+using Melodee.Common.Extensions;
 using Melodee.Common.Models;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services;
@@ -448,6 +450,115 @@ public sealed class PlaylistsController(
                 return ApiForbidden("You do not have permission to modify this playlist.");
             }
             return ApiBadRequest(reorderResult.Messages?.FirstOrDefault() ?? "Unable to reorder songs in playlist.");
+        }
+
+        return Ok();
+    }
+
+    /// <summary>
+    /// Upload an image for a playlist.
+    /// </summary>
+    [HttpPost]
+    [Route("{apiKey:guid}/image")]
+    public async Task<IActionResult> UploadPlaylistImage(Guid apiKey, IFormFile file, CancellationToken cancellationToken = default)
+    {
+        if (!ApiRequest.IsAuthorized)
+        {
+            return ApiUnauthorized();
+        }
+
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
+        {
+            return ApiUnauthorized();
+        }
+
+        if (user.IsLocked)
+        {
+            return ApiUserLocked();
+        }
+
+        if (file == null || file.Length == 0)
+        {
+            return ApiValidationError("Image file is required.");
+        }
+
+        // Validate file type
+        var allowedContentTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
+        if (!allowedContentTypes.Contains(file.ContentType.ToLowerInvariant()))
+        {
+            return ApiValidationError("Invalid image type. Allowed types: JPEG, PNG, GIF, WebP.");
+        }
+
+        // Validate file size using configured max upload size
+        var configuration = await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
+        var maxFileSize = configuration.GetValue<long>(SettingRegistry.SystemMaxUploadSize);
+        if (file.Length > maxFileSize)
+        {
+            return ApiValidationError($"Image file size must be less than {maxFileSize.FormatFileSize()}.");
+        }
+
+        byte[] imageBytes;
+        using (var memoryStream = new MemoryStream())
+        {
+            await file.CopyToAsync(memoryStream, cancellationToken).ConfigureAwait(false);
+            imageBytes = memoryStream.ToArray();
+        }
+
+        var uploadResult = await playlistService.UploadPlaylistImageAsync(apiKey, user.Id, imageBytes, cancellationToken).ConfigureAwait(false);
+
+        if (!uploadResult.IsSuccess)
+        {
+            if (uploadResult.Type == OperationResponseType.NotFound)
+            {
+                return ApiNotFound("Playlist");
+            }
+            if (uploadResult.Type == OperationResponseType.AccessDenied)
+            {
+                return ApiForbidden("You do not have permission to modify this playlist.");
+            }
+            return ApiBadRequest(uploadResult.Messages?.FirstOrDefault() ?? "Unable to upload image.");
+        }
+
+        return Ok();
+    }
+
+    /// <summary>
+    /// Delete the image for a playlist.
+    /// </summary>
+    [HttpDelete]
+    [Route("{apiKey:guid}/image")]
+    public async Task<IActionResult> DeletePlaylistImage(Guid apiKey, CancellationToken cancellationToken = default)
+    {
+        if (!ApiRequest.IsAuthorized)
+        {
+            return ApiUnauthorized();
+        }
+
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
+        {
+            return ApiUnauthorized();
+        }
+
+        if (user.IsLocked)
+        {
+            return ApiUserLocked();
+        }
+
+        var deleteResult = await playlistService.DeletePlaylistImageAsync(apiKey, user.Id, cancellationToken).ConfigureAwait(false);
+
+        if (!deleteResult.IsSuccess)
+        {
+            if (deleteResult.Type == OperationResponseType.NotFound)
+            {
+                return ApiNotFound("Playlist");
+            }
+            if (deleteResult.Type == OperationResponseType.AccessDenied)
+            {
+                return ApiForbidden("You do not have permission to modify this playlist.");
+            }
+            return ApiBadRequest(deleteResult.Messages?.FirstOrDefault() ?? "Unable to delete image.");
         }
 
         return Ok();
