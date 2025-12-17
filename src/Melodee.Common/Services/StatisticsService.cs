@@ -235,21 +235,15 @@ public sealed class StatisticsService(
     {
         await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
 
-        // Use AsNoTracking for performance and run queries in parallel
         var baseQuery = scopedContext.UserSongs
             .AsNoTracking()
             .Where(x => x.User.ApiKey == userApiKey);
 
-        var favoriteSongsCountTask = baseQuery
-            .CountAsync(x => x.StarredAt != null, cancellationToken);
+        var favCount = await baseQuery
+            .CountAsync(x => x.StarredAt != null, cancellationToken).ConfigureAwait(false);
 
-        var ratedSongsCountTask = baseQuery
-            .CountAsync(x => x.Rating > 0, cancellationToken);
-
-        // Wait for both queries to complete
-        await Task.WhenAll(favoriteSongsCountTask, ratedSongsCountTask).ConfigureAwait(false);
-        var favCount = await favoriteSongsCountTask.ConfigureAwait(false);
-        var ratedCount = await ratedSongsCountTask.ConfigureAwait(false);
+        var ratedCount = await baseQuery
+            .CountAsync(x => x.Rating > 0, cancellationToken).ConfigureAwait(false);
 
         var results = new Statistic[]
         {

@@ -44,28 +44,28 @@ public class ScrobbleController(
     configuration,
     configurationFactory)
 {
-    private static readonly SemaphoreSlim ScrobbleInitLock = new(1, 1);
-    private static bool ScrobbleInitialized;
+    private readonly SemaphoreSlim _scrobbleInitLock = new(1, 1);
+    private bool _scrobbleInitialized;
 
     private async Task EnsureScrobbleInitializedAsync(IMelodeeConfiguration config, CancellationToken cancellationToken)
     {
-        if (ScrobbleInitialized)
+        if (_scrobbleInitialized)
         {
             return;
         }
 
-        await ScrobbleInitLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        await _scrobbleInitLock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            if (!ScrobbleInitialized)
+            if (!_scrobbleInitialized)
             {
                 await scrobbleService.InitializeAsync(config, cancellationToken).ConfigureAwait(false);
-                ScrobbleInitialized = true;
+                _scrobbleInitialized = true;
             }
         }
         finally
         {
-            ScrobbleInitLock.Release();
+            _scrobbleInitLock.Release();
         }
     }
     [HttpPost]

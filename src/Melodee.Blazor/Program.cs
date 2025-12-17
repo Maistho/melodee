@@ -399,7 +399,21 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts(); // HSTS configured via services above
 }
 
-app.UseStatusCodePagesWithRedirects("/Error");
+app.UseStatusCodePages(context =>
+{
+    var request = context.HttpContext.Request;
+    // Don't redirect API or song streaming requests - they should return their status codes directly
+    if (request.Path.StartsWithSegments("/api") || 
+        request.Path.StartsWithSegments("/song") ||
+        request.Path.StartsWithSegments("/rest"))
+    {
+        return Task.CompletedTask;
+    }
+    
+    // For non-API requests, redirect to error page
+    context.HttpContext.Response.Redirect("/Error");
+    return Task.CompletedTask;
+});
 
 if (app.Environment.IsDevelopment())
 {
@@ -544,6 +558,12 @@ app.UseStaticFiles(new StaticFileOptions
     }
 });
 
+app.UseCors(bb => bb
+    .AllowAnyOrigin()
+    .AllowAnyMethod()
+    .AllowAnyHeader()
+    .WithExposedHeaders("Accept-Ranges", "Content-Range", "Content-Length", "Content-Type"));
+
 app.UseAntiforgery();
 app.UseAuthentication();
 app.UseAuthorization();
@@ -560,8 +580,6 @@ app.Use(async (context, next) =>
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
-
-app.UseCors(bb => bb.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 
 app.UseMelodeeBlazorHeader();
 

@@ -36,7 +36,7 @@ public sealed class MelodeeApiAuthFilter(
 {
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
-        if (context.Filters.OfType<IAllowAnonymousFilter>().Any())
+        if (context.ActionDescriptor.EndpointMetadata.OfType<IAllowAnonymous>().Any())
         {
             await next().ConfigureAwait(false);
             return;

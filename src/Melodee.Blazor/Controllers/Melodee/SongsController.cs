@@ -261,6 +261,7 @@ public class SongsController(
     }
 
     [HttpGet]
+    [HttpHead]
     [AllowAnonymous]
     [Route("/song/stream/{apiKey:guid}/{userApiKey:guid}/{authToken}")]
     public async Task<IActionResult> StreamSong(Guid apiKey, Guid userApiKey, string authToken, CancellationToken cancellationToken = default)
@@ -373,6 +374,15 @@ public class SongsController(
 
         var descriptor = descriptorResult.Data;
 
+        // Handle HEAD requests - return headers only without body
+        if (HttpContext.Request.Method.Equals("HEAD", StringComparison.OrdinalIgnoreCase))
+        {
+            Response.Headers["Accept-Ranges"] = "bytes";
+            Response.Headers["Content-Length"] = descriptor.FileSize.ToString();
+            Response.ContentType = descriptor.ContentType;
+            return new EmptyResult();
+        }
+
         // Return FileStreamResult for efficient streaming
         if (descriptor.Range != null)
         {
@@ -390,7 +400,7 @@ public class SongsController(
             // Set range response headers manually
             Response.StatusCode = 206;
             Response.Headers["Accept-Ranges"] = "bytes";
-            Response.Headers["Content-Range"] = $"bytes {descriptor.Range.Start}-{descriptor.Range.End}/{descriptor.FileSize}";
+            Response.Headers["Content-Range"] = descriptor.Range.ToContentRangeHeader(descriptor.FileSize);
 
             return new FileStreamResult(rangeStream, descriptor.ContentType)
             {

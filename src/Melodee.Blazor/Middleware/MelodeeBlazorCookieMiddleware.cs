@@ -11,7 +11,9 @@ public class MelodeeBlazorCookieMiddleware(RequestDelegate next, IMelodeeConfigu
 
     public async Task InvokeAsync(HttpContext context)
     {
-        var isApiCall = context.Request.Path.StartsWithSegments("/api");
+        var isApiCall = context.Request.Path.StartsWithSegments("/api") ||
+                        context.Request.Path.StartsWithSegments("/song") ||
+                        context.Request.Path.StartsWithSegments("/rest");
         if (isApiCall)
         {
             await next(context);
