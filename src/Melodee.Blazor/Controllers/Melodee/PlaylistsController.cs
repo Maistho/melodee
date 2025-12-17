@@ -194,6 +194,7 @@ public sealed class PlaylistsController(
             request.Comment,
             request.IsPublic,
             request.SongIds,
+            returnPrefixedApiKey: false,
             cancellationToken).ConfigureAwait(false);
 
         if (!createResult.IsSuccess || string.IsNullOrEmpty(createResult.Data))

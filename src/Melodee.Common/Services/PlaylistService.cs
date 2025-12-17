@@ -1205,12 +1205,14 @@ public class PlaylistService(
     /// <summary>
     /// Create a new playlist with songs
     /// </summary>
+    /// <param name="returnPrefixedApiKey">When true, returns "playlist|{guid}" format for OpenSubsonic API; when false, returns raw GUID string for Melodee API.</param>
     public async Task<OperationResult<string?>> CreatePlaylistAsync(
         string name,
         int userId,
         string? comment = null,
         bool isPublic = false,
         IEnumerable<Guid>? songApiKeys = null,
+        bool returnPrefixedApiKey = true,
         CancellationToken cancellationToken = default)
     {
         await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
@@ -1248,13 +1250,11 @@ public class PlaylistService(
         await scopedContext.Playlists.AddAsync(newPlaylist, cancellationToken).ConfigureAwait(false);
         await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        var playlistApiKey = newPlaylist.ToApiKey();
-
         Logger.Information("User [{UserId}] created playlist [{Name}] with [{SongCount}] songs.", userId, name, songsForPlaylist.Length);
 
         return new OperationResult<string?>
         {
-            Data = playlistApiKey
+            Data = returnPrefixedApiKey ? newPlaylist.ToApiKey() : newPlaylist.ApiKey.ToString()
         };
     }
 }
