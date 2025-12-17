@@ -44,6 +44,7 @@ public class ArtistHousekeepingJob(
                 .Include(x => x.Albums)
                 .Where(x => !x.Library.IsLocked && !x.IsLocked && (x.ImageCount == null || x.ImageCount == 0) &&
                             x.MetaDataStatus == readyToProcessStatus)
+                .OrderBy(x => x.Id)
                 .Take(batchSize)
                 .ToArrayAsync(context.CancellationToken)
                 .ConfigureAwait(false);
