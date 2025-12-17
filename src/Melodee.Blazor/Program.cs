@@ -390,16 +390,23 @@ app.UseResponseCompression();
 
 app.UseSwagger();
 
+// Get OpenSubsonic version from configuration before configuring SwaggerUI
+string openSubsonicVersion;
+{
+    using var scope = app.Services.CreateScope();
+    var configFactory = scope.ServiceProvider.GetRequiredService<IMelodeeConfigurationFactory>();
+    // Use synchronous database access for startup configuration
+    var dbContextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<MelodeeDbContext>>();
+    using var dbContext = dbContextFactory.CreateDbContext();
+    var setting = dbContext.Settings.AsNoTracking()
+        .FirstOrDefault(s => s.Key == SettingRegistry.OpenSubsonicServerSupportedVersion);
+    openSubsonicVersion = setting?.Value ?? "1.16.1";
+}
+
 // Configure SwaggerUI with dynamic OpenSubsonic version from configuration
 app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/melodee/swagger.json", "Melodee API v1");
-    
-    // Get OpenSubsonic version from configuration
-    using var scope = app.Services.CreateScope();
-    var configFactory = scope.ServiceProvider.GetRequiredService<IMelodeeConfigurationFactory>();
-    var config = configFactory.GetConfigurationAsync().GetAwaiter().GetResult();
-    var openSubsonicVersion = config.GetValue<string>(SettingRegistry.OpenSubsonicServerSupportedVersion) ?? "1.16.1";
     c.SwaggerEndpoint("/swagger/opensubsonic/swagger.json", $"OpenSubsonic API v{openSubsonicVersion}");
 });
 

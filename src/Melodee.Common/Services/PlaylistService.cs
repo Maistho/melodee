@@ -43,6 +43,108 @@ public class PlaylistService(
     }
 
     /// <summary>
+    ///     Returns the total count of all playlists including all enabled dynamic playlists (for admin/system stats).
+    /// </summary>
+    public async Task<int> GetTotalPlaylistCountAsync(CancellationToken cancellationToken = default)
+    {
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        
+        // Count database playlists
+        var dbPlaylistCount = await scopedContext.Playlists.AsNoTracking().CountAsync(cancellationToken).ConfigureAwait(false);
+        
+        // Count dynamic playlists
+        var dynamicPlaylistCount = 0;
+        var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken);
+        var isDynamicPlaylistsDisabled = configuration.GetValue<bool>(SettingRegistry.PlaylistDynamicPlaylistsDisabled);
+        if (!isDynamicPlaylistsDisabled)
+        {
+            var playlistLibrary = await libraryService.GetPlaylistLibraryAsync(cancellationToken).ConfigureAwait(false);
+            if (playlistLibrary.Data != null)
+            {
+                var dynamicPlaylistsPath = Path.Combine(playlistLibrary.Data.Path, "dynamic");
+                if (Directory.Exists(dynamicPlaylistsPath))
+                {
+                    var dynamicPlaylistsJsonFiles = dynamicPlaylistsPath
+                        .ToFileSystemDirectoryInfo()
+                        .AllFileInfos("*.json").ToArray();
+                    
+                    // Count all enabled dynamic playlists
+                    foreach (var dynamicPlaylistJsonFile in dynamicPlaylistsJsonFiles)
+                    {
+                        try
+                        {
+                            var dp = serializer.Deserialize<DynamicPlaylist>(
+                                await File.ReadAllTextAsync(dynamicPlaylistJsonFile.FullName, cancellationToken)
+                                    .ConfigureAwait(false));
+                            if (dp != null && dp.IsEnabled)
+                            {
+                                dynamicPlaylistCount++;
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Warning(e, "Error reading dynamic playlist file [{File}]", dynamicPlaylistJsonFile.FullName);
+                        }
+                    }
+                }
+            }
+        }
+        
+        return dbPlaylistCount + dynamicPlaylistCount;
+    }
+
+    /// <summary>
+    ///     Returns the total count of all playlists including dynamic playlists for a specific user.
+    /// </summary>
+    public async Task<int> GetTotalPlaylistCountAsync(UserInfo userInfo, CancellationToken cancellationToken = default)
+    {
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        
+        // Count database playlists
+        var dbPlaylistCount = await scopedContext.Playlists.AsNoTracking().CountAsync(cancellationToken).ConfigureAwait(false);
+        
+        // Count dynamic playlists
+        var dynamicPlaylistCount = 0;
+        var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken);
+        var isDynamicPlaylistsDisabled = configuration.GetValue<bool>(SettingRegistry.PlaylistDynamicPlaylistsDisabled);
+        if (!isDynamicPlaylistsDisabled)
+        {
+            var playlistLibrary = await libraryService.GetPlaylistLibraryAsync(cancellationToken).ConfigureAwait(false);
+            if (playlistLibrary.Data != null)
+            {
+                var dynamicPlaylistsPath = Path.Combine(playlistLibrary.Data.Path, "dynamic");
+                if (Directory.Exists(dynamicPlaylistsPath))
+                {
+                    var dynamicPlaylistsJsonFiles = dynamicPlaylistsPath
+                        .ToFileSystemDirectoryInfo()
+                        .AllFileInfos("*.json").ToArray();
+                    
+                    // Count enabled dynamic playlists that are either public or for the specific user
+                    foreach (var dynamicPlaylistJsonFile in dynamicPlaylistsJsonFiles)
+                    {
+                        try
+                        {
+                            var dp = serializer.Deserialize<DynamicPlaylist>(
+                                await File.ReadAllTextAsync(dynamicPlaylistJsonFile.FullName, cancellationToken)
+                                    .ConfigureAwait(false));
+                            if (dp != null && dp.IsEnabled && (dp.IsPublic || (dp.ForUserId != null && dp.ForUserId == userInfo.ApiKey)))
+                            {
+                                dynamicPlaylistCount++;
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Warning(e, "Error reading dynamic playlist file [{File}]", dynamicPlaylistJsonFile.FullName);
+                        }
+                    }
+                }
+            }
+        }
+        
+        return dbPlaylistCount + dynamicPlaylistCount;
+    }
+
+    /// <summary>
     ///     Return a paginated list of all playlists in the database.
     /// </summary>
     public async Task<PagedResult<Playlist>> ListAsync(

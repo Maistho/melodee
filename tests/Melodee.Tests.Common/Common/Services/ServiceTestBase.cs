@@ -294,7 +294,7 @@ public abstract class ServiceTestBase : IDisposable, IAsyncDisposable
 
     protected StatisticsService GetStatisticsService()
     {
-        return new StatisticsService(Logger, CacheManager, MockFactory());
+        return new StatisticsService(Logger, CacheManager, MockFactory(), GetPlaylistService());
     }
 
     protected LyricPlugin GetLyricPlugin()

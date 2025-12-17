@@ -13,7 +13,8 @@ namespace Melodee.Common.Services;
 public sealed class StatisticsService(
     ILogger logger,
     ICacheManager cacheManager,
-    IDbContextFactory<MelodeeDbContext> contextFactory)
+    IDbContextFactory<MelodeeDbContext> contextFactory,
+    PlaylistService playlistService)
     : ServiceBase(logger, cacheManager, contextFactory)
 {
     private static DateTimeZone ResolveZone(string? timeZoneId)
@@ -118,7 +119,7 @@ public sealed class StatisticsService(
         var artistsCountTask = RunInOwnContextAsync(ctx => ctx.Artists.AsNoTracking().CountAsync(cancellationToken));
         var contributorsCountTask = RunInOwnContextAsync(ctx => ctx.Contributors.AsNoTracking().CountAsync(cancellationToken));
         var librariesCountTask = RunInOwnContextAsync(ctx => ctx.Libraries.AsNoTracking().CountAsync(cancellationToken));
-        var playlistsCountTask = RunInOwnContextAsync(ctx => ctx.Playlists.AsNoTracking().CountAsync(cancellationToken));
+        var playlistsCountTask = playlistService.GetTotalPlaylistCountAsync(cancellationToken);
         var radioStationsCountTask = RunInOwnContextAsync(ctx => ctx.RadioStations.AsNoTracking().CountAsync(cancellationToken));
         var sharesCountTask = RunInOwnContextAsync(ctx => ctx.Shares.AsNoTracking().CountAsync(cancellationToken));
         var songsCountTask = RunInOwnContextAsync(ctx => ctx.Songs.AsNoTracking().CountAsync(cancellationToken));
