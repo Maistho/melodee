@@ -260,6 +260,41 @@ public class SongsController(
         return ApiBadRequest("Unable to set rating for song for user.");
     }
 
+    [HttpPost]
+    [Route("hated/{apiKey:guid}/{isHated:bool}")]
+    public async Task<IActionResult> ToggleSongHated(Guid apiKey, bool isHated, CancellationToken cancellationToken = default)
+    {
+        if (!ApiRequest.IsAuthorized)
+        {
+            return ApiUnauthorized();
+        }
+
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
+        {
+            return ApiUnauthorized();
+        }
+
+        if (user.IsLocked)
+        {
+            return ApiUserLocked();
+        }
+
+        if (await blacklistService.IsEmailBlacklistedAsync(user.Email).ConfigureAwait(false) ||
+            await blacklistService.IsIpBlacklistedAsync(GetRequestIp(HttpContext)).ConfigureAwait(false))
+        {
+            return ApiBlacklisted();
+        }
+
+        var toggleHatedResult = await userService.ToggleSongHatedAsync(user.Id, apiKey, isHated, cancellationToken).ConfigureAwait(false);
+        if (toggleHatedResult.IsSuccess)
+        {
+            return Ok();
+        }
+
+        return ApiBadRequest("Unable to toggle hated for song for user.");
+    }
+
     [HttpGet]
     [HttpHead]
     [AllowAnonymous]

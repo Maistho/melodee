@@ -2,6 +2,7 @@ using Asp.Versioning;
 using Melodee.Blazor.Controllers.Melodee.Extensions;
 using Melodee.Blazor.Controllers.Melodee.Models;
 using Melodee.Blazor.Filters;
+using Melodee.Blazor.Services;
 using Melodee.Common.Configuration;
 using Melodee.Common.Data.Models.Extensions;
 using Melodee.Common.Models;
@@ -27,6 +28,7 @@ public sealed class AlbumsController(
     EtagRepository etagRepository,
     UserService userService,
     AlbumService albumService,
+    IBlacklistService blacklistService,
     IConfiguration configuration,
     IMelodeeConfigurationFactory configurationFactory) : ControllerBase(
     etagRepository,
@@ -181,5 +183,110 @@ public sealed class AlbumsController(
             ),
             data = albumResult.Data.Songs.Select(x => x.ToSongDataInfo(x.UserSongs.FirstOrDefault()).ToSongModel(baseUrl, user.ToUserModel(baseUrl), user.PublicKey, GetClientBinding())).ToArray()
         });
+    }
+
+    [HttpPost]
+    [Route("starred/{apiKey:guid}/{isStarred:bool}")]
+    public async Task<IActionResult> ToggleAlbumStarred(Guid apiKey, bool isStarred, CancellationToken cancellationToken = default)
+    {
+        if (!ApiRequest.IsAuthorized)
+        {
+            return ApiUnauthorized();
+        }
+
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
+        {
+            return ApiUnauthorized();
+        }
+
+        if (user.IsLocked)
+        {
+            return ApiUserLocked();
+        }
+
+        if (await blacklistService.IsEmailBlacklistedAsync(user.Email).ConfigureAwait(false) ||
+            await blacklistService.IsIpBlacklistedAsync(GetRequestIp(HttpContext)).ConfigureAwait(false))
+        {
+            return ApiBlacklisted();
+        }
+
+        var toggleStarredResult = await userService.ToggleAlbumStarAsync(user.Id, apiKey, isStarred, cancellationToken).ConfigureAwait(false);
+        if (toggleStarredResult.IsSuccess)
+        {
+            return Ok();
+        }
+
+        return ApiBadRequest("Unable to toggle star for album for user.");
+    }
+
+    [HttpPost]
+    [Route("setrating/{apiKey:guid}/{rating:int}")]
+    public async Task<IActionResult> SetAlbumRating(Guid apiKey, int rating, CancellationToken cancellationToken = default)
+    {
+        if (!ApiRequest.IsAuthorized)
+        {
+            return ApiUnauthorized();
+        }
+
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
+        {
+            return ApiUnauthorized();
+        }
+
+        if (user.IsLocked)
+        {
+            return ApiUserLocked();
+        }
+
+        if (await blacklistService.IsEmailBlacklistedAsync(user.Email).ConfigureAwait(false) ||
+            await blacklistService.IsIpBlacklistedAsync(GetRequestIp(HttpContext)).ConfigureAwait(false))
+        {
+            return ApiBlacklisted();
+        }
+
+        var setRatingResult = await userService.SetAlbumRatingAsync(user.Id, apiKey, rating, cancellationToken).ConfigureAwait(false);
+        if (setRatingResult.IsSuccess)
+        {
+            return Ok();
+        }
+
+        return ApiBadRequest("Unable to set rating for album for user.");
+    }
+
+    [HttpPost]
+    [Route("hated/{apiKey:guid}/{isHated:bool}")]
+    public async Task<IActionResult> ToggleAlbumHated(Guid apiKey, bool isHated, CancellationToken cancellationToken = default)
+    {
+        if (!ApiRequest.IsAuthorized)
+        {
+            return ApiUnauthorized();
+        }
+
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
+        {
+            return ApiUnauthorized();
+        }
+
+        if (user.IsLocked)
+        {
+            return ApiUserLocked();
+        }
+
+        if (await blacklistService.IsEmailBlacklistedAsync(user.Email).ConfigureAwait(false) ||
+            await blacklistService.IsIpBlacklistedAsync(GetRequestIp(HttpContext)).ConfigureAwait(false))
+        {
+            return ApiBlacklisted();
+        }
+
+        var toggleHatedResult = await userService.ToggleAlbumHatedAsync(user.Id, apiKey, isHated, cancellationToken).ConfigureAwait(false);
+        if (toggleHatedResult.IsSuccess)
+        {
+            return Ok();
+        }
+
+        return ApiBadRequest("Unable to toggle hated for album for user.");
     }
 }

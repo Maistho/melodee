@@ -465,6 +465,58 @@ public class UserServiceTests : ServiceTestBase
     }
 
     [Fact]
+    public async Task SetArtistRatingAsync_WithInvalidUserId_ThrowsArgumentException()
+    {
+        // Arrange
+        var userService = GetUserService();
+        var userId = 0;
+        var artistApiKey = Guid.NewGuid();
+        var rating = 5;
+
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentException>(() => userService.SetArtistRatingAsync(userId, artistApiKey, rating));
+    }
+
+    [Fact]
+    public async Task SetAlbumRatingAsync_ByApiKey_WithInvalidUserId_ThrowsArgumentException()
+    {
+        // Arrange
+        var userService = GetUserService();
+        var userId = 0;
+        var albumApiKey = Guid.NewGuid();
+        var rating = 5;
+
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentException>(() => userService.SetAlbumRatingAsync(userId, albumApiKey, rating));
+    }
+
+    [Fact]
+    public async Task ToggleSongStarAsync_WithInvalidUserId_ThrowsArgumentException()
+    {
+        // Arrange
+        var userService = GetUserService();
+        var userId = 0;
+        var songApiKey = Guid.NewGuid();
+        var isStarred = true;
+
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentException>(() => userService.ToggleSongStarAsync(userId, songApiKey, isStarred));
+    }
+
+    [Fact]
+    public async Task ToggleSongHatedAsync_WithInvalidUserId_ThrowsArgumentException()
+    {
+        // Arrange
+        var userService = GetUserService();
+        var userId = 0;
+        var songApiKey = Guid.NewGuid();
+        var isHated = true;
+
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentException>(() => userService.ToggleSongHatedAsync(userId, songApiKey, isHated));
+    }
+
+    [Fact]
     public async Task UpdateLastLogin_WithValidEventData_ReturnsSuccess()
     {
         // Arrange
