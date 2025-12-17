@@ -49,10 +49,10 @@ public class PlaylistService(
     public async Task<int> GetTotalPlaylistCountAsync(CancellationToken cancellationToken = default)
     {
         await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
-        
+
         // Count database playlists
         var dbPlaylistCount = await scopedContext.Playlists.AsNoTracking().CountAsync(cancellationToken).ConfigureAwait(false);
-        
+
         // Count dynamic playlists
         var dynamicPlaylistCount = 0;
         var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken);
@@ -68,7 +68,7 @@ public class PlaylistService(
                     var dynamicPlaylistsJsonFiles = dynamicPlaylistsPath
                         .ToFileSystemDirectoryInfo()
                         .AllFileInfos("*.json").ToArray();
-                    
+
                     // Count all enabled dynamic playlists
                     foreach (var dynamicPlaylistJsonFile in dynamicPlaylistsJsonFiles)
                     {
@@ -90,7 +90,7 @@ public class PlaylistService(
                 }
             }
         }
-        
+
         return dbPlaylistCount + dynamicPlaylistCount;
     }
 
@@ -100,10 +100,10 @@ public class PlaylistService(
     public async Task<int> GetTotalPlaylistCountAsync(UserInfo userInfo, CancellationToken cancellationToken = default)
     {
         await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
-        
+
         // Count database playlists
         var dbPlaylistCount = await scopedContext.Playlists.AsNoTracking().CountAsync(cancellationToken).ConfigureAwait(false);
-        
+
         // Count dynamic playlists
         var dynamicPlaylistCount = 0;
         var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken);
@@ -119,7 +119,7 @@ public class PlaylistService(
                     var dynamicPlaylistsJsonFiles = dynamicPlaylistsPath
                         .ToFileSystemDirectoryInfo()
                         .AllFileInfos("*.json").ToArray();
-                    
+
                     // Count enabled dynamic playlists that are either public or for the specific user
                     foreach (var dynamicPlaylistJsonFile in dynamicPlaylistsJsonFiles)
                     {
@@ -141,7 +141,7 @@ public class PlaylistService(
                 }
             }
         }
-        
+
         return dbPlaylistCount + dynamicPlaylistCount;
     }
 

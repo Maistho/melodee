@@ -420,13 +420,13 @@ app.UseStatusCodePages(context =>
 {
     var request = context.HttpContext.Request;
     // Don't redirect API or song streaming requests - they should return their status codes directly
-    if (request.Path.StartsWithSegments("/api") || 
+    if (request.Path.StartsWithSegments("/api") ||
         request.Path.StartsWithSegments("/song") ||
         request.Path.StartsWithSegments("/rest"))
     {
         return Task.CompletedTask;
     }
-    
+
     // For non-API requests, redirect to error page
     context.HttpContext.Response.Redirect("/Error");
     return Task.CompletedTask;

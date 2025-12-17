@@ -49,15 +49,12 @@ public class SongsControllerTests
     [Fact]
     public void SetSongRating_HasCorrectRouteAttribute()
     {
-        // Arrange - The setrating method is named ToggleSongStarred but takes rating parameter
-        var methods = typeof(SongsController).GetMethods()
-            .Where(m => m.Name == "ToggleSongStarred" && m.GetParameters().Any(p => p.Name == "rating"))
-            .ToList();
+        // Arrange
+        var method = typeof(SongsController).GetMethod(nameof(SongsController.SetSongRating));
 
         // Assert
-        methods.Should().NotBeEmpty();
-        var method = methods.First();
-        var routeAttribute = method.GetCustomAttributes(typeof(RouteAttribute), false).FirstOrDefault() as RouteAttribute;
+        method.Should().NotBeNull();
+        var routeAttribute = method!.GetCustomAttributes(typeof(RouteAttribute), false).FirstOrDefault() as RouteAttribute;
         routeAttribute.Should().NotBeNull();
         routeAttribute!.Template.Should().Be("setrating/{apiKey:guid}/{rating:int}");
     }
@@ -66,14 +63,11 @@ public class SongsControllerTests
     public void SetSongRating_HasHttpPostAttribute()
     {
         // Arrange
-        var methods = typeof(SongsController).GetMethods()
-            .Where(m => m.Name == "ToggleSongStarred" && m.GetParameters().Any(p => p.Name == "rating"))
-            .ToList();
+        var method = typeof(SongsController).GetMethod(nameof(SongsController.SetSongRating));
 
         // Assert
-        methods.Should().NotBeEmpty();
-        var method = methods.First();
-        var httpPostAttribute = method.GetCustomAttributes(typeof(HttpPostAttribute), false).FirstOrDefault();
+        method.Should().NotBeNull();
+        var httpPostAttribute = method!.GetCustomAttributes(typeof(HttpPostAttribute), false).FirstOrDefault();
         httpPostAttribute.Should().NotBeNull();
     }
 
@@ -135,14 +129,11 @@ public class SongsControllerTests
     public void SetSongRating_HasCorrectParameters()
     {
         // Arrange
-        var methods = typeof(SongsController).GetMethods()
-            .Where(m => m.Name == "ToggleSongStarred" && m.GetParameters().Any(p => p.Name == "rating"))
-            .ToList();
+        var method = typeof(SongsController).GetMethod(nameof(SongsController.SetSongRating));
 
         // Assert
-        methods.Should().NotBeEmpty();
-        var method = methods.First();
-        var parameters = method.GetParameters();
+        method.Should().NotBeNull();
+        var parameters = method!.GetParameters();
         parameters.Should().HaveCount(3);
         parameters[0].Name.Should().Be("apiKey");
         parameters[0].ParameterType.Should().Be(typeof(Guid));
@@ -186,8 +177,8 @@ public class SongsControllerTests
         methods.Should().NotBeEmpty();
         var method = methods.First();
         // The method returns Task<IActionResult>? (nullable)
-        method.ReturnType.Should().Match(t => 
-            t == typeof(Task<IActionResult>) || 
+        method.ReturnType.Should().Match(t =>
+            t == typeof(Task<IActionResult>) ||
             (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Nullable<>)));
     }
 
@@ -195,16 +186,13 @@ public class SongsControllerTests
     public void SetSongRating_ReturnsTaskOfIActionResult()
     {
         // Arrange
-        var methods = typeof(SongsController).GetMethods()
-            .Where(m => m.Name == "ToggleSongStarred" && m.GetParameters().Any(p => p.Name == "rating"))
-            .ToList();
+        var method = typeof(SongsController).GetMethod(nameof(SongsController.SetSongRating));
 
         // Assert
-        methods.Should().NotBeEmpty();
-        var method = methods.First();
+        method.Should().NotBeNull();
         // The method returns Task<IActionResult>? (nullable)
-        method.ReturnType.Should().Match(t => 
-            t == typeof(Task<IActionResult>) || 
+        method!.ReturnType.Should().Match(t =>
+            t == typeof(Task<IActionResult>) ||
             (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Nullable<>)));
     }
 
