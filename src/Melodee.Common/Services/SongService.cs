@@ -90,7 +90,11 @@ public class SongService(
                         s.CreatedAt,
                         s.Tags ?? string.Empty,
                         false, // UserStarred - would need user context
-                        0 // UserRating - would need user context
+                        0, // UserRating - would need user context
+                        s.AlbumId,
+                        s.LastPlayedAt,
+                        s.PlayedCount,
+                        s.CalculatedRating
                     )).ToArray();
                 }
             }
@@ -165,7 +169,11 @@ public class SongService(
                 s.CreatedAt,
                 s.Tags ?? string.Empty,
                 false, // UserStarred - would need user context
-                0 // UserRating - would need user context
+                0, // UserRating - would need user context
+                s.AlbumId,
+                s.LastPlayedAt,
+                s.PlayedCount,
+                s.CalculatedRating
             )).ToArray();
         }
 
@@ -224,7 +232,11 @@ public class SongService(
                 s.CreatedAt,
                 s.Tags ?? string.Empty,
                 s.UserSongs.FirstOrDefault()?.IsStarred ?? false,
-                s.UserSongs.FirstOrDefault()?.Rating ?? 0
+                s.UserSongs.FirstOrDefault()?.Rating ?? 0,
+                s.AlbumId,
+                s.LastPlayedAt,
+                s.PlayedCount,
+                s.CalculatedRating
             )).ToArray();
         }
 
@@ -289,12 +301,16 @@ public class SongService(
         {
             "title" or "titlenormalized" => isDescending ? query.OrderByDescending(s => s.Title) : query.OrderBy(s => s.Title),
             "songnumber" => isDescending ? query.OrderByDescending(s => s.SongNumber) : query.OrderBy(s => s.SongNumber),
+            "albumid" => isDescending ? query.OrderByDescending(s => s.AlbumId) : query.OrderBy(s => s.AlbumId),
             "albumname" => isDescending ? query.OrderByDescending(s => s.Album.Name) : query.OrderBy(s => s.Album.Name),
             "artistname" => isDescending ? query.OrderByDescending(s => s.Album.Artist.Name) : query.OrderBy(s => s.Album.Artist.Name),
             "duration" => isDescending ? query.OrderByDescending(s => s.Duration) : query.OrderBy(s => s.Duration),
             "filesize" => isDescending ? query.OrderByDescending(s => s.FileSize) : query.OrderBy(s => s.FileSize),
             "createdat" => isDescending ? query.OrderByDescending(s => s.CreatedAt) : query.OrderBy(s => s.CreatedAt),
             "releasedate" => isDescending ? query.OrderByDescending(s => s.Album.ReleaseDate) : query.OrderBy(s => s.Album.ReleaseDate),
+            "lastplayedat" => isDescending ? query.OrderByDescending(s => s.LastPlayedAt) : query.OrderBy(s => s.LastPlayedAt),
+            "playedcount" => isDescending ? query.OrderByDescending(s => s.PlayedCount) : query.OrderBy(s => s.PlayedCount),
+            "calculatedrating" => isDescending ? query.OrderByDescending(s => s.CalculatedRating) : query.OrderBy(s => s.CalculatedRating),
             _ => query.OrderBy(s => s.Title)
         };
     }

@@ -82,7 +82,11 @@ public class MusicPlayerTests : BunitContext
             CreatedAt: Instant.FromDateTimeUtc(DateTime.UtcNow),
             Tags: "rock,test",
             UserStarred: false,
-            UserRating: 0
+            UserRating: 0,
+            AlbumId: 1,
+            LastPlayedAt: null,
+            PlayedCount: 0,
+            CalculatedRating: 0
         );
     }
 

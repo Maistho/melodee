@@ -105,6 +105,44 @@ public class ArtistsControllerTests
         parameters.Should().Contain(p => p.Name == "orderDirection");
     }
 
+    [Fact]
+    public void ArtistsController_HasSongOrderFields_WithExpectedSortOptions()
+    {
+        // Arrange
+        var expectedFields = new[]
+        {
+            nameof(SongDataInfo.Title),
+            nameof(SongDataInfo.SongNumber),
+            nameof(SongDataInfo.AlbumId),
+            nameof(SongDataInfo.PlayedCount),
+            nameof(SongDataInfo.Duration),
+            nameof(SongDataInfo.LastPlayedAt),
+            nameof(SongDataInfo.CalculatedRating)
+        };
+
+        // Act
+        var field = typeof(ArtistsController).GetField("SongOrderFields", BindingFlags.NonPublic | BindingFlags.Static);
+
+        // Assert
+        field.Should().NotBeNull();
+        var orderFields = field!.GetValue(null) as HashSet<string>;
+        orderFields.Should().NotBeNull();
+        orderFields.Should().BeEquivalentTo(expectedFields);
+    }
+
+    [Fact]
+    public void ArtistSongsAsync_HasOrderByAndOrderDirectionParameters()
+    {
+        // Arrange
+        var method = typeof(ArtistsController).GetMethod(nameof(ArtistsController.ArtistSongsAsync));
+
+        // Assert
+        method.Should().NotBeNull();
+        var parameters = method!.GetParameters();
+        parameters.Should().Contain(p => p.Name == "orderBy");
+        parameters.Should().Contain(p => p.Name == "orderDirection");
+    }
+
     #endregion
 
     #region Route Tests

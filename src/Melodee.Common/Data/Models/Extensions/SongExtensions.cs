@@ -178,7 +178,11 @@ public static class SongExtensions
             song.CreatedAt,
             song.Tags ?? string.Empty,
             userSong?.IsStarred ?? false,
-            userSong?.Rating ?? 0
+            userSong?.Rating ?? 0,
+            song.AlbumId,
+            song.LastPlayedAt,
+            song.PlayedCount,
+            song.CalculatedRating
         );
     }
 }

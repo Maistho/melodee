@@ -1016,4 +1016,132 @@ public class PlaylistServiceTests : ServiceTestBase
             Assert.NotNull(result.Data);
         });
     }
+
+    [Fact]
+    public async Task SongsForPlaylistAsync_SongDataInfo_IncludesNewFields()
+    {
+        var service = GetPlaylistService();
+        var userInfo = new UserInfo(5, Guid.NewGuid(), "testuser", "test@melodee.net", string.Empty, string.Empty);
+
+        // Create everything in the same context
+        await using var context = await MockFactory().CreateDbContextAsync();
+
+        // Create library
+        var library = new Library
+        {
+            ApiKey = Guid.NewGuid(),
+            Name = "Test Library",
+            Path = "/test/library/",
+            Type = (int)LibraryType.Storage,
+            CreatedAt = SystemClock.Instance.GetCurrentInstant()
+        };
+        context.Libraries.Add(library);
+        await context.SaveChangesAsync();
+
+        // Create artist
+        var artist = new Melodee.Common.Data.Models.Artist
+        {
+            ApiKey = Guid.NewGuid(),
+            Name = "Test Artist",
+            NameNormalized = "testartist",
+            LibraryId = library.Id,
+            Directory = "/testartist/",
+            CreatedAt = SystemClock.Instance.GetCurrentInstant()
+        };
+        context.Artists.Add(artist);
+        await context.SaveChangesAsync();
+
+        // Create album
+        var album = new Melodee.Common.Data.Models.Album
+        {
+            ApiKey = Guid.NewGuid(),
+            Name = "Test Album",
+            NameNormalized = "testalbum",
+            ArtistId = artist.Id,
+            Directory = "/testalbum/",
+            ReleaseDate = new LocalDate(2023, 1, 1),
+            CreatedAt = SystemClock.Instance.GetCurrentInstant()
+        };
+        context.Albums.Add(album);
+        await context.SaveChangesAsync();
+
+        // Create song with play stats
+        var song = new Melodee.Common.Data.Models.Song
+        {
+            ApiKey = Guid.NewGuid(),
+            Title = "Test Song",
+            TitleNormalized = "testsong",
+            AlbumId = album.Id,
+            SongNumber = 1,
+            FileName = "test.mp3",
+            FileSize = 1000000,
+            FileHash = "testhash",
+            Duration = 180000,
+            SamplingRate = 44100,
+            BitRate = 320,
+            BitDepth = 16,
+            BPM = 120,
+            ContentType = "audio/mpeg",
+            CreatedAt = SystemClock.Instance.GetCurrentInstant(),
+            PlayedCount = 50,
+            CalculatedRating = 4.5m,
+            LastPlayedAt = Instant.FromDateTimeUtc(DateTime.UtcNow.AddDays(-1))
+        };
+        context.Songs.Add(song);
+        await context.SaveChangesAsync();
+
+        // Create user
+        var testUser = new User
+        {
+            UserName = "testuser",
+            UserNameNormalized = "TESTUSER",
+            Email = "test@example.com",
+            EmailNormalized = "TEST@EXAMPLE.COM",
+            PublicKey = "testkey",
+            PasswordEncrypted = "encryptedpassword",
+            ApiKey = Guid.NewGuid(),
+            CreatedAt = SystemClock.Instance.GetCurrentInstant(),
+            IsAdmin = false,
+            IsLocked = false
+        };
+        context.Users.Add(testUser);
+        await context.SaveChangesAsync();
+
+        // Create playlist with the song
+        var testApiKey = Guid.NewGuid();
+        var testPlaylist = new Playlist
+        {
+            ApiKey = testApiKey,
+            Name = "Test Playlist",
+            IsPublic = true,
+            CreatedAt = SystemClock.Instance.GetCurrentInstant(),
+            User = testUser,
+            SongCount = 1,
+            Duration = song.Duration,
+            Songs = new List<PlaylistSong>
+            {
+                new PlaylistSong
+                {
+                    SongId = song.Id,
+                    SongApiKey = song.ApiKey,
+                    PlaylistOrder = 1
+                }
+            }
+        };
+        context.Playlists.Add(testPlaylist);
+        await context.SaveChangesAsync();
+
+        // Get songs for the playlist
+        var result = await service.SongsForPlaylistAsync(testApiKey, userInfo, new PagedRequest { PageSize = 100 });
+
+        // Assert
+        AssertResultIsSuccessful(result);
+        Assert.Single(result.Data);
+
+        var returnedSong = result.Data.First();
+        Assert.Equal(song.AlbumId, returnedSong.AlbumId);
+        Assert.Equal(song.PlayedCount, returnedSong.PlayedCount);
+        Assert.Equal(song.CalculatedRating, returnedSong.CalculatedRating);
+        Assert.NotNull(returnedSong.LastPlayedAt);
+    }
 }

@@ -1,5 +1,7 @@
+using System.Reflection;
 using FluentAssertions;
 using Melodee.Blazor.Controllers.Melodee;
+using Melodee.Common.Models.Collection;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Melodee.Tests.Blazor.Controllers.Melodee;
@@ -9,6 +11,66 @@ namespace Melodee.Tests.Blazor.Controllers.Melodee;
 /// </summary>
 public class SongsControllerTests
 {
+    #region Song Order Fields Tests
+
+    [Fact]
+    public void SongsController_HasSongOrderFields_WithExpectedSortOptions()
+    {
+        // Arrange
+        var expectedFields = new[]
+        {
+            nameof(SongDataInfo.Title),
+            nameof(SongDataInfo.SongNumber),
+            nameof(SongDataInfo.AlbumId),
+            nameof(SongDataInfo.PlayedCount),
+            nameof(SongDataInfo.Duration),
+            nameof(SongDataInfo.LastPlayedAt),
+            nameof(SongDataInfo.CalculatedRating)
+        };
+
+        // Act
+        var field = typeof(SongsController).GetField("SongOrderFields", BindingFlags.NonPublic | BindingFlags.Static);
+
+        // Assert
+        field.Should().NotBeNull();
+        var orderFields = field!.GetValue(null) as HashSet<string>;
+        orderFields.Should().NotBeNull();
+        orderFields.Should().BeEquivalentTo(expectedFields);
+    }
+
+    [Theory]
+    [InlineData("Title")]
+    [InlineData("SongNumber")]
+    [InlineData("AlbumId")]
+    [InlineData("PlayedCount")]
+    [InlineData("Duration")]
+    [InlineData("LastPlayedAt")]
+    [InlineData("CalculatedRating")]
+    public void SongsController_SongOrderFields_ContainsExpectedField(string fieldName)
+    {
+        // Arrange
+        var field = typeof(SongsController).GetField("SongOrderFields", BindingFlags.NonPublic | BindingFlags.Static);
+        var orderFields = field!.GetValue(null) as HashSet<string>;
+
+        // Assert
+        orderFields.Should().Contain(fieldName);
+    }
+
+    [Fact]
+    public void ListAsync_HasOrderByAndOrderDirectionParameters()
+    {
+        // Arrange
+        var method = typeof(SongsController).GetMethod(nameof(SongsController.ListAsync));
+
+        // Assert
+        method.Should().NotBeNull();
+        var parameters = method!.GetParameters();
+        parameters.Should().Contain(p => p.Name == "orderBy");
+        parameters.Should().Contain(p => p.Name == "orderDirection");
+    }
+
+    #endregion
+
     #region Starred Route Tests
 
     [Fact]

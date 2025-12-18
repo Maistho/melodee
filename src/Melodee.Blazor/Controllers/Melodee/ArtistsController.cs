@@ -64,6 +64,17 @@ public sealed class ArtistsController(
         nameof(AlbumDataInfo.CalculatedRating)
     ];
 
+    private static readonly HashSet<string> SongOrderFields =
+    [
+        nameof(SongDataInfo.Title),
+        nameof(SongDataInfo.SongNumber),
+        nameof(SongDataInfo.AlbumId),
+        nameof(SongDataInfo.PlayedCount),
+        nameof(SongDataInfo.Duration),
+        nameof(SongDataInfo.LastPlayedAt),
+        nameof(SongDataInfo.CalculatedRating)
+    ];
+
     /// <summary>
     /// Get an artist by ID.
     /// </summary>
@@ -294,7 +305,7 @@ public sealed class ArtistsController(
     [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> ArtistSongsAsync(Guid id, string? q, short page, short pageSize, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> ArtistSongsAsync(Guid id, string? q, short page, short pageSize, string? orderBy, string? orderDirection, CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)
         {
@@ -317,6 +328,11 @@ public sealed class ArtistsController(
             return pagingError!;
         }
 
+        if (!TryValidateOrdering(orderBy, orderDirection, SongOrderFields, out var validatedOrder, out var orderError))
+        {
+            return orderError!;
+        }
+
         var artistResult = await artistService.GetByApiKeyAsync(id, cancellationToken).ConfigureAwait(false);
         if (!artistResult.IsSuccess || artistResult.Data == null)
         {
@@ -333,7 +349,7 @@ public sealed class ArtistsController(
                 new FilterOperatorInfo(nameof(SongDataInfo.ArtistApiKey), FilterOperator.Equals, artistResult.Data.ApiKey),
                 new FilterOperatorInfo(nameof(SongDataInfo.TitleNormalized), FilterOperator.Contains, searchTermNormalized)
             ],
-            OrderBy = new Dictionary<string, string> { { nameof(SongDataInfo.CreatedAt), PagedRequest.OrderDescDirection } }
+            OrderBy = new Dictionary<string, string> { { validatedOrder.field, validatedOrder.direction } }
         }, user.Id, cancellationToken).ConfigureAwait(false);
         var baseUrl = await GetBaseUrlAsync(cancellationToken).ConfigureAwait(false);
 

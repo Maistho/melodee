@@ -245,7 +245,8 @@ public class PlaylistService(
                                 var sql = $"""
                                            SELECT s."Id", s."ApiKey", s."IsLocked", s."Title", s."TitleNormalized", s."SongNumber", a."ReleaseDate",
                                                   a."Name" as "AlbumName", a."ApiKey" as "AlbumApiKey", ar."Name" as "ArtistName", ar."ApiKey" as "ArtistApiKey",
-                                                  s."FileSize", s."Duration", s."CreatedAt", s."Tags", us."IsStarred" as "UserStarred", us."Rating" as "UserRating"
+                                                  s."FileSize", s."Duration", s."CreatedAt", s."Tags", us."IsStarred" as "UserStarred", us."Rating" as "UserRating",
+                                                  s."AlbumId", s."LastPlayedAt", s."PlayedCount", s."CalculatedRating"
                                            FROM "Songs" s
                                            join "Albums" a on (s."AlbumId" = a."Id")
                                            join "Artists" ar on (a."ArtistId" = ar."Id")
@@ -355,7 +356,8 @@ public class PlaylistService(
                 sql = $"""
                        SELECT s."Id", s."ApiKey", s."IsLocked", s."Title", s."TitleNormalized", s."SongNumber", a."ReleaseDate",
                               a."Name" as "AlbumName", a."ApiKey" as "AlbumApiKey", ar."Name" as "ArtistName", ar."ApiKey" as "ArtistApiKey",
-                              s."FileSize", s."Duration", s."CreatedAt", s."Tags", uus."IsStarred" as "UserStarred", uus."Rating" as "UserRating"
+                              s."FileSize", s."Duration", s."CreatedAt", s."Tags", uus."IsStarred" as "UserStarred", uus."Rating" as "UserRating",
+                              s."AlbumId", s."LastPlayedAt", s."PlayedCount", s."CalculatedRating"
                        FROM "Songs" s
                        join "Albums" a on (s."AlbumId" = a."Id")
                        join "Artists" ar on (a."ArtistId" = ar."Id")
@@ -415,7 +417,11 @@ public class PlaylistService(
                             ps.Song.CreatedAt,
                             ps.Song.Tags ?? "",
                             userSong?.IsStarred ?? false,
-                            userSong?.Rating ?? 0
+                            userSong?.Rating ?? 0,
+                            ps.Song.AlbumId,
+                            ps.Song.LastPlayedAt,
+                            ps.Song.PlayedCount,
+                            ps.Song.CalculatedRating
                         );
                     }).ToArray();
                 }

@@ -45,10 +45,13 @@ public class SongsController(
 {
     private static readonly HashSet<string> SongOrderFields =
     [
-        nameof(AlbumDataInfo.CreatedAt),
         nameof(SongDataInfo.Title),
+        nameof(SongDataInfo.SongNumber),
+        nameof(SongDataInfo.AlbumId),
+        nameof(SongDataInfo.PlayedCount),
         nameof(SongDataInfo.Duration),
-        nameof(SongDataInfo.PlayedCount)
+        nameof(SongDataInfo.LastPlayedAt),
+        nameof(SongDataInfo.CalculatedRating)
     ];
 
     /// <summary>

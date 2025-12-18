@@ -706,7 +706,452 @@ public class SongServiceTests : ServiceTestBase
 
     #endregion
 
+    #region Sorting Tests for New Fields
+
+    [Fact]
+    public async Task ListAsync_OrderByTitle_ReturnsOrderedResults()
+    {
+        // Arrange
+        await CreateMultipleTestSongs(5);
+        var pagedRequest = new PagedRequest
+        {
+            PageSize = 10,
+            Page = 1,
+            OrderBy = new Dictionary<string, string> { { "Title", "ASC" } }
+        };
+        var userId = 1;
+
+        // Act
+        var result = await _songService.ListAsync(pagedRequest, userId);
+
+        // Assert
+        AssertResultIsSuccessful(result);
+        Assert.NotEmpty(result.Data);
+        var titles = result.Data.Select(s => s.Title).ToArray();
+        var sortedTitles = titles.OrderBy(t => t).ToArray();
+        Assert.Equal(sortedTitles, titles);
+    }
+
+    [Fact]
+    public async Task ListAsync_OrderByTitleDescending_ReturnsOrderedResults()
+    {
+        // Arrange
+        await CreateMultipleTestSongs(5);
+        var pagedRequest = new PagedRequest
+        {
+            PageSize = 10,
+            Page = 1,
+            OrderBy = new Dictionary<string, string> { { "Title", "DESC" } }
+        };
+        var userId = 1;
+
+        // Act
+        var result = await _songService.ListAsync(pagedRequest, userId);
+
+        // Assert
+        AssertResultIsSuccessful(result);
+        Assert.NotEmpty(result.Data);
+        var titles = result.Data.Select(s => s.Title).ToArray();
+        var sortedTitles = titles.OrderByDescending(t => t).ToArray();
+        Assert.Equal(sortedTitles, titles);
+    }
+
+    [Fact]
+    public async Task ListAsync_OrderBySongNumber_ReturnsOrderedResults()
+    {
+        // Arrange
+        await CreateMultipleTestSongs(5);
+        var pagedRequest = new PagedRequest
+        {
+            PageSize = 10,
+            Page = 1,
+            OrderBy = new Dictionary<string, string> { { "SongNumber", "ASC" } }
+        };
+        var userId = 1;
+
+        // Act
+        var result = await _songService.ListAsync(pagedRequest, userId);
+
+        // Assert
+        AssertResultIsSuccessful(result);
+        Assert.NotEmpty(result.Data);
+        var songNumbers = result.Data.Select(s => s.SongNumber).ToArray();
+        var sortedSongNumbers = songNumbers.OrderBy(n => n).ToArray();
+        Assert.Equal(sortedSongNumbers, songNumbers);
+    }
+
+    [Fact]
+    public async Task ListAsync_OrderBySongNumberDescending_ReturnsOrderedResults()
+    {
+        // Arrange
+        await CreateMultipleTestSongs(5);
+        var pagedRequest = new PagedRequest
+        {
+            PageSize = 10,
+            Page = 1,
+            OrderBy = new Dictionary<string, string> { { "SongNumber", "DESC" } }
+        };
+        var userId = 1;
+
+        // Act
+        var result = await _songService.ListAsync(pagedRequest, userId);
+
+        // Assert
+        AssertResultIsSuccessful(result);
+        Assert.NotEmpty(result.Data);
+        var songNumbers = result.Data.Select(s => s.SongNumber).ToArray();
+        var sortedSongNumbers = songNumbers.OrderByDescending(n => n).ToArray();
+        Assert.Equal(sortedSongNumbers, songNumbers);
+    }
+
+    [Fact]
+    public async Task ListAsync_OrderByAlbumId_ReturnsOrderedResults()
+    {
+        // Arrange
+        await CreateMultipleTestSongs(5);
+        var pagedRequest = new PagedRequest
+        {
+            PageSize = 10,
+            Page = 1,
+            OrderBy = new Dictionary<string, string> { { "AlbumId", "ASC" } }
+        };
+        var userId = 1;
+
+        // Act
+        var result = await _songService.ListAsync(pagedRequest, userId);
+
+        // Assert
+        AssertResultIsSuccessful(result);
+        Assert.NotEmpty(result.Data);
+        var albumIds = result.Data.Select(s => s.AlbumId).ToArray();
+        var sortedAlbumIds = albumIds.OrderBy(id => id).ToArray();
+        Assert.Equal(sortedAlbumIds, albumIds);
+    }
+
+    [Fact]
+    public async Task ListAsync_OrderByAlbumIdDescending_ReturnsOrderedResults()
+    {
+        // Arrange
+        await CreateMultipleTestSongs(5);
+        var pagedRequest = new PagedRequest
+        {
+            PageSize = 10,
+            Page = 1,
+            OrderBy = new Dictionary<string, string> { { "AlbumId", "DESC" } }
+        };
+        var userId = 1;
+
+        // Act
+        var result = await _songService.ListAsync(pagedRequest, userId);
+
+        // Assert
+        AssertResultIsSuccessful(result);
+        Assert.NotEmpty(result.Data);
+        var albumIds = result.Data.Select(s => s.AlbumId).ToArray();
+        var sortedAlbumIds = albumIds.OrderByDescending(id => id).ToArray();
+        Assert.Equal(sortedAlbumIds, albumIds);
+    }
+
+    [Fact]
+    public async Task ListAsync_OrderByDuration_ReturnsOrderedResults()
+    {
+        // Arrange
+        await CreateMultipleTestSongs(5);
+        var pagedRequest = new PagedRequest
+        {
+            PageSize = 10,
+            Page = 1,
+            OrderBy = new Dictionary<string, string> { { "Duration", "ASC" } }
+        };
+        var userId = 1;
+
+        // Act
+        var result = await _songService.ListAsync(pagedRequest, userId);
+
+        // Assert
+        AssertResultIsSuccessful(result);
+        Assert.NotEmpty(result.Data);
+        var durations = result.Data.Select(s => s.Duration).ToArray();
+        var sortedDurations = durations.OrderBy(d => d).ToArray();
+        Assert.Equal(sortedDurations, durations);
+    }
+
+    [Fact]
+    public async Task ListAsync_OrderByDurationDescending_ReturnsOrderedResults()
+    {
+        // Arrange
+        await CreateMultipleTestSongs(5);
+        var pagedRequest = new PagedRequest
+        {
+            PageSize = 10,
+            Page = 1,
+            OrderBy = new Dictionary<string, string> { { "Duration", "DESC" } }
+        };
+        var userId = 1;
+
+        // Act
+        var result = await _songService.ListAsync(pagedRequest, userId);
+
+        // Assert
+        AssertResultIsSuccessful(result);
+        Assert.NotEmpty(result.Data);
+        var durations = result.Data.Select(s => s.Duration).ToArray();
+        var sortedDurations = durations.OrderByDescending(d => d).ToArray();
+        Assert.Equal(sortedDurations, durations);
+    }
+
+    [Fact]
+    public async Task ListAsync_OrderByPlayedCount_ReturnsOrderedResults()
+    {
+        // Arrange
+        await CreateTestSongsWithPlayStats(5);
+        var pagedRequest = new PagedRequest
+        {
+            PageSize = 10,
+            Page = 1,
+            OrderBy = new Dictionary<string, string> { { "PlayedCount", "ASC" } }
+        };
+        var userId = 1;
+
+        // Act
+        var result = await _songService.ListAsync(pagedRequest, userId);
+
+        // Assert
+        AssertResultIsSuccessful(result);
+        Assert.NotEmpty(result.Data);
+        var playedCounts = result.Data.Select(s => s.PlayedCount).ToArray();
+        var sortedPlayedCounts = playedCounts.OrderBy(c => c).ToArray();
+        Assert.Equal(sortedPlayedCounts, playedCounts);
+    }
+
+    [Fact]
+    public async Task ListAsync_OrderByPlayedCountDescending_ReturnsOrderedResults()
+    {
+        // Arrange
+        await CreateTestSongsWithPlayStats(5);
+        var pagedRequest = new PagedRequest
+        {
+            PageSize = 10,
+            Page = 1,
+            OrderBy = new Dictionary<string, string> { { "PlayedCount", "DESC" } }
+        };
+        var userId = 1;
+
+        // Act
+        var result = await _songService.ListAsync(pagedRequest, userId);
+
+        // Assert
+        AssertResultIsSuccessful(result);
+        Assert.NotEmpty(result.Data);
+        var playedCounts = result.Data.Select(s => s.PlayedCount).ToArray();
+        var sortedPlayedCounts = playedCounts.OrderByDescending(c => c).ToArray();
+        Assert.Equal(sortedPlayedCounts, playedCounts);
+    }
+
+    [Fact]
+    public async Task ListAsync_OrderByCalculatedRating_ReturnsOrderedResults()
+    {
+        // Arrange
+        await CreateTestSongsWithPlayStats(5);
+        var pagedRequest = new PagedRequest
+        {
+            PageSize = 10,
+            Page = 1,
+            OrderBy = new Dictionary<string, string> { { "CalculatedRating", "ASC" } }
+        };
+        var userId = 1;
+
+        // Act
+        var result = await _songService.ListAsync(pagedRequest, userId);
+
+        // Assert
+        AssertResultIsSuccessful(result);
+        Assert.NotEmpty(result.Data);
+        var ratings = result.Data.Select(s => s.CalculatedRating).ToArray();
+        var sortedRatings = ratings.OrderBy(r => r).ToArray();
+        Assert.Equal(sortedRatings, ratings);
+    }
+
+    [Fact]
+    public async Task ListAsync_OrderByCalculatedRatingDescending_ReturnsOrderedResults()
+    {
+        // Arrange
+        await CreateTestSongsWithPlayStats(5);
+        var pagedRequest = new PagedRequest
+        {
+            PageSize = 10,
+            Page = 1,
+            OrderBy = new Dictionary<string, string> { { "CalculatedRating", "DESC" } }
+        };
+        var userId = 1;
+
+        // Act
+        var result = await _songService.ListAsync(pagedRequest, userId);
+
+        // Assert
+        AssertResultIsSuccessful(result);
+        Assert.NotEmpty(result.Data);
+        var ratings = result.Data.Select(s => s.CalculatedRating).ToArray();
+        var sortedRatings = ratings.OrderByDescending(r => r).ToArray();
+        Assert.Equal(sortedRatings, ratings);
+    }
+
+    [Fact]
+    public async Task ListAsync_OrderByLastPlayedAt_ReturnsOrderedResults()
+    {
+        // Arrange
+        await CreateTestSongsWithPlayStats(5);
+        var pagedRequest = new PagedRequest
+        {
+            PageSize = 10,
+            Page = 1,
+            OrderBy = new Dictionary<string, string> { { "LastPlayedAt", "ASC" } }
+        };
+        var userId = 1;
+
+        // Act
+        var result = await _songService.ListAsync(pagedRequest, userId);
+
+        // Assert
+        AssertResultIsSuccessful(result);
+        Assert.NotEmpty(result.Data);
+    }
+
+    [Fact]
+    public async Task ListAsync_OrderByLastPlayedAtDescending_ReturnsOrderedResults()
+    {
+        // Arrange
+        await CreateTestSongsWithPlayStats(5);
+        var pagedRequest = new PagedRequest
+        {
+            PageSize = 10,
+            Page = 1,
+            OrderBy = new Dictionary<string, string> { { "LastPlayedAt", "DESC" } }
+        };
+        var userId = 1;
+
+        // Act
+        var result = await _songService.ListAsync(pagedRequest, userId);
+
+        // Assert
+        AssertResultIsSuccessful(result);
+        Assert.NotEmpty(result.Data);
+    }
+
+    #endregion
+
+    #region SongDataInfo New Fields Tests
+
+    [Fact]
+    public async Task ListAsync_SongDataInfo_IncludesAlbumId()
+    {
+        // Arrange
+        await CreateTestSongsWithPlayStats(3);
+        var pagedRequest = new PagedRequest { PageSize = 10, Page = 1 };
+        var userId = 1;
+
+        // Act
+        var result = await _songService.ListAsync(pagedRequest, userId);
+
+        // Assert
+        AssertResultIsSuccessful(result);
+        Assert.NotEmpty(result.Data);
+        Assert.All(result.Data, s => Assert.True(s.AlbumId > 0));
+    }
+
+    [Fact]
+    public async Task ListAsync_SongDataInfo_IncludesLastPlayedAt()
+    {
+        // Arrange
+        await CreateTestSongsWithPlayStats(3);
+        var pagedRequest = new PagedRequest { PageSize = 10, Page = 1 };
+        var userId = 1;
+
+        // Act
+        var result = await _songService.ListAsync(pagedRequest, userId);
+
+        // Assert
+        AssertResultIsSuccessful(result);
+        Assert.NotEmpty(result.Data);
+        Assert.Contains(result.Data, s => s.LastPlayedAt != null);
+    }
+
+    [Fact]
+    public async Task ListAsync_SongDataInfo_IncludesPlayedCount()
+    {
+        // Arrange
+        await CreateTestSongsWithPlayStats(3);
+        var pagedRequest = new PagedRequest { PageSize = 10, Page = 1 };
+        var userId = 1;
+
+        // Act
+        var result = await _songService.ListAsync(pagedRequest, userId);
+
+        // Assert
+        AssertResultIsSuccessful(result);
+        Assert.NotEmpty(result.Data);
+        Assert.Contains(result.Data, s => s.PlayedCount > 0);
+    }
+
+    [Fact]
+    public async Task ListAsync_SongDataInfo_IncludesCalculatedRating()
+    {
+        // Arrange
+        await CreateTestSongsWithPlayStats(3);
+        var pagedRequest = new PagedRequest { PageSize = 10, Page = 1 };
+        var userId = 1;
+
+        // Act
+        var result = await _songService.ListAsync(pagedRequest, userId);
+
+        // Assert
+        AssertResultIsSuccessful(result);
+        Assert.NotEmpty(result.Data);
+        Assert.Contains(result.Data, s => s.CalculatedRating > 0);
+    }
+
+    #endregion
+
     #region Helper Methods
+
+    private async Task<Melodee.Common.Data.Models.Song[]> CreateTestSongsWithPlayStats(int count)
+    {
+        var songs = new List<Melodee.Common.Data.Models.Song>();
+        var artist = await CreateTestArtist();
+        var album = await CreateTestAlbum(artist);
+
+        for (int i = 0; i < count; i++)
+        {
+            var song = new Melodee.Common.Data.Models.Song
+            {
+                ApiKey = Guid.NewGuid(),
+                Title = $"Test Song {i + 1}",
+                TitleNormalized = $"Test Song {i + 1}".ToNormalizedString() ?? string.Empty,
+                AlbumId = album.Id,
+                SongNumber = i + 1,
+                FileName = $"test{i + 1}.mp3",
+                FileSize = 1000000 + (i * 10000),
+                FileHash = $"testhash{i + 1}",
+                Duration = 180000 + (i * 1000),
+                SamplingRate = 44100,
+                BitRate = 320,
+                BitDepth = 16,
+                BPM = 120,
+                ContentType = "audio/mpeg",
+                CreatedAt = SystemClock.Instance.GetCurrentInstant(),
+                LastUpdatedAt = SystemClock.Instance.GetCurrentInstant(),
+                PlayedCount = (i + 1) * 10,
+                CalculatedRating = (i + 1) * 0.5m,
+                LastPlayedAt = Instant.FromDateTimeUtc(DateTime.UtcNow.AddDays(-(i + 1)))
+            };
+            songs.Add(song);
+        }
+
+        await using var context = await MockFactory().CreateDbContextAsync();
+        context.Songs.AddRange(songs);
+        await context.SaveChangesAsync();
+        return songs.ToArray();
+    }
 
     public async Task<Melodee.Common.Data.Models.Song> CreateTestSong(string? titleSuffix = null)
     {

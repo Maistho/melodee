@@ -21,13 +21,15 @@ public sealed record SongDataInfo(
     Instant CreatedAt,
     string Tags,
     bool UserStarred,
-    int UserRating)
+    int UserRating,
+    int AlbumId = 0,
+    Instant? LastPlayedAt = null,
+    int PlayedCount = 0,
+    decimal CalculatedRating = 0)
 {
     public static string InfoLineTitle => "Song Number | Duration";
 
     public string InfoLineData => $"{SongNumber.ToStringPadLeft(3)} | {Duration.ToFormattedDateTimeOffset()}";
-
-    public int PlayedCount { get; set; }
 
     public Instant? LastUpdatedAt { get; set; }
 
