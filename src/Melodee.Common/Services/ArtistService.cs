@@ -83,7 +83,10 @@ public class ArtistService(
                     a.SongCount,
                     a.CreatedAt,
                     a.Tags ?? string.Empty,
-                    a.LastUpdatedAt))
+                    a.LastUpdatedAt,
+                    a.LastPlayedAt,
+                    a.PlayedCount,
+                    a.CalculatedRating))
                 .ToArrayAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
@@ -205,6 +208,9 @@ public class ArtistService(
             "albumcount" => isDescending ? query.OrderByDescending(a => a.AlbumCount) : query.OrderBy(a => a.AlbumCount),
             "directory" => isDescending ? query.OrderByDescending(a => a.Directory) : query.OrderBy(a => a.Directory),
             "songcount" => isDescending ? query.OrderByDescending(a => a.SongCount) : query.OrderBy(a => a.SongCount),
+            "lastplayedat" => isDescending ? query.OrderByDescending(a => a.LastPlayedAt) : query.OrderBy(a => a.LastPlayedAt),
+            "playedcount" => isDescending ? query.OrderByDescending(a => a.PlayedCount) : query.OrderBy(a => a.PlayedCount),
+            "calculatedrating" => isDescending ? query.OrderByDescending(a => a.CalculatedRating) : query.OrderBy(a => a.CalculatedRating),
             _ => query.OrderBy(a => a.Name)
         };
     }

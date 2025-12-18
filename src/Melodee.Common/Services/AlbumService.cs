@@ -127,6 +127,11 @@ public class AlbumService(
                     "name" => isDescending ? albumsQueryWithIncludes.OrderByDescending(a => a.Name) : albumsQueryWithIncludes.OrderBy(a => a.Name),
                     "createdat" => isDescending ? albumsQueryWithIncludes.OrderByDescending(a => a.CreatedAt) : albumsQueryWithIncludes.OrderBy(a => a.CreatedAt),
                     "releasedate" => isDescending ? albumsQueryWithIncludes.OrderByDescending(a => a.ReleaseDate) : albumsQueryWithIncludes.OrderBy(a => a.ReleaseDate),
+                    "songcount" => isDescending ? albumsQueryWithIncludes.OrderByDescending(a => a.SongCount) : albumsQueryWithIncludes.OrderBy(a => a.SongCount),
+                    "duration" => isDescending ? albumsQueryWithIncludes.OrderByDescending(a => a.Duration) : albumsQueryWithIncludes.OrderBy(a => a.Duration),
+                    "lastplayedat" => isDescending ? albumsQueryWithIncludes.OrderByDescending(a => a.LastPlayedAt) : albumsQueryWithIncludes.OrderBy(a => a.LastPlayedAt),
+                    "playedcount" => isDescending ? albumsQueryWithIncludes.OrderByDescending(a => a.PlayedCount) : albumsQueryWithIncludes.OrderBy(a => a.PlayedCount),
+                    "calculatedrating" => isDescending ? albumsQueryWithIncludes.OrderByDescending(a => a.CalculatedRating) : albumsQueryWithIncludes.OrderBy(a => a.CalculatedRating),
                     _ => albumsQueryWithIncludes.OrderBy(a => a.Name)
                 };
 
@@ -154,7 +159,10 @@ public class AlbumService(
                         a.CreatedAt,
                         a.Tags,
                         a.ReleaseDate,
-                        a.AlbumStatus
+                        a.AlbumStatus,
+                        a.LastPlayedAt,
+                        a.PlayedCount,
+                        a.CalculatedRating
                     ))
                     .ToArray();
             }
@@ -207,6 +215,9 @@ public class AlbumService(
                     "duration" => isDescending ? baseQuery.OrderByDescending(a => a.Duration) : baseQuery.OrderBy(a => a.Duration),
                     "releasedate" => isDescending ? baseQuery.OrderByDescending(a => a.ReleaseDate) : baseQuery.OrderBy(a => a.ReleaseDate),
                     "songcount" => isDescending ? baseQuery.OrderByDescending(a => a.SongCount) : baseQuery.OrderBy(a => a.SongCount),
+                    "lastplayedat" => isDescending ? baseQuery.OrderByDescending(a => a.LastPlayedAt) : baseQuery.OrderBy(a => a.LastPlayedAt),
+                    "playedcount" => isDescending ? baseQuery.OrderByDescending(a => a.PlayedCount) : baseQuery.OrderBy(a => a.PlayedCount),
+                    "calculatedrating" => isDescending ? baseQuery.OrderByDescending(a => a.CalculatedRating) : baseQuery.OrderBy(a => a.CalculatedRating),
                     _ => baseQuery.OrderBy(a => a.Name)
                 };
 
@@ -234,7 +245,10 @@ public class AlbumService(
                     a.CreatedAt,
                     a.Tags,
                     a.ReleaseDate,
-                    a.AlbumStatus
+                    a.AlbumStatus,
+                    a.LastPlayedAt,
+                    a.PlayedCount,
+                    a.CalculatedRating
                 )).ToArray();
             }
 
@@ -279,6 +293,9 @@ public class AlbumService(
                     "duration" => isDescending ? baseQuery.OrderByDescending(a => a.Duration) : baseQuery.OrderBy(a => a.Duration),
                     "releasedate" => isDescending ? baseQuery.OrderByDescending(a => a.ReleaseDate) : baseQuery.OrderBy(a => a.ReleaseDate),
                     "songcount" => isDescending ? baseQuery.OrderByDescending(a => a.SongCount) : baseQuery.OrderBy(a => a.SongCount),
+                    "lastplayedat" => isDescending ? baseQuery.OrderByDescending(a => a.LastPlayedAt) : baseQuery.OrderBy(a => a.LastPlayedAt),
+                    "playedcount" => isDescending ? baseQuery.OrderByDescending(a => a.PlayedCount) : baseQuery.OrderBy(a => a.PlayedCount),
+                    "calculatedrating" => isDescending ? baseQuery.OrderByDescending(a => a.CalculatedRating) : baseQuery.OrderBy(a => a.CalculatedRating),
                     _ => baseQuery.OrderBy(a => a.Name)
                 };
 
@@ -306,7 +323,10 @@ public class AlbumService(
                     a.CreatedAt,
                     a.Tags,
                     a.ReleaseDate,
-                    a.AlbumStatus
+                    a.AlbumStatus,
+                    a.LastPlayedAt,
+                    a.PlayedCount,
+                    a.CalculatedRating
                 )).ToArray();
             }
 

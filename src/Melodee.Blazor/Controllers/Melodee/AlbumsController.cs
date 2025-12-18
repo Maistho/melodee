@@ -38,9 +38,13 @@ public sealed class AlbumsController(
 {
     private static readonly HashSet<string> AlbumOrderFields =
     [
-        nameof(AlbumDataInfo.CreatedAt),
+        nameof(AlbumDataInfo.Name),
         nameof(AlbumDataInfo.ReleaseDate),
-        nameof(AlbumDataInfo.Name)
+        nameof(AlbumDataInfo.SongCount),
+        nameof(AlbumDataInfo.Duration),
+        nameof(AlbumDataInfo.LastPlayedAt),
+        nameof(AlbumDataInfo.PlayedCount),
+        nameof(AlbumDataInfo.CalculatedRating)
     ];
 
     /// <summary>

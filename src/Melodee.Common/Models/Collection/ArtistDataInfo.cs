@@ -18,8 +18,11 @@ public sealed record ArtistDataInfo(
     Instant CreatedAt,
     string Tags,
 #pragma warning disable CS8907 // Parameter is unread. Did you forget to use it to initialize the property with that name?
-    Instant? LastUpdatedAt)
+    Instant? LastUpdatedAt,
 #pragma warning restore CS8907 // Parameter is unread. Did you forget to use it to initialize the property with that name?
+    Instant? LastPlayedAt = null,
+    int PlayedCount = 0,
+    decimal CalculatedRating = 0)
 {
     public bool UserStarred { get; set; }
 

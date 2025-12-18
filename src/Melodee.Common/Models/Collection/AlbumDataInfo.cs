@@ -20,7 +20,10 @@ public sealed record AlbumDataInfo(
     Instant CreatedAt,
     string? Tags,
     LocalDate ReleaseDate,
-    short AlbumStatus)
+    short AlbumStatus,
+    Instant? LastPlayedAt = null,
+    int PlayedCount = 0,
+    decimal CalculatedRating = 0)
 {
     public bool UserStarred { get; set; }
 
