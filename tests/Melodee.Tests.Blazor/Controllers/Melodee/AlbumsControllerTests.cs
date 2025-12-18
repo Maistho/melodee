@@ -30,7 +30,7 @@ public class AlbumsControllerTests
 
         // Act
         var field = typeof(AlbumsController).GetField("AlbumOrderFields", BindingFlags.NonPublic | BindingFlags.Static);
-        
+
         // Assert
         field.Should().NotBeNull();
         var orderFields = field!.GetValue(null) as HashSet<string>;

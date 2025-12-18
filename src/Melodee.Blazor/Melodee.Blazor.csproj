@@ -90,9 +90,7 @@
     <None Remove="Logs\**"/>
   </ItemGroup>
 
-  <ItemGroup>
-    <AdditionalFiles Include="Components\Components\DictionaryModal.razor"/>
-  </ItemGroup>
+
 
   <ItemGroup>
     <Folder Include="wwwroot\images\backgrounds\"/>

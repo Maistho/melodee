@@ -29,7 +29,7 @@ public class ArtistsControllerTests
 
         // Act
         var field = typeof(ArtistsController).GetField("ArtistOrderFields", BindingFlags.NonPublic | BindingFlags.Static);
-        
+
         // Assert
         field.Should().NotBeNull();
         var orderFields = field!.GetValue(null) as HashSet<string>;
@@ -71,7 +71,7 @@ public class ArtistsControllerTests
 
         // Act
         var field = typeof(ArtistsController).GetField("AlbumOrderFields", BindingFlags.NonPublic | BindingFlags.Static);
-        
+
         // Assert
         field.Should().NotBeNull();
         var orderFields = field!.GetValue(null) as HashSet<string>;
