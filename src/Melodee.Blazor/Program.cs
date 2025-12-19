@@ -39,6 +39,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using NodaTime;
 using Npgsql;
 using Quartz;
 using Quartz.AspNetCore;
@@ -376,6 +377,7 @@ builder.Services.AddScoped<MelodeeApiAuthFilter>();
 builder.Services.Configure<GoogleAuthOptions>(builder.Configuration.GetSection(GoogleAuthOptions.SectionName));
 builder.Services.Configure<AuthPolicyOptions>(builder.Configuration.GetSection(AuthPolicyOptions.SectionName));
 builder.Services.Configure<TokenOptions>(builder.Configuration.GetSection(TokenOptions.SectionName));
+builder.Services.AddSingleton<IClock>(SystemClock.Instance);
 builder.Services.AddScoped<IGoogleTokenService, GoogleTokenService>();
 builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 
