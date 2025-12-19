@@ -6,9 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 namespace Melodee.Tests.Blazor.Controllers.Melodee;
 
 /// <summary>
-/// Tests for AdvancedSearchController.
+/// Tests for SearchController.
 /// </summary>
-public class AdvancedSearchControllerTests
+public class SearchControllerTests
 {
     #region Route Attribute Tests
 
@@ -16,7 +16,7 @@ public class AdvancedSearchControllerTests
     public void Controller_HasCorrectRouteAttribute()
     {
         // Arrange
-        var routeAttribute = typeof(AdvancedSearchController)
+        var routeAttribute = typeof(SearchController)
             .GetCustomAttributes(typeof(RouteAttribute), false)
             .FirstOrDefault() as RouteAttribute;
 
@@ -33,7 +33,7 @@ public class AdvancedSearchControllerTests
     public void AdvancedSearchAsync_HasHttpPostAttribute()
     {
         // Arrange
-        var method = typeof(AdvancedSearchController).GetMethod(nameof(AdvancedSearchController.AdvancedSearchAsync));
+        var method = typeof(SearchController).GetMethod(nameof(SearchController.AdvancedSearchAsync));
 
         // Assert
         method.Should().NotBeNull();
@@ -45,7 +45,7 @@ public class AdvancedSearchControllerTests
     public void AdvancedSearchAsync_HasCorrectRouteAttribute()
     {
         // Arrange
-        var method = typeof(AdvancedSearchController).GetMethod(nameof(AdvancedSearchController.AdvancedSearchAsync));
+        var method = typeof(SearchController).GetMethod(nameof(SearchController.AdvancedSearchAsync));
 
         // Assert
         method.Should().NotBeNull();
@@ -58,7 +58,7 @@ public class AdvancedSearchControllerTests
     public void AdvancedSearchAsync_HasCorrectParameters()
     {
         // Arrange
-        var method = typeof(AdvancedSearchController).GetMethod(nameof(AdvancedSearchController.AdvancedSearchAsync));
+        var method = typeof(SearchController).GetMethod(nameof(SearchController.AdvancedSearchAsync));
 
         // Assert
         method.Should().NotBeNull();
@@ -76,7 +76,7 @@ public class AdvancedSearchControllerTests
     public void FindSimilarAsync_HasHttpGetAttribute()
     {
         // Arrange
-        var method = typeof(AdvancedSearchController).GetMethod(nameof(AdvancedSearchController.FindSimilarAsync));
+        var method = typeof(SearchController).GetMethod(nameof(SearchController.FindSimilarAsync));
 
         // Assert
         method.Should().NotBeNull();
@@ -88,7 +88,7 @@ public class AdvancedSearchControllerTests
     public void FindSimilarAsync_HasCorrectRouteAttribute()
     {
         // Arrange
-        var method = typeof(AdvancedSearchController).GetMethod(nameof(AdvancedSearchController.FindSimilarAsync));
+        var method = typeof(SearchController).GetMethod(nameof(SearchController.FindSimilarAsync));
 
         // Assert
         method.Should().NotBeNull();

@@ -14,8 +14,12 @@ using Microsoft.AspNetCore.RateLimiting;
 namespace Melodee.Blazor.Controllers.Melodee;
 
 /// <summary>
-/// Audio features endpoints.
+/// Access audio analysis features and find tracks by audio characteristics.
 /// </summary>
+/// <remarks>
+/// Provides access to audio features like tempo (BPM), key, time signature, and various audio
+/// characteristics. Also enables finding tracks within specific BPM ranges for workout playlists or DJ sets.
+/// </remarks>
 [ApiController]
 [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 [ServiceFilter(typeof(MelodeeApiAuthFilter))]
@@ -35,8 +39,11 @@ public class AudioFeaturesController(
     configurationFactory)
 {
     /// <summary>
-    /// Get detailed audio features for a song.
+    /// Get detailed audio analysis features for a specific song.
     /// </summary>
+    /// <param name="id">The song's unique identifier (API key).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Audio features including tempo, key, time signature, and audio characteristics.</returns>
     [HttpGet]
     [Route("features/{id:guid}")]
     [ProducesResponseType(typeof(AudioFeatures), StatusCodes.Status200OK)]
@@ -80,8 +87,14 @@ public class AudioFeaturesController(
     }
 
     /// <summary>
-    /// Get tracks within BPM range.
+    /// Find tracks within a BPM (tempo) range. Useful for creating workout playlists or DJ sets.
     /// </summary>
+    /// <param name="min">Minimum BPM (beats per minute).</param>
+    /// <param name="max">Maximum BPM (beats per minute).</param>
+    /// <param name="page">Page number (1-based).</param>
+    /// <param name="limit">Number of results per page (max 100).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Paginated list of tracks within the specified BPM range.</returns>
     [HttpGet]
     [Route("bpm")]
     [ProducesResponseType(typeof(BpmTracksResponse), StatusCodes.Status200OK)]

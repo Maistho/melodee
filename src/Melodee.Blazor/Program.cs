@@ -72,8 +72,18 @@ builder.Services.AddControllers(options => { options.Filters.Add<ETagFilter>(); 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-    options.SwaggerDoc("melodee", new OpenApiInfo { Title = "Melodee API", Version = "v1" });
-    options.SwaggerDoc("opensubsonic", new OpenApiInfo { Title = "OpenSubsonic API", Version = "v1" });
+    options.SwaggerDoc("melodee", new OpenApiInfo
+    {
+        Title = "Melodee API",
+        Version = "v1",
+        Description = "REST API for the Melodee music server. Provides endpoints for browsing, searching, streaming, and managing your music library."
+    });
+    options.SwaggerDoc("opensubsonic", new OpenApiInfo
+    {
+        Title = "OpenSubsonic API",
+        Version = "v1",
+        Description = "OpenSubsonic-compatible API for third-party music player clients."
+    });
     options.DocInclusionPredicate((docName, desc) =>
     {
         var controllerActionDescriptor = desc.ActionDescriptor as ControllerActionDescriptor;
@@ -87,6 +97,14 @@ builder.Services.AddSwaggerGen(options =>
     });
     // Resolve conflicting actions by taking the first one (OpenSubsonic has .view and non-.view routes)
     options.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
+
+    // Include XML comments for API documentation
+    var xmlFilename = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFilename);
+    if (File.Exists(xmlPath))
+    {
+        options.IncludeXmlComments(xmlPath);
+    }
 });
 
 // Build connection string with optional pool-size overrides via environment variables

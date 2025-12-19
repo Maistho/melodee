@@ -15,8 +15,12 @@ using NodaTime;
 namespace Melodee.Blazor.Controllers.Melodee;
 
 /// <summary>
-/// Analytics endpoints for listening statistics.
+/// View listening analytics and statistics for the current user.
 /// </summary>
+/// <remarks>
+/// Provides insights into listening habits including play counts, top artists/albums/songs,
+/// listening time distribution by hour and day, and genre preferences over configurable time periods.
+/// </remarks>
 [ApiController]
 [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 [ServiceFilter(typeof(MelodeeApiAuthFilter))]
@@ -39,8 +43,11 @@ public class AnalyticsController(
     private static readonly string[] ValidTypes = ["song", "album", "artist"];
 
     /// <summary>
-    /// Get detailed listening statistics.
+    /// Get detailed listening statistics for a time period.
     /// </summary>
+    /// <param name="period">Time period: day, week, month, year, or all_time.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Listening statistics including top content, play counts, and time-based distribution.</returns>
     [HttpGet]
     [Route("listening")]
     [ProducesResponseType(typeof(ListeningStatistics), StatusCodes.Status200OK)]
@@ -153,8 +160,13 @@ public class AnalyticsController(
     }
 
     /// <summary>
-    /// Get top content for a period.
+    /// Get top played content (songs, albums, or artists) for a time period.
     /// </summary>
+    /// <param name="period">Time period: day, week, month, year, or all_time.</param>
+    /// <param name="type">Content type: song, album, or artist.</param>
+    /// <param name="limit">Maximum number of results (1-100, default 10).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Ranked list of top content with play counts.</returns>
     [HttpGet]
     [Route("top/{period}")]
     [ProducesResponseType(typeof(TopContentResponse), StatusCodes.Status200OK)]

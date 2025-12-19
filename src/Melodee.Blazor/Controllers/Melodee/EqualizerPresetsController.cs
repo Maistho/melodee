@@ -15,8 +15,12 @@ using Microsoft.AspNetCore.RateLimiting;
 namespace Melodee.Blazor.Controllers.Melodee;
 
 /// <summary>
-/// Equalizer preset endpoints.
+/// Manage user equalizer presets for audio customization.
 /// </summary>
+/// <remarks>
+/// Equalizer presets allow users to save custom audio frequency adjustments.
+/// Each preset contains frequency bands with gain values that can be applied during playback.
+/// </remarks>
 [ApiController]
 [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 [ServiceFilter(typeof(MelodeeApiAuthFilter))]
@@ -36,8 +40,12 @@ public class EqualizerPresetsController(
     configurationFactory)
 {
     /// <summary>
-    /// Get available equalizer presets for the current user.
+    /// List all equalizer presets for the current user.
     /// </summary>
+    /// <param name="page">Page number (1-based).</param>
+    /// <param name="limit">Number of results per page (max 100).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Paginated list of equalizer presets.</returns>
     [HttpGet]
     [ProducesResponseType(typeof(EqualizerPresetsPagedResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
@@ -78,8 +86,11 @@ public class EqualizerPresetsController(
     }
 
     /// <summary>
-    /// Create or update an equalizer preset.
+    /// Create or update an equalizer preset. If a preset with the same name exists, it will be updated.
     /// </summary>
+    /// <param name="request">The preset configuration including name, bands, and default status.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The created or updated preset.</returns>
     [HttpPost]
     [ProducesResponseType(typeof(EqualizerPreset), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
@@ -135,8 +146,11 @@ public class EqualizerPresetsController(
     }
 
     /// <summary>
-    /// Delete an equalizer preset.
+    /// Delete an equalizer preset by ID.
     /// </summary>
+    /// <param name="id">The unique identifier (API key) of the preset to delete.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Success status.</returns>
     [HttpDelete]
     [Route("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status200OK)]

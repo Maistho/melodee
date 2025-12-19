@@ -13,8 +13,12 @@ using Microsoft.AspNetCore.RateLimiting;
 namespace Melodee.Blazor.Controllers.Melodee;
 
 /// <summary>
-/// Playback settings endpoints.
+/// Manage user playback preferences and audio settings.
 /// </summary>
+/// <remarks>
+/// Controls crossfade duration, gapless playback, volume normalization, replay gain,
+/// audio quality, and equalizer preset preferences for the authenticated user.
+/// </remarks>
 [ApiController]
 [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 [ServiceFilter(typeof(MelodeeApiAuthFilter))]
@@ -34,8 +38,10 @@ public class PlaybackSettingsController(
     configurationFactory)
 {
     /// <summary>
-    /// Get user playback preferences.
+    /// Get the current user's playback preferences.
     /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Current playback settings including crossfade, gapless, normalization, and quality preferences.</returns>
     [HttpGet]
     [ProducesResponseType(typeof(PlaybackSettings), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
@@ -71,8 +77,11 @@ public class PlaybackSettingsController(
     }
 
     /// <summary>
-    /// Save user playback preferences. Omitted fields are left unchanged.
+    /// Update the current user's playback preferences. Only provided fields are updated; omitted fields remain unchanged.
     /// </summary>
+    /// <param name="request">Partial update request with fields to change.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Success confirmation.</returns>
     [HttpPost]
     [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]

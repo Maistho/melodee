@@ -10,7 +10,8 @@
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <IncludeSourceRevisionInInformationalVersion>true</IncludeSourceRevisionInInformationalVersion>
     <RuntimeIdentifiers>win-x64;osx-x64;linux-x64</RuntimeIdentifiers>
-    <NoWarn>$(NoWarn);NU1507;IL2026</NoWarn>
+    <NoWarn>$(NoWarn);NU1507;IL2026;CS1591</NoWarn>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
     <!-- Auto-incrementing version -->
     <VersionPrefix>1.4.0</VersionPrefix>

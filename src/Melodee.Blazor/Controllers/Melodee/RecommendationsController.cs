@@ -15,8 +15,12 @@ using Microsoft.AspNetCore.RateLimiting;
 namespace Melodee.Blazor.Controllers.Melodee;
 
 /// <summary>
-/// Recommendation endpoints.
+/// Get personalized music recommendations based on listening history and preferences.
 /// </summary>
+/// <remarks>
+/// Provides discovery recommendations to find new music, similar content suggestions based on what you like,
+/// and highlights music you may have missed from artists you follow.
+/// </remarks>
 [ApiController]
 [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 [ServiceFilter(typeof(MelodeeApiAuthFilter))]
@@ -42,8 +46,13 @@ public class RecommendationsController(
     private static readonly string[] ValidCategories = ["discover", "similar", "missed", "based_on_recent"];
 
     /// <summary>
-    /// Get personalized recommendations.
+    /// Get personalized recommendations based on listening history and preferences.
     /// </summary>
+    /// <param name="limit">Maximum number of recommendations (1-100, default 20).</param>
+    /// <param name="type">Filter by content type: song, album, or artist. Returns all types if omitted.</param>
+    /// <param name="category">Recommendation category: discover (new music), similar (like your favorites), missed (from followed artists), or based_on_recent.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>List of personalized recommendations with explanations.</returns>
     [HttpGet]
     [ProducesResponseType(typeof(RecommendationsResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]

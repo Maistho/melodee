@@ -14,8 +14,13 @@ using Microsoft.AspNetCore.RateLimiting;
 namespace Melodee.Blazor.Controllers.Melodee;
 
 /// <summary>
-/// Smart playlist endpoints.
+/// Create and manage smart playlists with dynamic rules.
 /// </summary>
+/// <remarks>
+/// Smart playlists automatically populate based on rules like genre, year, rating, play count, BPM, duration, artist, or album.
+/// Rules can use operators like equals, contains, greaterThan, lessThan, and between.
+/// Playlists can optionally auto-update as your library changes.
+/// </remarks>
 [ApiController]
 [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 [ServiceFilter(typeof(MelodeeApiAuthFilter))]
@@ -39,8 +44,15 @@ public class SmartPlaylistsController(
     private static readonly string[] ValidOperators = ["equals", "contains", "greaterThan", "lessThan", "between"];
 
     /// <summary>
-    /// Create a smart playlist with rules.
+    /// Create a smart playlist that automatically populates based on defined rules.
     /// </summary>
+    /// <param name="request">Smart playlist configuration with name, description, rules, limit, and auto-update preference.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The created smart playlist with its ID and initial track count.</returns>
+    /// <remarks>
+    /// Rules define which tracks to include. Each rule has a field (genre, year, rating, playCount, bpm, duration, artist, album),
+    /// an operator (equals, contains, greaterThan, lessThan, between), and a value.
+    /// </remarks>
     [HttpPost]
     [ProducesResponseType(typeof(SmartPlaylistResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]

@@ -17,7 +17,8 @@ public sealed class BlacklistService : IBlacklistService
     /// <summary>
     ///     Initializes a new instance of the <see cref="BlacklistService" /> class.
     /// </summary>
-    /// <param name="configuration">The blacklist configuration</param>
+    /// <param name="serializer">The serializer for parsing blacklist data.</param>
+    /// <param name="configurationFactory">The configuration factory for loading blacklist settings.</param>
     public BlacklistService(ISerializer serializer, IMelodeeConfigurationFactory configurationFactory)
     {
         _serializer = serializer;

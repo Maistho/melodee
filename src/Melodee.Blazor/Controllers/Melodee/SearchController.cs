@@ -16,6 +16,13 @@ using Microsoft.AspNetCore.RateLimiting;
 
 namespace Melodee.Blazor.Controllers.Melodee;
 
+/// <summary>
+/// Search your music library for artists, albums, songs, and playlists.
+/// </summary>
+/// <remarks>
+/// Provides basic search, autocomplete suggestions, advanced filtering with multiple criteria,
+/// and the ability to find similar content based on genre and audio characteristics.
+/// </remarks>
 [ApiController]
 [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 [ServiceFilter(typeof(MelodeeApiAuthFilter))]
@@ -42,8 +49,11 @@ public class SearchController(
     private static readonly string[] ValidTypeValues = ["song", "album", "artist", "playlist"];
 
     /// <summary>
-    /// Search for artists, albums, songs, and playlists.
+    /// Search for artists, albums, songs, and playlists matching a query.
     /// </summary>
+    /// <param name="searchRequest">Search parameters including query, pagination, and type filters.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Search results grouped by type (artists, albums, songs, playlists).</returns>
     [HttpPost]
     [ProducesResponseType(typeof(SearchResultResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
@@ -112,8 +122,14 @@ public class SearchController(
     }
 
     /// <summary>
-    /// Search for songs with pagination.
+    /// Search for songs with full pagination support.
     /// </summary>
+    /// <param name="q">Search query (minimum 2 characters).</param>
+    /// <param name="page">Page number (1-based).</param>
+    /// <param name="pageSize">Number of results per page (max 100).</param>
+    /// <param name="filterByArtistApiKey">Optional: filter results to songs by a specific artist.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Paginated list of matching songs.</returns>
     [HttpGet]
     [Route("songs")]
     [ProducesResponseType(typeof(SongPagedResponse), StatusCodes.Status200OK)]
@@ -170,8 +186,12 @@ public class SearchController(
     }
 
     /// <summary>
-    /// Get search suggestions/autocomplete for a query. Returns lightweight results for quick display.
+    /// Get search suggestions for autocomplete. Returns lightweight results optimized for quick display as the user types.
     /// </summary>
+    /// <param name="q">Partial search query (minimum 2 characters).</param>
+    /// <param name="limit">Maximum suggestions per category (1-50, default 10).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Suggestions grouped by type: artists, albums, songs, and playlists.</returns>
     [HttpGet]
     [Route("suggest")]
     [ProducesResponseType(typeof(SearchSuggestResponse), StatusCodes.Status200OK)]
@@ -238,8 +258,15 @@ public class SearchController(
     }
 
     /// <summary>
-    /// Advanced search with multiple criteria.
+    /// Advanced search with multiple filter criteria including year, BPM, duration, genre, mood, key, artist, and album.
     /// </summary>
+    /// <param name="request">Search parameters with query, filters, type selection, sorting, and pagination.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Filtered search results with songs, albums, artists, and playlists.</returns>
+    /// <remarks>
+    /// Filters support range values (min/max) for year, BPM, and duration. Multiple genres and moods can be specified as arrays.
+    /// Results can be sorted by relevance, date, popularity, or rating in ascending or descending order.
+    /// </remarks>
     [HttpPost]
     [Route("advanced")]
     [ProducesResponseType(typeof(AdvancedSearchResponse), StatusCodes.Status200OK)]
@@ -372,8 +399,18 @@ public class SearchController(
     }
 
     /// <summary>
-    /// Find similar content (artist/album/song).
+    /// Find content similar to a given artist, album, or song based on genre and audio characteristics.
     /// </summary>
+    /// <param name="id">The unique identifier (API key) of the source item.</param>
+    /// <param name="type">Content type: artist, album, or song.</param>
+    /// <param name="limit">Maximum number of similar items to return (1-100, default 10).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>List of similar items with similarity scores and thumbnails.</returns>
+    /// <remarks>
+    /// For artists: finds artists with similar genres.
+    /// For albums: finds albums in similar genres.
+    /// For songs: finds songs with similar genre and BPM (within ±20 BPM).
+    /// </remarks>
     [HttpGet]
     [Route("similar/{id:guid}/{type}")]
     [ProducesResponseType(typeof(SimilarResponse), StatusCodes.Status200OK)]
