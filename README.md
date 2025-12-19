@@ -172,6 +172,47 @@ Full compatibility with Subsonic 1.16.1 and OpenSubsonic specifications:
 - Background processing
 - Progress monitoring
 
+### 🔐 Authentication
+
+Melodee supports multiple authentication methods:
+
+- **Username/Password**: Traditional authentication with JWT tokens
+- **Google Sign-In**: OAuth 2.0 authentication via Google (configurable)
+
+#### API Authentication
+
+All API endpoints (except public endpoints) require a Bearer token:
+
+```bash
+curl -H "Authorization: Bearer <JWT_TOKEN>" https://your-server/api/v1/albums
+```
+
+#### Token Refresh
+
+Melodee implements secure token rotation:
+- **Access tokens**: Short-lived (15 minutes default)
+- **Refresh tokens**: Long-lived (30 days default) with automatic rotation
+
+#### Google Sign-In Configuration
+
+To enable Google Sign-In, configure the following in `appsettings.json`:
+
+```json
+{
+  "Auth": {
+    "Google": {
+      "Enabled": true,
+      "ClientId": "your-google-client-id.apps.googleusercontent.com",
+      "AllowedHostedDomains": [],
+      "AutoLinkEnabled": false
+    },
+    "SelfRegistrationEnabled": true
+  }
+}
+```
+
+For API documentation including authentication endpoints, access `/swagger` on a running instance.
+
 ## 🏗️ Architecture
 
 ### Components

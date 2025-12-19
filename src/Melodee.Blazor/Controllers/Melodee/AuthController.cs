@@ -42,7 +42,8 @@ public class AuthController(
     IRefreshTokenService refreshTokenService,
     IOptions<GoogleAuthOptions> googleAuthOptions,
     IOptions<AuthPolicyOptions> authPolicyOptions,
-    IOptions<TokenOptions> tokenOptions) : ControllerBase(
+    IOptions<TokenOptions> tokenOptions,
+    ILogger<AuthController> logger) : ControllerBase(
     etagRepository,
     serializer,
     configuration,
@@ -67,8 +68,11 @@ public class AuthController(
     [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> AuthenticateAsync([FromBody] LoginModel model, CancellationToken cancellationToken = default)
     {
+        var clientIp = GetRequestIp(HttpContext);
+
         if (string.IsNullOrWhiteSpace(model.Email) && string.IsNullOrWhiteSpace(model.Password))
         {
+            LogAuthEvent("password", "validation_error", clientIp, model.UserName ?? model.Email);
             return ApiValidationError("Email or password are required");
         }
 
@@ -84,21 +88,25 @@ public class AuthController(
 
         if (!authResult.IsSuccess || authResult.Data == null)
         {
+            LogAuthEvent("password", "invalid_credentials", clientIp, model.UserName ?? model.Email);
             return ApiUnauthorized("Invalid credentials");
         }
 
         if (authResult.Data.IsLocked)
         {
+            LogAuthEvent("password", "account_disabled", clientIp, model.UserName ?? model.Email, authResult.Data.Id);
             return StatusCode(StatusCodes.Status403Forbidden,
                 new ApiError(ApiError.Codes.AccountDisabled, "Account is disabled", GetCorrelationId()));
         }
 
         if (await blacklistService.IsEmailBlacklistedAsync(authResult.Data.Email).ConfigureAwait(false) ||
-            await blacklistService.IsIpBlacklistedAsync(GetRequestIp(HttpContext)).ConfigureAwait(false))
+            await blacklistService.IsIpBlacklistedAsync(clientIp).ConfigureAwait(false))
         {
+            LogAuthEvent("password", "blacklisted", clientIp, authResult.Data.UserName, authResult.Data.Id);
             return ApiBlacklisted();
         }
 
+        LogAuthEvent("password", "success", clientIp, authResult.Data.UserName, authResult.Data.Id);
         return await GenerateAuthResponseAsync(authResult.Data, null, cancellationToken).ConfigureAwait(false);
     }
 
@@ -120,8 +128,11 @@ public class AuthController(
     [ProducesResponseType(typeof(ApiError), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> GoogleAuthAsync([FromBody] GoogleAuthRequest request, CancellationToken cancellationToken = default)
     {
+        var clientIp = GetRequestIp(HttpContext);
+
         if (!_googleAuthOptions.Enabled)
         {
+            LogAuthEvent("google", "not_enabled", clientIp);
             return ApiBadRequest("Google authentication is not enabled");
         }
 
@@ -131,6 +142,7 @@ public class AuthController(
         if (!validationResult.IsValid || validationResult.Payload == null)
         {
             var errorCode = validationResult.ErrorCode ?? ApiError.Codes.InvalidGoogleToken;
+            LogAuthEvent("google", errorCode, clientIp);
             var statusCode = errorCode == ApiError.Codes.ExpiredGoogleToken
                 ? StatusCodes.Status401Unauthorized
                 : errorCode == ApiError.Codes.ForbiddenTenant
@@ -146,8 +158,9 @@ public class AuthController(
         var googleEmail = payload.Email;
 
         // Check IP blacklist
-        if (await blacklistService.IsIpBlacklistedAsync(GetRequestIp(HttpContext)).ConfigureAwait(false))
+        if (await blacklistService.IsIpBlacklistedAsync(clientIp).ConfigureAwait(false))
         {
+            LogAuthEvent("google", "blacklisted", clientIp, googleEmail);
             return ApiBlacklisted();
         }
 
@@ -155,6 +168,7 @@ public class AuthController(
         var socialLoginResult = await userService.GetUserBySocialLoginAsync("Google", googleSubject, cancellationToken).ConfigureAwait(false);
 
         Data.User? user = null;
+        var authOutcome = "existing_link";
 
         if (socialLoginResult.IsSuccess && socialLoginResult.Data != null)
         {
@@ -163,12 +177,14 @@ public class AuthController(
 
             if (user.IsLocked)
             {
+                LogAuthEvent("google", "account_disabled", clientIp, googleEmail, user.Id);
                 return StatusCode(StatusCodes.Status403Forbidden,
                     new ApiError(ApiError.Codes.AccountDisabled, "Account is disabled", GetCorrelationId()));
             }
 
             if (await blacklistService.IsEmailBlacklistedAsync(user.Email).ConfigureAwait(false))
             {
+                LogAuthEvent("google", "blacklisted", clientIp, user.UserName, user.Id);
                 return ApiBlacklisted();
             }
 
@@ -184,9 +200,11 @@ public class AuthController(
                 if (userByEmail.IsSuccess && userByEmail.Data != null)
                 {
                     user = userByEmail.Data;
+                    authOutcome = "auto_linked";
 
                     if (user.IsLocked)
                     {
+                        LogAuthEvent("google", "account_disabled", clientIp, googleEmail, user.Id);
                         return StatusCode(StatusCodes.Status403Forbidden,
                             new ApiError(ApiError.Codes.AccountDisabled, "Account is disabled", GetCorrelationId()));
                     }
@@ -208,6 +226,7 @@ public class AuthController(
             {
                 if (!_authPolicyOptions.SelfRegistrationEnabled)
                 {
+                    LogAuthEvent("google", "signup_disabled", clientIp, googleEmail);
                     return StatusCode(StatusCodes.Status403Forbidden,
                         new ApiError(ApiError.Codes.SignupDisabled, "Self-registration is disabled", GetCorrelationId()));
                 }
@@ -216,6 +235,7 @@ public class AuthController(
                 if (!string.IsNullOrEmpty(googleEmail) &&
                     await blacklistService.IsEmailBlacklistedAsync(googleEmail).ConfigureAwait(false))
                 {
+                    LogAuthEvent("google", "blacklisted", clientIp, googleEmail);
                     return ApiBlacklisted();
                 }
 
@@ -229,6 +249,7 @@ public class AuthController(
 
                 if (!createResult.IsSuccess || createResult.Data == null)
                 {
+                    LogAuthEvent("google", "create_failed", clientIp, googleEmail);
                     return StatusCode(StatusCodes.Status409Conflict,
                         new ApiError(ApiError.Codes.GoogleAccountNotLinked,
                             createResult.Messages?.FirstOrDefault() ?? "Failed to create account",
@@ -236,18 +257,21 @@ public class AuthController(
                 }
 
                 user = createResult.Data;
+                authOutcome = "new_user";
             }
         }
 
         if (user == null)
         {
             // This shouldn't happen, but handle it gracefully
+            LogAuthEvent("google", "not_linked", clientIp, googleEmail);
             return StatusCode(StatusCodes.Status409Conflict,
                 new ApiError(ApiError.Codes.GoogleAccountNotLinked,
                     "Google account is not linked. Please log in with password and link your Google account.",
                     GetCorrelationId()));
         }
 
+        LogAuthEvent("google", $"success_{authOutcome}", clientIp, user.UserName, user.Id);
         return await GenerateAuthResponseAsync(user, request.DeviceId, cancellationToken).ConfigureAwait(false);
     }
 
@@ -267,8 +291,11 @@ public class AuthController(
     [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> RefreshTokenWithRotationAsync([FromBody] RefreshTokenRequest request, CancellationToken cancellationToken = default)
     {
+        var clientIp = GetRequestIp(HttpContext);
+
         if (string.IsNullOrWhiteSpace(request.RefreshToken))
         {
+            LogAuthEvent("refresh", "missing_token", clientIp);
             return Unauthorized(new ApiError(ApiError.Codes.RefreshTokenInvalid, "Refresh token is required", GetCorrelationId()));
         }
 
@@ -276,12 +303,13 @@ public class AuthController(
             request.RefreshToken,
             request.DeviceId,
             Request.Headers.UserAgent.ToString(),
-            GetRequestIp(HttpContext),
+            clientIp,
             cancellationToken).ConfigureAwait(false);
 
         if (!rotateResult.IsSuccess)
         {
             var errorCode = rotateResult.ErrorCode ?? ApiError.Codes.RefreshTokenInvalid;
+            LogAuthEvent("refresh", errorCode, clientIp);
             return Unauthorized(new ApiError(errorCode, rotateResult.ErrorMessage ?? "Invalid refresh token", GetCorrelationId()));
         }
 
@@ -289,6 +317,7 @@ public class AuthController(
         var userResult = await userService.GetAsync(rotateResult.UserId!.Value, cancellationToken).ConfigureAwait(false);
         if (!userResult.IsSuccess || userResult.Data == null)
         {
+            LogAuthEvent("refresh", "user_not_found", clientIp, userId: rotateResult.UserId);
             return Unauthorized(new ApiError(ApiError.Codes.RefreshTokenInvalid, "User not found", GetCorrelationId()));
         }
 
@@ -298,20 +327,23 @@ public class AuthController(
         {
             // Revoke all tokens for this user
             await refreshTokenService.RevokeAllUserTokensAsync(user.Id, "account_disabled", cancellationToken).ConfigureAwait(false);
+            LogAuthEvent("refresh", "account_disabled", clientIp, user.UserName, user.Id);
             return StatusCode(StatusCodes.Status403Forbidden,
                 new ApiError(ApiError.Codes.AccountDisabled, "Account is disabled", GetCorrelationId()));
         }
 
         if (await blacklistService.IsEmailBlacklistedAsync(user.Email).ConfigureAwait(false) ||
-            await blacklistService.IsIpBlacklistedAsync(GetRequestIp(HttpContext)).ConfigureAwait(false))
+            await blacklistService.IsIpBlacklistedAsync(clientIp).ConfigureAwait(false))
         {
             await refreshTokenService.RevokeAllUserTokensAsync(user.Id, "blacklisted", cancellationToken).ConfigureAwait(false);
+            LogAuthEvent("refresh", "blacklisted", clientIp, user.UserName, user.Id);
             return ApiBlacklisted();
         }
 
         var (accessToken, expiresAt) = GenerateJwtToken(user);
         var melodeeConfig = await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
 
+        LogAuthEvent("refresh", "success", clientIp, user.UserName, user.Id);
         return Ok(new AuthenticationResponse
         {
             User = user.ToUserModel(GetBaseUrl(melodeeConfig)),
@@ -579,5 +611,20 @@ public class AuthController(
 
         var token = tokenHandler.CreateToken(tokenDescriptor);
         return (tokenHandler.WriteToken(token), expiresAt);
+    }
+
+    /// <summary>
+    /// Logs an authentication event for telemetry and monitoring.
+    /// No sensitive data (tokens, passwords) is logged.
+    /// </summary>
+    private void LogAuthEvent(string method, string outcome, string? clientIp, string? identifier = null, int? userId = null)
+    {
+        logger.LogInformation(
+            "Auth event: Method={Method}, Outcome={Outcome}, ClientIp={ClientIp}, Identifier={Identifier}, UserId={UserId}",
+            method,
+            outcome,
+            clientIp ?? "unknown",
+            identifier ?? "unknown",
+            userId);
     }
 }
