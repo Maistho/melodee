@@ -7,6 +7,7 @@
 @inherits MelodeeComponentBase
 
 @inject IMelodeeConfigurationFactory MelodeeConfigurationFactory
+@inject NavigationManager NavigationManager
 
 <PageTitle>About</PageTitle>
 
@@ -31,6 +32,7 @@
                 <RadzenStack Gap="0.25rem">
                     <RadzenText TextStyle="TextStyle.Overline">Melodee (UI Version)</RadzenText>
                     <RadzenText TextStyle="TextStyle.H5">@_uiVersion</RadzenText>
+                    <RadzenButton Text="API Docs" Icon="description" ButtonStyle="ButtonStyle.Info" Size="ButtonSize.Small" Style="margin-top: 0.5rem;" Click="@(() => NavigationManager.NavigateTo("/swagger", forceLoad: true))" />
                 </RadzenStack>
             </RadzenCard>
         </RadzenColumn>
