@@ -335,6 +335,159 @@ public class SongsController(
     }
 
     /// <summary>
+    /// Get songs the user has starred/liked (favorited).
+    /// </summary>
+    [HttpGet]
+    [Route("starred")]
+    [ProducesResponseType(typeof(SongPagedResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> StarredSongsAsync(short page = 1, short pageSize = 20, CancellationToken cancellationToken = default)
+    {
+        if (!ApiRequest.IsAuthorized)
+        {
+            return ApiUnauthorized();
+        }
+
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
+        {
+            return ApiUnauthorized();
+        }
+
+        if (user.IsLocked)
+        {
+            return ApiUserLocked();
+        }
+
+        if (!TryValidatePaging(page, pageSize, out var validatedPage, out var validatedPageSize, out var pagingError))
+        {
+            return pagingError!;
+        }
+
+        var starredResult = await songService.ListStarredAsync(new PagedRequest
+        {
+            Page = validatedPage,
+            PageSize = validatedPageSize
+        }, user.Id, cancellationToken).ConfigureAwait(false);
+
+        var baseUrl = await GetBaseUrlAsync(cancellationToken).ConfigureAwait(false);
+
+        return Ok(new
+        {
+            data = starredResult.Data.Select(x => x.ToSongModel(baseUrl, user.ToUserModel(baseUrl), user.PublicKey, GetClientBinding())).ToArray(),
+            meta = new
+            {
+                totalCount = starredResult.TotalCount,
+                page = (int)validatedPage,
+                pageSize = (int)validatedPageSize
+            }
+        });
+    }
+
+    /// <summary>
+    /// Get songs the user has marked as disliked.
+    /// </summary>
+    [HttpGet]
+    [Route("hated")]
+    [ProducesResponseType(typeof(SongPagedResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> HatedSongsAsync(short page = 1, short pageSize = 20, CancellationToken cancellationToken = default)
+    {
+        if (!ApiRequest.IsAuthorized)
+        {
+            return ApiUnauthorized();
+        }
+
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
+        {
+            return ApiUnauthorized();
+        }
+
+        if (user.IsLocked)
+        {
+            return ApiUserLocked();
+        }
+
+        if (!TryValidatePaging(page, pageSize, out var validatedPage, out var validatedPageSize, out var pagingError))
+        {
+            return pagingError!;
+        }
+
+        var hatedResult = await songService.ListHatedAsync(new PagedRequest
+        {
+            Page = validatedPage,
+            PageSize = validatedPageSize
+        }, user.Id, cancellationToken).ConfigureAwait(false);
+
+        var baseUrl = await GetBaseUrlAsync(cancellationToken).ConfigureAwait(false);
+
+        return Ok(new
+        {
+            data = hatedResult.Data.Select(x => x.ToSongModel(baseUrl, user.ToUserModel(baseUrl), user.PublicKey, GetClientBinding())).ToArray(),
+            meta = new
+            {
+                totalCount = hatedResult.TotalCount,
+                page = (int)validatedPage,
+                pageSize = (int)validatedPageSize
+            }
+        });
+    }
+
+    /// <summary>
+    /// Get songs the user has rated 4+ stars.
+    /// </summary>
+    [HttpGet]
+    [Route("top-rated")]
+    [ProducesResponseType(typeof(SongPagedResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> TopRatedSongsAsync(short page = 1, short pageSize = 20, CancellationToken cancellationToken = default)
+    {
+        if (!ApiRequest.IsAuthorized)
+        {
+            return ApiUnauthorized();
+        }
+
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
+        {
+            return ApiUnauthorized();
+        }
+
+        if (user.IsLocked)
+        {
+            return ApiUserLocked();
+        }
+
+        if (!TryValidatePaging(page, pageSize, out var validatedPage, out var validatedPageSize, out var pagingError))
+        {
+            return pagingError!;
+        }
+
+        var topRatedResult = await songService.ListTopRatedAsync(new PagedRequest
+        {
+            Page = validatedPage,
+            PageSize = validatedPageSize
+        }, user.Id, 4, cancellationToken).ConfigureAwait(false);
+
+        var baseUrl = await GetBaseUrlAsync(cancellationToken).ConfigureAwait(false);
+
+        return Ok(new
+        {
+            data = topRatedResult.Data.Select(x => x.ToSongModel(baseUrl, user.ToUserModel(baseUrl), user.PublicKey, GetClientBinding())).ToArray(),
+            meta = new
+            {
+                totalCount = topRatedResult.TotalCount,
+                page = (int)validatedPage,
+                pageSize = (int)validatedPageSize
+            }
+        });
+    }
+
+    /// <summary>
     /// Stream a song. Requires a valid auth token.
     /// </summary>
     [HttpGet]
