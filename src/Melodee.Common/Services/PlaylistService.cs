@@ -567,6 +567,25 @@ public class PlaylistService(
     /// <summary>
     /// Gets a playlist by API key for internal operations (no user access control).
     /// </summary>
+    public async Task<OperationResult<Playlist?>> GetByApiKeyAsync(Guid apiKey, CancellationToken cancellationToken)
+    {
+        var id = await CacheManager.GetAsync(CacheKeyDetailByApiKeyTemplate.FormatSmart(apiKey), async () =>
+        {
+            await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+            return await scopedContext.Playlists
+                .AsNoTracking()
+                .Where(p => p.ApiKey == apiKey)
+                .Select(p => p.Id)
+                .FirstOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }, cancellationToken).ConfigureAwait(false);
+
+        return id > 0 ? await GetAsync(id, cancellationToken).ConfigureAwait(false) : new OperationResult<Playlist?> { Data = null };
+    }
+
+    /// <summary>
+    /// Gets a playlist by API key for internal operations (no user access control).
+    /// </summary>
     private async Task<OperationResult<Playlist?>> GetByApiKeyInternalAsync(Guid apiKey, CancellationToken cancellationToken)
     {
         var id = await CacheManager.GetAsync(CacheKeyDetailByApiKeyTemplate.FormatSmart(apiKey), async () =>

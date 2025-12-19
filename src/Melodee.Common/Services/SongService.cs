@@ -1270,4 +1270,115 @@ public class SongService(
             Data = songs
         };
     }
+
+    /// <summary>
+    ///     Gets random songs from the library.
+    /// </summary>
+    public async Task<MelodeeModels.OperationResult<SongDataInfo[]>> GetRandomSongsAsync(
+        int count,
+        int? userId = null,
+        Guid? filterByArtistApiKey = null,
+        Guid? filterByAlbumApiKey = null,
+        string? filterByGenre = null,
+        int? fromYear = null,
+        int? toYear = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (count < 1)
+        {
+            count = 10;
+        }
+
+        if (count > 500)
+        {
+            count = 500;
+        }
+
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var query = scopedContext.Songs
+            .AsNoTracking()
+            .Include(s => s.Album)
+            .ThenInclude(a => a.Artist)
+            .AsQueryable();
+
+        // Apply filters
+        if (filterByArtistApiKey.HasValue)
+        {
+            query = query.Where(s => s.Album.Artist.ApiKey == filterByArtistApiKey.Value);
+        }
+
+        if (filterByAlbumApiKey.HasValue)
+        {
+            query = query.Where(s => s.Album.ApiKey == filterByAlbumApiKey.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(filterByGenre))
+        {
+            var genreNormalized = filterByGenre.ToUpperInvariant().Trim();
+            query = query.Where(s => s.Genres != null && s.Genres.Any(g => g.ToUpper().Contains(genreNormalized)));
+        }
+
+        if (fromYear.HasValue)
+        {
+            query = query.Where(s => s.Album.ReleaseDate.Year >= fromYear.Value);
+        }
+
+        if (toYear.HasValue)
+        {
+            query = query.Where(s => s.Album.ReleaseDate.Year <= toYear.Value);
+        }
+
+        // If user specified, exclude hated songs
+        if (userId.HasValue)
+        {
+            var hatedSongIds = await scopedContext.UserSongs
+                .AsNoTracking()
+                .Where(us => us.UserId == userId.Value && us.IsHated)
+                .Select(us => us.SongId)
+                .ToArrayAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            if (hatedSongIds.Length > 0)
+            {
+                query = query.Where(s => !hatedSongIds.Contains(s.Id));
+            }
+        }
+
+        // Get random songs using database-level randomization
+        var randomSongs = await query
+            .OrderBy(_ => EF.Functions.Random())
+            .Take(count)
+            .ToArrayAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var songs = randomSongs.Select(s => new SongDataInfo(
+            s.Id,
+            s.ApiKey,
+            s.IsLocked,
+            s.Title,
+            s.TitleNormalized,
+            s.SongNumber,
+            s.Album.ReleaseDate,
+            s.Album.Name,
+            s.Album.ApiKey,
+            s.Album.Artist.Name,
+            s.Album.Artist.ApiKey,
+            s.FileSize,
+            s.Duration,
+            s.CreatedAt,
+            s.Tags ?? string.Empty,
+            false, // UserStarred - would need user context
+            0, // UserRating - would need user context
+            s.AlbumId,
+            s.LastPlayedAt,
+            s.PlayedCount,
+            s.CalculatedRating
+        )).ToArray();
+
+        return new MelodeeModels.OperationResult<SongDataInfo[]>
+        {
+            Data = songs
+        };
+    }
 }

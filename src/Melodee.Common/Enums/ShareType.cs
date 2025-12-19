@@ -8,5 +8,7 @@ public enum ShareType
 
     Album,
 
-    Playlist
+    Playlist,
+
+    Artist
 }

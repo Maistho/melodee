@@ -3,6 +3,7 @@ using Melodee.Blazor.Controllers.Melodee.Extensions;
 using Melodee.Blazor.Controllers.Melodee.Models;
 using Melodee.Blazor.Filters;
 using Melodee.Common.Configuration;
+using Melodee.Common.Models.Collection.Extensions;
 using Melodee.Common.Models.Search;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services;
@@ -159,4 +160,86 @@ public class SearchController(
             data = searchResult.Data.Songs.Select(x => x.ToSongModel(baseUrl, user.ToUserModel(baseUrl), user.PublicKey, GetClientBinding()))
         });
     }
+
+    /// <summary>
+    /// Get search suggestions/autocomplete for a query. Returns lightweight results for quick display.
+    /// </summary>
+    [HttpGet]
+    [Route("suggest")]
+    [ProducesResponseType(typeof(SearchSuggestResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> SuggestAsync(string q, short? limit, CancellationToken cancellationToken = default)
+    {
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
+        {
+            return ApiUnauthorized();
+        }
+
+        var limitValue = limit ?? 10;
+        if (limitValue < 1 || limitValue > 50)
+        {
+            limitValue = 10;
+        }
+
+        // Short-circuit for empty or too-short queries
+        var query = q?.Trim();
+        if (string.IsNullOrEmpty(query) || query.Length < 2)
+        {
+            return Ok(new SearchSuggestResponse([], [], [], []));
+        }
+
+        // Search with a small page size for quick suggestions
+        var searchResult = await searchService.DoSearchAsync(user.ApiKey,
+                ApiRequest.ApiRequestPlayer.UserAgent,
+                query,
+                1, // albumPage
+                1, // artistPage
+                1, // songPage
+                limitValue,
+                SearchInclude.Artists | SearchInclude.Albums | SearchInclude.Songs | SearchInclude.Playlists,
+                null,
+                cancellationToken)
+            .ConfigureAwait(false);
+
+        var baseUrl = await GetBaseUrlAsync(cancellationToken).ConfigureAwait(false);
+
+        // Return lightweight suggestion objects
+        var artistSuggestions = searchResult.Data.Artists
+            .Take(limitValue)
+            .Select(a => new SearchSuggestion(a.ApiKey, a.Name, "artist", $"{baseUrl}/images/{a.ToApiKey()}/{MelodeeConfiguration.DefaultThumbNailSize}"))
+            .ToArray();
+
+        var albumSuggestions = searchResult.Data.Albums
+            .Take(limitValue)
+            .Select(a => new SearchSuggestion(a.ApiKey, $"{a.Name} - {a.ArtistName}", "album", $"{baseUrl}/images/{a.ToApiKey()}/{MelodeeConfiguration.DefaultThumbNailSize}"))
+            .ToArray();
+
+        var songSuggestions = searchResult.Data.Songs
+            .Take(limitValue)
+            .Select(s => new SearchSuggestion(s.ApiKey, $"{s.Title} - {s.ArtistName}", "song", $"{baseUrl}/images/{s.ToApiKey()}/{MelodeeConfiguration.DefaultThumbNailSize}"))
+            .ToArray();
+
+        var playlistSuggestions = searchResult.Data.Playlists
+            .Take(limitValue)
+            .Select(p => new SearchSuggestion(p.ApiKey, p.Name, "playlist", $"{baseUrl}/images/{p.ToApiKey()}/{MelodeeConfiguration.DefaultThumbNailSize}"))
+            .ToArray();
+
+        return Ok(new SearchSuggestResponse(artistSuggestions, albumSuggestions, songSuggestions, playlistSuggestions));
+    }
 }
+
+/// <summary>
+/// Lightweight suggestion item for autocomplete.
+/// </summary>
+public record SearchSuggestion(Guid Id, string Name, string Type, string ThumbnailUrl);
+
+/// <summary>
+/// Response for search suggestions.
+/// </summary>
+public record SearchSuggestResponse(
+    SearchSuggestion[] Artists,
+    SearchSuggestion[] Albums,
+    SearchSuggestion[] Songs,
+    SearchSuggestion[] Playlists);

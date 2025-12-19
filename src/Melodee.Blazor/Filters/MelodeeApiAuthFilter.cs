@@ -23,7 +23,8 @@ public enum UserCapability
     Stream,
     Playlist,
     Admin,
-    Scrobble
+    Scrobble,
+    Share
 }
 
 /// <summary>
@@ -119,6 +120,7 @@ public sealed class MelodeeApiAuthFilter(
             UserCapability.Stream => user.HasStreamRole,
             UserCapability.Playlist => user.HasPlaylistRole,
             UserCapability.Scrobble => user.IsScrobblingEnabled,
+            UserCapability.Share => user.HasShareRole,
             _ => false
         };
 }

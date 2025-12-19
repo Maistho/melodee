@@ -2148,4 +2148,351 @@ IBus bus)
             Data = result
         };
     }
+
+    #region Password Reset
+
+    /// <summary>
+    ///     Generates a password reset token for the user with the given email.
+    ///     Returns the token if successful, null if user not found.
+    /// </summary>
+    public async Task<MelodeeModels.OperationResult<string?>> GeneratePasswordResetTokenAsync(
+        string email,
+        CancellationToken cancellationToken = default)
+    {
+        Guard.Against.NullOrWhiteSpace(email, nameof(email));
+
+        var emailNormalized = email.ToNormalizedString() ?? email.ToLowerInvariant();
+
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var user = await scopedContext.Users
+            .FirstOrDefaultAsync(u => u.EmailNormalized == emailNormalized, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (user == null)
+        {
+            return new MelodeeModels.OperationResult<string?>("User not found")
+            {
+                Data = null,
+                Type = MelodeeModels.OperationResponseType.NotFound
+            };
+        }
+
+        if (user.IsLocked)
+        {
+            return new MelodeeModels.OperationResult<string?>("User is locked")
+            {
+                Data = null,
+                Type = MelodeeModels.OperationResponseType.AccessDenied
+            };
+        }
+
+        // Generate a secure random token
+        var tokenBytes = new byte[32];
+        using (var rng = RandomNumberGenerator.Create())
+        {
+            rng.GetBytes(tokenBytes);
+        }
+        var token = Convert.ToBase64String(tokenBytes).Replace("+", "-").Replace("/", "_").TrimEnd('=');
+
+        // Set token expiration to 1 hour from now
+        user.PasswordResetToken = token;
+        user.PasswordResetTokenExpiresAt = SystemClock.Instance.GetCurrentInstant().Plus(Duration.FromHours(1));
+        user.LastUpdatedAt = SystemClock.Instance.GetCurrentInstant();
+
+        await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        ClearUserCache(user);
+
+        return new MelodeeModels.OperationResult<string?>
+        {
+            Data = token
+        };
+    }
+
+    /// <summary>
+    ///     Validates a password reset token and returns the user if valid.
+    /// </summary>
+    public async Task<MelodeeModels.OperationResult<User?>> ValidatePasswordResetTokenAsync(
+        string token,
+        CancellationToken cancellationToken = default)
+    {
+        Guard.Against.NullOrWhiteSpace(token, nameof(token));
+
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var user = await scopedContext.Users
+            .FirstOrDefaultAsync(u => u.PasswordResetToken == token, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (user == null)
+        {
+            return new MelodeeModels.OperationResult<User?>("Invalid token")
+            {
+                Data = null,
+                Type = MelodeeModels.OperationResponseType.NotFound
+            };
+        }
+
+        if (user.PasswordResetTokenExpiresAt == null ||
+            user.PasswordResetTokenExpiresAt < SystemClock.Instance.GetCurrentInstant())
+        {
+            return new MelodeeModels.OperationResult<User?>("Token has expired")
+            {
+                Data = null,
+                Type = MelodeeModels.OperationResponseType.ValidationFailure
+            };
+        }
+
+        return new MelodeeModels.OperationResult<User?>
+        {
+            Data = user
+        };
+    }
+
+    /// <summary>
+    ///     Resets the user's password using a valid reset token.
+    /// </summary>
+    public async Task<MelodeeModels.OperationResult<bool>> ResetPasswordWithTokenAsync(
+        string token,
+        string newPassword,
+        CancellationToken cancellationToken = default)
+    {
+        Guard.Against.NullOrWhiteSpace(token, nameof(token));
+        Guard.Against.NullOrWhiteSpace(newPassword, nameof(newPassword));
+
+        var validationResult = await ValidatePasswordResetTokenAsync(token, cancellationToken).ConfigureAwait(false);
+        if (!validationResult.IsSuccess || validationResult.Data == null)
+        {
+            return new MelodeeModels.OperationResult<bool>(validationResult.Messages ?? ["Invalid or expired token"])
+            {
+                Data = false,
+                Type = validationResult.Type
+            };
+        }
+
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var user = await scopedContext.Users
+            .FirstAsync(u => u.Id == validationResult.Data.Id, cancellationToken)
+            .ConfigureAwait(false);
+
+        // Encrypt the new password using the user's public key
+        var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
+        var encryptionKey = configuration.GetValue<string>(SettingRegistry.EncryptionPrivateKey);
+        user.PasswordEncrypted = EncryptionHelper.Encrypt(encryptionKey!, newPassword, user.PublicKey);
+
+        // Clear the reset token
+        user.PasswordResetToken = null;
+        user.PasswordResetTokenExpiresAt = null;
+        user.LastUpdatedAt = SystemClock.Instance.GetCurrentInstant();
+
+        await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        ClearUserCache(user);
+
+        return new MelodeeModels.OperationResult<bool>
+        {
+            Data = true
+        };
+    }
+
+    #endregion
+
+    #region Genre Favorites
+
+    /// <summary>
+    ///     Toggles the starred status for a genre for the user.
+    /// </summary>
+    public async Task<MelodeeModels.OperationResult<bool>> ToggleGenreStarAsync(
+        int userId,
+        string genreName,
+        bool isStarred,
+        CancellationToken cancellationToken = default)
+    {
+        Guard.Against.Expression(x => x < 1, userId, nameof(userId));
+        Guard.Against.NullOrWhiteSpace(genreName, nameof(genreName));
+
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var user = await scopedContext.Users
+            .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (user == null)
+        {
+            return new MelodeeModels.OperationResult<bool>("User not found")
+            {
+                Data = false,
+                Type = MelodeeModels.OperationResponseType.NotFound
+            };
+        }
+
+        var normalizedGenre = genreName.ToUpperInvariant().Trim();
+        var starredGenres = ParsePipeSeparatedList(user.StarredGenres);
+
+        if (isStarred)
+        {
+            if (!starredGenres.Contains(normalizedGenre))
+            {
+                starredGenres.Add(normalizedGenre);
+            }
+        }
+        else
+        {
+            starredGenres.Remove(normalizedGenre);
+        }
+
+        user.StarredGenres = starredGenres.Count > 0 ? string.Join("|", starredGenres) : null;
+        user.LastUpdatedAt = SystemClock.Instance.GetCurrentInstant();
+
+        await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        ClearUserCache(user);
+
+        return new MelodeeModels.OperationResult<bool>
+        {
+            Data = true
+        };
+    }
+
+    /// <summary>
+    ///     Toggles the hated status for a genre for the user.
+    /// </summary>
+    public async Task<MelodeeModels.OperationResult<bool>> ToggleGenreHatedAsync(
+        int userId,
+        string genreName,
+        bool isHated,
+        CancellationToken cancellationToken = default)
+    {
+        Guard.Against.Expression(x => x < 1, userId, nameof(userId));
+        Guard.Against.NullOrWhiteSpace(genreName, nameof(genreName));
+
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var user = await scopedContext.Users
+            .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (user == null)
+        {
+            return new MelodeeModels.OperationResult<bool>("User not found")
+            {
+                Data = false,
+                Type = MelodeeModels.OperationResponseType.NotFound
+            };
+        }
+
+        var normalizedGenre = genreName.ToUpperInvariant().Trim();
+        var hatedGenres = ParsePipeSeparatedList(user.HatedGenres);
+
+        if (isHated)
+        {
+            if (!hatedGenres.Contains(normalizedGenre))
+            {
+                hatedGenres.Add(normalizedGenre);
+            }
+        }
+        else
+        {
+            hatedGenres.Remove(normalizedGenre);
+        }
+
+        user.HatedGenres = hatedGenres.Count > 0 ? string.Join("|", hatedGenres) : null;
+        user.LastUpdatedAt = SystemClock.Instance.GetCurrentInstant();
+
+        await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        ClearUserCache(user);
+
+        return new MelodeeModels.OperationResult<bool>
+        {
+            Data = true
+        };
+    }
+
+    /// <summary>
+    ///     Gets the list of starred genres for the user.
+    /// </summary>
+    public async Task<MelodeeModels.OperationResult<string[]>> GetStarredGenresAsync(
+        int userId,
+        CancellationToken cancellationToken = default)
+    {
+        Guard.Against.Expression(x => x < 1, userId, nameof(userId));
+
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var user = await scopedContext.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (user == null)
+        {
+            return new MelodeeModels.OperationResult<string[]>("User not found")
+            {
+                Data = [],
+                Type = MelodeeModels.OperationResponseType.NotFound
+            };
+        }
+
+        return new MelodeeModels.OperationResult<string[]>
+        {
+            Data = ParsePipeSeparatedList(user.StarredGenres).ToArray()
+        };
+    }
+
+    /// <summary>
+    ///     Gets the list of hated genres for the user.
+    /// </summary>
+    public async Task<MelodeeModels.OperationResult<string[]>> GetHatedGenresAsync(
+        int userId,
+        CancellationToken cancellationToken = default)
+    {
+        Guard.Against.Expression(x => x < 1, userId, nameof(userId));
+
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var user = await scopedContext.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (user == null)
+        {
+            return new MelodeeModels.OperationResult<string[]>("User not found")
+            {
+                Data = [],
+                Type = MelodeeModels.OperationResponseType.NotFound
+            };
+        }
+
+        return new MelodeeModels.OperationResult<string[]>
+        {
+            Data = ParsePipeSeparatedList(user.HatedGenres).ToArray()
+        };
+    }
+
+    private static List<string> ParsePipeSeparatedList(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return [];
+        }
+
+        return value.Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(x => x.ToUpperInvariant())
+            .Distinct()
+            .ToList();
+    }
+
+    #endregion
+
+    private void ClearUserCache(User user)
+    {
+        CacheManager.Remove(CacheKeyDetailTemplate.FormatSmart(user.Id));
+        CacheManager.Remove(CacheKeyDetailByApiKeyTemplate.FormatSmart(user.ApiKey));
+        CacheManager.Remove(CacheKeyDetailByEmailAddressKeyTemplate.FormatSmart(user.EmailNormalized));
+        CacheManager.Remove(CacheKeyDetailByUsernameTemplate.FormatSmart(user.UserNameNormalized));
+    }
 }

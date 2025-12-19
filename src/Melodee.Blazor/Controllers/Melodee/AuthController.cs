@@ -159,6 +159,110 @@ public class AuthController(
         return Ok(new { message = "Logged out successfully" });
     }
 
+    /// <summary>
+    /// Request a password reset magic link. The server will generate a token and return it.
+    /// In production, this token would be sent via email. The client can then call
+    /// POST /auth/password-reset/confirm with the token and new password.
+    /// </summary>
+    [HttpPost]
+    [Route("password-reset/request")]
+    [AllowAnonymous]
+    [EnableRateLimiting("melodee-auth")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RequestPasswordResetAsync([FromBody] PasswordResetRequest request, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(request.Email))
+        {
+            return ApiValidationError("Email is required");
+        }
+
+        var result = await userService.GeneratePasswordResetTokenAsync(request.Email, cancellationToken).ConfigureAwait(false);
+
+        if (!result.IsSuccess)
+        {
+            // Don't reveal if user exists - return success anyway for security
+            // In production, always return success to prevent email enumeration
+            return Ok(new { message = "If an account with that email exists, a password reset link has been sent." });
+        }
+
+        // In a real implementation, you would send an email with the reset link
+        // For now, we return the token in the response (for development/testing)
+        var melodeeConfig = await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
+        var baseUrl = GetBaseUrl(melodeeConfig);
+        var resetUrl = $"{baseUrl}/reset-password?token={result.Data}";
+
+        return Ok(new
+        {
+            message = "If an account with that email exists, a password reset link has been sent.",
+            // Include token in response for development - remove in production
+            resetToken = result.Data,
+            resetUrl
+        });
+    }
+
+    /// <summary>
+    /// Validate a password reset token without consuming it.
+    /// </summary>
+    [HttpGet]
+    [Route("password-reset/validate/{token}")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ValidatePasswordResetTokenAsync(string token, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            return ApiValidationError("Token is required");
+        }
+
+        var result = await userService.ValidatePasswordResetTokenAsync(token, cancellationToken).ConfigureAwait(false);
+
+        if (!result.IsSuccess)
+        {
+            return ApiBadRequest(result.Messages?.FirstOrDefault() ?? "Invalid or expired token");
+        }
+
+        return Ok(new { valid = true });
+    }
+
+    /// <summary>
+    /// Reset password using a valid reset token.
+    /// </summary>
+    [HttpPost]
+    [Route("password-reset/confirm")]
+    [AllowAnonymous]
+    [EnableRateLimiting("melodee-auth")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ConfirmPasswordResetAsync([FromBody] PasswordResetConfirmRequest request, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(request.Token))
+        {
+            return ApiValidationError("Token is required");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.NewPassword))
+        {
+            return ApiValidationError("New password is required");
+        }
+
+        if (request.NewPassword.Length < 8)
+        {
+            return ApiValidationError("Password must be at least 8 characters");
+        }
+
+        var result = await userService.ResetPasswordWithTokenAsync(request.Token, request.NewPassword, cancellationToken).ConfigureAwait(false);
+
+        if (!result.IsSuccess)
+        {
+            return ApiBadRequest(result.Messages?.FirstOrDefault() ?? "Failed to reset password");
+        }
+
+        return Ok(new { message = "Password has been reset successfully" });
+    }
+
     private (string token, DateTime expiresAt) GenerateJwtToken(Data.User user)
     {
         var tokenHandler = new JwtSecurityTokenHandler();

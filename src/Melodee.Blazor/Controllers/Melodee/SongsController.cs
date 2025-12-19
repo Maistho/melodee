@@ -499,4 +499,72 @@ public class SongsController(
             };
         }
     }
+
+    /// <summary>
+    /// Get random songs from the library. Useful for shuffle/radio features.
+    /// </summary>
+    [HttpGet]
+    [Route("random")]
+    [ProducesResponseType(typeof(Models.Song[]), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> RandomSongsAsync(
+        short? count,
+        Guid? artistId,
+        Guid? albumId,
+        string? genre,
+        int? fromYear,
+        int? toYear,
+        CancellationToken cancellationToken = default)
+    {
+        if (!ApiRequest.IsAuthorized)
+        {
+            return ApiUnauthorized();
+        }
+
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
+        {
+            return ApiUnauthorized();
+        }
+
+        if (user.IsLocked)
+        {
+            return ApiUserLocked();
+        }
+
+        var requestedCount = count ?? 50;
+        if (requestedCount < 1)
+        {
+            requestedCount = 50;
+        }
+
+        if (requestedCount > 500)
+        {
+            requestedCount = 500;
+        }
+
+        var randomResult = await songService.GetRandomSongsAsync(
+            requestedCount,
+            user.Id,
+            artistId,
+            albumId,
+            genre,
+            fromYear,
+            toYear,
+            cancellationToken).ConfigureAwait(false);
+
+        if (!randomResult.IsSuccess)
+        {
+            return ApiBadRequest("Unable to get random songs.");
+        }
+
+        var baseUrl = await GetBaseUrlAsync(cancellationToken).ConfigureAwait(false);
+
+        return Ok(new
+        {
+            count = randomResult.Data.Length,
+            data = randomResult.Data.Select(x => x.ToSongModel(baseUrl, user.ToUserModel(baseUrl), user.PublicKey, GetClientBinding())).ToArray()
+        });
+    }
 }

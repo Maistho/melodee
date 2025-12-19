@@ -1,6 +1,8 @@
 using Melodee.Common.Data;
 using Melodee.Common.Data.Constants;
 using Melodee.Common.Data.Models.Extensions;
+using Melodee.Common.Models;
+using Melodee.Common.Models.Collection;
 using Melodee.Common.Models.OpenSubsonic;
 using Melodee.Common.Services.Caching;
 using Melodee.Common.Utility;
@@ -53,6 +55,197 @@ public class UserQueueService(
             Username = user.Data.UserName,
             Entry = usersPlayQues.Select(x => x.Song.ToApiChild(x.Song.Album, null)).ToArray()
         };
+    }
+
+    /// <summary>
+    /// Gets the play queue for a user by their ID (for Melodee API).
+    /// </summary>
+    public async Task<OperationResult<UserPlayQueue?>> GetPlayQueueByUserIdAsync(
+        int userId,
+        CancellationToken cancellationToken = default)
+    {
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var user = await scopedContext.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (user == null)
+        {
+            return new OperationResult<UserPlayQueue?>("User not found")
+            {
+                Data = null,
+                Type = OperationResponseType.NotFound
+            };
+        }
+
+        var usersPlayQues = await scopedContext
+            .PlayQues
+            .Include(x => x.Song)
+            .ThenInclude(x => x.Album)
+            .ThenInclude(x => x.Artist)
+            .Where(x => x.UserId == userId)
+            .OrderBy(x => x.PlayQueId)
+            .ToArrayAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        if (usersPlayQues.Length == 0)
+        {
+            return new OperationResult<UserPlayQueue?>
+            {
+                Data = new UserPlayQueue(
+                    [],
+                    null,
+                    0,
+                    user.UserName,
+                    null)
+            };
+        }
+
+        var current = usersPlayQues.FirstOrDefault(x => x.IsCurrentSong);
+        var songs = usersPlayQues.Select(pq => new SongDataInfo(
+            pq.Song.Id,
+            pq.Song.ApiKey,
+            pq.Song.IsLocked,
+            pq.Song.Title,
+            pq.Song.TitleNormalized,
+            pq.Song.SongNumber,
+            pq.Song.Album.ReleaseDate,
+            pq.Song.Album.Name,
+            pq.Song.Album.ApiKey,
+            pq.Song.Album.Artist.Name,
+            pq.Song.Album.Artist.ApiKey,
+            pq.Song.FileSize,
+            pq.Song.Duration,
+            pq.Song.CreatedAt,
+            pq.Song.Tags ?? string.Empty,
+            false, // UserStarred
+            0, // UserRating
+            pq.Song.AlbumId,
+            pq.Song.LastPlayedAt,
+            pq.Song.PlayedCount,
+            pq.Song.CalculatedRating
+        )).ToArray();
+
+        return new OperationResult<UserPlayQueue?>
+        {
+            Data = new UserPlayQueue(
+                songs,
+                current?.SongApiKey,
+                current?.Position ?? 0,
+                current?.ChangedBy ?? user.UserName,
+                current?.LastUpdatedAt.ToString())
+        };
+    }
+
+    /// <summary>
+    /// Saves the play queue for a user by their ID (for Melodee API).
+    /// </summary>
+    public async Task<OperationResult<bool>> SavePlayQueueByUserIdAsync(
+        int userId,
+        Guid[] songApiKeys,
+        Guid? currentSongApiKey,
+        double? position,
+        string changedBy,
+        CancellationToken cancellationToken = default)
+    {
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var user = await scopedContext.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (user == null)
+        {
+            return new OperationResult<bool>("User not found")
+            {
+                Data = false,
+                Type = OperationResponseType.NotFound
+            };
+        }
+
+        // Clear existing queue
+        var existingQueue = await scopedContext.PlayQues
+            .Where(pq => pq.UserId == userId)
+            .ToArrayAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        if (existingQueue.Length > 0)
+        {
+            scopedContext.PlayQues.RemoveRange(existingQueue);
+        }
+
+        // If no songs provided, just clear the queue
+        if (songApiKeys.Length == 0)
+        {
+            await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            return new OperationResult<bool> { Data = true };
+        }
+
+        // Look up all songs
+        var songs = await scopedContext.Songs
+            .AsNoTracking()
+            .Where(s => songApiKeys.Contains(s.ApiKey))
+            .ToDictionaryAsync(s => s.ApiKey, cancellationToken)
+            .ConfigureAwait(false);
+
+        var now = Instant.FromDateTimeUtc(DateTime.UtcNow);
+        var newQueue = new List<dbModels.PlayQueue>();
+        var playQueId = 1;
+
+        foreach (var apiKey in songApiKeys)
+        {
+            if (!songs.TryGetValue(apiKey, out var song))
+            {
+                continue;
+            }
+
+            newQueue.Add(new dbModels.PlayQueue
+            {
+                PlayQueId = playQueId++,
+                CreatedAt = now,
+                IsCurrentSong = apiKey == currentSongApiKey,
+                UserId = userId,
+                SongId = song.Id,
+                SongApiKey = song.ApiKey,
+                ChangedBy = changedBy,
+                Position = apiKey == currentSongApiKey && position.HasValue ? position.Value : 0
+            });
+        }
+
+        if (newQueue.Count > 0)
+        {
+            await scopedContext.PlayQues.AddRangeAsync(newQueue, cancellationToken).ConfigureAwait(false);
+        }
+
+        await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        return new OperationResult<bool> { Data = true };
+    }
+
+    /// <summary>
+    /// Clears the play queue for a user.
+    /// </summary>
+    public async Task<OperationResult<bool>> ClearPlayQueueByUserIdAsync(
+        int userId,
+        CancellationToken cancellationToken = default)
+    {
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var existingQueue = await scopedContext.PlayQues
+            .Where(pq => pq.UserId == userId)
+            .ToArrayAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        if (existingQueue.Length > 0)
+        {
+            scopedContext.PlayQues.RemoveRange(existingQueue);
+            await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        return new OperationResult<bool> { Data = true };
     }
 
     public async Task<bool> SavePlayQueueForUserAsync(string username, string[]? apiIds, string? currentApiId, double? position, string? client,

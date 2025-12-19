@@ -205,6 +205,164 @@ public sealed class GenresController(
             limit = (int)validatedLimit
         });
     }
+
+    /// <summary>
+    /// Toggle starred status for a genre.
+    /// </summary>
+    [HttpPost]
+    [Route("starred/{id}/{isStarred:bool}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ToggleGenreStarred(string id, bool isStarred, CancellationToken cancellationToken = default)
+    {
+        if (!ApiRequest.IsAuthorized)
+        {
+            return ApiUnauthorized();
+        }
+
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
+        {
+            return ApiUnauthorized();
+        }
+
+        if (user.IsLocked)
+        {
+            return ApiUserLocked();
+        }
+
+        // Decode genre name from base64 ID
+        string genreName;
+        try
+        {
+            genreName = id.FromBase64();
+        }
+        catch
+        {
+            return ApiBadRequest("Invalid genre ID");
+        }
+
+        if (string.IsNullOrWhiteSpace(genreName))
+        {
+            return ApiBadRequest("Invalid genre ID");
+        }
+
+        var result = await userService.ToggleGenreStarAsync(user.Id, genreName, isStarred, cancellationToken).ConfigureAwait(false);
+        if (result.IsSuccess)
+        {
+            return Ok();
+        }
+
+        return ApiBadRequest("Unable to toggle star for genre.");
+    }
+
+    /// <summary>
+    /// Toggle hated status for a genre.
+    /// </summary>
+    [HttpPost]
+    [Route("hated/{id}/{isHated:bool}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ToggleGenreHated(string id, bool isHated, CancellationToken cancellationToken = default)
+    {
+        if (!ApiRequest.IsAuthorized)
+        {
+            return ApiUnauthorized();
+        }
+
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
+        {
+            return ApiUnauthorized();
+        }
+
+        if (user.IsLocked)
+        {
+            return ApiUserLocked();
+        }
+
+        // Decode genre name from base64 ID
+        string genreName;
+        try
+        {
+            genreName = id.FromBase64();
+        }
+        catch
+        {
+            return ApiBadRequest("Invalid genre ID");
+        }
+
+        if (string.IsNullOrWhiteSpace(genreName))
+        {
+            return ApiBadRequest("Invalid genre ID");
+        }
+
+        var result = await userService.ToggleGenreHatedAsync(user.Id, genreName, isHated, cancellationToken).ConfigureAwait(false);
+        if (result.IsSuccess)
+        {
+            return Ok();
+        }
+
+        return ApiBadRequest("Unable to toggle hated for genre.");
+    }
+
+    /// <summary>
+    /// Get the list of starred genres for the current user.
+    /// </summary>
+    [HttpGet]
+    [Route("starred")]
+    [ProducesResponseType(typeof(string[]), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetStarredGenres(CancellationToken cancellationToken = default)
+    {
+        if (!ApiRequest.IsAuthorized)
+        {
+            return ApiUnauthorized();
+        }
+
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
+        {
+            return ApiUnauthorized();
+        }
+
+        var result = await userService.GetStarredGenresAsync(user.Id, cancellationToken).ConfigureAwait(false);
+
+        // Convert genre names to Genre objects with base64 IDs
+        var genres = result.Data.Select(g => new Genre(g.ToBase64(), g, 0, 0)).ToArray();
+
+        return Ok(new { genres });
+    }
+
+    /// <summary>
+    /// Get the list of hated/disliked genres for the current user.
+    /// </summary>
+    [HttpGet]
+    [Route("hated")]
+    [ProducesResponseType(typeof(string[]), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetHatedGenres(CancellationToken cancellationToken = default)
+    {
+        if (!ApiRequest.IsAuthorized)
+        {
+            return ApiUnauthorized();
+        }
+
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
+        {
+            return ApiUnauthorized();
+        }
+
+        var result = await userService.GetHatedGenresAsync(user.Id, cancellationToken).ConfigureAwait(false);
+
+        // Convert genre names to Genre objects with base64 IDs
+        var genres = result.Data.Select(g => new Genre(g.ToBase64(), g, 0, 0)).ToArray();
+
+        return Ok(new { genres });
+    }
 }
 
 // Response types for OpenAPI documentation

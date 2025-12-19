@@ -91,6 +91,23 @@ public class User : DataModelBase
     [MaxLength(MaxLengthDefinitions.MaxIndexableLength)]
     public string? HatedGenres { get; set; }
 
+    /// <summary>
+    ///     Pipe separated list of starred/favorited genres. e.g. 'ROCK|JAZZ|CLASSICAL'
+    /// </summary>
+    [MaxLength(MaxLengthDefinitions.MaxIndexableLength)]
+    public string? StarredGenres { get; set; }
+
+    /// <summary>
+    ///     Token used for password reset. Null when no reset is pending.
+    /// </summary>
+    [MaxLength(MaxLengthDefinitions.HashOrGuidLength)]
+    public string? PasswordResetToken { get; set; }
+
+    /// <summary>
+    ///     When the password reset token expires.
+    /// </summary>
+    public Instant? PasswordResetTokenExpiresAt { get; set; }
+
     public ICollection<Bookmark> Bookmarks { get; set; } = new List<Bookmark>();
 
     public ICollection<Player> Players { get; set; } = new List<Player>();
