@@ -379,8 +379,11 @@ public class SongsController(
             meta = new
             {
                 totalCount = starredResult.TotalCount,
-                page = (int)validatedPage,
-                pageSize = (int)validatedPageSize
+                pageSize = (int)validatedPageSize,
+                currentPage = (int)validatedPage,
+                totalPages = starredResult.TotalPages,
+                hasNext = validatedPage < starredResult.TotalPages,
+                hasPrevious = validatedPage > 1
             }
         });
     }
@@ -430,8 +433,11 @@ public class SongsController(
             meta = new
             {
                 totalCount = hatedResult.TotalCount,
-                page = (int)validatedPage,
-                pageSize = (int)validatedPageSize
+                pageSize = (int)validatedPageSize,
+                currentPage = (int)validatedPage,
+                totalPages = hatedResult.TotalPages,
+                hasNext = validatedPage < hatedResult.TotalPages,
+                hasPrevious = validatedPage > 1
             }
         });
     }
@@ -481,8 +487,11 @@ public class SongsController(
             meta = new
             {
                 totalCount = topRatedResult.TotalCount,
-                page = (int)validatedPage,
-                pageSize = (int)validatedPageSize
+                pageSize = (int)validatedPageSize,
+                currentPage = (int)validatedPage,
+                totalPages = topRatedResult.TotalPages,
+                hasNext = validatedPage < topRatedResult.TotalPages,
+                hasPrevious = validatedPage > 1
             }
         });
     }

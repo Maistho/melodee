@@ -341,4 +341,226 @@ public class ArtistsControllerTests
     }
 
     #endregion
+
+    #region Starred Artists Endpoint Tests
+
+    [Fact]
+    public void StarredArtistsAsync_HasCorrectRouteAttribute()
+    {
+        // Arrange
+        var method = typeof(ArtistsController).GetMethod(nameof(ArtistsController.StarredArtistsAsync));
+
+        // Assert
+        method.Should().NotBeNull();
+        var routeAttribute = method!.GetCustomAttributes(typeof(RouteAttribute), false).FirstOrDefault() as RouteAttribute;
+        routeAttribute.Should().NotBeNull();
+        routeAttribute!.Template.Should().Be("starred");
+    }
+
+    [Fact]
+    public void StarredArtistsAsync_HasHttpGetAttribute()
+    {
+        // Arrange
+        var method = typeof(ArtistsController).GetMethod(nameof(ArtistsController.StarredArtistsAsync));
+
+        // Assert
+        method.Should().NotBeNull();
+        var httpGetAttribute = method!.GetCustomAttributes(typeof(HttpGetAttribute), false).FirstOrDefault();
+        httpGetAttribute.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void StarredArtistsAsync_HasCorrectParameters()
+    {
+        // Arrange
+        var method = typeof(ArtistsController).GetMethod(nameof(ArtistsController.StarredArtistsAsync));
+
+        // Assert
+        method.Should().NotBeNull();
+        var parameters = method!.GetParameters();
+        parameters.Should().HaveCount(3);
+        parameters[0].Name.Should().Be("page");
+        parameters[1].Name.Should().Be("pageSize");
+        parameters[2].Name.Should().Be("cancellationToken");
+    }
+
+    [Fact]
+    public void StarredArtistsAsync_HasCorrectDefaultValues()
+    {
+        // Arrange
+        var method = typeof(ArtistsController).GetMethod(nameof(ArtistsController.StarredArtistsAsync));
+
+        // Assert
+        method.Should().NotBeNull();
+        var parameters = method!.GetParameters();
+        
+        var pageParam = parameters.First(p => p.Name == "page");
+        pageParam.HasDefaultValue.Should().BeTrue();
+        pageParam.DefaultValue.Should().Be((short)1);
+        
+        var pageSizeParam = parameters.First(p => p.Name == "pageSize");
+        pageSizeParam.HasDefaultValue.Should().BeTrue();
+        pageSizeParam.DefaultValue.Should().Be((short)20);
+    }
+
+    [Fact]
+    public void StarredArtistsAsync_ReturnsTaskOfIActionResult()
+    {
+        // Arrange
+        var method = typeof(ArtistsController).GetMethod(nameof(ArtistsController.StarredArtistsAsync));
+
+        // Assert
+        method.Should().NotBeNull();
+        method!.ReturnType.Should().Be(typeof(Task<IActionResult>));
+    }
+
+    #endregion
+
+    #region Hated Artists Endpoint Tests
+
+    [Fact]
+    public void HatedArtistsAsync_HasCorrectRouteAttribute()
+    {
+        // Arrange
+        var method = typeof(ArtistsController).GetMethod(nameof(ArtistsController.HatedArtistsAsync));
+
+        // Assert
+        method.Should().NotBeNull();
+        var routeAttribute = method!.GetCustomAttributes(typeof(RouteAttribute), false).FirstOrDefault() as RouteAttribute;
+        routeAttribute.Should().NotBeNull();
+        routeAttribute!.Template.Should().Be("hated");
+    }
+
+    [Fact]
+    public void HatedArtistsAsync_HasHttpGetAttribute()
+    {
+        // Arrange
+        var method = typeof(ArtistsController).GetMethod(nameof(ArtistsController.HatedArtistsAsync));
+
+        // Assert
+        method.Should().NotBeNull();
+        var httpGetAttribute = method!.GetCustomAttributes(typeof(HttpGetAttribute), false).FirstOrDefault();
+        httpGetAttribute.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void HatedArtistsAsync_HasCorrectParameters()
+    {
+        // Arrange
+        var method = typeof(ArtistsController).GetMethod(nameof(ArtistsController.HatedArtistsAsync));
+
+        // Assert
+        method.Should().NotBeNull();
+        var parameters = method!.GetParameters();
+        parameters.Should().HaveCount(3);
+        parameters[0].Name.Should().Be("page");
+        parameters[1].Name.Should().Be("pageSize");
+        parameters[2].Name.Should().Be("cancellationToken");
+    }
+
+    [Fact]
+    public void HatedArtistsAsync_HasCorrectDefaultValues()
+    {
+        // Arrange
+        var method = typeof(ArtistsController).GetMethod(nameof(ArtistsController.HatedArtistsAsync));
+
+        // Assert
+        method.Should().NotBeNull();
+        var parameters = method!.GetParameters();
+        
+        var pageParam = parameters.First(p => p.Name == "page");
+        pageParam.HasDefaultValue.Should().BeTrue();
+        pageParam.DefaultValue.Should().Be((short)1);
+        
+        var pageSizeParam = parameters.First(p => p.Name == "pageSize");
+        pageSizeParam.HasDefaultValue.Should().BeTrue();
+        pageSizeParam.DefaultValue.Should().Be((short)20);
+    }
+
+    [Fact]
+    public void HatedArtistsAsync_ReturnsTaskOfIActionResult()
+    {
+        // Arrange
+        var method = typeof(ArtistsController).GetMethod(nameof(ArtistsController.HatedArtistsAsync));
+
+        // Assert
+        method.Should().NotBeNull();
+        method!.ReturnType.Should().Be(typeof(Task<IActionResult>));
+    }
+
+    #endregion
+
+    #region Top Rated Artists Endpoint Tests
+
+    [Fact]
+    public void TopRatedArtistsAsync_HasCorrectRouteAttribute()
+    {
+        // Arrange
+        var method = typeof(ArtistsController).GetMethod(nameof(ArtistsController.TopRatedArtistsAsync));
+
+        // Assert
+        method.Should().NotBeNull();
+        var routeAttribute = method!.GetCustomAttributes(typeof(RouteAttribute), false).FirstOrDefault() as RouteAttribute;
+        routeAttribute.Should().NotBeNull();
+        routeAttribute!.Template.Should().Be("top-rated");
+    }
+
+    [Fact]
+    public void TopRatedArtistsAsync_HasHttpGetAttribute()
+    {
+        // Arrange
+        var method = typeof(ArtistsController).GetMethod(nameof(ArtistsController.TopRatedArtistsAsync));
+
+        // Assert
+        method.Should().NotBeNull();
+        var httpGetAttribute = method!.GetCustomAttributes(typeof(HttpGetAttribute), false).FirstOrDefault();
+        httpGetAttribute.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void TopRatedArtistsAsync_HasCorrectParameters()
+    {
+        // Arrange
+        var method = typeof(ArtistsController).GetMethod(nameof(ArtistsController.TopRatedArtistsAsync));
+
+        // Assert
+        method.Should().NotBeNull();
+        var parameters = method!.GetParameters();
+        parameters.Should().HaveCount(3);
+        parameters[0].Name.Should().Be("page");
+        parameters[1].Name.Should().Be("pageSize");
+        parameters[2].Name.Should().Be("cancellationToken");
+    }
+
+    [Fact]
+    public void TopRatedArtistsAsync_HasCorrectDefaultValues()
+    {
+        // Arrange
+        var method = typeof(ArtistsController).GetMethod(nameof(ArtistsController.TopRatedArtistsAsync));
+
+        // Assert
+        method.Should().NotBeNull();
+        var parameters = method!.GetParameters();
+        
+        var pageParam = parameters.First(p => p.Name == "page");
+        pageParam.HasDefaultValue.Should().BeTrue();
+        pageParam.DefaultValue.Should().Be((short)1);
+        
+        var pageSizeParam = parameters.First(p => p.Name == "pageSize");
+        pageSizeParam.HasDefaultValue.Should().BeTrue();
+        pageSizeParam.DefaultValue.Should().Be((short)20);
+    }
+
+    [Fact]
+    public void TopRatedArtistsAsync_ReturnsTaskOfIActionResult()
+    {
+        // Arrange
+        var method = typeof(ArtistsController).GetMethod(nameof(ArtistsController.TopRatedArtistsAsync));
+
+        // Assert
+        method.Should().NotBeNull();
+        method!.ReturnType.Should().Be(typeof(Task<IActionResult>));
+    }
+
+    #endregion
 }
