@@ -109,11 +109,11 @@ public class UserControllerTests
         var method = typeof(UserController).GetMethod(nameof(UserController.LikedSongsAsync));
         method.Should().NotBeNull();
         var parameters = method!.GetParameters();
-        
+
         var pageParam = parameters.First(p => p.Name == "page");
         pageParam.HasDefaultValue.Should().BeTrue();
         pageParam.DefaultValue.Should().Be(1);
-        
+
         var limitParam = parameters.First(p => p.Name == "limit");
         limitParam.HasDefaultValue.Should().BeTrue();
         limitParam.DefaultValue.Should().Be(50);
@@ -178,11 +178,11 @@ public class UserControllerTests
         var method = typeof(UserController).GetMethod(nameof(UserController.LikedAlbumsAsync));
         method.Should().NotBeNull();
         var parameters = method!.GetParameters();
-        
+
         var pageParam = parameters.First(p => p.Name == "page");
         pageParam.HasDefaultValue.Should().BeTrue();
         pageParam.DefaultValue.Should().Be(1);
-        
+
         var limitParam = parameters.First(p => p.Name == "limit");
         limitParam.HasDefaultValue.Should().BeTrue();
         limitParam.DefaultValue.Should().Be(50);
@@ -247,11 +247,11 @@ public class UserControllerTests
         var method = typeof(UserController).GetMethod(nameof(UserController.LikedArtistsAsync));
         method.Should().NotBeNull();
         var parameters = method!.GetParameters();
-        
+
         var pageParam = parameters.First(p => p.Name == "page");
         pageParam.HasDefaultValue.Should().BeTrue();
         pageParam.DefaultValue.Should().Be(1);
-        
+
         var limitParam = parameters.First(p => p.Name == "limit");
         limitParam.HasDefaultValue.Should().BeTrue();
         limitParam.DefaultValue.Should().Be(50);
@@ -316,11 +316,11 @@ public class UserControllerTests
         var method = typeof(UserController).GetMethod(nameof(UserController.RecentlyPlayedSongsAsync));
         method.Should().NotBeNull();
         var parameters = method!.GetParameters();
-        
+
         var pageParam = parameters.First(p => p.Name == "page");
         pageParam.HasDefaultValue.Should().BeTrue();
         pageParam.DefaultValue.Should().Be(1);
-        
+
         var limitParam = parameters.First(p => p.Name == "limit");
         limitParam.HasDefaultValue.Should().BeTrue();
         limitParam.DefaultValue.Should().Be(50);

@@ -112,11 +112,11 @@ public class GenresControllerTests
         // Assert
         method.Should().NotBeNull();
         var parameters = method!.GetParameters();
-        
+
         var pageParam = parameters.First(p => p.Name == "page");
         pageParam.HasDefaultValue.Should().BeTrue();
         pageParam.DefaultValue.Should().Be(1);
-        
+
         var limitParam = parameters.First(p => p.Name == "limit");
         limitParam.HasDefaultValue.Should().BeTrue();
         limitParam.DefaultValue.Should().Be(50);
@@ -218,11 +218,11 @@ public class GenresControllerTests
         // Assert
         method.Should().NotBeNull();
         var parameters = method!.GetParameters();
-        
+
         var pageParam = parameters.First(p => p.Name == "page");
         pageParam.HasDefaultValue.Should().BeTrue();
         pageParam.DefaultValue.Should().Be(1);
-        
+
         var limitParam = parameters.First(p => p.Name == "limit");
         limitParam.HasDefaultValue.Should().BeTrue();
         limitParam.DefaultValue.Should().Be(50);

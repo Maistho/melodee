@@ -107,14 +107,14 @@ public sealed class GenresController(
         var isDescending = validatedOrder.direction.Equals(PagedRequest.OrderDescDirection, StringComparison.OrdinalIgnoreCase);
         allGenres = validatedOrder.field switch
         {
-            nameof(Genre.Name) => isDescending 
-                ? allGenres.OrderByDescending(g => g.Name).ToList() 
+            nameof(Genre.Name) => isDescending
+                ? allGenres.OrderByDescending(g => g.Name).ToList()
                 : allGenres.OrderBy(g => g.Name).ToList(),
-            nameof(Genre.SongCount) => isDescending 
-                ? allGenres.OrderByDescending(g => g.SongCount).ToList() 
+            nameof(Genre.SongCount) => isDescending
+                ? allGenres.OrderByDescending(g => g.SongCount).ToList()
                 : allGenres.OrderBy(g => g.SongCount).ToList(),
-            nameof(Genre.AlbumCount) => isDescending 
-                ? allGenres.OrderByDescending(g => g.AlbumCount).ToList() 
+            nameof(Genre.AlbumCount) => isDescending
+                ? allGenres.OrderByDescending(g => g.AlbumCount).ToList()
                 : allGenres.OrderBy(g => g.AlbumCount).ToList(),
             _ => allGenres.OrderBy(g => g.Name).ToList()
         };

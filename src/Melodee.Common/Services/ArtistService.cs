@@ -1641,7 +1641,7 @@ public class ArtistService(
                 .ToList();
 
             var artistIds = pagedArtistData.Select(x => x.ArtistId).ToArray();
-            
+
             var rawArtists = await scopedContext.Artists
                 .Where(a => artistIds.Contains(a.Id))
                 .Include(a => a.Library)
