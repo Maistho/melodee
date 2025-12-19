@@ -19,7 +19,7 @@ namespace Melodee.Blazor.Controllers.Melodee;
 [ServiceFilter(typeof(MelodeeApiAuthFilter))]
 [EnableRateLimiting("melodee-api")]
 [ApiVersion(1)]
-[Route("api/v{version:apiVersion}/[controller]")]
+[Route("api/v{version:apiVersion}/search")]
 public class SearchController(
     ISerializer serializer,
     EtagRepository etagRepository,

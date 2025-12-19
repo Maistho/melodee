@@ -274,7 +274,7 @@ public class GenresControllerTests
 
         // Assert
         routeAttribute.Should().NotBeNull();
-        routeAttribute!.Template.Should().Be("api/v{version:apiVersion}/[controller]");
+        routeAttribute!.Template.Should().Be("api/v{version:apiVersion}/genres");
     }
 
     [Fact]

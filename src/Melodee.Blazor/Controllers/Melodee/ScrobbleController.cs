@@ -28,7 +28,7 @@ namespace Melodee.Blazor.Controllers.Melodee;
 [RequireCapability(UserCapability.Scrobble)]
 [EnableRateLimiting("melodee-api")]
 [ApiVersion(1)]
-[Route("api/v{version:apiVersion}/[controller]")]
+[Route("api/v{version:apiVersion}/scrobble")]
 public class ScrobbleController(
     ILogger logger,
     ISerializer serializer,

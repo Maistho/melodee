@@ -20,7 +20,7 @@ namespace Melodee.Blazor.Controllers.Melodee;
 [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 [ServiceFilter(typeof(MelodeeApiAuthFilter))]
 [ApiVersion(1)]
-[Route("api/v{version:apiVersion}/[controller]")]
+[Route("api/v{version:apiVersion}/system")]
 public sealed class SystemController(
     ISerializer serializer,
     EtagRepository etagRepository,

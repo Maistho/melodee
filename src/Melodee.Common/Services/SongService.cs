@@ -1143,4 +1143,131 @@ public class SongService(
             Data = songs
         };
     }
+
+    /// <summary>
+    /// List all rated songs for a user with pagination, sorted by rating descending
+    /// </summary>
+    public async Task<MelodeeModels.PagedResult<SongDataInfo>> ListRatedAsync(
+        MelodeeModels.PagedRequest pagedRequest,
+        int userId,
+        CancellationToken cancellationToken = default)
+    {
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var baseQuery = scopedContext.UserSongs
+            .Where(us => us.UserId == userId && us.Rating > 0)
+            .Include(us => us.Song)
+            .ThenInclude(s => s.Album)
+            .ThenInclude(a => a.Artist)
+            .AsNoTracking();
+
+        var songCount = await baseQuery.CountAsync(cancellationToken).ConfigureAwait(false);
+
+        SongDataInfo[] songs = [];
+
+        if (!pagedRequest.IsTotalCountOnlyRequest)
+        {
+            var rawUserSongs = await baseQuery
+                .OrderByDescending(us => us.Rating)
+                .ThenByDescending(us => us.LastUpdatedAt)
+                .Skip(pagedRequest.SkipValue)
+                .Take(pagedRequest.TakeValue)
+                .ToArrayAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            songs = rawUserSongs.Select(us => new SongDataInfo(
+                us.Song.Id,
+                us.Song.ApiKey,
+                us.Song.IsLocked,
+                us.Song.Title,
+                us.Song.TitleNormalized,
+                us.Song.SongNumber,
+                us.Song.Album.ReleaseDate,
+                us.Song.Album.Name,
+                us.Song.Album.ApiKey,
+                us.Song.Album.Artist.Name,
+                us.Song.Album.Artist.ApiKey,
+                us.Song.FileSize,
+                us.Song.Duration,
+                us.Song.CreatedAt,
+                us.Song.Tags ?? string.Empty,
+                us.IsStarred,
+                us.Rating,
+                us.Song.AlbumId,
+                us.Song.LastPlayedAt,
+                us.Song.PlayedCount,
+                us.Song.CalculatedRating
+            )).ToArray();
+        }
+
+        return new MelodeeModels.PagedResult<SongDataInfo>
+        {
+            TotalCount = songCount,
+            TotalPages = pagedRequest.TotalPages(songCount),
+            Data = songs
+        };
+    }
+
+    /// <summary>
+    /// List recently played songs for a user with pagination, sorted by last played descending
+    /// </summary>
+    public async Task<MelodeeModels.PagedResult<SongDataInfo>> ListRecentlyPlayedAsync(
+        MelodeeModels.PagedRequest pagedRequest,
+        int userId,
+        CancellationToken cancellationToken = default)
+    {
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var baseQuery = scopedContext.UserSongs
+            .Where(us => us.UserId == userId && us.LastPlayedAt != null)
+            .Include(us => us.Song)
+            .ThenInclude(s => s.Album)
+            .ThenInclude(a => a.Artist)
+            .AsNoTracking();
+
+        var songCount = await baseQuery.CountAsync(cancellationToken).ConfigureAwait(false);
+
+        SongDataInfo[] songs = [];
+
+        if (!pagedRequest.IsTotalCountOnlyRequest)
+        {
+            var rawUserSongs = await baseQuery
+                .OrderByDescending(us => us.LastPlayedAt)
+                .Skip(pagedRequest.SkipValue)
+                .Take(pagedRequest.TakeValue)
+                .ToArrayAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            songs = rawUserSongs.Select(us => new SongDataInfo(
+                us.Song.Id,
+                us.Song.ApiKey,
+                us.Song.IsLocked,
+                us.Song.Title,
+                us.Song.TitleNormalized,
+                us.Song.SongNumber,
+                us.Song.Album.ReleaseDate,
+                us.Song.Album.Name,
+                us.Song.Album.ApiKey,
+                us.Song.Album.Artist.Name,
+                us.Song.Album.Artist.ApiKey,
+                us.Song.FileSize,
+                us.Song.Duration,
+                us.Song.CreatedAt,
+                us.Song.Tags ?? string.Empty,
+                us.IsStarred,
+                us.Rating,
+                us.Song.AlbumId,
+                us.Song.LastPlayedAt,
+                us.Song.PlayedCount,
+                us.Song.CalculatedRating
+            )).ToArray();
+        }
+
+        return new MelodeeModels.PagedResult<SongDataInfo>
+        {
+            TotalCount = songCount,
+            TotalPages = pagedRequest.TotalPages(songCount),
+            Data = songs
+        };
+    }
 }

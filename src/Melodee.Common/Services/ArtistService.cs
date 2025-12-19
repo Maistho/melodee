@@ -1541,4 +1541,155 @@ public class ArtistService(
             Data = artists
         };
     }
+
+    /// <summary>
+    /// List all rated artists for a user with pagination, sorted by rating descending
+    /// </summary>
+    public async Task<MelodeeModels.PagedResult<ArtistDataInfo>> ListRatedAsync(
+        MelodeeModels.PagedRequest pagedRequest,
+        int userId,
+        CancellationToken cancellationToken = default)
+    {
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var baseQuery = scopedContext.UserArtists
+            .Where(ua => ua.UserId == userId && ua.Rating > 0)
+            .Include(ua => ua.Artist)
+            .ThenInclude(a => a.Library)
+            .AsNoTracking();
+
+        var artistCount = await baseQuery.CountAsync(cancellationToken).ConfigureAwait(false);
+
+        ArtistDataInfo[] artists = [];
+
+        if (!pagedRequest.IsTotalCountOnlyRequest)
+        {
+            var rawUserArtists = await baseQuery
+                .OrderByDescending(ua => ua.Rating)
+                .ThenByDescending(ua => ua.LastUpdatedAt)
+                .Skip(pagedRequest.SkipValue)
+                .Take(pagedRequest.TakeValue)
+                .ToArrayAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            artists = rawUserArtists.Select(ua => new ArtistDataInfo(
+                ua.Artist.Id,
+                ua.Artist.ApiKey,
+                ua.Artist.IsLocked,
+                ua.Artist.LibraryId,
+                ua.Artist.Library.Path,
+                ua.Artist.Name,
+                ua.Artist.NameNormalized,
+                ua.Artist.AlternateNames ?? string.Empty,
+                ua.Artist.Directory,
+                ua.Artist.AlbumCount,
+                ua.Artist.SongCount,
+                ua.Artist.CreatedAt,
+                ua.Artist.Tags ?? string.Empty,
+                ua.Artist.LastUpdatedAt,
+                ua.Artist.LastPlayedAt,
+                ua.Artist.PlayedCount,
+                ua.Artist.CalculatedRating
+            )
+            {
+                UserStarred = ua.IsStarred,
+                UserRating = ua.Rating,
+                Biography = ua.Artist.Biography
+            }).ToArray();
+        }
+
+        return new MelodeeModels.PagedResult<ArtistDataInfo>
+        {
+            TotalCount = artistCount,
+            TotalPages = pagedRequest.TotalPages(artistCount),
+            Data = artists
+        };
+    }
+
+    /// <summary>
+    /// List recently played artists for a user with pagination.
+    /// Artists are considered "recently played" based on songs the user has played from that artist.
+    /// </summary>
+    public async Task<MelodeeModels.PagedResult<ArtistDataInfo>> ListRecentlyPlayedAsync(
+        MelodeeModels.PagedRequest pagedRequest,
+        int userId,
+        CancellationToken cancellationToken = default)
+    {
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        // Get distinct artists from user's recently played songs
+        var recentlyPlayedArtistIds = await scopedContext.UserSongs
+            .Where(us => us.UserId == userId && us.LastPlayedAt != null)
+            .Include(us => us.Song)
+            .ThenInclude(s => s.Album)
+            .Select(us => new { us.Song.Album.ArtistId, us.LastPlayedAt })
+            .GroupBy(x => x.ArtistId)
+            .Select(g => new { ArtistId = g.Key, LastPlayedAt = g.Max(x => x.LastPlayedAt) })
+            .OrderByDescending(x => x.LastPlayedAt)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var artistCount = recentlyPlayedArtistIds.Count;
+
+        ArtistDataInfo[] artists = [];
+
+        if (!pagedRequest.IsTotalCountOnlyRequest && artistCount > 0)
+        {
+            var pagedArtistData = recentlyPlayedArtistIds
+                .Skip(pagedRequest.SkipValue)
+                .Take(pagedRequest.TakeValue)
+                .ToList();
+
+            var artistIds = pagedArtistData.Select(x => x.ArtistId).ToArray();
+            
+            var rawArtists = await scopedContext.Artists
+                .Where(a => artistIds.Contains(a.Id))
+                .Include(a => a.Library)
+                .Include(a => a.UserArtists.Where(ua => ua.UserId == userId))
+                .AsNoTracking()
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            // Preserve the order from recentlyPlayedArtistIds
+            var artistDict = rawArtists.ToDictionary(a => a.Id);
+            artists = pagedArtistData
+                .Where(x => artistDict.ContainsKey(x.ArtistId))
+                .Select(x =>
+                {
+                    var artist = artistDict[x.ArtistId];
+                    var userArtist = artist.UserArtists.FirstOrDefault();
+                    return new ArtistDataInfo(
+                        artist.Id,
+                        artist.ApiKey,
+                        artist.IsLocked,
+                        artist.LibraryId,
+                        artist.Library.Path,
+                        artist.Name,
+                        artist.NameNormalized,
+                        artist.AlternateNames ?? string.Empty,
+                        artist.Directory,
+                        artist.AlbumCount,
+                        artist.SongCount,
+                        artist.CreatedAt,
+                        artist.Tags ?? string.Empty,
+                        artist.LastUpdatedAt,
+                        x.LastPlayedAt,
+                        artist.PlayedCount,
+                        artist.CalculatedRating
+                    )
+                    {
+                        UserStarred = userArtist?.IsStarred ?? false,
+                        UserRating = userArtist?.Rating ?? 0,
+                        Biography = artist.Biography
+                    };
+                }).ToArray();
+        }
+
+        return new MelodeeModels.PagedResult<ArtistDataInfo>
+        {
+            TotalCount = artistCount,
+            TotalPages = pagedRequest.TotalPages(artistCount),
+            Data = artists
+        };
+    }
 }
