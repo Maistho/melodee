@@ -1,36 +1,823 @@
 using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 using NodaTime;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
 namespace Melodee.Common.Migrations
 {
     /// <inheritdoc />
-    public partial class AddPasswordResetTokenToUser : Migration
+    public partial class AddUserPlaybackSettingsAndEqualizerPresets : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "PasswordResetToken",
-                table: "Users",
-                type: "character varying(64)",
-                maxLength: 64,
-                nullable: true);
+            migrationBuilder.CreateTable(
+                name: "UserEqualizerPresets",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserId = table.Column<int>(type: "integer", nullable: false),
+                    Name = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    NameNormalized = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    BandsJson = table.Column<string>(type: "character varying(4000)", maxLength: 4000, nullable: false),
+                    IsDefault = table.Column<bool>(type: "boolean", nullable: false),
+                    IsLocked = table.Column<bool>(type: "boolean", nullable: false),
+                    SortOrder = table.Column<int>(type: "integer", nullable: false),
+                    ApiKey = table.Column<Guid>(type: "uuid", nullable: false),
+                    CreatedAt = table.Column<Instant>(type: "timestamp with time zone", nullable: false),
+                    LastUpdatedAt = table.Column<Instant>(type: "timestamp with time zone", nullable: true),
+                    Tags = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
+                    Notes = table.Column<string>(type: "character varying(4000)", maxLength: 4000, nullable: true),
+                    Description = table.Column<string>(type: "character varying(62000)", maxLength: 62000, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserEqualizerPresets", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_UserEqualizerPresets_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
 
-            migrationBuilder.AddColumn<Instant>(
-                name: "PasswordResetTokenExpiresAt",
-                table: "Users",
-                type: "timestamp with time zone",
-                nullable: true);
+            migrationBuilder.CreateTable(
+                name: "UserPlaybackSettings",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserId = table.Column<int>(type: "integer", nullable: false),
+                    CrossfadeDuration = table.Column<double>(type: "double precision", nullable: false),
+                    GaplessPlayback = table.Column<bool>(type: "boolean", nullable: false),
+                    VolumeNormalization = table.Column<bool>(type: "boolean", nullable: false),
+                    ReplayGain = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    AudioQuality = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    EqualizerPreset = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
+                    LastUsedDevice = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
+                    IsLocked = table.Column<bool>(type: "boolean", nullable: false),
+                    SortOrder = table.Column<int>(type: "integer", nullable: false),
+                    ApiKey = table.Column<Guid>(type: "uuid", nullable: false),
+                    CreatedAt = table.Column<Instant>(type: "timestamp with time zone", nullable: false),
+                    LastUpdatedAt = table.Column<Instant>(type: "timestamp with time zone", nullable: true),
+                    Tags = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
+                    Notes = table.Column<string>(type: "character varying(4000)", maxLength: 4000, nullable: true),
+                    Description = table.Column<string>(type: "character varying(62000)", maxLength: 62000, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserPlaybackSettings", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_UserPlaybackSettings_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
 
-            migrationBuilder.AddColumn<string>(
-                name: "StarredGenres",
-                table: "Users",
-                type: "character varying(2000)",
-                maxLength: 2000,
-                nullable: true);
+            migrationBuilder.UpdateData(
+                table: "Libraries",
+                keyColumn: "Id",
+                keyValue: 1,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("0e5fafc0-6379-4531-9b14-5aaff47055b0"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Libraries",
+                keyColumn: "Id",
+                keyValue: 2,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("a5be89c7-cf1d-4451-b607-7893b976c3ee"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Libraries",
+                keyColumn: "Id",
+                keyValue: 3,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("4c7a928e-9384-44af-98d3-81e0e277822e"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Libraries",
+                keyColumn: "Id",
+                keyValue: 4,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("29642bbf-8d8f-4d00-a3bb-5fa252f56680"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Libraries",
+                keyColumn: "Id",
+                keyValue: 5,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("d531cb3d-af6e-4a87-a96e-320a36371336"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 1,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("2aff0c14-11bc-4c13-9fe1-99dd888de81b"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 2,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("d2332eac-9dbf-4e27-b361-f6ce3ee0bf08"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 4,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("6684a15c-63b3-496c-af80-554632085e0f"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 6,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("6ec600fb-629b-4eb1-a171-cc87236fded3"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 9,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("be000480-fcb6-4307-a622-2eb99c91227d"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 26,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("acdcf344-9de9-4d5d-9c8c-b47988ad85b7"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 27,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("0725d3d9-d657-4ffb-b43b-ad7e0f7aa822"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 28,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("fd43bae8-04d1-41ad-b7b7-b6390c10f272"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 29,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("d307119e-d5d2-4991-956c-e899c0a868ab"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 30,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("c5d1938a-ac98-4f6d-974e-578fa7e86b9c"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 32,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("6080d960-25eb-4469-b3a2-607e681cb48b"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 34,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("b2f6b1ff-cac6-463f-a4d8-334cb17635e3"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 35,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("ea9e2f32-2138-4836-a067-ec46c4c100d6"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 36,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("c8320e95-ebb5-4aed-8d13-0d3dc31746c5"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 37,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("2dd51106-3302-4091-8a5f-db0cd527fa99"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 38,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("604ec997-4d33-4ea4-aaa6-1724e4c5f45a"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 39,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("916cbff4-1e36-4141-a1c7-0f3ea0745428"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 41,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("bf6d9708-387c-41de-a2f8-17f3bf4f9f71"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 42,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("85b0fe0b-2c72-4269-8bfd-3a13340bd9e8"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 43,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("d768e5be-8a26-46ba-9edf-ecff0cfcd2ed"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 45,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("ddc508c9-7883-4eb9-80af-824aaa1cac8e"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 46,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("b7c0c395-f45c-4740-889e-80ecdc8c1892"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 47,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("56b0fa70-772f-4280-ba35-17462a7761ff"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 49,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("06da3533-2459-4547-9b36-1a6c55307cbf"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 50,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("21123452-b9b6-4718-9972-ae1e1070b520"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 53,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("fe7794e1-03f5-4e4d-a9ef-9989e0fa000e"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 54,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("69e65ee3-7124-4244-818a-a826e0c9a994"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 100,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("53306371-bd66-4964-893a-9b10d8124997"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 101,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("8f13f538-783e-4233-9e5b-1683c6657484"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 102,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("dcd813cc-7684-4a28-9f38-e3fca891d567"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 103,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("ebe77efc-e379-4c67-a9cb-26bdf9ddcd78"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 104,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("9673f581-b1e9-4cd4-9d01-ca3aa4a0ebee"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 200,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("508275e6-254a-4eae-9d2d-0d1f63b64303"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 201,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("a3416e0f-e7fe-45dc-9ca6-b31b6f64bd8a"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 202,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("4bacf2cd-12fd-4f96-8ee9-db7fba343b31"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 203,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("cfc3dfb4-e698-4ba5-b12a-266be3eecca1"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 300,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("fa0e8f86-c403-45fe-bdd2-526f725c0793"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 301,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("6cb483dd-b3f4-469b-8035-28b72be329b6"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 400,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("c62f51c9-6f17-42e6-bd10-1bd93593e233"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 401,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("d5743b45-a247-4f83-93a6-7db88c214b17"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 402,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("287807d8-1bdb-41d4-8435-210625156dfe"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 403,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("8f0a3b66-8f13-47b5-a924-b4c6df12a937"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 404,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("08111b40-cf22-4072-bb7d-472d569e2a04"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 405,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("9e0a64f1-35e5-4ad5-9138-1474f7f422e5"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 406,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("a72f9352-69ce-4d5c-81c4-2c539384562a"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 500,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("4bb9a6c7-b8fe-46ea-8f2b-ef4ca5a29177"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 501,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("c339e813-2971-48e7-8123-d258d927ad5f"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 502,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("d44738a7-30c0-4b9e-ba24-0a8cc7252e69"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 503,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("49d21f0b-bc3e-4fcf-bbdd-8124920ccf44"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 504,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("a96f9614-423b-441e-8904-8debfc06cd3f"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 505,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("6ee0fb26-f6e4-4a11-a72a-977273e01093"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 506,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("f4e1d602-b49e-4093-8386-f0b2fd409d92"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 507,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("a2311842-b54e-46ba-9ad8-13a180c6af8b"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 700,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("8ddbaaaa-718b-4c38-9c5e-a8929f8623f4"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 701,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("2a74eab0-62a8-4328-9b27-d804d64082c5"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 702,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("e136442c-d8fb-4f85-bd15-bcf53ea7032c"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 703,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("559fb90f-536c-4345-9e79-731969c05cae"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 704,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("c7ce2689-aa48-4016-98fb-c5dc17d400e7"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 902,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("d36e5b1d-cfbd-41f1-b5ab-1b7b593a581b"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 903,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("c1937a53-4aba-4496-8d27-0de204813e03"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 904,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("022ad5e6-7088-4596-9bc1-f04b04589b19"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 905,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("4ee42872-5e14-42ad-9784-5624cbc97705"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 906,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("d86ca6eb-d39c-4179-993c-ef4d26f565e2"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 907,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("60c34e6c-c969-48d6-9ac5-623878348474"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 908,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("a5559073-6d6a-4320-b075-8875aae152d7"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 910,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("b1874a29-c370-4ef1-9fec-1729706a36e2"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 911,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("82bd4510-ef8a-41d6-8795-b138ba925a53"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 912,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("f62d0061-5496-4032-bb00-6b2ff69044a8"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 913,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("3dc2a534-61d5-4a41-81d8-7e41c6d3e346"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 914,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("ea41f656-8bac-421c-9e42-9764a8195ef1"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 915,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("4f6469b6-1dc8-4e7d-bde1-00185f66b299"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 916,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("18e309c4-14f3-4561-9221-9427f2f89f54"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 917,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("8eaac2ca-1ca8-481f-9776-42dfe4617270"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 918,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("9bb529ad-b17a-46c8-ada8-c525071f58b7"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 919,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("3a6ad1fb-af71-4652-b2a0-cf32da6400b9"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 1000,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("292d86c9-0559-4936-97c4-901c4bd571c9"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 1001,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("8d40ecf7-dd52-4764-98ad-4bebd425db48"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 1002,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("e24c81d7-3641-48af-856b-73e68b92f7ca"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 1003,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("0c17b34d-5229-4d0a-87d9-2dd1aa693761"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 1100,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("01b000fc-9565-47ab-b057-429d07d6db2f"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 1101,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("8c0856aa-a088-48cf-a12a-79803d59cb8c"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 1102,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("4707c407-be46-4eba-8066-74008eca2e4c"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 1200,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("01dd92b2-58b4-43b9-bcae-2c9fd13ca1f5"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 1201,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("ba6d3605-02f0-4ddd-8921-2f6c6456a2eb"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 1202,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("7fd4fa5b-7234-4252-addd-6ed906ca193f"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 1203,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("8788b455-fc65-4e0a-b549-2fb238250076"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 1300,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("441affae-85a9-4c72-99f6-5ea5e6bbe489"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 1301,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("6756f116-c5f8-4992-9589-ee479d9956e0"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 1302,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("e9e8a325-abec-4247-ba98-e3d8e82f056c"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 1303,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("ea586ab3-668e-4b19-bf3a-32a7efaa0266"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 1304,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("da382174-e63e-4a45-bb28-380fb0d1c364"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 1400,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("2a4a532e-154a-4b3f-a300-b4176afbf938"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 1401,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("51d23237-dae0-4a1e-aadb-52385e6fb432"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 1402,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("5a1ca326-d1dc-4ac7-8a0e-25b37ada8757"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 1403,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("ed2a3a2d-d925-4516-b914-eeb72455df8f"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.UpdateData(
+                table: "Settings",
+                keyColumn: "Id",
+                keyValue: 1404,
+                columns: new[] { "ApiKey", "CreatedAt" },
+                values: new object[] { new Guid("c0203b6d-434d-4bf2-97e4-b62cb490c84a"), NodaTime.Instant.FromUnixTimeTicks(17661730176061653L) });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserEqualizerPresets_ApiKey",
+                table: "UserEqualizerPresets",
+                column: "ApiKey",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserEqualizerPresets_UserId_Name",
+                table: "UserEqualizerPresets",
+                columns: new[] { "UserId", "Name" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserPlaybackSettings_ApiKey",
+                table: "UserPlaybackSettings",
+                column: "ApiKey",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserPlaybackSettings_UserId",
+                table: "UserPlaybackSettings",
+                column: "UserId",
+                unique: true);
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropTable(
+                name: "UserEqualizerPresets");
+
+            migrationBuilder.DropTable(
+                name: "UserPlaybackSettings");
 
             migrationBuilder.UpdateData(
                 table: "Libraries",
@@ -738,729 +1525,6 @@ namespace Melodee.Common.Migrations
                 keyValue: 1404,
                 columns: new[] { "ApiKey", "CreatedAt" },
                 values: new object[] { new Guid("1e48fc83-95c8-45b7-97fa-2d633c0d9d5f"), NodaTime.Instant.FromUnixTimeTicks(17661621751534507L) });
-        }
-
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.DropColumn(
-                name: "PasswordResetToken",
-                table: "Users");
-
-            migrationBuilder.DropColumn(
-                name: "PasswordResetTokenExpiresAt",
-                table: "Users");
-
-            migrationBuilder.DropColumn(
-                name: "StarredGenres",
-                table: "Users");
-
-            migrationBuilder.UpdateData(
-                table: "Libraries",
-                keyColumn: "Id",
-                keyValue: 1,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("e43e1f96-d164-430d-8729-9cb1f94ad26d"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Libraries",
-                keyColumn: "Id",
-                keyValue: 2,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("2e1e79e1-7530-45bc-8a26-ac71ae4c62f0"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Libraries",
-                keyColumn: "Id",
-                keyValue: 3,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("2afc297c-5f17-4c69-91b4-261c6b08485f"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Libraries",
-                keyColumn: "Id",
-                keyValue: 4,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("af93096e-9798-4467-a8bb-53b915a57542"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Libraries",
-                keyColumn: "Id",
-                keyValue: 5,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("7ea06c4a-6110-4d35-bb37-b348f568d15b"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 1,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("3e5b73c5-dc94-4c2f-8937-a17b0217f394"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 2,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("a177ab19-c88d-4c38-a525-6e24d7556249"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 4,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("171c5d1f-8cd7-4898-8b3b-dd155fcbf53c"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 6,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("88d5a545-7a27-40cf-be0f-cb81b4ab16f5"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 9,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("e2ee2b12-5925-4360-8f54-f2c66f703a07"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 26,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("fc7a6f03-cb7d-442a-b496-10ea9ea85b45"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 27,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("5ba05533-9e9c-4e7a-a187-2642f5438b9e"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 28,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("e553eb2b-bef9-4fca-9b52-53c4d57a3edc"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 29,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("b40e5c83-7cb1-4f8b-8c46-4fcf7fc7539a"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 30,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("e7b71773-bb0d-4add-b5f9-dbdc1455688e"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 32,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("3f1b8d89-d99b-472e-b5ba-50883cbf7272"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 34,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("3f118f05-fd57-4d26-b231-e043e124c230"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 35,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("8f776d5a-69f0-4fee-8814-f0e39e69e2b0"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 36,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("6cf43baf-b724-4de7-b8b9-60617fcf8906"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 37,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("0a421a1f-22bc-4481-8712-18b569893469"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 38,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("27ec9b29-107f-4a76-9f4f-97cebfb5aa00"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 39,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("aa6bb8c9-d6e3-42d4-9efb-cbb16c2a755a"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 41,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("53bb8439-66d1-432b-bc9e-3e43b37a5066"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 42,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("db41019e-89d8-4656-bde7-4ebc93fbb490"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 43,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("e0062797-1222-494a-95b3-619b8666fea7"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 45,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("7a4f8aed-330b-4367-8582-03a3d0a63d36"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 46,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("ebb26a3d-1306-4fab-9da9-6ced3181f074"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 47,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("59220e3a-aeaf-495f-a05e-1867d9bfbee1"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 49,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("7329f19b-b8d5-4a01-941f-4d9cde4f5949"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 50,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("a73cc166-6d15-4fcf-b7e3-832d8c0c5b33"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 53,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("a76498c4-d21f-4447-b37d-4863736f1fe3"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 54,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("673d057f-b766-4e17-8b10-9e759555dc58"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 100,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("ce605a2f-062f-4b94-8533-3cf506b25d20"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 101,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("071cb421-b259-427c-9e0f-1f71f4180813"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 102,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("ee6fb689-952f-45cc-aec3-900375125e90"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 103,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("1904f25b-fe4c-4d3b-b697-77e791682cfc"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 104,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("c0ad12ae-7b7f-4a2d-b288-20dba05bfc38"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 200,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("50aa22eb-b428-431d-990b-6e8028752b25"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 201,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("7ede8008-fa33-42fe-ade8-8d9c8ae86443"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 202,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("f7501577-6eb6-4043-8610-6f48e9f3bd5f"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 203,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("4537847b-3841-4c4c-8213-6cbc703bb7a0"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 300,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("8009b84d-4145-483b-b1cd-fa7715dc33c3"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 301,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("761e5d2a-40db-4806-8983-19d38cb6b9cf"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 400,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("7b4982eb-626e-4266-b19d-d48df7677a50"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 401,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("a5f999c1-4be8-4d51-9e7d-0d8955939116"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 402,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("6f78a321-4587-49bf-a1fc-fcf799ec89e5"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 403,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("b7ff065a-763d-4cb7-85da-372c082e59b5"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 404,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("ff71bfa5-a58a-4b81-99a4-4ec553685301"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 405,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("b025525c-0d03-4ba2-a390-017837cadb63"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 406,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("f0949d3d-9f32-4aa6-acf7-d9a5a08150e3"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 500,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("e587d3be-38a4-42fc-845f-52cd5a9b41ea"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 501,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("495304a2-41bf-48c0-a564-77515144b4d7"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 502,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("33d6a011-69cf-4f17-947e-79c2b394ef81"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 503,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("5feea9ab-e025-4aa4-b96e-3195379f3bd5"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 504,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("d873a075-7f01-411b-9004-32ffabb03084"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 505,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("0b69ae13-a59e-4855-82be-39b9b2069385"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 506,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("4c46d322-3eea-4b9d-99fc-09090ff2d111"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 507,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("a0da1ffb-9a91-4d67-a14f-b6203f71b9fe"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 700,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("9d978a43-f74a-4368-a4e5-f3edbca9ea9f"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 701,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("587cb39b-b707-42df-949f-d58b77d07ded"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 702,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("06fe43bf-9116-4113-b55d-e2ff634384a2"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 703,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("7d67277b-57e9-4058-b334-90a26d4ccc20"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 704,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("23b7a3ca-4ffa-4040-a96d-154c94909d5e"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 902,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("c4bfff23-9925-40d2-b85b-4553025585af"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 903,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("7b9992bc-aa05-454b-b441-aacfd8e4b5cf"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 904,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("7fed1fb6-956a-44de-bc00-262bbe1dbfd6"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 905,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("b9acba9f-712d-4813-8b03-b13a8ebe3d65"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 906,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("313583a6-12db-474a-96d1-7588aaf59bfa"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 907,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("5671eab4-fceb-4bba-a810-858f914fba06"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 908,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("c0c59982-0596-4ea8-9cc6-c55fe2fc4c13"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 910,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("78c56522-f242-4f53-9140-c20c3b0b4aa5"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 911,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("25e56255-f33e-4852-8bd5-8bf725f92613"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 912,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("414b40fa-7f9a-4a7c-9b60-2d2366443209"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 913,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("36aef1e7-d582-49ac-9695-bc52bbabf1f6"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 914,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("765d6352-e047-46ab-9c6f-1b2174f4ab0e"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 915,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("961b982b-bc70-45dc-8e3e-bd02af2b1c3f"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 916,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("a4d7865d-4e3d-4bc1-9a59-6df55671a5b2"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 917,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("ab3badeb-4fe7-4423-9bdf-7d1bcb859f2a"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 918,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("3ce72612-2d07-4ad3-abf3-de21104338d6"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 919,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("b2ffc4fa-9d50-422b-a013-1e9e5c40c775"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 1000,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("896580d5-8f5f-4752-8061-a1972791aa25"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 1001,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("4d30291e-6e30-4d85-b4f5-2a44e83938b7"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 1002,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("234fc299-a213-4d86-9fb3-4b9111d552ba"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 1003,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("859ad9eb-4e24-47e8-8aac-4b3a4b7a1353"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 1100,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("adc1b117-14e7-40e3-89da-55e722a859b5"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 1101,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("36080c24-5efa-4b7b-81f8-69ce051d0898"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 1102,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("4a2a226c-5ab4-47bb-b312-f6a7e0eef11f"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 1200,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("33540ef5-4c6f-45ff-a609-b88176444939"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 1201,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("6d7befc5-1ddc-46cd-9179-473e878f0214"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 1202,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("a3688434-ff86-4e7f-adcd-2726a8b6eae1"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 1203,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("1fcd6b0e-57e1-4e12-ba0d-c893673bbb24"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 1300,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("b962205c-cb6f-4e70-a71a-32e739c634ce"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 1301,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("1b681217-291b-42b8-939e-b8114fbbd4c9"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 1302,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("768dc3f8-1be8-4a2e-a108-0d64ef59a6df"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 1303,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("1c30aba4-7ac8-4a7a-9fc2-03699daf2dbf"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 1304,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("4566e3f5-9750-49d0-8a38-1678386595ae"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 1400,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("1a9bc93f-07ea-4094-a8f4-ad9014d591e6"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 1401,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("dfc139de-a210-4586-9fd7-7f071925a457"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 1402,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("d8187958-cb42-4bd2-8956-d9b013920eef"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 1403,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("ec1f3235-d19c-4741-859d-c8e6de9a2ee1"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
-
-            migrationBuilder.UpdateData(
-                table: "Settings",
-                keyColumn: "Id",
-                keyValue: 1404,
-                columns: new[] { "ApiKey", "CreatedAt" },
-                values: new object[] { new Guid("cd167563-cca5-44c6-9ec0-950754a5b5bd"), NodaTime.Instant.FromUnixTimeTicks(17657332146305413L) });
         }
     }
 }

@@ -1692,4 +1692,39 @@ public class ArtistService(
             Data = artists
         };
     }
+
+    public async Task<MelodeeModels.OperationResult<Artist[]>> ListByGenreAsync(
+        string[] genres,
+        int limit,
+        CancellationToken cancellationToken = default)
+    {
+        if (genres == null || genres.Length == 0)
+        {
+            return new MelodeeModels.OperationResult<Artist[]> { Data = [] };
+        }
+
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var normalizedGenres = genres.Select(g => g.ToUpperInvariant()).ToArray();
+
+        // Artists don't have genres directly, so find artists via their albums
+        var artistIds = await scopedContext.Albums
+            .AsNoTracking()
+            .Where(a => a.Genres != null && a.Genres.Any(g => normalizedGenres.Contains(g.ToUpper())))
+            .Select(a => a.ArtistId)
+            .Distinct()
+            .Take(limit)
+            .ToArrayAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var artists = await scopedContext.Artists
+            .AsNoTracking()
+            .Where(a => artistIds.Contains(a.Id))
+            .OrderByDescending(a => a.PlayedCount)
+            .ThenBy(a => a.Name)
+            .ToArrayAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return new MelodeeModels.OperationResult<Artist[]> { Data = artists };
+    }
 }

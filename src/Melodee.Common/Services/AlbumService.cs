@@ -1735,4 +1735,31 @@ public class AlbumService(
             Data = albums
         };
     }
+
+    public async Task<MelodeeModels.OperationResult<Album[]>> ListByGenreAsync(
+        string[] genres,
+        int limit,
+        CancellationToken cancellationToken = default)
+    {
+        if (genres == null || genres.Length == 0)
+        {
+            return new MelodeeModels.OperationResult<Album[]> { Data = [] };
+        }
+
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var normalizedGenres = genres.Select(g => g.ToUpperInvariant()).ToArray();
+
+        var albums = await scopedContext.Albums
+            .AsNoTracking()
+            .Include(a => a.Artist)
+            .Where(a => a.Genres != null && a.Genres.Any(g => normalizedGenres.Contains(g.ToUpper())))
+            .OrderByDescending(a => a.PlayedCount)
+            .ThenBy(a => a.Name)
+            .Take(limit)
+            .ToArrayAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return new MelodeeModels.OperationResult<Album[]> { Data = albums };
+    }
 }

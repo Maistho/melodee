@@ -332,7 +332,9 @@ builder.Services
     .AddScoped<AlbumRescanEventHandler>()
     .AddScoped<AlbumAddEventHandler>()
     .AddScoped<ILyricPlugin, LyricPlugin>()
-    .AddScoped<UserQueueService>();
+    .AddScoped<UserQueueService>()
+    .AddScoped<PlaybackSettingsService>()
+    .AddScoped<EqualizerPresetService>();
 
 #endregion
 

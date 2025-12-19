@@ -57,6 +57,10 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
 
     public DbSet<UserSongPlayHistory> UserSongPlayHistories { get; set; }
 
+    public DbSet<UserPlaybackSettings> UserPlaybackSettings { get; set; }
+
+    public DbSet<UserEqualizerPreset> UserEqualizerPresets { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         var now = Instant.FromDateTimeUtc(DateTime.UtcNow);
