@@ -1,7 +1,11 @@
 @page "/account/login"
 @using System.Diagnostics
+@using System.Net.Http.Json
+@using System.Text.Json
 @using Melodee.Common.Data.Models.Extensions
+@using Melodee.Common.Services.Security
 @using Microsoft.AspNetCore.WebUtilities
+@using Microsoft.Extensions.Options
 
 @inject UserService UserService
 @inject NotificationService NotificationService
@@ -9,6 +13,11 @@
 @inject IAuthService AuthService
 @inject IMelodeeConfigurationFactory ConfigurationFactory
 @inject LibraryService LibraryService
+@inject IJSRuntime JsRuntime
+@inject IOptions<GoogleAuthOptions> GoogleAuthOptions
+@inject IHttpClientFactory HttpClientFactory
+
+@implements IAsyncDisposable
 
 @attribute [AllowAnonymous]
 
@@ -42,6 +51,56 @@ else
                                  ResetPassword=@(args => OnResetPassword(args, "Login"))
                                  Register=@(args => OnRegister("Login"))/>
                 </RadzenTemplateForm>
+                
+                @if (_googleAuthEnabled)
+                {
+                    <RadzenStack Gap="1rem" class="rz-mt-4">
+                        <RadzenRow AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Gap="0.5rem">
+                            <RadzenColumn Size="5"><hr style="border-top: 1px solid var(--rz-text-disabled-color);"/></RadzenColumn>
+                            <RadzenColumn Size="2" class="rz-text-align-center">
+                                <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-disabled-color);">or</RadzenText>
+                            </RadzenColumn>
+                            <RadzenColumn Size="5"><hr style="border-top: 1px solid var(--rz-text-disabled-color);"/></RadzenColumn>
+                        </RadzenRow>
+                        
+                        <RadzenButton Click="@OnGoogleSignInClick" 
+                                      ButtonStyle="ButtonStyle.Light" 
+                                      Variant="Variant.Outlined"
+                                      Style="width: 100%; justify-content: center;"
+                                      Disabled="@_isGoogleSigningIn"
+                                      aria-label="Continue with Google">
+                            @if (_isGoogleSigningIn)
+                            {
+                                <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Primary" 
+                                                           Value="100" 
+                                                           ShowValue="false"
+                                                           Mode="ProgressBarMode.Indeterminate" 
+                                                           Size="ProgressBarCircularSize.Small"
+                                                           Style="margin-right: 8px;"/>
+                                <span>Signing in...</span>
+                            }
+                            else
+                            {
+                                <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" style="margin-right: 8px;">
+                                    <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/>
+                                    <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/>
+                                    <path fill="#FBBC05" d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/>
+                                    <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
+                                </svg>
+                                <span>Continue with Google</span>
+                            }
+                        </RadzenButton>
+                        
+                        @if (!string.IsNullOrEmpty(_googleAuthError))
+                        {
+                            <RadzenAlert AlertStyle="AlertStyle.Danger" Shade="Shade.Lighter" AllowClose="true" Close="@(() => _googleAuthError = null)">
+                                @_googleAuthError
+                            </RadzenAlert>
+                        }
+                        
+                        <div id="google-signin-button-fallback" style="display: none;"></div>
+                    </RadzenStack>
+                }
             </RadzenCard>
         </RadzenColumn>
     </RadzenRow>
@@ -51,6 +110,11 @@ else
     private readonly string _userName = string.Empty;
     private readonly string _password = string.Empty;
     private bool _isLoading = true;
+    private bool _googleAuthEnabled;
+    private bool _isGoogleSigningIn;
+    private string? _googleAuthError;
+    private DotNetObjectReference<Login>? _dotNetRef;
+    private bool _googleInitialized;
 
     [SupplyParameterFromQuery] [Parameter] public string? ReturnUrl { get; set; }
 
@@ -66,6 +130,22 @@ else
                                       <RadzenButton Text="Close" Click="@(args => ns.Messages.Clear())"></RadzenButton>
                                   </RadzenStack>
         });
+    }
+    
+    void ShowSuccessNotification(string title, string message)
+    {
+        NotificationService.Notify(new NotificationMessage
+        {
+            Severity = NotificationSeverity.Success,
+            Duration = 3000,
+            SummaryContent = _ => @<RadzenText TextStyle="TextStyle.H6">@title</RadzenText>,
+            DetailContent = _ => @<RadzenText TextStyle="TextStyle.Subtitle1">@message</RadzenText>
+        });
+    }
+
+    protected override void OnInitialized()
+    {
+        _googleAuthEnabled = GoogleAuthOptions.Value.Enabled && !string.IsNullOrEmpty(GoogleAuthOptions.Value.ClientId);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -86,7 +166,132 @@ else
         }
 
         _isLoading = false;
+        
+        // Initialize Google Sign-In if enabled
+        if (firstRender && _googleAuthEnabled && !_googleInitialized)
+        {
+            await InitializeGoogleSignInAsync();
+        }
+        
         StateHasChanged();
+    }
+
+    private async Task InitializeGoogleSignInAsync()
+    {
+        try
+        {
+            _dotNetRef = DotNetObjectReference.Create(this);
+            await JsRuntime.InvokeVoidAsync("initializeGoogleSignIn", GoogleAuthOptions.Value.ClientId, _dotNetRef);
+            _googleInitialized = true;
+        }
+        catch (Exception ex)
+        {
+            Trace.WriteLine($"Failed to initialize Google Sign-In: {ex.Message}");
+            _googleAuthError = "Google Sign-In is temporarily unavailable";
+        }
+    }
+
+    private async Task OnGoogleSignInClick()
+    {
+        if (_isGoogleSigningIn) return;
+        
+        _isGoogleSigningIn = true;
+        _googleAuthError = null;
+        StateHasChanged();
+        
+        try
+        {
+            await JsRuntime.InvokeVoidAsync("promptGoogleSignIn");
+        }
+        catch (Exception ex)
+        {
+            Trace.WriteLine($"Error prompting Google Sign-In: {ex.Message}");
+            _googleAuthError = "Failed to open Google Sign-In";
+            _isGoogleSigningIn = false;
+            StateHasChanged();
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnGoogleSignInSuccess(string idToken)
+    {
+        try
+        {
+            _isGoogleSigningIn = true;
+            StateHasChanged();
+            
+            // Exchange the Google ID token for Melodee tokens
+            var httpClient = HttpClientFactory.CreateClient("MelodeeApi");
+            var response = await httpClient.PostAsJsonAsync("/api/v1/auth/google", new { idToken });
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var authResponse = await response.Content.ReadFromJsonAsync<GoogleAuthResponse>();
+                if (authResponse?.User != null)
+                {
+                    var userImageLibrary = await LibraryService.GetUserImagesLibraryAsync();
+                    var config = await ConfigurationFactory.GetConfigurationAsync();
+                    
+                    // Create claims principal from the response
+                    var user = await UserService.GetByApiKeyAsync(Guid.Parse(authResponse.User.ApiKey!));
+                    if (user.IsSuccess && user.Data != null)
+                    {
+                        await AuthService.Login(user.Data.ToUserInfo().ToClaimsPrincipal(config, userImageLibrary.Data?.Path ?? string.Empty));
+                        ShowSuccessNotification("Welcome!", $"Signed in as {authResponse.User.UserName}");
+                        NavigationManager.NavigateTo(ReturnUrl ?? "/");
+                        return;
+                    }
+                }
+                
+                _googleAuthError = "Failed to complete sign-in";
+            }
+            else
+            {
+                var errorResponse = await response.Content.ReadFromJsonAsync<ApiErrorResponse>();
+                _googleAuthError = MapGoogleAuthError(errorResponse?.Code, errorResponse?.Message);
+            }
+        }
+        catch (Exception ex)
+        {
+            Trace.WriteLine($"Error during Google Sign-In: {ex.Message}");
+            _googleAuthError = "An error occurred during sign-in. Please try again.";
+        }
+        finally
+        {
+            _isGoogleSigningIn = false;
+            StateHasChanged();
+        }
+    }
+
+    [JSInvokable]
+    public Task OnGoogleSignInError(string error)
+    {
+        _googleAuthError = error;
+        _isGoogleSigningIn = false;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    [JSInvokable]
+    public Task OnGoogleSignInCancelled()
+    {
+        _isGoogleSigningIn = false;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private static string MapGoogleAuthError(string? errorCode, string? message)
+    {
+        return errorCode switch
+        {
+            "invalid_google_token" => "Invalid Google credentials. Please try again.",
+            "expired_google_token" => "Your Google session has expired. Please sign in again.",
+            "google_account_not_linked" => "This Google account is not linked to any Melodee account. Please sign in with your password and link your Google account from your profile.",
+            "signup_disabled" => "New account registration is currently disabled. Please contact an administrator.",
+            "forbidden_tenant" => "Your Google account domain is not allowed. Please use a different account.",
+            "account_disabled" => "Your account has been disabled. Please contact support.",
+            _ => message ?? "An error occurred during Google Sign-In. Please try again."
+        };
     }
 
     private async Task OnLogin(LoginArgs args, string name)
@@ -124,6 +329,42 @@ else
     void OnResetPassword(string value, string name)
     {
     }
+    
+    public async ValueTask DisposeAsync()
+    {
+        if (_googleInitialized)
+        {
+            try
+            {
+                await JsRuntime.InvokeVoidAsync("cleanupGoogleSignIn");
+            }
+            catch
+            {
+                // Ignore errors during disposal
+            }
+        }
+        _dotNetRef?.Dispose();
+    }
 
+    // Response models for API calls
+    private class GoogleAuthResponse
+    {
+        public UserModel? User { get; set; }
+        public string? Token { get; set; }
+        public string? RefreshToken { get; set; }
+    }
+
+    private class UserModel
+    {
+        public string? UserName { get; set; }
+        public string? Email { get; set; }
+        public string? ApiKey { get; set; }
+    }
+
+    private class ApiErrorResponse
+    {
+        public string? Code { get; set; }
+        public string? Message { get; set; }
+    }
 }
 

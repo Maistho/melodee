@@ -61,6 +61,10 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
 
     public DbSet<UserEqualizerPreset> UserEqualizerPresets { get; set; }
 
+    public DbSet<UserSocialLogin> UserSocialLogins { get; set; }
+
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         var now = Instant.FromDateTimeUtc(DateTime.UtcNow);

@@ -28,6 +28,7 @@ using Melodee.Common.Services;
 using Melodee.Common.Services.Caching;
 using Melodee.Common.Services.Scanning;
 using Melodee.Common.Services.SearchEngines;
+using Melodee.Common.Services.Security;
 using Melodee.Common.Utility;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -170,6 +171,17 @@ if (useForwardedHeaders)
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
+builder.Services.AddHttpClient("MelodeeApi", (sp, client) =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+    // Use relative URLs - the client will use the current request's base address
+    var httpContextAccessor = sp.GetService<IHttpContextAccessor>();
+    if (httpContextAccessor?.HttpContext != null)
+    {
+        var request = httpContextAccessor.HttpContext.Request;
+        client.BaseAddress = new Uri($"{request.Scheme}://{request.Host}");
+    }
+});
 builder.Services.AddHttpClient("LastFm", client =>
 {
     client.Timeout = TimeSpan.FromSeconds(10);
@@ -358,6 +370,16 @@ builder.Services
 
 builder.Services.AddSingleton<IBlacklistService, BlacklistService>();
 builder.Services.AddScoped<MelodeeApiAuthFilter>();
+
+#region Google Auth & Token Services
+
+builder.Services.Configure<GoogleAuthOptions>(builder.Configuration.GetSection(GoogleAuthOptions.SectionName));
+builder.Services.Configure<AuthPolicyOptions>(builder.Configuration.GetSection(AuthPolicyOptions.SectionName));
+builder.Services.Configure<TokenOptions>(builder.Configuration.GetSection(TokenOptions.SectionName));
+builder.Services.AddScoped<IGoogleTokenService, GoogleTokenService>();
+builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
+
+#endregion
 
 #region Quartz Related
 

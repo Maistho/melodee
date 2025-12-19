@@ -57,6 +57,7 @@
     <PackageReference Include="Microsoft.Extensions.Http"/>
     <PackageReference Include="Microsoft.Net.Http.Headers"/>
     <PackageReference Include="MimeKit" />
+    <PackageReference Include="Google.Apis.Auth"/>
     <PackageReference Include="NodaTime"/>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL"/>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"/>

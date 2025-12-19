@@ -2488,6 +2488,311 @@ IBus bus)
 
     #endregion
 
+    #region Social Login
+
+    /// <summary>
+    /// Gets a user by their social login provider and subject.
+    /// </summary>
+    public async Task<MelodeeModels.OperationResult<User?>> GetUserBySocialLoginAsync(
+        string provider,
+        string subject,
+        CancellationToken cancellationToken = default)
+    {
+        Guard.Against.NullOrWhiteSpace(provider, nameof(provider));
+        Guard.Against.NullOrWhiteSpace(subject, nameof(subject));
+
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var socialLogin = await scopedContext.UserSocialLogins
+            .Include(sl => sl.User)
+            .ThenInclude(u => u.Pins)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(sl => sl.Provider == provider && sl.Subject == subject, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (socialLogin == null)
+        {
+            return new MelodeeModels.OperationResult<User?>("Social login not found")
+            {
+                Data = null,
+                Type = MelodeeModels.OperationResponseType.NotFound
+            };
+        }
+
+        return new MelodeeModels.OperationResult<User?>
+        {
+            Data = socialLogin.User
+        };
+    }
+
+    /// <summary>
+    /// Links a social login to an existing user.
+    /// </summary>
+    public async Task<MelodeeModels.OperationResult<bool>> LinkSocialLoginAsync(
+        int userId,
+        string provider,
+        string subject,
+        string? email,
+        string? displayName,
+        string? hostedDomain,
+        CancellationToken cancellationToken = default)
+    {
+        Guard.Against.Expression(x => x < 1, userId, nameof(userId));
+        Guard.Against.NullOrWhiteSpace(provider, nameof(provider));
+        Guard.Against.NullOrWhiteSpace(subject, nameof(subject));
+
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        // Check if this social login is already linked to another user
+        var existingLink = await scopedContext.UserSocialLogins
+            .FirstOrDefaultAsync(sl => sl.Provider == provider && sl.Subject == subject, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (existingLink != null)
+        {
+            if (existingLink.UserId == userId)
+            {
+                // Already linked to this user - update last login
+                existingLink.LastLoginAt = Instant.FromDateTimeUtc(DateTime.UtcNow);
+                await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+                return new MelodeeModels.OperationResult<bool> { Data = true };
+            }
+
+            return new MelodeeModels.OperationResult<bool>("This social account is already linked to another user")
+            {
+                Data = false,
+                Type = MelodeeModels.OperationResponseType.ValidationFailure
+            };
+        }
+
+        var now = Instant.FromDateTimeUtc(DateTime.UtcNow);
+        var socialLogin = new UserSocialLogin
+        {
+            UserId = userId,
+            Provider = provider,
+            Subject = subject,
+            Email = email,
+            DisplayName = displayName,
+            HostedDomain = hostedDomain,
+            LastLoginAt = now,
+            CreatedAt = now
+        };
+
+        scopedContext.UserSocialLogins.Add(socialLogin);
+        var result = await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false) > 0;
+
+        return new MelodeeModels.OperationResult<bool> { Data = result };
+    }
+
+    /// <summary>
+    /// Unlinks a social login from a user.
+    /// </summary>
+    public async Task<MelodeeModels.OperationResult<bool>> UnlinkSocialLoginAsync(
+        int userId,
+        string provider,
+        CancellationToken cancellationToken = default)
+    {
+        Guard.Against.Expression(x => x < 1, userId, nameof(userId));
+        Guard.Against.NullOrWhiteSpace(provider, nameof(provider));
+
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var socialLogin = await scopedContext.UserSocialLogins
+            .FirstOrDefaultAsync(sl => sl.UserId == userId && sl.Provider == provider, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (socialLogin == null)
+        {
+            return new MelodeeModels.OperationResult<bool>("Social login not found")
+            {
+                Data = false,
+                Type = MelodeeModels.OperationResponseType.NotFound
+            };
+        }
+
+        scopedContext.UserSocialLogins.Remove(socialLogin);
+        var result = await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false) > 0;
+
+        return new MelodeeModels.OperationResult<bool> { Data = result };
+    }
+
+    /// <summary>
+    /// Gets all social logins for a user.
+    /// </summary>
+    public async Task<MelodeeModels.OperationResult<UserSocialLogin[]>> GetUserSocialLoginsAsync(
+        int userId,
+        CancellationToken cancellationToken = default)
+    {
+        Guard.Against.Expression(x => x < 1, userId, nameof(userId));
+
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var socialLogins = await scopedContext.UserSocialLogins
+            .Where(sl => sl.UserId == userId)
+            .AsNoTracking()
+            .ToArrayAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return new MelodeeModels.OperationResult<UserSocialLogin[]> { Data = socialLogins };
+    }
+
+    /// <summary>
+    /// Gets linked providers for a user in a simple format (provider name and email).
+    /// </summary>
+    public async Task<MelodeeModels.OperationResult<MelodeeModels.LinkedProviderInfo[]>> GetLinkedProvidersAsync(
+        int userId,
+        CancellationToken cancellationToken = default)
+    {
+        Guard.Against.Expression(x => x < 1, userId, nameof(userId));
+
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var socialLogins = await scopedContext.UserSocialLogins
+            .Where(sl => sl.UserId == userId)
+            .Select(sl => new MelodeeModels.LinkedProviderInfo
+            {
+                Provider = sl.Provider,
+                Email = sl.Email,
+                LinkedAt = sl.CreatedAt.ToDateTimeUtc()
+            })
+            .AsNoTracking()
+            .ToArrayAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return new MelodeeModels.OperationResult<MelodeeModels.LinkedProviderInfo[]> { Data = socialLogins };
+    }
+
+    /// <summary>
+    /// Updates the last login timestamp for a social login.
+    /// </summary>
+    public async Task<MelodeeModels.OperationResult<bool>> UpdateSocialLoginLastLoginAsync(
+        string provider,
+        string subject,
+        CancellationToken cancellationToken = default)
+    {
+        Guard.Against.NullOrWhiteSpace(provider, nameof(provider));
+        Guard.Against.NullOrWhiteSpace(subject, nameof(subject));
+
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var now = Instant.FromDateTimeUtc(DateTime.UtcNow);
+        var updated = await scopedContext.UserSocialLogins
+            .Where(sl => sl.Provider == provider && sl.Subject == subject)
+            .ExecuteUpdateAsync(s => s.SetProperty(sl => sl.LastLoginAt, now), cancellationToken)
+            .ConfigureAwait(false);
+
+        return new MelodeeModels.OperationResult<bool> { Data = updated > 0 };
+    }
+
+    /// <summary>
+    /// Creates a new user from Google identity.
+    /// </summary>
+    public async Task<MelodeeModels.OperationResult<User?>> CreateUserFromGoogleAsync(
+        string googleSubject,
+        string email,
+        string displayName,
+        string? hostedDomain,
+        CancellationToken cancellationToken = default)
+    {
+        Guard.Against.NullOrWhiteSpace(googleSubject, nameof(googleSubject));
+        Guard.Against.NullOrWhiteSpace(email, nameof(email));
+        Guard.Against.NullOrWhiteSpace(displayName, nameof(displayName));
+
+        // Check if user with this email already exists
+        var existingUser = await GetByEmailAddressAsync(email, cancellationToken).ConfigureAwait(false);
+        if (existingUser.IsSuccess && existingUser.Data != null)
+        {
+            return new MelodeeModels.OperationResult<User?>("User with this email already exists. Please log in with password and link your Google account.")
+            {
+                Data = null,
+                Type = MelodeeModels.OperationResponseType.ValidationFailure
+            };
+        }
+
+        // Generate a unique username from email or display name
+        var baseUsername = email.Split('@')[0].Replace(".", "_").Replace("+", "_");
+        var username = baseUsername;
+
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        // Ensure username is unique
+        var usernameNormalized = username.ToNormalizedString() ?? username.ToUpperInvariant();
+        var counter = 1;
+        while (await scopedContext.Users.AnyAsync(u => u.UserNameNormalized == usernameNormalized, cancellationToken).ConfigureAwait(false))
+        {
+            username = $"{baseUsername}{counter}";
+            usernameNormalized = username.ToNormalizedString() ?? username.ToUpperInvariant();
+            counter++;
+        }
+
+        var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
+        var usersPublicKey = EncryptionHelper.GenerateRandomPublicKeyBase64();
+        var now = Instant.FromDateTimeUtc(DateTime.UtcNow);
+
+        // Generate a random password (user can reset if needed, or continue using Google)
+        var randomPassword = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
+
+        var newUser = new User
+        {
+            UserName = username,
+            UserNameNormalized = usernameNormalized,
+            Email = email,
+            EmailNormalized = email.ToNormalizedString() ?? email.ToUpperInvariant(),
+            PublicKey = usersPublicKey,
+            PasswordEncrypted = EncryptionHelper.Encrypt(
+                configuration.GetValue<string>(SettingRegistry.EncryptionPrivateKey)!,
+                randomPassword,
+                usersPublicKey),
+            CreatedAt = now,
+            LastActivityAt = now,
+            LastLoginAt = now
+        };
+
+        scopedContext.Users.Add(newUser);
+
+        if (await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false) < 1)
+        {
+            return new MelodeeModels.OperationResult<User?>("Failed to create user")
+            {
+                Data = null,
+                Type = MelodeeModels.OperationResponseType.Error
+            };
+        }
+
+        // Check if this is the first user - make them admin
+        var dbUserCount = await scopedContext.Users.CountAsync(cancellationToken).ConfigureAwait(false);
+        if (dbUserCount == 1)
+        {
+            await scopedContext.Users
+                .Where(x => x.Id == newUser.Id)
+                .ExecuteUpdateAsync(x => x.SetProperty(u => u.IsAdmin, true), cancellationToken)
+                .ConfigureAwait(false);
+            newUser.IsAdmin = true;
+        }
+
+        // Link the Google account
+        var socialLogin = new UserSocialLogin
+        {
+            UserId = newUser.Id,
+            Provider = "Google",
+            Subject = googleSubject,
+            Email = email,
+            DisplayName = displayName,
+            HostedDomain = hostedDomain,
+            LastLoginAt = now,
+            CreatedAt = now
+        };
+
+        scopedContext.UserSocialLogins.Add(socialLogin);
+        await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        ClearCache(newUser.EmailNormalized, newUser.ApiKey, newUser.Id, newUser.UserNameNormalized);
+
+        return new MelodeeModels.OperationResult<User?> { Data = newUser };
+    }
+
+    #endregion
+
     private void ClearUserCache(User user)
     {
         CacheManager.Remove(CacheKeyDetailTemplate.FormatSmart(user.Id));

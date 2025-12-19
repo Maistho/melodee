@@ -8,10 +8,12 @@ using Melodee.Common.Data.Models.Extensions;
 using Melodee.Common.Models;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services;
+using Melodee.Common.Services.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Options;
 
 namespace Melodee.Blazor.Controllers.Melodee;
 
@@ -34,6 +36,8 @@ public class UserController(
     AlbumService albumService,
     ArtistService artistService,
     PlaylistService playlistService,
+    IGoogleTokenService googleTokenService,
+    IOptions<GoogleAuthOptions> googleAuthOptions,
     IConfiguration configuration,
     IMelodeeConfigurationFactory configurationFactory) : ControllerBase(
     etagRepository,
@@ -41,6 +45,8 @@ public class UserController(
     configuration,
     configurationFactory)
 {
+    private readonly GoogleAuthOptions _googleAuthOptions = googleAuthOptions.Value;
+
     #region User Profile
 
     /// <summary>
@@ -809,6 +815,142 @@ public class UserController(
                 hasPrevious = validatedPage > 1
             }
         });
+    }
+
+    #endregion
+
+    #region Social Login Linking
+
+    /// <summary>
+    /// Get linked social providers for the current user.
+    /// </summary>
+    /// <remarks>
+    /// Returns a list of social login providers linked to the current user's account.
+    /// </remarks>
+    [HttpGet]
+    [Route("me/linked-providers")]
+    [ProducesResponseType(typeof(LinkedProviderInfo[]), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetLinkedProvidersAsync(CancellationToken cancellationToken = default)
+    {
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
+        {
+            return ApiUnauthorized();
+        }
+
+        var socialLoginsResult = await userService.GetUserSocialLoginsAsync(user.Id, cancellationToken).ConfigureAwait(false);
+
+        var linkedProviders = socialLoginsResult.Data?.Select(sl => new LinkedProviderInfo
+        {
+            Provider = sl.Provider,
+            Email = sl.Email,
+            LinkedAt = sl.CreatedAt.ToDateTimeUtc(),
+            LastLoginAt = sl.LastLoginAt?.ToDateTimeUtc()
+        }).ToArray() ?? [];
+
+        return Ok(linkedProviders);
+    }
+
+    /// <summary>
+    /// Link a Google account to the current user.
+    /// </summary>
+    /// <remarks>
+    /// Validates the Google ID token and links it to the authenticated user's account.
+    /// The user must be authenticated via password before linking.
+    /// </remarks>
+    [HttpPost]
+    [Route("me/link/google")]
+    [EnableRateLimiting("melodee-auth")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> LinkGoogleAsync([FromBody] GoogleLinkRequest request, CancellationToken cancellationToken = default)
+    {
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
+        {
+            return ApiUnauthorized();
+        }
+
+        if (!_googleAuthOptions.Enabled)
+        {
+            return ApiBadRequest("Google authentication is not enabled");
+        }
+
+        // Validate the Google ID token
+        var validationResult = await googleTokenService.ValidateTokenAsync(request.IdToken, cancellationToken).ConfigureAwait(false);
+
+        if (!validationResult.IsValid || validationResult.Payload == null)
+        {
+            var errorCode = validationResult.ErrorCode ?? ApiError.Codes.InvalidGoogleToken;
+            return StatusCode(
+                errorCode == ApiError.Codes.ExpiredGoogleToken ? StatusCodes.Status401Unauthorized : StatusCodes.Status400BadRequest,
+                new ApiError(errorCode, validationResult.ErrorMessage ?? "Google token validation failed", GetCorrelationId()));
+        }
+
+        var payload = validationResult.Payload;
+
+        // Try to link
+        var linkResult = await userService.LinkSocialLoginAsync(
+            user.Id,
+            "Google",
+            payload.Subject,
+            payload.Email,
+            payload.Name,
+            payload.HostedDomain,
+            cancellationToken).ConfigureAwait(false);
+
+        if (!linkResult.IsSuccess)
+        {
+            return StatusCode(StatusCodes.Status409Conflict,
+                new ApiError(ApiError.Codes.GoogleAlreadyLinked,
+                    linkResult.Messages?.FirstOrDefault() ?? "Failed to link Google account",
+                    GetCorrelationId()));
+        }
+
+        return Ok(new
+        {
+            message = "Google account linked successfully",
+            provider = new LinkedProviderInfo
+            {
+                Provider = "Google",
+                Email = payload.Email,
+                LinkedAt = DateTime.UtcNow,
+                LastLoginAt = DateTime.UtcNow
+            }
+        });
+    }
+
+    /// <summary>
+    /// Unlink a Google account from the current user.
+    /// </summary>
+    /// <remarks>
+    /// Removes the Google social login link. The user can still log in with password
+    /// and can re-link Google later if desired.
+    /// </remarks>
+    [HttpDelete]
+    [Route("me/link/google")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UnlinkGoogleAsync(CancellationToken cancellationToken = default)
+    {
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
+        {
+            return ApiUnauthorized();
+        }
+
+        var unlinkResult = await userService.UnlinkSocialLoginAsync(user.Id, "Google", cancellationToken).ConfigureAwait(false);
+
+        if (!unlinkResult.IsSuccess)
+        {
+            return ApiNotFound("Google account is not linked");
+        }
+
+        return Ok(new { message = "Google account unlinked successfully" });
     }
 
     #endregion

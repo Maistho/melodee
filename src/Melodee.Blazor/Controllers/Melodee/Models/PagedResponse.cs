@@ -30,8 +30,3 @@ public record ArtistPagedResponse(PaginationMetadata Meta, Artist[] Data);
 /// Response wrapper for search results.
 /// </summary>
 public record SearchResultResponse(PaginationMetadata Meta, SearchResult Data);
-
-/// <summary>
-/// Response for successful authentication.
-/// </summary>
-public record AuthenticationResponse(User User, string ServerVersion, string Token);

@@ -126,6 +126,10 @@ public class User : DataModelBase
 
     public ICollection<UserPin> Pins { get; set; } = new List<UserPin>();
 
+    public ICollection<UserSocialLogin> SocialLogins { get; set; } = new List<UserSocialLogin>();
+
+    public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+
     public static User BlankUser => new()
     {
         UserName = string.Empty,
