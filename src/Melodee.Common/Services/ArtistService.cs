@@ -1051,12 +1051,12 @@ public class ArtistService(
 
             if (imageFile is not { Exists: true })
             {
-                Logger.Warning("No image found for artist [{ArtistId}] with size [{Size}].", artistId, sizeValue);
+                Logger.Warning("No image found for artist [{ArtistId}] with size [{Size}].", artistId, LogSanitizer.Sanitize(sizeValue));
                 return new MelodeeModels.ImageBytesAndEtag(null, badEtag);
             }
 
             var imageBytes = await fileSystemService.ReadAllBytesAsync(imageFile.FullName, cancellationToken).ConfigureAwait(false);
-            Logger.Information("Image found for artist [{ArtistId}] with size [{Size}] CacheKey [{CacheKey}].", artistId, sizeValue, cacheKey);
+            Logger.Information("Image found for artist [{ArtistId}] with size [{Size}] CacheKey [{CacheKey}].", artistId, LogSanitizer.Sanitize(sizeValue), LogSanitizer.Sanitize(cacheKey));
             return new MelodeeModels.ImageBytesAndEtag(imageBytes, (artist.Data.LastUpdatedAt ?? artist.Data.CreatedAt).ToEtag());
         }, cancellationToken, configuration.CacheDuration(), Artist.CacheRegion);
     }

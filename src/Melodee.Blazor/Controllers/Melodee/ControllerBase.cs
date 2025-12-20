@@ -66,7 +66,10 @@ public abstract class ControllerBase(
             );
 
             var logger = context.HttpContext.RequestServices.GetService(typeof(ILogger<ControllerBase>)) as ILogger<ControllerBase>;
-            logger?.LogInformation("Authenticated request {Path} user {User} from {Ip}", context.HttpContext.Request.Path, ApiRequest.Username, ipAddress);
+            logger?.LogInformation("Authenticated request {Path} user {User} from {Ip}", 
+                LogSanitizer.Sanitize(context.HttpContext.Request.Path), 
+                LogSanitizer.Sanitize(ApiRequest.Username), 
+                LogSanitizer.Sanitize(ipAddress));
         }
 
         await next().ConfigureAwait(false);

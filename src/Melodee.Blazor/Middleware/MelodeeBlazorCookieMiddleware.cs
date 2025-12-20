@@ -26,7 +26,7 @@ public class MelodeeBlazorCookieMiddleware(RequestDelegate next, IMelodeeConfigu
             new CookieOptions
             {
                 HttpOnly = true,
-                Secure = false,
+                Secure = true, // Required for SameSite=None and for secure cookie transmission
                 SameSite = SameSiteMode.None, // this is none as some players are hosted and cross site to Melodee servers (e.g. Feishin on vercel)
                 Expires = DateTime.UtcNow.AddDays(1)
             });

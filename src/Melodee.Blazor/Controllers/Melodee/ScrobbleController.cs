@@ -10,6 +10,7 @@ using Melodee.Common.Extensions;
 using Melodee.Common.Models;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services;
+using Melodee.Common.Utility;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -93,10 +94,10 @@ public class ScrobbleController(
         var songRequest = await songService.GetByApiKeyAsync(scrobbleRequest.SongId, cancellationToken).ConfigureAwait(false);
         if (!songRequest.IsSuccess || songRequest.Data == null)
         {
-            logger.Warning("[{ControllerName}] [{MethodName}] Scrobble request for unknown song [{Request}]",
+            logger.Warning("[{ControllerName}] [{MethodName}] Scrobble request for unknown song [{SongId}]",
                 nameof(ScrobbleController),
                 nameof(ScrobbleSong),
-                scrobbleRequest);
+                scrobbleRequest.SongId);
             return ApiBadRequest("Unknown song");
         }
 
@@ -137,19 +138,19 @@ public class ScrobbleController(
                 return Ok();
             }
 
-            logger.Warning("[{ControllerName}] [{MethodName}] Scrobble request for unknown song [{Request}] Message [{Message}",
+            logger.Warning("[{ControllerName}] [{MethodName}] Scrobble failed for song [{SongId}] Message [{Message}]",
                 nameof(ScrobbleController),
                 nameof(ScrobbleSong),
-                scrobbleRequest,
-                result.Messages?.First() ?? "Unknown error");
+                scrobbleRequest.SongId,
+                LogSanitizer.Sanitize(result.Messages?.First() ?? "Unknown error"));
             return ApiBadRequest(result.Messages?.First() ?? "Unknown error");
         }
 
-        logger.Warning("[{ControllerName}] [{MethodName}] Scrobble request for unknown song [{Request}] Message [{Message}",
+        logger.Warning("[{ControllerName}] [{MethodName}] Unknown scrobble type [{ScrobbleType}] for song [{SongId}]",
             nameof(ScrobbleController),
             nameof(ScrobbleSong),
-            scrobbleRequest,
-            $"Unknown scrobble type: {scrobbleRequest.ScrobbleType}");
+            LogSanitizer.Sanitize(scrobbleRequest.ScrobbleType),
+            scrobbleRequest.SongId);
         return ApiBadRequest($"Unknown scrobble type: {scrobbleRequest.ScrobbleType}");
     }
 

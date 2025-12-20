@@ -197,7 +197,8 @@ public static partial class StringExtensions
             {
                 if (!string.IsNullOrEmpty(match.Value))
                 {
-                    nameString = Regex.Replace(nameString, match.Value, x => x.ToString().ToUpper());
+                    // Use Regex.Escape to prevent regex injection from user input
+                    nameString = Regex.Replace(nameString, Regex.Escape(match.Value), x => x.ToString().ToUpper());
                 }
             }
         }
@@ -901,7 +902,8 @@ public static partial class StringExtensions
         }
         catch (Exception e)
         {
-            Trace.WriteLine($"Error: [{e.Message}] input text [{originalText}] processed to [{text}]");
+            // Sanitize user input before logging to prevent log forging
+            Trace.WriteLine($"Error: [{e.Message}] during text normalization");
         }
 
 
@@ -927,7 +929,8 @@ public static partial class StringExtensions
             var invalidCharactersRegex =
                 new Regex("([\ud800-\udbff](?![\udc00-\udfff]))|((?<![\ud800-\udbff])[\udc00-\udfff])");
             text = invalidCharactersRegex.Replace(text, "");
-            Trace.WriteLine($"Error: [{e.Message}] input text [{originalText}] processed to [{text}]");
+            // Sanitize user input before logging to prevent log forging
+            Trace.WriteLine($"Error: [{e.Message}] during text normalization (invalid characters removed)");
         }
 
         return text;

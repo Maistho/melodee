@@ -149,12 +149,15 @@ def setup_environment_config(melodee_dir):
         # Replace the default password with a secure one
         env_content = env_content.replace('DB_PASSWORD=s3cur3pAssw0rd', f'DB_PASSWORD={secure_password}')
 
-        # Write the new .env file
+        # Write the new .env file with restricted permissions
+        import stat
         with open(env_path, 'w') as f:
             f.write(env_content)
+        # Set file permissions to owner read/write only (0600)
+        os.chmod(env_path, stat.S_IRUSR | stat.S_IWUSR)
 
         print(f"✅ Created .env file with secure database password")
-        print(f"   Database password: {secure_password}")
+        print(f"   Database password has been set (check .env file)")
         return True
 
     except Exception as e:

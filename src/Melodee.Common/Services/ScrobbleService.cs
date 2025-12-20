@@ -6,6 +6,7 @@ using Melodee.Common.Models;
 using Melodee.Common.Models.Scrobbling;
 using Melodee.Common.Plugins.Scrobbling;
 using Melodee.Common.Services.Caching;
+using Melodee.Common.Utility;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using Serilog;
@@ -83,10 +84,10 @@ public class ScrobbleService(
     {
         Logger.Information("[{ServiceName}] NowPlaying called for User [{User}], Song [{SongId}], Time [{Time}], Player [{Player}]",
             nameof(ScrobbleService),
-            user.UserName,
+            LogSanitizer.Sanitize(user.UserName),
             id,
             time,
-            playerName);
+            LogSanitizer.Sanitize(playerName));
 
         var result = true;
         var databaseSongScrobbleInfo = await DatabaseSongScrobbleInfoForSongApiKey(id, cancellationToken).ConfigureAwait(false);
@@ -158,9 +159,9 @@ public class ScrobbleService(
     {
         Logger.Information("[{ServiceName}] Scrobble called for User [{User}], Song [{SongId}], Player [{Player}]",
             nameof(ScrobbleService),
-            user.UserName,
+            LogSanitizer.Sanitize(user.UserName),
             songId,
-            playerName);
+            LogSanitizer.Sanitize(playerName));
 
         CheckInitialized();
 

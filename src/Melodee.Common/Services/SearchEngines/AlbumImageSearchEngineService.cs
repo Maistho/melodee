@@ -14,6 +14,7 @@ using Melodee.Common.Plugins.SearchEngine.MusicBrainz.Data;
 using Melodee.Common.Plugins.SearchEngine.Spotify;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services.Caching;
+using Melodee.Common.Utility;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -81,14 +82,17 @@ public class AlbumImageSearchEngineService(
         var result = new List<ImageSearchResult>();
         var enabledEngines = searchEngines.Where(x => x.IsEnabled).OrderBy(x => x.SortOrder).ToArray();
 
+        // Sanitize query for logging to prevent log forging
+        var sanitizedQuery = LogSanitizer.Sanitize(query.ToString());
+
         Logger.Debug("Starting album image search for query [{Query}] with [{Count}] enabled search engines: [{Engines}]",
-            query, enabledEngines.Length, string.Join(", ", enabledEngines.Select(x => x.DisplayName)));
+            sanitizedQuery, enabledEngines.Length, string.Join(", ", enabledEngines.Select(x => x.DisplayName)));
 
         foreach (var searchEngine in enabledEngines)
         {
             try
             {
-                Logger.Debug("[{Plugin}] searching for album images with query [{Query}]", searchEngine.DisplayName, query);
+                Logger.Debug("[{Plugin}] searching for album images with query [{Query}]", searchEngine.DisplayName, sanitizedQuery);
                 var searchResult = await searchEngine.DoAlbumImageSearch(query, maxResultsValue, token);
                 if (searchResult.IsSuccess)
                 {
@@ -96,18 +100,18 @@ public class AlbumImageSearchEngineService(
                     if (foundCount > 0)
                     {
                         Logger.Debug("[{Plugin}] found [{Count}] image(s) for query [{Query}]",
-                            searchEngine.DisplayName, foundCount, query);
+                            searchEngine.DisplayName, foundCount, sanitizedQuery);
                         result.AddRange(searchResult.Data ?? []);
                     }
                     else
                     {
-                        Logger.Debug("[{Plugin}] found no images for query [{Query}]", searchEngine.DisplayName, query);
+                        Logger.Debug("[{Plugin}] found no images for query [{Query}]", searchEngine.DisplayName, sanitizedQuery);
                     }
                 }
                 else
                 {
                     Logger.Warning("[{Plugin}] search failed for query [{Query}]: [{Errors}]",
-                        searchEngine.DisplayName, query, string.Join(", ", searchResult.Errors ?? []));
+                        searchEngine.DisplayName, sanitizedQuery, string.Join(", ", searchResult.Errors ?? []));
                 }
 
                 if (searchEngine.StopProcessing || result.Count >= maxResultsValue)
@@ -119,11 +123,11 @@ public class AlbumImageSearchEngineService(
             }
             catch (Exception e)
             {
-                Logger.Error(e, "[{Plugin}] threw error with query [{Query}]", searchEngine.DisplayName, query);
+                Logger.Error(e, "[{Plugin}] threw error with query [{Query}]", searchEngine.DisplayName, sanitizedQuery);
             }
         }
 
-        Logger.Debug("Album image search completed for query [{Query}] with [{Count}] total result(s)", query, result.Count);
+        Logger.Debug("Album image search completed for query [{Query}] with [{Count}] total result(s)", sanitizedQuery, result.Count);
 
         return new OperationResult<ImageSearchResult[]>
         {

@@ -157,7 +157,8 @@ public record MelodeeConfiguration(Dictionary<string, object?> Configuration) : 
             }
             catch (Exception e)
             {
-                Trace.WriteLine($"Error converting setting [{settingName}]: {e.Message}]");
+                // Don't log setting name as it might hint at sensitive configuration
+                Trace.WriteLine($"Error converting configuration setting: {e.Message}]");
             }
         }
 
@@ -174,7 +175,8 @@ public record MelodeeConfiguration(Dictionary<string, object?> Configuration) : 
             }
             catch (Exception e)
             {
-                Trace.WriteLine($"Error converting setting [{settingName}]: {e.Message}]");
+                // Don't log setting name as it might hint at sensitive configuration
+                Trace.WriteLine($"Error converting configuration setting to boolean: {e.Message}]");
             }
         }
 

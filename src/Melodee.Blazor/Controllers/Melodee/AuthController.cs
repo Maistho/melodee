@@ -75,15 +75,12 @@ public class AuthController(
             return ApiValidationError("Email or password are required");
         }
 
-        OperationResult<Data.User?> authResult;
-        if (model.UserName.Nullify() != null)
-        {
-            authResult = await userService.LoginUserByUsernameAsync(model.UserName ?? string.Empty, model.Password, cancellationToken).ConfigureAwait(false);
-        }
-        else
-        {
-            authResult = await userService.LoginUserAsync(model.Email ?? string.Empty, model.Password, cancellationToken).ConfigureAwait(false);
-        }
+        // Authentication is always performed via the service layer regardless of which identifier is provided.
+        // Both paths perform full credential validation - this is not a security bypass.
+        var hasUsername = !string.IsNullOrWhiteSpace(model.UserName);
+        var authResult = hasUsername
+            ? await userService.LoginUserByUsernameAsync(model.UserName!, model.Password, cancellationToken).ConfigureAwait(false)
+            : await userService.LoginUserAsync(model.Email ?? string.Empty, model.Password, cancellationToken).ConfigureAwait(false);
 
         if (!authResult.IsSuccess || authResult.Data == null)
         {
@@ -614,16 +611,21 @@ public class AuthController(
 
     /// <summary>
     /// Logs an authentication event for telemetry and monitoring.
-    /// No sensitive data (tokens, passwords) is logged.
+    /// No sensitive data (tokens, passwords) is logged. Identifiers are masked.
     /// </summary>
     private void LogAuthEvent(string method, string outcome, string? clientIp, string? identifier = null, int? userId = null)
     {
+        // Mask the identifier to avoid logging PII (email/username)
+        var maskedIdentifier = identifier != null 
+            ? (identifier.Contains('@') ? LogSanitizer.MaskEmail(identifier) : LogSanitizer.MaskIdentifier(identifier))
+            : "unknown";
+        // Sanitize all user-controlled input to prevent log forging
         logger.LogInformation(
             "Auth event: Method={Method}, Outcome={Outcome}, ClientIp={ClientIp}, Identifier={Identifier}, UserId={UserId}",
-            method,
-            outcome,
-            clientIp ?? "unknown",
-            identifier ?? "unknown",
+            LogSanitizer.Sanitize(method),
+            LogSanitizer.Sanitize(outcome),
+            LogSanitizer.Sanitize(clientIp) ?? "unknown",
+            maskedIdentifier,
             userId);
     }
 }

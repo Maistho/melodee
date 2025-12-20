@@ -9,6 +9,7 @@ using Melodee.Common.Models.OpenSubsonic.Responses;
 using Melodee.Common.Models.Streaming;
 using Melodee.Common.Plugins.Scrobbling;
 using Melodee.Common.Services.Caching;
+using Melodee.Common.Utility;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Primitives;
 using Serilog;
@@ -545,7 +546,7 @@ public class SongService(
             if (range == null)
             {
                 Logger.Warning("[{ServiceName}] Invalid range request for song [{ApiKey}]. RangeHeader: [{RangeHeader}], FileSize: [{FileSize}]",
-                    nameof(SongService), apiKey, rangeHeader, songStreamInfo.FileSize);
+                    nameof(SongService), apiKey, LogSanitizer.Sanitize(rangeHeader), songStreamInfo.FileSize);
                 return new MelodeeModels.OperationResult<StreamingDescriptor>("Invalid range request")
                 {
                     Type = MelodeeModels.OperationResponseType.Error,
