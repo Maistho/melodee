@@ -4,13 +4,16 @@ namespace Melodee.Common.Utility;
 
 // WARNING: This class executes shell commands and may pose a security risk if used with untrusted input.
 // Only use with paths and commands from trusted configuration sources.
-// Consider validating that script paths are within expected directories.
+// The current escape mechanism only handles double quotes and does NOT protect against all shell injection vectors
+// such as backticks, semicolons, pipe operators, or other shell metacharacters.
+// Consider validating that script paths are within expected directories and using allowlists for acceptable scripts.
 public static class ShellHelper
 {
     public static Task<int> Bash(this string cmd)
     {
         var source = new TaskCompletionSource<int>();
-        // Escape double quotes in the command to prevent injection
+        // WARNING: This escape only handles double quotes. Not comprehensive protection against shell injection.
+        // This should only be used with trusted input from configuration files.
         var escapedArgs = cmd.Replace("\"", "\\\"");
         var process = new Process
         {

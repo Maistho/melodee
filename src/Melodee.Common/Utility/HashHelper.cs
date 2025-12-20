@@ -20,7 +20,16 @@ public static class HashHelper
 
     public static string? CreateMd5(FileInfo file)
     {
-        return CreateMd5(File.ReadAllBytes(file.FullName));
+        using var md5 = MD5.Create();
+        using var stream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
+        var hash = md5.ComputeHash(stream);
+        
+        var sBuilder = new StringBuilder();
+        foreach (var t in hash)
+        {
+            sBuilder.Append(t.ToString("x2"));
+        }
+        return sBuilder.ToString();
     }
 
     public static string? CreateMd5(byte[]? bytes)
@@ -60,7 +69,16 @@ public static class HashHelper
 
     public static string? CreateSha256(FileInfo file)
     {
-        return CreateSha256(File.ReadAllBytes(file.FullName));
+        using var sha256 = SHA256.Create();
+        using var stream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
+        var hash = sha256.ComputeHash(stream);
+        
+        var sBuilder = new StringBuilder();
+        foreach (var t in hash)
+        {
+            sBuilder.Append(t.ToString("x2"));
+        }
+        return sBuilder.ToString();
     }
 
     public static string? CreateSha256(byte[]? bytes)
