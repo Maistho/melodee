@@ -1,0 +1,92 @@
+using Melodee.Common.Configuration;
+using Melodee.Common.Data;
+using Melodee.Common.Metadata;
+using Melodee.Common.Models.SearchEngines.ArtistSearchEngineServiceData;
+using Melodee.Common.Plugins.Scrobbling;
+using Melodee.Common.Plugins.SearchEngine.MusicBrainz.Data;
+using Melodee.Common.Plugins.SearchEngine.Spotify;
+using Melodee.Common.Serialization;
+using Melodee.Common.Services;
+using Melodee.Common.Services.Caching;
+using Melodee.Common.Services.Scanning;
+using Melodee.Common.Services.SearchEngines;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Rebus.Config;
+using Rebus.Transport.InMem;
+using Serilog;
+using Spectre.Console.Cli;
+using SpotifyAPI.Web;
+
+namespace Melodee.Cli.Command;
+
+public abstract class CommandBase<T> : AsyncCommand<T> where T : Spectre.Console.Cli.CommandSettings
+{
+    protected IConfigurationRoot Configuration()
+    {
+        return new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json")
+            .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}.json", true)
+            .AddEnvironmentVariables()
+            .Build();
+    }
+
+    protected ServiceProvider CreateServiceProvider()
+    {
+        var configuration = Configuration();
+        var services = new ServiceCollection();
+
+        Log.Logger = new LoggerConfiguration()
+            .ReadFrom.Configuration(configuration)
+            .CreateLogger();
+
+        services.AddSingleton(Log.Logger);
+        services.AddHttpContextAccessor();
+        services.AddSingleton<ISerializer, Serializer>();
+        services.AddHttpClient();
+        services.AddDbContextFactory<MelodeeDbContext>(opt =>
+            opt.UseNpgsql(configuration.GetConnectionString("DefaultConnection"),
+                o => o.UseNodaTime().UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
+        services.AddDbContextFactory<MusicBrainzDbContext>(opt =>
+            opt.UseSqlite(configuration.GetConnectionString("MusicBrainzConnection")));
+        services.AddDbContextFactory<ArtistSearchEngineServiceDbContext>(opt
+            => opt.UseSqlite(configuration.GetConnectionString("ArtistSearchEngineConnection")));
+        services.AddScoped<IMusicBrainzRepository, SQLiteMusicBrainzRepository>();
+        services.AddSingleton<IMelodeeConfigurationFactory, MelodeeConfigurationFactory>();
+        services.AddSingleton<ICacheManager>(opt
+            => new MemoryCacheManager(opt.GetRequiredService<ILogger>(),
+                new TimeSpan(1,
+                    0,
+                    0,
+                    0),
+                opt.GetRequiredService<ISerializer>()));
+        services.AddSingleton(Log.Logger);
+        services.AddRebus(configure =>
+        {
+            return configure
+                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "melodee_bus"));
+        });
+        services.AddSingleton(SpotifyClientConfig.CreateDefault());
+        services.AddSingleton<IFileSystemService, FileSystemService>();
+        services.AddSingleton<INowPlayingRepository, NowPlayingInMemoryRepository>();
+        services.AddScoped<ISpotifyClientBuilder, SpotifyClientBuilder>();
+        services.AddScoped<AlbumDiscoveryService>();
+        services.AddScoped<AlbumImageSearchEngineService>();
+        services.AddScoped<ArtistSearchEngineService>();
+        services.AddScoped<DirectoryProcessorToStagingService>();
+        services.AddScoped<LibraryService>();
+        services.AddScoped<MediaEditService>();
+        services.AddScoped<MelodeeMetadataMaker>();
+        services.AddScoped<SettingService>();
+        services.AddScoped<ArtistService>();
+        services.AddScoped<AlbumService>();
+        services.AddScoped<SongService>();
+        services.AddScoped<PlaylistService>();
+        services.AddScoped<UserService>();
+        services.AddScoped<UserQueueService>();
+
+        return services.BuildServiceProvider();
+    }
+}

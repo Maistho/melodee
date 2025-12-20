@@ -1,0 +1,31 @@
+@using Melodee.Common.Models.Collection
+@using Melodee.Common.Models.Collection.Extensions
+<RadzenCard Variant="Variant.Filled"
+            class="@($"{CssClass}")"
+            Style="@Style">
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Start" Gap="5px" class="rz-p-1">
+        <RadzenImage Path="@Artist.ImageUrl()" Style="width: 60px; height: 60px; margin-right: 5px;"/>
+        <RadzenStack Gap="0">
+            <RadzenText TextStyle="TextStyle.Body1" style="max-width:160px;">
+                @if (ShowArtistLink)
+                {
+                    <RadzenLink text="@Artist.Name" class="rz-text-wrap" Path="@Artist.DetailUrl()"/>
+                }
+                else
+                {
+                    <RadzenText text="@Artist.Name" class="rz-text-wrap"/>
+                }
+            </RadzenText>
+            <RadzenText TextStyle="TextStyle.Overline"
+                        Style="margin:0;padding:0;">@ArtistDataInfo.InfoLineTitle</RadzenText>
+            <RadzenText TextStyle="TextStyle.Body1" Style="margin:0;padding:0;">@Artist.InfoLineData</RadzenText>
+        </RadzenStack>
+    </RadzenStack>
+</RadzenCard>
+
+@code {
+    [Parameter] public ArtistDataInfo Artist { get; set; } = null!;
+    [Parameter] public string CssClass { get; set; } = string.Empty;
+    [Parameter] public string? Style { get; set; }
+    [Parameter] public bool ShowArtistLink { get; set; } = true;
+}

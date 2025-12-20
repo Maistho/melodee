@@ -1,0 +1,196 @@
+﻿@inherits LayoutComponentBase
+@using System.Drawing
+@using Melodee.Common.Enums
+@using Microsoft.AspNetCore.Components.Authorization
+@using HttpUtility = System.Web.HttpUtility
+
+@implements IDisposable
+@inject LibraryService LibraryService
+@inject MainLayoutProxyService MainLayoutProxyService
+@inject IAuthService AuthService
+@inject NavigationManager NavigationManager
+@inject IMelodeeConfigurationFactory MelodeeConfigurationFactory
+
+@* Without this Radzen doesn't restore the theme from cookie <shrug /> *@
+@* ReSharper disable once UnusedMember.Local *@
+@inject CookieThemeService CookieThemeService
+
+<RadzenComponents @rendermode="InteractiveServer"/>
+
+<RadzenNotification/>
+<RadzenTooltip/>
+<RadzenContextMenu/>
+
+<AuthorizeView>
+    <NotAuthorized>
+        @Body
+    </NotAuthorized>
+    <Authorized>
+        <RadzenLayout>
+            <RadzenHeader>
+                <RadzenRow JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center" Gap="0">
+                    <RadzenColumn Size="5">
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0">
+                            <RadzenSidebarToggle Click="@SidebarToggleClick"></RadzenSidebarToggle>
+                            <RadzenText Text="@_siteTitle" TextStyle="TextStyle.H6" class="hide-below-480" Style="margin-top:13px;"/>
+                        </RadzenStack>
+                    </RadzenColumn>
+                    <RadzenColumn Size="7">
+                        <RadzenStack
+                            AlignItems="AlignItems.Center"
+                            Orientation="Orientation.Horizontal"
+                            JustifyContent="JustifyContent.End">
+                            <RadzenProgressBar Visible="@MainLayoutProxyService.ShowSpinner"
+                                               Style="width:100px;"
+                                               ProgressBarStyle="ProgressBarStyle.Info"
+                                               Value="100"
+                                               ShowValue="false"
+                                               Mode="ProgressBarMode.Indeterminate"/>
+                            <DebounceInput class="rz-textbox"
+                                           style="width:200px;"
+                                           autocomplete="off"
+                                           @bind-Value="@_debounceInputValue"
+                                           @bind-Value:event="OnInput"
+                                           placeholder="Search"
+                                           DebounceTime="2000"
+                                           MinLength="2"
+                                           OnValueChanged="@DoSearchAsync"
+                                           ForceNotifyByEnter="true"
+                                           ForceNotifyOnBlur="true"/>
+                            <RadzenStack Orientation="Orientation.Vertical"
+                                         Gap="0.5rem"
+                                         class="rz-p-sm-2">
+                            </RadzenStack>
+                            <RadzenAppearanceToggle/>
+                            <RadzenIcon Visible="@context.User.IsAdmin()" IconColor="@Colors.Warning" title="You are an admin!" Icon="server_person" />
+                            <RadzenIcon Visible="@(!context.User.IsAdmin() && context.User.IsEditor())" IconColor="@Colors.Warning" title="You are a editor!" Icon="box_edit" />
+                            <RadzenProfileMenu>
+                                <ChildContent>
+                                    <RadzenProfileMenuItem Path="/account/profile" Icon="settings" Text="Profile"/>
+                                    <RadzenProfileMenuItem Path="/account/logout" Text="Logout" Value="Logout"
+                                                           Icon="power_settings_new"/>
+                                </ChildContent>
+                                <Template>
+                                    <RadzenImage
+                                        Path="@($"/images/{context.User.ToApiKey()}/{MelodeeConfiguration.DefaultThumbNailSize}")"
+                                        style="border-radius:5px;height:40px;width:40px;"/>
+                                </Template>
+                            </RadzenProfileMenu>
+                        </RadzenStack>
+                    </RadzenColumn>
+                </RadzenRow>
+            </RadzenHeader>
+            <RadzenSidebar Style="width:160px;" @bind-Expanded="@_sidebarExpanded">
+                <RadzenPanelMenu>
+                    <RadzenPanelMenuItem Text="Dashboard" Path="/" Icon="dashboard"/>
+                    <RadzenPanelMenuItem Text="Stats" Path="/stats" Icon="bar_chart"/>
+                    <RadzenPanelMenuItem Text="Artists" Path="/data/artists" Icon="artist"/>
+                    <RadzenPanelMenuItem Text="Albums" Path="/data/albums" Icon="album"/>
+                    <RadzenPanelMenuItem Text="Libraries" Path="/data/libraries" Icon="library_music"
+                                         Visible="@AuthService.IsAdmin"/>
+                    <RadzenPanelMenuItem Text="Now Playing" Path="/activity/nowplaying" Icon="sound_sampler"/>
+                    <RadzenPanelMenuItem Text="Playlists" Path="/data/playlists" Icon="playlist_play"/>
+                    <RadzenPanelMenuItem Text="Radio Stations" Path="/data/radiostations" Icon="radio"/>
+                    <RadzenPanelMenuItem Text="Songs" Path="/data/songs" Icon="music_note"/>
+                    <RadzenPanelMenuItem Text="Shares" Path="/data/shares" Icon="share"/>
+                    <RadzenPanelMenuItem Text="Users" Path="/data/users" Icon="group"/>
+                    <RadzenPanelMenuItem Text="Admin" Icon="admin_panel_settings" IconColor="@Colors.Danger"
+                                         Visible="@AuthService.IsAdmin">
+                        <RadzenPanelMenuItem Text="Dashboard" Path="/admin/dashboard" Icon="dashboard"/>
+                        <RadzenPanelMenuItem Text="Media" Icon="perm_media">
+                            @foreach (var mediaLibraryInfo in _mediaLibraryInfos)
+                            {
+                                <RadzenPanelMenuItem Text="@mediaLibraryInfo.Text" Path="@mediaLibraryInfo.Path"
+                                                     Icon="folder"/>
+                            }
+                        </RadzenPanelMenuItem>
+                        <RadzenPanelMenuItem Text="Media Artists" Path="/admin/mediaartists" Icon="artist"/>
+                        <RadzenPanelMenuItem Text="Jobs" Path="/admin/jobs" Icon="checklist"/>
+                        <RadzenPanelMenuItem Text="Settings" Path="/admin/settings" Icon="settings"/>
+                    </RadzenPanelMenuItem>
+                    <RadzenPanelMenuItem Text="About" Path="/about" Icon="info" IconColor="@Colors.Secondary"/>
+                </RadzenPanelMenu>
+            </RadzenSidebar>
+            <RadzenBody Style="margin: 10px; padding:3px;">
+                @Body
+            </RadzenBody>
+        </RadzenLayout>
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    bool _sidebarExpanded = true;
+    string _siteTitle = string.Empty;
+
+    string _debounceInputValue = "";
+
+    MediaLibraryInfo[] _mediaLibraryInfos = [];
+
+    private sealed record MediaLibraryInfo(string Text, string Path);
+
+    [CascadingParameter] private HttpContext? HttpContext { get; set; }
+
+    [Inject] private ThemeService ThemeService { get; set; } = null!;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        if (HttpContext != null)
+        {
+            var theme = HttpContext.Request.Cookies["melodee_ui_theme"];
+
+            if (!string.IsNullOrEmpty(theme))
+            {
+                ThemeService.SetTheme(theme, false);
+            }
+        }
+
+        MainLayoutProxyService.HeaderChanged += OnHeaderChange;
+        MainLayoutProxyService.SpinnerVisibleChanged += OnSpinnerChange;
+    }
+
+    private void OnHeaderChange(object? sender, EventArgs e)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void OnSpinnerChange(object? sender, EventArgs e)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        MainLayoutProxyService.HeaderChanged -= OnHeaderChange;
+        MainLayoutProxyService.SpinnerVisibleChanged -= OnSpinnerChange;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var configuration = await MelodeeConfigurationFactory.GetConfigurationAsync();
+            _siteTitle = configuration.GetValue<string>(SettingRegistry.OpenSubsonicServerType) ?? string.Empty;
+            _mediaLibraryInfos = (await LibraryService.ListMediaLibrariesAsync())
+                .Data
+                .Where(x => x.TypeValue is LibraryType.Inbound or LibraryType.Staging)
+                .Select(x => new MediaLibraryInfo(x.Name, $"/media/library/{x.ApiKey}"))
+                .ToArray();
+
+            MainLayoutProxyService.ShowSpinner = false;
+            StateHasChanged();
+        }
+    }
+
+    private void SidebarToggleClick()
+    {
+        _sidebarExpanded = !_sidebarExpanded;
+    }
+
+    private void DoSearchAsync(string arg)
+    {
+        NavigationManager.NavigateTo($"/search/{HttpUtility.UrlEncode(arg)}", true);
+    }
+
+}

@@ -1,0 +1,44 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="description" content="Melodee - A modern music library management system for organizing, streaming, and discovering your music collection. Features include music tagging, album artwork, playlist management, and multi-format audio support."/>
+    <meta name="keywords" content="music library, audio management, music streaming, music organizer, media player, music collection"/>
+    <meta name="author" content="Melodee"/>
+    <base href="/"/>
+
+    <!-- Preload critical CSS to reduce render blocking (addresses Lighthouse: Eliminate render-blocking resources) -->
+    <link rel="preload" href="app.css" as="style" onload="this.onload=null;this.rel='stylesheet'"/>
+    <noscript><link rel="stylesheet" href="app.css"/></noscript>
+
+    <link rel="stylesheet" href="server.styles.css"/>
+    <link href="/_content/PSC.Blazor.Components.MarkdownEditor/css/easymde.min.css" rel="stylesheet"/>
+    <link rel="icon" type="image/ico" href="favicon.ico"/>
+    <title>Melodee - Music Library Management System</title>
+    <RadzenTheme Theme="standard" @rendermode="InteractiveServer"/>
+    <HeadOutlet @rendermode="InteractiveServer"/>
+</head>
+
+<body>
+<Routes @rendermode="InteractiveServer"/>
+
+<!-- Load scripts with defer to reduce blocking (addresses Lighthouse: Eliminate render-blocking resources) -->
+<script src="_framework/blazor.web.js" defer></script>
+<script defer>
+    window.getUserAgent = () => {
+        return navigator.userAgent;
+    };
+
+    function openInNewTab(url) {
+        window.open(url, '_blank');
+    }
+</script>
+<script src="_content/Radzen.Blazor/Radzen.Blazor.js?v=@(typeof(Colors).Assembly.GetName().Version)" defer></script>
+<script src="/_content/PSC.Blazor.Components.MarkdownEditor/js/easymde.min.js" defer></script>
+<script src="/_content/PSC.Blazor.Components.MarkdownEditor/js/markdownEditor.js" defer></script>
+<script src="js/googleAuth.js" defer></script>
+</body>
+
+</html>

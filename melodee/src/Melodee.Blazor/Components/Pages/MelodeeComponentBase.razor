@@ -1,0 +1,80 @@
+@using System.Security.Claims
+@using Melodee.Common.Models.Collection
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IMelodeeConfigurationFactory ConfigurationFactory
+@inject DialogService DialogService
+
+@code {
+
+    protected short DefaultPageSize { get; private set; } = 25;
+
+    protected IEnumerable<int> PageSizeOptions { get; private set; } = [10, 20, 30];
+
+    protected int ToastTime { get; private set; } = 1000;
+
+    protected const int MaxTextLength = 4000;
+
+    protected ClaimsPrincipal? CurrentUser { get; private set; }
+
+    protected int CurrentUsersId => CurrentUser?.UserId() ?? 0;
+
+    protected IMelodeeConfiguration Configuration { get; private set; } = new MelodeeConfiguration(new Dictionary<string, object?>());
+
+    protected override async Task OnInitializedAsync()
+    {
+        Configuration = await ConfigurationFactory.GetConfigurationAsync();
+        ToastTime = Configuration.GetValue<int>(SettingRegistry.UserInterfaceToastAutoCloseTime);
+        DefaultPageSize = Configuration.DefaultPageSize();
+        PageSizeOptions = Configuration.DefaultPageSizeOptions();
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        CurrentUser = authState.User;
+    }
+
+    protected async Task PlayAction(string dialogTitle, List<SongDataInfo> songs)
+    {
+        await DialogService.OpenAsync<MusicPlayer>(dialogTitle, new Dictionary<string, object> { { "Songs", songs } },
+            new DialogOptions
+            {
+                Resizable = false,
+                Draggable = false,
+                Width = "400px",
+                Height = "900px"
+            });
+    }
+
+    public NotificationMessage NotificationMessageForResult<T>(OperationResult<T> result, string action, int duration)
+    {
+        string message;
+        string detailMessage;
+        NotificationSeverity severity;
+        switch (result.Type)
+        {
+            case OperationResponseType.Ok:
+                severity = NotificationSeverity.Success;
+                message = $"Successfully {action}";
+                detailMessage = "HUZZAH!";
+                break;
+
+            default:
+                severity = NotificationSeverity.Error;
+                message = $"Error {action}";
+                detailMessage = string.Join("</br>", result.Messages ?? []);
+                break;
+        }
+
+        return new NotificationMessage
+        {
+            Severity = severity,
+            Duration = duration,
+            SummaryContent = _ => @<RadzenText TextStyle="TextStyle.H6">@message</RadzenText>,
+            DetailContent = ns =>
+                @<RadzenStack>
+                    <RadzenText TextStyle="TextStyle.Subtitle1">@detailMessage</RadzenText>
+                    <RadzenButton Text="Close" Click="@(args => ns.Messages.Clear())"></RadzenButton>
+                </RadzenStack>
+        };
+    }
+
+}

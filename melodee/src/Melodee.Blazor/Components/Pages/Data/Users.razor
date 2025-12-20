@@ -1,0 +1,253 @@
+@page "/data/users"
+
+@inherits MelodeeComponentBase
+@using Melodee.Common.Data.Models.Extensions
+@using Melodee.Common.Filtering
+@using Melodee.Common.Models.Collection
+@using Melodee.Common.Models.Collection.Extensions
+@using FilterOperator = Melodee.Common.Filtering.FilterOperator
+@using User = Melodee.Common.Data.Models.User
+
+@inject MainLayoutProxyService MainLayoutProxyService
+@inject ILogger Logger
+@inject UserService UserService
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+@inject TooltipService TooltipService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Users</PageTitle>
+
+<RadzenStack Style="height: 100%">
+    <RadzenBreadCrumb Class="rz-pb-5">
+        <RadzenBreadCrumbItem Path="/" Text="Dashboard"/>
+        <RadzenBreadCrumbItem Icon="group" Text="Users"/>
+    </RadzenBreadCrumb>
+    <RadzenRow AlignItems="AlignItems.Center">
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenText Text="Users" TextStyle="TextStyle.DisplayH6" TagName="TagName.H1" style="margin: 0"/>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="6" Visible="CurrentUser?.IsEditor() ?? false">
+            <RadzenStack
+                Orientation="Orientation.Horizontal"
+                AlignItems="AlignItems.Center"
+                JustifyContent="JustifyContent.End"
+                Gap="0.5rem">
+                <RadzenButton Icon="add_circle_outline" Text="Add"
+                              Size="ButtonSize.Small"
+                              Click="@AddButtonClick"/>
+                <RadzenButton Icon="delete" Disabled="!_selectedUsers.Any()" Text="Delete"
+                              Click="@DeleteSelectedButtonClick"
+                              Size="ButtonSize.Small"
+                              ButtonStyle="ButtonStyle.Warning"/>
+            </RadzenStack>
+        </RadzenColumn>
+    </RadzenRow>
+    <DebounceInput class="rz-textbox rz-w-100"
+                   autocomplete="off"
+                   @bind-Value="@_debounceInputValue"
+                   @bind-Value:event="OnInput"
+                   DebounceTime="800"
+                   MinLength="3"
+                   OnValueChanged="@DoSearchAsync"
+                   ForceNotifyByEnter="true"
+                   ForceNotifyOnBlur="true"/>
+    <RadzenRow Style="flex: 1; overflow: hidden;">
+        <RadzenDataGrid
+            @ref="_grid"
+            Style="height: 100%"
+            IsLoading="@_isLoading"
+            Count="@_count"
+            Data="@_users"
+            LoadData="@LoadData"
+            AllowSorting="true"
+            AllowFiltering="true"
+            AllowRowSelectOnRowClick="false"
+            AllowPaging="true"
+            Page="OnPage"
+            PageSize="DefaultPageSize"
+            PagerHorizontalAlign="HorizontalAlign.Center"
+            ShowPagingSummary="true"
+            PageSizeOptions="@PageSizeOptions"
+            PagingSummaryFormat="@ViewConstants.PagingSummaryFormat"
+            ColumnWidth="200px"
+            SelectionMode="DataGridSelectionMode.Multiple"
+            @bind-Value="@_selectedUsers">
+            <Columns>
+                <RadzenDataGridColumn Width="60px" Sortable="false" Filterable="false">
+                    <HeaderTemplate>
+                        <RadzenCheckBox
+                            TabIndex="-1"
+                            TriState="false"
+                            TValue="bool?"
+                            InputAttributes="@(new Dictionary<string, object> { { "aria-label", "Select all items" } })"
+                            Value="@(_selectedUsers.Any() != true ? false : !_users.All(i => _selectedUsers.Contains(i)) ? null : _users.Any(i => _selectedUsers.Contains(i)))"
+                            Change="@(args => _selectedUsers = args == true ? _users.ToList() : [])"/>
+                    </HeaderTemplate>
+                    <Template Context="data">
+                        <RadzenIcon Icon="lock" IconColor="@Colors.Warning" Visible="@(data.IsLocked)"
+                                    MouseEnter="@(args => ShowTooltip(args, "User is locked. Locked users cannot be deleted."))"/>
+                        <RadzenCheckBox
+                            TabIndex="-1"
+                            TriState="false"
+                            Value="@(_selectedUsers.Contains(data))"
+                            InputAttributes="@(new Dictionary<string, object> { { "aria-label", "Select item" } })"
+                            Change="@(_ => { _grid.SelectRow(data); })"
+                            Visible="@(!data.IsLocked)"
+                            TValue="bool"/>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(UserDataInfo.UserName)" Title="UserName">
+                    <Template Context="data">
+                        <RadzenButton Style="float:right;margin-top: 7px;"
+                                      Size="ButtonSize.ExtraSmall"
+                                      Visible="@(CurrentUser?.IsEditor() ?? false)"
+                                      Click=@(_ => NavigationManager.NavigateTo($"/data/useredit/{data.ApiKey}"))
+                                      Icon="edit"
+                                      ButtonStyle="ButtonStyle.Secondary"/>
+                        <RadzenImage Path=@($"/images/{data.ToApiKey()}/{ ImageSize.Thumbnail }")
+                                     Style="float:left;margin-right: 5px;"
+                                     AlternateText="@data.UserName"/>
+                        <RadzenText Text="@data.UserName"/>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(UserDataInfo.Email)" Title="Email"/>
+                <RadzenDataGridColumn Property="@nameof(UserDataInfo.LastLoginAt)" Title="Last Login" Width="120px">
+                    <Template Context="data">
+                        <RadzenText Text="@CurrentUser?.FormatInstant(data.LastLoginAt)"/>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(UserDataInfo.LastActivityAt)" Title="Last Activity" Width="120px">
+                    <Template Context="data">
+                        <RadzenText Text="@CurrentUser?.FormatInstant(data.LastActivityAt)"/>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(UserDataInfo.CreatedAt)" Title="Created" Filterable="false"
+                                      Width="120px">
+                    <Template Context="data">
+                        <RadzenText Text="@CurrentUser?.FormatInstant(data.CreatedAt)"/>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(UserDataInfo.Tags)" Title="Tags" Width="100px">
+                    <Template Context="data">
+                        <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="5px">
+                            @foreach (var name in data.Tags?.ToTags() ?? [])
+                            {
+                                <RadzenBadge IsPill="true" BadgeStyle="BadgeStyle.Primary" Text="@name"/>
+                            }
+                        </RadzenStack>
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    </RadzenRow>
+</RadzenStack>
+
+@code {
+
+    RadzenDataGrid<UserDataInfo> _grid = null!;
+    int _count;
+    IEnumerable<UserDataInfo> _users = null!;
+    bool _isLoading;
+    int _currentPage = 1;
+    IList<UserDataInfo> _selectedUsers = [];
+
+    string _debounceInputValue = "";
+
+    void OnPage(PagerEventArgs args)
+    {
+        _currentPage = args.PageIndex + 1;
+    }
+
+    async Task LoadData(LoadDataArgs args)
+    {
+        _isLoading = true;
+        MainLayoutProxyService.ToggleSpinnerVisible();
+        try
+        {
+            Dictionary<string, string>? sorting = null;
+            if (args.Sorts.Any())
+            {
+                sorting = args.Sorts.ToDictionary(x => x.Property, x => x.SortOrder == SortOrder.Ascending ? PagedRequest.OrderAscDirection : PagedRequest.OrderDescDirection);
+            }
+
+            FilterOperatorInfo[]? filters = null;
+            if (_debounceInputValue.Nullify() != null)
+            {
+                filters =
+                [
+                    new FilterOperatorInfo(nameof(UserDataInfo.UserName), FilterOperator.Contains, _debounceInputValue.ToNormalizedString() ?? _debounceInputValue),
+                    new FilterOperatorInfo(nameof(UserDataInfo.Email), FilterOperator.Contains, _debounceInputValue.ToNormalizedString() ?? _debounceInputValue, FilterOperatorInfo.OrJoinOperator)
+                ];
+            }
+            else if (args.Filters.Any())
+            {
+                filters = args.Filters.Select(x => x.ToFilterOperatorInfo()).ToArray();
+            }
+
+            var result = await UserService.ListAsync(new PagedRequest
+            {
+                FilterBy = filters,
+                Page = _currentPage,
+                PageSize = SafeParser.ToNumber<short>(args.Top),
+                OrderBy = sorting
+            });
+            _users = result.Data;
+            _count = SafeParser.ToNumber<int>(result.TotalCount);
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e, "Error loading user data");
+            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Error", Detail = e.Message });
+        }
+        finally
+        {
+            _isLoading = false;
+            MainLayoutProxyService.ToggleSpinnerVisible();
+        }
+    }
+
+    private void AddButtonClick()
+    {
+        NavigationManager.NavigateTo("/data/useredit/new");
+    }
+
+    private async Task DeleteSelectedButtonClick()
+    {
+        if (!_selectedUsers.Any()) return;
+
+        var result = await DialogService.Confirm("Are you sure you want to delete the selected users?", "Delete Users", new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" });
+        if (result.HasValue && result.Value)
+        {
+            try
+            {
+                var userIds = _selectedUsers.Select(x => x.Id).ToArray();
+                var deleteResult = await UserService.DeleteAsync(userIds);
+                if (deleteResult.IsSuccess)
+                {
+                    NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Success, Summary = "Success", Detail = "Users deleted successfully" });
+                    await _grid.Reload();
+                    _selectedUsers.Clear();
+                }
+                else
+                {
+                    NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Error", Detail = "Failed to delete users" });
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e, "Error deleting users");
+                NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Error", Detail = e.Message });
+            }
+        }
+    }
+
+    private async Task DoSearchAsync(string searchValue)
+    {
+        _debounceInputValue = searchValue;
+        await _grid.Reload();
+    }
+
+    void ShowTooltip(ElementReference elementReference, string text, TooltipOptions? options = null) => TooltipService.Open(elementReference, text, options);
+
+}

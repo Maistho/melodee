@@ -1,0 +1,403 @@
+@page "/data/songs/{Filter?}"
+@using System.Security.Claims
+@using Melodee.Common.Enums
+@using Melodee.Common.Filtering
+@using Melodee.Common.Models.Collection
+@using FilterOperator = Melodee.Common.Filtering.FilterOperator
+@inherits MelodeeComponentBase
+
+@inject MainLayoutProxyService MainLayoutProxyService
+@inject ILogger Logger
+@inject IMelodeeConfigurationFactory ConfigurationFactory
+@inject SongService SongService
+@inject StatisticsService StatisticsService
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Songs</PageTitle>
+
+<RadzenStack Style="height: 100%">
+    <RadzenBreadCrumb Class="rz-pb-5">
+        <RadzenBreadCrumbItem Path="/" Text="Dashboard"/>
+        <RadzenBreadCrumbItem Icon="music_note" Text="Songs"/>
+    </RadzenBreadCrumb>
+    <RadzenRow>
+        <RadzenPanel class="rz-w-100" AllowCollapse="true">
+            <HeaderTemplate>
+                <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-align-items-center rz-m-0">
+                    <RadzenIcon Icon="monitoring" class="rz-me-1"/>
+                    Statistics
+                </RadzenText>
+            </HeaderTemplate>
+            <ChildContent>
+                <RadzenStack
+                    Orientation="Orientation.Horizontal"
+                    Wrap="FlexWrap.Wrap"
+                    JustifyContent="JustifyContent.Left"
+                    class="rz-p-2"
+                    Gap="8px">
+                    @foreach (var statistic in _statistics)
+                    {
+                        <RadzenBadge @onclick="@(() => StatClickAsync(statistic))"
+                                     BadgeStyle="DetermineBadgeStyle(statistic)"
+                                     Shade="Shade.Dark"
+                                     title="Click to filter songs."
+                                     Style="min-width: 200px;cursor:pointer;">
+                            <RadzenIcon Icon="@statistic.Icon"/>
+                            <RadzenIcon Icon="filter_alt"/>
+                            <div style="width:120px;display:inline-block;text-transform:none;text-align:left;">
+                                @($"{statistic.Title}")
+                            </div>
+                            <div style="width:100px;display:inline-block;text-align:right;" title="@statistic.Message">
+                                @if (statistic.Type == StatisticType.Count)
+                                {
+                                    @($"{((int)statistic.Data).ToStringPadLeft(ViewConstants.StatisticNumberPadLength)}")
+                                }
+                                else
+                                {
+                                    @statistic.Data
+                                }
+                            </div>
+                        </RadzenBadge>
+                    }
+                </RadzenStack>
+            </ChildContent>
+        </RadzenPanel>
+    </RadzenRow>
+    <RadzenRow AlignItems="AlignItems.Center">
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenText Text="Songs" TextStyle="TextStyle.DisplayH6" TagName="TagName.H1" style="margin: 0"/>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="6" Visible="CurrentUser?.IsEditor() ?? false">
+            <RadzenStack
+                Orientation="Orientation.Horizontal"
+                AlignItems="AlignItems.Center"
+                JustifyContent="JustifyContent.End"
+                Gap="0.5rem">
+                <RadzenButton Icon="delete" Disabled="!_selectedSongs.Any()" Text="Delete"
+                              Click="@DeleteSelectedButtonClick"
+                              Size="ButtonSize.Small"
+                              ButtonStyle="ButtonStyle.Warning"/>
+            </RadzenStack>
+        </RadzenColumn>
+    </RadzenRow>
+    <DebounceInput class="rz-textbox rz-w-100"
+                   autocomplete="off"
+                   @bind-Value="@_debounceInputValue"
+                   @bind-Value:event="OnInput"
+                   DebounceTime="800"
+                   MinLength="3"
+                   OnValueChanged="@DoSearchAsync"
+                   ForceNotifyByEnter="true"
+                   ForceNotifyOnBlur="true"/>
+    <RadzenRow Style="flex: 1; overflow: hidden;">
+        <RadzenDataGrid
+            @ref="_grid"
+            Style="height: 100%"
+            IsLoading="@_isLoading"
+            Count="@_count"
+            Data="@_songs"
+            LoadData="@LoadData"
+            AllowSorting="true"
+            AllowFiltering="true"
+            AllowRowSelectOnRowClick="false"
+            AllowPaging="true"
+            Page="OnPage"
+            PageSize="DefaultPageSize"
+            PagerHorizontalAlign="HorizontalAlign.Center"
+            ShowPagingSummary="true"
+            PageSizeOptions="@PageSizeOptions"
+            ColumnWidth="200px"
+            SelectionMode="DataGridSelectionMode.Multiple"
+            @bind-Value="@_selectedSongs">
+            <PagingSummaryTemplate>
+                <RadzenIcon Icon="database"
+                            Style="color: var(--rz-primary); font-size: var(--rz-pager-summary-font-size);"/>
+                Displaying
+                page @context.CurrentPage of @context.NumberOfPages <b>(total @context.TotalCount records)</b>
+            </PagingSummaryTemplate>
+            <Columns>
+                <RadzenDataGridColumn Width="60px" Sortable="false" Filterable="false">
+                    <HeaderTemplate>
+                        <RadzenCheckBox
+                            TabIndex="-1"
+                            TriState="false"
+                            TValue="bool?"
+                            InputAttributes="@(new Dictionary<string, object> { { "aria-label", "Select all items" } })"
+                            Value="@(_selectedSongs.Any() != true ? false : !_songs.All(i => _selectedSongs.Contains(i)) ? null : _songs.Any(i => _selectedSongs.Contains(i)))"
+                            Change="@(args => _selectedSongs = args == true ? _songs.ToList() : [])"/>
+                    </HeaderTemplate>
+                    <Template Context="data">
+                        <RadzenIcon Icon="lock" IconColor="@Colors.Warning" Visible="@(data.IsLocked)"
+                                    title="Album is locked. Locked albums cannot be deleted."/>
+                        <RadzenCheckBox
+                            TabIndex="-1"
+                            TriState="false"
+                            Value="@(_selectedSongs.Contains(data))"
+                            InputAttributes="@(new Dictionary<string, object> { { "aria-label", "Select item" } })"
+                            Change="@(_ => { _grid.SelectRow(data); })"
+                            Visible="@(!data.IsLocked)"
+                            TValue="bool"/>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(SongDataInfo.Title)" Title="Title" Width="300px">
+                    <Template Context="data">
+                        <RadzenButton Style="float:right;margin-top: 7px;" Visible="@(CurrentUser?.IsEditor() ?? false)"
+                                      Size="ButtonSize.ExtraSmall"
+                                      Click=@(_ => NavigationManager.NavigateTo($"/data/songedit/{data.ApiKey}"))
+                                      Icon="edit" ButtonStyle="ButtonStyle.Secondary"/>
+                        <RadzenLink text="@data.Title" class="rz-text-wrap" Path="@($"/data/song/{data.ApiKey}")"/>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(SongDataInfo.AlbumName)" Title="Album" Width="150px">
+                    <Template Context="data">
+                        <RadzenLink text="@data.AlbumName" class="rz-text-wrap"
+                                    Path="@($"/data/album/{data.AlbumApiKey}")"/>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(SongDataInfo.ArtistName)" Title="Artist" Width="150px">
+                    <Template Context="data">
+                        <RadzenLink text="@data.ArtistName" class="rz-text-wrap"
+                                    Path="@($"/data/artist/{data.ArtistApiKey}")"/>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(SongDataInfo.SongNumber)" Title="Song #" Width="90px">
+                    <Template Context="data">
+                        <RadzenText Text="@CurrentUser?.FormatNumber(data.SongNumber)"/>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(SongDataInfo.FileSize)" Title="File size" Width="120px">
+                    <Template Context="data">
+                        <RadzenText Text="@data.FileSize.FormatFileSize()"/>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(SongDataInfo.Duration)" Title="Duration" Width="120px">
+                    <Template Context="data">
+                        <RadzenText Text="@data.Duration.ToFormattedDateTimeOffset()"/>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(SongDataInfo.CreatedAt)" Title="Created" Filterable="false"
+                                      Width="100px">
+                    <Template Context="data">
+                        <RadzenText Text="@CurrentUser?.FormatInstant(data.CreatedAt)"/>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(SongDataInfo.UserStarred)" Title="Loved" Filterable="true"
+                                      Width="70px">
+                    <Template Context="data">
+                        <RadzenCheckBox Value="@data.UserStarred"/>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(SongDataInfo.UserRating)" Title="Rating" Filterable="true"
+                                      Width="70px">
+                    <Template Context="data">
+                        <RadzenText Text="@(data.UserRating.ToString())"/>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(SongDataInfo.Tags)" Title="Tags" Width="100px">
+                    <Template Context="data">
+                        <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="5px">
+                            @foreach (var name in data.Tags?.ToTags() ?? [])
+                            {
+                                <RadzenBadge IsPill="true" BadgeStyle="BadgeStyle.Primary" Text="@name"/>
+                            }
+                        </RadzenStack>
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    </RadzenRow>
+</RadzenStack>
+
+@code {
+    Statistic[] _statistics = [];
+    bool _yourFavoriteSongsFilterSet;
+    bool _yourRatedSongsFilterSet;
+
+    RadzenDataGrid<SongDataInfo> _grid = null!;
+    int _count;
+    IEnumerable<SongDataInfo> _songs = null!;
+    bool _isLoading;
+    int _currentPage = 1;
+    IList<SongDataInfo> _selectedSongs = [];
+
+    string _debounceInputValue = "";
+
+    [Parameter] public string? Filter { get; set; }
+
+    void OnPage(PagerEventArgs args)
+    {
+        _currentPage = args.PageIndex + 1;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        var statResult = await StatisticsService.GetUserSongStatisticsAsync(SafeParser.ToGuid(CurrentUser?.FindFirstValue(ClaimTypes.Sid) ?? string.Empty) ?? Guid.Empty);
+        _statistics = statResult?.Data ?? [];
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Filter != null)
+        {
+            var filterParts = Filter.Split("_");
+            var column = _grid.ColumnsCollection.FirstOrDefault(x => x.Property == filterParts[0]);
+            if (column != null)
+            {
+                var val = SafeParser.ChangeType(column.FilterPropertyType, filterParts[1]);
+                await column.SetFilterValueAsync(val);
+                column.SetFilterOperator(Radzen.FilterOperator.Equals);
+                await _grid.RefreshDataAsync();
+            }
+        }
+    }
+
+    async Task LoadData(LoadDataArgs args)
+    {
+        _isLoading = true;
+        MainLayoutProxyService.ToggleSpinnerVisible();
+        try
+        {
+            Dictionary<string, string>? sorting = null;
+            if (args.Sorts.Any())
+            {
+                sorting = args.Sorts.ToDictionary(x => x.Property, x => x.SortOrder == SortOrder.Ascending ? PagedRequest.OrderAscDirection : PagedRequest.OrderDescDirection);
+            }
+
+            FilterOperatorInfo[]? filters = null;
+            if (_debounceInputValue.Nullify() != null)
+            {
+                filters =
+                [
+                    new FilterOperatorInfo(nameof(SongDataInfo.TitleNormalized), FilterOperator.Contains, _debounceInputValue.ToNormalizedString() ?? _debounceInputValue)
+                ];
+            }
+            else if (args.Filters.Any())
+            {
+                filters = args.Filters.Select(x => x.ToFilterOperatorInfo()).ToArray();
+            }
+
+            var result = await SongService.ListAsync(new PagedRequest
+            {
+                FilterBy = filters,
+                Page = _currentPage,
+                PageSize = SafeParser.ToNumber<short>(args.Top),
+                OrderBy = sorting
+            }, CurrentUser!.UserId());
+            _songs = result.Data;
+            _count = SafeParser.ToNumber<int>(result.TotalCount);
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e, "Loading Albums");
+        }
+        finally
+        {
+            MainLayoutProxyService.ToggleSpinnerVisible();
+        }
+
+        _isLoading = false;
+    }
+
+    private void AddButtonClick()
+    {
+        NavigationManager.NavigateTo($"/data/albumedit/{Guid.Empty}");
+    }
+
+
+    private async Task DeleteSelectedButtonClick()
+    {
+        var confirm = await DialogService.Confirm("Are you sure?", "Delete confirmation", new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" });
+        if (confirm ?? false)
+        {
+            var deleteResult = await SongService.DeleteAsync(_selectedSongs.Select(x => x.Id).ToArray());
+            if (deleteResult.IsSuccess)
+            {
+                NotificationService.Notify(NotificationMessageForResult(deleteResult, "Deleting Songs", ToastTime));
+                await _grid.RefreshDataAsync();
+                return;
+            }
+
+            NotificationService.Notify(NotificationMessageForResult(deleteResult, "Deleting Songs", ToastTime));
+        }
+    }
+
+    private async Task DoSearchAsync(string s)
+    {
+        await LoadData(new LoadDataArgs { Sorts = [], Filters = [] });
+    }
+
+    private async void MergeSelectedButtonClick()
+    {
+        await DialogService.OpenAsync("Merge Songs", ds =>
+            @<div>
+                <RadzenText>Song merging allows combining multiple song entries. This feature requires careful selection of songs to merge.</RadzenText>
+                <RadzenButton Text="OK" Click="@(() => ds.Close())" class="rz-mt-3"/>
+            </div>,
+            new DialogOptions { Width = "500px" });
+    }
+
+
+    private async Task StatClickAsync(Statistic statistic)
+    {
+        if (statistic.Title.ToNormalizedString() == "Your Favorite Songs".ToNormalizedString())
+        {
+            _yourFavoriteSongsFilterSet = !_yourFavoriteSongsFilterSet;
+            var column = _grid.ColumnsCollection.FirstOrDefault(x => x.Property == "UserStarred");
+            if (column != null)
+            {
+                if (_yourFavoriteSongsFilterSet)
+                {
+                    await column.SetFilterValueAsync(true);
+                    column.SetFilterOperator(Radzen.FilterOperator.Equals);
+                }
+                else
+                {
+                    column.ClearFilters();
+                }
+
+                await _grid.RefreshDataAsync();
+            }
+        }
+
+        if (statistic.Title.ToNormalizedString() == "Your Rated Songs".ToNormalizedString())
+        {
+            _yourRatedSongsFilterSet = !_yourRatedSongsFilterSet;
+            var column = _grid.ColumnsCollection.FirstOrDefault(x => x.Property == "UserRating");
+            if (column != null)
+            {
+                if (_yourRatedSongsFilterSet)
+                {
+                    await column.SetFilterValueAsync(0);
+                    column.SetFilterOperator(Radzen.FilterOperator.GreaterThan);
+                }
+                else
+                {
+                    column.ClearFilters();
+                }
+
+                await _grid.RefreshDataAsync();
+            }
+        }
+    }
+
+    private BadgeStyle DetermineBadgeStyle(Statistic statistic)
+    {
+        if (_yourFavoriteSongsFilterSet && statistic.Title.ToNormalizedString() == "Your Favorite Songs".ToNormalizedString())
+        {
+            return BadgeStyle.Warning;
+        }
+
+        if (_yourRatedSongsFilterSet && statistic.Title.ToNormalizedString() == "Your Rated Songs".ToNormalizedString())
+        {
+            return BadgeStyle.Warning;
+        }
+
+        return BadgeStyle.Info;
+    }
+
+}
+
+

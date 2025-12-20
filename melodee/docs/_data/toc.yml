@@ -1,0 +1,13 @@
+- title: Documentation
+  url: docs
+  links:
+    - title: Installation
+      url: "installing"
+    - title: Configuration
+      url: "configuration"
+    - title: Libraries
+      url: "libraries"
+    - title: API
+      url: "api"
+    - title: "About"
+      url: "about"

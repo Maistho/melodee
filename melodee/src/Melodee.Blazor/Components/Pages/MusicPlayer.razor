@@ -1,0 +1,412 @@
+@page "/musicplayer"
+@inherits MelodeeComponentBase
+@using Melodee.Common.Models.Collection.Extensions
+@using SongDataInfo = Melodee.Common.Models.Collection.SongDataInfo
+@using Melodee.Common.Constants
+@using Melodee.Common.Configuration
+@inject ScrobbleService ScrobbleService
+@inject IJSRuntime JsRuntime
+@inject IBaseUrlService BaseUrlService
+@inject Serilog.ILogger Logger
+@inject IHttpContextAccessor HttpContextAccessor
+@implements IAsyncDisposable
+
+<div class="music-player-container">
+    @if (Songs != null && Songs.Count > 0)
+    {
+    <div class="music-player">
+        <div class="song-info">
+            <div class="album-art @(IsPlaying ? "playing" : "")">
+                <img src="@CurrentSong.ImageUrl(ImageSize.Medium)" alt="Album Art">
+            </div>
+            <h2 class="song-title">@CurrentSong.Title</h2>
+            <p class="artist">@CurrentSong.ArtistName</p>
+            <p class="album">@CurrentSong.AlbumName</p>
+        </div>
+
+        <div class="progress-container" @ref="_progressContainer" @onclick="SetProgress">
+            <div class="progress-bar" style="width: @ProgressPercentage%;"></div>
+        </div>
+
+        <div class="time-container">
+            <span>@CurrentTimeFormatted</span>
+            <span>@DurationFormatted</span>
+        </div>
+
+        <div class="controls">
+            <button class="control-btn" @onclick="PreviousSong">
+                <span class="icon">⏮</span>
+            </button>
+            <button class="control-btn" @onclick="BackwardTenSec">
+                <span class="icon">⏪</span>
+            </button>
+            <button class="control-btn play-pause-btn" @onclick="TogglePlayPause">
+                <span class="icon">@(IsPlaying ? "⏸" : "▶")</span>
+            </button>
+            <button class="control-btn" @onclick="ForwardTenSec">
+                <span class="icon">⏩</span>
+            </button>
+            <button class="control-btn" @onclick="NextSong">
+                <span class="icon">⏭</span>
+            </button>
+            <button class="control-btn @(IsRepeatEnabled ? "active" : "")" @onclick="ToggleRepeat" title="@(IsRepeatEnabled ? "Repeat On" : "Repeat Off")">
+                <span class="icon">🔁</span>
+            </button>
+        </div>
+
+        <div class="volume-container">
+            <div class="volume-icon" @onclick="ToggleMute">
+                @GetVolumeIcon()
+            </div>
+            <div class="volume-slider" @ref="_volumeSlider" @onclick="SetVolume">
+                <div class="volume-progress" style="width: @(IsMuted ? 0 : Volume * 100)%"></div>
+            </div>
+        </div>
+
+        <div class="playlist">
+            @foreach (var (song, index) in Songs.Select((value, i) => (value, i)))
+            {
+                <div class="playlist-item @(index == CurrentSongIndex ? "active" : "")"
+                     @onclick="() => PlaySelectedSong(index)">
+                    <span class="playlist-number">@(index + 1)</span>
+                    <div class="playlist-info">
+                        <div class="playlist-title">@song.Title</div>
+                        <div class="playlist-artist">@song.AlbumName</div>
+                    </div>
+                    <span class="playlist-duration">@FormatTime(song.DurationInSeconds())</span>
+                </div>
+            }
+        </div>
+    </div>
+    }
+    else
+    {
+        <div class="music-player">
+            <p>No songs to play.</p>
+        </div>
+    }
+</div>
+
+@code {
+
+    private const double MinimumForNowPlaying = 10.0;
+
+    private DotNetObjectReference<MusicPlayer> _objRef = null!;
+    private IJSObjectReference _module = null!;
+
+    [Parameter] public List<SongDataInfo> Songs { get; set; } = [];
+
+    private ElementReference _progressContainer;
+    private ElementReference _volumeSlider;
+    private int CurrentSongIndex { get; set; }
+    private SongDataInfo CurrentSong => Songs[CurrentSongIndex];
+    private bool IsPlaying { get; set; }
+    private double CurrentTime { get; set; }
+
+    private string CurrentTimeFormatted => FormatTime(CurrentTime);
+    private string DurationFormatted => FormatTime(Duration);
+    private double ProgressPercentage => Duration > 0 ? CurrentTime / Duration * 100 : 0;
+
+    private double Duration { get; set; }
+    private double Volume { get; set; } = 100;
+    private bool IsMuted { get; set; }
+    private bool IsRepeatEnabled { get; set; }
+
+    private bool _nowPlayingRecordedForCurrentSong;
+    private string? _userAgent;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        _objRef = DotNetObjectReference.Create(this);
+
+        Logger.Information("[MusicPlayer] Initializing ScrobbleService for user [{User}]", 
+            CurrentUser?.Identity?.Name ?? "Unknown");
+        await ScrobbleService.InitializeAsync(Configuration);
+        
+        // Get user agent from browser
+        try
+        {
+            _userAgent = await JsRuntime.InvokeAsync<string>("getUserAgent");
+            Logger.Information("[MusicPlayer] User agent: [{UserAgent}]", _userAgent);
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning(ex, "[MusicPlayer] Failed to get user agent");
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && Songs != null && Songs.Count > 0)
+        {
+            _module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/musicPlayer.js");
+            if (_module != null)
+            {
+                await _module.InvokeVoidAsync("initializeAudio", _objRef);
+                await LoadSong();
+                await PlaySong();
+            }
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnTimeUpdate(double currentTime, double duration)
+    {
+        CurrentTime = currentTime;
+        Duration = duration;
+        await InvokeAsync(StateHasChanged);
+        if (!_nowPlayingRecordedForCurrentSong && currentTime > MinimumForNowPlaying && CurrentUser != null)
+        {
+            _nowPlayingRecordedForCurrentSong = true; // Set flag immediately to prevent race condition
+            Logger.Information("[MusicPlayer] OnTimeUpdate triggering NowPlaying for song [{SongId}] at [{Time}] seconds",
+                CurrentSong.ApiKey, currentTime);
+            
+            var ipAddress = HttpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString() 
+                ?? HttpContextAccessor.HttpContext?.Request?.Headers["X-Forwarded-For"].FirstOrDefault()
+                ?? HttpContextAccessor.HttpContext?.Request?.Headers["X-Real-IP"].FirstOrDefault();
+            
+            await ScrobbleService.NowPlaying(
+                UserInfo.FromClaimsPrincipal(CurrentUser), 
+                CurrentSong.ApiKey, 
+                currentTime, 
+                Configuration.GetValue<string>(SettingRegistry.OpenSubsonicServerType) ?? "Melodee",
+                _userAgent,
+                ipAddress);
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnSongEnded()
+    {
+        Logger.Information("[MusicPlayer] OnSongEnded triggering Scrobble for song [{SongId}]", CurrentSong.ApiKey);
+        
+        var ipAddress = HttpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString() 
+            ?? HttpContextAccessor.HttpContext?.Request?.Headers["X-Forwarded-For"].FirstOrDefault()
+            ?? HttpContextAccessor.HttpContext?.Request?.Headers["X-Real-IP"].FirstOrDefault();
+        
+        await ScrobbleService.Scrobble(
+            UserInfo.FromClaimsPrincipal(CurrentUser!), 
+            CurrentSong.ApiKey, 
+            false, 
+            Configuration.GetValue<string>(SettingRegistry.OpenSubsonicServerType) ?? "Melodee",
+            _userAgent,
+            ipAddress);
+        
+        // Check if we should continue to next song
+        if (IsRepeatEnabled || CurrentSongIndex < Songs.Count - 1)
+        {
+            await NextSong();
+        }
+        else
+        {
+            // Last song and repeat is off - stop playing
+            IsPlaying = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task LoadSong()
+    {
+        if (_module != null)
+        {
+            await _module.InvokeVoidAsync("loadSong", GetStreamUrl());
+            Duration = CurrentSong.DurationInSeconds();
+            CurrentTime = 0;
+            _nowPlayingRecordedForCurrentSong = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task PlaySelectedSong(int index)
+    {
+        CurrentSongIndex = index;
+        await LoadSong();
+        await PlaySong();
+    }
+
+    private async Task PlaySong()
+    {
+        if (_module != null)
+        {
+            await _module.InvokeVoidAsync("playSong");
+            IsPlaying = true;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task PauseSong()
+    {
+        if (_module != null)
+        {
+            await _module.InvokeVoidAsync("pauseSong");
+            IsPlaying = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task TogglePlayPause()
+    {
+        if (IsPlaying)
+        {
+            await PauseSong();
+        }
+        else
+        {
+            await PlaySong();
+        }
+    }
+
+    private async Task PreviousSong()
+    {
+        CurrentSongIndex--;
+        if (CurrentSongIndex < 0)
+        {
+            CurrentSongIndex = Songs.Count - 1;
+        }
+
+        await LoadSong();
+        if (IsPlaying)
+        {
+            await PlaySong();
+        }
+    }
+
+    private async Task NextSong()
+    {
+        CurrentSongIndex++;
+        if (CurrentSongIndex >= Songs.Count)
+        {
+            if (IsRepeatEnabled)
+            {
+                CurrentSongIndex = 0;
+            }
+            else
+            {
+                CurrentSongIndex = Songs.Count - 1;
+                return;
+            }
+        }
+
+        await LoadSong();
+        if (IsPlaying)
+        {
+            await PlaySong();
+        }
+    }
+
+    private async Task ToggleRepeat()
+    {
+        IsRepeatEnabled = !IsRepeatEnabled;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ForwardTenSec()
+    {
+        if (_module != null)
+        {
+            await _module.InvokeVoidAsync("forwardTenSec");
+        }
+    }
+
+    private async Task BackwardTenSec()
+    {
+        if (_module != null)
+        {
+            await _module.InvokeVoidAsync("backwardTenSec");
+        }
+    }
+
+    private async Task SetProgress(MouseEventArgs e)
+    {
+        if (_module != null)
+        {
+            var rect = await JsRuntime.InvokeAsync<DomRect>("getBoundingClientRect", _progressContainer);
+            var percent = (e.ClientX - rect.Left) / rect.Width;
+            await _module.InvokeVoidAsync("setProgress", percent);
+        }
+    }
+
+    private async Task SetVolume(MouseEventArgs e)
+    {
+        if (_module != null)
+        {
+            var rect = await JsRuntime.InvokeAsync<DomRect>("getBoundingClientRect", _progressContainer);
+            Volume = Math.Max(0, Math.Min(1, (e.ClientX - rect.Left) / rect.Width));
+            IsMuted = false;
+            await _module.InvokeVoidAsync("setVolume", Volume);
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task ToggleMute()
+    {
+        if (_module != null)
+        {
+            IsMuted = !IsMuted;
+            await _module.InvokeVoidAsync("setMute", IsMuted);
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private string GetVolumeIcon()
+    {
+        if (IsMuted || Volume == 0)
+        {
+            return "🔇";
+        }
+
+        if (Volume < 0.5)
+        {
+            return "🔉";
+        }
+
+        return "🔊";
+    }
+
+    private static string FormatTime(double seconds)
+    {
+        var minutes = Math.Floor(seconds / 60);
+        var remainingSeconds = Math.Floor(seconds % 60);
+        return $"{minutes}:{remainingSeconds:00}";
+    }
+
+    private string GetStreamUrl()
+    {
+        var baseUrl = BaseUrlService.GetBaseUrl();
+        if (baseUrl == null)
+        {
+            throw new Exception("Base URL is not available for generating streaming URLs. Please configure the system.baseUrl setting.");
+        }
+        
+        return $"{baseUrl}/rest/stream?id={CurrentSong.ToApiKey()}";
+    }
+
+
+    public class DomRect
+    {
+        public double X { get; set; }
+        public double Y { get; set; }
+        public double Width { get; set; }
+        public double Height { get; set; }
+        public double Top { get; set; }
+        public double Right { get; set; }
+        public double Bottom { get; set; }
+        public double Left { get; set; }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await PauseSong();
+        if (_module != null)
+        {
+            await _module.DisposeAsync();
+        }
+
+        _objRef?.Dispose();
+    }
+
+}
+
+
+

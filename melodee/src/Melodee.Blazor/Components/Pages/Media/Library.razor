@@ -1,0 +1,727 @@
+@page "/media/library/{ApiKey:guid}"
+@inherits MelodeeComponentBase
+@using Melodee.Common.Data.Models.Extensions
+@using Melodee.Common.Enums
+@using Melodee.Common.Filtering
+@using Melodee.Common.Models.Collection
+@using Melodee.Common.Models.Collection.Extensions
+@using Melodee.Common.Models.Extensions
+@using Melodee.Common.Extensions
+@using Melodee.Common.Services.Scanning
+@using Melodee.Common.Services.SearchEngines
+@using Melodee.Common.Plugins.Validation
+@using Melodee.Common.Constants
+@using Melodee.Common.Utility
+@using SixLabors.ImageSharp
+@using FileInfo = System.IO.FileInfo
+@using ImageInfo = Melodee.Common.Models.ImageInfo
+@using FilterOperator = Melodee.Common.Filtering.FilterOperator
+
+@inject MainLayoutProxyService MainLayoutProxyService
+@inject ILogger Logger
+@inject LibraryService LibraryService
+@inject AlbumDiscoveryService AlbumDiscoveryService
+@inject AlbumImageSearchEngineService AlbumImageSearchEngineService
+@inject MediaEditService MediaEditService
+@inject IHttpClientFactory HttpClientFactory
+@inject IMelodeeConfigurationFactory ConfigurationFactory
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+@inject NavigationManager NavigationManager
+@inject DefaultImages DefaultImages
+@inject DirectoryProcessorToStagingService DirectoryProcessorToStagingService
+
+@attribute [Authorize(Roles = "Administrator,Editor")]
+
+<PageTitle>@_library.Name</PageTitle>
+
+<RadzenStack Style="height: 100%">
+    <RadzenBreadCrumb Class="rz-pb-5">
+        <RadzenBreadCrumbItem Path="/" Text="Dashboard"/>
+        <RadzenBreadCrumbItem Icon="folder" Text="@_library.Name"/>
+    </RadzenBreadCrumb>
+    <RadzenMenu>
+        <RadzenMenuItem Text="Clean" Disabled="_library.IsLocked" Click="CleanButtonClick"
+                        title="Clean this media library directory." IconColor="@Colors.Warning"
+                        Icon="mop"></RadzenMenuItem>
+        <RadzenMenuItem Text="Delete Albums" Disabled="@(!_library.IsLocked && _selectedAlbums.Count == 0)"
+                        Click="DeleteSelectedButtonClick"
+                        title="Delete selected media albums, including album files. BEWARE!" IconColor="@Colors.Warning"
+                        Icon="remove"></RadzenMenuItem>
+        <RadzenMenuItem Text="Delete" Disabled="_library.IsLocked" conColor="@Colors.Warning" Icon="delete">
+            <RadzenMenuItem Text="Delete not Ok" Click="DeleteNotOkSelectedButtonClick"
+                            title="Delete all not Ok status albums in library. BEWARE!" IconColor="@Colors.Warning"
+                            Icon="delete_sweep"></RadzenMenuItem>
+            <RadzenMenuItem Text="Delete with less than 4 songs" Click="DeleteLessThanFourSongsButtonClick"
+                            title="Delete all albums with less than 4 songs. BEWARE!" IconColor="@Colors.Warning"
+                            Icon="delete_sweep"></RadzenMenuItem>
+            <RadzenMenuItem Text="Delete less than 10 minutes" Click="DeleteLessThan10MinutesButtonClick"
+                            title="Delete all albums with duration less than 10 minutes. BEWARE!"
+                            IconColor="@Colors.Warning" Icon="delete_sweep"></RadzenMenuItem>
+            @foreach (var librariesAlbumsGroupedByStatus in _librariesAlbumsGroupedByStatus)
+            {
+                <RadzenMenuItem Text="@($"Delete all albums with status [{librariesAlbumsGroupedByStatus.Key}]")"
+                                Click="@(args => DeleteAlbumsByStatus(librariesAlbumsGroupedByStatus.Key))"
+                                title="@($"Delete all albums with status [{librariesAlbumsGroupedByStatus.Key}]. BEWARE!")"
+                                IconColor="@Colors.Warning" Icon="delete_sweep"></RadzenMenuItem>
+            }
+        </RadzenMenuItem>
+        <RadzenMenuItem Text="Process" Disabled="_library.IsLocked" Click="ProcessButtonClick"
+                        title="Run process job on this library." Icon="memory"></RadzenMenuItem>
+        <RadzenMenuItem Text="Find Missing Images" Disabled="_library.IsLocked" Click="FindMissingImagesButtonClick"
+                        title="Find missing images for albums with no images." Icon="image_search"></RadzenMenuItem>
+        <RadzenMenuItem Text="@($"Move Ok [{ _numberOfAlbumsWithStatusOk }]")" Disabled="_library.IsLocked" Click="MoveOkButtonClick"
+                        title="Move Ok media albums to Library." Icon="move_group"></RadzenMenuItem>
+    </RadzenMenu>
+
+    <RadzenText
+        Text="Media Albums"
+        TextStyle="TextStyle.DisplayH6"
+        TagName="TagName.H1"
+        style="margin: 0"/>
+
+    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+        <DebounceInput class="rz-textbox rz-w-100"
+                       autocomplete="off"
+                       @bind-Value="@_debounceInputValue"
+                       @bind-Value:event="OnInput"
+                       DebounceTime="800"
+                       MinLength="3"
+                       OnValueChanged="@DoSearchAsync"
+                       ForceNotifyByEnter="true"
+                       ForceNotifyOnBlur="true"/>
+        <RadzenDropDown Data="@_uniqueStatusReasons" @bind-Value="@_selectedStatusReason" Change="@OnStatusReasonChange" Placeholder="Filter by status..." AllowClear="true" Style="width: 300px" />
+    </RadzenStack>
+
+    <RadzenRow Style="flex: 1; overflow: hidden;">
+        <RadzenDataGrid
+            @ref="_grid"
+            Style="height: 100%"
+            IsLoading="@_isLoading"
+            Count="@_count"
+            Data="@_albums"
+            LoadData="@LoadData"
+            AllowSorting="true"
+            AllowFiltering="true"
+            AllowRowSelectOnRowClick="false"
+            AllowPaging="true"
+            Page="OnPage"
+            PageSize="DefaultPageSize"
+            PagerHorizontalAlign="HorizontalAlign.Center"
+            ShowPagingSummary="true"
+            PageSizeOptions="@PageSizeOptions"
+            PagingSummaryFormat="@ViewConstants.PagingSummaryFormat"
+            ColumnWidth="200px"
+            SelectionMode="DataGridSelectionMode.Multiple"
+            @bind-Value="@_selectedAlbums">
+            <Columns>
+                <RadzenDataGridColumn Width="60px" Sortable="false" Filterable="false">
+                    <HeaderTemplate>
+                        <RadzenCheckBox
+                            TabIndex="-1"
+                            TriState="false"
+                            TValue="bool?"
+                            InputAttributes="@(new Dictionary<string, object> { { "aria-label", "Select all items" } })"
+                            Value="@(_selectedAlbums.Any() != true ? false : !_albums.All(i => _selectedAlbums.Contains(i)) ? null : _albums.Any(i => _selectedAlbums.Contains(i)))"
+                            Change="@(args => _selectedAlbums = args == true ? _albums.ToList() : [])"/>
+                    </HeaderTemplate>
+                    <Template Context="data">
+                        <RadzenCheckBox
+                            TabIndex="-1"
+                            TriState="false"
+                            Value="@(_selectedAlbums.Contains(data))"
+                            InputAttributes="@(new Dictionary<string, object> { { "aria-label", "Select item" } })"
+                            Change="@(_ => { _grid?.SelectRow(data); })"
+                            TValue="bool"/>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(AlbumDataInfo.Name)" Title="Name" Width="300px">
+                    <Template Context="data">
+                        <RadzenButton Style="float:right;margin-top: 7px;" Visible="@(CurrentUser?.IsEditor() ?? false)"
+                                      Size="ButtonSize.ExtraSmall"
+                                      Click=@(_ => NavigationManager.NavigateTo($"/media/album/{_library.ApiKey}/{data.ApiKey}/edit"))
+                                      Icon="edit" ButtonStyle="ButtonStyle.Secondary"/>
+                        <RadzenImage Path="@data.ImageBase64(DefaultImages.AlbumCoverBytes)"
+                                     Style="margin-right: 5px; width: 32px; height: 32px;"
+                                     AlternateText="@data.Name"/>
+                        <RadzenLink text="@data.Name" class="rz-text-wrap"
+                                    Path="@($"/media/album/{_library.ApiKey}/{data.ApiKey}")"/>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(AlbumDataInfo.AlbumStatusValue)" Title="Status" Width="100px">
+                    <Template Context="data">
+                        <RadzenText Text="@data.AlbumStatusValue.ToString()"/>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(AlbumDataInfo.ArtistName)" Title="Artist" Width="150px">
+                    <Template Context="data">
+                        @if (data.ArtistApiKey != Guid.Empty)
+                        {
+                            <RadzenLink Text="@data.ArtistName" Path="@($"/data/artist/{data.ArtistApiKey}")"/>
+                        }
+                        else
+                        {
+                            <RadzenText Text="@data.ArtistName"/>
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(AlbumDataInfo.NeedsAttentionReasonsValue)" Filterable="false"
+                                      Title="Status Reasons" Width="200px">
+                    <Template Context="data">
+                        <RadzenText Text="@data.NeedsAttentionReasonsValue.ToString()"/>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(AlbumDataInfo.SongCount)" Filterable="false" Title="Songs"
+                                      Width="90px">
+                    <Template Context="data">
+                        <RadzenText Text="@CurrentUser?.FormatNumber(data.SongCount)"/>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(AlbumDataInfo.Duration)" Filterable="false" Title="Duration"
+                                      Width="120px">
+                    <Template Context="data">
+                        <RadzenText Text="@data.Duration.ToFormattedDateTimeOffset()"/>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn
+                    Property="@nameof(AlbumDataInfo.CreatedAt)"
+                    Title="Created"
+                    Filterable="false"
+                    SortOrder="SortOrder.Descending"
+                    Width="120px">
+                    <Template Context="data">
+                        <RadzenText Text="@CurrentUser?.FormatInstant(data.CreatedAt)"/>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(AlbumDataInfo.Tags)" Filterable="false" Title="Tags"
+                                      Width="100px">
+                    <Template Context="data">
+                        <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="5px">
+                            @foreach (var name in data.Tags?.ToTags() ?? [])
+                            {
+                                <RadzenBadge IsPill="true" BadgeStyle="BadgeStyle.Primary" Text="@name"/>
+                            }
+                        </RadzenStack>
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    </RadzenRow>
+</RadzenStack>
+
+@code {
+
+    RadzenDataGrid<AlbumDataInfo>? _grid;
+    int _count;
+    IEnumerable<AlbumDataInfo> _albums = null!;
+    bool _isLoading;
+    int _currentPage = 1;
+    IList<AlbumDataInfo> _selectedAlbums = [];
+
+    Common.Data.Models.Library _library = new()
+    {
+        Name = string.Empty,
+        Path = string.Empty,
+        Type = 0,
+        CreatedAt = default
+    };
+
+    Dictionary<string, int> _librariesAlbumsGroupedByStatus = new();
+    List<string> _uniqueStatusReasons = [];
+    string? _selectedStatusReason;
+
+    string _debounceInputValue = "";
+    private int _numberOfAlbumsWithStatusOk;
+
+    [Parameter] public Guid ApiKey { get; set; }
+
+    void OnPage(PagerEventArgs args)
+    {
+        _currentPage = args.PageIndex + 1;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var libraryResult = await LibraryService.GetByApiKeyAsync(ApiKey);
+        _library = libraryResult.Data!;
+        if (_grid != null)
+        {
+            await _grid.RefreshDataAsync();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await AlbumDiscoveryService.InitializeAsync();
+        await MediaEditService.InitializeAsync();
+    }
+
+    async Task OnStatusReasonChange(object? value)
+    {
+        await LoadData(new LoadDataArgs { Sorts = [], Filters = [] });
+    }
+
+    async Task LoadData(LoadDataArgs args)
+    {
+        if (_library.Path.Nullify() == null)
+        {
+            return;
+        }
+
+        _isLoading = true;
+        MainLayoutProxyService.ToggleSpinnerVisible();
+        try
+        {
+            Dictionary<string, string>? sorting = null;
+            if (args.Sorts.Any())
+            {
+                sorting = args.Sorts.ToDictionary(x => x.Property, x => x.SortOrder == SortOrder.Ascending ? PagedRequest.OrderAscDirection : PagedRequest.OrderDescDirection);
+            }
+
+            FilterOperatorInfo[]? filters = null;
+            if (_debounceInputValue.Nullify() != null)
+            {
+                filters =
+                [
+                    new FilterOperatorInfo(nameof(AlbumDataInfo.NameNormalized), FilterOperator.Contains, _debounceInputValue.ToNormalizedString() ?? _debounceInputValue)
+                ];
+            }
+            else if (args.Filters.Any())
+            {
+                filters = args.Filters.Select(x => new FilterOperatorInfo(x.Property,
+                        SafeParser.ToEnum<FilterOperator>(x.FilterOperator.ToDictionary()),
+                        x.FilterValue))
+                    .ToArray();
+            }
+
+            if (_selectedStatusReason != null)
+            {
+                var statusFilter = new FilterOperatorInfo("NeedsAttentionReasons", FilterOperator.Equals, _selectedStatusReason);
+                if (filters == null)
+                {
+                    filters = [statusFilter];
+                }
+                else
+                {
+                    var list = filters.ToList();
+                    list.Add(statusFilter);
+                    filters = list.ToArray();
+                }
+            }
+
+            var result = await AlbumDiscoveryService.AlbumsDataInfosForDirectoryAsync(_library.ToFileSystemDirectoryInfo(),
+                new PagedRequest
+                {
+                    FilterBy = filters,
+                    Page = _currentPage,
+                    PageSize = SafeParser.ToNumber<short>(args.Top),
+                    OrderBy = sorting
+                });
+
+            _albums = result.Data;
+            _count = SafeParser.ToNumber<int>(result.TotalCount);
+
+            var allAlbums = await AlbumDiscoveryService.AllMelodeeAlbumDataFilesForDirectoryAsync(_library.ToFileSystemDirectoryInfo());
+            _librariesAlbumsGroupedByStatus = allAlbums.Data?
+                .Where(x => x.Status != AlbumStatus.Ok)
+                .GroupBy(x => x.StatusReasons)
+                .ToDictionary(x => x.Key.ToString(), x => x.Count()) ?? new Dictionary<string, int>();
+
+            var allFlags = new HashSet<AlbumNeedsAttentionReasons>();
+            foreach (var key in _librariesAlbumsGroupedByStatus.Keys)
+            {
+                var reason = SafeParser.ToEnum<AlbumNeedsAttentionReasons>(key);
+                foreach (AlbumNeedsAttentionReasons value in Enum.GetValues(typeof(AlbumNeedsAttentionReasons)))
+                {
+                    if (value != AlbumNeedsAttentionReasons.NotSet && reason.HasFlag(value))
+                    {
+                        allFlags.Add(value);
+                    }
+                }
+            }
+            _uniqueStatusReasons = allFlags.Select(x => x.ToString()).OrderBy(x => x).ToList();
+
+            _numberOfAlbumsWithStatusOk = await AlbumDiscoveryService.NumberOfOkAlbumsAsync(_library.ToFileSystemDirectoryInfo());
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e, "Loading Albums");
+        }
+        finally
+        {
+            MainLayoutProxyService.ToggleSpinnerVisible(false);
+        }
+
+        _isLoading = false;
+    }
+
+    private async Task DeleteSelectedButtonClick()
+    {
+        var confirm = await DialogService.Confirm("Are you sure?", "Delete confirmation", new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" });
+        if (confirm ?? false)
+        {
+            foreach (var toDelete in _selectedAlbums)
+            {
+                var fileInfo = new FileInfo(toDelete.MelodeeDataFileName ?? string.Empty);
+                if (fileInfo.DirectoryName != null)
+                {
+                    Directory.Delete(fileInfo.DirectoryName, true);
+                }
+            }
+
+            if (_grid != null)
+            {
+                await _grid.RefreshDataAsync();
+            }
+
+            NotificationService.Notify(NotificationMessageForResult(new OperationResult<bool>
+            {
+                Data = true
+            }, "Deleting Albums", ToastTime));
+            _selectedAlbums.Clear();
+        }
+    }
+
+    private async Task DoSearchAsync(string s)
+    {
+        await LoadData(new LoadDataArgs { Sorts = [], Filters = [] });
+    }
+
+    private async Task FindMissingImagesButtonClick()
+    {
+        var confirm = await DialogService.Confirm(
+            "This will search for images for all albums that currently have no images. This may take a while.",
+            "Find Missing Images",
+            new ConfirmOptions { OkButtonText = "Start Search", CancelButtonText = "Cancel" });
+
+        if (confirm ?? false)
+        {
+            MainLayoutProxyService.ToggleSpinnerVisible();
+            try
+            {
+                var allAlbumsResult = await AlbumDiscoveryService.AllMelodeeAlbumDataFilesForDirectoryAsync(_library.ToFileSystemDirectoryInfo());
+                if (allAlbumsResult.Data == null) return;
+
+                var albumsWithNoImages = allAlbumsResult.Data.Where(x => x.CoverImage() == null).ToList();
+                var count = 0;
+                var total = albumsWithNoImages.Count;
+
+                var httpClient = HttpClientFactory.CreateClient();
+                var configuration = await ConfigurationFactory.GetConfigurationAsync();
+                var imageValidator = new ImageValidator(configuration);
+                var maxResults = configuration.GetValue<short?>(SettingRegistry.SearchEngineDefaultPageSize) ?? configuration.GetValue<short>(SettingRegistry.DefaultsPageSize);
+
+                var albumsProcessed = 0;
+                foreach (var album in albumsWithNoImages)
+                {
+                    try
+                    {
+                        albumsProcessed++;
+                        var albumQuery = album.ToAlbumQuery();
+                        Logger.Debug("Processing album [{Album}] ({Index}/{Total}) - Query: [{Query}]", album.AlbumTitle(), albumsProcessed, total, albumQuery);
+                        
+                        var imageSearch = await AlbumImageSearchEngineService.DoSearchAsync(albumQuery, maxResults);
+                        
+                        if (!imageSearch.IsSuccess)
+                        {
+                            Logger.Warning("Image search failed for album [{Album}]: [{Errors}]", 
+                                album.AlbumTitle(), string.Join(", ", imageSearch.Errors ?? []));
+                        }
+                        else if (imageSearch.Data?.Length > 0)
+                        {
+                            Logger.Information("Found [{Count}] image(s) for album [{Album}], attempting to download and validate", 
+                                imageSearch.Data.Length, album.AlbumTitle());
+                            
+                            foreach (var imageSearchResult in imageSearch.Data.OrderByDescending(x => x.Rank))
+                            {
+                                Logger.Debug("Attempting to download image from [{Url}] for album [{Album}]", 
+                                    imageSearchResult.MediaUrl, album.AlbumTitle());
+                                
+                                var albumImageFromSearchFileName = Path.Combine(album.Directory.FullName(), album.Directory.GetNextFileNameForType(Melodee.Common.Data.Models.Album.FrontImageType).Item1);
+                                if (await httpClient.DownloadFileAsync(
+                                        imageSearchResult.MediaUrl,
+                                        albumImageFromSearchFileName,
+                                        async (_, newFileInfo, _) => (await imageValidator.ValidateImage(newFileInfo, PictureIdentifier.Front)).Data.IsValid).ConfigureAwait(false))
+                                {
+                                    Logger.Information("Successfully downloaded and validated image for album [{Album}] from [{Url}]", 
+                                        album.AlbumTitle(), imageSearchResult.MediaUrl);
+                                    
+                                    var newImageInfo = new FileInfo(albumImageFromSearchFileName);
+                                    var imageInfo = await Image.IdentifyAsync(albumImageFromSearchFileName).ConfigureAwait(false);
+                                    album.Images = new List<ImageInfo>
+                                    {
+                                        new()
+                                        {
+                                            FileInfo = newImageInfo.ToFileSystemInfo(),
+                                            PictureIdentifier = PictureIdentifier.Front,
+                                            CrcHash = Crc32.Calculate(newImageInfo),
+                                            Width = imageInfo.Width,
+                                            Height = imageInfo.Height,
+                                            SortOrder = 1,
+                                            WasEmbeddedInSong = false
+                                        }
+                                    };
+
+                                    await MediaEditService.SaveMelodeeAlbum(album);
+                                    count++;
+                                    break;
+                                }
+                                else
+                                {
+                                    Logger.Warning("Failed to download or validate image from [{Url}] for album [{Album}]", 
+                                        imageSearchResult.MediaUrl, album.AlbumTitle());
+                                }
+                            }
+                        }
+                        else
+                        {
+                            Logger.Debug("No images found for album [{Album}]", album.AlbumTitle());
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error(ex, "Error finding image for album [{Album}]", album.AlbumTitle());
+                    }
+                }
+
+                await InvokeAsync(() => NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = "Find Missing Images",
+                    Detail = $"Found and set images for {count} out of {total} albums."
+                }));
+
+                if (_grid != null) await InvokeAsync(_grid.RefreshDataAsync);
+            }
+            finally
+            {
+                await InvokeAsync(() => MainLayoutProxyService.ToggleSpinnerVisible(false));
+            }
+        }
+    }
+
+    private async Task ProcessButtonClick()
+    {
+        var confirm = await DialogService.ConfirmHtml(
+            @"
+            <p>Scanning a library updates the library with media found. This could delete artists, albums and songs.</p>
+            <p>This action starts a background job.</p>
+            <p>⚠️ There is no undo</p>
+            ", "Scan confirmation",
+            new ConfirmOptions { OkButtonText = "Start scan", CancelButtonText = "Cancel"});
+
+        if (confirm ?? false)
+        {
+            MainLayoutProxyService.ToggleSpinnerVisible();
+            try
+            {
+                await DirectoryProcessorToStagingService.InitializeAsync();
+                var result = await DirectoryProcessorToStagingService.ProcessDirectoryAsync(_library.ToFileSystemDirectoryInfo(), _library.LastScanAt, null);
+                NotificationService.Notify(NotificationMessageForResult(result, "started library scan job", ToastTime));
+            }
+            finally
+            {
+                MainLayoutProxyService.ToggleSpinnerVisible();
+            }
+        }
+    }
+
+    private async Task MoveOkButtonClick()
+    {
+        MainLayoutProxyService.ToggleSpinnerVisible();
+        try
+        {
+            var librariesResult = await LibraryService.GetStorageLibrariesAsync();
+            Melodee.Common.Data.Models.Library? targetLibrary = null;
+
+            if (librariesResult.Data.Length > 1)
+            {
+                // Show library selection dialog
+                targetLibrary = await ShowLibrarySelectionDialog(librariesResult.Data, "Select the destination library for OK albums:");
+
+                if (targetLibrary == null)
+                {
+                    // User cancelled the dialog
+                    return;
+                }
+            }
+            else
+            {
+                targetLibrary = librariesResult.Data.First();
+            }
+
+            var moveResult = await LibraryService.MoveAlbumsFromLibraryToLibrary(
+                _library.Name,
+                targetLibrary.Name,
+                a => a.Status == AlbumStatus.Ok,
+                true);
+            NotificationService.Notify(NotificationMessageForResult(moveResult, "Moving Ok Albums", ToastTime));
+            if (_grid != null) await _grid.RefreshDataAsync();
+        }
+        finally
+        {
+            MainLayoutProxyService.ToggleSpinnerVisible();
+        }
+    }
+
+    private async Task DeleteNotOkSelectedButtonClick()
+    {
+        var confirm = await DialogService.ConfirmHtml("<p>Deleting all not Ok albums can potentially delete many albums</p><p>⚠️ There is no undo</p>", "Deleting not Ok", new ConfirmOptions { OkButtonText = "Delete", CancelButtonText = "Cancel" });
+        if (confirm ?? false)
+        {
+            var didDelete = await AlbumDiscoveryService.DeleteAlbumsAsync(_library.ToFileSystemDirectoryInfo(), album => album.Status != AlbumStatus.Ok);
+
+            if (didDelete)
+            {
+                if (_grid != null)
+                {
+                    await _grid.RefreshDataAsync();
+                }
+
+                NotificationService.Notify(NotificationMessageForResult(new OperationResult<bool>
+                {
+                    Data = true
+                }, "deleted albums", ToastTime));
+                _selectedAlbums.Clear();
+            }
+        }
+    }
+
+    private async Task CleanButtonClick()
+    {
+        var dryRun = await DialogService.Confirm(
+            "Do you want to perform a dry-run first to see what would change?",
+            "Library Clean",
+            new ConfirmOptions { OkButtonText = "Dry Run", CancelButtonText = "Skip to Real Clean" });
+
+        if (dryRun == true)
+        {
+            // Perform dry run
+            await DialogService.OpenAsync("Dry Run Summary", ds =>
+                @<div>
+                    <RadzenText>Dry run would analyze:</RadzenText>
+                    <ul>
+                        <li>Media files on disk without DB records</li>
+                        <li>DB records without media files</li>
+                        <li>Album status updates needed</li>
+                    </ul>
+                    <RadzenText>This feature performs filesystem-database reconciliation where filesystem is the authority.</RadzenText>
+                    <RadzenButton Text="OK" Click="@(() => ds.Close())" class="rz-mt-3"/>
+                </div>,
+                new DialogOptions { Width = "500px" });
+
+            var proceed = await DialogService.Confirm(
+                "Do you want to proceed with the real clean operation?",
+                "Proceed with Clean",
+                new ConfirmOptions { OkButtonText = "Yes, Clean", CancelButtonText = "Cancel" });
+
+            if (proceed != true)
+            {
+                return;
+            }
+        }
+
+        NotificationService.Notify(new NotificationMessage
+        {
+            Severity = NotificationSeverity.Info,
+            Summary = "Library Clean",
+            Detail = "Library clean operation is not yet fully implemented. This will reconcile filesystem with database records."
+        });
+    }
+
+    private async Task DeleteLessThanFourSongsButtonClick()
+    {
+        var didDelete = await AlbumDiscoveryService.DeleteAlbumsAsync(_library.ToFileSystemDirectoryInfo(), album => album.Songs?.Count() < 4);
+
+        if (didDelete)
+        {
+            if (_grid != null)
+            {
+                await _grid.RefreshDataAsync();
+            }
+
+            NotificationService.Notify(NotificationMessageForResult(new OperationResult<bool>
+            {
+                Data = true
+            }, "deleted albums", ToastTime));
+            _selectedAlbums.Clear();
+        }
+    }
+
+    private async Task DeleteLessThan10MinutesButtonClick()
+    {
+        var lessThanDurationMs = TimeSpan.FromMinutes(10).TotalMilliseconds;
+        var didDelete = await AlbumDiscoveryService.DeleteAlbumsAsync(_library.ToFileSystemDirectoryInfo(), album => album.TotalDuration() < lessThanDurationMs);
+
+        if (didDelete)
+        {
+            if (_grid != null)
+            {
+                await _grid.RefreshDataAsync();
+            }
+
+            NotificationService.Notify(NotificationMessageForResult(new OperationResult<bool>
+            {
+                Data = true
+            }, "deleted albums", ToastTime));
+            _selectedAlbums.Clear();
+        }
+    }
+
+    private async Task DeleteAlbumsByStatus(string key)
+    {
+        var didDelete = await AlbumDiscoveryService.DeleteAlbumsAsync(_library.ToFileSystemDirectoryInfo(), album => album.StatusReasons.ToString() == key);
+
+        if (didDelete)
+        {
+            if (_grid != null)
+            {
+                await _grid.RefreshDataAsync();
+            }
+
+            NotificationService.Notify(NotificationMessageForResult(new OperationResult<bool>
+            {
+                Data = true
+            }, "deleted albums", ToastTime));
+            _selectedAlbums.Clear();
+        }
+    }
+
+    private async Task<Melodee.Common.Data.Models.Library?> ShowLibrarySelectionDialog(
+        Melodee.Common.Data.Models.Library[] libraries,
+        string message)
+    {
+        // Use a simple list selection approach with inline component
+        var options = libraries.Select(l => $"{l.Name} ({l.Path})").ToArray();
+        var libraryDict = libraries.ToDictionary(l => $"{l.Name} ({l.Path})", l => l);
+
+        string? selectedOption = null;
+
+        await DialogService.OpenAsync("Select Destination Library", ds =>
+            @<div>
+                <RadzenStack Gap="1rem">
+                    <RadzenText>@message</RadzenText>
+                    <RadzenSelectBar @bind-Value="@selectedOption" TValue="string">
+                        <Items>
+                            @foreach (var lib in libraries)
+                            {
+                                var displayText = $"{lib.Name} ({lib.Path})";
+                                <RadzenSelectBarItem Text="@displayText" Value="@displayText" />
+                            }
+                        </Items>
+                    </RadzenSelectBar>
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End">
+                        <RadzenButton Text="Cancel" Click="@(() => ds.Close())" ButtonStyle="ButtonStyle.Secondary" />
+                        <RadzenButton Text="Select" Click="@(() => ds.Close())" ButtonStyle="ButtonStyle.Primary" Disabled="@(selectedOption == null)" />
+                    </RadzenStack>
+                </RadzenStack>
+            </div>,
+            new DialogOptions { Width = "600px", Height = "auto", ShowClose = true });
+
+        return selectedOption != null && libraryDict.ContainsKey(selectedOption)
+            ? libraryDict[selectedOption]
+            : null;
+    }
+
+}
