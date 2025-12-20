@@ -1,0 +1,13 @@
+# CodeQL configuration
+# This file excludes Jekyll template files from JavaScript analysis
+# to prevent parse errors from Liquid template syntax
+
+name: "CodeQL config"
+
+# Paths to exclude from all analyses
+paths-ignore:
+  # Exclude Jekyll template JavaScript files that contain Liquid syntax
+  - 'docs/assets/js/main.js'
+  - 'docs/assets/js/search.js'
+  - 'melodee/docs/assets/js/main.js'
+  - 'melodee/docs/assets/js/search.js'
