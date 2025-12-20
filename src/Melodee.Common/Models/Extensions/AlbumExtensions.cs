@@ -729,6 +729,7 @@ public static class AlbumExtensions
                 }
 
                 var fileFileSystemDirectoryInfo = fileInfo.Directory!.ToDirectorySystemInfo();
+                var isSameDirectory = string.Equals(fileFileSystemDirectoryInfo.Path, album.Directory.Path, StringComparison.OrdinalIgnoreCase);
                 imageInfos.Add(new ImageInfo
                 {
                     CrcHash = crc32,
@@ -738,7 +739,7 @@ public static class AlbumExtensions
                         Size = fileInfoFileSystemInfo.Size,
                         OriginalName = fileInfo.Name
                     },
-                    DirectoryInfo = fileFileSystemDirectoryInfo == album.Directory ? null : fileFileSystemDirectoryInfo,
+                    DirectoryInfo = isSameDirectory ? null : fileFileSystemDirectoryInfo,
                     OriginalFilename = fileInfo.Name,
                     PictureIdentifier = pictureIdentifier,
                     Width = imageInfo.Width,
