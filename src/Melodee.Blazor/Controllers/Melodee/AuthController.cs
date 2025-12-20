@@ -7,8 +7,6 @@ using Melodee.Blazor.Controllers.Melodee.Models;
 using Melodee.Blazor.Filters;
 using Melodee.Blazor.Services;
 using Melodee.Common.Configuration;
-using Melodee.Common.Extensions;
-using Melodee.Common.Models;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services;
 using Melodee.Common.Services.Security;
@@ -616,7 +614,7 @@ public class AuthController(
     private void LogAuthEvent(string method, string outcome, string? clientIp, string? identifier = null, int? userId = null)
     {
         // Mask the identifier to avoid logging PII (email/username)
-        var maskedIdentifier = identifier != null 
+        var maskedIdentifier = identifier != null
             ? (identifier.Contains('@') ? LogSanitizer.MaskEmail(identifier) : LogSanitizer.MaskIdentifier(identifier))
             : "unknown";
         // Sanitize all user-controlled input to prevent log forging

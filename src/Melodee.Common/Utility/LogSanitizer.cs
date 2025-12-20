@@ -64,7 +64,7 @@ public static class LogSanitizer
 
         var localPart = email[..atIndex];
         var domain = email[atIndex..];
-        
+
         if (localPart.Length <= 2)
         {
             return $"{localPart[0]}***{domain}";
