@@ -17,7 +17,7 @@ on:
   pull_request:
     branches: [ "main" ]
   schedule:
-    - cron: '0 0 * * 0'  # Weekly scan on Sundays at midnight
+    - cron: '0 0 * * 0'  # Weekly scan on Sundays at midnight UTC
 
 permissions:
   actions: read
@@ -28,7 +28,7 @@ jobs:
   analyze:
     name: Analyze
     runs-on: ubuntu-latest
-    timeout-minutes: 360
+    timeout-minutes: 120
     
     strategy:
       fail-fast: false
