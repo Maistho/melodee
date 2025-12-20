@@ -7,6 +7,8 @@ permalink: /configuration/
 
 Melodee exposes configuration through environment variables, the web UI, and (internally) a dynamic settings registry. This page outlines common areas to tune.
 
+For a comprehensive reference of all configuration options, see the [Configuration Reference](/configuration-reference/) page.
+
 ## Configuration Sources
 
 Priority (highest wins):
@@ -110,7 +112,65 @@ MELODEE_PORT=8080
 
 System statistics endpoint (native API) surfaces counts (songs, albums, artists, etc.) — see /api/ for details. Future metrics (transcoding time, cache hit rates) planned.
 
-## Hardening Checklist
+## Homelab Security & Optimization
+
+### Reverse Proxy Setup
+
+For homelab deployments, it's strongly recommended to put Melodee behind a reverse proxy:
+
+**Nginx Example:**
+```nginx
+server {
+    listen 443 ssl http2;
+    server_name music.yourdomain.com;
+
+    ssl_certificate /path/to/certificate.crt;
+    ssl_certificate_key /path/to/private.key;
+
+    location / {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Increase buffer sizes for media streaming
+        proxy_buffer_size 128k;
+        proxy_buffers 4 256k;
+        proxy_busy_buffers_size 256k;
+    }
+}
+```
+
+**Traefik Example:**
+```yaml
+labels:
+  - "traefik.enable=true"
+  - "traefik.http.routers.melodee.rule=Host(`music.yourdomain.com`)"
+  - "traefik.http.routers.melodee.tls=true"
+  - "traefik.http.routers.melodee.entrypoints=websecure"
+  - "traefik.http.services.melodee.loadbalancer.server.port=8080"
+```
+
+### Performance Tuning for Homelabs
+
+**Database Connection Pool:**
+```
+DB_MIN_POOL_SIZE=10
+DB_MAX_POOL_SIZE=50
+```
+
+**Media Processing:**
+- Adjust `MaxConcurrentStreams` based on your hardware capabilities
+- Configure transcoding quality settings based on your network bandwidth
+- Set appropriate scan intervals to balance freshness with system load
+
+**Storage Optimization:**
+- Mount media volumes to separate drives for performance
+- Use SSDs for the database volume
+- Consider separate volumes for different library types (lossless vs lossy)
+
+### Hardening Checklist
 
 - Put behind a reverse proxy (nginx / Caddy) with TLS.
 - Restrict inbound port to proxy layer only.

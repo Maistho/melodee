@@ -19,6 +19,8 @@
 
 Melodee is a comprehensive music management and streaming system built with .NET 10 and Blazor. It provides a complete solution for processing, organizing, and serving large music libraries through both restful and OpenSubsonic-compatible APIs.
 
+Designed with homelab enthusiasts in mind, Melodee runs efficiently on a wide range of hardware from single-board computers like Raspberry Pi to full server setups, making it perfect for self-hosted music streaming in home environments.
+
 ### Key Capabilities
 
 - **📁 Smart Media Processing**: Automatically converts, cleans, and validates inbound media
@@ -38,7 +40,25 @@ Melodee is a comprehensive music management and streaming system built with .NET
 - [Podman](https://podman.io/) or Docker
 - [Podman Compose](https://github.com/containers/podman-compose) (for Podman users)
 
-### 🐳 Deploy with Podman
+### 🐍 Automated Setup (Recommended)
+
+For a fully automated setup, run our Python setup script:
+
+```bash
+# Download and run the setup script
+curl -O https://raw.githubusercontent.com/melodee-project/melodee/main/setup_melodee.py
+python3 setup_melodee.py
+```
+
+The script will:
+- Check for required dependencies (Git, Docker/Podman)
+- Clone the Melodee repository (if not already present)
+- Generate a secure environment configuration
+- Build and start the containers automatically
+- Wait for the service to be healthy
+- Provide you with the URL to access the Blazor Admin UI
+
+### 🐳 Manual Deploy with Podman
 
 1. **Clone the repository**
    ```bash
@@ -94,6 +114,17 @@ podman-compose up -d --build
 ```
 
 > **Note**: Database migrations are handled automatically during container startup.
+
+## 🏠 Homelab Deployment
+
+Melodee is designed to run in homelab environments with support for various hardware configurations:
+
+- **Single Board Computers**: Raspberry Pi 4/5, Rock 5B, Odroid N2+
+- **Home Servers**: Intel NUC, custom builds, used desktops
+- **NAS Integration**: Mount external storage for large music collections
+- **Container Orchestration**: Docker Compose, Podman Compose, or Docker Swarm
+
+For detailed homelab deployment guides, check out our [documentation](https://melodee.org).
 
 ### 🗂️ Volume Management
 
@@ -266,6 +297,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Discord**: [Join our community](https://discord.gg/bfMnEUrvbp)
 - **Issues**: [GitHub Issues](https://github.com/sphildreth/melodee/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/sphildreth/melodee/discussions)
+
+## 📚 Documentation
+
+For comprehensive documentation, including installation guides, configuration options, homelab deployment strategies, and API references, visit [https://www.melodee.org](https://www.melodee.org).
 
 ## 🙏 Acknowledgments
 

@@ -643,4 +643,95 @@ public class MemoryCacheManagerTests
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
             _cacheManager.GetAsync<string>(key, () => Task.FromResult("test"), CancellationToken.None, negativeDuration));
     }
+
+    #region CacheStatistics Tests
+
+    [Fact]
+    public async Task CacheStatistics_WithEmptyCache_ReturnsBasicStats()
+    {
+        // Act
+        var stats = _cacheManager.CacheStatistics().ToList();
+
+        // Assert
+        Assert.NotNull(stats);
+        Assert.Contains(stats, s => s.Title == "Total Cache Items");
+        Assert.Contains(stats, s => s.Title == "Total Cache Size");
+        Assert.Contains(stats, s => s.Title == "Cache Regions");
+        Assert.Contains(stats, s => s.Title == "Cache Hit Ratio");
+    }
+
+    [Fact]
+    public async Task CacheStatistics_WithCachedItems_ReturnsCorrectCounts()
+    {
+        // Arrange
+        await _cacheManager.GetAsync("key1", () => Task.FromResult("value1"), CancellationToken.None);
+        await _cacheManager.GetAsync("key2", () => Task.FromResult("value2"), CancellationToken.None);
+        await _cacheManager.GetAsync("key3", () => Task.FromResult("value3"), CancellationToken.None, region: "region1");
+
+        // Act
+        var stats = _cacheManager.CacheStatistics().ToList();
+
+        // Assert
+        var totalItemsStat = stats.FirstOrDefault(s => s.Title == "Total Cache Items");
+        Assert.NotNull(totalItemsStat);
+        Assert.True(totalItemsStat.Data is long or int);
+    }
+
+    [Fact]
+    public async Task CacheStatistics_AfterCacheHitsAndMisses_ReportsHitRatio()
+    {
+        // Arrange
+        var key = "hit-ratio-key";
+
+        // Cause a miss (first call)
+        await _cacheManager.GetAsync(key, () => Task.FromResult("value"), CancellationToken.None);
+
+        // Cause a hit (second call)
+        await _cacheManager.GetAsync(key, () => Task.FromResult("value"), CancellationToken.None);
+
+        // Act
+        var stats = _cacheManager.CacheStatistics().ToList();
+
+        // Assert
+        var hitRatioStat = stats.FirstOrDefault(s => s.Title == "Cache Hit Ratio");
+        Assert.NotNull(hitRatioStat);
+        Assert.NotNull(hitRatioStat.Data);
+
+        var hitsStat = stats.FirstOrDefault(s => s.Title == "Cache Hits");
+        Assert.NotNull(hitsStat);
+
+        var missesStat = stats.FirstOrDefault(s => s.Title == "Cache Misses");
+        Assert.NotNull(missesStat);
+    }
+
+    [Fact]
+    public async Task CacheStatistics_WithMultipleRegions_ReportsPerRegionStats()
+    {
+        // Arrange
+        await _cacheManager.GetAsync("key1", () => Task.FromResult("value1"), CancellationToken.None, region: "region1");
+        await _cacheManager.GetAsync("key2", () => Task.FromResult("value2"), CancellationToken.None, region: "region2");
+
+        // Act
+        var stats = _cacheManager.CacheStatistics().ToList();
+
+        // Assert
+        Assert.Contains(stats, s => s.Title.Contains("Region 'region1'"));
+        Assert.Contains(stats, s => s.Title.Contains("Region 'region2'"));
+    }
+
+    [Fact]
+    public void CacheStatistics_ReturnsOnlyStatisticTypes()
+    {
+        // Act
+        var stats = _cacheManager.CacheStatistics().ToList();
+
+        // Assert
+        Assert.All(stats, stat =>
+        {
+            Assert.NotNull(stat);
+            Assert.NotNull(stat.Title);
+        });
+    }
+
+    #endregion
 }

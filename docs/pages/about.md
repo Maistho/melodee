@@ -26,7 +26,7 @@ Component overview:
 
 | Component | Purpose | Key Tech |
 |-----------|---------|---------|
-| Melodee Blazor | Administrative web UI + OpenSubsonic & native REST API host + streaming pipeline | .NET 9, Blazor Server, Radzen |
+| Melodee Blazor | Administrative web UI + OpenSubsonic & native REST API host + streaming pipeline | .NET 10, Blazor Server, Radzen |
 | Melodee API (native / OpenSubsonic) | Programmatic access layer consumed by external clients & integrations | ASP.NET Core, API Versioning |
 | Melodee.Cli | Operational & maintenance commands (jobs, migrations, utilities) | .NET Console |
 | MeloAmp | Cross‑platform desktop client (browse, play, queue mgmt, theming, equalizer, scrobbling) | Electron, React, Material‑UI, TypeScript |
@@ -55,6 +55,18 @@ Together these deliver an end‑to‑end ecosystem: ingestion & curation (server
 - Consolidate multiple scattered music folders into a normalized library.
 - Run large private label streaming for a band/collective with editorial control.
 - Power analytics or recommendation engines via the structured REST endpoints.
+- Self-hosted music streaming in homelab environments for personal or family use.
+- Media center integration with support for various client types (desktop, mobile, automotive).
+- Large-scale music collection management with automated metadata enrichment.
+
+## Homelab Community
+
+Melodee has an active homelab community sharing experiences and solutions:
+
+- **Discord Server**: Join #homelab channel for homelab-specific discussions
+- **GitHub Discussions**: Share your setup and learn from others
+- **Community Showcase**: Share your homelab builds and configurations
+- **Hardware Recommendations**: Get advice on SBCs, NAS, and server builds
 
 ## Support
 

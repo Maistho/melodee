@@ -5,8 +5,6 @@ permalink: /
 ---
 # Melodee Music System
 
-> ⚠️ Documentation is evolving. Core concepts & API reference are being expanded. Check back frequently. ⚠️
-
 Melodee is a self‑hosted music management & streaming platform. It ingests disorganized audio files; cleans, normalizes & enriches metadata; stages human edits; then serves a pristine library over both the OpenSubsonic protocol and a native JSON REST API.
 
 Think of it as a blend of:

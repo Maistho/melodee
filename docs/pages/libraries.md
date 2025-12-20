@@ -64,6 +64,23 @@ Default naming rules aim for consistency: Artist/Year - Album/TrackNumber - Titl
 - Consider a quota or monitoring on inbound to avoid runaway disk usage.
 - Deduplicate via external tooling before dropping huge batches into inbound when possible.
 
+### Homelab Storage Strategies
+
+**For Limited Storage:**
+- Use lossy formats for storage (MP3, OGG) with transcoding for quality preferences
+- Implement a "hot" library (frequently played) and "cold" archive strategy
+- Consider external storage (NAS) mounted to storage volumes
+
+**For Large Collections:**
+- Use multiple storage volumes across different drives
+- Implement RAID for redundancy and performance
+- Consider separate volumes for different quality formats (lossless vs lossy)
+
+**For SBC Deployments:**
+- Use fast USB 3.0+ SSD for database and frequently accessed media
+- Consider external spinning drives for large music collections
+- Monitor storage temperature and performance
+
 ### Backups
 
 Prioritize: storage libraries > database > staging (optional) > inbound (usually ephemeral). Always back up artwork if you’ve invested manual curation time.

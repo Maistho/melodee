@@ -15,7 +15,29 @@ This guide covers getting Melodee running quickly using containers, plus optiona
 - At least 2GB RAM (4GB recommended for large scans)
 - Persistent storage volumes or bound host directories
 
-### 1. Clone & Configure
+### Automated Setup (Easiest)
+
+For a fully automated setup, run our Python setup script:
+
+```bash
+# Download and run the setup script
+curl -O https://raw.githubusercontent.com/melodee-project/melodee/main/setup_melodee.py
+python3 setup_melodee.py
+```
+
+The script will:
+- Check for required dependencies (Git, Docker/Podman)
+- Clone the Melodee repository (if not already present)
+- Generate a secure environment configuration
+- Build and start the containers automatically
+- Wait for the service to be healthy
+- Provide you with the URL to access the Blazor Admin UI
+
+### Manual Setup
+
+If you prefer to set up manually:
+
+#### 1. Clone & Configure
 
 ```bash
 git clone https://github.com/sphildreth/melodee.git
@@ -32,7 +54,7 @@ MELODEE_PORT=8080
 
 Additional optional env vars will be documented soon (streaming tweaks, concurrency limits, etc.).
 
-### 2. Launch
+#### 2. Launch
 
 ```bash
 # Podman
@@ -64,9 +86,66 @@ podman-compose up -d --build
 
 Database migrations run automatically on startup.
 
+## Homelab Deployment Options
+
+### Option A: Standalone Container Deployment
+
+For basic homelab setups, the default `compose.yml` is sufficient. Simply run:
+
+```bash
+git clone https://github.com/sphildreth/melodee.git
+cd melodee
+cp example.env .env
+# Edit .env with your preferences (especially DB_PASSWORD)
+docker-compose up -d
+```
+
+### Option B: Reverse Proxy with HTTPS
+
+For homelabs exposed to the internet or requiring SSL, configure a reverse proxy:
+
+**Nginx Proxy Manager Configuration:**
+- Domain: your-music.domain.com
+- Scheme: http
+- Host: 127.0.0.1 (if running on same machine)
+- Port: 8080 (or whatever MELODEE_PORT is set to)
+
+**Traefik Configuration (docker-compose):**
+```yaml
+services:
+  melodee.blazor:
+    # ... existing config ...
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.melodee.rule=Host(`music.your-domain.com`)"
+      - "traefik.http.routers.melodee.tls=true"
+      - "traefik.http.routers.melodee.entrypoints=websecure"
+```
+
+### Option C: Docker Swarm Deployment
+
+For high availability homelabs:
+
+```bash
+# Initialize swarm
+docker swarm init
+
+# Deploy as stack
+docker stack deploy -c compose.yml melodee
+```
+
+### Option D: Hardware Optimization
+
+For homelabs with large collections:
+
+- **CPU**: Multi-core processor recommended (parallel transcoding)
+- **RAM**: 8GB+ for large libraries (tens of thousands of tracks)
+- **Storage**: SSD for database, spinning drives for media
+- **Network**: Gigabit Ethernet for streaming performance
+
 ## Option 2: Local Development (Source)
 
-Prerequisites: .NET 9 SDK, PostgreSQL 17 (or use the compose DB service), ffmpeg in PATH (for transcoding), optional: imagemagick.
+Prerequisites: .NET 10 SDK, PostgreSQL 17 (or use the compose DB service), ffmpeg in PATH (for transcoding), optional: imagemagick.
 
 ```bash
 dotnet restore
@@ -115,6 +194,38 @@ Example (Podman):
 ```bash
 podman volume export melodee_db_data > db_backup_$(date +%F).tar
 podman volume export melodee_storage > storage_backup_$(date +%F).tar
+```
+
+### Automated Backup Script
+
+Create a backup script for homelab automation:
+
+```bash
+#!/bin/bash
+# backup-melodee.sh
+
+BACKUP_DIR="/backup/melodee/$(date +%Y-%m-%d)"
+mkdir -p "$BACKUP_DIR"
+
+# Export volumes
+podman volume export melodee_db_data > "$BACKUP_DIR/db_backup.tar"
+podman volume export melodee_storage > "$BACKUP_DIR/storage_backup.tar"
+podman volume export melodee_user_images > "$BACKUP_DIR/user_images_backup.tar"
+podman volume export melodee_playlists > "$BACKUP_DIR/playlists_backup.tar"
+
+# Compress backups
+gzip "$BACKUP_DIR"/*.tar
+
+# Optional: Upload to cloud storage
+# aws s3 sync "$BACKUP_DIR" s3://your-backup-bucket/melodee/
+
+echo "Backup completed: $BACKUP_DIR"
+```
+
+Schedule with cron:
+```bash
+# Daily backup at 2 AM
+0 2 * * * /path/to/backup-melodee.sh
 ```
 
 ## Troubleshooting

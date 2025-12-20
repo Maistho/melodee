@@ -1,13 +1,25 @@
 - title: Documentation
   url: docs
   links:
+    - title: Quick Start for Homelabs
+      url: "quickstart"
     - title: Installation
       url: "installing"
     - title: Configuration
       url: "configuration"
+    - title: Configuration Reference
+      url: "configuration-reference"
     - title: Libraries
       url: "libraries"
+    - title: API Overview
+      url: "apis"
     - title: API
       url: "api"
     - title: "About"
       url: "about"
+    - title: "Homelab Deployment"
+      url: "homelab"
+    - title: "Hardware & Performance"
+      url: "hardware"
+    - title: "Backup & Recovery"
+      url: "backup"

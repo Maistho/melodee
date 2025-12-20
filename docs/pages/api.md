@@ -5,12 +5,9 @@ permalink: /api/
 
 # API
 
-Melodee exposes two major API surfaces:
+This page documents the native Melodee API (Controllers in `src/Melodee.Blazor/Controllers/Melodee/`). For an overview of both API options (Native Melodee API and OpenSubsonic API), see the [API Overview](/apis/) page.
 
-1. OpenSubsonic / Subsonic Compatible XML & JSON endpoints (client facing; broad ecosystem support).
-2. Native Melodee JSON REST API (versioned under /api/v1/) providing simpler, modern, strongly typed resource endpoints.
-
-This page documents the native API (Controllers in `src/Melodee.Blazor/Controllers/Melodee/`). For OpenSubsonic usage consult the compatibility matrix (coming soon).
+For interactive API documentation and testing, visit the Swagger UI at `/swagger` when Melodee is running.
 
 ## Authentication
 
@@ -212,6 +209,25 @@ The API layer was re‑architected to delegate operations to consolidated domain
 - Caching: May locally cache minimal metadata for smooth navigation; server remains source of truth.
 - Scrobbling: Dispatches NowPlaying then Played events to represent progress and completion.
 - Supports pull‑to‑refresh to re-query / invalidate local caches via `If-None-Match` (future optimization with etag headers).
+
+## Homelab API Integration
+
+For homelab environments, the API enables several useful integrations:
+
+**Automation Scripts:**
+- Automated library management
+- Scheduled metadata updates
+- Custom reporting and statistics
+
+**Home Automation:**
+- Integration with home automation systems (Home Assistant, OpenHAB)
+- Voice control via custom integrations
+- Presence detection for automatic playback
+
+**Monitoring:**
+- System health checks
+- Library statistics tracking
+- User activity monitoring
 
 If you build another client (CLI player, iOS app, web SPA, etc.) let us know and we’ll list it here.
 
