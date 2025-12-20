@@ -142,6 +142,6 @@ Both of these are external API requirements and are properly documented in the c
 ## References
 
 - [OWASP Top 10](https://owasp.org/www-project-top-ten/)
-- [OpenSubsonic API Specification](http://www.subsonic.org/pages/api.jsp)
+- [OpenSubsonic API Specification](https://www.subsonic.org/pages/api.jsp)
 - [Last.fm API Authentication](https://www.last.fm/api/authentication)
 - [.NET Security Best Practices](https://docs.microsoft.com/en-us/dotnet/standard/security/)
