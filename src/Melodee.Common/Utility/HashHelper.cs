@@ -23,7 +23,7 @@ public static class HashHelper
         using var md5 = MD5.Create();
         using var stream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
         var hash = md5.ComputeHash(stream);
-        
+
         var sBuilder = new StringBuilder();
         foreach (var t in hash)
         {
@@ -72,7 +72,7 @@ public static class HashHelper
         using var sha256 = SHA256.Create();
         using var stream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
         var hash = sha256.ComputeHash(stream);
-        
+
         var sBuilder = new StringBuilder();
         foreach (var t in hash)
         {

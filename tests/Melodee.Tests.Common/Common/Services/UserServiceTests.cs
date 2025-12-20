@@ -1,3 +1,5 @@
+using Melodee.Common.Configuration;
+using Melodee.Common.Constants;
 using Melodee.Common.Data.Models;
 using Melodee.Common.Enums;
 using Melodee.Common.Extensions;
@@ -6,6 +8,7 @@ using Melodee.Common.Models;
 using Melodee.Common.Models.Collection;
 using Melodee.Common.Models.Importing;
 using Melodee.Common.Services;
+using Melodee.Common.Utility;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using NodaTime;
@@ -15,6 +18,21 @@ namespace Melodee.Tests.Common.Common.Services;
 
 public class UserServiceTests : ServiceTestBase
 {
+    private UserService CreateUserService(IMelodeeConfigurationFactory? configFactory = null, IBus? bus = null)
+    {
+        return new UserService(
+            Logger,
+            CacheManager,
+            MockFactory(),
+            configFactory ?? MockConfigurationFactory(),
+            GetLibraryService(),
+            GetArtistService(),
+            GetAlbumService(),
+            GetSongService(),
+            GetPlaylistService(),
+            bus ?? MockBus());
+    }
+
     [Fact]
     public async Task ListAsync_WithValidRequest_ReturnsPagedResult()
     {
@@ -46,6 +64,216 @@ public class UserServiceTests : ServiceTestBase
         Assert.NotEqual(Guid.Empty, firstUser.ApiKey);
         Assert.NotNull(firstUser.UserName);
         Assert.NotNull(firstUser.Email);
+    }
+
+    [Fact]
+    public async Task ListAsync_WithUsernameFilter_ReturnsFilteredResults()
+    {
+        // Arrange
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            context.Users.RemoveRange(context.Users);
+            await context.SaveChangesAsync();
+
+            var user1 = CreateTestUser(101, "johnsmith", "john@test.com");
+            var user2 = CreateTestUser(102, "janesmith", "jane@test.com");
+            var user3 = CreateTestUser(103, "bobwilson", "bob@test.com");
+            context.Users.AddRange(user1, user2, user3);
+            await context.SaveChangesAsync();
+        }
+
+        var userService = GetUserService();
+        var pagedRequest = new PagedRequest
+        {
+            Page = 1,
+            PageSize = 10,
+            FilterBy = [new Melodee.Common.Filtering.FilterOperatorInfo("username", Melodee.Common.Filtering.FilterOperator.Contains, "smith")]
+        };
+
+        // Act
+        var result = await userService.ListAsync(pagedRequest);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(2, result.TotalCount);
+        Assert.All(result.Data, u => Assert.Contains("smith", u.UserName, StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task ListAsync_WithEmailFilter_ReturnsFilteredResults()
+    {
+        // Arrange
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            context.Users.RemoveRange(context.Users);
+            await context.SaveChangesAsync();
+
+            var user1 = CreateTestUser(101, "user1", "alpha@company.com");
+            var user2 = CreateTestUser(102, "user2", "beta@other.com");
+            var user3 = CreateTestUser(103, "user3", "gamma@company.com");
+            context.Users.AddRange(user1, user2, user3);
+            await context.SaveChangesAsync();
+        }
+
+        var userService = GetUserService();
+        var pagedRequest = new PagedRequest
+        {
+            Page = 1,
+            PageSize = 10,
+            FilterBy = [new Melodee.Common.Filtering.FilterOperatorInfo("email", Melodee.Common.Filtering.FilterOperator.Contains, "company")]
+        };
+
+        // Act
+        var result = await userService.ListAsync(pagedRequest);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(2, result.TotalCount);
+        Assert.All(result.Data, u => Assert.Contains("company", u.Email, StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task ListAsync_WithIsLockedFilter_ReturnsFilteredResults()
+    {
+        // Arrange
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            context.Users.RemoveRange(context.Users);
+            await context.SaveChangesAsync();
+
+            var user1 = CreateTestUser(101, "activeuser", "active@test.com");
+            user1.IsLocked = false;
+            var user2 = CreateTestUser(102, "lockeduser", "locked@test.com");
+            user2.IsLocked = true;
+            var user3 = CreateTestUser(103, "anotheractive", "another@test.com");
+            user3.IsLocked = false;
+            context.Users.AddRange(user1, user2, user3);
+            await context.SaveChangesAsync();
+        }
+
+        var userService = GetUserService();
+        var pagedRequest = new PagedRequest
+        {
+            Page = 1,
+            PageSize = 10,
+            FilterBy = [new Melodee.Common.Filtering.FilterOperatorInfo("islocked", Melodee.Common.Filtering.FilterOperator.Equals, "true")]
+        };
+
+        // Act
+        var result = await userService.ListAsync(pagedRequest);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Single(result.Data);
+        Assert.True(result.Data.First().IsLocked);
+    }
+
+    [Fact]
+    public async Task ListAsync_WithIsAdminFilter_ReturnsFilteredResults()
+    {
+        // Arrange
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            context.Users.RemoveRange(context.Users);
+            await context.SaveChangesAsync();
+
+            var user1 = CreateTestUser(101, "adminuser", "admin@test.com");
+            user1.IsAdmin = true;
+            var user2 = CreateTestUser(102, "regularuser", "regular@test.com");
+            user2.IsAdmin = false;
+            var user3 = CreateTestUser(103, "anotheradmin", "admin2@test.com");
+            user3.IsAdmin = true;
+            context.Users.AddRange(user1, user2, user3);
+            await context.SaveChangesAsync();
+        }
+
+        var userService = GetUserService();
+        var pagedRequest = new PagedRequest
+        {
+            Page = 1,
+            PageSize = 10,
+            FilterBy = [new Melodee.Common.Filtering.FilterOperatorInfo("isadmin", Melodee.Common.Filtering.FilterOperator.Equals, "true")]
+        };
+
+        // Act
+        var result = await userService.ListAsync(pagedRequest);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(2, result.TotalCount);
+        Assert.All(result.Data, u => Assert.True(u.IsAdmin));
+    }
+
+    [Fact]
+    public async Task ListAsync_WithOrderByUsername_ReturnsOrderedResults()
+    {
+        // Arrange
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            context.Users.RemoveRange(context.Users);
+            await context.SaveChangesAsync();
+
+            var user1 = CreateTestUser(101, "zebra", "zebra@test.com");
+            var user2 = CreateTestUser(102, "alpha", "alpha@test.com");
+            var user3 = CreateTestUser(103, "middle", "middle@test.com");
+            context.Users.AddRange(user1, user2, user3);
+            await context.SaveChangesAsync();
+        }
+
+        var userService = GetUserService();
+        var pagedRequest = new PagedRequest
+        {
+            Page = 1,
+            PageSize = 10,
+            OrderBy = new Dictionary<string, string> { { "username", "ASC" } }
+        };
+
+        // Act
+        var result = await userService.ListAsync(pagedRequest);
+
+        // Assert
+        Assert.NotNull(result);
+        var users = result.Data.ToArray();
+        Assert.Equal(3, users.Length);
+        Assert.Equal("alpha", users[0].UserName);
+        Assert.Equal("middle", users[1].UserName);
+        Assert.Equal("zebra", users[2].UserName);
+    }
+
+    [Fact]
+    public async Task ListAsync_WithMultipleFilters_ReturnsFilteredResults()
+    {
+        // Arrange
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            context.Users.RemoveRange(context.Users);
+            await context.SaveChangesAsync();
+
+            var user1 = CreateTestUser(101, "johnsmith", "john@test.com");
+            var user2 = CreateTestUser(102, "janesmith", "jane@test.com");
+            var user3 = CreateTestUser(103, "bobwilson", "bob@test.com");
+            context.Users.AddRange(user1, user2, user3);
+            await context.SaveChangesAsync();
+        }
+
+        var userService = GetUserService();
+        // Multiple filters use OR logic
+        var pagedRequest = new PagedRequest
+        {
+            Page = 1,
+            PageSize = 10,
+            FilterBy = [
+                new Melodee.Common.Filtering.FilterOperatorInfo("username", Melodee.Common.Filtering.FilterOperator.Contains, "john"),
+                new Melodee.Common.Filtering.FilterOperatorInfo("username", Melodee.Common.Filtering.FilterOperator.Contains, "bob")
+            ]
+        };
+
+        // Act
+        var result = await userService.ListAsync(pagedRequest);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(2, result.TotalCount);
     }
 
     [Fact]
@@ -105,6 +333,20 @@ public class UserServiceTests : ServiceTestBase
         // Assert
         Assert.True(result.IsSuccess);
         Assert.True(result.Data);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_WithUnknownUserId_ReturnsNotFound()
+    {
+        // Arrange
+        var userService = GetUserService();
+
+        // Act
+        var result = await userService.DeleteAsync(new[] { 999 });
+
+        // Assert
+        Assert.False(result.Data);
+        Assert.Equal(OperationResponseType.NotFound, result.Type);
     }
 
     [Fact]
@@ -321,6 +563,205 @@ public class UserServiceTests : ServiceTestBase
     }
 
     [Fact]
+    public async Task LoginUserAsync_WithValidPassword_ReturnsUser()
+    {
+        // Arrange
+        var plainPassword = "Sup3rSecret!";
+        var userService = GetUserService();
+        var configuration = TestsBase.NewPluginsConfiguration();
+        var user = CreateTestUser(5, "loginuser", "loginuser@example.com");
+        user.PublicKey = EncryptionHelper.GenerateRandomPublicKeyBase64();
+        user.PasswordEncrypted = EncryptionHelper.Encrypt(
+            configuration.GetValue<string>(SettingRegistry.EncryptionPrivateKey)!,
+            plainPassword,
+            user.PublicKey);
+
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            context.Users.Add(user);
+            await context.SaveChangesAsync();
+        }
+
+        // Act
+        var result = await userService.LoginUserAsync(user.Email, plainPassword);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+        Assert.NotNull(result.Data!.LastLoginAt);
+        Assert.NotNull(result.Data.LastActivityAt);
+    }
+
+    [Fact]
+    public async Task LoginUserAsync_WithInvalidPassword_ReturnsUnauthorized()
+    {
+        // Arrange
+        var userService = GetUserService();
+        var configuration = TestsBase.NewPluginsConfiguration();
+        var user = CreateTestUser(6, "wrongpassword", "wrongpassword@example.com");
+        user.PublicKey = EncryptionHelper.GenerateRandomPublicKeyBase64();
+        user.PasswordEncrypted = EncryptionHelper.Encrypt(
+            configuration.GetValue<string>(SettingRegistry.EncryptionPrivateKey)!,
+            "correct-password",
+            user.PublicKey);
+
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            context.Users.Add(user);
+            await context.SaveChangesAsync();
+        }
+
+        // Act
+        var result = await userService.LoginUserAsync(user.Email, "incorrect-password");
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(OperationResponseType.Unauthorized, result.Type);
+        Assert.Null(result.Data);
+    }
+
+    [Fact]
+    public async Task ValidateTokenAsync_WithValidToken_ReturnsUser()
+    {
+        // Arrange
+        var password = "token-pass";
+        var salt = "123";
+        var config = TestsBase.NewPluginsConfiguration();
+        var userService = GetUserService();
+        var publicKey = EncryptionHelper.GenerateRandomPublicKeyBase64();
+        var encryptedPassword = EncryptionHelper.Encrypt(
+            config.GetValue<string>(SettingRegistry.EncryptionPrivateKey)!,
+            password,
+            publicKey);
+
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            var user = CreateTestUser(9, "tokenuser", "token@example.com");
+            user.PublicKey = publicKey;
+            user.PasswordEncrypted = encryptedPassword;
+            context.Users.Add(user);
+            await context.SaveChangesAsync();
+        }
+
+        var token = HashHelper.CreateMd5($"{password}{salt}");
+
+        // Act
+        var result = await userService.ValidateTokenAsync("tokenuser", token!, salt);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+        Assert.Equal(9, result.Data!.Id);
+    }
+
+    [Fact]
+    public async Task ValidateTokenAsync_WithLockedUser_ReturnsUnauthorized()
+    {
+        // Arrange
+        var password = "locked-pass";
+        var salt = "456";
+        var config = TestsBase.NewPluginsConfiguration();
+        var userService = GetUserService();
+        var publicKey = EncryptionHelper.GenerateRandomPublicKeyBase64();
+        var encryptedPassword = EncryptionHelper.Encrypt(
+            config.GetValue<string>(SettingRegistry.EncryptionPrivateKey)!,
+            password,
+            publicKey);
+
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            var user = CreateTestUser(10, "lockeduser", "locked@example.com");
+            user.PublicKey = publicKey;
+            user.PasswordEncrypted = encryptedPassword;
+            user.IsLocked = true;
+            context.Users.Add(user);
+            await context.SaveChangesAsync();
+        }
+
+        var token = HashHelper.CreateMd5($"{password}{salt}");
+
+        // Act
+        var result = await userService.ValidateTokenAsync("lockeduser", token!, salt);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(OperationResponseType.Unauthorized, result.Type);
+        Assert.Null(result.Data);
+    }
+
+    [Fact]
+    public async Task RegisterAsync_WithDuplicateEmail_ReturnsValidationFailure()
+    {
+        // Arrange
+        var email = "duplicate@example.com";
+        var userService = GetUserService();
+
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            var existingUser = CreateTestUser(7, "existinguser", email);
+            context.Users.Add(existingUser);
+            await context.SaveChangesAsync();
+        }
+
+        // Act
+        var result = await userService.RegisterAsync("newuser", email, "P@ssword1", null);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(OperationResponseType.ValidationFailure, result.Type);
+        Assert.Null(result.Data);
+    }
+
+    [Fact]
+    public async Task RegisterAsync_FirstUserBecomesAdmin()
+    {
+        // Arrange
+        var configFactory = MockConfigurationFactory();
+        var userService = CreateUserService(configFactory);
+
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            context.Users.RemoveRange(context.Users);
+            await context.SaveChangesAsync();
+        }
+
+        // Act
+        var result = await userService.RegisterAsync("first", "first@example.com", "P@ssw0rd!", null);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+        Assert.True(result.Data!.IsAdmin);
+    }
+
+    [Fact]
+    public async Task RegisterAsync_WithInvalidPrivateCode_ReturnsUnauthorized()
+    {
+        // Arrange
+        var settings = TestsBase.NewConfiguration();
+        settings[SettingRegistry.RegisterPrivateCode] = "secret-code";
+        var configFactory = new Mock<IMelodeeConfigurationFactory>();
+        configFactory.Setup(x => x.GetConfigurationAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new MelodeeConfiguration(settings));
+
+        var userService = CreateUserService(configFactory.Object);
+
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            context.Users.RemoveRange(context.Users);
+            await context.SaveChangesAsync();
+        }
+
+        // Act
+        var result = await userService.RegisterAsync("user", "code@example.com", "Password!", "wrong");
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(OperationResponseType.Unauthorized, result.Type);
+        Assert.Null(result.Data);
+    }
+
+    [Fact]
     public async Task ImportUserFavoriteSongs_WithNullConfiguration_ThrowsArgumentNullException()
     {
         // Arrange
@@ -371,6 +812,46 @@ public class UserServiceTests : ServiceTestBase
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(() => userService.UpdateAsync(currentUser, detailToUpdate));
+    }
+
+    [Fact]
+    public async Task UpdateAsync_WithValidUser_UpdatesProperties()
+    {
+        // Arrange
+        var userService = GetUserService();
+        var currentUser = CreateTestUser(8, "before", "before@example.com");
+
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            currentUser.Description = "old description";
+            currentUser.Notes = "old notes";
+            context.Users.Add(currentUser);
+            await context.SaveChangesAsync();
+        }
+
+        var detailToUpdate = CreateTestUser(8, "after", "after@example.com");
+        detailToUpdate.Description = "new description";
+        detailToUpdate.Notes = "new notes";
+        detailToUpdate.SortOrder = 5;
+        detailToUpdate.Tags = "alpha,beta";
+        detailToUpdate.IsLocked = true;
+
+        // Act
+        var result = await userService.UpdateAsync(currentUser, detailToUpdate);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.True(result.Data);
+
+        await using var verifyContext = await MockFactory().CreateDbContextAsync();
+        var updatedUser = await verifyContext.Users.FirstAsync(u => u.Id == 8);
+        Assert.Equal("after@example.com", updatedUser.Email);
+        Assert.Equal("after", updatedUser.UserName);
+        Assert.Equal("new description", updatedUser.Description);
+        Assert.Equal("new notes", updatedUser.Notes);
+        Assert.True(updatedUser.IsLocked);
+        Assert.Equal("alpha,beta", updatedUser.Tags);
+        Assert.Equal(5, updatedUser.SortOrder);
     }
 
     [Fact]

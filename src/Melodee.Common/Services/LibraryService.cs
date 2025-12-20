@@ -1691,11 +1691,12 @@ public class LibraryService : ServiceBase
         {
             var filter = pagedRequest.FilterBy[0];
             var filterValue = filter.Value.ToString() ?? string.Empty;
-            var normalizedValue = filterValue.ToNormalizedString();
+            var normalizedValue = filterValue.ToNormalizedString() ?? string.Empty;
+            var lowerNormalizedValue = normalizedValue.ToLowerInvariant();
             return filter.PropertyName.ToLowerInvariant() switch
             {
-                "name" or "namenormalized" => query.Where(a => EF.Functions.ILike(a.Name, $"%{normalizedValue}%")),
-                "description" => query.Where(a => a.Description != null && EF.Functions.ILike(a.Description, $"%{normalizedValue}%")),
+                "name" or "namenormalized" => query.Where(a => a.Name.ToLower().Contains(lowerNormalizedValue)),
+                "description" => query.Where(a => a.Description != null && a.Description.ToLower().Contains(lowerNormalizedValue)),
                 "type" => filter.Operator switch
                 {
                     FilterOperator.Equals when int.TryParse(filterValue, out var typeValue) =>
@@ -1708,7 +1709,7 @@ public class LibraryService : ServiceBase
                         query.Where(l => l.IsLocked == boolValue),
                     _ => query
                 },
-                "tags" => query.Where(a => a.Tags != null && EF.Functions.ILike(a.Tags, $"%{normalizedValue}%")),
+                "tags" => query.Where(a => a.Tags != null && a.Tags.ToLower().Contains(lowerNormalizedValue)),
                 _ => query
             };
         }
@@ -1719,11 +1720,12 @@ public class LibraryService : ServiceBase
         foreach (var filter in pagedRequest.FilterBy)
         {
             var filterValue = filter.Value.ToString().ToNormalizedString() ?? string.Empty;
-            var normalizedValue = filterValue.ToNormalizedString();
+            var normalizedValue = filterValue.ToNormalizedString() ?? string.Empty;
+            var lowerNormalizedValue = normalizedValue.ToLowerInvariant();
             var predicate = filter.PropertyName.ToLowerInvariant() switch
             {
-                "name" or "namenormalized" => (Expression<Func<Library, bool>>)(a => EF.Functions.ILike(a.Name, $"%{normalizedValue}%")),
-                "description" => (Expression<Func<Library, bool>>)(a => a.Description != null && EF.Functions.ILike(a.Description, $"%{normalizedValue}%")),
+                "name" or "namenormalized" => (Expression<Func<Library, bool>>)(a => a.Name.ToLower().Contains(lowerNormalizedValue)),
+                "description" => (Expression<Func<Library, bool>>)(a => a.Description != null && a.Description.ToLower().Contains(lowerNormalizedValue)),
                 "type" => filter.Operator switch
                 {
                     FilterOperator.Equals when int.TryParse(filterValue, out var typeValue) =>
@@ -1736,7 +1738,7 @@ public class LibraryService : ServiceBase
                         (Expression<Func<Library, bool>>)(l => l.IsLocked == boolValue),
                     _ => null
                 },
-                "tags" => (Expression<Func<Library, bool>>)(a => a.Tags != null && EF.Functions.ILike(a.Tags, $"%{normalizedValue}%")),
+                "tags" => (Expression<Func<Library, bool>>)(a => a.Tags != null && a.Tags.ToLower().Contains(lowerNormalizedValue)),
                 _ => null
             };
 

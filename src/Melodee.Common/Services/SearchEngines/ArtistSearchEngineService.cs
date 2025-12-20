@@ -106,28 +106,28 @@ public class ArtistSearchEngineService(
                 foreach (var filter in pagedRequest.FilterBy)
                 {
                     var filterValue = filter.Value?.ToString() ?? string.Empty;
-                    var filterValuePattern = filter.ValuePattern()?.ToString() ?? string.Empty;
+                    var filterValueLower = filterValue.ToLowerInvariant();
 
                     // Apply filters based on property name and operator
                     query = filter.PropertyName.ToLower() switch
                     {
                         "name" => filter.OperatorValue.ToUpper() switch
                         {
-                            "LIKE" => query.Where(x => EF.Functions.Like(x.Name, filterValuePattern)),
+                            "LIKE" => ApplyLikeFilter(query, x => x.Name, filter.Operator, filterValueLower),
                             "=" => query.Where(x => x.Name == filterValue),
                             "!=" => query.Where(x => x.Name != filterValue),
                             _ => query
                         },
                         "namenormalized" => filter.OperatorValue.ToUpper() switch
                         {
-                            "LIKE" => query.Where(x => EF.Functions.Like(x.NameNormalized, filterValuePattern)),
+                            "LIKE" => ApplyLikeFilter(query, x => x.NameNormalized, filter.Operator, filterValueLower),
                             "=" => query.Where(x => x.NameNormalized == filterValue),
                             "!=" => query.Where(x => x.NameNormalized != filterValue),
                             _ => query
                         },
                         "sortname" => filter.OperatorValue.ToUpper() switch
                         {
-                            "LIKE" => query.Where(x => EF.Functions.Like(x.SortName, filterValuePattern)),
+                            "LIKE" => ApplyLikeFilter(query, x => x.SortName, filter.Operator, filterValueLower),
                             "=" => query.Where(x => x.SortName == filterValue),
                             "!=" => query.Where(x => x.SortName != filterValue),
                             _ => query
@@ -142,7 +142,7 @@ public class ArtistSearchEngineService(
                         {
                             "=" => query.Where(x => x.SpotifyId == filterValue),
                             "!=" => query.Where(x => x.SpotifyId != filterValue),
-                            "LIKE" => query.Where(x => EF.Functions.Like(x.SpotifyId!, filterValuePattern)),
+                            "LIKE" => ApplyLikeFilter(query, x => x.SpotifyId!, filter.Operator, filterValueLower),
                             _ => query
                         },
                         _ => query
@@ -962,5 +962,52 @@ public class ArtistSearchEngineService(
         return ex.InnerException is SqliteException sqlite &&
                sqlite.SqliteErrorCode == 19 &&
                sqlite.Message.Contains("Albums.ArtistId", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static IQueryable<Artist> ApplyLikeFilter(
+        IQueryable<Artist> query,
+        System.Linq.Expressions.Expression<Func<Artist, string?>> propertySelector,
+        Filtering.FilterOperator filterOperator,
+        string filterValueLower)
+    {
+        var parameter = propertySelector.Parameters[0];
+        var propertyAccess = propertySelector.Body;
+
+        // Build: property != null && property.ToLower().Contains/StartsWith/EndsWith(filterValueLower)
+        var nullCheck = System.Linq.Expressions.Expression.NotEqual(propertyAccess, System.Linq.Expressions.Expression.Constant(null, typeof(string)));
+        var toLowerMethod = typeof(string).GetMethod("ToLower", Type.EmptyTypes)!;
+        var toLowerCall = System.Linq.Expressions.Expression.Call(propertyAccess, toLowerMethod);
+
+        System.Linq.Expressions.MethodCallExpression stringOperation;
+        var filterConstant = System.Linq.Expressions.Expression.Constant(filterValueLower);
+
+        switch (filterOperator)
+        {
+            case Filtering.FilterOperator.StartsWith:
+                var startsWithMethod = typeof(string).GetMethod("StartsWith", [typeof(string)])!;
+                stringOperation = System.Linq.Expressions.Expression.Call(toLowerCall, startsWithMethod, filterConstant);
+                break;
+            case Filtering.FilterOperator.EndsWith:
+                var endsWithMethod = typeof(string).GetMethod("EndsWith", [typeof(string)])!;
+                stringOperation = System.Linq.Expressions.Expression.Call(toLowerCall, endsWithMethod, filterConstant);
+                break;
+            case Filtering.FilterOperator.DoesNotContain:
+                var containsMethod = typeof(string).GetMethod("Contains", [typeof(string)])!;
+                var containsCall = System.Linq.Expressions.Expression.Call(toLowerCall, containsMethod, filterConstant);
+                var notContains = System.Linq.Expressions.Expression.Not(containsCall);
+                var orNullCheck = System.Linq.Expressions.Expression.Equal(propertyAccess, System.Linq.Expressions.Expression.Constant(null, typeof(string)));
+                var doesNotContainBody = System.Linq.Expressions.Expression.OrElse(orNullCheck, notContains);
+                var doesNotContainLambda = System.Linq.Expressions.Expression.Lambda<Func<Artist, bool>>(doesNotContainBody, parameter);
+                return query.Where(doesNotContainLambda);
+            default: // Contains
+                var containsMethodDefault = typeof(string).GetMethod("Contains", [typeof(string)])!;
+                stringOperation = System.Linq.Expressions.Expression.Call(toLowerCall, containsMethodDefault, filterConstant);
+                break;
+        }
+
+        var andExpression = System.Linq.Expressions.Expression.AndAlso(nullCheck, stringOperation);
+        var lambda = System.Linq.Expressions.Expression.Lambda<Func<Artist, bool>>(andExpression, parameter);
+
+        return query.Where(lambda);
     }
 }

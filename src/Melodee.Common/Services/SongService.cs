@@ -1345,9 +1345,9 @@ public class SongService(
             }
         }
 
-        // Get random songs using database-level randomization
+        // Get random songs using cross-provider random ordering (GUID-based)
         var randomSongs = await query
-            .OrderBy(_ => EF.Functions.Random())
+            .OrderBy(_ => Guid.NewGuid())
             .Take(count)
             .ToArrayAsync(cancellationToken)
             .ConfigureAwait(false);

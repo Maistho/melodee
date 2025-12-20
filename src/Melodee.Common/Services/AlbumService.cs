@@ -1221,7 +1221,7 @@ public class AlbumService(
             switch (albumListRequest.Type)
             {
                 case ListType.Random:
-                    albumsQuery = albumsQuery.OrderBy(a => EF.Functions.Random());
+                    albumsQuery = albumsQuery.OrderBy(a => Guid.NewGuid());
                     break;
                 case ListType.Newest:
                     albumsQuery = albumsQuery.OrderByDescending(a => a.CreatedAt);
@@ -1348,7 +1348,7 @@ public class AlbumService(
             switch (albumListRequest.Type)
             {
                 case ListType.Random:
-                    albumsQuery = albumsQuery.OrderBy(a => EF.Functions.Random());
+                    albumsQuery = albumsQuery.OrderBy(a => Guid.NewGuid());
                     break;
                 case ListType.Newest:
                     albumsQuery = albumsQuery.OrderByDescending(a => a.CreatedAt);
