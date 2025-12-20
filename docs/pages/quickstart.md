@@ -48,8 +48,8 @@ For the easiest setup, use our Python setup script which automates the entire pr
 
 ```bash
 # Download and run the setup script
-curl -O https://raw.githubusercontent.com/melodee-project/melodee/main/setup_melodee.py
-python3 setup_melodee.py
+curl -O https://raw.githubusercontent.com/melodee-project/melodee/main/scripts/setup_melodee.py
+python3 scripts/setup_melodee.py
 ```
 
 The script will:
