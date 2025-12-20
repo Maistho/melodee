@@ -1056,6 +1056,10 @@ IBus bus)
 
         var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken);
         var usersPassword = user.Data.Decrypt(user.Data.PasswordEncrypted, configuration);
+        // NOTE: MD5 is required here by the OpenSubsonic API specification for token-based authentication.
+        // The token is computed as MD5(password + salt) per the OpenSubsonic/Subsonic protocol.
+        // This cannot be changed without breaking API compatibility with all Subsonic clients.
+        // See: http://www.subsonic.org/pages/api.jsp#authentication
         var expectedToken = HashHelper.CreateMd5($"{usersPassword}{salt}");
         var isAuthenticated = string.Equals(expectedToken, token, StringComparison.OrdinalIgnoreCase);
 

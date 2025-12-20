@@ -1280,7 +1280,7 @@ public class OpenSubsonicApiService(
                                 result = ImageConvertor.ResizeImageIfNeeded(result,
                                     sizeParsedToInt,
                                     sizeParsedToInt, isUserImageRequest);
-                                eTag = HashHelper.CreateMd5(eTag + sizeParsedToInt);
+                                eTag = HashHelper.CreateSha256(eTag + sizeParsedToInt);
                             }
                             else
                             {
@@ -1292,7 +1292,7 @@ public class OpenSubsonicApiService(
                                             thumbnailSize,
                                             thumbnailSize,
                                             isUserImageRequest);
-                                        eTag = HashHelper.CreateMd5(eTag + nameof(ImageSize.Thumbnail));
+                                        eTag = HashHelper.CreateSha256(eTag + nameof(ImageSize.Thumbnail));
                                         break;
 
                                     case ImageSize.Small:
@@ -1302,7 +1302,7 @@ public class OpenSubsonicApiService(
                                             smallSize,
                                             smallSize,
                                             isUserImageRequest);
-                                        eTag = HashHelper.CreateMd5(eTag + nameof(ImageSize.Small));
+                                        eTag = HashHelper.CreateSha256(eTag + nameof(ImageSize.Small));
                                         break;
 
                                     case ImageSize.Medium:
@@ -1315,7 +1315,7 @@ public class OpenSubsonicApiService(
                                             mediumSize,
                                             mediumSize,
                                             isUserImageRequest);
-                                        eTag = HashHelper.CreateMd5(eTag + nameof(ImageSize.Medium));
+                                        eTag = HashHelper.CreateSha256(eTag + nameof(ImageSize.Medium));
                                         break;
                                 }
                             }
@@ -3143,9 +3143,8 @@ public class OpenSubsonicApiService(
             var allDbSongs = await songQuery
                 .ToArrayAsync(cancellationToken)
                 .ConfigureAwait(false);
-            // Shuffle and take the required number
-            var random = new Random();
-            var dbSongs = allDbSongs.OrderBy(_ => random.Next()).Take(takeSize).ToArray();
+            // Shuffle and take the required number using Random.Shared for thread-safe randomization
+            var dbSongs = allDbSongs.OrderBy(_ => Random.Shared.Next()).Take(takeSize).ToArray();
 
             songs = dbSongs.Select(x => x.ToApiChild(x.Album, x.UserSongs.FirstOrDefault())).ToArray();
         }

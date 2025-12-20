@@ -82,9 +82,9 @@ public static class FileSystemDirectoryInfoExtensions
 
     private static async Task<string> CalculateFileHashAsync(string filePath, CancellationToken cancellationToken)
     {
-        using var md5 = MD5.Create();
+        using var sha256 = SHA256.Create();
         using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-        var hash = await md5.ComputeHashAsync(stream, cancellationToken);
+        var hash = await sha256.ComputeHashAsync(stream, cancellationToken);
         return BitConverter.ToString(hash).Replace("-", "").ToLower();
     }
 

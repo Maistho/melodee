@@ -6,6 +6,8 @@ namespace Melodee.Common.Utility;
 
 public static class HashHelper
 {
+    // NOTE: MD5 methods are maintained for compatibility with external APIs (OpenSubsonic, Last.fm)
+    // that require MD5 for authentication. For new code, use CreateSha256 instead.
     public static string? CreateMd5(string? input)
     {
         if (string.IsNullOrEmpty(input))
@@ -31,6 +33,46 @@ public static class HashHelper
         using (var md5 = MD5.Create())
         {
             var data = md5.ComputeHash(bytes);
+
+            // Create a new StringBuilder to collect the bytes and create a string.
+            var sBuilder = new StringBuilder();
+
+            // Loop through each byte of the hashed data and format each one as a hexadecimal string.
+            foreach (var t in data)
+            {
+                sBuilder.Append(t.ToString("x2"));
+            }
+
+            // Return the hexadecimal string.
+            return sBuilder.ToString();
+        }
+    }
+
+    public static string? CreateSha256(string? input)
+    {
+        if (string.IsNullOrEmpty(input))
+        {
+            return null;
+        }
+
+        return CreateSha256(Encoding.UTF8.GetBytes(input));
+    }
+
+    public static string? CreateSha256(FileInfo file)
+    {
+        return CreateSha256(File.ReadAllBytes(file.FullName));
+    }
+
+    public static string? CreateSha256(byte[]? bytes)
+    {
+        if (bytes == null || !bytes.Any())
+        {
+            return null;
+        }
+
+        using (var sha256 = SHA256.Create())
+        {
+            var data = sha256.ComputeHash(bytes);
 
             // Create a new StringBuilder to collect the bytes and create a string.
             var sBuilder = new StringBuilder();

@@ -2,11 +2,15 @@ using System.Diagnostics;
 
 namespace Melodee.Common.Utility;
 
+// WARNING: This class executes shell commands and may pose a security risk if used with untrusted input.
+// Only use with paths and commands from trusted configuration sources.
+// Consider validating that script paths are within expected directories.
 public static class ShellHelper
 {
     public static Task<int> Bash(this string cmd)
     {
         var source = new TaskCompletionSource<int>();
+        // Escape double quotes in the command to prevent injection
         var escapedArgs = cmd.Replace("\"", "\\\"");
         var process = new Process
         {
