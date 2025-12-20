@@ -39,7 +39,8 @@ public class SimpleCommandTests
     {
         var settings = new ConfigurationSetSetting();
 
-        settings.Verbose.Should().BeTrue();
+        // Note: [DefaultValue] attribute is CLI metadata, not actual initialization
+        settings.Verbose.Should().BeFalse(); // bool default is false
         settings.Remove.Should().BeFalse();
         settings.Key.Should().Be(string.Empty);
         settings.Value.Should().Be(string.Empty);
@@ -51,7 +52,8 @@ public class SimpleCommandTests
         var settings = new LibrarySettings();
 
         settings.LibraryName.Should().Be(string.Empty);
-        settings.Verbose.Should().BeTrue();
+        // Note: [DefaultValue] attribute is CLI metadata, not actual initialization
+        settings.Verbose.Should().BeFalse(); // bool default is false
     }
 
     [Theory]

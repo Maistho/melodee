@@ -494,3 +494,4 @@ appsettings.*.json
 .env
 .env.local
 .env.*.local
+coverage/

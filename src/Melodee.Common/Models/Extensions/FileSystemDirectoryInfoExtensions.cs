@@ -376,7 +376,6 @@ public static class FileSystemDirectoryInfoExtensions
         var dirInfo = new DirectoryInfo(fileSystemDirectoryInfo.FullName());
         if (!dirInfo.Exists)
         {
-            Trace.WriteLine($"Directory does not exist [{fileSystemDirectoryInfo.Path}]", TraceLevel.Warning.ToString());
             return [];
         }
         return dirInfo.EnumerateFiles(searchPattern ?? "*.*", searchOption ?? SearchOption.TopDirectoryOnly);
@@ -412,8 +411,6 @@ public static class FileSystemDirectoryInfoExtensions
 
         if (!Directory.Exists(dir))
         {
-            Trace.WriteLine($"Delete Empty Dirs called with a directory that does not exist [{dir}]",
-                TraceLevel.Warning.ToString());
             return;
         }
 

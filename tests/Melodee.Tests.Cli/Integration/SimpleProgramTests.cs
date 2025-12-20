@@ -14,7 +14,7 @@ public class SimpleProgramTests
         var programType = typeof(Melodee.Cli.Program);
         
         programType.Should().NotBeNull();
-        programType.Assembly.GetName().Name.Should().Be("Melodee.Cli");
+        programType.Assembly.GetName().Name.Should().Be("mcli");
     }
 
     [Fact]

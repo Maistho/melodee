@@ -16,7 +16,8 @@ public class FixedCommandTests
         var settings = new LibrarySettings();
 
         settings.LibraryName.Should().Be(string.Empty);
-        settings.Verbose.Should().BeTrue();
+        // Note: [DefaultValue] attribute is CLI metadata, not actual initialization
+        settings.Verbose.Should().BeFalse(); // bool default is false
     }
 
     [Fact]
@@ -24,8 +25,9 @@ public class FixedCommandTests
     {
         var settings = new LibraryProcessSettings();
 
-        settings.CopyMode.Should().BeTrue();
-        settings.ForceMode.Should().BeTrue();
+        // Note: [DefaultValue] attribute is CLI metadata, not actual initialization
+        settings.CopyMode.Should().BeFalse(); // bool default is false
+        settings.ForceMode.Should().BeFalse(); // bool default is false
         settings.ProcessLimit.Should().BeNull();
         settings.PreDiscoveryScript.Should().BeNull();
     }
@@ -62,7 +64,8 @@ public class FixedCommandTests
     {
         var settings = new ConfigurationSetSetting();
 
-        settings.Verbose.Should().BeTrue();
+        // Note: [DefaultValue] attribute is CLI metadata, not actual initialization
+        settings.Verbose.Should().BeFalse(); // bool default is false
         settings.Remove.Should().BeFalse();
         settings.Key.Should().Be(string.Empty);
         settings.Value.Should().Be(string.Empty);

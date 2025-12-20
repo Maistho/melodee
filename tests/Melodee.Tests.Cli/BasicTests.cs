@@ -20,7 +20,7 @@ public class BasicTests
         // Test that we can load the CLI assembly
         var cliAssembly = typeof(Melodee.Cli.Program).Assembly;
         cliAssembly.Should().NotBeNull();
-        cliAssembly.GetName().Name.Should().Be("Melodee.Cli");
+        cliAssembly.GetName().Name.Should().Be("mcli");
     }
 
     [Fact]

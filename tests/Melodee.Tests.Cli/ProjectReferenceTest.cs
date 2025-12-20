@@ -33,7 +33,8 @@ public class ProjectReferenceTest
         };
         
         settings.LibraryName.Should().Be("Test");
-        settings.CopyMode.Should().BeTrue(); // Default value
+        // Note: [DefaultValue] attribute is CLI metadata, not actual initialization
+        settings.CopyMode.Should().BeFalse(); // bool default is false
     }
 
     [Fact]
