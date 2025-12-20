@@ -1,476 +1,552 @@
 @page "/admin/dashboard"
-@using Melodee.Common.Plugins.Scrobbling
-@using Melodee.Common.Services.Caching
-@using Melodee.Common.Services
+@using System.Runtime.InteropServices
+@using Melodee.Blazor.Constants
+@using Melodee.Common.Data
 @using Melodee.Common.Enums
 @using Melodee.Common.Models
 @using Melodee.Common.Models.Scrobbling
-@using Melodee.Blazor.ViewModels
-@using Melodee.Common.Data
+@using Melodee.Common.Plugins.Scrobbling
+@using Melodee.Common.Services.Caching
 @using Microsoft.EntityFrameworkCore
+@using NodaTime
+@using Quartz
+@using Quartz.Impl.Matchers
 @inherits MelodeeComponentBase
 
 @inject IMelodeeConfigurationFactory MelodeeConfigurationFactory
 @inject ICacheManager CacheManager
-@inject INowPlayingRepository NowPlayingInMemoryRepository
+@inject INowPlayingRepository NowPlayingRepository
 @inject NotificationService NotificationService
 @inject StatisticsService StatisticsService
-@inject IDbContextFactory<MelodeeDbContext> ContextFactory
-@inject IServiceProvider ServiceProvider
+@inject LibraryService LibraryService
+@inject IDbContextFactory<MelodeeDbContext> DbContextFactory
+@inject ISchedulerFactory SchedulerFactory
+@inject NavigationManager NavigationManager
 
 @attribute [Authorize(Roles = "Administrator")]
 
 <PageTitle>Admin Dashboard</PageTitle>
 
-<div class="dashboard-container">
-    <h2 class="rz-typography rz-typography-h4 rz-mb-4">System Dashboard</h2>
-
-    <!-- System Controls -->
-    <RadzenCard class="rz-mb-4">
-        <div class="rz-p-3">
-            <h3 class="rz-typography rz-typography-h6 rz-mb-3">System Controls</h3>
-            <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" FlexWrap="FlexWrap.Wrap">
-                <RadzenButton
-                    Icon="cached"
-                    Text="Clear Cache"
-                    Click="@ClearCacheClicked"
-                    Size="ButtonSize.Medium"
-                    ButtonStyle="ButtonStyle.Warning"
-                    class="rz-mb-2" />
-                <RadzenButton
-                    Icon="sweep"
-                    Text="Clear Now Playing"
-                    Click="@ClearNowPlayingClicked"
-                    Size="ButtonSize.Medium"
-                    ButtonStyle="ButtonStyle.Warning"
-                    class="rz-mb-2" />
-                <RadzenButton
-                    Icon="refresh"
-                    Text="Refresh Data"
-                    Click="@RefreshData"
-                    Size="ButtonSize.Medium"
-                    ButtonStyle="ButtonStyle.Primary"
-                    class="rz-mb-2" />
+<RadzenStack Gap="1rem">
+    @* Header with quick actions *@
+    <RadzenRow AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenText TextStyle="TextStyle.H4">
+                <RadzenIcon Icon="dashboard" class="rz-me-1"/>
+                Admin Dashboard
+            </RadzenText>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.End" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                <RadzenButton Icon="refresh" Text="Refresh" Click="@RefreshDashboard" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Primary"/>
+                <RadzenButton Icon="sweep" Text="Clear Cache" Click="@ClearCacheClicked" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Warning"/>
+                <RadzenButton Icon="stop_circle" Text="Clear Now Playing" Click="@ClearNowPlayingClicked" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Warning"/>
             </RadzenStack>
-        </div>
+        </RadzenColumn>
+    </RadzenRow>
+
+    @* Quick Links *@
+    <RadzenCard>
+      <RadzenText TextStyle="TextStyle.H6">
+        <RadzenIcon Icon="link" class="rz-me-1"/>
+        Quick Links
+      </RadzenText>
+      <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap" class="rz-mt-2">
+        <RadzenButton Text="Settings" Icon="settings" Click="@(() => NavigationManager.NavigateTo("/admin/settings"))" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary"/>
+        <RadzenButton Text="Users" Icon="group" Click="@(() => NavigationManager.NavigateTo("/data/users"))" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary"/>
+        <RadzenButton Text="Libraries" Icon="library_music" Click="@(() => NavigationManager.NavigateTo("/data/libraries"))" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary"/>
+        <RadzenButton Text="Artists" Icon="person" Click="@(() => NavigationManager.NavigateTo("/data/artists"))" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary"/>
+        <RadzenButton Text="Albums" Icon="album" Click="@(() => NavigationManager.NavigateTo("/data/albums"))" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary"/>
+        <RadzenButton Text="Songs" Icon="music_note" Click="@(() => NavigationManager.NavigateTo("/data/songs"))" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary"/>
+        <RadzenButton Text="API Docs" Icon="description" Click="@(() => NavigationManager.NavigateTo("/swagger", forceLoad: true))" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Info"/>
+      </RadzenStack>
     </RadzenCard>
 
-    <!-- Key Statistics -->
-    <RadzenCard class="rz-mb-4">
-        <div class="rz-p-3">
-            <h3 class="rz-typography rz-typography-h6 rz-mb-3">Library Statistics</h3>
-            <RadzenRow class="rz-mb-3">
-                @if (LibraryStatistics != null)
+    @* System Health Overview *@
+    <RadzenRow Gap="1rem">
+        <RadzenColumn Size="12" SizeMD="3">
+            <RadzenCard class="rz-background-color-success-lighter" Style="height: 100%;">
+                <RadzenStack Gap="0.25rem" AlignItems="AlignItems.Center">
+                    <RadzenIcon Icon="check_circle" Style="font-size: 2rem; color: var(--rz-success);"/>
+                    <RadzenText TextStyle="TextStyle.Overline">System Status</RadzenText>
+                    <RadzenText TextStyle="TextStyle.H5" Style="color: var(--rz-success);">Online</RadzenText>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="3">
+            <RadzenCard Style="height: 100%;">
+                <RadzenStack Gap="0.25rem" AlignItems="AlignItems.Center">
+                    <RadzenIcon Icon="headphones" Style="font-size: 2rem; color: var(--rz-info);"/>
+                    <RadzenText TextStyle="TextStyle.Overline">Now Playing</RadzenText>
+                    <RadzenText TextStyle="TextStyle.H5">@_nowPlayingCount</RadzenText>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="3">
+            <RadzenCard Style="height: 100%;">
+                <RadzenStack Gap="0.25rem" AlignItems="AlignItems.Center">
+                    <RadzenIcon Icon="group" Style="font-size: 2rem; color: var(--rz-primary);"/>
+                    <RadzenText TextStyle="TextStyle.Overline">Total Users</RadzenText>
+                    <RadzenText TextStyle="TextStyle.H5">@_userCount</RadzenText>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="3">
+            <RadzenCard Style="height: 100%;">
+                <RadzenStack Gap="0.25rem" AlignItems="AlignItems.Center">
+                    <RadzenIcon Icon="schedule" Style="font-size: 2rem; color: var(--rz-secondary);"/>
+                    <RadzenText TextStyle="TextStyle.Overline">Uptime</RadzenText>
+                    <RadzenText TextStyle="TextStyle.H5">@_uptime</RadzenText>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+    </RadzenRow>
+
+    @* Library Statistics *@
+    <RadzenCard>
+        <RadzenText TextStyle="TextStyle.H6">
+            <RadzenIcon Icon="library_music" class="rz-me-1"/>
+            Library Overview
+        </RadzenText>
+        <RadzenRow Gap="1rem" class="rz-mt-2">
+            @foreach (var stat in _libraryStats)
+            {
+                <RadzenColumn Size="6" SizeMD="3" SizeLG="2">
+                    <RadzenStack Gap="0.25rem">
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem">
+                            <RadzenIcon Icon="@stat.Icon" Style="font-size: 1.25rem;"/>
+                            <RadzenText TextStyle="TextStyle.Caption">@stat.Title</RadzenText>
+                        </RadzenStack>
+                        <RadzenText TextStyle="TextStyle.H5">
+                            @if (stat.Type == StatisticType.Count)
+                            {
+                                @($"{stat.DataAsInt:N0}")
+                            }
+                            else
+                            {
+                                @stat.Data
+                            }
+                        </RadzenText>
+                    </RadzenStack>
+                </RadzenColumn>
+            }
+        </RadzenRow>
+    </RadzenCard>
+
+    @* Charts Row *@
+    <RadzenRow Gap="1rem">
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenCard Style="height: 100%;">
+                <RadzenText TextStyle="TextStyle.H6">
+                    <RadzenIcon Icon="trending_up" class="rz-me-1"/>
+                    Songs Added (Last 30 Days)
+                </RadzenText>
+                @if (_songsAddedPerDay.Length > 0)
                 {
-                    @foreach (var stat in LibraryStatistics.Take(6))
-                    {
-                        <RadzenColumn Size="12" SizeMd="4" SizeLg="2">
-                            <div class="stat-card rz-p-3 rz-text-center">
-                                @if (!string.IsNullOrEmpty(stat.Icon))
-                                {
-                                    <RadzenIcon Icon="@stat.Icon" class="rz-mb-2 stat-icon" style="font-size: 2rem;" />
-                                }
-                                <div class="rz-typography rz-typography-body1 rz-text-secondary">@stat.Title</div>
-                                <div class="rz-typography rz-typography-h4 rz-font-weight-bold">@stat.Data</div>
-                            </div>
-                        </RadzenColumn>
-                    }
+                    <RadzenChart Style="height: 280px;">
+                        <RadzenAreaSeries Data="@_songsAddedPerDay" CategoryProperty="Day" ValueProperty="Value" Title="Songs" Fill="var(--rz-primary-light)" Stroke="var(--rz-primary)">
+                            <RadzenCategoryAxis FormatString="MM/dd" Step="5"/>
+                            <RadzenValueAxis>
+                                <RadzenAxisTitle Text="Songs"/>
+                            </RadzenValueAxis>
+                        </RadzenAreaSeries>
+                    </RadzenChart>
                 }
                 else
                 {
-                    <RadzenColumn Size="12">
-                        <RadzenProgressBar Mode="ProgressBarMode.Indeterminate" />
-                    </RadzenColumn>
+                    <RadzenText TextStyle="TextStyle.Body2" class="rz-mt-4">No data available</RadzenText>
                 }
-            </RadzenRow>
-        </div>
-    </RadzenCard>
-
-    <!-- Cache and System Info -->
-    <RadzenRow class="rz-mb-4">
-        <RadzenColumn Size="12" SizeMd="6">
-            <RadzenCard>
-                <div class="rz-p-3">
-                    <h3 class="rz-typography rz-typography-h6 rz-mb-3">Cache Statistics</h3>
-                    <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
-                        @if (CacheStatistics != null)
-                        {
-                            @foreach (var stat in CacheStatistics)
-                            {
-                                <div class="cache-stat-item">
-                                    <div class="rz-typography rz-typography-body1 rz-text-secondary">@stat.Title</div>
-                                    <div class="rz-typography rz-typography-body1 rz-font-weight-medium">@stat.Data</div>
-                                </div>
-                            }
-                        }
-                        else
-                        {
-                            <RadzenProgressBar Mode="ProgressBarMode.Indeterminate" />
-                        }
-                    </RadzenStack>
-                </div>
             </RadzenCard>
         </RadzenColumn>
-        <RadzenColumn Size="12" SizeMd="6">
-            <RadzenCard>
-                <div class="rz-p-3">
-                    <h3 class="rz-typography rz-typography-h6 rz-mb-3">System Information</h3>
-                    <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
-                        <div class="cache-stat-item">
-                            <div class="rz-typography rz-typography-body1 rz-text-secondary">Application Version</div>
-                            <div class="rz-typography rz-typography-body1 rz-font-weight-medium">@GetAppVersion()</div>
-                        </div>
-                        <div class="cache-stat-item">
-                            <div class="rz-typography rz-typography-body1 rz-text-secondary">Database Provider</div>
-                            <div class="rz-typography rz-typography-body1 rz-font-weight-medium">@DatabaseProvider</div>
-                        </div>
-                        <div class="cache-stat-item">
-                            <div class="rz-typography rz-typography-body1 rz-text-secondary">Server Time</div>
-                            <div class="rz-typography rz-typography-body1 rz-font-weight-medium">@DateTimeOffset.Now</div>
-                        </div>
-                        <div class="cache-stat-item">
-                            <div class="rz-typography rz-typography-body1 rz-text-secondary">Cache Provider</div>
-                            <div class="rz-typography rz-typography-body1 rz-font-weight-medium">@CacheManager.GetType().Name</div>
-                        </div>
-                    </RadzenStack>
-                </div>
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenCard Style="height: 100%;">
+                <RadzenText TextStyle="TextStyle.H6">
+                    <RadzenIcon Icon="search" class="rz-me-1"/>
+                    Search Activity (Last 30 Days)
+                </RadzenText>
+                @if (_searchesPerDay.Length > 0)
+                {
+                    <RadzenChart Style="height: 280px;">
+                        <RadzenAreaSeries Data="@_searchesPerDay" CategoryProperty="Day" ValueProperty="Value" Title="Searches" Fill="var(--rz-info-light)" Stroke="var(--rz-info)">
+                            <RadzenCategoryAxis FormatString="MM/dd" Step="5"/>
+                            <RadzenValueAxis>
+                                <RadzenAxisTitle Text="Searches"/>
+                            </RadzenValueAxis>
+                        </RadzenAreaSeries>
+                    </RadzenChart>
+                }
+                else
+                {
+                    <RadzenText TextStyle="TextStyle.Body2" class="rz-mt-4">No data available</RadzenText>
+                }
             </RadzenCard>
         </RadzenColumn>
     </RadzenRow>
 
-    <!-- Job Status and Now Playing -->
-    <RadzenRow class="rz-mb-4">
-        <RadzenColumn Size="12" SizeMd="6">
-            <RadzenCard>
-                <div class="rz-p-3">
-                    <h3 class="rz-typography rz-typography-h6 rz-mb-3">Job Status</h3>
-                    <RadzenDataGrid Data="@JobStatuses"
-                                    TItem="JobStatus"
-                                    AllowFiltering="false"
-                                    AllowPaging="false"
-                                    AllowSorting="false"
-                                    class="rz-data-grid-sm">
-                        <Columns>
-                            <RadzenDataGridColumn TItem="JobStatus" Property="Name" Title="Job" />
-                            <RadzenDataGridColumn TItem="JobStatus" Property="TriggerState" Title="Status" />
-                            <RadzenDataGridColumn TItem="JobStatus" Property="NextFireTime" Title="Next Run" />
-                        </Columns>
-                    </RadzenDataGrid>
-                </div>
+    @* Libraries and Jobs Row *@
+    <RadzenRow Gap="1rem">
+        @* Library Status *@
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenCard Style="height: 100%;">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+                    <RadzenText TextStyle="TextStyle.H6">
+                        <RadzenIcon Icon="folder" class="rz-me-1"/>
+                        Library Status
+                    </RadzenText>
+                    <RadzenButton Text="Manage" Icon="settings" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Click="@(() => NavigationManager.NavigateTo("/data/libraries"))"/>
+                </RadzenStack>
+                <RadzenDataGrid TItem="LibraryInfo" Data="@_libraries" AllowPaging="false" AllowSorting="false" Density="Density.Compact" class="rz-mt-2">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="LibraryInfo" Property="Name" Title="Name" Width="180px"/>
+                        <RadzenDataGridColumn TItem="LibraryInfo" Property="TypeLabel" Title="Type" Width="100px"/>
+                        <RadzenDataGridColumn TItem="LibraryInfo" Title="Last Scan">
+                            <Template Context="lib">
+                                @if (lib.LastScanAt.HasValue)
+                                {
+                                    @lib.LastScanAt.Value.ToString("yyyy-MM-dd HH:mm", null)
+                                }
+                                else
+                                {
+                                    <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-warning);">Never</RadzenText>
+                                }
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="LibraryInfo" Title="Status" Width="100px">
+                            <Template Context="lib">
+                                @if (lib.NeedsScanning)
+                                {
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="Needs Scan" Shade="Shade.Light"/>
+                                }
+                                else
+                                {
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="OK" Shade="Shade.Light"/>
+                                }
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
             </RadzenCard>
         </RadzenColumn>
-        <RadzenColumn Size="12" SizeMd="6">
-            <RadzenCard>
-                <div class="rz-p-3">
-                    <h3 class="rz-typography rz-typography-h6 rz-mb-3">Now Playing</h3>
-                    @if (NowPlayingItems != null && NowPlayingItems.Any())
+
+        @* Scheduled Jobs *@
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenCard Style="height: 100%;">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+                    <RadzenText TextStyle="TextStyle.H6">
+                        <RadzenIcon Icon="schedule" class="rz-me-1"/>
+                        Scheduled Jobs
+                    </RadzenText>
+                    <RadzenButton Text="Manage" Icon="settings" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Click="@(() => NavigationManager.NavigateTo("/admin/jobs"))"/>
+                </RadzenStack>
+                <RadzenDataGrid TItem="JobInfo" Data="@_jobs" AllowPaging="false" AllowSorting="false" Density="Density.Compact" class="rz-mt-2">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="JobInfo" Property="Name" Title="Job" Width="200px"/>
+                        <RadzenDataGridColumn TItem="JobInfo" Title="Last Run">
+                            <Template Context="job">
+                                <RadzenText TextStyle="TextStyle.Caption">@job.PreviousFireTime</RadzenText>
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="JobInfo" Title="Next Run">
+                            <Template Context="job">
+                                <RadzenText TextStyle="TextStyle.Caption">@job.NextFireTime</RadzenText>
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            </RadzenCard>
+        </RadzenColumn>
+    </RadzenRow>
+
+    @* Now Playing and Recent Activity *@
+    <RadzenRow Gap="1rem">
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenCard Style="height: 100%;">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+                    <RadzenText TextStyle="TextStyle.H6">
+                        <RadzenIcon Icon="headphones" class="rz-me-1"/>
+                        Now Playing
+                    </RadzenText>
+                    <RadzenButton Text="View All" Icon="open_in_new" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Click="@(() => NavigationManager.NavigateTo("/activity/nowplaying"))"/>
+                </RadzenStack>
+                @if (_nowPlayingItems.Length == 0)
+                {
+                    <RadzenText TextStyle="TextStyle.Body2" class="rz-mt-2" Style="color: var(--rz-text-secondary-color);">No active listeners</RadzenText>
+                }
+                else
+                {
+                    <RadzenDataGrid TItem="NowPlayingInfo" Data="@_nowPlayingItems" AllowPaging="false" AllowSorting="false" Density="Density.Compact" class="rz-mt-2">
+                        <Columns>
+                            <RadzenDataGridColumn TItem="NowPlayingInfo" Title="User" Width="120px">
+                                <Template Context="np">@np.User.UserName</Template>
+                            </RadzenDataGridColumn>
+                            <RadzenDataGridColumn TItem="NowPlayingInfo" Title="Song">
+                                <Template Context="np">@np.Scrobble.SongTitle</Template>
+                            </RadzenDataGridColumn>
+                            <RadzenDataGridColumn TItem="NowPlayingInfo" Title="Artist">
+                                <Template Context="np">@np.Scrobble.ArtistName</Template>
+                            </RadzenDataGridColumn>
+                        </Columns>
+                    </RadzenDataGrid>
+                }
+            </RadzenCard>
+        </RadzenColumn>
+
+        @* Missing Images *@
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenCard Style="height: 100%;">
+                <RadzenText TextStyle="TextStyle.H6">
+                    <RadzenIcon Icon="image_not_supported" class="rz-me-1"/>
+                    Content Health
+                </RadzenText>
+                <RadzenDataGrid TItem="Statistic" Data="@_missingImages" AllowPaging="false" AllowSorting="false" Density="Density.Compact" class="rz-mt-2">
+                    <Columns>
+                        <RadzenDataGridColumn TItem="Statistic" Property="Title" Title="Item"/>
+                        <RadzenDataGridColumn TItem="Statistic" Title="Count" Width="100px">
+                            <Template Context="stat">
+                                @if (stat.DataAsInt > 0)
+                                {
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="@stat.DataAsInt?.ToString("N0")" Shade="Shade.Light"/>
+                                }
+                                else
+                                {
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="0" Shade="Shade.Light"/>
+                                }
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            </RadzenCard>
+        </RadzenColumn>
+    </RadzenRow>
+
+    @* System Info and Cache *@
+    <RadzenRow Gap="1rem">
+        @* System Information *@
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenCard Style="height: 100%;">
+                <RadzenText TextStyle="TextStyle.H6">
+                    <RadzenIcon Icon="info" class="rz-me-1"/>
+                    System Information
+                </RadzenText>
+                <RadzenStack Gap="0.5rem" class="rz-mt-2">
+                    <RadzenRow>
+                        <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">Server Time (UTC)</RadzenText></RadzenColumn>
+                        <RadzenColumn Size="6"><RadzenText>@_serverTimeUtc</RadzenText></RadzenColumn>
+                    </RadzenRow>
+                    <RadzenRow>
+                        <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">.NET Version</RadzenText></RadzenColumn>
+                        <RadzenColumn Size="6"><RadzenText>@_dotNetVersion</RadzenText></RadzenColumn>
+                    </RadzenRow>
+                    <RadzenRow>
+                        <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">Melodee Version</RadzenText></RadzenColumn>
+                        <RadzenColumn Size="6"><RadzenText>@_melodeeVersion</RadzenText></RadzenColumn>
+                    </RadzenRow>
+                    <RadzenRow>
+                        <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">API Version</RadzenText></RadzenColumn>
+                        <RadzenColumn Size="6"><RadzenText>@_apiVersion</RadzenText></RadzenColumn>
+                    </RadzenRow>
+                    <RadzenRow>
+                        <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">OS</RadzenText></RadzenColumn>
+                        <RadzenColumn Size="6"><RadzenText>@_osDescription</RadzenText></RadzenColumn>
+                    </RadzenRow>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+
+        @* Cache Statistics *@
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenCard Style="height: 100%;">
+                <RadzenText TextStyle="TextStyle.H6">
+                    <RadzenIcon Icon="memory" class="rz-me-1"/>
+                    Cache Statistics
+                </RadzenText>
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" Wrap="FlexWrap.Wrap" class="rz-mt-2">
+                    @if (_cacheStatistics != null)
                     {
-                        <RadzenDataGrid Data="@NowPlayingItems"
-                                        TItem="NowPlayingInfo"
-                                        AllowFiltering="false"
-                                        AllowPaging="false"
-                                        AllowSorting="false"
-                                        class="rz-data-grid-sm">
-                            <Columns>
-                                <RadzenDataGridColumn TItem="NowPlayingInfo" Property="Song.Title" Title="Song" />
-                                <RadzenDataGridColumn TItem="NowPlayingInfo" Property="User.UserName" Title="User" />
-                                <RadzenDataGridColumn TItem="NowPlayingInfo" Property="StartedPlayingAt" Title="Started" />
-                            </Columns>
-                        </RadzenDataGrid>
+                        @foreach (var stat in _cacheStatistics)
+                        {
+                            <RadzenCard Variant="Variant.Outlined" Style="min-width: 140px; flex: 1;">
+                                <RadzenStack Gap="0.25rem" AlignItems="AlignItems.Center">
+                                    <RadzenText TextStyle="TextStyle.Caption">@stat.Title</RadzenText>
+                                    <RadzenText TextStyle="TextStyle.H6">@stat.Data</RadzenText>
+                                </RadzenStack>
+                            </RadzenCard>
+                        }
                     }
                     else
                     {
-                        <div class="rz-text-center rz-py-4 rz-text-secondary">No one is currently playing music</div>
+                        <RadzenProgressBar Mode="ProgressBarMode.Indeterminate"/>
                     }
-                </div>
+                </RadzenStack>
             </RadzenCard>
         </RadzenColumn>
     </RadzenRow>
-
-    <!-- Additional Statistics -->
-    <RadzenRow class="rz-mb-4">
-        <RadzenColumn Size="12" SizeMd="6">
-            <RadzenCard>
-                <div class="rz-p-3">
-                    <h3 class="rz-typography rz-typography-h6 rz-mb-3">User Statistics</h3>
-                    <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
-                        @if (UserStatistics != null)
-                        {
-                            @foreach (var stat in UserStatistics)
-                            {
-                                <div class="cache-stat-item">
-                                    <div class="rz-typography rz-typography-body1 rz-text-secondary">@stat.Title</div>
-                                    <div class="rz-typography rz-typography-body1 rz-font-weight-medium">@stat.Data</div>
-                                </div>
-                            }
-                        }
-                        else
-                        {
-                            <RadzenProgressBar Mode="ProgressBarMode.Indeterminate" />
-                        }
-                    </RadzenStack>
-                </div>
-            </RadzenCard>
-        </RadzenColumn>
-        <RadzenColumn Size="12" SizeMd="6">
-            <RadzenCard>
-                <div class="rz-p-3">
-                    <h3 class="rz-typography rz-typography-h6 rz-mb-3">Media Statistics</h3>
-                    <RadzenStack Orientation="Orientation.Vertical" Gap="1rem">
-                        @if (MediaStatistics != null)
-                        {
-                            @foreach (var stat in MediaStatistics)
-                            {
-                                <div class="cache-stat-item">
-                                    <div class="rz-typography rz-typography-body1 rz-text-secondary">@stat.Title</div>
-                                    <div class="rz-typography rz-typography-body1 rz-font-weight-medium">@stat.Data</div>
-                                </div>
-                            }
-                        }
-                        else
-                        {
-                            <RadzenProgressBar Mode="ProgressBarMode.Indeterminate" />
-                        }
-                    </RadzenStack>
-                </div>
-            </RadzenCard>
-        </RadzenColumn>
-    </RadzenRow>
-</div>
-
-<style>
-    .dashboard-container {
-        padding: 1rem;
-    }
-
-    .stat-card {
-        background: var(--rz-card-background);
-        border-radius: var(--rz-border-radius);
-        border: 1px solid var(--rz-card-border);
-        transition: all 0.3s ease;
-    }
-
-    .stat-card:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--rz-card-shadow);
-    }
-
-    .stat-icon {
-        color: var(--rz-primary);
-    }
-
-    .cache-stat-item {
-        display: flex;
-        justify-content: space-between;
-        padding: 0.5rem 0;
-        border-bottom: 1px solid var(--rz-border-color);
-    }
-
-    .cache-stat-item:last-child {
-        border-bottom: none;
-    }
-
-    .rz-data-grid-sm .rz-data-grid-table {
-        font-size: 0.875rem;
-    }
-
-    .rz-data-grid-sm .rz-data-grid-header {
-        background-color: var(--rz-gray-100);
-    }
-
-    .rz-data-grid-sm .rz-data-grid-cell {
-        padding: 0.5rem 0.75rem;
-    }
-</style>
+</RadzenStack>
 
 @code {
-    private IEnumerable<Statistic>? LibraryStatistics;
-    private IEnumerable<Statistic>? CacheStatistics;
-    private IEnumerable<Statistic>? UserStatistics;
-    private IEnumerable<Statistic>? MediaStatistics;
-    private List<JobStatus>? JobStatuses;
-    private NowPlayingInfo[]? NowPlayingItems;
-    private string DatabaseProvider = "Loading...";
+    private IEnumerable<Statistic>? _cacheStatistics;
+    private Statistic[] _libraryStats = [];
+    private Statistic[] _missingImages = [];
+    private TimeSeriesPoint[] _songsAddedPerDay = [];
+    private TimeSeriesPoint[] _searchesPerDay = [];
+    private LibraryInfo[] _libraries = [];
+    private JobInfo[] _jobs = [];
+    private NowPlayingInfo[] _nowPlayingItems = [];
+
+    private int _nowPlayingCount;
+    private int _userCount;
+    private string _uptime = "---";
+    private string _serverTimeUtc = "---";
+    private string _dotNetVersion = "---";
+    private string _melodeeVersion = "---";
+    private string _apiVersion = "---";
+    private string _osDescription = "---";
+
+    private LocalDate _rangeStart;
+    private LocalDate _rangeEnd;
+    private static readonly DateTime StartTime = DateTime.UtcNow;
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadDataAsync();
+        await base.OnInitializedAsync();
+        await LoadDashboardDataAsync();
     }
 
-    private async Task LoadDataAsync()
+    private async Task RefreshDashboard()
     {
-        // Load all statistics in parallel
+        await LoadDashboardDataAsync();
+        StateHasChanged();
+        NotificationService.Notify(new NotificationMessage
+        {
+            Severity = NotificationSeverity.Info,
+            Summary = "Dashboard refreshed",
+            Duration = ToastTime
+        });
+    }
+
+    private async Task LoadDashboardDataAsync()
+    {
+        var zone = DateTimeZone.Utc;
+        var today = SystemClock.Instance.GetCurrentInstant().InZone(zone).Date;
+        _rangeEnd = today;
+        _rangeStart = today.PlusDays(-29);
+
+        // Load system info
+        _serverTimeUtc = SystemClock.Instance.GetCurrentInstant().InUtc().LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss", null);
+        _dotNetVersion = RuntimeInformation.FrameworkDescription;
+        _melodeeVersion = typeof(Program).Assembly.GetName().Version?.ToString() ?? "Unknown";
+        _osDescription = RuntimeInformation.OSDescription;
+        _uptime = FormatUptime(DateTime.UtcNow - StartTime);
+
+        var config = await MelodeeConfigurationFactory.GetConfigurationAsync();
+        _apiVersion = config.GetValue<string>(SettingRegistry.OpenSubsonicServerVersion) ?? "Unknown";
+
+        // Load cache statistics
+        _cacheStatistics = CacheManager.CacheStatistics();
+
+        // Load all data in parallel
         var statsTask = StatisticsService.GetStatisticsAsync();
-        var cacheStatsTask = Task.Run(() => CacheManager.CacheStatistics());
-        var userStatsTask = GetUserStatisticsAsync();
-        var mediaStatsTask = GetMediaStatisticsAsync();
-        var jobsTask = GetJobStatusesAsync();
-        var nowPlayingTask = NowPlayingInMemoryRepository.GetNowPlayingAsync();
-        var dbProviderTask = GetDatabaseProviderAsync();
+        var missingImagesTask = StatisticsService.GetMissingImagesAsync();
+        var songsAddedTask = StatisticsService.GetSongsAddedPerDayAsync(_rangeStart, _rangeEnd, "UTC");
+        var searchesTask = StatisticsService.GetSearchesPerDayAsync(_rangeStart, _rangeEnd, "UTC");
+        var nowPlayingTask = NowPlayingRepository.GetNowPlayingAsync();
+        var librariesTask = LoadLibrariesAsync();
+        var jobsTask = LoadJobsAsync();
 
-        await Task.WhenAll(statsTask, cacheStatsTask, userStatsTask, mediaStatsTask, jobsTask, nowPlayingTask, dbProviderTask);
+        await Task.WhenAll(statsTask, missingImagesTask, songsAddedTask, searchesTask, nowPlayingTask, librariesTask, jobsTask);
 
-        LibraryStatistics = (await statsTask).Data;
-        CacheStatistics = await cacheStatsTask;
-        UserStatistics = (await userStatsTask).Data;
-        MediaStatistics = (await mediaStatsTask).Data;
-        JobStatuses = await jobsTask;
-        NowPlayingItems = (await nowPlayingTask).Data;
-        DatabaseProvider = await dbProviderTask;
+        _libraryStats = statsTask.Result.Data ?? [];
+        _missingImages = missingImagesTask.Result.Data ?? [];
+        _songsAddedPerDay = songsAddedTask.Result.Data ?? [];
+        _searchesPerDay = searchesTask.Result.Data ?? [];
+        _nowPlayingItems = nowPlayingTask.Result.Data ?? [];
+        _nowPlayingCount = _nowPlayingItems.Length;
+        _libraries = await librariesTask;
+        _jobs = await jobsTask;
+
+        // Extract user count from stats
+        var userStat = _libraryStats.FirstOrDefault(s => s.Category == StatisticCategory.CountUsers);
+        _userCount = userStat?.DataAsInt ?? 0;
     }
 
-    private async Task<OperationResult<Statistic[]>> GetUserStatisticsAsync()
+    private async Task<LibraryInfo[]> LoadLibrariesAsync()
     {
-        var stats = new List<Statistic>();
+        await using var context = await DbContextFactory.CreateDbContextAsync();
+        var libraries = await context.Libraries
+            .AsNoTracking()
+            .OrderBy(l => l.Type)
+            .ThenBy(l => l.Name)
+            .ToListAsync();
 
-        var usersCount = (await StatisticsService.GetStatisticsAsync()).Data?.FirstOrDefault(s => s.Category == StatisticCategory.CountUsers);
-        if (usersCount != null)
-        {
-            stats.Add(usersCount);
-        }
-
-        // Add more user-related stats here
-        return new OperationResult<Statistic[]> { Data = stats.ToArray() };
+        return libraries.Select(l => new LibraryInfo(
+            l.Name,
+            l.TypeValue.ToString(),
+            l.LastScanAt?.ToDateTimeUtc(),
+            l.NeedsScanning()
+        )).ToArray();
     }
 
-    private async Task<OperationResult<Statistic[]>> GetMediaStatisticsAsync()
+    private async Task<JobInfo[]> LoadJobsAsync()
     {
-        var stats = new List<Statistic>();
-
-        // Get file size and duration from the main statistics
-        var allStats = (await StatisticsService.GetStatisticsAsync()).Data;
-
-        var fileSizeStat = allStats?.FirstOrDefault(s => s.Title.Contains("Total: Song Mb"));
-        if (fileSizeStat != null)
-        {
-            stats.Add(fileSizeStat);
-        }
-
-        var durationStat = allStats?.FirstOrDefault(s => s.Title.Contains("Total: Song Duration"));
-        if (durationStat != null)
-        {
-            stats.Add(durationStat);
-        }
-
-        // Add genres count
-        var genresStat = allStats?.FirstOrDefault(s => s.Title.Contains("Genres"));
-        if (genresStat != null)
-        {
-            stats.Add(genresStat);
-        }
-
-        return new OperationResult<Statistic[]> { Data = stats.ToArray() };
-    }
-
-    private async Task<List<JobStatus>> GetJobStatusesAsync()
-    {
-        var result = new List<JobStatus>();
-
+        var result = new List<JobInfo>();
         try
         {
-            var scheduler = ServiceProvider.GetService<Quartz.IScheduler>();
-            if (scheduler != null)
+            var scheduler = await SchedulerFactory.GetScheduler();
+            var jobGroups = await scheduler.GetJobGroupNames();
+
+            foreach (var group in jobGroups)
             {
-                var jobGroups = await scheduler.GetJobGroupNames();
-
-                foreach (var group in jobGroups)
+                var groupMatcher = GroupMatcher<JobKey>.GroupContains(group);
+                var jobKeys = await scheduler.GetJobKeys(groupMatcher);
+                foreach (var jobKey in jobKeys)
                 {
-                    var groupMatcher = Quartz.Impl.Matchers.GroupMatcher<Quartz.JobKey>.GroupEquals(group);
-                    var jobKeys = await scheduler.GetJobKeys(groupMatcher);
-
-                    foreach (var jobKey in jobKeys)
+                    var triggers = await scheduler.GetTriggersOfJob(jobKey);
+                    foreach (var trigger in triggers)
                     {
-                        var triggers = await scheduler.GetTriggersOfJob(jobKey);
-
-                        foreach (var trigger in triggers)
-                        {
-                            var triggerState = await scheduler.GetTriggerState(trigger.Key);
-                            var nextFireTime = trigger.GetNextFireTimeUtc()?.ToString("yyyy-MM-dd HH:mm:ss") ?? "None";
-                            var previousFireTime = trigger.GetPreviousFireTimeUtc()?.ToString("yyyy-MM-dd HH:mm:ss") ?? "None";
-
-                            result.Add(new JobStatus(
-                                Group: group,
-                                Name: jobKey.Name,
-                                TriggerName: trigger.Key.Name,
-                                TriggerGroup: trigger.Key.Group,
-                                TriggerType: trigger.GetType().Name,
-                                TriggerState: triggerState.ToString(),
-                                NextFireTime: nextFireTime,
-                                PreviousFireTime: previousFireTime
-                            ));
-                        }
+                        var nextFireTime = trigger.GetNextFireTimeUtc();
+                        var previousFireTime = trigger.GetPreviousFireTimeUtc();
+                        result.Add(new JobInfo(
+                            jobKey.Name,
+                            previousFireTime?.LocalDateTime.ToString("MM/dd HH:mm") ?? "---",
+                            nextFireTime?.LocalDateTime.ToString("MM/dd HH:mm") ?? "---"
+                        ));
                     }
                 }
             }
         }
         catch
         {
-            // If we can't get job statuses, return an empty list
+            // Jobs may be disabled
         }
 
-        return result;
+        return result.ToArray();
+    }
+
+    private static string FormatUptime(TimeSpan uptime)
+    {
+        if (uptime.TotalDays >= 1)
+            return $"{(int)uptime.TotalDays}d {uptime.Hours}h";
+        if (uptime.TotalHours >= 1)
+            return $"{(int)uptime.TotalHours}h {uptime.Minutes}m";
+        return $"{uptime.Minutes}m {uptime.Seconds}s";
     }
 
     private void ClearCacheClicked()
     {
         CacheManager.Clear();
         MelodeeConfigurationFactory.Reset();
-        NotificationService.Notify(NotificationMessageForResult(new OperationResult<bool> { Data = true }, "Cleared cache successfully", ToastTime));
-        _ = Task.Run(async () =>
-        {
-            await InvokeAsync(async () =>
-            {
-                await LoadDataAsync();
-                StateHasChanged();
-            });
-        });
+        _cacheStatistics = CacheManager.CacheStatistics();
+        NotificationService.Notify(NotificationMessageForResult(new OperationResult<bool> { Data = true }, "cleared cache", ToastTime));
     }
 
     private async Task ClearNowPlayingClicked()
     {
-        await NowPlayingInMemoryRepository.ClearNowPlayingAsync();
-        NotificationService.Notify(NotificationMessageForResult(new OperationResult<bool> { Data = true }, "Cleared now playing list", ToastTime));
-        await LoadDataAsync();
-        StateHasChanged();
+        await NowPlayingRepository.ClearNowPlayingAsync();
+        _nowPlayingItems = [];
+        _nowPlayingCount = 0;
+        NotificationService.Notify(NotificationMessageForResult(new OperationResult<bool> { Data = true }, "cleared now playing", ToastTime));
     }
 
-    private async Task RefreshData()
-    {
-        await LoadDataAsync();
-        StateHasChanged();
-    }
-
-    private string GetAppVersion()
-    {
-        return typeof(Program).Assembly.GetName().Version?.ToString() ?? "Unknown";
-    }
-
-    private async Task<string> GetDatabaseProviderAsync()
-    {
-        try
-        {
-            // Get database provider from the DbContext factory
-            using var context = await ContextFactory.CreateDbContextAsync(CancellationToken.None);
-            var providerName = context.Database.ProviderName;
-
-            if (!string.IsNullOrEmpty(providerName))
-            {
-                if (providerName.Contains("Npgsql"))
-                    return "PostgreSQL";
-                if (providerName.Contains("Sqlite"))
-                    return "SQLite";
-                if (providerName.Contains("SqlServer"))
-                    return "SQL Server";
-                if (providerName.Contains("MySql"))
-                    return "MySQL";
-                return providerName; // return the raw provider name if not recognized
-            }
-
-            return "Unknown";
-        }
-        catch
-        {
-            return "Unknown";
-        }
-    }
+    private record LibraryInfo(string Name, string TypeLabel, DateTime? LastScanAt, bool NeedsScanning);
+    private record JobInfo(string Name, string PreviousFireTime, string NextFireTime);
 }
