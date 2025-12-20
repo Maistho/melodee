@@ -4,6 +4,8 @@ using Melodee.Common.Plugins.MetaData.Directory.Nfo.Handlers.Jellyfin.Models.Jel
 
 namespace Melodee.Common.Plugins.MetaData.Directory.Nfo.Handlers.Jellyfin;
 
+// NOTE: XDocument.Parse and XDocument.Load have XXE protection enabled by default in .NET Core and later.
+// External entities and DTD processing are disabled by default, preventing XML External Entity attacks.
 public class JellyfinXmlDeserializer<T> where T : class, new()
 {
     public T Deserialize(string xmlContent)
