@@ -280,6 +280,10 @@ public class ScrobbleController(
         }
     }
 
+    // NOTE: MD5 is required here by the Last.fm API specification for authentication signatures.
+    // The API signature must be computed as MD5 per the Last.fm Web Services Authentication protocol.
+    // This cannot be changed without breaking compatibility with Last.fm's API.
+    // See: https://www.last.fm/api/authentication
     private static string BuildApiSignature(string apiKey, string secret, string token)
     {
         var sigString = $"api_key{apiKey}methodauth.getSessiontoken{token}{secret}";

@@ -126,7 +126,7 @@ public abstract class ControllerBase(EtagRepository etagRepository, ISerializer 
             context.HttpContext.Request.Cookies.TryGetValue("melodee_blazor_token", out var melodeeBlazorTokenCookie);
             if (!string.IsNullOrWhiteSpace(melodeeBlazorTokenCookie))
             {
-                var cookieHash = HashHelper.CreateMd5(DateTime.UtcNow.ToString(MelodeeBlazorCookieMiddleware.DateFormat) + configuration.GetValue<string>(SettingRegistry.EncryptionPrivateKey)) ?? string.Empty;
+                var cookieHash = HashHelper.CreateSha256(DateTime.UtcNow.ToString(MelodeeBlazorCookieMiddleware.DateFormat) + configuration.GetValue<string>(SettingRegistry.EncryptionPrivateKey)) ?? string.Empty;
                 requiresAuth = melodeeBlazorTokenCookie != cookieHash;
             }
         }

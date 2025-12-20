@@ -22,7 +22,7 @@ public class MelodeeBlazorCookieMiddleware(RequestDelegate next, IMelodeeConfigu
 
         var configuration = await configurationFactory.GetConfigurationAsync();
         context.Response.Cookies.Append(CookieName,
-            HashHelper.CreateMd5(DateTime.UtcNow.ToString(DateFormat) + configuration.GetValue<string>(SettingRegistry.EncryptionPrivateKey)) ?? string.Empty,
+            HashHelper.CreateSha256(DateTime.UtcNow.ToString(DateFormat) + configuration.GetValue<string>(SettingRegistry.EncryptionPrivateKey)) ?? string.Empty,
             new CookieOptions
             {
                 HttpOnly = true,
@@ -42,7 +42,7 @@ public class MelodeeBlazorCookieMiddleware(RequestDelegate next, IMelodeeConfigu
         }
 
         var configuration = await configurationFactory.GetConfigurationAsync();
-        return HashHelper.CreateMd5(DateTime.UtcNow.ToString("yyyyMMdd") + configuration.GetValue<string>(SettingRegistry.EncryptionPrivateKey)) == cookie;
+        return HashHelper.CreateSha256(DateTime.UtcNow.ToString("yyyyMMdd") + configuration.GetValue<string>(SettingRegistry.EncryptionPrivateKey)) == cookie;
     }
 }
 
