@@ -11,6 +11,7 @@ using Melodee.Common.Extensions;
 using Melodee.Common.Models;
 using Melodee.Common.Models.Collection;
 using Melodee.Common.Models.Streaming;
+using Melodee.Common.Plugins.MetaData.Song;
 using Melodee.Common.Security;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services;
@@ -37,6 +38,7 @@ public class SongsController(
     StreamingLimiter streamingLimiter,
     IConfiguration configuration,
     IBlacklistService blacklistService,
+    ILyricPlugin lyricPlugin,
     IMelodeeConfigurationFactory configurationFactory) : ControllerBase(
     etagRepository,
     serializer,
@@ -102,6 +104,92 @@ public class SongsController(
         return Ok(songResult.Data
             .ToSongDataInfo(userSong)
             .ToSongModel(baseUrl, user.ToUserModel(baseUrl), user.PublicKey, GetClientBinding()));
+    }
+
+    /// <summary>
+    /// Get lyrics for a song by ID.
+    /// Returns structured lyrics with optional timing information for synchronized display.
+    /// </summary>
+    [HttpGet]
+    [Route("{id:guid}/lyrics")]
+    [ProducesResponseType(typeof(Models.Lyrics), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetLyricsAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        if (!ApiRequest.IsAuthorized)
+        {
+            return ApiUnauthorized();
+        }
+
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
+        {
+            return ApiUnauthorized();
+        }
+
+        if (user.IsLocked)
+        {
+            return ApiUserLocked();
+        }
+
+        var songResult = await songService.GetSongWithPathInfoAsync(id, cancellationToken).ConfigureAwait(false);
+        if (!songResult.IsSuccess)
+        {
+            return ApiNotFound("Song");
+        }
+
+        var (song, libraryPath, artistDirectory) = songResult.Data;
+
+        // Try to get structured/synced lyrics first
+        var lyricListResult = await lyricPlugin.GetLyricListAsync(
+            Path.Combine(libraryPath, artistDirectory).ToFileSystemDirectoryInfo(),
+            new FileSystemFileInfo
+            {
+                Name = song.FileName,
+                Size = song.FileSize
+            },
+            cancellationToken).ConfigureAwait(false);
+
+        if (lyricListResult.IsSuccess && lyricListResult.Data != null)
+        {
+            var lyricList = lyricListResult.Data;
+            return Ok(new Models.Lyrics(
+                id,
+                lyricList.Lang,
+                lyricList.Synced,
+                lyricList.Synced ? null : string.Join("\n", lyricList.Line.Select(l => l.Value)),
+                lyricList.Line.Select(l => new LyricsLine(l.Value, l.Start)).ToArray(),
+                lyricList.DisplayArtist,
+                lyricList.DisplayTitle,
+                lyricList.Offset));
+        }
+
+        // Fall back to plain lyrics
+        var lyricsResult = await lyricPlugin.GetLyricsAsync(
+            Path.Combine(libraryPath, artistDirectory).ToFileSystemDirectoryInfo(),
+            new FileSystemFileInfo
+            {
+                Name = song.FileName,
+                Size = song.FileSize
+            },
+            cancellationToken).ConfigureAwait(false);
+
+        if (lyricsResult.IsSuccess && lyricsResult.Data != null)
+        {
+            var lyrics = lyricsResult.Data;
+            return Ok(new Models.Lyrics(
+                id,
+                "und", // undetermined language
+                false,
+                lyrics.Value,
+                null,
+                lyrics.Artist.Nullify(),
+                lyrics.Title.Nullify(),
+                null));
+        }
+
+        return ApiNotFound("Lyrics");
     }
 
     /// <summary>
