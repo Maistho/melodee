@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Rendering;
 using Radzen;
 
 namespace Melodee.Blazor.Extensions;

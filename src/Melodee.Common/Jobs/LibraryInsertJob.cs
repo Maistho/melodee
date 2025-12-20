@@ -1,6 +1,5 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Threading;
 using IdSharp.Common.Utils;
 using Melodee.Common.Configuration;
 using Melodee.Common.Constants;
@@ -22,7 +21,6 @@ using NodaTime;
 using Quartz;
 using Rebus.Bus;
 using Serilog;
-using SmartFormat;
 using dbModels = Melodee.Common.Data.Models;
 using SearchOption = System.IO.SearchOption;
 

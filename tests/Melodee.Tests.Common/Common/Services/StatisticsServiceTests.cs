@@ -1,7 +1,6 @@
 using Melodee.Common.Data.Models;
 using Melodee.Common.Enums;
 using Melodee.Common.Extensions;
-using Melodee.Common.Services;
 using NodaTime;
 
 namespace Melodee.Tests.Common.Common.Services;

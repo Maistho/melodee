@@ -5,7 +5,6 @@ using Melodee.Common.Models;
 using Melodee.Common.Services.Caching;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
-using NodaTime.TimeZones;
 using Serilog;
 
 namespace Melodee.Common.Services;

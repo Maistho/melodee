@@ -1,4 +1,3 @@
-using System;
 using Melodee.Common.Models.SearchEngines;
 using Melodee.Common.Plugins.SearchEngine.ITunes;
 using Melodee.Common.Services.Caching;

@@ -4,11 +4,8 @@ using Melodee.Blazor.Controllers.Melodee.Models;
 using Melodee.Blazor.Services;
 using Melodee.Common.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.Extensions.Logging;
 
 namespace Melodee.Blazor.Filters;
 

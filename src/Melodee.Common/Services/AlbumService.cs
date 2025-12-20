@@ -11,7 +11,6 @@ using Melodee.Common.MessageBus.Events;
 using Melodee.Common.Models.Collection;
 using Melodee.Common.Models.Extensions;
 using Melodee.Common.Models.OpenSubsonic;
-using Melodee.Common.Models.OpenSubsonic.DTO;
 using Melodee.Common.Models.OpenSubsonic.Enums;
 using Melodee.Common.Models.OpenSubsonic.Requests;
 using Melodee.Common.Plugins.Conversion.Image;

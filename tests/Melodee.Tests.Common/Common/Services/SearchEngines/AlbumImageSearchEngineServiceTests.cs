@@ -1,5 +1,4 @@
 using Melodee.Common.Models.SearchEngines;
-using Melodee.Common.Services.SearchEngines;
 
 namespace Melodee.Tests.Common.Common.Services.SearchEngines;
 

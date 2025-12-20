@@ -1,8 +1,5 @@
 using System.Security.Claims;
 using Bunit;
-using Melodee.Blazor.Services;
-using Melodee.Common.Configuration;
-using Melodee.Common.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

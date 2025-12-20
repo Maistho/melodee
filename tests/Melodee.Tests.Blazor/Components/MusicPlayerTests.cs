@@ -1,13 +1,10 @@
 using System.Security.Claims;
 using Bunit;
 using Melodee.Blazor.Components.Pages;
-using Melodee.Blazor.Services;
-using Melodee.Common.Configuration;
 using Melodee.Common.Data;
 using Melodee.Common.Models.Collection;
 using Melodee.Common.Models.Scrobbling;
 using Melodee.Common.Plugins.Scrobbling;
-using Melodee.Common.Services;
 using Melodee.Common.Services.Caching;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -17,7 +14,6 @@ using Microsoft.JSInterop;
 using Moq;
 using NodaTime;
 using Serilog;
-using Xunit;
 
 namespace Melodee.Tests.Blazor.Components;
 

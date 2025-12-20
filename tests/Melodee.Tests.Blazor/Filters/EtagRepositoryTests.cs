@@ -1,5 +1,4 @@
 using Melodee.Blazor.Filters;
-using Xunit;
 
 namespace Melodee.Tests.Blazor.Filters;
 

@@ -8,7 +8,6 @@ using Melodee.Common.Models.Collection.Extensions;
 using Melodee.Common.Models.Search;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services;
-using Melodee.Common.Utility;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

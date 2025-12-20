@@ -7,7 +7,6 @@ using Melodee.Blazor.Controllers.Melodee.Models;
 using Melodee.Blazor.Filters;
 using Melodee.Blazor.Services;
 using Melodee.Common.Configuration;
-using Melodee.Common.Data.Models.Extensions;
 using Melodee.Common.Extensions;
 using Melodee.Common.Models;
 using Melodee.Common.Serialization;

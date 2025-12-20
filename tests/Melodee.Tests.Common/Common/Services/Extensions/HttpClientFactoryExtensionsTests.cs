@@ -1,7 +1,4 @@
-using System.Net;
 using Melodee.Common.Services.Extensions;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Http;
 using Moq;
 
 namespace Melodee.Tests.Common.Common.Services.Extensions;

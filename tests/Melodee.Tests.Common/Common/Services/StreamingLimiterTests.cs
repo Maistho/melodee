@@ -1,6 +1,5 @@
 using Melodee.Common.Configuration;
 using Melodee.Common.Services;
-using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace Melodee.Tests.Common.Common.Services;

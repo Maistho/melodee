@@ -1,6 +1,5 @@
 using FluentAssertions;
 using Melodee.Blazor.Controllers.Melodee.Models;
-using Xunit;
 
 namespace Melodee.Tests.Blazor.Controllers.Melodee;
 

@@ -6,7 +6,6 @@ using Melodee.Common.Services;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using Serilog;
-using Xunit;
 using DbAlbum = Melodee.Common.Data.Models.Album;
 using DbArtist = Melodee.Common.Data.Models.Artist;
 using DbSong = Melodee.Common.Data.Models.Song;

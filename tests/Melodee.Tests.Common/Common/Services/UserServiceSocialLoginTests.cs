@@ -1,7 +1,6 @@
 using FluentAssertions;
 using Melodee.Common.Data.Models;
 using Melodee.Common.Extensions;
-using Melodee.Common.Models;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 

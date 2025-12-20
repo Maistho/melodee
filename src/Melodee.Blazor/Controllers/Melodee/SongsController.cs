@@ -15,7 +15,6 @@ using Melodee.Common.Plugins.MetaData.Song;
 using Melodee.Common.Security;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services;
-using Melodee.Common.Utility;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

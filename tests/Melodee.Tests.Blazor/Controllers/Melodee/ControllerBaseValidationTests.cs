@@ -1,8 +1,4 @@
 using FluentAssertions;
-using Melodee.Blazor.Controllers.Melodee.Models;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Xunit;
 
 namespace Melodee.Tests.Blazor.Controllers.Melodee;
 

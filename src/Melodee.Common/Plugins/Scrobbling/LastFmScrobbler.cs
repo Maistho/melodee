@@ -1,17 +1,12 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Hqub.Lastfm;
 using Melodee.Common.Configuration;
 using Melodee.Common.Constants;
 using Melodee.Common.Data;
-using Melodee.Common.Enums;
 using Melodee.Common.Extensions;
 using Melodee.Common.Models;
 using Melodee.Common.Models.Scrobbling;
 using Melodee.Common.Utility;
 using Microsoft.EntityFrameworkCore;
-using NodaTime;
 using Serilog;
 using Scrobble = Hqub.Lastfm.Entities.Scrobble;
 

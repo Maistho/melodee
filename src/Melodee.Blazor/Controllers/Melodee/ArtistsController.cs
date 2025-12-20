@@ -11,13 +11,10 @@ using Melodee.Common.Models;
 using Melodee.Common.Models.Collection;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services;
-using Melodee.Common.Utility;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using Nextended.Core.Extensions;
-using Album = Melodee.Blazor.Controllers.Melodee.Models.Album;
 using Artist = Melodee.Blazor.Controllers.Melodee.Models.Artist;
 
 namespace Melodee.Blazor.Controllers.Melodee;

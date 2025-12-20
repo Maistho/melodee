@@ -1,5 +1,4 @@
 using Melodee.Common.Data.Models;
-using Melodee.Common.Data.Models.Extensions;
 using Melodee.Common.Enums;
 using Melodee.Common.Extensions;
 using Melodee.Common.MessageBus.Events;

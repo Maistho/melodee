@@ -1,4 +1,3 @@
-using Melodee.Common.Models.OpenSubsonic;
 using Melodee.Common.Services.Extensions;
 using NodaTime;
 

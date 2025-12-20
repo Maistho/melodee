@@ -3,7 +3,6 @@ using Melodee.Blazor.Controllers.Melodee.Extensions;
 using Melodee.Blazor.Controllers.Melodee.Models;
 using Melodee.Blazor.Filters;
 using Melodee.Common.Configuration;
-using Melodee.Common.Data.Models.Extensions;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;

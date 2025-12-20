@@ -1,7 +1,4 @@
-using Melodee.Common.Enums;
-using Melodee.Common.Metadata.AudioTags;
 using Melodee.Common.Metadata.AudioTags.Readers;
-using Melodee.Common.Utility;
 
 namespace Melodee.Tests.Common.MetaData.AudioTags;
 

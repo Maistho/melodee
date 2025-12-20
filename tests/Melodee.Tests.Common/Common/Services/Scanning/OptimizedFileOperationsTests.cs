@@ -1,7 +1,4 @@
-using System.Collections.Concurrent;
-using System.Text;
 using Melodee.Common.Services.Scanning;
-using Microsoft.Extensions.Logging;
 
 namespace Melodee.Tests.Common.Common.Services.Scanning;
 

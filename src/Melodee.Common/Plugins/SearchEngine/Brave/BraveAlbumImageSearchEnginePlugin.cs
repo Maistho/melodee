@@ -1,5 +1,4 @@
 using Melodee.Common.Configuration;
-using Melodee.Common.Extensions;
 using Melodee.Common.Models;
 using Melodee.Common.Models.SearchEngines;
 using Serilog;

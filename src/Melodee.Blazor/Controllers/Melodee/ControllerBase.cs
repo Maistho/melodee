@@ -1,11 +1,9 @@
-using System.Diagnostics;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
 using Melodee.Blazor.Controllers.Melodee.Models;
 using Melodee.Blazor.Filters;
 using Melodee.Common.Configuration;
 using Melodee.Common.Constants;
-using Melodee.Common.Data.Models;
 using Melodee.Common.Extensions;
 using Melodee.Common.Models;
 using Melodee.Common.Models.OpenSubsonic.Requests;
@@ -15,7 +13,6 @@ using Melodee.Common.Services;
 using Melodee.Common.Utility;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.Extensions.Logging;
 
 namespace Melodee.Blazor.Controllers.Melodee;
 

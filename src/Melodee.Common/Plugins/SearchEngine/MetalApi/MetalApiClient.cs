@@ -1,4 +1,3 @@
-using System.Net;
 using System.Text.Json;
 using Melodee.Common.Extensions;
 using Serilog;

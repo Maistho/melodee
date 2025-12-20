@@ -1,8 +1,5 @@
-using System.Threading.Tasks;
-using Melodee.Common.Data;
 using Melodee.Tests.Common.Common.Services;
 using Microsoft.EntityFrameworkCore;
-using Xunit;
 
 namespace Melodee.Tests.Common.Common.Performance;
 

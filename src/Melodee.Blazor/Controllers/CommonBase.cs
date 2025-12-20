@@ -3,7 +3,6 @@ using Melodee.Common.Constants;
 using Melodee.Common.Extensions;
 using Melodee.Common.Models.OpenSubsonic.Requests;
 using Melodee.Common.Models.Scrobbling;
-using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 

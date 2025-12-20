@@ -1,5 +1,4 @@
 using FluentAssertions;
-using Melodee.Common.Services.Security;
 using Microsoft.Extensions.Options;
 
 namespace Melodee.Tests.Blazor.Components;

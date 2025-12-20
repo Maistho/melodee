@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using Melodee.Common.Data.Models;
-using Melodee.Common.Models;
 using NodaTime;
 
 namespace Melodee.Tests.Common.Common.Services;

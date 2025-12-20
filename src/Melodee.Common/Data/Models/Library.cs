@@ -4,7 +4,6 @@ using Melodee.Common.Data.Constants;
 using Melodee.Common.Data.Validators;
 using Melodee.Common.Enums;
 using Melodee.Common.Utility;
-using Microsoft.EntityFrameworkCore;
 using NodaTime;
 
 namespace Melodee.Common.Data.Models;

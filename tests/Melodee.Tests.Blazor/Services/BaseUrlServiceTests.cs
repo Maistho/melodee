@@ -1,9 +1,6 @@
-using Melodee.Blazor.Services;
-using Melodee.Common.Configuration;
 using Melodee.Common.Constants;
 using Microsoft.AspNetCore.Http;
 using Moq;
-using Xunit;
 
 namespace Melodee.Tests.Blazor.Services;
 

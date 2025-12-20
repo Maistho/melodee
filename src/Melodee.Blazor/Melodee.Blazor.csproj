@@ -40,62 +40,63 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Melodee.Common\Melodee.Common.csproj"/>
+    <ProjectReference Include="..\Melodee.Common\Melodee.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Asp.Versioning.Mvc"/>
-    <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer"/>
-    <PackageReference Include="AuralizeBlazor"/>
-    <PackageReference Include="Markdig"/>
-    <PackageReference Include="PSC.Blazor.Components.MarkdownEditor"/>
-    <PackageReference Include="Radzen.Blazor"/>
-    <PackageReference Include="Asp.Versioning.Http"/>
-    <PackageReference Include="Blazored.SessionStorage"/>
+    <PackageReference Include="Asp.Versioning.Mvc" />
+    <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" />
+    <PackageReference Include="AuralizeBlazor" />
+    <PackageReference Include="Markdig" />
+    <PackageReference Include="Microsoft.OpenApi" />
+    <PackageReference Include="PSC.Blazor.Components.MarkdownEditor" />
+    <PackageReference Include="Radzen.Blazor" />
+    <PackageReference Include="Asp.Versioning.Http" />
+    <PackageReference Include="Blazored.SessionStorage" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions"/>
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json"/>
+    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
-    <PackageReference Include="Microsoft.IdentityModel.Tokens"/>
-    <PackageReference Include="Quartz.AspNetCore"/>
-    <PackageReference Include="Quartz.Jobs"/>
-    <PackageReference Include="Quartz.Plugins.TimeZoneConverter"/>
-    <PackageReference Include="Quartz.Serialization.SystemTextJson"/>
-    <PackageReference Include="Rebus"/>
-    <PackageReference Include="Rebus.ServiceProvider"/>
-    <PackageReference Include="Swashbuckle.AspNetCore"/>
-    <PackageReference Include="Serilog"/>
-    <PackageReference Include="Serilog.AspNetCore"/>
-    <PackageReference Include="Serilog.Settings.AppSettings"/>
-    <PackageReference Include="Serilog.Sinks.Console"/>
-    <PackageReference Include="Serilog.Sinks.File"/>
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt"/>
-    <PackageReference Include="System.Reactive"/>
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" />
+    <PackageReference Include="Quartz.AspNetCore" />
+    <PackageReference Include="Quartz.Jobs" />
+    <PackageReference Include="Quartz.Plugins.TimeZoneConverter" />
+    <PackageReference Include="Quartz.Serialization.SystemTextJson" />
+    <PackageReference Include="Rebus" />
+    <PackageReference Include="Rebus.ServiceProvider" />
+    <PackageReference Include="Swashbuckle.AspNetCore" />
+    <PackageReference Include="Serilog" />
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Settings.AppSettings" />
+    <PackageReference Include="Serilog.Sinks.Console" />
+    <PackageReference Include="Serilog.Sinks.File" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
+    <PackageReference Include="System.Reactive" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="Logs\**"/>
+    <Compile Remove="Logs\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Remove="Logs\**"/>
+    <EmbeddedResource Remove="Logs\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Remove="Logs\**"/>
+    <Content Remove="Logs\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="Logs\**"/>
+    <None Remove="Logs\**" />
   </ItemGroup>
 
 
 
   <ItemGroup>
-    <Folder Include="wwwroot\images\backgrounds\"/>
-    <Folder Include="wwwroot\images\icons\"/>
+    <Folder Include="wwwroot\images\backgrounds\" />
+    <Folder Include="wwwroot\images\icons\" />
   </ItemGroup>
 
 </Project>

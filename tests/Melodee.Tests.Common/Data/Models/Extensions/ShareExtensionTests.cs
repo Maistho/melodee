@@ -1,5 +1,4 @@
 using Melodee.Common.Configuration;
-using Melodee.Common.Data.Models;
 using Melodee.Common.Data.Models.Extensions;
 using Melodee.Common.Models.OpenSubsonic;
 using Moq;
