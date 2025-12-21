@@ -927,7 +927,10 @@ public static partial class StringExtensions
         catch (Exception e)
         {
             var invalidCharactersRegex =
-                new Regex("([\ud800-\udbff](?![\udc00-\udfff]))|((?<![\ud800-\udbff])[\udc00-\udfff])");
+                new Regex(
+                    "([\ud800-\udbff](?![\udc00-\udfff]))|((?<![\ud800-\udbff])[\udc00-\udfff])",
+                    RegexOptions.None,
+                    TimeSpan.FromSeconds(5));
             text = invalidCharactersRegex.Replace(text, "");
             // Sanitize user input before logging to prevent log forging
             Trace.WriteLine($"Error: [{e.Message}] during text normalization (invalid characters removed)");

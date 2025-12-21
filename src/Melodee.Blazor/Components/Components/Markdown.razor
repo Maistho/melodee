@@ -1,14 +1,60 @@
 @using Markdig
+@using Ganss.Xss
 @inject HttpClient Http
 
 @if (Content != null)
 {
-    @((MarkupString)BuildHtmlFromMarkdown(Content))
+    @((MarkupString)SanitizeHtml(BuildHtmlFromMarkdown(Content)))
 }
 
 @functions {
 
     [Parameter] public string? Content { get; set; }
+
+    private static HtmlSanitizer CreateSanitizer()
+    {
+        var sanitizer = new HtmlSanitizer();
+        // Allow common safe HTML tags for markdown rendering
+        sanitizer.AllowedTags.Add("h1");
+        sanitizer.AllowedTags.Add("h2");
+        sanitizer.AllowedTags.Add("h3");
+        sanitizer.AllowedTags.Add("h4");
+        sanitizer.AllowedTags.Add("h5");
+        sanitizer.AllowedTags.Add("h6");
+        sanitizer.AllowedTags.Add("p");
+        sanitizer.AllowedTags.Add("br");
+        sanitizer.AllowedTags.Add("hr");
+        sanitizer.AllowedTags.Add("ul");
+        sanitizer.AllowedTags.Add("ol");
+        sanitizer.AllowedTags.Add("li");
+        sanitizer.AllowedTags.Add("a");
+        sanitizer.AllowedTags.Add("strong");
+        sanitizer.AllowedTags.Add("em");
+        sanitizer.AllowedTags.Add("code");
+        sanitizer.AllowedTags.Add("pre");
+        sanitizer.AllowedTags.Add("blockquote");
+        sanitizer.AllowedTags.Add("table");
+        sanitizer.AllowedTags.Add("thead");
+        sanitizer.AllowedTags.Add("tbody");
+        sanitizer.AllowedTags.Add("tr");
+        sanitizer.AllowedTags.Add("th");
+        sanitizer.AllowedTags.Add("td");
+        sanitizer.AllowedTags.Add("img");
+        
+        // Allow safe attributes
+        sanitizer.AllowedAttributes.Add("href");
+        sanitizer.AllowedAttributes.Add("src");
+        sanitizer.AllowedAttributes.Add("alt");
+        sanitizer.AllowedAttributes.Add("title");
+        sanitizer.AllowedAttributes.Add("class");
+        
+        // Only allow safe URL schemes
+        sanitizer.AllowedSchemes.Add("https");
+        sanitizer.AllowedSchemes.Add("http");
+        sanitizer.AllowedSchemes.Add("mailto");
+        
+        return sanitizer;
+    }
 
     private string BuildHtmlFromMarkdown(string value)
     {
@@ -16,6 +62,13 @@
             value,
             new MarkdownPipelineBuilder().UseAdvancedExtensions().Build()
         );
+    }
+    
+    private static string SanitizeHtml(string html)
+    {
+        // Create new instance per call for thread-safety in concurrent Blazor scenarios
+        var sanitizer = CreateSanitizer();
+        return sanitizer.Sanitize(html);
     }
 
 }
