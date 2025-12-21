@@ -709,7 +709,13 @@
         {
             try
             {
-                var target = Path.Combine(dir, file.Name);
+                // Use SafePath to prevent path traversal attacks - file.Name could contain malicious path components
+                var target = Melodee.Common.Utility.SafePath.ResolveUnderRoot(dir, file.Name);
+                if (target == null)
+                {
+                    NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Upload failed", Detail = "Filename contains invalid characters or path components" });
+                    continue;
+                }
                 await using var fs = File.Create(target);
                 await file.OpenReadStream(_maxUploadSize).CopyToAsync(fs);
             }

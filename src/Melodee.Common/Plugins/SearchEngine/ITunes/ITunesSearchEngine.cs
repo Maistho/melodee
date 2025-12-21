@@ -316,7 +316,10 @@ ICacheManager cacheManager)
 
         var document = await client.GetStringAsync(url);
 
-        var regex = new Regex("<meta property=\"og:image\" content=\"(.*png)\"");
+        var regex = new Regex(
+            "<meta property=\"og:image\" content=\"(.*png)\"",
+            RegexOptions.None,
+            TimeSpan.FromSeconds(5));
         var match = regex.Match(document);
 
         if (match.Success)
@@ -325,7 +328,9 @@ ICacheManager cacheManager)
             var imageUrl = Regex.Replace(
                 rawImageUrl,
                 @"[\d]+x[\d]+(cw)+",
-                $"{Width}x{Height}cc"
+                $"{Width}x{Height}cc",
+                RegexOptions.None,
+                TimeSpan.FromSeconds(5)
             );
             return imageUrl;
         }
