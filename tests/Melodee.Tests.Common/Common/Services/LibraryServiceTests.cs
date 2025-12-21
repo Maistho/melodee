@@ -1093,6 +1093,585 @@ public sealed class LibraryServiceTests : ServiceTestBase
 
     #endregion
 
+    #region UpdateAggregatesAsync Tests
+
+    [Fact]
+    public async Task UpdateAggregatesAsync_WithInvalidId_ThrowsArgumentException()
+    {
+        // Arrange
+        var libraryService = GetLibraryService();
+
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentException>(() => libraryService.UpdateAggregatesAsync(0));
+        await Assert.ThrowsAsync<ArgumentException>(() => libraryService.UpdateAggregatesAsync(-1));
+    }
+
+    [Fact]
+    public async Task UpdateAggregatesAsync_WithNonExistingLibrary_ReturnsError()
+    {
+        // Arrange
+        var libraryService = GetLibraryService();
+
+        // Act
+        var result = await libraryService.UpdateAggregatesAsync(9999);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.False(result.Data);
+        Assert.Contains("Invalid From library Name", result.Messages ?? []);
+    }
+
+    [Fact]
+    public async Task UpdateAggregatesAsync_WithLockedLibrary_ReturnsError()
+    {
+        // Arrange
+        await CleanupTestLibraries();
+        var libraryService = GetLibraryService();
+        await CreateLibraryInDb(1, "Locked Library", LibraryType.Storage, isLocked: true);
+
+        // Act
+        var result = await libraryService.UpdateAggregatesAsync(1);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.False(result.Data);
+        Assert.Contains("From library is locked.", result.Messages ?? []);
+    }
+
+    [Fact]
+    public async Task UpdateAggregatesAsync_WithValidLibrary_UpdatesAggregates()
+    {
+        // Arrange
+        await CleanupTestLibraries();
+        var libraryService = GetLibraryService();
+        var now = Instant.FromDateTimeUtc(DateTime.UtcNow);
+
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            var library = new Library
+            {
+                Id = 100,
+                Name = "Test Library",
+                Path = "/tmp/test",
+                Type = (int)LibraryType.Storage,
+                CreatedAt = now,
+                ArtistCount = 0,
+                AlbumCount = 0,
+                SongCount = 0
+            };
+            context.Libraries.Add(library);
+
+            var artist = new LibraryArtist
+            {
+                Id = 101,
+                Name = "Test Artist",
+                NameNormalized = "TEST ARTIST",
+                Directory = "TestArtist/",
+                ApiKey = Guid.NewGuid(),
+                LibraryId = 100,
+                CreatedAt = now,
+                LastUpdatedAt = now,
+                AlbumCount = 0,
+                SongCount = 0
+            };
+            context.Artists.Add(artist);
+
+            var album = new Melodee.Common.Data.Models.Album
+            {
+                Id = 102,
+                Name = "Test Album",
+                NameNormalized = "TEST ALBUM",
+                Directory = "TestAlbum/",
+                ApiKey = Guid.NewGuid(),
+                ArtistId = 101,
+                CreatedAt = now,
+                LastUpdatedAt = now,
+                SongCount = 0
+            };
+            context.Albums.Add(album);
+
+            await context.SaveChangesAsync();
+        }
+
+        // Act
+        var result = await libraryService.UpdateAggregatesAsync(100);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.True(result.Data);
+
+        // Verify aggregates were updated
+        var updatedLibrary = await libraryService.GetAsync(100);
+        Assert.NotNull(updatedLibrary.Data);
+        Assert.Equal(1, updatedLibrary.Data!.ArtistCount);
+        Assert.Equal(1, updatedLibrary.Data.AlbumCount);
+    }
+
+    #endregion
+
+    #region CreateLibraryScanHistory Tests
+
+    [Fact]
+    public async Task CreateLibraryScanHistory_WithInvalidLibraryId_ReturnsError()
+    {
+        // Arrange
+        var libraryService = GetLibraryService();
+        var now = Instant.FromDateTimeUtc(DateTime.UtcNow);
+        var invalidLibrary = new Library 
+        { 
+            Id = 0, 
+            Name = "Invalid", 
+            Path = "/tmp/invalid", 
+            Type = 1, 
+            CreatedAt = now 
+        };
+        var scanHistory = new LibraryScanHistory 
+        { 
+            LibraryId = 0, 
+            CreatedAt = now 
+        };
+
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            libraryService.CreateLibraryScanHistory(invalidLibrary, scanHistory));
+    }
+
+    [Fact]
+    public async Task CreateLibraryScanHistory_WithNonExistingLibrary_ReturnsError()
+    {
+        // Arrange
+        await CleanupTestLibraries();
+        var libraryService = GetLibraryService();
+        var now = Instant.FromDateTimeUtc(DateTime.UtcNow);
+        var nonExistingLibrary = new Library 
+        { 
+            Id = 9999, 
+            Name = "NonExisting", 
+            Path = "/tmp/nonexisting", 
+            Type = 1, 
+            CreatedAt = now 
+        };
+        var scanHistory = new LibraryScanHistory
+        {
+            LibraryId = 9999,
+            CreatedAt = now,
+            FoundArtistsCount = 5,
+            FoundAlbumsCount = 10,
+            FoundSongsCount = 50,
+            DurationInMs = 5000
+        };
+
+        // Act
+        var result = await libraryService.CreateLibraryScanHistory(nonExistingLibrary, scanHistory);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Null(result.Data);
+        Assert.Contains("Invalid Library Id", result.Messages ?? []);
+        Assert.Equal(OperationResponseType.Error, result.Type);
+    }
+
+    [Fact]
+    public async Task CreateLibraryScanHistory_WithValidData_CreatesHistoryAndUpdatesLibrary()
+    {
+        // Arrange
+        await CleanupTestLibraries();
+        var libraryService = GetLibraryService();
+        var now = Instant.FromDateTimeUtc(DateTime.UtcNow);
+        await CreateLibraryInDb(1, "Test Library", LibraryType.Storage);
+
+        var scanHistory = new LibraryScanHistory
+        {
+            LibraryId = 1,
+            CreatedAt = now,
+            FoundArtistsCount = 5,
+            FoundAlbumsCount = 10,
+            FoundSongsCount = 50,
+            DurationInMs = 5000
+        };
+
+        // Act
+        var result = await libraryService.CreateLibraryScanHistory(
+            new Library { Id = 1, Name = "Test Library", Path = "/tmp/test", Type = 3, CreatedAt = now },
+            scanHistory);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Data);
+        Assert.Equal(1, result.Data!.LibraryId);
+        Assert.Equal(5, result.Data.FoundArtistsCount);
+        Assert.Equal(10, result.Data.FoundAlbumsCount);
+        Assert.Equal(50, result.Data.FoundSongsCount);
+        Assert.Equal(5000, result.Data.DurationInMs);
+
+        // Verify library's LastScanAt was updated
+        var updatedLibrary = await libraryService.GetAsync(1);
+        Assert.NotNull(updatedLibrary.Data);
+        Assert.NotNull(updatedLibrary.Data!.LastScanAt);
+    }
+
+    [Fact]
+    public async Task CreateLibraryScanHistory_WithForArtistId_CreatesHistoryWithArtistReference()
+    {
+        // Arrange
+        await CleanupTestLibraries();
+        var libraryService = GetLibraryService();
+        var now = Instant.FromDateTimeUtc(DateTime.UtcNow);
+
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            var library = new Library
+            {
+                Id = 200,
+                Name = "Test Library",
+                Path = "/tmp/test",
+                Type = (int)LibraryType.Storage,
+                CreatedAt = now
+            };
+            context.Libraries.Add(library);
+
+            var artist = new LibraryArtist
+            {
+                Id = 201,
+                Name = "Test Artist",
+                NameNormalized = "TEST ARTIST",
+                Directory = "TestArtist/",
+                ApiKey = Guid.NewGuid(),
+                LibraryId = 200,
+                CreatedAt = now,
+                LastUpdatedAt = now
+            };
+            context.Artists.Add(artist);
+
+            await context.SaveChangesAsync();
+        }
+
+        var scanHistory = new LibraryScanHistory
+        {
+            LibraryId = 200,
+            CreatedAt = now,
+            ForArtistId = 201,
+            FoundAlbumsCount = 3,
+            FoundSongsCount = 15,
+            DurationInMs = 2000
+        };
+
+        // Act
+        var result = await libraryService.CreateLibraryScanHistory(
+            new Library { Id = 200, Name = "Test Library", Path = "/tmp/test", Type = 3, CreatedAt = now },
+            scanHistory);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Data);
+        Assert.Equal(201, result.Data!.ForArtistId);
+    }
+
+    #endregion
+
+    #region GetDynamicPlaylistAsync Tests
+
+    [Fact]
+    public async Task GetDynamicPlaylistAsync_WithEmptyGuid_ThrowsArgumentException()
+    {
+        // Arrange
+        var libraryService = GetLibraryService();
+
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            libraryService.GetDynamicPlaylistAsync(Guid.Empty, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task GetDynamicPlaylistAsync_WhenPlaylistLibraryNotConfigured_ThrowsException()
+    {
+        // Arrange
+        await CleanupTestLibraries();
+        var libraryService = GetLibraryService();
+        var playlistApiKey = Guid.NewGuid();
+
+        // Act & Assert - GetPlaylistLibraryAsync will throw if no playlist library exists
+        await Assert.ThrowsAsync<Exception>(() =>
+            libraryService.GetDynamicPlaylistAsync(playlistApiKey, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task GetDynamicPlaylistAsync_WithNonExistingPlaylist_ReturnsNull()
+    {
+        // Arrange
+        await CleanupTestLibraries();
+        var libraryService = GetLibraryService();
+        var playlistLibraryPath = Path.Combine(Path.GetTempPath(), "playlist-test-" + Guid.NewGuid().ToString());
+        
+        try
+        {
+            Directory.CreateDirectory(playlistLibraryPath);
+            Directory.CreateDirectory(Path.Combine(playlistLibraryPath, "dynamic"));
+            
+            await CreateLibraryInDb(1, "Playlist Library", LibraryType.Playlist);
+            
+            await using (var context = await MockFactory().CreateDbContextAsync())
+            {
+                var library = await context.Libraries.FirstAsync(l => l.Id == 1);
+                library.Path = playlistLibraryPath;
+                await context.SaveChangesAsync();
+            }
+
+            var nonExistingPlaylistId = Guid.NewGuid();
+
+            // Act
+            var result = await libraryService.GetDynamicPlaylistAsync(nonExistingPlaylistId, CancellationToken.None);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Null(result.Data);
+        }
+        finally
+        {
+            if (Directory.Exists(playlistLibraryPath))
+            {
+                Directory.Delete(playlistLibraryPath, true);
+            }
+        }
+    }
+
+    #endregion
+
+    #region Rebuild Tests
+
+    [Fact]
+    public async Task Rebuild_WithEmptyLibraryName_ThrowsArgumentException()
+    {
+        // Arrange
+        var libraryService = GetLibraryService();
+
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            libraryService.Rebuild(string.Empty, false, false, null, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Rebuild_WithInvalidLibraryName_ReturnsError()
+    {
+        // Arrange
+        await CleanupTestLibraries();
+        var libraryService = GetLibraryService();
+
+        // Act
+        var result = await libraryService.Rebuild("NonExistingLibrary", false, false, null, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.False(result.Data);
+        Assert.Contains("Invalid From library Name", result.Messages ?? []);
+    }
+
+    [Fact]
+    public async Task Rebuild_WithLockedLibrary_ReturnsError()
+    {
+        // Arrange
+        await CleanupTestLibraries();
+        var libraryService = GetLibraryService();
+        await CreateLibraryInDb(1, "Locked Library", LibraryType.Storage, isLocked: true);
+
+        // Act
+        var result = await libraryService.Rebuild("Locked Library", false, false, null, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.False(result.Data);
+        Assert.Contains("Library is locked.", result.Messages ?? []);
+    }
+
+    [Fact]
+    public async Task Rebuild_WithInboundLibrary_ReturnsError()
+    {
+        // Arrange
+        await CleanupTestLibraries();
+        var libraryService = GetLibraryService();
+        await CreateLibraryInDb(1, "Inbound Library", LibraryType.Inbound);
+
+        // Act
+        var result = await libraryService.Rebuild("Inbound Library", false, false, null, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.False(result.Data);
+        Assert.NotEmpty(result.Messages ?? []);
+        Assert.Contains("Invalid library type", result.Messages!.First());
+    }
+
+    #endregion
+
+    #region AlbumStatusReport Tests
+
+    [Fact]
+    public async Task AlbumStatusReport_WithEmptyLibraryName_ThrowsArgumentException()
+    {
+        // Arrange
+        var libraryService = GetLibraryService();
+
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            libraryService.AlbumStatusReport(string.Empty, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task AlbumStatusReport_WithInvalidLibraryName_ReturnsError()
+    {
+        // Arrange
+        await CleanupTestLibraries();
+        var libraryService = GetLibraryService();
+
+        // Act
+        var result = await libraryService.AlbumStatusReport("NonExistingLibrary", CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Empty(result.Data ?? []);
+        Assert.Contains("Invalid library Name", result.Messages ?? []);
+    }
+
+    #endregion
+
+    #region Statistics Tests
+
+    [Fact]
+    public async Task Statistics_WithEmptyLibraryName_ThrowsArgumentException()
+    {
+        // Arrange
+        var libraryService = GetLibraryService();
+
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            libraryService.Statistics(string.Empty, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Statistics_WithInvalidLibraryName_ReturnsError()
+    {
+        // Arrange
+        await CleanupTestLibraries();
+        var libraryService = GetLibraryService();
+
+        // Act
+        var result = await libraryService.Statistics("NonExistingLibrary", CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Empty(result.Data ?? []);
+        Assert.Contains("Invalid From library Name", result.Messages ?? []);
+    }
+
+    [Fact]
+    public async Task Statistics_WithValidLibrary_ReturnsBasicStatistics()
+    {
+        // Arrange
+        await CleanupTestLibraries();
+        var libraryService = GetLibraryService();
+        var tempPath = Path.Combine(Path.GetTempPath(), "stats-test-" + Guid.NewGuid().ToString());
+        
+        try
+        {
+            Directory.CreateDirectory(tempPath);
+            
+            await using (var context = await MockFactory().CreateDbContextAsync())
+            {
+                var now = Instant.FromDateTimeUtc(DateTime.UtcNow);
+                var library = new Library
+                {
+                    Id = 300,
+                    Name = "Test Library",
+                    Path = tempPath,
+                    Type = (int)LibraryType.Storage,
+                    CreatedAt = now,
+                    ArtistCount = 10,
+                    AlbumCount = 25,
+                    SongCount = 150
+                };
+                context.Libraries.Add(library);
+                await context.SaveChangesAsync();
+            }
+
+            // Act
+            var result = await libraryService.Statistics("Test Library", CancellationToken.None);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.NotNull(result.Data);
+            Assert.True(result.Data!.Length >= 3); // At least artist, album, and song counts
+            
+            var artistCountStat = result.Data.FirstOrDefault(s => s.Title == "Artist Count");
+            Assert.NotNull(artistCountStat);
+            Assert.Contains("10", artistCountStat.Data.ToString() ?? "");
+
+            var albumCountStat = result.Data.FirstOrDefault(s => s.Title == "Album Count");
+            Assert.NotNull(albumCountStat);
+            Assert.Contains("25", albumCountStat.Data.ToString() ?? "");
+
+            var songCountStat = result.Data.FirstOrDefault(s => s.Title == "Song Count");
+            Assert.NotNull(songCountStat);
+            Assert.Contains("150", songCountStat.Data.ToString() ?? "");
+        }
+        finally
+        {
+            if (Directory.Exists(tempPath))
+            {
+                Directory.Delete(tempPath, true);
+            }
+        }
+    }
+
+    #endregion
+
+    #region CleanLibraryAsync Tests
+
+    [Fact]
+    public async Task CleanLibraryAsync_WithEmptyLibraryName_ThrowsArgumentException()
+    {
+        // Arrange
+        var libraryService = GetLibraryService();
+
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            libraryService.CleanLibraryAsync(string.Empty, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task CleanLibraryAsync_WithInvalidLibraryName_ReturnsError()
+    {
+        // Arrange
+        await CleanupTestLibraries();
+        var libraryService = GetLibraryService();
+
+        // Act
+        var result = await libraryService.CleanLibraryAsync("NonExistingLibrary", CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Empty(result.Data);
+        Assert.Contains("Invalid from library Name", result.Messages ?? []);
+    }
+
+    [Fact]
+    public async Task CleanLibraryAsync_WithLockedLibrary_ReturnsError()
+    {
+        // Arrange
+        await CleanupTestLibraries();
+        var libraryService = GetLibraryService();
+        await CreateLibraryInDb(1, "Locked Library", LibraryType.Storage, isLocked: true);
+
+        // Act
+        var result = await libraryService.CleanLibraryAsync("Locked Library", CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Empty(result.Data);
+        Assert.Contains("Library is locked.", result.Messages ?? []);
+    }
+
+    #endregion
+
     #region Helper Methods
 
     // Add an overload that allows passing a custom config factory
