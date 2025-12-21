@@ -5,6 +5,7 @@ using Melodee.Common.Models.Extensions;
 using Melodee.Common.Plugins.MetaData.Song;
 using Melodee.Common.Plugins.Processor;
 using Melodee.Common.Utility;
+using SongModel = Melodee.Common.Models.Song;
 
 namespace Melodee.Tests.Common.Plugins.MetaData;
 
@@ -124,7 +125,7 @@ public class MetaTagTests : TestsBase
                 Identifier = MetaTagIdentifier.Album,
                 Value = newAlbumValue
             });
-            var tagUpdateResult = await metaTag.UpdateSongAsync(dirInfo, new Song
+            var tagUpdateResult = await metaTag.UpdateSongAsync(dirInfo, new SongModel
             {
                 CrcHash = "12345678",
                 File = fileInfo.ToFileSystemInfo(),

@@ -1,0 +1,23 @@
+{
+  "subsonic-response": {
+    "status": "ok",
+    "version": "1.16.1",
+    "type": "melodee",
+    "serverVersion": "1.0.0",
+    "openSubsonic": true,
+    "albumList": {
+      "album": [
+        {
+          "id": "123",
+          "name": "Test Album",
+          "artist": "Test Artist"
+        },
+        {
+          "id": "456",
+          "name": "Another Album",
+          "artist": "Another Artist"
+        }
+      ]
+    }
+  }
+}
