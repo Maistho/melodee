@@ -529,8 +529,8 @@ public class SongService(
 
         if (!(songStreamInfo?.TrackFileInfo.Exists ?? false))
         {
-            Logger.Warning("[{ServiceName}] Stream request for song that was not found. User [{User}] Song ApiKey [{ApiKey}]",
-                nameof(SongService), user.ToString(), apiKey);
+            Logger.Warning("[{ServiceName}] Stream request for song that was not found.",
+                nameof(SongService));
             return new MelodeeModels.OperationResult<StreamingDescriptor>("Song file not found")
             {
                 Type = MelodeeModels.OperationResponseType.NotFound,
@@ -545,8 +545,7 @@ public class SongService(
             range = RangeParser.ParseRange(rangeHeader, songStreamInfo.FileSize);
             if (range == null)
             {
-                Logger.Warning("[{ServiceName}] Invalid range request for song [{ApiKey}]. RangeHeader: [{RangeHeader}], FileSize: [{FileSize}]",
-                    nameof(SongService), apiKey, LogSanitizer.Sanitize(rangeHeader), songStreamInfo.FileSize);
+                Logger.Warning("[{ServiceName}] Invalid range request.", nameof(SongService));
                 return new MelodeeModels.OperationResult<StreamingDescriptor>("Invalid range request")
                 {
                     Type = MelodeeModels.OperationResponseType.Error,
@@ -554,8 +553,7 @@ public class SongService(
                 };
             }
 
-            Logger.Debug("[{ServiceName}] Parsed range for song [{ApiKey}]: Start={Start}, End={End}, FileSize={FileSize}",
-                nameof(SongService), apiKey, range.Start, range.End, songStreamInfo.FileSize);
+            Logger.Debug("[{ServiceName}] Parsed range for song request.", nameof(SongService));
         }
 
         // Create base headers

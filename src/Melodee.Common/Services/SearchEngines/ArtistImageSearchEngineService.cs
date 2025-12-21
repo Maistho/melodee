@@ -79,7 +79,7 @@ public class ArtistImageSearchEngineService(
             }
             catch (Exception e)
             {
-                Logger.Error(e, "[{Plugin}] threw error with query [{Query}]", searchEngine.DisplayName, query);
+                Logger.Error(e, "[{Plugin}] threw error during artist image search.", searchEngine.DisplayName);
             }
         }
 

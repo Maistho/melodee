@@ -613,17 +613,12 @@ public class AuthController(
     /// </summary>
     private void LogAuthEvent(string method, string outcome, string? clientIp, string? identifier = null, int? userId = null)
     {
-        // Mask the identifier to avoid logging PII (email/username)
-        var maskedIdentifier = identifier != null
-            ? (identifier.Contains('@') ? LogSanitizer.MaskEmail(identifier) : LogSanitizer.MaskIdentifier(identifier))
-            : "unknown";
-        // Sanitize all user-controlled input to prevent log forging
+        // Sanitize all user-controlled input to prevent log forging and avoid logging identifiers
         logger.LogInformation(
-            "Auth event: Method={Method}, Outcome={Outcome}, ClientIp={ClientIp}, Identifier={Identifier}, UserId={UserId}",
+            "Auth event: Method={Method}, Outcome={Outcome}, ClientIp={ClientIp}, UserId={UserId}",
             LogSanitizer.Sanitize(method),
             LogSanitizer.Sanitize(outcome),
             LogSanitizer.Sanitize(clientIp) ?? "unknown",
-            maskedIdentifier,
             userId);
     }
 }

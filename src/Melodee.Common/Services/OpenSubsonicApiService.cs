@@ -798,7 +798,7 @@ public class OpenSubsonicApiService(
         var apiKey = ApiKeyFromId(id);
         if (apiKey == null)
         {
-            Logger.Warning("Invalid playlist id [{Id}] for Request [{Request}]", id, apiRequest);
+            Logger.Warning("Invalid playlist id requested.");
             return new ResponseModel
             {
                 UserInfo = UserInfo.BlankUserInfo,
@@ -926,7 +926,7 @@ public class OpenSubsonicApiService(
         var songId = ApiKeyFromId(apiKey) ?? Guid.Empty;
         if (songId == Guid.Empty)
         {
-            Logger.Warning("Invalid song id [{SongId}] for Request [{Request}]", apiKey, apiRequest);
+            Logger.Warning("Invalid song id requested.");
             return new ResponseModel
             {
                 UserInfo = UserInfo.BlankUserInfo,
@@ -1141,7 +1141,7 @@ public class OpenSubsonicApiService(
         catch (Exception e)
         {
             error = Error.GenericError($"Failed to get avatar");
-            Logger.Error(e, "Failed to get avatar for user [{Username}]", username);
+            Logger.Error(e, "Failed to get avatar for user.");
         }
 
         return new ResponseModel
@@ -1324,8 +1324,8 @@ public class OpenSubsonicApiService(
                 }
                 catch (Exception e)
                 {
-                    error = Error.GenericError($"Failed to get image for ApiKey [{apiId}]");
-                    Logger.Error(e, "Failed to get cover image for [{ApiId}]", apiId);
+                    error = Error.GenericError("Failed to get image for ApiKey.");
+                    Logger.Error(e, "Failed to get cover image for requested resource.");
                 }
 
                 return new ImageBytesAndEtag(result, eTag);
@@ -1576,7 +1576,7 @@ public class OpenSubsonicApiService(
                     }
                     catch (Exception ex)
                     {
-                        Logger.Error(ex, "JWT authentication failed, request [{ApiRequest}]", apiRequest);
+                        Logger.Error(ex, "JWT authentication failed.");
                         return new ResponseModel
                         {
                             UserInfo = UserInfo.BlankUserInfo,
@@ -1610,9 +1610,9 @@ public class OpenSubsonicApiService(
                     ResponseData = await NewApiResponse(loginResult.IsSuccess, string.Empty, string.Empty, loginResult.IsSuccess ? null : Error.AuthError)
                 };
             }
-            catch (Exception e)
-            {
-                Logger.Error(e, "Error authenticating user, request [{ApiRequest}]", apiRequest);
+                catch (Exception e)
+                {
+                    Logger.Error(e, "Error authenticating user.");
                 return new ResponseModel
                 {
                     UserInfo = UserInfo.BlankUserInfo,
@@ -1826,10 +1826,9 @@ public class OpenSubsonicApiService(
                 (await Configuration.Value).GetValue<bool?>(SettingRegistry.SystemIsDownloadingEnabled) ?? false;
             if (!isDownloadingEnabled)
             {
-                Logger.Warning("[{ServiceName}] Downloading is disabled [{SettingName}]. Request [{Request}]",
+                Logger.Warning("[{ServiceName}] Downloading is disabled [{SettingName}].",
                     nameof(OpenSubsonicApiService),
-                    SettingRegistry.SystemIsDownloadingEnabled,
-                    request);
+                    SettingRegistry.SystemIsDownloadingEnabled);
                 return new OperationResult<StreamingDescriptor>("Downloading is disabled")
                 {
                     Type = OperationResponseType.AccessDenied,
@@ -1840,8 +1839,8 @@ public class OpenSubsonicApiService(
 
         if (request is { IsDownloadingRequest: false, TimeOffset: not null })
         {
-            Logger.Warning("[{ServiceName}] Stream request has TimeOffset. Request [{Request}]",
-                nameof(OpenSubsonicApiService), request);
+            Logger.Warning("[{ServiceName}] Stream request has TimeOffset.",
+                nameof(OpenSubsonicApiService));
             return new OperationResult<StreamingDescriptor>("TimeOffset not supported for streaming")
             {
                 Type = OperationResponseType.NotImplementedOrDisabled,
@@ -1852,7 +1851,7 @@ public class OpenSubsonicApiService(
         var apiKey = ApiKeyFromId(request.Id);
         if (apiKey == null)
         {
-            Logger.Warning("[{ServiceName}] Invalid song ID [{Id}]", nameof(OpenSubsonicApiService), request.Id);
+            Logger.Warning("[{ServiceName}] Invalid song ID requested.", nameof(OpenSubsonicApiService));
             return new OperationResult<StreamingDescriptor>("Invalid song ID")
             {
                 Type = OperationResponseType.NotFound,
@@ -2093,8 +2092,7 @@ public class OpenSubsonicApiService(
 
         if (albums.Length == 0 && songs.Length == 0 && artists.Length == 0)
         {
-            Logger.Information("! No result for query [{Query}] Normalized [{QueryNormalized}]", request.QueryValue,
-                request.QueryNormalizedValue);
+            Logger.Information("! No search results found.");
         }
 
         return new ResponseModel
@@ -2379,8 +2377,8 @@ public class OpenSubsonicApiService(
             }
             else
             {
-                Logger.Warning("[{MethodName}] invalid artist id [{Id}] ApiRequest [{ApiRequest}]",
-                    nameof(GetArtistAsync), id, apiRequest.ToString());
+                Logger.Warning("[{MethodName}] invalid artist id requested.",
+                    nameof(GetArtistAsync));
             }
         }
 
@@ -3230,9 +3228,7 @@ public class OpenSubsonicApiService(
 
         if (result)
         {
-            Logger.Information("User [{UserInfo}] created radio station [{Name}].",
-                authResponse.UserInfo,
-                name);
+            Logger.Information("Radio station created.");
         }
 
         return new ResponseModel

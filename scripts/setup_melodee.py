@@ -152,6 +152,7 @@ def setup_environment_config(melodee_dir):
         # Write the new .env file with restricted permissions
         import stat
         with open(env_path, 'w') as f:
+            # codeql[py/clear-text-storage-sensitive-data]: .env is intentionally created for local setup; file is chmod 600 immediately after write.
             f.write(env_content)
         # Set file permissions to owner read/write only (0600)
         os.chmod(env_path, stat.S_IRUSR | stat.S_IWUSR)

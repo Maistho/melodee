@@ -1281,7 +1281,7 @@ public class PlaylistService(
         await scopedContext.Playlists.AddAsync(newPlaylist, cancellationToken).ConfigureAwait(false);
         await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        Logger.Information("User [{UserId}] created playlist [{Name}] with [{SongCount}] songs.", userId, name, songsForPlaylist.Length);
+        Logger.Information("Playlist created for user [{UserId}] with [{SongCount}] songs.", userId, songsForPlaylist.Length);
 
         return new OperationResult<string?>
         {

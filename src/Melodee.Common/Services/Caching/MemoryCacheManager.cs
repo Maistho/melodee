@@ -105,7 +105,7 @@ public sealed class MemoryCacheManager(ILogger logger, TimeSpan defaultTimeSpan,
         if (duration.HasValue && duration.Value == TimeSpan.Zero)
         {
             var result = await getItem().ConfigureAwait(false);
-            Logger.Verbose("-+> Cache Bypass for Key {0}, Region {1}", LogSanitizer.Sanitize(key), LogSanitizer.Sanitize(region) ?? DefaultRegion);
+            Logger.Verbose("-+> Cache Bypass executed.");
             return result;
         }
 
@@ -113,7 +113,7 @@ public sealed class MemoryCacheManager(ILogger logger, TimeSpan defaultTimeSpan,
         var cachedValue = Get<TOut>(key, region);
         if (!EqualityComparer<TOut>.Default.Equals(cachedValue, default))
         {
-            Logger.Verbose("-!> Cache Hit for Key {0}, Region {1}", LogSanitizer.Sanitize(key), LogSanitizer.Sanitize(region) ?? DefaultRegion);
+            Logger.Verbose("-!> Cache Hit.");
             Interlocked.Increment(ref _hitCount);
             return cachedValue!;
         }

@@ -138,19 +138,15 @@ public class ScrobbleController(
                 return Ok();
             }
 
-            logger.Warning("[{ControllerName}] [{MethodName}] Scrobble failed for song [{SongId}] Message [{Message}]",
+            logger.Warning("[{ControllerName}] [{MethodName}] Scrobble failed.",
                 nameof(ScrobbleController),
-                nameof(ScrobbleSong),
-                scrobbleRequest.SongId,
-                LogSanitizer.Sanitize(result.Messages?.First() ?? "Unknown error"));
+                nameof(ScrobbleSong));
             return ApiBadRequest(result.Messages?.First() ?? "Unknown error");
         }
 
-        logger.Warning("[{ControllerName}] [{MethodName}] Unknown scrobble type [{ScrobbleType}] for song [{SongId}]",
+        logger.Warning("[{ControllerName}] [{MethodName}] Unknown scrobble type.",
             nameof(ScrobbleController),
-            nameof(ScrobbleSong),
-            LogSanitizer.Sanitize(scrobbleRequest.ScrobbleType),
-            scrobbleRequest.SongId);
+            nameof(ScrobbleSong));
         return ApiBadRequest($"Unknown scrobble type: {scrobbleRequest.ScrobbleType}");
     }
 
