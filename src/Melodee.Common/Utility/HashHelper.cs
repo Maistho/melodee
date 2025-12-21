@@ -20,6 +20,7 @@ public static class HashHelper
 
     public static string? CreateMd5(FileInfo file)
     {
+        // CodeQL [cs/weak-crypto] MD5 required by external APIs (OpenSubsonic, Last.fm) - use CreateSha256 for new code
         using var md5 = MD5.Create();
         using var stream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
         var hash = md5.ComputeHash(stream);
@@ -39,6 +40,7 @@ public static class HashHelper
             return null;
         }
 
+        // CodeQL [cs/weak-crypto] MD5 required by external APIs (OpenSubsonic, Last.fm) - use CreateSha256 for new code
         using (var md5 = MD5.Create())
         {
             var data = md5.ComputeHash(bytes);

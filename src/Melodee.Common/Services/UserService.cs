@@ -1060,6 +1060,7 @@ IBus bus)
         // The token is computed as MD5(password + salt) per the OpenSubsonic/Subsonic protocol.
         // This cannot be changed without breaking API compatibility with all Subsonic clients.
         // See: http://www.subsonic.org/pages/api.jsp#authentication
+        // CodeQL [cs/weak-crypto] MD5 mandated by OpenSubsonic API specification - cannot change
         var expectedToken = HashHelper.CreateMd5($"{usersPassword}{salt}");
         var isAuthenticated = string.Equals(expectedToken, token, StringComparison.OrdinalIgnoreCase);
 
