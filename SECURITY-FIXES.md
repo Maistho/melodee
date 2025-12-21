@@ -108,17 +108,17 @@ The following were reviewed and confirmed to be secure:
 To prevent false positives in CodeQL security scanning, the following inline suppression comments have been added to legitimate MD5 usages that are required by external APIs:
 
 1. **`src/Melodee.Common/Utility/HashHelper.cs`**
-   - `// CodeQL [cs/weak-crypto] MD5 required by external APIs (OpenSubsonic, Last.fm) - use CreateSha256 for new code`
+   - `// lgtm[cs/weak-crypto] MD5 required by external APIs (OpenSubsonic, Last.fm) - use CreateSha256 for new code`
    - Added to both `CreateMd5(FileInfo file)` and `CreateMd5(byte[]? bytes)` methods
    - These methods are maintained solely for API compatibility
 
 2. **`src/Melodee.Common/Services/UserService.cs`** (line ~1063)
-   - `// CodeQL [cs/weak-crypto] MD5 mandated by OpenSubsonic API specification - cannot change`
+   - `// lgtm[cs/weak-crypto] MD5 mandated by OpenSubsonic API specification - cannot change`
    - Suppresses alert for OpenSubsonic token authentication
    - MD5 is part of the OpenSubsonic/Subsonic protocol specification
 
 3. **`src/Melodee.Blazor/Controllers/Melodee/ScrobbleController.cs`** (line ~287)
-   - `// CodeQL [cs/weak-crypto] MD5 mandated by Last.fm API specification - cannot change`
+   - `// lgtm[cs/weak-crypto] MD5 mandated by Last.fm API specification - cannot change`
    - Suppresses alert for Last.fm API signature computation
    - MD5 is required by Last.fm's authentication protocol
 

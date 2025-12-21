@@ -46,7 +46,7 @@ Three instances of MD5 usage remain in the codebase, all required by external AP
 #### 1. HashHelper.cs (Lines 23, 43)
 
 ```csharp
-// CodeQL [cs/weak-crypto] MD5 required by external APIs (OpenSubsonic, Last.fm) - use CreateSha256 for new code
+// lgtm[cs/weak-crypto] MD5 required by external APIs (OpenSubsonic, Last.fm) - use CreateSha256 for new code
 using var md5 = MD5.Create();
 ```
 
@@ -57,7 +57,7 @@ using var md5 = MD5.Create();
 #### 2. UserService.cs (Line ~1063)
 
 ```csharp
-// CodeQL [cs/weak-crypto] MD5 mandated by OpenSubsonic API specification - cannot change
+// lgtm[cs/weak-crypto] MD5 mandated by OpenSubsonic API specification - cannot change
 var expectedToken = HashHelper.CreateMd5($"{usersPassword}{salt}");
 ```
 
@@ -69,7 +69,7 @@ var expectedToken = HashHelper.CreateMd5($"{usersPassword}{salt}");
 #### 3. ScrobbleController.cs (Line ~287)
 
 ```csharp
-// CodeQL [cs/weak-crypto] MD5 mandated by Last.fm API specification - cannot change
+// lgtm[cs/weak-crypto] MD5 mandated by Last.fm API specification - cannot change
 using var md5 = MD5.Create();
 ```
 
@@ -151,7 +151,7 @@ Comprehensive audit performed for common vulnerability patterns:
 
 ### Format
 ```csharp
-// CodeQL [rule-id] Justification explaining why this is safe
+// lgtm[rule-id] Justification explaining why this is safe
 ```
 
 ### Benefits
