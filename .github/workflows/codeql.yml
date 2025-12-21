@@ -9,6 +9,11 @@
 # the `language` matrix defined below to confirm you have the correct set of
 # supported CodeQL languages.
 #
+# ******** IMPORTANT ********
+# This workflow is configured to upload results to GitHub Security.
+# If you also have GitHub's "default setup" enabled, you should disable it
+# to avoid duplicate scans. See .github/CODEQL-WORKFLOW.md for details.
+#
 name: "CodeQL"
 
 on:
@@ -75,8 +80,7 @@ jobs:
         uses: github/codeql-action/analyze@v4
         with:
           category: "/language:${{ matrix.language }}"
-          # Prevent workflow failure when GitHub "default setup" code scanning is enabled.
-          # If you want advanced results uploaded, disable default setup or set upload: true.
-          upload: false
-          upload-database: false
-          wait-for-processing: false
+          # Upload results to GitHub Security tab
+          # Note: If GitHub "default setup" is also enabled, disable it to avoid duplicate scans
+          # See .github/CODEQL-WORKFLOW.md for detailed configuration guidance
+          upload: true

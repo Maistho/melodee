@@ -239,7 +239,7 @@ All security recommendations from previous audit have been implemented:
 ## Monitoring and Maintenance
 
 ### Continuous Security
-1. **CodeQL Workflow**: Runs on every push and PR
+1. **CodeQL Workflow**: Runs on every push and PR (see `.github/CODEQL-WORKFLOW.md` for configuration details)
 2. **Dependency Scanning**: NuGet package vulnerability checks
 3. **Test Suite**: 2,813 tests verify functionality and security
 4. **Code Review**: Security-focused review process

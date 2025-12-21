@@ -7,7 +7,7 @@
 
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
   [![.NET](https://github.com/sphildreth/melodee/actions/workflows/dotnet.yml/badge.svg)](https://github.com/sphildreth/melodee/actions/workflows/dotnet.yml)
-  [![CodeQL](https://github.com/sphildreth/melodee/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/sphildreth/melodee/actions/workflows/github-code-scanning/codeql)
+  [![CodeQL](https://github.com/sphildreth/melodee/actions/workflows/codeql.yml/badge.svg)](https://github.com/sphildreth/melodee/actions/workflows/codeql.yml)
   [![Discord](https://img.shields.io/discord/1337921126210211943)](https://discord.gg/bfMnEUrvbp)
 
   [Features](#features) • [Quick Start](#quick-start) • [Documentation](#documentation) • [Contributing](#contributing) • [Support](#support)
