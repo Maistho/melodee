@@ -7,7 +7,7 @@ namespace Melodee.Benchmarks;
 /// <summary>
 /// Benchmarks for collection operations addressing PERFORMANCE_REVIEW.md requirements
 /// </summary>
-[SimpleJob(RuntimeMoniker.Net90)]
+[SimpleJob(RuntimeMoniker.HostProcess)]
 [MemoryDiagnoser]
 [ThreadingDiagnoser]
 public class CollectionOperationBenchmarks

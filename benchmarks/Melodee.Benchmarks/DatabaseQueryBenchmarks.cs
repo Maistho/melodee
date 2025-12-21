@@ -14,7 +14,7 @@ namespace Melodee.Benchmarks;
 /// <summary>
 /// Benchmarks for database query operations addressing PERFORMANCE_REVIEW.md requirements
 /// </summary>
-[SimpleJob(RuntimeMoniker.Net90)]
+[SimpleJob(RuntimeMoniker.HostProcess)]
 [MemoryDiagnoser]
 [ThreadingDiagnoser]
 public class DatabaseQueryBenchmarks

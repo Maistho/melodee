@@ -11,7 +11,7 @@ namespace Melodee.Benchmarks;
 /// <summary>
 /// Benchmarks for caching operations addressing PERFORMANCE_REVIEW.md requirements
 /// </summary>
-[SimpleJob(RuntimeMoniker.Net90)]
+[SimpleJob(RuntimeMoniker.HostProcess)]
 [MemoryDiagnoser]
 [ThreadingDiagnoser]
 public class CacheBenchmarks

@@ -7,7 +7,7 @@ namespace Melodee.Benchmarks;
 /// <summary>
 /// Benchmarks for streaming operations addressing API_REVIEW_FIX.md requirements
 /// </summary>
-[SimpleJob(RuntimeMoniker.Net90)]
+[SimpleJob(RuntimeMoniker.HostProcess)]
 [MemoryDiagnoser]
 [ThreadingDiagnoser]
 public class StreamingBenchmarks
