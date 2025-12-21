@@ -495,3 +495,6 @@ appsettings.*.json
 .env.local
 .env.*.local
 coverage/
+
+# BenchmarkDotNet
+BenchmarkDotNet.Artifacts/
