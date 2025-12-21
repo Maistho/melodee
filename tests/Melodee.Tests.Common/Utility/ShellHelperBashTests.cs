@@ -1,5 +1,4 @@
 using Melodee.Common.Utility;
-using Xunit;
 
 namespace Melodee.Tests.Common.Utility;
 

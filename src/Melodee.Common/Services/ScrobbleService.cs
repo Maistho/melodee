@@ -6,7 +6,6 @@ using Melodee.Common.Models;
 using Melodee.Common.Models.Scrobbling;
 using Melodee.Common.Plugins.Scrobbling;
 using Melodee.Common.Services.Caching;
-using Melodee.Common.Utility;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using Serilog;
@@ -40,9 +39,9 @@ public class ScrobbleService(
             var scrobblers = new List<IScrobbler>();
 
             // Only create MelodeeScrobbler if all dependencies are available
-            if (albumService != null && ContextFactory != null && nowPlayingRepository != null)
+            if (albumService != null && ContextFactory != null)
             {
-                scrobblers.Add(new MelodeeScrobbler(albumService, ContextFactory, nowPlayingRepository, Logger)
+                scrobblers.Add(new MelodeeScrobbler(albumService, ContextFactory, Logger)
                 {
                     IsEnabled = true
                 });

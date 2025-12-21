@@ -34,7 +34,7 @@ public static class SafePath
 
         // Get the full path of the base directory (normalize it)
         var baseFullPath = Path.GetFullPath(baseDirectory);
-        
+
         // Ensure base directory ends with a directory separator to prevent prefix attacks
         // e.g., /safe/path could match /safe/pathevil without this
         if (!baseFullPath.EndsWith(Path.DirectorySeparatorChar))
@@ -97,7 +97,7 @@ public static class SafePath
         // Get just the filename, removing any directory components
         // This handles both forward and backward slashes
         var name = Path.GetFileName(fileName);
-        
+
         if (string.IsNullOrWhiteSpace(name))
         {
             return null;
@@ -111,7 +111,7 @@ public static class SafePath
 
         // Use existing PathSanitizer to clean invalid characters
         var sanitized = PathSanitizer.SanitizeFilename(name, '_');
-        
+
         if (string.IsNullOrWhiteSpace(sanitized))
         {
             return null;

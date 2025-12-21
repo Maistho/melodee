@@ -112,10 +112,10 @@ public class FileSystemDirectoryInfoExtensionsTests : IDisposable
     [Fact]
     public void FullName_PathWithTrailingSeparator_RemovesSeparator()
     {
-        var dir = new FileSystemDirectoryInfo 
-        { 
-            Path = $"/test{Path.DirectorySeparatorChar}", 
-            Name = "subdir" 
+        var dir = new FileSystemDirectoryInfo
+        {
+            Path = $"/test{Path.DirectorySeparatorChar}",
+            Name = "subdir"
         };
 
         var fullName = dir.FullName();
@@ -502,11 +502,11 @@ public class FileSystemDirectoryInfoExtensionsTests : IDisposable
         var dir = CreateTestDirectory();
         var content = new byte[1024]; // Same size binary content
         Array.Fill(content, (byte)42);
-        
+
         await File.WriteAllBytesAsync(Path.Combine(dir.FullName(), "file1.bin"), content);
         await Task.Delay(50); // Ensure different write times
         await File.WriteAllBytesAsync(Path.Combine(dir.FullName(), "file2.bin"), content);
-        
+
         var uniqueContent = new byte[2048];
         Array.Fill(uniqueContent, (byte)99);
         await File.WriteAllBytesAsync(Path.Combine(dir.FullName(), "unique.bin"), uniqueContent);
@@ -529,7 +529,7 @@ public class FileSystemDirectoryInfoExtensionsTests : IDisposable
         Array.Fill(content1, (byte)1);
         var content2 = new byte[1024];
         Array.Fill(content2, (byte)2);
-        
+
         await File.WriteAllBytesAsync(Path.Combine(dir.FullName(), "file1.bin"), content1);
         await File.WriteAllBytesAsync(Path.Combine(dir.FullName(), "file2.bin"), content2);
 

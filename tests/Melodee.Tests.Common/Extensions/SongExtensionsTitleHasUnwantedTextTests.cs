@@ -1,7 +1,6 @@
 using Melodee.Common.Enums;
 using Melodee.Common.Models;
 using Melodee.Common.Models.Extensions;
-using Xunit;
 
 namespace Melodee.Tests.Common.Extensions;
 
@@ -10,14 +9,14 @@ public class SongExtensionsTitleHasUnwantedTextTests
     private Song CreateSong(string? title, int songNumber = 1, string? albumTitle = null)
     {
         var tags = new List<MetaTag<object?>>();
-        
+
         if (title != null)
         {
             tags.Add(new MetaTag<object?> { Identifier = MetaTagIdentifier.Title, Value = title });
         }
-        
+
         tags.Add(new MetaTag<object?> { Identifier = MetaTagIdentifier.TrackNumber, Value = songNumber });
-        
+
         if (albumTitle != null)
         {
             tags.Add(new MetaTag<object?> { Identifier = MetaTagIdentifier.Album, Value = albumTitle });

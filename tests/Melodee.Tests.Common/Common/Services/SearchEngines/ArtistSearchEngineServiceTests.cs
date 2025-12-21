@@ -1,9 +1,4 @@
-using Melodee.Common.Data.Models;
-using Melodee.Common.Models;
 using Melodee.Common.Models.SearchEngines;
-using Microsoft.EntityFrameworkCore;
-using NodaTime;
-using Artist = Melodee.Common.Models.SearchEngines.ArtistSearchEngineServiceData.Artist;
 
 namespace Melodee.Tests.Common.Common.Services.SearchEngines;
 

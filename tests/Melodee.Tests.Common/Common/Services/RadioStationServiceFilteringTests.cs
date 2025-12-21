@@ -2,7 +2,6 @@ using Melodee.Common.Data.Models;
 using Melodee.Common.Filtering;
 using Melodee.Common.Models;
 using NodaTime;
-using Xunit;
 
 namespace Melodee.Tests.Common.Common.Services;
 

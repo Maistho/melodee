@@ -35,4 +35,15 @@ public class UserSongPlayHistory
     ///     Source of the play (0 = Unknown, 1 = Stream, 2 = Share, 3 = Radio)
     /// </summary>
     public short Source { get; set; }
+
+    /// <summary>
+    ///     True if this song is currently being played (not yet scrobbled/completed).
+    /// </summary>
+    public bool IsNowPlaying { get; set; }
+
+    /// <summary>
+    ///     Last time the client sent a "now playing" heartbeat.
+    ///     Used to detect stale entries (client disconnected without scrobbling).
+    /// </summary>
+    public Instant? LastHeartbeatAt { get; set; }
 }

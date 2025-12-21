@@ -19,7 +19,6 @@ public class MelodeeScrobblerUserSongTests : IDisposable
     private readonly MelodeeScrobbler _scrobbler;
     private readonly UserInfo _testUser;
     private readonly DbContextOptions<MelodeeDbContext> _dbOptions;
-    private readonly INowPlayingRepository _nowPlayingRepo;
 
     public MelodeeScrobblerUserSongTests()
     {
@@ -105,28 +104,23 @@ public class MelodeeScrobblerUserSongTests : IDisposable
         );
 
         var contextFactory = new TestDbContextFactory(_dbOptions);
-        _nowPlayingRepo = new NowPlayingInMemoryRepository();
         AlbumService albumService = null!;
         var logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
 
-        _scrobbler = new MelodeeScrobbler(albumService, contextFactory, _nowPlayingRepo, logger);
+        _scrobbler = new MelodeeScrobbler(albumService, contextFactory, logger);
     }
 
     [Fact]
     public async Task NowPlaying_CreatesUserSong_WhenDoesNotExist()
     {
-        // Arrange
         var scrobbleInfo = CreateScrobbleInfo(secondsPlayed: 10);
 
-        // Verify no UserSong exists before
         var userSongBefore = await _dbContext.UserSongs
             .FirstOrDefaultAsync(us => us.UserId == _testUser.Id && us.SongId == 1);
         Assert.Null(userSongBefore);
 
-        // Act
         var result = await _scrobbler.NowPlaying(_testUser, scrobbleInfo, CancellationToken.None);
 
-        // Assert
         Assert.True(result.IsSuccess);
         var userSongAfter = await _dbContext.UserSongs
             .FirstOrDefaultAsync(us => us.UserId == _testUser.Id && us.SongId == 1);
@@ -138,7 +132,6 @@ public class MelodeeScrobblerUserSongTests : IDisposable
     [Fact]
     public async Task NowPlaying_DoesNotDuplicateUserSong_WhenAlreadyExists()
     {
-        // Arrange
         var existingUserSong = new Melodee.Common.Data.Models.UserSong
         {
             UserId = _testUser.Id,
@@ -150,44 +143,38 @@ public class MelodeeScrobblerUserSongTests : IDisposable
 
         var scrobbleInfo = CreateScrobbleInfo(secondsPlayed: 10);
 
-        // Act
         var result = await _scrobbler.NowPlaying(_testUser, scrobbleInfo, CancellationToken.None);
 
-        // Assert
         Assert.True(result.IsSuccess);
         var userSongCount = await _dbContext.UserSongs
             .CountAsync(us => us.UserId == _testUser.Id && us.SongId == 1);
-        Assert.Equal(1, userSongCount); // Should still be only 1
+        Assert.Equal(1, userSongCount);
     }
 
     [Fact]
-    public async Task NowPlaying_CreatesUserSongPlayHistory_AfterCreatingUserSong()
+    public async Task NowPlaying_CreatesUserSongPlayHistory_WithIsNowPlayingTrue()
     {
-        // Arrange
         var scrobbleInfo = CreateScrobbleInfo(secondsPlayed: 10);
 
-        // Act
         var result = await _scrobbler.NowPlaying(_testUser, scrobbleInfo, CancellationToken.None);
 
-        // Assert
         Assert.True(result.IsSuccess);
 
-        // Verify UserSong was created
         var userSong = await _dbContext.UserSongs
             .FirstOrDefaultAsync(us => us.UserId == _testUser.Id && us.SongId == 1);
         Assert.NotNull(userSong);
 
-        // Verify UserSongPlayHistory was also created
         var playHistory = await _dbContext.UserSongPlayHistories
             .FirstOrDefaultAsync(h => h.UserId == _testUser.Id && h.SongId == 1);
         Assert.NotNull(playHistory);
         Assert.Equal(10, playHistory.SecondsPlayed);
+        Assert.True(playHistory.IsNowPlaying);
+        Assert.NotNull(playHistory.LastHeartbeatAt);
     }
 
     [Fact]
     public async Task NowPlaying_CreatesUserSongForMultipleUsers_Independently()
     {
-        // Arrange
         var user2 = new DbUser
         {
             Id = 2,
@@ -216,11 +203,9 @@ public class MelodeeScrobblerUserSongTests : IDisposable
         var scrobbleUser1 = CreateScrobbleInfo(secondsPlayed: 10);
         var scrobbleUser2 = CreateScrobbleInfo(secondsPlayed: 20);
 
-        // Act
         await _scrobbler.NowPlaying(_testUser, scrobbleUser1, CancellationToken.None);
         await _scrobbler.NowPlaying(user2Info, scrobbleUser2, CancellationToken.None);
 
-        // Assert
         var user1Song = await _dbContext.UserSongs
             .FirstOrDefaultAsync(us => us.UserId == _testUser.Id && us.SongId == 1);
         var user2Song = await _dbContext.UserSongs
@@ -228,52 +213,69 @@ public class MelodeeScrobblerUserSongTests : IDisposable
 
         Assert.NotNull(user1Song);
         Assert.NotNull(user2Song);
-        Assert.NotEqual(user1Song.Id, user2Song.Id); // Different records
+        Assert.NotEqual(user1Song.Id, user2Song.Id);
     }
 
     [Fact]
-    public async Task NowPlaying_CreatesUserSong_BeforeUserSongPlayHistory()
+    public async Task NowPlaying_ClearsPreviousNowPlaying_ForSameUser()
     {
-        // This test verifies the order of operations:
-        // 1. UserSong must be created first
-        // 2. Then UserSongPlayHistory is created
+        // Add a second song for this test
+        var secondSong = new DbSong
+        {
+            Id = 2,
+            AlbumId = 1,
+            Title = "Second Test Song",
+            TitleNormalized = "second test song",
+            ApiKey = Guid.NewGuid(),
+            Duration = 200000,
+            SongNumber = 2,
+            FileName = "test2.mp3",
+            FileSize = 6000000,
+            FileHash = "testhash2",
+            SamplingRate = 44100,
+            BitRate = 320,
+            BitDepth = 16,
+            BPM = 125,
+            ContentType = "audio/mpeg",
+            SortOrder = 2,
+            CreatedAt = SystemClock.Instance.GetCurrentInstant()
+        };
+        _dbContext.Songs.Add(secondSong);
+        await _dbContext.SaveChangesAsync();
 
-        // Arrange
-        var scrobbleInfo = CreateScrobbleInfo(secondsPlayed: 10);
+        var scrobbleInfo1 = CreateScrobbleInfo(songId: 1, secondsPlayed: 10);
+        await _scrobbler.NowPlaying(_testUser, scrobbleInfo1, CancellationToken.None);
 
-        // Act
-        var result = await _scrobbler.NowPlaying(_testUser, scrobbleInfo, CancellationToken.None);
-
-        // Assert
-        Assert.True(result.IsSuccess);
-
-        var userSong = await _dbContext.UserSongs
-            .FirstOrDefaultAsync(us => us.UserId == _testUser.Id && us.SongId == 1);
-        var playHistory = await _dbContext.UserSongPlayHistories
+        var firstPlayHistory = await _dbContext.UserSongPlayHistories
             .FirstOrDefaultAsync(h => h.UserId == _testUser.Id && h.SongId == 1);
+        Assert.NotNull(firstPlayHistory);
+        Assert.True(firstPlayHistory.IsNowPlaying);
 
-        // Both should exist
-        Assert.NotNull(userSong);
-        Assert.NotNull(playHistory);
+        var scrobbleInfo2 = CreateScrobbleInfo(songId: 2, secondsPlayed: 20);
+        await _scrobbler.NowPlaying(_testUser, scrobbleInfo2, CancellationToken.None);
 
-        // UserSong should have been created at or before the play history
-        Assert.True(userSong.CreatedAt <= playHistory.PlayedAt);
+        await _dbContext.Entry(firstPlayHistory).ReloadAsync();
+        Assert.False(firstPlayHistory.IsNowPlaying);
+
+        var nowPlayingCount = await _dbContext.UserSongPlayHistories
+            .CountAsync(h => h.UserId == _testUser.Id && h.IsNowPlaying);
+        Assert.Equal(1, nowPlayingCount);
     }
 
-    private ScrobbleInfo CreateScrobbleInfo(int secondsPlayed)
+    private ScrobbleInfo CreateScrobbleInfo(int secondsPlayed, int songId = 1)
     {
         return new ScrobbleInfo(
             SongApiKey: Guid.NewGuid(),
             ArtistId: 1,
             AlbumId: 1,
-            SongId: 1,
-            SongTitle: "Test Song",
+            SongId: songId,
+            SongTitle: $"Test Song {songId}",
             ArtistName: "Test Artist",
             IsRandomizedScrobble: false,
             AlbumTitle: "Test Album",
             SongDuration: 180,
             SongMusicBrainzId: null,
-            SongNumber: 1,
+            SongNumber: songId,
             SongArtist: null,
             CreatedAt: SystemClock.Instance.GetCurrentInstant(),
             PlayerName: "Melodee",
@@ -285,8 +287,6 @@ public class MelodeeScrobblerUserSongTests : IDisposable
 
     public void Dispose()
     {
-        // Clear the static NowPlayingRepository to avoid test pollution
-        _nowPlayingRepo.ClearNowPlayingAsync(CancellationToken.None).GetAwaiter().GetResult();
         _dbContext.Database.EnsureDeleted();
         _dbContext.Dispose();
     }

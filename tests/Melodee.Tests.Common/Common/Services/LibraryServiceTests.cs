@@ -1217,18 +1217,18 @@ public sealed class LibraryServiceTests : ServiceTestBase
         // Arrange
         var libraryService = GetLibraryService();
         var now = Instant.FromDateTimeUtc(DateTime.UtcNow);
-        var invalidLibrary = new Library 
-        { 
-            Id = 0, 
-            Name = "Invalid", 
-            Path = "/tmp/invalid", 
-            Type = 1, 
-            CreatedAt = now 
+        var invalidLibrary = new Library
+        {
+            Id = 0,
+            Name = "Invalid",
+            Path = "/tmp/invalid",
+            Type = 1,
+            CreatedAt = now
         };
-        var scanHistory = new LibraryScanHistory 
-        { 
-            LibraryId = 0, 
-            CreatedAt = now 
+        var scanHistory = new LibraryScanHistory
+        {
+            LibraryId = 0,
+            CreatedAt = now
         };
 
         // Act & Assert
@@ -1243,13 +1243,13 @@ public sealed class LibraryServiceTests : ServiceTestBase
         await CleanupTestLibraries();
         var libraryService = GetLibraryService();
         var now = Instant.FromDateTimeUtc(DateTime.UtcNow);
-        var nonExistingLibrary = new Library 
-        { 
-            Id = 9999, 
-            Name = "NonExisting", 
-            Path = "/tmp/nonexisting", 
-            Type = 1, 
-            CreatedAt = now 
+        var nonExistingLibrary = new Library
+        {
+            Id = 9999,
+            Name = "NonExisting",
+            Path = "/tmp/nonexisting",
+            Type = 1,
+            CreatedAt = now
         };
         var scanHistory = new LibraryScanHistory
         {
@@ -1402,14 +1402,14 @@ public sealed class LibraryServiceTests : ServiceTestBase
         await CleanupTestLibraries();
         var libraryService = GetLibraryService();
         var playlistLibraryPath = Path.Combine(Path.GetTempPath(), "playlist-test-" + Guid.NewGuid().ToString());
-        
+
         try
         {
             Directory.CreateDirectory(playlistLibraryPath);
             Directory.CreateDirectory(Path.Combine(playlistLibraryPath, "dynamic"));
-            
+
             await CreateLibraryInDb(1, "Playlist Library", LibraryType.Playlist);
-            
+
             await using (var context = await MockFactory().CreateDbContextAsync())
             {
                 var library = await context.Libraries.FirstAsync(l => l.Id == 1);
@@ -1570,11 +1570,11 @@ public sealed class LibraryServiceTests : ServiceTestBase
         await CleanupTestLibraries();
         var libraryService = GetLibraryService();
         var tempPath = Path.Combine(Path.GetTempPath(), "stats-test-" + Guid.NewGuid().ToString());
-        
+
         try
         {
             Directory.CreateDirectory(tempPath);
-            
+
             await using (var context = await MockFactory().CreateDbContextAsync())
             {
                 var now = Instant.FromDateTimeUtc(DateTime.UtcNow);
@@ -1600,7 +1600,7 @@ public sealed class LibraryServiceTests : ServiceTestBase
             Assert.NotNull(result);
             Assert.NotNull(result.Data);
             Assert.True(result.Data!.Length >= 3); // At least artist, album, and song counts
-            
+
             var artistCountStat = result.Data.FirstOrDefault(s => s.Title == "Artist Count");
             Assert.NotNull(artistCountStat);
             Assert.Contains("10", artistCountStat.Data.ToString() ?? "");

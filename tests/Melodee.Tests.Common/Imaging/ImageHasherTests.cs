@@ -2,7 +2,6 @@ using Melodee.Common.Imaging;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
-using Xunit;
 
 namespace Melodee.Tests.Common.Imaging;
 
@@ -13,7 +12,7 @@ public class ImageHasherTests
         using var image = new Image<Rgba32>(width, height);
         var color = new Rgba32(r, g, b);
         image.Mutate(ctx => ctx.BackgroundColor(color));
-        
+
         using var stream = new MemoryStream();
         image.SaveAsPng(stream);
         return stream.ToArray();
@@ -22,7 +21,7 @@ public class ImageHasherTests
     private static byte[] CreateGradientImage(int width, int height)
     {
         using var image = new Image<Rgba32>(width, height);
-        
+
         for (int y = 0; y < height; y++)
         {
             for (int x = 0; x < width; x++)
@@ -31,7 +30,7 @@ public class ImageHasherTests
                 image[x, y] = new Rgba32(brightness, brightness, brightness);
             }
         }
-        
+
         using var stream = new MemoryStream();
         image.SaveAsPng(stream);
         return stream.ToArray();
@@ -40,7 +39,7 @@ public class ImageHasherTests
     private static byte[] CreateCheckerboardImage(int width, int height, int squareSize)
     {
         using var image = new Image<Rgba32>(width, height);
-        
+
         for (int y = 0; y < height; y++)
         {
             for (int x = 0; x < width; x++)
@@ -49,7 +48,7 @@ public class ImageHasherTests
                 image[x, y] = isWhite ? new Rgba32(255, 255, 255) : new Rgba32(0, 0, 0);
             }
         }
-        
+
         using var stream = new MemoryStream();
         image.SaveAsPng(stream);
         return stream.ToArray();

@@ -4,7 +4,6 @@ using Melodee.Common.Enums;
 using Melodee.Common.Jobs;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
-using Xunit;
 
 namespace Melodee.Tests.Common.Jobs;
 
@@ -20,7 +19,7 @@ public class LibraryInsertJobGetMelodeeFilesToProcessTests : TestsBase, IDisposa
         Directory.CreateDirectory(_testDirectory);
 
         var contextFactory = CreateInMemoryContextFactory();
-        
+
         _job = new LibraryInsertJob(
             Logger,
             MockConfigurationFactory(),
@@ -72,9 +71,9 @@ public class LibraryInsertJobGetMelodeeFilesToProcessTests : TestsBase, IDisposa
         var fullPath = Path.Combine(_testDirectory, relativePath);
         var directory = Path.GetDirectoryName(fullPath)!;
         Directory.CreateDirectory(directory);
-        
+
         File.WriteAllText(fullPath, "{}");
-        
+
         if (lastModified.HasValue)
         {
             File.SetLastWriteTimeUtc(fullPath, lastModified.Value);
@@ -177,7 +176,7 @@ public class LibraryInsertJobGetMelodeeFilesToProcessTests : TestsBase, IDisposa
     {
         var scanDir = Path.Combine(_testDirectory, "Artist1");
         Directory.CreateDirectory(scanDir);
-        
+
         var lastScan = DateTime.UtcNow.AddDays(-1);
         CreateMelodeeJsonFile("Artist1/Album1/melodee.json");
         CreateMelodeeJsonFile("Artist1/Album2/melodee.json");
@@ -206,11 +205,11 @@ public class LibraryInsertJobGetMelodeeFilesToProcessTests : TestsBase, IDisposa
     {
         var lastScan = DateTime.UtcNow.AddDays(-1);
         CreateMelodeeJsonFile("Artist1/Album1/melodee.json");
-        
+
         var otherFile1 = Path.Combine(_testDirectory, "Artist1/Album1/other.json");
         Directory.CreateDirectory(Path.GetDirectoryName(otherFile1)!);
         File.WriteAllText(otherFile1, "{}");
-        
+
         var otherFile2 = Path.Combine(_testDirectory, "Artist2/readme.txt");
         Directory.CreateDirectory(Path.GetDirectoryName(otherFile2)!);
         File.WriteAllText(otherFile2, "readme");
@@ -225,7 +224,7 @@ public class LibraryInsertJobGetMelodeeFilesToProcessTests : TestsBase, IDisposa
     public void GetMelodeeFilesToProcess_LargeNumberOfFiles_ProcessesAll()
     {
         var lastScan = DateTime.UtcNow.AddDays(-1);
-        
+
         for (int i = 0; i < 50; i++)
         {
             CreateMelodeeJsonFile($"Artist{i}/Album{i}/melodee.json");
@@ -253,7 +252,7 @@ public class LibraryInsertJobGetMelodeeFilesToProcessTests : TestsBase, IDisposa
     {
         var scanDir = Path.Combine(_testDirectory, "Artist1");
         Directory.CreateDirectory(scanDir);
-        
+
         var lastScan = DateTime.UtcNow.AddDays(-1);
         CreateMelodeeJsonFile("Artist1/Album1/melodee.json");
         CreateMelodeeJsonFile("Artist1/Album2/melodee.json");
@@ -272,7 +271,7 @@ public class LibraryInsertJobGetMelodeeFilesToProcessTests : TestsBase, IDisposa
     public void GetMelodeeFilesToProcess_VariousLastScanDates_FiltersCorrectly(int daysAgo)
     {
         var lastScan = DateTime.UtcNow.AddDays(daysAgo);
-        
+
         CreateMelodeeJsonFile("Recent/melodee.json", DateTime.UtcNow);
         CreateMelodeeJsonFile("Yesterday/melodee.json", DateTime.UtcNow.AddDays(-1));
         CreateMelodeeJsonFile("LastWeek/melodee.json", DateTime.UtcNow.AddDays(-7));
@@ -287,10 +286,10 @@ public class LibraryInsertJobGetMelodeeFilesToProcessTests : TestsBase, IDisposa
     public void GetMelodeeFilesToProcess_EmptySubdirectories_DoesNotCauseError()
     {
         var lastScan = DateTime.UtcNow.AddDays(-1);
-        
+
         Directory.CreateDirectory(Path.Combine(_testDirectory, "EmptyArtist1"));
         Directory.CreateDirectory(Path.Combine(_testDirectory, "EmptyArtist2/EmptyAlbum"));
-        
+
         CreateMelodeeJsonFile("ValidArtist/ValidAlbum/melodee.json");
 
         var result = CallGetMelodeeFilesToProcess(_testLibrary, null, lastScan);

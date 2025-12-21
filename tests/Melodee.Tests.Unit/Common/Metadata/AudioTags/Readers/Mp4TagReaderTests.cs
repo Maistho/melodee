@@ -13,7 +13,7 @@ public class Mp4TagReaderTests
     {
         // Use an actual test MP4 file if available in test fixtures
         var testFile = Path.Combine("Fixtures", "Audio", "test.m4a");
-        
+
         if (!File.Exists(testFile))
         {
             // Skip if test file doesn't exist
@@ -64,7 +64,7 @@ public class Mp4TagReaderTests
     public async Task ReadImagesAsync_ValidMp4WithCoverArt_ReturnsImages()
     {
         var testFile = Path.Combine("Fixtures", "Audio", "test_with_cover.m4a");
-        
+
         if (!File.Exists(testFile))
         {
             return;
@@ -85,7 +85,7 @@ public class Mp4TagReaderTests
     public async Task ReadImagesAsync_Mp4WithoutCoverArt_ReturnsEmptyList()
     {
         var testFile = Path.Combine("Fixtures", "Audio", "test_no_cover.m4a");
-        
+
         if (!File.Exists(testFile))
         {
             return;
@@ -123,7 +123,7 @@ public class Mp4TagReaderTests
     public async Task ReadTagAsync_ValidFileAndTag_ReturnsTagValue()
     {
         var testFile = Path.Combine("Fixtures", "Audio", "test.m4a");
-        
+
         if (!File.Exists(testFile))
         {
             return;
@@ -159,7 +159,7 @@ public class Mp4TagReaderTests
     public async Task ReadMediaAudiosAsync_ValidMp4_ReturnsAudioDetails()
     {
         var testFile = Path.Combine("Fixtures", "Audio", "test.m4a");
-        
+
         if (!File.Exists(testFile))
         {
             return;
@@ -206,7 +206,7 @@ public class Mp4TagReaderTests
 
             // Mp4TagReader handles cancellation internally and returns empty dict
             var result = await _reader.ReadTagsAsync(tempFile, cts.Token);
-            
+
             result.Should().NotBeNull();
         }
         finally
@@ -222,18 +222,18 @@ public class Mp4TagReaderTests
     {
         // Create a minimal valid MP4 file structure for testing
         var bytes = new List<byte>();
-        
+
         // ftyp atom (24 bytes)
         bytes.AddRange(new byte[] { 0x00, 0x00, 0x00, 0x18 }); // Size: 24
         bytes.AddRange(System.Text.Encoding.ASCII.GetBytes("ftyp"));
         bytes.AddRange(System.Text.Encoding.ASCII.GetBytes("isom"));
         bytes.AddRange(new byte[] { 0x00, 0x00, 0x02, 0x00 }); // Minor version
         bytes.AddRange(System.Text.Encoding.ASCII.GetBytes("isom"));
-        
+
         // moov atom (minimal - 8 bytes)
         bytes.AddRange(new byte[] { 0x00, 0x00, 0x00, 0x08 }); // Size: 8
         bytes.AddRange(System.Text.Encoding.ASCII.GetBytes("moov"));
-        
+
         return bytes.ToArray();
     }
 }

@@ -331,7 +331,8 @@ builder.Services
     .AddSingleton(SpotifyClientConfig.CreateDefault())
     .AddScoped<ISpotifyClientBuilder, SpotifyClientBuilder>()
     .AddSingleton<IFileSystemService, FileSystemService>()
-    .AddSingleton<INowPlayingRepository, NowPlayingInMemoryRepository>()
+    .AddScoped<NowPlayingDatabaseRepository>()
+    .AddScoped<INowPlayingRepository>(sp => sp.GetRequiredService<NowPlayingDatabaseRepository>())
     .AddSingleton<IMelodeeConfigurationFactory, MelodeeConfigurationFactory>()
     .AddSingleton<StreamingLimiter>()
     .AddSingleton<EtagRepository>()
@@ -569,6 +570,17 @@ if (!isQuartzDisabled)
                 .StartNow()
                 .Build());
     }
+
+    // Schedule NowPlayingCleanupJob to run every 5 minutes
+    await quartzScheduler.ScheduleJob(
+        JobBuilder.Create<NowPlayingCleanupJob>()
+            .WithIdentity(JobKeyRegistry.NowPlayingCleanupJobKey)
+            .Build(),
+        TriggerBuilder.Create()
+            .WithIdentity("NowPlayingCleanupJob-trigger")
+            .WithCronSchedule("0 */5 * * * ?")
+            .StartNow()
+            .Build());
 }
 
 #endregion

@@ -309,7 +309,7 @@ public abstract class ServiceTestBase : IDisposable, IAsyncDisposable
 
     protected SongService GetSongService()
     {
-        return new SongService(Logger, CacheManager, MockFactory(), GetNowPlayingRepository());
+        return new SongService(Logger, CacheManager, MockFactory());
     }
 
     protected SearchService GetSearchService()
@@ -324,7 +324,7 @@ public abstract class ServiceTestBase : IDisposable, IAsyncDisposable
 
     protected INowPlayingRepository GetNowPlayingRepository()
     {
-        return new NowPlayingInMemoryRepository();
+        return new NowPlayingDatabaseRepository(Logger, MockFactory());
     }
 
     protected LibraryService GetLibraryService()

@@ -1,7 +1,6 @@
 using System.Reflection;
 using System.Text;
 using Melodee.Common.Metadata.AudioTags.Readers;
-using Xunit;
 
 namespace Melodee.Tests.Common.Metadata.AudioTags.Readers;
 

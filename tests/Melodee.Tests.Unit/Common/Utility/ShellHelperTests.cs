@@ -51,7 +51,7 @@ public class ShellHelperTests
     public async Task Bash_MultilineCommand_ExecutesSuccessfully()
     {
         var command = "if [ 1 -eq 1 ]; then echo 'true'; fi";
-        
+
         var exitCode = await command.Bash();
 
         exitCode.Should().Be(0);
@@ -128,7 +128,7 @@ public class ShellHelperTests
     public async Task Bash_FileTestNonExistent_ReturnsNonZero()
     {
         var command = "test -f /nonexistent/file/path/12345.txt";
-        
+
         var act = async () => await command.Bash();
 
         await act.Should().ThrowAsync<Exception>();

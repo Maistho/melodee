@@ -7,11 +7,11 @@ using Melodee.Common.Models.Collection;
 using Melodee.Common.Models.OpenSubsonic.DTO;
 using Melodee.Common.Models.OpenSubsonic.Responses;
 using Melodee.Common.Models.Streaming;
-using Melodee.Common.Plugins.Scrobbling;
 using Melodee.Common.Services.Caching;
 using Melodee.Common.Utility;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Primitives;
+using NodaTime;
 using Serilog;
 using SmartFormat;
 using MelodeeModels = Melodee.Common.Models;
@@ -21,83 +21,68 @@ namespace Melodee.Common.Services;
 public class SongService(
     ILogger logger,
     ICacheManager cacheManager,
-    IDbContextFactory<MelodeeDbContext> contextFactory,
-    INowPlayingRepository nowPlayingRepository)
+    IDbContextFactory<MelodeeDbContext> contextFactory)
     : ServiceBase(logger, cacheManager, contextFactory)
 {
     private const string CacheKeyDetailByApiKeyTemplate = "urn:song:apikey:{0}";
     private const string CacheKeyDetailByTitleNormalizedTemplate = "urn:song:titlenormalized:{0}";
     private const string CacheKeyDetailTemplate = "urn:song:{0}";
 
-    // public async Task<dynamic[]?> DatabaseSongInfosForAlbumApiKey(Guid albumApiKey, CancellationToken cancellationToken = default)
-    // {
-    //     await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
-    //
-    //     return await scopedContext.Songs
-    //         .Include(s => s.Album)
-    //         .Where(s => s.Album.ApiKey == albumApiKey)
-    //         .Select(s => new { s.Id, Name = s.Title })
-    //         .ToArrayAsync(cancellationToken)
-    //         .ConfigureAwait(false);
-    // }    
+    /// <summary>
+    ///     Entries without a heartbeat for longer than this are considered stale.
+    ///     Set to 60 minutes to accommodate very long songs (some tracks exceed 40 minutes).
+    /// </summary>
+    private static readonly Duration StaleThreshold = Duration.FromMinutes(60);
 
     public async Task<MelodeeModels.PagedResult<SongDataInfo>> ListNowPlayingAsync(MelodeeModels.PagedRequest pagedRequest, CancellationToken cancellationToken = default)
     {
-        var songCount = 0;
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var threshold = SystemClock.Instance.GetCurrentInstant().Minus(StaleThreshold);
+
+        // Query directly from database for songs currently being played
+        var baseQuery = scopedContext.UserSongPlayHistories
+            .AsNoTracking()
+            .Where(h => h.IsNowPlaying && h.LastHeartbeatAt != null && h.LastHeartbeatAt >= threshold)
+            .Include(h => h.Song)
+                .ThenInclude(s => s.Album)
+                    .ThenInclude(a => a.Artist);
+
+        var songCount = await baseQuery.CountAsync(cancellationToken).ConfigureAwait(false);
         SongDataInfo[] songs = [];
-        await using (var scopedContext =
-                     await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
+
+        if (!pagedRequest.IsTotalCountOnlyRequest && songCount > 0)
         {
-            var nowPlaying = await nowPlayingRepository.GetNowPlayingAsync(cancellationToken).ConfigureAwait(false);
-            if (nowPlaying.Data.Length > 0)
-            {
-                var nowPlayingSongIds = nowPlaying.Data.Select(x => x.Scrobble.SongId).ToArray();
-                songCount = nowPlayingSongIds.Length;
+            var rawRecords = await baseQuery
+                .OrderByDescending(h => h.LastHeartbeatAt)
+                .Skip(pagedRequest.SkipValue)
+                .Take(pagedRequest.TakeValue)
+                .ToArrayAsync(cancellationToken)
+                .ConfigureAwait(false);
 
-                if (!pagedRequest.IsTotalCountOnlyRequest)
-                {
-                    // Create base query using EF Core
-                    var baseQuery = scopedContext.Songs
-                        .Where(s => nowPlayingSongIds.Contains(s.Id))
-                        .Include(s => s.Album)
-                        .ThenInclude(a => a.Artist)
-                        .AsNoTracking();
-
-                    // Apply ordering
-                    var orderedQuery = ApplyOrdering(baseQuery, pagedRequest);
-
-                    // Execute query with paging and project to SongDataInfo
-                    var rawSongs = await orderedQuery
-                        .Skip(pagedRequest.SkipValue)
-                        .Take(pagedRequest.TakeValue)
-                        .ToArrayAsync(cancellationToken)
-                        .ConfigureAwait(false);
-
-                    songs = rawSongs.Select(s => new SongDataInfo(
-                        s.Id,
-                        s.ApiKey,
-                        s.IsLocked,
-                        s.Title,
-                        s.TitleNormalized,
-                        s.SongNumber,
-                        s.Album.ReleaseDate,
-                        s.Album.Name,
-                        s.Album.ApiKey,
-                        s.Album.Artist.Name,
-                        s.Album.Artist.ApiKey,
-                        s.FileSize,
-                        s.Duration,
-                        s.CreatedAt,
-                        s.Tags ?? string.Empty,
-                        false, // UserStarred - would need user context
-                        0, // UserRating - would need user context
-                        s.AlbumId,
-                        s.LastPlayedAt,
-                        s.PlayedCount,
-                        s.CalculatedRating
-                    )).ToArray();
-                }
-            }
+            songs = rawRecords.Select(h => new SongDataInfo(
+                h.Song.Id,
+                h.Song.ApiKey,
+                h.Song.IsLocked,
+                h.Song.Title,
+                h.Song.TitleNormalized,
+                h.Song.SongNumber,
+                h.Song.Album.ReleaseDate,
+                h.Song.Album.Name,
+                h.Song.Album.ApiKey,
+                h.Song.Album.Artist.Name,
+                h.Song.Album.Artist.ApiKey,
+                h.Song.FileSize,
+                h.Song.Duration,
+                h.Song.CreatedAt,
+                h.Song.Tags ?? string.Empty,
+                false,
+                0,
+                h.Song.AlbumId,
+                h.Song.LastPlayedAt,
+                h.Song.PlayedCount,
+                h.Song.CalculatedRating
+            )).ToArray();
         }
 
         return new MelodeeModels.PagedResult<SongDataInfo>

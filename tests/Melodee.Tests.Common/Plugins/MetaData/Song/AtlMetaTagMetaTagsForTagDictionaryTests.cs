@@ -1,10 +1,7 @@
-using Melodee.Common.Configuration;
-using Melodee.Common.Constants;
 using Melodee.Common.Enums;
 using Melodee.Common.Models;
 using Melodee.Common.Plugins.MetaData.Song;
 using Melodee.Common.Plugins.Processor;
-using Xunit;
 
 namespace Melodee.Tests.Common.Plugins.MetaData.Song;
 
@@ -19,7 +16,7 @@ public class AtlMetaTagMetaTagsForTagDictionaryTests : TestsBase
 
     private IEnumerable<MetaTag<object?>> CallMetaTagsForTagDictionary(Dictionary<string, string> tagsDictionary)
     {
-        var method = typeof(AtlMetaTag).GetMethod("MetaTagsForTagDictionary", 
+        var method = typeof(AtlMetaTag).GetMethod("MetaTagsForTagDictionary",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         return (IEnumerable<MetaTag<object?>>)method!.Invoke(_plugin, [tagsDictionary])!;
     }

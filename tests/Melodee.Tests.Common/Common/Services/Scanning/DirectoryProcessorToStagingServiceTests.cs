@@ -1,13 +1,8 @@
-using Melodee.Common.Configuration;
 using Melodee.Common.Data.Models;
 using Melodee.Common.Enums;
 using Melodee.Common.Models;
-using Melodee.Common.Models.Extensions;
-using Melodee.Common.Plugins.SearchEngine.MusicBrainz.Data;
-using Melodee.Common.Serialization;
 using Melodee.Common.Services;
 using Melodee.Common.Services.Scanning;
-using Melodee.Common.Services.SearchEngines;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using NodaTime;
@@ -378,8 +373,7 @@ public class DirectoryProcessorToStagingServiceTests : ServiceTestBase
         await CreateStagingLibraryInDb();
         await service.InitializeAsync();
 
-        var eventRaised = false;
-        service.OnProcessingEvent += (sender, message) => eventRaised = true;
+        service.OnProcessingEvent += (sender, message) => { /* Event handler for testing */ };
 
         var dirInfo = new FileSystemDirectoryInfo
         {
@@ -416,8 +410,7 @@ public class DirectoryProcessorToStagingServiceTests : ServiceTestBase
         await CreateStagingLibraryInDb();
         await service.InitializeAsync();
 
-        var startEventRaised = false;
-        service.OnProcessingStart += (sender, count) => startEventRaised = true;
+        service.OnProcessingStart += (sender, count) => { /* Event handler for testing */ };
 
         var dirInfo = new FileSystemDirectoryInfo
         {

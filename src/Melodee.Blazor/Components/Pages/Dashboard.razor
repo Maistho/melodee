@@ -2,49 +2,130 @@
 
 @using Melodee.Common.Data.Models
 @using Melodee.Common.Enums
+@using Melodee.Common.Models
 @using Melodee.Common.Models.Collection
+@using Melodee.Common.Models.Collection.Extensions
+@using NodaTime
 @using TextStyle = Radzen.Blazor.TextStyle
 @inherits MelodeeComponentBase
 
 @inject UserService UserService
 @inject ArtistService ArtistService
 @inject AlbumService AlbumService
+@inject StatisticsService StatisticsService
 @inject IMelodeeConfigurationFactory ConfigurationFactory
 
 <PageTitle>Dashboard</PageTitle>
 
-<RadzenStack>
+<RadzenStack Gap="1rem">
+    <RadzenRow>
+        @foreach (var kpi in _userKpis)
+        {
+            <RadzenColumn Size="6" SizeSM="4" SizeMD="3" SizeLG="2">
+                <RadzenCard>
+                    <RadzenStack Gap="0.25rem">
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                            <RadzenIcon Icon="@kpi.Icon" Style="font-size: 1.25rem; opacity: 0.7;"/>
+                            <RadzenText TextStyle="TextStyle.Overline" Style="margin: 0;">@kpi.Title</RadzenText>
+                        </RadzenStack>
+                        <RadzenText TextStyle="TextStyle.H5" Style="margin: 0;">@kpi.Data</RadzenText>
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+        }
+    </RadzenRow>
+
+    <RadzenRow>
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenCard>
+                <RadzenText TextStyle="TextStyle.H6">Your plays (last 30 days)</RadzenText>
+                <RadzenChart Style="height: 200px;">
+                    <RadzenLineSeries Data="@_playsPerDay" CategoryProperty="Day" ValueProperty="Value" Title="Plays" Smooth="true">
+                        <RadzenCategoryAxis FormatString="MM/dd" Step="5">
+                            <RadzenAxisTitle Text=""/>
+                        </RadzenCategoryAxis>
+                        <RadzenValueAxis>
+                            <RadzenAxisTitle Text="Plays"/>
+                        </RadzenValueAxis>
+                    </RadzenLineSeries>
+                </RadzenChart>
+            </RadzenCard>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenCard>
+                <RadzenText TextStyle="TextStyle.H6">Top played songs (last 30 days)</RadzenText>
+                @if (_topSongs.Length > 0)
+                {
+                    <RadzenDataGrid TItem="TopItemStat" Data="@_topSongs" AllowPaging="false" AllowSorting="false" AllowFiltering="false" Density="Density.Compact" Style="max-height: 200px; overflow-y: auto;">
+                        <Columns>
+                            <RadzenDataGridColumn TItem="TopItemStat" Property="Label" Title="Song" Width="70%"/>
+                            <RadzenDataGridColumn TItem="TopItemStat" Property="Value" Title="Plays" Width="30%" TextAlign="TextAlign.Right"/>
+                        </Columns>
+                    </RadzenDataGrid>
+                }
+                else
+                {
+                    <RadzenText TextStyle="TextStyle.Body2" Style="opacity: 0.7; padding: 1rem;">No play history yet. Start listening to see your top songs!</RadzenText>
+                }
+            </RadzenCard>
+        </RadzenColumn>
+    </RadzenRow>
+
+    @if (_recentlyPlayed.Length > 0)
+    {
+        <RadzenPanel AllowCollapse="true">
+            <HeaderTemplate>
+                <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-align-items-center rz-m-0">
+                    <RadzenIcon Icon="history" class="rz-me-1"/>
+                    Recently played
+                </RadzenText>
+            </HeaderTemplate>
+            <ChildContent>
+                <RadzenStack
+                    Orientation="Orientation.Horizontal"
+                    Wrap="FlexWrap.Wrap"
+                    JustifyContent="JustifyContent.Left"
+                    class="rz-p-2"
+                    Gap="8px">
+                    @foreach (var song in _recentlyPlayedSongs)
+                    {
+                        <SongDataInfoCardComponent Song="@song" Style="width: 280px;"/>
+                    }
+                </RadzenStack>
+            </ChildContent>
+        </RadzenPanel>
+    }
+
     @if (_userPins.Length > 0)
     {
-        <RadzenRow>
-            <RadzenPanel AllowCollapse="true">
-                <HeaderTemplate>
-                    <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-align-items-center rz-m-0">
-                        <RadzenIcon Icon="keep" class="rz-me-1"/>
-                        Your pins
-                    </RadzenText>
-                </HeaderTemplate>
-                <ChildContent>
-                    <RadzenStack
-                        Orientation="Orientation.Horizontal"
-                        Wrap="FlexWrap.Wrap"
-                        JustifyContent="JustifyContent.Left"
-                        class="rz-p-2"
-                        Gap="8px">
-                        @foreach (var pin in _userPins)
-                        {
-                            <UserPinCardComponent UserPin="@pin"/>
-                        }
-                    </RadzenStack>
-                </ChildContent>
-            </RadzenPanel>
-        </RadzenRow>
+        <RadzenPanel AllowCollapse="true">
+            <HeaderTemplate>
+                <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-align-items-center rz-m-0">
+                    <RadzenIcon Icon="push_pin" class="rz-me-1"/>
+                    Your pins
+                </RadzenText>
+            </HeaderTemplate>
+            <ChildContent>
+                <RadzenStack
+                    Orientation="Orientation.Horizontal"
+                    Wrap="FlexWrap.Wrap"
+                    JustifyContent="JustifyContent.Left"
+                    class="rz-p-2"
+                    Gap="8px">
+                    @foreach (var pin in _userPins)
+                    {
+                        <UserPinCardComponent UserPin="@pin"/>
+                    }
+                </RadzenStack>
+            </ChildContent>
+        </RadzenPanel>
     }
+
     <RadzenPanel AllowCollapse="true">
         <HeaderTemplate>
             <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-m-0">
-                <RadzenIcon Icon="artist" class="rz-me-1"/>
-                Most recently added artists
+                <RadzenIcon Icon="person" class="rz-me-1"/>
+                Recently added artists
             </RadzenText>
         </HeaderTemplate>
         <ChildContent>
@@ -65,7 +146,7 @@
         <HeaderTemplate>
             <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-m-0">
                 <RadzenIcon Icon="album" class="rz-me-1"/>
-                Most recently added albums
+                Recently added albums
             </RadzenText>
         </HeaderTemplate>
         <ChildContent>
@@ -86,11 +167,19 @@
 
 @code {
 
-    AlbumDataInfo[] _latestAlbums = [];
-    ArtistDataInfo[] _latestArtists = [];
-    UserPin[] _userPins = [];
+    private AlbumDataInfo[] _latestAlbums = [];
+    private ArtistDataInfo[] _latestArtists = [];
+    private UserPin[] _userPins = [];
+    private Statistic[] _userKpis = [];
+    private TimeSeriesPoint[] _playsPerDay = [];
+    private TopItemStat[] _topSongs = [];
+    private TopItemStat[] _recentlyPlayed = [];
+    private SongDataInfo[] _recentlyPlayedSongs = [];
 
     private short _latestPageSize;
+    private LocalDate _rangeStart;
+    private LocalDate _rangeEnd;
+    private string _timeZoneId = "UTC";
 
     protected override async Task OnInitializedAsync()
     {
@@ -99,7 +188,15 @@
         var configuration = await ConfigurationFactory.GetConfigurationAsync();
         _latestPageSize = configuration.GetValue<short?>(SettingRegistry.DefaultsDashboardLatestPageSize) ?? configuration.GetValue<short?>(SettingRegistry.DefaultsPageSize) ?? 50;
 
-        var albumLatestResult = await AlbumService.ListAsync(new PagedRequest
+        _timeZoneId = CurrentUser?.TimeZoneId() ?? "UTC";
+        var zone = DateTimeZoneProviders.Tzdb.GetZoneOrNull(_timeZoneId) ?? DateTimeZone.Utc;
+        var today = SystemClock.Instance.GetCurrentInstant().InZone(zone).Date;
+        _rangeEnd = today;
+        _rangeStart = today.PlusDays(-29);
+
+        var userApiKey = CurrentUser?.ToApiGuid() ?? Guid.Empty;
+
+        var albumLatestTask = AlbumService.ListAsync(new PagedRequest
         {
             PageSize = _latestPageSize,
             OrderBy = new Dictionary<string, string>
@@ -107,9 +204,8 @@
                 { nameof(AlbumDataInfo.CreatedAt), PagedRequest.OrderDescDirection }
             }
         });
-        _latestAlbums = albumLatestResult.Data.ToArray();
 
-        var artistLatestResult = await ArtistService.ListAsync(new PagedRequest
+        var artistLatestTask = ArtistService.ListAsync(new PagedRequest
         {
             PageSize = _latestPageSize,
             OrderBy = new Dictionary<string, string>
@@ -117,12 +213,50 @@
                 { nameof(ArtistDataInfo.CreatedAt), PagedRequest.OrderDescDirection }
             }
         });
-        _latestArtists = artistLatestResult.Data.ToArray();
 
-        var userResult = await UserService.GetAsync(CurrentUser?.UserId() ?? 0);
-        if (userResult is { IsSuccess: true, Data: not null })
+        var userTask = UserService.GetAsync(CurrentUser?.UserId() ?? 0);
+        var kpiTask = StatisticsService.GetUserKpisAsync(userApiKey, _rangeStart, _rangeEnd, _timeZoneId);
+        var playsTask = StatisticsService.GetUserSongPlaysPerDayAsync(userApiKey, _rangeStart, _rangeEnd, _timeZoneId);
+        var topSongsTask = StatisticsService.GetUserTopPlayedSongsAsync(userApiKey, _rangeStart, _rangeEnd, _timeZoneId, 10);
+        var recentlyPlayedTask = StatisticsService.GetUserRecentlyPlayedSongsAsync(userApiKey, 10);
+
+        await Task.WhenAll(albumLatestTask, artistLatestTask, userTask, kpiTask, playsTask, topSongsTask, recentlyPlayedTask);
+
+        _latestAlbums = albumLatestTask.Result.Data.ToArray();
+        _latestArtists = artistLatestTask.Result.Data.ToArray();
+        _userKpis = kpiTask.Result.Data ?? [];
+        _playsPerDay = playsTask.Result.Data ?? [];
+        _topSongs = topSongsTask.Result.Data ?? [];
+        _recentlyPlayed = recentlyPlayedTask.Result.Data ?? [];
+
+        if (userTask.Result is { IsSuccess: true, Data: not null })
         {
-            _userPins = userResult.Data.Pins.ToArray();
+            _userPins = userTask.Result.Data.Pins.ToArray();
+        }
+
+        if (_recentlyPlayed.Length > 0)
+        {
+            _recentlyPlayedSongs = _recentlyPlayed
+                .Where(x => x.ApiKey.HasValue)
+                .Select(x => new SongDataInfo(
+                    x.Id ?? 0,
+                    x.ApiKey!.Value,
+                    false,
+                    x.Label,
+                    x.Label.ToNormalizedString() ?? string.Empty,
+                    0,
+                    LocalDate.MinIsoValue,
+                    string.Empty,
+                    Guid.Empty,
+                    string.Empty,
+                    Guid.Empty,
+                    0,
+                    0,
+                    Instant.MinValue,
+                    string.Empty,
+                    false,
+                    0))
+                .ToArray();
         }
     }
 
