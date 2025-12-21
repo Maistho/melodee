@@ -863,12 +863,12 @@ public class AlbumService(
 
             if (imageFile is not { Exists: true })
             {
-                Logger.Warning("No image found for album [{AlbumId}] with size [{Size}].", albumId, LogSanitizer.Sanitize(sizeValue));
+                Logger.Warning("No image found for album [{AlbumId}].", albumId);
                 return new MelodeeModels.ImageBytesAndEtag(null, badEtag);
             }
 
             var imageBytes = await File.ReadAllBytesAsync(imageFile.FullName, cancellationToken).ConfigureAwait(false);
-            Logger.Information("Image found for album [{AlbumId}] with size [{Size}] CacheKey [{CacheKey}].", album, LogSanitizer.Sanitize(sizeValue), LogSanitizer.Sanitize(cacheKey));
+            Logger.Information("Image found for album [{AlbumId}].", album);
             return new MelodeeModels.ImageBytesAndEtag(imageBytes, (album.Data.LastUpdatedAt ?? album.Data.CreatedAt).ToEtag());
         }, cancellationToken, configuration.CacheDuration(), Album.CacheRegion);
     }

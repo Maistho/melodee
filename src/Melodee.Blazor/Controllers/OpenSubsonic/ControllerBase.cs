@@ -157,8 +157,7 @@ public abstract class ControllerBase(EtagRepository etagRepository, ISerializer 
             ),
             ipAddress
         );
-        // Sanitize user input before logging to prevent log forging - only log sanitized username
-        Trace.WriteLine($"-*-> User [{LogSanitizer.Sanitize(ApiRequest.Username)}] authenticated");
+        Trace.WriteLine("-*-> User authenticated");
         await next().ConfigureAwait(false);
     }
 }

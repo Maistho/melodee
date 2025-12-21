@@ -82,21 +82,13 @@ public class ScrobbleService(
 
     public async Task<OperationResult<bool>> NowPlaying(UserInfo user, Guid id, double? time, string playerName, string? userAgent = null, string? ipAddress = null, CancellationToken cancellationToken = default)
     {
-        Logger.Information("[{ServiceName}] NowPlaying called for User [{User}], Song [{SongId}], Time [{Time}], Player [{Player}]",
-            nameof(ScrobbleService),
-            LogSanitizer.Sanitize(user.UserName),
-            id,
-            time,
-            LogSanitizer.Sanitize(playerName));
+        Logger.Information("[{ServiceName}] NowPlaying invoked.", nameof(ScrobbleService));
 
         var result = true;
         var databaseSongScrobbleInfo = await DatabaseSongScrobbleInfoForSongApiKey(id, cancellationToken).ConfigureAwait(false);
         if (databaseSongScrobbleInfo != null)
         {
-            Logger.Information("[{ServiceName}] Found song info: [{SongTitle}] by [{ArtistName}]",
-                nameof(ScrobbleService),
-                databaseSongScrobbleInfo.SongTitle,
-                databaseSongScrobbleInfo.ArtistName);
+            Logger.Information("[{ServiceName}] Found song info for NowPlaying.", nameof(ScrobbleService));
 
             var secondsPlayed = time.HasValue ? (int?)Math.Round(time.Value) : null;
 
@@ -125,28 +117,21 @@ public class ScrobbleService(
             };
 
             var enabledScrobblers = _scrobblers.OrderBy(x => x.SortOrder).Where(x => x.IsEnabled).ToArray();
-            Logger.Information("[{ServiceName}] Processing NowPlaying with [{Count}] enabled scrobblers",
-                nameof(ScrobbleService),
-                enabledScrobblers.Length);
+                Logger.Information("[{ServiceName}] Processing NowPlaying with configured scrobblers.",
+                    nameof(ScrobbleService));
 
             foreach (var scrobbler in enabledScrobblers)
             {
-                Logger.Information("[{ServiceName}] Calling NowPlaying on scrobbler [{Scrobbler}]",
-                    nameof(ScrobbleService),
-                    scrobbler.DisplayName);
+                Logger.Information("[{ServiceName}] Calling NowPlaying on scrobbler.", nameof(ScrobbleService));
                 var nowPlayingResult = await scrobbler.NowPlaying(user, scrobble, cancellationToken).ConfigureAwait(false);
                 result &= nowPlayingResult.IsSuccess;
-                Logger.Information("[{ServiceName}] Scrobbler [{Scrobbler}] NowPlaying result: [{Success}]",
-                    nameof(ScrobbleService),
-                    scrobbler.DisplayName,
-                    nowPlayingResult.IsSuccess);
+                Logger.Information("[{ServiceName}] Scrobbler NowPlaying completed.", nameof(ScrobbleService));
             }
         }
         else
         {
-            Logger.Warning("[{ServiceName}] Could not find song info for Song [{SongId}]",
-                nameof(ScrobbleService),
-                id);
+            Logger.Warning("[{ServiceName}] Could not find song info for request.",
+                nameof(ScrobbleService));
         }
 
         return new OperationResult<bool>
@@ -157,11 +142,7 @@ public class ScrobbleService(
 
     public async Task<OperationResult<bool>> Scrobble(UserInfo user, Guid songId, bool isRandomizedScrobble, string playerName, string? userAgent = null, string? ipAddress = null, CancellationToken cancellationToken = default)
     {
-        Logger.Information("[{ServiceName}] Scrobble called for User [{User}], Song [{SongId}], Player [{Player}]",
-            nameof(ScrobbleService),
-            LogSanitizer.Sanitize(user.UserName),
-            songId,
-            LogSanitizer.Sanitize(playerName));
+        Logger.Information("[{ServiceName}] Scrobble invoked.", nameof(ScrobbleService));
 
         CheckInitialized();
 
@@ -173,10 +154,8 @@ public class ScrobbleService(
             var databaseSongScrobbleInfo = await DatabaseSongScrobbleInfoForSongApiKey(songId, cancellationToken).ConfigureAwait(false);
             if (databaseSongScrobbleInfo != null)
             {
-                Logger.Information("[{ServiceName}] Found song info: [{SongTitle}] by [{ArtistName}]",
-                    nameof(ScrobbleService),
-                    databaseSongScrobbleInfo.SongTitle,
-                    databaseSongScrobbleInfo.ArtistName);
+                Logger.Information("[{ServiceName}] Found song info for scrobble.",
+                    nameof(ScrobbleService));
 
                 // For completed scrobbles, use the full song duration
                 var secondsPlayed = databaseSongScrobbleInfo.SongDuration.ToSeconds();

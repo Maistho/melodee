@@ -427,10 +427,9 @@ public class ArtistSearchEngineService(
 
                     if (artistFromSearchResult.SpotifyId == null && artistFromSearchResult.MusicBrainzId == null)
                     {
-                        Logger.Warning("[{Name}]:[{MethodName}] unable to find artist for query [{Query}].",
+                        Logger.Warning("[{Name}]:[{MethodName}] unable to find artist for provided query.",
                             nameof(ArtistSearchEngineService),
-                            nameof(GetArtistFromSearchProviders),
-                            query);
+                            nameof(GetArtistFromSearchProviders));
                         return null;
                     }
                 }
@@ -463,11 +462,9 @@ public class ArtistSearchEngineService(
                 var newArtist = artistsFromSearchResult.OrderByDescending(x => x.Rank).FirstOrDefault();
 
                 Logger.Debug(
-                    "[{Name}]:[{MethodName}] artist for query [{Query}] return [{ArtistId}] with [{AlbumCount}] albums in [{ElapsedTime}] ms.",
+                    "[{Name}]:[{MethodName}] artist search completed with [{AlbumCount}] albums in [{ElapsedTime}] ms.",
                     nameof(ArtistSearchEngineService),
                     nameof(GetArtistFromSearchProviders),
-                    query,
-                    newArtist?.ToString(),
                     newArtist?.Releases?.Length,
                     Stopwatch.GetElapsedTime(startTicks).TotalMilliseconds
                 );
@@ -476,8 +473,7 @@ public class ArtistSearchEngineService(
         }
         catch (Exception e)
         {
-            Logger.Error(e, "[{Name}] GetArtistFromSearchProviders [{Query}]", nameof(ArtistSearchEngineService),
-                query);
+            Logger.Error(e, "[{Name}] GetArtistFromSearchProviders failed.", nameof(ArtistSearchEngineService));
         }
 
         return null;
