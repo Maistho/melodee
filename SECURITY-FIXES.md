@@ -103,12 +103,34 @@ The following were reviewed and confirmed to be secure:
 
 **Note**: The application uses a permissive CORS policy (`AllowAnyOrigin()`). This is intentional for a music API server that needs to be accessed from various clients. Authentication and authorization are properly enforced, and rate limiting is enabled.
 
+## CodeQL Suppression Comments
+
+To prevent false positives in CodeQL security scanning, the following inline suppression comments have been added to legitimate MD5 usages that are required by external APIs:
+
+1. **`src/Melodee.Common/Utility/HashHelper.cs`**
+   - `// lgtm[cs/weak-crypto] MD5 required by external APIs (OpenSubsonic, Last.fm) - use CreateSha256 for new code`
+   - Added to both `CreateMd5(FileInfo file)` and `CreateMd5(byte[]? bytes)` methods
+   - These methods are maintained solely for API compatibility
+
+2. **`src/Melodee.Common/Services/UserService.cs`** (line ~1063)
+   - `// lgtm[cs/weak-crypto] MD5 mandated by OpenSubsonic API specification - cannot change`
+   - Suppresses alert for OpenSubsonic token authentication
+   - MD5 is part of the OpenSubsonic/Subsonic protocol specification
+
+3. **`src/Melodee.Blazor/Controllers/Melodee/ScrobbleController.cs`** (line ~287)
+   - `// lgtm[cs/weak-crypto] MD5 mandated by Last.fm API specification - cannot change`
+   - Suppresses alert for Last.fm API signature computation
+   - MD5 is required by Last.fm's authentication protocol
+
+These suppressions ensure CodeQL analysis focuses on actual security vulnerabilities rather than flagging legitimate uses of legacy cryptography mandated by third-party APIs.
+
 ## Testing
 
 - ✅ Build: Successful
 - ✅ Hash Helper Tests: 10 tests passed
-- ✅ Full Test Suite: 2,079 tests passed
+- ✅ Full Test Suite: 2,159 tests passed (as of latest run)
 - ✅ No regressions introduced
+- ✅ CodeQL suppression comments added
 
 ## Remaining Known Issues
 
