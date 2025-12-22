@@ -116,8 +116,8 @@ public class ScrobbleService(
             };
 
             var enabledScrobblers = _scrobblers.OrderBy(x => x.SortOrder).Where(x => x.IsEnabled).ToArray();
-                Logger.Information("[{ServiceName}] Processing NowPlaying with configured scrobblers.",
-                    nameof(ScrobbleService));
+            Logger.Information("[{ServiceName}] Processing NowPlaying with configured scrobblers.",
+                nameof(ScrobbleService));
 
             foreach (var scrobbler in enabledScrobblers)
             {

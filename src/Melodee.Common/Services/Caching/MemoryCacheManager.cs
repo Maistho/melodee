@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Text;
 using System.Text.Json;
@@ -14,7 +13,8 @@ using Serilog;
 namespace Melodee.Common.Services.Caching;
 
 /// <summary>
-///     MemoryCache implementation for ICacheManager.
+///     MemoryCache implementation for ICacheManager with region support.
+///     Optimized for performance while maintaining region functionality.
 /// </summary>
 /// <param name="logger">Logger for CacheManager</param>
 /// <param name="defaultTimeSpan">Default Timespan for lifetime of cached items.</param>
@@ -22,62 +22,55 @@ namespace Melodee.Common.Services.Caching;
 public sealed class MemoryCacheManager(ILogger logger, TimeSpan defaultTimeSpan, ISerializer serializer)
     : CacheManagerBase(logger, defaultTimeSpan, serializer)
 {
-    private const string DefaultRegion = "__default__";
-    private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, Task<object>>> _pendingTasksByRegion = new();
-    private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, long>> _regionCacheData = new();
-    private readonly ConcurrentDictionary<string, MemoryCache> _regionCaches = new();
+    private readonly IMemoryCache _memoryCache = new MemoryCache(new MemoryCacheOptions());
+    private readonly ConcurrentDictionary<string, Task<object>> _pendingTasks = new();
+    private readonly ConcurrentDictionary<string, (long size, string region)> _cacheData = new(); // Track size and region
+
+    // Internal class to hold cached value with its type
+    private class TypedCacheValue
+    {
+        public object? Value { get; }
+        public Type Type { get; }
+
+        public TypedCacheValue(object? value, Type type)
+        {
+            Value = value;
+            Type = type;
+        }
+    }
+
     private long _hitCount;
     private long _missCount;
 
     public override void Clear()
     {
-        // Clear all caches including default region
-        foreach (var cache in _regionCaches.Values)
-        {
-            cache.Dispose();
-        }
-
-        _regionCaches.Clear();
-        _pendingTasksByRegion.Clear();
-        _regionCacheData.Clear();
+        (_memoryCache as MemoryCache)?.Compact(1.0); // Force cleanup of expired items
+        _pendingTasks.Clear();
+        _cacheData.Clear();
     }
 
     public override void ClearRegion(string region)
     {
-        var regionKey = string.IsNullOrEmpty(region) ? DefaultRegion : region;
-
-        // Remove and dispose the specific region cache
-        if (_regionCaches.TryRemove(regionKey, out var cache))
+        if (string.IsNullOrEmpty(region))
         {
-            cache.Dispose();
-            Logger.Verbose("Cleared cache region [{0}]", regionKey);
+            return; // Nothing to clear for default region in this implementation
         }
 
-        // Remove pending tasks for this region
-        _pendingTasksByRegion.TryRemove(regionKey, out _);
-
-        // Remove tracking data for this region
-        _regionCacheData.TryRemove(regionKey, out _);
-    }
-
-    private MemoryCache GetCacheForRegion(string? region)
-    {
-        var regionKey = string.IsNullOrEmpty(region) ? DefaultRegion : region;
-        return _regionCaches.GetOrAdd(regionKey, _ => new MemoryCache(new MemoryCacheOptions()));
-    }
-
-    private TOut? Get<TOut>(string key, string? region = null)
-    {
-        var cache = GetCacheForRegion(region);
-        // Get raw value from cache
-        var rawValue = cache.Get(key);
-        if (rawValue == null)
+        // For region-based clearing, we'd need to track keys by region
+        // For now, we'll clear items that match the region prefix
+        var keysToRemove = _cacheData.Keys.Where(k => k.StartsWith($"{region}:")).ToList();
+        foreach (var key in keysToRemove)
         {
-            return default;
+            _memoryCache.Remove(key);
+            _cacheData.TryRemove(key, out _);
         }
 
-        // Try safe conversion
-        return SafeParser.ChangeType<TOut>(rawValue);
+        // Also clean up pending tasks for this region
+        var pendingKeysToRemove = _pendingTasks.Keys.Where(k => k.StartsWith($"{region}:")).ToList();
+        foreach (var key in pendingKeysToRemove)
+        {
+            _pendingTasks.TryRemove(key, out _);
+        }
     }
 
     public override async Task<TOut> GetAsync<TOut>(
@@ -87,7 +80,7 @@ public sealed class MemoryCacheManager(ILogger logger, TimeSpan defaultTimeSpan,
         TimeSpan? duration = null,
         string? region = null)
     {
-        if (key.Nullify() == null)
+        if (string.IsNullOrWhiteSpace(key))
         {
             throw new ArgumentException("Invalid Key", nameof(key));
         }
@@ -109,18 +102,25 @@ public sealed class MemoryCacheManager(ILogger logger, TimeSpan defaultTimeSpan,
             return result;
         }
 
+        // For region support, create a composite key (without type to maintain compatibility with Remove)
+        var cacheKey = string.IsNullOrEmpty(region) ? key : $"{region}:{key}";
+
         // First check if the item is already in the cache
-        var cachedValue = Get<TOut>(key, region);
-        if (!EqualityComparer<TOut>.Default.Equals(cachedValue, default))
+        if (_memoryCache.TryGetValue(cacheKey, out object? cachedObj))
         {
-            Logger.Verbose("-!> Cache Hit.");
-            Interlocked.Increment(ref _hitCount);
-            return cachedValue!;
+            if (cachedObj is TypedCacheValue typedCacheValue)
+            {
+                // Check if the cached type matches the requested type
+                if (typedCacheValue.Type == typeof(TOut) && typedCacheValue.Value is TOut cachedValue)
+                {
+                    Logger.Verbose("-!> Cache Hit.");
+                    Interlocked.Increment(ref _hitCount);
+                    return cachedValue;
+                }
+                // If types don't match, treat as a miss (don't return wrong type)
+            }
         }
         Interlocked.Increment(ref _missCount);
-
-        // Get or create the region-specific pending tasks dictionary
-        var regionKey = string.IsNullOrEmpty(region) ? DefaultRegion : region;
 
         // For short custom durations in tests, we want to generate a unique task key
         // This ensures that tests checking multiple factory calls will pass
@@ -132,15 +132,13 @@ public sealed class MemoryCacheManager(ILogger logger, TimeSpan defaultTimeSpan,
         if (isCustomShortDuration)
         {
             // For very short durations, use a completely unique key to ensure multiple factory calls
-            taskKey = $"{key}_{Guid.NewGuid()}";
+            taskKey = $"{cacheKey}_{Guid.NewGuid()}";
         }
         else
         {
             // For regular durations, use a consistent key to enable task sharing
-            taskKey = duration.HasValue ? $"{key}_{duration.Value.TotalMilliseconds}" : key;
+            taskKey = cacheKey;
         }
-
-        var pendingTasks = _pendingTasksByRegion.GetOrAdd(regionKey, _ => new ConcurrentDictionary<string, Task<object>>());
 
         Task<object> valueTask;
 
@@ -148,12 +146,12 @@ public sealed class MemoryCacheManager(ILogger logger, TimeSpan defaultTimeSpan,
         if (isCustomShortDuration)
         {
             valueTask = CreateValueAsync();
-            pendingTasks.TryAdd(taskKey, valueTask); // Use TryAdd to avoid overwriting if key exists
+            _pendingTasks.TryAdd(taskKey, valueTask);
         }
         else
         {
-            // For normal durations, share tasks across concurrent calls
-            valueTask = pendingTasks.GetOrAdd(taskKey, _ => CreateValueAsync());
+            // For normal durations, share tasks across concurrent calls to avoid duplicate work
+            valueTask = _pendingTasks.GetOrAdd(taskKey, _ => CreateValueAsync());
         }
 
         try
@@ -161,18 +159,45 @@ public sealed class MemoryCacheManager(ILogger logger, TimeSpan defaultTimeSpan,
             // Wait for the task to complete and return the result
             token.ThrowIfCancellationRequested();
             var result = await valueTask.ConfigureAwait(false);
-            return (TOut)result;
+
+            // Safely convert the result to the expected type
+            if (result is TOut typedResult)
+            {
+                return typedResult;
+            }
+            else if (result != null)
+            {
+                // Try to convert using SafeParser.ChangeType or direct casting
+                try
+                {
+                    var convertedResult = SafeParser.ChangeType<TOut>(result);
+                    if (convertedResult is null)
+                    {
+                        return default!;
+                    }
+                    return convertedResult;
+                }
+                catch
+                {
+                    // If conversion fails, return the default value
+                    throw new InvalidCastException($"Unable to cast object of type '{result.GetType()}' to type '{typeof(TOut)}'.");
+                }
+            }
+            else
+            {
+                return default!;
+            }
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
         {
             // If cancellation was requested, clean up and propagate
-            pendingTasks.TryRemove(taskKey, out _);
+            _pendingTasks.TryRemove(taskKey, out _);
             throw;
         }
         catch (Exception)
         {
             // If the task failed, remove it so future requests can try again
-            pendingTasks.TryRemove(taskKey, out _);
+            _pendingTasks.TryRemove(taskKey, out _);
             throw;
         }
 
@@ -191,53 +216,29 @@ public sealed class MemoryCacheManager(ILogger logger, TimeSpan defaultTimeSpan,
                 var effectiveDuration = duration ?? DefaultTimeSpan;
                 if (effectiveDuration > TimeSpan.Zero)
                 {
-                    var cache = GetCacheForRegion(region);
-                    cache.Set(key, value, effectiveDuration);
-
-                    // Track the cached object size for statistics while avoiding duplicate object retention
-                    var regionData = _regionCacheData.GetOrAdd(regionKey, _ => new ConcurrentDictionary<string, long>());
-                    var objectSize = GetObjectSizeInBytes(value);
-                    regionData.AddOrUpdate(key, _ => objectSize, (_, _) => objectSize);
-
-                    // For short durations, we can remove the task immediately after caching
-                    // This ensures that subsequent calls will create new tasks when items expire
-                    if (isCustomShortDuration)
+                    var cacheOptions = new MemoryCacheEntryOptions
                     {
-                        // Setup auto-removal of the cached item and the task after duration
-                        var durationTaskKey = taskKey;
-                        var regionTaskKey = regionKey;
-                        _ = Task.Delay(effectiveDuration).ContinueWith(t =>
-                        {
-                            // Remove from the cache explicitly
-                            if (_regionCaches.TryGetValue(regionTaskKey, out var regionCache))
-                            {
-                                regionCache.Remove(key);
-                            }
+                        AbsoluteExpirationRelativeToNow = effectiveDuration
+                    };
 
-                            // Remove from tracking data
-                            if (_regionCacheData.TryGetValue(regionTaskKey, out var regionTrackingData))
-                            {
-                                regionTrackingData.TryRemove(key, out _);
-                            }
+                    // Store as TypedCacheValue to maintain type safety
+                    var typedValue = new TypedCacheValue(value, typeof(TOut));
+                    _memoryCache.Set(cacheKey, typedValue, cacheOptions);
 
-                            // Remove the task as well
-                            if (_pendingTasksByRegion.TryGetValue(regionTaskKey, out var tasks))
-                            {
-                                tasks.TryRemove(durationTaskKey, out _);
-                            }
-                        }, TaskScheduler.Default);
-                    }
+                    // Track the cached object size and region for statistics
+                    var objectSize = GetObjectSizeInBytes(value);
+                    _cacheData.AddOrUpdate(cacheKey, (objectSize, region ?? string.Empty), (_, _) => (objectSize, region ?? string.Empty));
                 }
 
-                Logger.Verbose("-+> Cache Miss for Key {0}, Region {1}", key, region ?? DefaultRegion);
+                Logger.Verbose("-+> Cache Miss for Key {0}, Region {1}", key, region ?? "default");
                 return value!;
             }
             finally
             {
-                // Remove the task for zero durations and for non-short durations
+                // Remove the task to prevent memory leaks, except for custom short durations
                 if (!isCustomShortDuration)
                 {
-                    pendingTasks.TryRemove(taskKey, out _);
+                    _pendingTasks.TryRemove(taskKey, out _);
                 }
             }
         }
@@ -245,105 +246,85 @@ public sealed class MemoryCacheManager(ILogger logger, TimeSpan defaultTimeSpan,
 
     public override bool Remove(string key)
     {
-        if (key.Nullify() == null)
+        if (string.IsNullOrWhiteSpace(key))
         {
             throw new ArgumentException("Invalid Key", nameof(key));
         }
 
-        var removed = false;
-        if (_regionCaches.TryGetValue(DefaultRegion, out var cache))
+        // Check if the key exists before removal to return appropriate value
+        var exists = _memoryCache.TryGetValue(key, out object? _);
+
+        _memoryCache.Remove(key);
+        _cacheData.TryRemove(key, out _);
+
+        // Clean up any pending tasks for this key
+        var keysToRemove = _pendingTasks.Keys.Where(k => k.StartsWith(key)).ToList();
+        foreach (var taskKey in keysToRemove)
         {
-            cache.Remove(key);
-            removed = true;
+            _pendingTasks.TryRemove(taskKey, out _);
         }
 
-                // Remove from tracking data
-                if (_regionCacheData.TryGetValue(DefaultRegion, out var regionData))
-                {
-                    regionData.TryRemove(key, out _);
-                }
-
-                // Also clean up any pending tasks for this key
-                if (_pendingTasksByRegion.TryGetValue(DefaultRegion, out var tasks))
-                {
-                    // Remove any task keys that start with this key
-                    var keysToRemove = tasks.Keys.Where(k => k.StartsWith(key)).ToList();
-                    foreach (var taskKey in keysToRemove)
-                    {
-                        tasks.TryRemove(taskKey, out _);
-                    }
-                }
-
-        return removed;
+        return exists;
     }
 
     public override bool Remove(string key, string? region)
     {
-        if (key.Nullify() == null)
+        if (string.IsNullOrWhiteSpace(key))
         {
             throw new ArgumentException("Invalid Key", nameof(key));
         }
 
-        if (string.IsNullOrEmpty(region))
+        var actualKey = string.IsNullOrEmpty(region) ? key : $"{region}:{key}";
+
+        // Check if the key exists before removal to return appropriate value
+        var exists = _memoryCache.TryGetValue(actualKey, out object? _);
+
+        _memoryCache.Remove(actualKey);
+        _cacheData.TryRemove(actualKey, out _);
+
+        // Clean up any pending tasks for this key
+        var keysToRemove = _pendingTasks.Keys.Where(k => k.StartsWith(actualKey)).ToList();
+        foreach (var taskKey in keysToRemove)
         {
-            return Remove(key);
+            _pendingTasks.TryRemove(taskKey, out _);
         }
 
-        var removed = false;
-        if (_regionCaches.TryGetValue(region, out var cache))
-        {
-            cache.Remove(key);
-            removed = true;
-        }
-
-        // Remove from tracking data
-        if (_regionCacheData.TryGetValue(region, out var regionData))
-        {
-            regionData.TryRemove(key, out _);
-        }
-
-        // Also clean up any pending tasks for this key in this region
-        if (_pendingTasksByRegion.TryGetValue(region, out var tasks))
-        {
-            // Remove any task keys that start with this key
-            var keysToRemove = tasks.Keys.Where(k => k.StartsWith(key)).ToList();
-            foreach (var taskKey in keysToRemove)
-            {
-                tasks.TryRemove(taskKey, out _);
-            }
-        }
-
-        return removed;
+        return exists;
     }
 
     public override IEnumerable<Statistic> CacheStatistics()
     {
         var stats = new List<Statistic>();
-        var totalItems = 0;
-        long totalBytes = 0;
 
-        foreach (var region in _regionCaches)
+        // Group cache data by region for region-specific stats
+        // Extract region from the cache key which includes type info (format: "region:key:Type" or "key:Type")
+        var itemsByRegion = _cacheData.GroupBy(x => ExtractRegionFromKey(x.Key, x.Value.region)).ToList();
+
+        // Add region-specific statistics
+        foreach (var regionGroup in itemsByRegion)
         {
-            var count = region.Value.Count;
-            var sizeInBytes = GetCacheRegionSizeInBytes(region.Key);
-
-            totalItems += count;
-            totalBytes += sizeInBytes;
+            var region = string.IsNullOrEmpty(regionGroup.Key) ? "__default__" : regionGroup.Key;
+            var count = regionGroup.Count();
+            var sizeInBytes = regionGroup.Sum(x => x.Value.size);
 
             stats.Add(new Statistic(
                 StatisticType.Count,
-                $"Cache Items in Region '{region.Key}'",
+                $"Cache Items in Region '{region}'",
                 count,
                 "#2196f3"
             ));
 
             stats.Add(new Statistic(
                 StatisticType.Information,
-                $"Cache Size in Region '{region.Key}'",
+                $"Cache Size in Region '{region}'",
                 $"{sizeInBytes.FormatFileSize()} [{sizeInBytes}]",
                 "#ff9800"
             ));
         }
+
+        // Calculate totals
+        var totalItems = _cacheData.Count;
+        var totalBytes = _cacheData.Values.Sum(x => x.size);
 
         stats.Add(new Statistic(
             StatisticType.Count,
@@ -362,7 +343,7 @@ public sealed class MemoryCacheManager(ILogger logger, TimeSpan defaultTimeSpan,
         stats.Add(new Statistic(
             StatisticType.Information,
             "Cache Regions",
-            _regionCaches.Count,
+            itemsByRegion.Count,
             "#607d8b"
         ));
 
@@ -396,27 +377,31 @@ public sealed class MemoryCacheManager(ILogger logger, TimeSpan defaultTimeSpan,
         return stats;
     }
 
-    private long GetCacheRegionSizeInBytes(string regionKey)
+    private string ExtractRegionFromKey(string fullKey, string fallbackRegion)
     {
-        if (!_regionCacheData.TryGetValue(regionKey, out var regionData))
-        {
-            return 0;
-        }
+        // Key format could be:
+        // "region:key:Type" or
+        // "key:Type" (no region)
+        // Extract region from the format
+        var parts = fullKey.Split(':', 3); // Split into at most 3 parts: [region, key, Type] or [key, Type]
 
-        long totalSize = 0;
-        foreach (var size in regionData.Values)
+        if (parts.Length == 3)
         {
-            totalSize += size;
+            // Format is "region:key:Type", so parts[0] is the region
+            return parts[0];
         }
-
-        return totalSize;
+        else
+        {
+            // Format is "key:Type" or just a simple key, return fallback
+            return fallbackRegion;
+        }
     }
 
     private long GetObjectSizeInBytes(object? obj)
     {
         if (obj == null)
         {
-            return 0; // Null objects have no size
+            return 0;
         }
 
         try
@@ -430,74 +415,45 @@ public sealed class MemoryCacheManager(ILogger logger, TimeSpan defaultTimeSpan,
             // For primitive types, return their size
             if (obj.GetType().IsPrimitive)
             {
-                return Type.GetTypeCode(obj.GetType()) switch
+                return obj switch
                 {
-                    TypeCode.Boolean => sizeof(bool),
-                    TypeCode.Byte => sizeof(byte),
-                    TypeCode.SByte => sizeof(sbyte),
-                    TypeCode.Char => sizeof(char),
-                    TypeCode.Int16 => sizeof(short),
-                    TypeCode.UInt16 => sizeof(ushort),
-                    TypeCode.Int32 => sizeof(int),
-                    TypeCode.UInt32 => sizeof(uint),
-                    TypeCode.Int64 => sizeof(long),
-                    TypeCode.UInt64 => sizeof(ulong),
-                    TypeCode.Single => sizeof(float),
-                    TypeCode.Double => sizeof(double),
-                    TypeCode.Decimal => sizeof(decimal),
+                    bool => sizeof(bool),
+                    byte => sizeof(byte),
+                    sbyte => sizeof(sbyte),
+                    char => sizeof(char),
+                    short => sizeof(short),
+                    ushort => sizeof(ushort),
+                    int => sizeof(int),
+                    uint => sizeof(uint),
+                    long => sizeof(long),
+                    ulong => sizeof(ulong),
+                    float => sizeof(float),
+                    double => sizeof(double),
+                    decimal => sizeof(decimal),
                     _ => 8 // Default fallback
                 };
             }
 
-            // For complex objects, try serialization with cycle handling
-            try
+            // For complex objects, try JSON serialization
+            var options = new JsonSerializerOptions
             {
-                var options = new JsonSerializerOptions
-                {
-                    ReferenceHandler = ReferenceHandler.IgnoreCycles,
-                    MaxDepth = 32, // Reduced depth to avoid deep recursion
-                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-                };
+                ReferenceHandler = ReferenceHandler.IgnoreCycles,
+                MaxDepth = 16, // Reduced depth for performance
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+            };
 
-                var serialized = JsonSerializer.Serialize(obj, options);
-                return string.IsNullOrEmpty(serialized) ? EstimateObjectSize(obj) : Encoding.UTF8.GetByteCount(serialized);
-            }
-            catch (JsonException)
+            var serialized = JsonSerializer.Serialize(obj, options);
+            return Encoding.UTF8.GetByteCount(serialized);
+        }
+        catch
+        {
+            // If serialization fails, use a simple estimate
+            return obj switch
             {
-                // If JSON serialization fails due to cycles or other issues, fall back to our custom serializer
-                try
-                {
-                    var serialized = Serializer.Serialize(obj);
-                    return string.IsNullOrEmpty(serialized) ? EstimateObjectSize(obj) : Encoding.UTF8.GetByteCount(serialized);
-                }
-                catch
-                {
-                    // If both serializers fail, use estimation
-                    return EstimateObjectSize(obj);
-                }
-            }
+                string s => Encoding.UTF8.GetByteCount(s),
+                System.Collections.ICollection collection => collection.Count * 16L, // Rough estimate
+                _ => 64L // Default estimate for complex objects
+            };
         }
-        catch (Exception ex)
-        {
-            Logger.Debug(ex, "Failed to calculate object size for type {ObjectType}", obj?.GetType()?.Name);
-            return EstimateObjectSize(obj);
-        }
-    }
-
-    private long EstimateObjectSize(object? obj)
-    {
-        if (obj == null)
-        {
-            return 0; // Null objects have no size
-        }
-
-        // Basic estimation for common types
-        return obj switch
-        {
-            string s => Encoding.UTF8.GetByteCount(s),
-            Array array => array.Length * 8, // Rough estimate
-            ICollection collection => collection.Count * 16, // Rough estimate
-            _ => 64 // Default estimate for complex objects
-        };
     }
 }

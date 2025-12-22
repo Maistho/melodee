@@ -1610,9 +1610,9 @@ public class OpenSubsonicApiService(
                     ResponseData = await NewApiResponse(loginResult.IsSuccess, string.Empty, string.Empty, loginResult.IsSuccess ? null : Error.AuthError)
                 };
             }
-                catch (Exception e)
-                {
-                    Logger.Error(e, "Error authenticating user.");
+            catch (Exception e)
+            {
+                Logger.Error(e, "Error authenticating user.");
                 return new ResponseModel
                 {
                     UserInfo = UserInfo.BlankUserInfo,

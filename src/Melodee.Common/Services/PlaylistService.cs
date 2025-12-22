@@ -162,7 +162,7 @@ public class PlaylistService(
                 .AsNoTracking()
                 .Include(p => p.User);
 
-            // Get total count
+            // Get total count efficiently
             playlistCount = await baseQuery.CountAsync(cancellationToken).ConfigureAwait(false);
 
             if (!pagedRequest.IsTotalCountOnlyRequest)
@@ -180,6 +180,7 @@ public class PlaylistService(
                     orderedQuery = baseQuery.OrderBy(p => p.Id); // Simple fallback
                 }
 
+                // Apply pagination at the database level for better performance
                 playlists = await orderedQuery
                     .Skip(pagedRequest.SkipValue)
                     .Take(pagedRequest.TakeValue)
@@ -846,9 +847,11 @@ public class PlaylistService(
 
         if (playlist != null)
         {
-            // Use HashSet for O(1) lookups and avoid multiple ToList and OrderBy passes
+            // Use HashSet for O(1) lookups
             var keys = new HashSet<Guid>(songApiKeys);
             var songsToRemove = new List<PlaylistSong>();
+
+            // Identify songs to remove in single pass
             foreach (var ps in playlist.Songs)
             {
                 if (keys.Contains(ps.Song.ApiKey))
@@ -857,13 +860,14 @@ public class PlaylistService(
                 }
             }
 
+            // Remove identified songs
             foreach (var playlistSong in songsToRemove)
             {
                 playlist.Songs.Remove(playlistSong);
             }
 
-            // Reorder remaining songs (single pass after sorting)
-            var remainingSongs = playlist.Songs.OrderBy(x => x.PlaylistOrder).ToArray();
+            // Reorder remaining songs in single pass - avoid multiple ToList/OrderBy calls
+            var remainingSongs = playlist.Songs.ToArray(); // Single materialization
             for (int i = 0; i < remainingSongs.Length; i++)
             {
                 remainingSongs[i].PlaylistOrder = i + 1;
@@ -921,8 +925,8 @@ public class PlaylistService(
                 playlist.Songs.Remove(playlistSong);
             }
 
-            // Reorder remaining songs (single pass)
-            var remainingSongs = playlist.Songs.OrderBy(x => x.PlaylistOrder).ToArray();
+            // Reorder remaining songs in single pass - avoid multiple ToList/OrderBy calls
+            var remainingSongs = playlist.Songs.ToArray(); // Single materialization
             for (int i = 0; i < remainingSongs.Length; i++)
             {
                 remainingSongs[i].PlaylistOrder = i + 1;

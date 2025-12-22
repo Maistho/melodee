@@ -8,7 +8,6 @@ using Melodee.Common.Models.OpenSubsonic.DTO;
 using Melodee.Common.Models.OpenSubsonic.Responses;
 using Melodee.Common.Models.Streaming;
 using Melodee.Common.Services.Caching;
-using Melodee.Common.Utility;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Primitives;
 using NodaTime;
