@@ -16,6 +16,8 @@ namespace Melodee.Blazor.Controllers.OpenSubsonic;
 
 public class MediaRetrievalController(ISerializer serializer, EtagRepository etagRepository, OpenSubsonicApiService openSubsonicApiService, IMelodeeConfigurationFactory configurationFactory, StreamingLimiter streamingLimiter) : ControllerBase(etagRepository, serializer, configurationFactory)
 {
+    private const long BufferedResponseThresholdBytes = 2 * 1024 * 1024; // 2 MB guardrail to avoid large buffered allocations
+
     /// <summary>
     ///     Searches for and returns lyrics for a given song.
     /// </summary>
@@ -131,11 +133,16 @@ public class MediaRetrievalController(ISerializer serializer, EtagRepository eta
             }
             var bufferedDescriptor = bufferedDescriptorResult.Data;
 
-            foreach (var header in RangeParser.CreateResponseHeaders(bufferedDescriptor, bufferedDescriptor.Range != null ? 206 : 200))
+            var statusCode = bufferedDescriptor.Range != null ? 206 : 200;
+            var expectedLength = bufferedDescriptor.Range?.GetContentLength(bufferedDescriptor.FileSize) ?? bufferedDescriptor.FileSize;
+
+            // Avoid large buffered allocations; fall back to streaming when payloads are large
+            if (expectedLength > BufferedResponseThresholdBytes)
             {
-                Response.Headers[header.Key] = header.Value;
+                return StreamFromDescriptor(bufferedDescriptor, statusCode, isDownload: true);
             }
-            Response.StatusCode = bufferedDescriptor.Range != null ? 206 : 200;
+
+            ApplyStreamingHeaders(bufferedDescriptor, statusCode);
 
             byte[] bytes;
             if (bufferedDescriptor.Range != null)
@@ -164,42 +171,8 @@ public class MediaRetrievalController(ISerializer serializer, EtagRepository eta
         {
             var descriptor = descriptorResult.Data;
 
-            // Create response headers
             var statusCode = descriptor.Range != null ? 206 : 200;
-            var responseHeaders = RangeParser.CreateResponseHeaders(descriptor, statusCode);
-
-            foreach (var header in responseHeaders)
-            {
-                Response.Headers[header.Key] = header.Value;
-            }
-
-            Response.StatusCode = statusCode;
-
-            // Return efficient file streaming result
-            if (descriptor.Range != null)
-            {
-                // For range requests
-                var fileStream = new FileStream(descriptor.FilePath, FileMode.Open, FileAccess.Read, FileShare.Read,
-                    bufferSize: 65536, FileOptions.Asynchronous | FileOptions.SequentialScan);
-
-                fileStream.Seek(descriptor.Range.Start, SeekOrigin.Begin);
-                var rangeStream = new BoundedStream(fileStream, descriptor.Range.GetContentLength(descriptor.FileSize));
-
-                return new FileStreamResult(rangeStream, descriptor.ContentType)
-                {
-                    EnableRangeProcessing = true,
-                    FileDownloadName = descriptor.FileName
-                };
-            }
-            else
-            {
-                // For full file downloads
-                return new PhysicalFileResult(descriptor.FilePath, descriptor.ContentType)
-                {
-                    EnableRangeProcessing = true,
-                    FileDownloadName = descriptor.FileName
-                };
-            }
+            return StreamFromDescriptor(descriptor, statusCode, isDownload: true);
         }
 
         Response.StatusCode = (int)HttpStatusCode.NotFound;
@@ -247,11 +220,16 @@ public class MediaRetrievalController(ISerializer serializer, EtagRepository eta
             }
             var bufferedDescriptor = bufferedDescriptorResult.Data;
 
-            foreach (var header in RangeParser.CreateResponseHeaders(bufferedDescriptor, bufferedDescriptor.Range != null ? 206 : 200))
+            var bufferedStatusCode = bufferedDescriptor.Range != null ? 206 : 200;
+            var expectedLength = bufferedDescriptor.Range?.GetContentLength(bufferedDescriptor.FileSize) ?? bufferedDescriptor.FileSize;
+
+            // Avoid buffering large payloads; stream them instead to reduce allocations
+            if (expectedLength > BufferedResponseThresholdBytes)
             {
-                Response.Headers[header.Key] = header.Value;
+                return StreamFromDescriptor(bufferedDescriptor, bufferedStatusCode, isDownload: request.IsDownloadingRequest || bufferedDescriptor.IsDownload);
             }
-            Response.StatusCode = bufferedDescriptor.Range != null ? 206 : 200;
+
+            ApplyStreamingHeaders(bufferedDescriptor, bufferedStatusCode);
 
             byte[] bytes;
             if (bufferedDescriptor.Range != null)
@@ -300,21 +278,26 @@ public class MediaRetrievalController(ISerializer serializer, EtagRepository eta
 
         var descriptor = descriptorResult.Data;
 
-        // Create response headers
         var statusCode = descriptor.Range != null ? 206 : 200;
-        var responseHeaders = RangeParser.CreateResponseHeaders(descriptor, statusCode);
+        return StreamFromDescriptor(descriptor, statusCode, isDownload: descriptor.IsDownload);
+    }
 
-        foreach (var header in responseHeaders)
+    private void ApplyStreamingHeaders(StreamingDescriptor descriptor, int statusCode)
+    {
+        foreach (var header in RangeParser.CreateResponseHeaders(descriptor, statusCode))
         {
             Response.Headers[header.Key] = header.Value;
         }
 
         Response.StatusCode = statusCode;
+    }
 
-        // Return efficient file streaming result
+    private IActionResult StreamFromDescriptor(StreamingDescriptor descriptor, int statusCode, bool isDownload)
+    {
+        ApplyStreamingHeaders(descriptor, statusCode);
+
         if (descriptor.Range != null)
         {
-            // For range requests
             var fileStream = new FileStream(descriptor.FilePath, FileMode.Open, FileAccess.Read, FileShare.Read,
                 bufferSize: 65536, FileOptions.Asynchronous | FileOptions.SequentialScan);
 
@@ -324,17 +307,14 @@ public class MediaRetrievalController(ISerializer serializer, EtagRepository eta
             return new FileStreamResult(rangeStream, descriptor.ContentType)
             {
                 EnableRangeProcessing = true,
-                FileDownloadName = descriptor.IsDownload ? descriptor.FileName : null
+                FileDownloadName = isDownload ? descriptor.FileName : null
             };
         }
-        else
+
+        return new PhysicalFileResult(descriptor.FilePath, descriptor.ContentType)
         {
-            // For full file streaming
-            return new PhysicalFileResult(descriptor.FilePath, descriptor.ContentType)
-            {
-                EnableRangeProcessing = true,
-                FileDownloadName = descriptor.IsDownload ? descriptor.FileName : null
-            };
-        }
+            EnableRangeProcessing = true,
+            FileDownloadName = isDownload ? descriptor.FileName : null
+        };
     }
 }

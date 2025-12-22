@@ -5,6 +5,7 @@ namespace Melodee.Blazor.Filters;
 public class EtagRepository
 {
     private readonly ConcurrentDictionary<string, ETagEntry> _eTags = new();
+    private readonly ConcurrentQueue<string> _insertionOrder = new();
     private readonly int _maxEntries;
     private readonly TimeSpan _entryMaxAge;
     private volatile int _currentCount;
@@ -23,7 +24,6 @@ public class EtagRepository
 
     public bool AddEtag(string? apiKeyId, string? etag)
     {
-        // Fix guard logic: both key AND value are required (was OR, now AND)
         if (!string.IsNullOrWhiteSpace(apiKeyId) && !string.IsNullOrWhiteSpace(etag))
         {
             var entry = new ETagEntry(etag, DateTime.UtcNow);
@@ -31,9 +31,9 @@ public class EtagRepository
 
             if (added)
             {
+                _insertionOrder.Enqueue(apiKeyId!);
                 Interlocked.Increment(ref _currentCount);
 
-                // Trigger cleanup if needed (simple heuristic)
                 if (_currentCount > _maxEntries || ShouldCleanup())
                 {
                     _ = Task.Run(CleanupExpiredEntries);
@@ -48,12 +48,10 @@ public class EtagRepository
 
     public bool EtagMatch(string? apiKeyId, string? etag)
     {
-        // Fix guard logic: both key AND value are required (was OR, now AND)
         if (!string.IsNullOrWhiteSpace(apiKeyId) && !string.IsNullOrWhiteSpace(etag))
         {
             if (_eTags.TryGetValue(apiKeyId!, out var entry))
             {
-                // Check if entry is still valid (not expired)
                 if (DateTime.UtcNow - entry.CreatedAt <= _entryMaxAge)
                 {
                     var match = entry.ETag == etag;
@@ -69,7 +67,6 @@ public class EtagRepository
                 }
                 else
                 {
-                    // Remove expired entry
                     if (_eTags.TryRemove(apiKeyId!, out _))
                     {
                         Interlocked.Decrement(ref _currentCount);
@@ -89,61 +86,45 @@ public class EtagRepository
     private bool ShouldCleanup()
     {
         var now = DateTime.UtcNow;
-        return now - _lastCleanup > TimeSpan.FromMinutes(10); // Cleanup every 10 minutes
+        return now - _lastCleanup > TimeSpan.FromMinutes(10);
     }
 
     private void CleanupExpiredEntries()
     {
         if (!Monitor.TryEnter(_cleanupLock, TimeSpan.FromSeconds(1)))
         {
-            return; // Another cleanup is running
+            return;
         }
 
         try
         {
             var now = DateTime.UtcNow;
-            var expiredKeys = new List<string>();
             var entriesRemoved = 0;
+            var targetCount = (int)(_maxEntries * 0.8);
 
-            // Find expired entries
-            foreach (var kvp in _eTags)
+            // FIFO eviction using queue - O(n) worst case but typically O(k) where k is entries to remove
+            while (_currentCount > targetCount && _insertionOrder.TryDequeue(out var oldestKey))
             {
-                if (now - kvp.Value.CreatedAt > _entryMaxAge)
+                if (_eTags.TryGetValue(oldestKey, out var entry))
                 {
-                    expiredKeys.Add(kvp.Key);
-                }
-            }
-
-            // Remove expired entries
-            foreach (var key in expiredKeys)
-            {
-                if (_eTags.TryRemove(key, out _))
-                {
-                    entriesRemoved++;
-                }
-            }
-
-            // If still over capacity, remove oldest entries (LRU-style)
-            if (_currentCount > _maxEntries)
-            {
-                var entriesToRemove = _currentCount - (int)(_maxEntries * 0.8); // Remove to 80% capacity
-                var oldestEntries = _eTags
-                    .OrderBy(kvp => kvp.Value.CreatedAt)
-                    .Take(entriesToRemove)
-                    .Select(kvp => kvp.Key)
-                    .ToArray();
-
-                foreach (var key in oldestEntries)
-                {
-                    if (_eTags.TryRemove(key, out _))
+                    // Remove if expired OR if we're over capacity
+                    if (now - entry.CreatedAt > _entryMaxAge || _currentCount > _maxEntries)
                     {
-                        entriesRemoved++;
+                        if (_eTags.TryRemove(oldestKey, out _))
+                        {
+                            Interlocked.Decrement(ref _currentCount);
+                            entriesRemoved++;
+                        }
+                    }
+                    else
+                    {
+                        // Entry is still valid and we're not over hard limit, re-queue it
+                        _insertionOrder.Enqueue(oldestKey);
+                        break;
                     }
                 }
             }
 
-            // Update counters
-            Interlocked.Add(ref _currentCount, -entriesRemoved);
             _lastCleanup = now;
         }
         finally
@@ -152,7 +133,6 @@ public class EtagRepository
         }
     }
 
-    // For testing purposes
     public int CurrentCount => _currentCount;
     public void ForceCleanup() => CleanupExpiredEntries();
     public long HitCount => Interlocked.Read(ref _hitCount);

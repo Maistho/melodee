@@ -1261,10 +1261,6 @@ public class AlbumService(
 
             var albums = await albumsQuery.ToListAsync(cancellationToken);
 
-            var userAlbums = await scopedContext.UserAlbums
-                .Where(ua => ua.UserId == userId && albums.Select(a => a.Id).Contains(ua.AlbumId))
-                .ToListAsync(cancellationToken);
-
             data = albums.Select(a => new AlbumList
             {
                 Id = a.ToApiKey(),
@@ -1280,8 +1276,8 @@ public class AlbumService(
                 Artist = a.Artist.Name,
                 Year = a.ReleaseDate.Year,
                 Genres = a.Genres,
-                UserRating = userAlbums
-                                 .FirstOrDefault(ua => ua.UserId == userId && ua.AlbumId == a.Id)
+                UserRating = a.UserAlbums
+                                 .FirstOrDefault(ua => ua.UserId == userId)
                                  ?.Rating ??
                              0,
                 AverageRating = a.CalculatedRating,
@@ -1380,10 +1376,6 @@ public class AlbumService(
 
             var albums = await albumsQuery.ToListAsync(cancellationToken);
 
-            var userAlbums = await scopedContext.UserAlbums
-                .Where(ua => ua.UserId == userId && albums.Select(a => a.Id).Contains(ua.AlbumId))
-                .ToListAsync(cancellationToken);
-
             data = albums.Select(a => new AlbumList2
             {
                 Id = a.ToApiKey(),
@@ -1399,8 +1391,8 @@ public class AlbumService(
                 Artist = a.Artist.Name,
                 Year = a.ReleaseDate.Year,
                 Genres = a.Genres,
-                UserRating = userAlbums
-                                 .FirstOrDefault(ua => ua.UserId == userId && ua.AlbumId == a.Id)
+                UserRating = a.UserAlbums
+                                 .FirstOrDefault(ua => ua.UserId == userId)
                                  ?.Rating ??
                              0,
                 Parent = a.Artist.Library.ToApiKey()

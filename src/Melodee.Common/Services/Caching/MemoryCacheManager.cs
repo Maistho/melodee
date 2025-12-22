@@ -24,7 +24,7 @@ public sealed class MemoryCacheManager(ILogger logger, TimeSpan defaultTimeSpan,
 {
     private const string DefaultRegion = "__default__";
     private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, Task<object>>> _pendingTasksByRegion = new();
-    private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, object>> _regionCacheData = new();
+    private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, long>> _regionCacheData = new();
     private readonly ConcurrentDictionary<string, MemoryCache> _regionCaches = new();
     private long _hitCount;
     private long _missCount;
@@ -194,9 +194,10 @@ public sealed class MemoryCacheManager(ILogger logger, TimeSpan defaultTimeSpan,
                     var cache = GetCacheForRegion(region);
                     cache.Set(key, value, effectiveDuration);
 
-                    // Track the cached object for size calculations
-                    var regionData = _regionCacheData.GetOrAdd(regionKey, _ => new ConcurrentDictionary<string, object>());
-                    regionData.AddOrUpdate(key, value!, (_, _) => value!);
+                    // Track the cached object size for statistics while avoiding duplicate object retention
+                    var regionData = _regionCacheData.GetOrAdd(regionKey, _ => new ConcurrentDictionary<string, long>());
+                    var objectSize = GetObjectSizeInBytes(value);
+                    regionData.AddOrUpdate(key, _ => objectSize, (_, _) => objectSize);
 
                     // For short durations, we can remove the task immediately after caching
                     // This ensures that subsequent calls will create new tasks when items expire
@@ -256,22 +257,22 @@ public sealed class MemoryCacheManager(ILogger logger, TimeSpan defaultTimeSpan,
             removed = true;
         }
 
-        // Remove from tracking data
-        if (_regionCacheData.TryGetValue(DefaultRegion, out var regionData))
-        {
-            regionData.TryRemove(key, out _);
-        }
+                // Remove from tracking data
+                if (_regionCacheData.TryGetValue(DefaultRegion, out var regionData))
+                {
+                    regionData.TryRemove(key, out _);
+                }
 
-        // Also clean up any pending tasks for this key
-        if (_pendingTasksByRegion.TryGetValue(DefaultRegion, out var tasks))
-        {
-            // Remove any task keys that start with this key
-            var keysToRemove = tasks.Keys.Where(k => k.StartsWith(key)).ToList();
-            foreach (var taskKey in keysToRemove)
-            {
-                tasks.TryRemove(taskKey, out _);
-            }
-        }
+                // Also clean up any pending tasks for this key
+                if (_pendingTasksByRegion.TryGetValue(DefaultRegion, out var tasks))
+                {
+                    // Remove any task keys that start with this key
+                    var keysToRemove = tasks.Keys.Where(k => k.StartsWith(key)).ToList();
+                    foreach (var taskKey in keysToRemove)
+                    {
+                        tasks.TryRemove(taskKey, out _);
+                    }
+                }
 
         return removed;
     }
@@ -403,9 +404,9 @@ public sealed class MemoryCacheManager(ILogger logger, TimeSpan defaultTimeSpan,
         }
 
         long totalSize = 0;
-        foreach (var obj in regionData.Values)
+        foreach (var size in regionData.Values)
         {
-            totalSize += GetObjectSizeInBytes(obj);
+            totalSize += size;
         }
 
         return totalSize;

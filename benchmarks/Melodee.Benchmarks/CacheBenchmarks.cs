@@ -212,34 +212,35 @@ public class CacheBenchmarks
     }
 
     [Benchmark]
-    public async Task ConcurrentCacheAccess()
+    public async Task ConcurrentCacheAccess_HitHeavy()
     {
-        var cache = new ConcurrentDictionary<string, Task<string>>();
-        var concurrentTasks = new List<Task>();
+        var cache = new ConcurrentDictionary<string, Lazy<Task<string>>>();
 
-        for (int i = 0; i < 100; i++)
+        // Prefill cache (so we measure hits)
+        for (int i = 0; i < CacheSize; i++)
         {
-            var taskIndex = i;
-            var task = Task.Run(async () =>
-            {
-                for (int j = 0; j < CacheSize / 100; j++)
-                {
-                    var key = $"key_{taskIndex}_{j}";
-                    var valueTask = cache.GetOrAdd(key, async k =>
-                    {
-                        await Task.Delay(1); // Simulate async work
-                        return $"value_{k}";
-                    });
+            var key = $"key_{i}";
+            cache[key] = new Lazy<Task<string>>(() => Task.FromResult($"value_{key}"));
+        }
 
-                    await valueTask;
+        var concurrentTasks = new Task[100];
+        for (int t = 0; t < concurrentTasks.Length; t++)
+        {
+            concurrentTasks[t] = Task.Run(async () =>
+            {
+                // Each worker performs many reads from the existing keyspace
+                for (int j = 0; j < 1000; j++)
+                {
+                    var key = $"key_{j % CacheSize}";
+                    var lazy = cache.GetOrAdd(key, k => new Lazy<Task<string>>(() => Task.FromResult($"value_{k}")));
+                    await lazy.Value;
                 }
             });
-
-            concurrentTasks.Add(task);
         }
 
         await Task.WhenAll(concurrentTasks);
     }
+
 
     [Benchmark]
     public void ETagRepository_Simulation()
