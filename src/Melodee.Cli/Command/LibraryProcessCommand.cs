@@ -2,7 +2,6 @@ using System.Diagnostics;
 using Melodee.Cli.CommandSettings;
 using Melodee.Common.Configuration;
 using Melodee.Common.Constants;
-using Melodee.Common.Data.Models.Extensions;
 using Melodee.Common.Models;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services;

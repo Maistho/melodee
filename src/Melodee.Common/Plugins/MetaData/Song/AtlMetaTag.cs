@@ -519,12 +519,14 @@ public sealed class AtlMetaTag(
         if (song.Tags?.Any() ?? false)
         {
             var songFileName = song.File.FullName(directoryInfo);
+
+            // Check file existence first before attempting any operations
             if (!File.Exists(songFileName))
             {
                 Log.Error(new Exception($"File not found [{songFileName}]"),
                     "[{PlugInName}] UpdateSongAsync called File [{FileName}] does not exist", nameof(AtlMetaTag),
                     songFileName);
-                return new OperationResult<bool>
+                return new OperationResult<bool>([$"File not found: {songFileName}"])
                 {
                     Data = false
                 };
@@ -532,11 +534,22 @@ public sealed class AtlMetaTag(
 
             try
             {
-                if (!await OptimizedFileOperations.WaitForFileStabilityAsync(songFileName, cancellationToken: cancellationToken)
+                // Wait for file stability with retry logic
+                if (!await OptimizedFileOperations.WaitForFileStabilityAsync(songFileName, checks: 3, delayMs: 150, cancellationToken: cancellationToken)
                         .ConfigureAwait(false))
                 {
                     Log.Warning("[{Plugin}] File [{File}] not stable for write, skipping.", DisplayName, songFileName);
                     return new OperationResult<bool>(["File not stable for write"])
+                    {
+                        Data = false
+                    };
+                }
+
+                // Double-check file still exists after stability wait
+                if (!File.Exists(songFileName))
+                {
+                    Log.Warning("[{Plugin}] File [{File}] disappeared during stability check.", DisplayName, songFileName);
+                    return new OperationResult<bool>(["File disappeared during processing"])
                     {
                         Data = false
                     };

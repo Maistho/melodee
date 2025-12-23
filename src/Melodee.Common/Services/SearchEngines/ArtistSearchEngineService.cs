@@ -43,6 +43,7 @@ public class ArtistSearchEngineService(
     private IArtistTopSongsSearchEnginePlugin[] _artistTopSongsSearchEnginePlugins = [];
     private IMelodeeConfiguration _configuration = new MelodeeConfiguration([]);
     private bool _initialized;
+    private readonly ArtistSearchCache _searchCache = new();
 
     public async Task InitializeAsync(IMelodeeConfiguration? configuration = null,
         CancellationToken cancellationToken = default)
@@ -291,8 +292,11 @@ public class ArtistSearchEngineService(
     {
         try
         {
+            // Normalize query for better matching
+            var normalizedQueryName = Utility.UnicodeNormalizer.NormalizeForSearch(query.NameNormalized);
+
             var variousArtist = new VariousArtist();
-            if (query.NameNormalized.IsSimilar(variousArtist.Name.ToNormalizedString()))
+            if (normalizedQueryName.IsSimilar(variousArtist.Name.ToNormalizedString()))
             {
                 // Various artist is a mess and has hundreds of thousands of albums. Make the admin manually validate various artists.
                 Logger.Warning("[{Name}]:[{MethodName}] various artists albums require manual validation.",
@@ -302,7 +306,7 @@ public class ArtistSearchEngineService(
             }
 
             var theater = new Theater();
-            if (query.NameNormalized.IsSimilar(theater.Name.ToNormalizedString()))
+            if (normalizedQueryName.IsSimilar(theater.Name.ToNormalizedString()))
             {
                 Logger.Warning("[{Name}]:[{MethodName}] theater albums require manual validation.",
                     nameof(ArtistSearchEngineService),
@@ -484,6 +488,35 @@ public class ArtistSearchEngineService(
     {
         CheckInitialized();
 
+        // Normalize the artist name to handle special characters
+        var normalizedQuery = query with
+        {
+            Name = Utility.UnicodeNormalizer.Normalize(query.Name)
+        };
+
+        // Check cache first
+        if (_searchCache.TryGetCachedResult(normalizedQuery, out var wasFound, out var cachedArtistId))
+        {
+            if (!wasFound)
+            {
+                Logger.Debug("[{Name}] Artist [{Artist}] not found (cached negative result)",
+                    nameof(ArtistSearchEngineService), normalizedQuery.Name);
+                return new PagedResult<ArtistSearchResult>
+                {
+                    Data = [],
+                    TotalCount = 0,
+                    TotalPages = 0
+                };
+            }
+
+            if (cachedArtistId.HasValue)
+            {
+                Logger.Debug("[{Name}] Artist [{Artist}] found in cache (ID: {Id})",
+                    nameof(ArtistSearchEngineService), normalizedQuery.Name, cachedArtistId.Value);
+                // Will be retrieved from database below
+            }
+        }
+
         var result = new List<ArtistSearchResult>();
 
         var maxResultsValue = maxResults ?? _configuration.GetValue<int>(SettingRegistry.SearchEngineDefaultPageSize);
@@ -494,36 +527,36 @@ public class ArtistSearchEngineService(
         try
         {
             using (Operation.At(LogEventLevel.Debug)
-                       .Time("[{Name}] DoSearchAsync [{Query}]", nameof(ArtistSearchEngineService), query))
+                       .Time("[{Name}] DoSearchAsync [{Query}]", nameof(ArtistSearchEngineService), normalizedQuery))
             {
                 // See if found in DbContext if not then query plugins, add to context and return results
                 await using (var scopedContext = await artistSearchEngineServiceDbContextFactory
                                  .CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
                 {
-                    var firstTag = $"{query.NameNormalized}{StringExtensions.TagsSeparator}";
+                    var firstTag = $"{normalizedQuery.NameNormalized}{StringExtensions.TagsSeparator}";
                     var inTag =
-                        $"{StringExtensions.TagsSeparator}{query.NameNormalized}{StringExtensions.TagsSeparator}";
-                    var outerTag = $"{StringExtensions.TagsSeparator}{query.NameNormalized}";
+                        $"{StringExtensions.TagsSeparator}{normalizedQuery.NameNormalized}{StringExtensions.TagsSeparator}";
+                    var outerTag = $"{StringExtensions.TagsSeparator}{normalizedQuery.NameNormalized}";
                     var artists = await scopedContext
                         .Artists.Include(x => x.Albums)
-                        .Where(x => x.NameNormalized == query.NameNormalized ||
-                                    (x.MusicBrainzId != null && query.MusicBrainzId != null &&
-                                     x.MusicBrainzId == query.MusicBrainzIdValue) ||
+                        .Where(x => x.NameNormalized == normalizedQuery.NameNormalized ||
+                                    (x.MusicBrainzId != null && normalizedQuery.MusicBrainzId != null &&
+                                     x.MusicBrainzId == normalizedQuery.MusicBrainzIdValue) ||
                                     (x.AlternateNames != null && (x.AlternateNames.Contains(firstTag) ||
                                                                   x.AlternateNames.Contains(inTag) ||
                                                                   x.AlternateNames.Contains(outerTag))) ||
-                                    (x.SpotifyId != null && query.SpotifyId != null && x.SpotifyId == query.SpotifyId))
+                                    (x.SpotifyId != null && normalizedQuery.SpotifyId != null && x.SpotifyId == normalizedQuery.SpotifyId))
                         .ToArrayAsync(cancellationToken)
                         .ConfigureAwait(false);
 
-                    if (artists.Length > 0 && query.AlbumKeyValues?.Length > 0)
+                    if (artists.Length > 0 && normalizedQuery.AlbumKeyValues?.Length > 0)
                     {
                         foreach (var ar in artists)
                         {
                             // If any album is given then rank artist if any album matches 
                             foreach (var album in ar.Albums)
                             {
-                                foreach (var albumKey in query.AlbumKeyValues)
+                                foreach (var albumKey in normalizedQuery.AlbumKeyValues)
                                 {
                                     var isAlbumMatch = album.Year.ToString() == albumKey.Key &&
                                                        album.NameNormalized == albumKey.Value;
@@ -546,7 +579,7 @@ public class ArtistSearchEngineService(
                             Trace.WriteLine(
                                 $"[{nameof(ArtistSearchEngineService)}] artist [{artist.NameNormalized}] has no albums. Refreshing from search engine.");
                             var newArtist =
-                                await GetArtistFromSearchProviders(query, maxResultsValue, cancellationToken)
+                                await GetArtistFromSearchProviders(normalizedQuery, maxResultsValue, cancellationToken)
                                     .ConfigureAwait(false);
                             if (newArtist?.Releases?.Length > 0)
                             {
@@ -617,11 +650,11 @@ public class ArtistSearchEngineService(
 
                         result.Add(artist.ToArtistSearchResult(nameof(ArtistSearchEngineService)));
                         Trace.WriteLine(
-                            $"[{nameof(ArtistSearchEngineService)}] Found artist [{artist}] in database for query [{query}].");
+                            $"[{nameof(ArtistSearchEngineService)}] Found artist [{artist}] in database for query [{normalizedQuery}].");
                     }
                     else
                     {
-                        var newArtist = await GetArtistFromSearchProviders(query, maxResultsValue, cancellationToken)
+                        var newArtist = await GetArtistFromSearchProviders(normalizedQuery, maxResultsValue, cancellationToken)
                             .ConfigureAwait(false);
                         if (newArtist != null)
                         {
@@ -751,7 +784,21 @@ public class ArtistSearchEngineService(
         }
         catch (Exception e)
         {
-            Logger.Error(e, "Attempting to Search [{Artist}]", query.Name);
+            Logger.Error(e, "Attempting to Search [{Artist}]", normalizedQuery.Name);
+        }
+
+        // Cache results
+        if (result.Any())
+        {
+            var firstResult = result.First();
+            if (firstResult.Id.HasValue)
+            {
+                _searchCache.CachePositiveResult(normalizedQuery, firstResult.Id.Value);
+            }
+        }
+        else
+        {
+            _searchCache.CacheNegativeResult(normalizedQuery);
         }
 
         return new PagedResult<ArtistSearchResult>

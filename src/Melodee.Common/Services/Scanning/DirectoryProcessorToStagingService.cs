@@ -317,6 +317,10 @@ public sealed class DirectoryProcessorToStagingService(
             MaxDegreeOfParallelism = Environment.ProcessorCount // Limit parallel execution to CPU core count
         };
 
+        var processedCount = 0;
+        var totalDirectories = directoriesToProcess.Count;
+        var nextProgressReport = 10; // Report every 10 directories
+
         try
         {
             await Parallel.ForEachAsync(directoriesToProcess, parallelOptions, async (directoryInfoToProcess, ct) =>
@@ -330,6 +334,17 @@ public sealed class DirectoryProcessorToStagingService(
                     var processingResult = await ProcessSingleDirectoryAsync(directoryInfoToProcess, processingMessages, processingErrors, artistsIdsSeen, albumsIdsSeen, songsIdsSeen, ct);
                     numberOfAlbumsProcessed += processingResult.Item1;
                     numberOfValidAlbumsProcessed += processingResult.Item2;
+
+                    // Progress reporting
+                    var currentCount = Interlocked.Increment(ref processedCount);
+                    if (currentCount >= nextProgressReport || currentCount == totalDirectories)
+                    {
+                        var percentComplete = (currentCount * 100) / totalDirectories;
+                        LogAndRaiseEvent(LogEventLevel.Information,
+                            "Progress: {0}/{1} directories ({2}%) - {3} valid albums processed",
+                            null, currentCount, totalDirectories, percentComplete, numberOfValidAlbumsProcessed);
+                        Interlocked.Add(ref nextProgressReport, 10);
+                    }
                 }
                 finally
                 {

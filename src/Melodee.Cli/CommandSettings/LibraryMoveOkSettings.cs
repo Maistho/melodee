@@ -1,5 +1,4 @@
 using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 using Spectre.Console.Cli;
 using ValidationResult = Spectre.Console.ValidationResult;
 
@@ -8,7 +7,7 @@ namespace Melodee.Cli.CommandSettings;
 public class LibraryMoveOkSettings : LibrarySettings
 {
     [Description("Name of library to move 'Ok' albums into.")]
-    [CommandArgument(0, "[TOLIBRARY]")]
+    [CommandArgument(1, "[TOLIBRARY]")]
     public string ToLibraryName { get; set; } = string.Empty;
 
     [Description("Source path containing albums to move (use with --to-path for path-based mode, bypasses database library lookup).")]
