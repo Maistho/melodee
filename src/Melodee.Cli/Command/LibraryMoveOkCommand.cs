@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Melodee.Cli.CommandSettings;
 using Melodee.Common.Enums;
 using Melodee.Common.Serialization;
@@ -11,6 +12,12 @@ namespace Melodee.Cli.Command;
 
 public class LibraryMoveOkCommand : CommandBase<LibraryMoveOkSettings>
 {
+    private static string FormatBytes(long bytes)
+    {
+        const long megabyte = 1024 * 1024;
+        return (bytes / (double)megabyte).ToString("F2");
+    }
+
     public override async Task<int> ExecuteAsync(CommandContext context, LibraryMoveOkSettings settings, CancellationToken cancellationToken)
     {
         using (var scope = CreateServiceProvider().CreateScope())
@@ -18,81 +25,190 @@ public class LibraryMoveOkCommand : CommandBase<LibraryMoveOkSettings>
             var serializer = scope.ServiceProvider.GetRequiredService<ISerializer>();
             var libraryService = scope.ServiceProvider.GetRequiredService<LibraryService>();
 
-            libraryService.OnProcessingProgressEvent += (sender, e) =>
-            {
-                switch (e.Type)
-                {
-                    case ProcessingEventType.Start:
-                        if (e.Max == 0)
-                        {
-                            AnsiConsole.MarkupLine("[yellow]No albums found.[/]");
-                        }
-                        else
-                        {
-                            AnsiConsole.MarkupLine($"[blue]| {e.Max} albums to move.[/]");
-                        }
+            Common.Models.OperationResult<bool>? result = null;
+            var startTime = Stopwatch.GetTimestamp();
 
-                        break;
-
-                    case ProcessingEventType.Processing:
-                        if (e.Max > 0 && e.Current % 10 == 0)
-                        {
-                            AnsiConsole.MarkupLine($"[blue]- moved {e.Current} albums.[/]");
-                        }
-
-                        break;
-
-                    case ProcessingEventType.Stop:
-                        if (e.Max > 0)
-                        {
-                            AnsiConsole.MarkupLine($"[green]= {Markup.Escape(e.Message)}[/]");
-                        }
-
-                        break;
-                }
-            };
-
-            Common.Models.OperationResult<bool> result;
+            // Display initial configuration
+            var configGrid = new Grid()
+                .AddColumn(new GridColumn().NoWrap().PadRight(4))
+                .AddColumn();
 
             if (settings.IsPathBasedMode)
             {
-                AnsiConsole.MarkupLine("[blue]Running in path-based mode (bypassing database library lookup)[/]");
-                AnsiConsole.MarkupLine($"[grey]From: {settings.FromPath!.EscapeMarkup()}[/]");
-                AnsiConsole.MarkupLine($"[grey]To: {settings.ToPath!.EscapeMarkup()}[/]");
-
-                result = await libraryService.MoveAlbumsFromPathToPath(
-                        settings.FromPath!,
-                        settings.ToPath!,
-                        b => b.Status == AlbumStatus.Ok,
-                        settings.Verbose,
-                        cancellationToken)
-                    .ConfigureAwait(false);
+                configGrid
+                    .AddRow("[b]Mode[/]", "[blue]Path-based[/] (bypassing database)")
+                    .AddRow("[b]From[/]", $"{settings.FromPath!.EscapeMarkup()}")
+                    .AddRow("[b]To[/]", $"{settings.ToPath!.EscapeMarkup()}");
             }
             else
             {
-                if (settings.LibraryName == settings.ToLibraryName)
-                {
-                    AnsiConsole.MarkupLine("[red]Source and destination library are the same.[/]");
-                    return 1;
-                }
+                configGrid
+                    .AddRow("[b]Mode[/]", "[blue]Library-based[/]")
+                    .AddRow("[b]From Library[/]", $"{settings.LibraryName.EscapeMarkup()}")
+                    .AddRow("[b]To Library[/]", $"{settings.ToLibraryName.EscapeMarkup()}");
+            }
 
-                result = await libraryService.MoveAlbumsFromLibraryToLibrary(
-                        settings.LibraryName,
-                        settings.ToLibraryName,
-                        b => b.Status == AlbumStatus.Ok,
-                        settings.Verbose,
-                        cancellationToken)
-                    .ConfigureAwait(false);
+            AnsiConsole.Write(
+                new Panel(configGrid)
+                    .Header("[yellow]Move 'Ok' Albums Configuration[/]")
+                    .RoundedBorder()
+                    .BorderColor(Color.Blue));
+
+            AnsiConsole.WriteLine();
+
+            var currentAlbumLine = string.Empty;
+            var statsLine = string.Empty;
+
+            await AnsiConsole.Progress()
+                .AutoRefresh(true)
+                .AutoClear(false)
+                .HideCompleted(false)
+                .Columns(
+                [
+                    new TaskDescriptionColumn(),
+                    new ProgressBarColumn(),
+                    new PercentageColumn(),
+                    new RemainingTimeColumn(),
+                    new SpinnerColumn()
+                ])
+                .StartAsync(async ctx =>
+                {
+                    var progressTask = ctx.AddTask("[green]Initializing...[/]", maxValue: 100);
+
+                    var totalToMove = 0;
+                    var totalBytes = 0L;
+                    var lastCurrentAlbum = string.Empty;
+
+                    libraryService.OnProcessingProgressEvent += (sender, e) =>
+                    {
+                        switch (e.Type)
+                        {
+                            case ProcessingEventType.Start:
+                                totalToMove = e.Max;
+                                totalBytes = e.TotalBytes;
+
+                                if (e.Max == 0)
+                                {
+                                    progressTask.Description = "[yellow]No albums found to move[/]";
+                                    progressTask.StopTask();
+                                }
+                                else
+                                {
+                                    progressTask.MaxValue = e.Max;
+                                    progressTask.Description = $"[green]Moving albums:[/] 0/{e.Max:N0} (0.0%)";
+                                }
+                                break;
+
+                            case ProcessingEventType.Processing:
+                                if (e.Max > 0)
+                                {
+                                    var percentComplete = (double)e.Current / e.Max * 100;
+                                    progressTask.Value = e.Current;
+
+                                    var elapsed = Stopwatch.GetElapsedTime(startTime);
+                                    var bytesPerSecond = elapsed.TotalSeconds > 0
+                                        ? e.BytesProcessed / elapsed.TotalSeconds
+                                        : 0;
+                                    var mbps = FormatBytes((long)bytesPerSecond);
+
+                                    // Extract album name from message if present
+                                    var albumName = e.Message;
+                                    if (albumName.StartsWith("Processing [") && albumName.EndsWith("]"))
+                                    {
+                                        albumName = albumName[12..^1]; // Remove "Processing [" and "]"
+                                        if (albumName.Length > 45)
+                                        {
+                                            albumName = albumName[..42] + "...";
+                                        }
+                                        lastCurrentAlbum = albumName;
+                                    }
+
+                                    var processedMB = FormatBytes(e.BytesProcessed);
+                                    var totalMB = FormatBytes(totalBytes);
+                                    var dataPercent = totalBytes > 0 ? (double)e.BytesProcessed / totalBytes * 100 : 0;
+
+                                    // Format: Albums: 125/284 (44%) | Current: Abbey Road | Data: 12.5/25.5 GB (49%) | Speed: 95 MB/s
+                                    progressTask.Description = $"[green]Albums:[/] {e.Current}/{e.Max} ([cyan]{percentComplete:F1}%[/]) | " +
+                                                              $"[yellow]{Markup.Escape(lastCurrentAlbum)}[/] | " +
+                                                              $"[green]Data:[/] {processedMB}/{totalMB} MB ([cyan]{dataPercent:F1}%[/]) | " +
+                                                              $"[green]Speed:[/] [cyan]{mbps} MB/s[/]";
+                                }
+                                break;
+
+                            case ProcessingEventType.Stop:
+                                progressTask.Value = progressTask.MaxValue;
+                                progressTask.StopTask();
+
+                                var totalElapsed = Stopwatch.GetElapsedTime(startTime);
+                                var avgBytesPerSecond = totalElapsed.TotalSeconds > 0
+                                    ? e.BytesProcessed / totalElapsed.TotalSeconds
+                                    : 0;
+                                var avgMbps = FormatBytes((long)avgBytesPerSecond);
+
+                                progressTask.Description = $"[green]✓ Completed:[/] {e.Max:N0} albums | " +
+                                                          $"{FormatBytes(e.BytesProcessed)} MB | " +
+                                                          $"[cyan]Avg: {avgMbps} MB/s[/] | " +
+                                                          $"[cyan]Time: {totalElapsed:hh\\:mm\\:ss}[/]";
+                                break;
+                        }
+                    };
+
+                    if (settings.IsPathBasedMode)
+                    {
+                        result = await libraryService.MoveAlbumsFromPathToPath(
+                                settings.FromPath!,
+                                settings.ToPath!,
+                                b => b.Status == AlbumStatus.Ok,
+                                settings.Verbose,
+                                cancellationToken)
+                            .ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        if (settings.LibraryName == settings.ToLibraryName)
+                        {
+                            result = new Common.Models.OperationResult<bool>("Source and destination library are the same.")
+                            {
+                                Data = false
+                            };
+                        }
+                        else
+                        {
+                            result = await libraryService.MoveAlbumsFromLibraryToLibrary(
+                                    settings.LibraryName,
+                                    settings.ToLibraryName,
+                                    b => b.Status == AlbumStatus.Ok,
+                                    settings.Verbose,
+                                    cancellationToken)
+                                .ConfigureAwait(false);
+                        }
+                    }
+                });
+
+            AnsiConsole.WriteLine();
+
+            if (result == null)
+            {
+                AnsiConsole.MarkupLine("[red]Error: Operation did not complete[/]");
+                return 1;
             }
 
             if (!result.IsSuccess)
             {
                 AnsiConsole.Write(
                     new Panel(new JsonText(serializer.Serialize(result) ?? string.Empty))
-                        .Header("Not successful")
+                        .Header("[red]Operation Failed[/]")
                         .Collapse()
                         .RoundedBorder()
-                        .BorderColor(Color.Yellow));
+                        .BorderColor(Color.Red));
+            }
+            else
+            {
+                var rule = new Rule("[green]Move operation completed successfully[/]")
+                {
+                    Justification = Justify.Left
+                };
+                AnsiConsole.Write(rule);
             }
 
             return result.IsSuccess ? 0 : 1;

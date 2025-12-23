@@ -3,6 +3,7 @@ using Melodee.Cli.CommandSettings;
 using Melodee.Common.Configuration;
 using Melodee.Common.Constants;
 using Melodee.Common.Models;
+using Melodee.Common.Plugins.Processor.Models;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services;
 using Melodee.Common.Services.Scanning;
@@ -39,8 +40,6 @@ public class ProcessInboundCommand : CommandBase<LibraryProcessSettings>
             {
                 directoryInbound = settings.InboundPath!;
                 directoryStaging = settings.StagingPath!;
-
-                AnsiConsole.MarkupLine("[blue]Running in path-based mode (bypassing database library lookup)[/]");
             }
             else
             {
@@ -60,16 +59,20 @@ public class ProcessInboundCommand : CommandBase<LibraryProcessSettings>
             var grid = new Grid()
                 .AddColumn(new GridColumn().NoWrap().PadRight(4))
                 .AddColumn()
-                .AddRow("[b]Path-based Mode?[/]", $"{YesNo(settings.IsPathBasedMode)}")
-                .AddRow("[b]Copy Mode?[/]", $"{YesNo(!SafeParser.ToBoolean(melodeeConfiguration.Configuration[SettingRegistry.ProcessingDoDeleteOriginal]))}")
-                .AddRow("[b]Force Mode?[/]", $"{YesNo(SafeParser.ToBoolean(melodeeConfiguration.Configuration[SettingRegistry.ProcessingDoOverrideExistingMelodeeDataFiles]))}")
+                .AddRow("[b]Mode[/]", settings.IsPathBasedMode ? "[blue]Path-based[/] (bypassing database)" : "[blue]Library-based[/]")
+                .AddRow("[b]Copy Mode[/]", SafeParser.ToBoolean(melodeeConfiguration.Configuration[SettingRegistry.ProcessingDoDeleteOriginal]) ? "[dim]No[/]" : "[yellow]Yes[/]")
+                .AddRow("[b]Force Mode[/]", SafeParser.ToBoolean(melodeeConfiguration.Configuration[SettingRegistry.ProcessingDoOverrideExistingMelodeeDataFiles]) ? "[yellow]Yes[/]" : "[dim]No[/]")
                 .AddRow("[b]PreDiscovery Script[/]", $"{SafeParser.ToString(melodeeConfiguration.Configuration[SettingRegistry.ScriptingPreDiscoveryScript])}")
                 .AddRow("[b]Inbound[/]", $"{directoryInbound.EscapeMarkup()}")
                 .AddRow("[b]Staging[/]", $"{directoryStaging.EscapeMarkup()}");
 
             AnsiConsole.Write(
                 new Panel(grid)
-                    .Header("Configuration"));
+                    .Header("[yellow]Process Inbound Configuration[/]")
+                    .RoundedBorder()
+                    .BorderColor(Color.Blue));
+
+            AnsiConsole.WriteLine();
 
             var processor = scope.ServiceProvider.GetRequiredService<DirectoryProcessorToStagingService>();
             var dirInfo = new DirectoryInfo(directoryInbound);
@@ -90,21 +93,51 @@ public class ProcessInboundCommand : CommandBase<LibraryProcessSettings>
                 Name = dirInfo.Name
             };
 
-            var result = await processor.ProcessDirectoryAsync(fileSystemDirectoryInfo, lastScanAt, settings.ProcessLimit, cancellationToken);
+            OperationResult<DirectoryProcessorResult>? result = null;
+
+            await AnsiConsole.Status()
+                .StartAsync("[yellow]Processing inbound directory...[/]", async ctx =>
+                {
+                    ctx.Spinner(Spinner.Known.Dots);
+                    result = await processor.ProcessDirectoryAsync(fileSystemDirectoryInfo, lastScanAt, settings.ProcessLimit, cancellationToken);
+                });
 
             Log.Debug("ℹ️ Processed directory [{Inbound}] in [{ElapsedTime}]", directoryInbound, Stopwatch.GetElapsedTime(startTicks));
 
-            if (settings.Verbose)
+            AnsiConsole.WriteLine();
+
+            if (result != null && result.IsSuccess && result.Data != null)
             {
+                var resultData = result.Data;
+                var statsGrid = new Grid()
+                    .AddColumn(new GridColumn().NoWrap().PadRight(4))
+                    .AddColumn();
+
+                statsGrid
+                    .AddRow("[b]Albums Processed[/]", $"[green]{resultData.NumberOfAlbumsProcessed:N0}[/]")
+                    .AddRow("[b]Valid Albums[/]", $"[green]{resultData.NumberOfValidAlbumsProcessed:N0}[/] ([cyan]{resultData.FormattedValidPercentageProcessed}[/])")
+                    .AddRow("[b]New Albums[/]", $"[yellow]{resultData.NewAlbumsCount:N0}[/]")
+                    .AddRow("[b]New Songs[/]", $"[yellow]{resultData.NewSongsCount:N0}[/]");
+
+                AnsiConsole.Write(
+                    new Panel(statsGrid)
+                        .Header("[green]Process Results[/]")
+                        .RoundedBorder()
+                        .BorderColor(Color.Green));
+            }
+
+            if (settings.Verbose && result != null)
+            {
+                AnsiConsole.WriteLine();
                 AnsiConsole.Write(
                     new Panel(new JsonText(serializer.Serialize(result) ?? string.Empty))
-                        .Header("Process Result")
+                        .Header("[yellow]Detailed Results[/]")
                         .Collapse()
                         .RoundedBorder()
                         .BorderColor(Color.Yellow));
             }
 
-            return result.IsSuccess ? 0 : 1;
+            return result?.IsSuccess == true ? 0 : 1;
         }
     }
 
