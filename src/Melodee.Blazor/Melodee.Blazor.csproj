@@ -67,6 +67,7 @@
     <PackageReference Include="Quartz.Serialization.SystemTextJson" />
     <PackageReference Include="Rebus" />
     <PackageReference Include="Rebus.ServiceProvider" />
+    <PackageReference Include="Serilog.Formatting.Compact" />
     <PackageReference Include="Swashbuckle.AspNetCore" />
     <PackageReference Include="Serilog" />
     <PackageReference Include="Serilog.AspNetCore" />
