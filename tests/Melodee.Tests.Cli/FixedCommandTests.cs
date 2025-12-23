@@ -56,7 +56,7 @@ public class FixedCommandTests
         var result = settings.Validate();
 
         result.Successful.Should().BeFalse();
-        result.Message.Should().Be("Library name is required");
+        result.Message.Should().Contain("Library name is required");
     }
 
     [Fact]

@@ -92,6 +92,11 @@ public sealed class DirectoryProcessorToStagingService(
 
     public async Task InitializeAsync(IMelodeeConfiguration? configuration = null, CancellationToken token = default)
     {
+        await InitializeAsync(configuration, null, token).ConfigureAwait(false);
+    }
+
+    public async Task InitializeAsync(IMelodeeConfiguration? configuration, string? stagingPathOverride, CancellationToken token)
+    {
         if (_initialized)
         {
             return;
@@ -105,7 +110,7 @@ public sealed class DirectoryProcessorToStagingService(
         _duplicateThreshold = _configuration.GetValue<int?>(SettingRegistry.ImagingDuplicateThreshold) ??
                               MelodeeConfiguration.DefaultImagingDuplicateThreshold;
 
-        _directoryStaging = (await libraryService.GetStagingLibraryAsync(token).ConfigureAwait(false)).Data.Path;
+        _directoryStaging = stagingPathOverride ?? (await libraryService.GetStagingLibraryAsync(token).ConfigureAwait(false)).Data.Path;
 
         _albumValidator = new AlbumValidator(_configuration);
         _imageValidator = new ImageValidator(_configuration);

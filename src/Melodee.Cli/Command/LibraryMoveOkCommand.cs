@@ -52,18 +52,38 @@ public class LibraryMoveOkCommand : CommandBase<LibraryMoveOkSettings>
                 }
             };
 
-            if (settings.LibraryName == settings.ToLibraryName)
-            {
-                AnsiConsole.MarkupLine("[red]Source and destination library are the same.[/]");
-                return 1;
-            }
+            Common.Models.OperationResult<bool> result;
 
-            var result = await libraryService.MoveAlbumsFromLibraryToLibrary(settings.LibraryName,
-                    settings.ToLibraryName,
-                    b => b.Status == AlbumStatus.Ok,
-                    settings.Verbose,
-                    cancellationToken)
-                .ConfigureAwait(false);
+            if (settings.IsPathBasedMode)
+            {
+                AnsiConsole.MarkupLine("[blue]Running in path-based mode (bypassing database library lookup)[/]");
+                AnsiConsole.MarkupLine($"[grey]From: {settings.FromPath!.EscapeMarkup()}[/]");
+                AnsiConsole.MarkupLine($"[grey]To: {settings.ToPath!.EscapeMarkup()}[/]");
+
+                result = await libraryService.MoveAlbumsFromPathToPath(
+                        settings.FromPath!,
+                        settings.ToPath!,
+                        b => b.Status == AlbumStatus.Ok,
+                        settings.Verbose,
+                        cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            else
+            {
+                if (settings.LibraryName == settings.ToLibraryName)
+                {
+                    AnsiConsole.MarkupLine("[red]Source and destination library are the same.[/]");
+                    return 1;
+                }
+
+                result = await libraryService.MoveAlbumsFromLibraryToLibrary(
+                        settings.LibraryName,
+                        settings.ToLibraryName,
+                        b => b.Status == AlbumStatus.Ok,
+                        settings.Verbose,
+                        cancellationToken)
+                    .ConfigureAwait(false);
+            }
 
             if (!result.IsSuccess)
             {

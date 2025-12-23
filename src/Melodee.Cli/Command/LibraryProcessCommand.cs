@@ -9,6 +9,7 @@ using Melodee.Common.Services;
 using Melodee.Common.Services.Scanning;
 using Melodee.Common.Utility;
 using Microsoft.Extensions.DependencyInjection;
+using NodaTime;
 using Serilog;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -20,13 +21,6 @@ public class ProcessInboundCommand : CommandBase<LibraryProcessSettings>
 {
     public override async Task<int> ExecuteAsync(CommandContext context, LibraryProcessSettings settings, CancellationToken cancellationToken)
     {
-        // var font = FigletFont.Load("Fonts/Elite.flf");        
-        //
-        // AnsiConsole.Write(
-        //     new FigletText(font, "Processing")
-        //         .LeftJustified()
-        //         .Color(Color.Purple3));        
-
         if (settings.Verbose)
         {
             Trace.Listeners.Add(new ConsoleTraceListener());
@@ -38,20 +32,36 @@ public class ProcessInboundCommand : CommandBase<LibraryProcessSettings>
             var melodeeConfigurationFactory = scope.ServiceProvider.GetRequiredService<IMelodeeConfigurationFactory>();
             var melodeeConfiguration = await melodeeConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
 
-            var libraryService = scope.ServiceProvider.GetRequiredService<LibraryService>();
+            string directoryInbound;
+            string directoryStaging;
+            Instant? lastScanAt = null;
 
-            var libraryToProcess = (await libraryService.ListAsync(new PagedRequest(), cancellationToken)).Data?.FirstOrDefault(x => string.Equals(x.Name, settings.LibraryName, StringComparison.OrdinalIgnoreCase));
-            if (libraryToProcess == null)
+            if (settings.IsPathBasedMode)
             {
-                throw new Exception($"Library with name [{settings.LibraryName}] not found.");
-            }
+                directoryInbound = settings.InboundPath!;
+                directoryStaging = settings.StagingPath!;
 
-            var directoryInbound = libraryToProcess.Path;
-            var directoryStaging = (await libraryService.GetStagingLibraryAsync(cancellationToken).ConfigureAwait(false)).Data!.Path;
+                AnsiConsole.MarkupLine("[blue]Running in path-based mode (bypassing database library lookup)[/]");
+            }
+            else
+            {
+                var libraryService = scope.ServiceProvider.GetRequiredService<LibraryService>();
+
+                var libraryToProcess = (await libraryService.ListAsync(new PagedRequest(), cancellationToken)).Data?.FirstOrDefault(x => string.Equals(x.Name, settings.LibraryName, StringComparison.OrdinalIgnoreCase));
+                if (libraryToProcess == null)
+                {
+                    throw new Exception($"Library with name [{settings.LibraryName}] not found.");
+                }
+
+                directoryInbound = libraryToProcess.Path;
+                directoryStaging = (await libraryService.GetStagingLibraryAsync(cancellationToken).ConfigureAwait(false)).Data!.Path;
+                lastScanAt = settings.ForceMode ? null : libraryToProcess.LastScanAt;
+            }
 
             var grid = new Grid()
                 .AddColumn(new GridColumn().NoWrap().PadRight(4))
                 .AddColumn()
+                .AddRow("[b]Path-based Mode?[/]", $"{YesNo(settings.IsPathBasedMode)}")
                 .AddRow("[b]Copy Mode?[/]", $"{YesNo(!SafeParser.ToBoolean(melodeeConfiguration.Configuration[SettingRegistry.ProcessingDoDeleteOriginal]))}")
                 .AddRow("[b]Force Mode?[/]", $"{YesNo(SafeParser.ToBoolean(melodeeConfiguration.Configuration[SettingRegistry.ProcessingDoOverrideExistingMelodeeDataFiles]))}")
                 .AddRow("[b]PreDiscovery Script[/]", $"{SafeParser.ToString(melodeeConfiguration.Configuration[SettingRegistry.ScriptingPreDiscoveryScript])}")
@@ -63,21 +73,27 @@ public class ProcessInboundCommand : CommandBase<LibraryProcessSettings>
                     .Header("Configuration"));
 
             var processor = scope.ServiceProvider.GetRequiredService<DirectoryProcessorToStagingService>();
-            var dirInfo = new DirectoryInfo(libraryToProcess.Path);
+            var dirInfo = new DirectoryInfo(directoryInbound);
             if (!dirInfo.Exists)
             {
-                throw new Exception($"Directory [{libraryToProcess.Path}] does not exist.");
+                throw new Exception($"Directory [{directoryInbound}] does not exist.");
             }
 
             var startTicks = Stopwatch.GetTimestamp();
 
-            Log.Debug("\ud83d\udcc1 Processing library [{Inbound}]", libraryToProcess.ToString());
+            Log.Debug("\ud83d\udcc1 Processing directory [{Inbound}]", directoryInbound);
 
-            await processor.InitializeAsync(token: cancellationToken);
+            await processor.InitializeAsync(null, settings.IsPathBasedMode ? directoryStaging : null, cancellationToken);
 
-            var result = await processor.ProcessDirectoryAsync(libraryToProcess.ToFileSystemDirectoryInfo(), settings.ForceMode ? null : libraryToProcess.LastScanAt, settings.ProcessLimit, cancellationToken);
+            var fileSystemDirectoryInfo = new FileSystemDirectoryInfo
+            {
+                Path = directoryInbound,
+                Name = dirInfo.Name
+            };
 
-            Log.Debug("ℹ️ Processed library [{Inbound}] in [{ElapsedTime}]", libraryToProcess.ToString(), Stopwatch.GetElapsedTime(startTicks));
+            var result = await processor.ProcessDirectoryAsync(fileSystemDirectoryInfo, lastScanAt, settings.ProcessLimit, cancellationToken);
+
+            Log.Debug("ℹ️ Processed directory [{Inbound}] in [{ElapsedTime}]", directoryInbound, Stopwatch.GetElapsedTime(startTicks));
 
             if (settings.Verbose)
             {
@@ -89,7 +105,6 @@ public class ProcessInboundCommand : CommandBase<LibraryProcessSettings>
                         .BorderColor(Color.Yellow));
             }
 
-            // For console error codes, 0 is success.
             return result.IsSuccess ? 0 : 1;
         }
     }
@@ -98,6 +113,4 @@ public class ProcessInboundCommand : CommandBase<LibraryProcessSettings>
     {
         return value ? "Yes" : "No";
     }
-
-
 }
