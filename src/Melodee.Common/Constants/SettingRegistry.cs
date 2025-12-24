@@ -27,6 +27,7 @@ public static class SettingRegistry
     public const string ImagingDuplicateThreshold = "imaging.duplicateThreshold";
     public const string JobsArtistHousekeepingCronExpression = "jobs.artistHousekeeping.cronExpression";
     public const string JobsArtistSearchEngineHousekeepingCronExpression = "jobs.artistSearchEngineHousekeeping.cronExpression";
+    public const string JobsChartUpdateCronExpression = "jobs.chartUpdate.cronExpression";
     public const string JobsLibraryProcessCronExpression = "jobs.libraryProcess.cronExpression";
     public const string JobsLibraryInsertCronExpression = "jobs.libraryInsert.cronExpression";
     public const string JobsMusicBrainzUpdateDatabaseCronExpression = "jobs.musicbrainzUpdateDatabase.cronExpression";

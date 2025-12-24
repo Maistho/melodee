@@ -271,6 +271,95 @@
                     </ChildContent>
                 </RadzenPanel>
             }
+            else if (_showItem == ShowItem.Images)
+            {
+                <RadzenPanel>
+                    <HeaderTemplate>
+                        <RadzenText TextStyle="TextStyle.H6"
+                                    class="rz-display-flex rz-align-items-center rz-m-0">
+                            <RadzenIcon Icon="image" class="rz-me-1"/>
+                            Images (@(_album.Images?.Count() ?? 0))
+                        </RadzenText>
+                    </HeaderTemplate>
+                    <ChildContent>
+                        @if (_album.Images?.Any() ?? false)
+                        {
+                            <RadzenRow>
+                                @foreach (var image in _album.Images.OrderBy(i => i.SortOrder))
+                                {
+                                    var imageDir = image.DirectoryInfo ?? _album.Directory;
+                                    var imageFullPath = image.FileInfo != null ? image.FileInfo.FullName(imageDir) : null;
+                                    
+                                    <RadzenColumn Size="12" SizeMD="6" SizeLG="4" Class="rz-p-2">
+                                        <RadzenCard Style="height: 100%;">
+                                            <RadzenStack Gap="0.5rem">
+                                                @if (imageFullPath != null && File.Exists(imageFullPath))
+                                                {
+                                                    <RadzenImage Path="@($"data:image/jpeg;base64,{Convert.ToBase64String(File.ReadAllBytes(imageFullPath))}")"
+                                                                 Style="width: 100%; height: auto; max-height: 300px; object-fit: contain;"
+                                                                 AlternateText="@image.PictureIdentifier.ToString()"/>
+                                                }
+                                                else
+                                                {
+                                                    <div style="width: 100%; height: 200px; background: #f0f0f0; display: flex; align-items: center; justify-content: center;">
+                                                        <RadzenText TextStyle="TextStyle.Body2">Image not available</RadzenText>
+                                                    </div>
+                                                }
+                                                <RadzenStack Gap="0.25rem">
+                                                    <RadzenText TextStyle="TextStyle.Subtitle2" Style="font-weight: bold;">
+                                                        @image.PictureIdentifier.ToString()
+                                                    </RadzenText>
+                                                    @if (image.FileInfo != null)
+                                                    {
+                                                        <RadzenText TextStyle="TextStyle.Body2">
+                                                            <strong>File:</strong> @image.FileInfo.Name
+                                                        </RadzenText>
+                                                        @if (imageFullPath != null && File.Exists(imageFullPath))
+                                                        {
+                                                            var fileInfo = new FileInfo(imageFullPath);
+                                                            <RadzenText TextStyle="TextStyle.Body2">
+                                                                <strong>Size:</strong> @fileInfo.Length.FormatFileSize()
+                                                            </RadzenText>
+                                                        }
+                                                    }
+                                                    <RadzenText TextStyle="TextStyle.Body2">
+                                                        <strong>Resolution:</strong> @image.Width x @image.Height
+                                                    </RadzenText>
+                                                    <RadzenText TextStyle="TextStyle.Body2">
+                                                        <strong>Type:</strong> @(image.FileInfo?.Name.Split('.').LastOrDefault()?.ToUpperInvariant() ?? "Unknown")
+                                                    </RadzenText>
+                                                    @if (!string.IsNullOrEmpty(image.CrcHash))
+                                                    {
+                                                        <RadzenText TextStyle="TextStyle.Body2">
+                                                            <strong>CRC:</strong> @image.CrcHash
+                                                        </RadzenText>
+                                                    }
+                                                    @if (image.WasEmbeddedInSong)
+                                                    {
+                                                        <RadzenBadge Text="Embedded" BadgeStyle="BadgeStyle.Info" Style="margin-top: 0.25rem;"/>
+                                                    }
+                                                    @if (!string.IsNullOrEmpty(image.OriginalFilename))
+                                                    {
+                                                        <RadzenText TextStyle="TextStyle.Caption">
+                                                            <strong>Original:</strong> @image.OriginalFilename
+                                                        </RadzenText>
+                                                    }
+                                                </RadzenStack>
+                                            </RadzenStack>
+                                        </RadzenCard>
+                                    </RadzenColumn>
+                                }
+                            </RadzenRow>
+                        }
+                        else
+                        {
+                            <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat">
+                                No images found for this album.
+                            </RadzenAlert>
+                        }
+                    </ChildContent>
+                </RadzenPanel>
+            }
         </RadzenColumn>
     </RadzenRow>
 </RadzenStack>
@@ -341,6 +430,10 @@
             case "Files":
                 _showItem = ShowItem.Files;
                 await LoadAlbumFilesAsync();
+                break;
+            case "Images":
+                _showItem = ShowItem.Images;
+                await InvokeAsync(StateHasChanged);
                 break;
         }
     }

@@ -585,6 +585,20 @@ if (!isQuartzDisabled)
             .WithCronSchedule("0 */5 * * * ?")
             .StartNow()
             .Build());
+
+    var chartUpdateCronExpression = melodeeConfiguration.GetValue<string>(SettingRegistry.JobsChartUpdateCronExpression);
+    if (chartUpdateCronExpression.Nullify() != null)
+    {
+        await quartzScheduler.ScheduleJob(
+            JobBuilder.Create<ChartUpdateJob>()
+                .WithIdentity(JobKeyRegistry.ChartUpdateJobKey)
+                .Build(),
+            TriggerBuilder.Create()
+                .WithIdentity("ChartUpdateJob-trigger")
+                .WithCronSchedule(chartUpdateCronExpression!)
+                .StartNow()
+                .Build());
+    }
 }
 
 #endregion
