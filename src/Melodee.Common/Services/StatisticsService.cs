@@ -445,8 +445,9 @@ public sealed class StatisticsService(
         var songs = await context.Songs
             .AsNoTracking()
             .Include(x => x.Album)
+                .ThenInclude(a => a.Artist)
             .Where(x => songIds.Contains(x.Id))
-            .Select(x => new { x.Id, x.Title, x.ApiKey, AlbumApiKey = x.Album.ApiKey, ArtistApiKey = x.Album.ArtistApiKey })
+            .Select(x => new { x.Id, x.Title, x.ApiKey, AlbumApiKey = x.Album.ApiKey, ArtistApiKey = x.Album.Artist.ApiKey })
             .ToDictionaryAsync(x => x.Id, cancellationToken)
             .ConfigureAwait(false);
 
