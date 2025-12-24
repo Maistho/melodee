@@ -11,6 +11,7 @@ public class MelodeeDbContextFactory : IDesignTimeDbContextFactory<MelodeeDbCont
         var configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile("appsettings.json")
+            .AddJsonFile("appsettings.Development.json", true)
             .Build();
         var builder = new DbContextOptionsBuilder<MelodeeDbContext>();
         var connectionString = configuration.GetConnectionString("DefaultConnection");
