@@ -211,51 +211,6 @@ public sealed class ChartsController(
             Tracks = tracksResult.Data?.Select(t => t.ToChartTrackModel(baseUrl)).ToArray() ?? []
         });
     }
-
-    /// <summary>
-    /// Get the image for a chart.
-    /// </summary>
-    /// <param name="apiKey">Chart API key (GUID)</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    [HttpGet]
-    [Route("{apiKey:guid}/image")]
-    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK, "image/gif")]
-    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetChartImage(Guid apiKey, CancellationToken cancellationToken = default)
-    {
-        if (!ApiRequest.IsAuthorized)
-        {
-            return ApiUnauthorized();
-        }
-
-        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
-        if (user == null)
-        {
-            return ApiUnauthorized();
-        }
-
-        if (user.IsLocked)
-        {
-            return ApiUserLocked();
-        }
-
-        var chartResult = await chartService.GetByApiKeyAsync(apiKey, cancellationToken).ConfigureAwait(false);
-        if (chartResult.Data == null || !chartResult.Data.IsVisible)
-        {
-            return ApiNotFound("Chart");
-        }
-
-        var imageResult = await chartService.GetChartImageBytesAndEtagAsync(apiKey, null, cancellationToken).ConfigureAwait(false);
-        if (imageResult.Bytes == null || imageResult.Bytes.Length == 0)
-        {
-            return ApiNotFound("Chart image");
-        }
-
-        Response.Headers.ETag = imageResult.Etag;
-        Response.Headers.CacheControl = "public, max-age=86400";
-        return File(imageResult.Bytes, "image/gif");
-    }
 }
 
 public sealed record ChartPagedResponse

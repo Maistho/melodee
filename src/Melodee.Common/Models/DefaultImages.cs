@@ -16,4 +16,8 @@ public sealed record DefaultImages
     public required byte[] PlaylistImageBytes { get; init; }
 
     public string PlaylistImageBase64 => $"data:image/png;base64,{Convert.ToBase64String(PlaylistImageBytes)}";
+
+    public required byte[] ChartImageBytes { get; init; }
+
+    public string ChartImageBase64 => $"data:image/png;base64,{Convert.ToBase64String(ChartImageBytes)}";
 }

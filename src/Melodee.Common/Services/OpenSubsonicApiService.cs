@@ -58,6 +58,7 @@ public class OpenSubsonicApiService(
     LibraryService libraryService,
     ArtistSearchEngineService artistSearchEngineService,
     PlaylistService playlistService,
+    ChartService chartService,
     ShareService shareService,
     RadioStationService radioStationService,
     UserQueueService userQueueService,
@@ -94,6 +95,11 @@ public class OpenSubsonicApiService(
     private static bool IsApiIdForPlaylist(string? id)
     {
         return id.Nullify() != null && (id?.StartsWith($"playlist{OpenSubsonicServer.ApiIdSeparator}") ?? false);
+    }
+
+    private static bool IsApiIdForChart(string? id)
+    {
+        return id.Nullify() != null && (id?.StartsWith($"chart{OpenSubsonicServer.ApiIdSeparator}") ?? false);
     }
 
     private static bool IsApiIdForDynamicPlaylist(string? id)
@@ -1231,6 +1237,12 @@ public class OpenSubsonicApiService(
                         var playlistImageBytesAndEtag = await playlistService.GetPlaylistImageBytesAndEtagAsync(apiKey.Value, size, cancellationToken).ConfigureAwait(false);
                         result = playlistImageBytesAndEtag.Bytes ?? defaultImages.PlaylistImageBytes;
                         eTag = playlistImageBytesAndEtag.Etag ?? badEtag;
+                    }
+                    else if (IsApiIdForChart(apiId))
+                    {
+                        var chartImageBytesAndEtab = await chartService.GetChartImageBytesAndEtagAsync(apiKey.Value, size, cancellationToken).ConfigureAwait(false);
+                        result = chartImageBytesAndEtab.Bytes ?? defaultImages.ChartImageBytes;
+                        eTag = chartImageBytesAndEtab.Etag ?? badEtag;
                     }
                     else if (isUserImageRequest)
                     {

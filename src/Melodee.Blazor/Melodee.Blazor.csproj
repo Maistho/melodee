@@ -97,6 +97,7 @@
 
 
   <ItemGroup>
+    <Folder Include="Controllers\Internal\" />
     <Folder Include="wwwroot\images\backgrounds\" />
     <Folder Include="wwwroot\images\icons\" />
   </ItemGroup>

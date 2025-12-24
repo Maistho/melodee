@@ -326,7 +326,8 @@ builder.Services
         UserAvatarBytes = File.ReadAllBytes("wwwroot/images/avatar.png"),
         AlbumCoverBytes = File.ReadAllBytes("wwwroot/images/album.jpg"),
         ArtistBytes = File.ReadAllBytes("wwwroot/images/artist.jpg"),
-        PlaylistImageBytes = File.ReadAllBytes("wwwroot/images/playlist.jpg")
+        PlaylistImageBytes = File.ReadAllBytes("wwwroot/images/playlist.jpg"),
+        ChartImageBytes = File.ReadAllBytes("wwwroot/images/chart.jpg")
     })
     .AddSingleton(SpotifyClientConfig.CreateDefault())
     .AddScoped<ISpotifyClientBuilder, SpotifyClientBuilder>()

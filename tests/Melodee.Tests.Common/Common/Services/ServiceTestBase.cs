@@ -232,7 +232,8 @@ public abstract class ServiceTestBase : IDisposable, IAsyncDisposable
                 AlbumCoverBytes = [],
                 ArtistBytes = [],
                 PlaylistImageBytes = [],
-                UserAvatarBytes = []
+                UserAvatarBytes = [],
+                ChartImageBytes = []
             },
             MockConfigurationFactory(),
             GetUserService(),
@@ -245,6 +246,7 @@ public abstract class ServiceTestBase : IDisposable, IAsyncDisposable
             GetLibraryService(),
             GetArtistSearchEngineService(),
             GetPlaylistService(),
+            GetChartService(),
             GetShareService(),
             GetRadioStationService(),
             GetUserQueueService(),
@@ -320,6 +322,11 @@ public abstract class ServiceTestBase : IDisposable, IAsyncDisposable
     protected PlaylistService GetPlaylistService()
     {
         return new PlaylistService(Logger, CacheManager, Serializer, MockConfigurationFactory(), MockFactory(), GetLibraryService());
+    }
+
+    protected ChartService GetChartService()
+    {
+        return new ChartService(Logger, CacheManager, MockFactory(), GetLibraryService());
     }
 
     protected INowPlayingRepository GetNowPlayingRepository()

@@ -670,6 +670,230 @@ public class ChartServiceTests : ServiceTestBase
 
     #endregion
 
+    #region ListAsync Additional Edge Case Tests
+
+    [Fact]
+    public async Task ListAsync_WithNoCharts_ReturnsEmptyCollection()
+    {
+        var service = GetChartService();
+
+        var result = await service.ListAsync(new PagedRequest { PageSize = 10 }, includeHidden: true);
+
+        Assert.True(result.IsSuccess);
+        Assert.Empty(result.Data);
+        Assert.Equal(0, result.TotalCount);
+    }
+
+    [Fact]
+    public async Task ListAsync_WithChartsHavingItems_ReturnsChartsWithItemCount()
+    {
+        var service = GetChartService();
+        
+        var createResult = await service.CreateAsync("Test Chart", isVisible: true);
+        var chartId = createResult.Data!.Id;
+
+        var csv = @"1,Artist One,Album One,2024
+2,Artist Two,Album Two,2024
+3,Artist Three,Album Three,2024";
+        var parseResult = await service.ParseCsvAsync(csv);
+        await service.SaveItemsAsync(chartId, parseResult.Data!.Items, doAutoLink: false);
+
+        var result = await service.ListAsync(new PagedRequest { PageSize = 10 }, includeHidden: false);
+
+        Assert.True(result.IsSuccess);
+        Assert.Single(result.Data);
+        Assert.Equal(3, result.Data.First().Items.Count);
+    }
+
+    [Fact]
+    public async Task ListAsync_DefaultIncludeHidden_HidesNonVisibleCharts()
+    {
+        var service = GetChartService();
+        await service.CreateAsync("Hidden Chart 1", isVisible: false);
+        await service.CreateAsync("Hidden Chart 2", isVisible: false);
+        await service.CreateAsync("Visible Chart 1", isVisible: true);
+
+        var result = await service.ListAsync(new PagedRequest { PageSize = 10 }, includeHidden: false);
+
+        Assert.True(result.IsSuccess);
+        Assert.Single(result.Data);
+        Assert.Equal("Visible Chart 1", result.Data.First().Title);
+    }
+
+    [Fact]
+    public async Task ListAsync_FilterBySource_ReturnsCaseInsensitiveMatch()
+    {
+        var service = GetChartService();
+        await service.CreateAsync("Chart 1", sourceName: "Rolling Stone", isVisible: true);
+        await service.CreateAsync("Chart 2", sourceName: "rolling stone", isVisible: true);
+        await service.CreateAsync("Chart 3", sourceName: "NME", isVisible: true);
+
+        var result = await service.ListAsync(
+            new PagedRequest { PageSize = 10 }, 
+            includeHidden: true, 
+            filterBySource: "ROLLING STONE");
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(2, result.Data.Count());
+    }
+
+    [Fact]
+    public async Task ListAsync_Pagination_ReturnsCorrectPage()
+    {
+        var service = GetChartService();
+        for (var i = 1; i <= 5; i++)
+        {
+            await service.CreateAsync($"Chart {i}", isVisible: true);
+        }
+
+        var result = await service.ListAsync(new PagedRequest { Page = 2, PageSize = 2 }, includeHidden: true);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(2, result.Data.Count());
+        Assert.Equal(5, result.TotalCount);
+        Assert.Equal(3, result.TotalPages);
+    }
+
+    #endregion
+
+    #region GetByApiKey Tests
+
+    [Fact]
+    public async Task GetByApiKeyAsync_WithValidApiKey_ReturnsChart()
+    {
+        var service = GetChartService();
+        var createResult = await service.CreateAsync("Test Chart");
+        var apiKey = createResult.Data!.ApiKey;
+
+        var result = await service.GetByApiKeyAsync(apiKey);
+
+        Assert.NotNull(result.Data);
+        Assert.Equal("Test Chart", result.Data.Title);
+    }
+
+    [Fact]
+    public async Task GetByApiKeyAsync_WithInvalidApiKey_ReturnsNull()
+    {
+        var service = GetChartService();
+
+        var result = await service.GetByApiKeyAsync(Guid.NewGuid());
+
+        Assert.Null(result.Data);
+    }
+
+    #endregion
+
+    #region Slug Generation Tests
+
+    [Fact]
+    public async Task GenerateSlugPreviewAsync_WithEmptyTitle_ReturnsEmptySlug()
+    {
+        var service = GetChartService();
+
+        var result = await service.GenerateSlugPreviewAsync("");
+
+        Assert.Equal(string.Empty, result.Data);
+    }
+
+    [Fact]
+    public async Task GenerateSlugPreviewAsync_WithSpecialCharacters_NormalizesSlug()
+    {
+        var service = GetChartService();
+
+        var result = await service.GenerateSlugPreviewAsync("Rolling Stone's Top 100 Albums!");
+
+        Assert.NotNull(result.Data);
+        Assert.DoesNotContain("'", result.Data);
+        Assert.DoesNotContain("!", result.Data);
+        Assert.Contains("-", result.Data);
+    }
+
+    [Fact]
+    public async Task GenerateSlugPreviewAsync_ExcludesExistingChart_AllowsSameSlug()
+    {
+        var service = GetChartService();
+        var createResult = await service.CreateAsync("Test Chart");
+        var chartId = createResult.Data!.Id;
+
+        var result = await service.GenerateSlugPreviewAsync("Test Chart", excludeChartId: chartId);
+
+        Assert.Equal("test-chart", result.Data);
+    }
+
+    [Fact]
+    public async Task CreateAsync_WithMultipleDuplicates_GeneratesIncrementingSlug()
+    {
+        var service = GetChartService();
+
+        var result1 = await service.CreateAsync("Same Title");
+        var result2 = await service.CreateAsync("Same Title");
+        var result3 = await service.CreateAsync("Same Title");
+
+        Assert.Equal("same-title", result1.Data!.Slug);
+        Assert.Equal("same-title-2", result2.Data!.Slug);
+        Assert.Equal("same-title-3", result3.Data!.Slug);
+    }
+
+    #endregion
+
+    #region Search Albums Tests
+
+    [Fact]
+    public async Task SearchAlbumsAsync_WithEmptyQuery_ReturnsEmptyResults()
+    {
+        var service = GetChartService();
+
+        var result = await service.SearchAlbumsAsync("");
+
+        Assert.Empty(result.Data!);
+    }
+
+    [Fact]
+    public async Task SearchAlbumsAsync_MatchesByAlbumName()
+    {
+        var service = GetChartService();
+        var artist = await CreateTestArtistAsync("Test Artist");
+        await CreateTestAlbumAsync(artist.Id, "Abbey Road", 1969);
+        await CreateTestAlbumAsync(artist.Id, "Let It Be", 1970);
+
+        var result = await service.SearchAlbumsAsync("Abbey");
+
+        Assert.Single(result.Data!);
+        Assert.Equal("Abbey Road", result.Data!.First().AlbumName);
+    }
+
+    [Fact]
+    public async Task SearchAlbumsAsync_MatchesByArtistName()
+    {
+        var service = GetChartService();
+        var artist1 = await CreateTestArtistAsync("The Beatles");
+        var artist2 = await CreateTestArtistAsync("Pink Floyd");
+        await CreateTestAlbumAsync(artist1.Id, "Abbey Road");
+        await CreateTestAlbumAsync(artist2.Id, "The Wall");
+
+        var result = await service.SearchAlbumsAsync("Beatles");
+
+        Assert.Single(result.Data!);
+        Assert.Equal("Abbey Road", result.Data!.First().AlbumName);
+    }
+
+    [Fact]
+    public async Task SearchAlbumsAsync_RespectsLimit()
+    {
+        var service = GetChartService();
+        var artist = await CreateTestArtistAsync("Test Artist");
+        for (var i = 1; i <= 10; i++)
+        {
+            await CreateTestAlbumAsync(artist.Id, $"Album {i}");
+        }
+
+        var result = await service.SearchAlbumsAsync("Album", limit: 5);
+
+        Assert.Equal(5, result.Data!.Count());
+    }
+
+    #endregion
+
     #region Update Tests
 
     [Fact]

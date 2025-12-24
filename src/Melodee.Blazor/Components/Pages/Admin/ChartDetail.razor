@@ -1,4 +1,4 @@
-@page "/charts/{ChartId:int}"
+@page "/charts/{ApiKey:guid}"
 
 @inherits MelodeeComponentBase
 @using Melodee.Common.Data.Models
@@ -12,6 +12,7 @@
 @inject DialogService DialogService
 @inject NavigationManager NavigationManager
 @inject IAuthService AuthService
+@inject DefaultImages DefaultImages
 
 <PageTitle>@(_chart?.Title ?? "Chart Details")</PageTitle>
 
@@ -57,79 +58,80 @@ else
                     <RadzenButton Text="Back to List" Icon="arrow_back" ButtonStyle="ButtonStyle.Light" Click="@(() => NavigationManager.NavigateTo("/charts"))"/>
                     @if (AuthService.IsAdmin)
                     {
-                        <RadzenButton Text="Edit" Icon="edit" ButtonStyle="ButtonStyle.Primary" Click="@(() => NavigationManager.NavigateTo($"/charts/edit/{ChartId}"))"/>
+                        <RadzenButton Text="Edit" Icon="edit" ButtonStyle="ButtonStyle.Primary" Click="@(() => NavigationManager.NavigateTo($"/charts/edit/{ApiKey}"))"/>
                     }
                 </RadzenStack>
             </RadzenColumn>
         </RadzenRow>
 
         <RadzenRow>
-            <RadzenColumn Size="12" SizeMD="4">
-                <RadzenCard>
-                    @if (_hasImage)
-                    {
-                        <RadzenImage Path="@($"/api/v1/charts/{_chart.ApiKey}/image?v={_imageVersion}")" 
-                                     Style="width: 100%; height: auto; border-radius: 8px;" 
-                                     AlternateText="@_chart.Title"/>
-                    }
-                    else
-                    {
-                        <div style="width: 100%; aspect-ratio: 1; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                            <RadzenIcon Icon="format_list_numbered" Style="font-size: 64px; color: white;"/>
-                        </div>
-                    }
-                    
-                    <RadzenStack class="rz-mt-4" Gap="0.5rem">
-                        <RadzenRow>
-                            <RadzenColumn Size="6">
-                                <RadzenText TextStyle="TextStyle.Body2" class="rz-text-secondary-color">Year</RadzenText>
-                                <RadzenText TextStyle="TextStyle.Body1">@(_chart.Year?.ToString() ?? "—")</RadzenText>
-                            </RadzenColumn>
-                            <RadzenColumn Size="6">
-                                <RadzenText TextStyle="TextStyle.Body2" class="rz-text-secondary-color">Items</RadzenText>
-                                <RadzenText TextStyle="TextStyle.Body1">@_chart.Items.Count</RadzenText>
-                            </RadzenColumn>
-                        </RadzenRow>
-                        <RadzenRow>
-                            <RadzenColumn Size="6">
-                                <RadzenText TextStyle="TextStyle.Body2" class="rz-text-secondary-color">Status</RadzenText>
-                                @if (_chart.IsVisible)
-                                {
-                                    <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="Visible"/>
-                                }
-                                else
-                                {
-                                    <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="Hidden"/>
-                                }
-                            </RadzenColumn>
-                            <RadzenColumn Size="6">
-                                <RadzenText TextStyle="TextStyle.Body2" class="rz-text-secondary-color">Playlist</RadzenText>
-                                @if (_chart.IsGeneratedPlaylistEnabled)
-                                {
-                                    <RadzenBadge BadgeStyle="BadgeStyle.Info" Text="Enabled"/>
-                                }
-                                else
-                                {
-                                    <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="Disabled"/>
-                                }
-                            </RadzenColumn>
-                        </RadzenRow>
-                        @if (!string.IsNullOrWhiteSpace(_chart.Tags))
-                        {
-                            <RadzenRow>
-                                <RadzenColumn Size="12">
-                                    <RadzenText TextStyle="TextStyle.Body2" class="rz-text-secondary-color">Tags</RadzenText>
-                                    <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="0.25rem">
-                                        @foreach (var tag in _chart.Tags.Split('|', StringSplitOptions.RemoveEmptyEntries))
-                                        {
-                                            <RadzenBadge BadgeStyle="BadgeStyle.Secondary" Text="@tag"/>
-                                        }
-                                    </RadzenStack>
-                                </RadzenColumn>
-                            </RadzenRow>
-                        }
-                    </RadzenStack>
-                </RadzenCard>
+            <RadzenColumn Size="12" SizeMD="3">
+              <RadzenCard>
+                @if (_isLoading)
+                {
+                  <RadzenImage
+                    Path=@(DefaultImages.ChartImageBase64)
+                    Style="margin:auto;display: block;width: 300px;height: 300px;"
+                    AlternateText="@_chart.Title"/>
+                }
+                else if (_hasImage)
+                {
+                  <RadzenImage
+                    Path=@($"/images/{_chart.ToApiKey()}/{ ImageSize.Small}")
+                    Style="margin:auto;display: block;width: 300px;height: 300px;"
+                    AlternateText="@_chart.Title"/>
+                }
+                <RadzenStack class="rz-mt-4" Gap="0.5rem">
+                  <RadzenRow>
+                    <RadzenColumn Size="6">
+                      <RadzenText TextStyle="TextStyle.Body2" class="rz-text-secondary-color">Year</RadzenText>
+                      <RadzenText TextStyle="TextStyle.Body1">@(_chart.Year?.ToString() ?? "—")</RadzenText>
+                    </RadzenColumn>
+                    <RadzenColumn Size="6">
+                      <RadzenText TextStyle="TextStyle.Body2" class="rz-text-secondary-color">Items</RadzenText>
+                      <RadzenText TextStyle="TextStyle.Body1">@_chart.Items.Count</RadzenText>
+                    </RadzenColumn>
+                  </RadzenRow>
+                  <RadzenRow>
+                    <RadzenColumn Size="6">
+                      <RadzenText TextStyle="TextStyle.Body2" class="rz-text-secondary-color">Status</RadzenText>
+                      @if (_chart.IsVisible)
+                      {
+                        <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="Visible"/>
+                      }
+                      else
+                      {
+                        <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="Hidden"/>
+                      }
+                    </RadzenColumn>
+                    <RadzenColumn Size="6">
+                      <RadzenText TextStyle="TextStyle.Body2" class="rz-text-secondary-color">Playlist</RadzenText>
+                      @if (_chart.IsGeneratedPlaylistEnabled)
+                      {
+                        <RadzenBadge BadgeStyle="BadgeStyle.Info" Text="Enabled"/>
+                      }
+                      else
+                      {
+                        <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="Disabled"/>
+                      }
+                    </RadzenColumn>
+                  </RadzenRow>
+                  @if (!string.IsNullOrWhiteSpace(_chart.Tags))
+                  {
+                    <RadzenRow>
+                      <RadzenColumn Size="12">
+                        <RadzenText TextStyle="TextStyle.Body2" class="rz-text-secondary-color">Tags</RadzenText>
+                        <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="0.25rem">
+                          @foreach (var tag in _chart.Tags.Split('|', StringSplitOptions.RemoveEmptyEntries))
+                          {
+                            <RadzenBadge BadgeStyle="BadgeStyle.Secondary" Text="@tag"/>
+                          }
+                        </RadzenStack>
+                      </RadzenColumn>
+                    </RadzenRow>
+                  }
+                </RadzenStack>
+              </RadzenCard>
 
                 @if (!string.IsNullOrWhiteSpace(_chart.Description))
                 {
@@ -140,7 +142,7 @@ else
                 }
             </RadzenColumn>
 
-            <RadzenColumn Size="12" SizeMD="8">
+            <RadzenColumn Size="12" SizeMD="9">
                 <RadzenCard>
                     <RadzenText TextStyle="TextStyle.H6" class="rz-mb-4">
                         <RadzenIcon Icon="list" class="rz-mr-1"/> Chart Items (@_chart.Items.Count)
@@ -192,7 +194,7 @@ else
 }
 
 @code {
-    [Parameter] public int ChartId { get; set; }
+  [Parameter] public Guid ApiKey { get; set; }
 
     Chart? _chart;
     List<ChartItem> _chartItems = [];
@@ -212,19 +214,21 @@ else
         MainLayoutProxyService.ToggleSpinnerVisible();
         try
         {
-            var result = await ChartService.GetByIdAsync(ChartId);
+            var result = await ChartService.GetByApiKeyAsync(ApiKey);
             if (result.IsSuccess && result.Data != null)
             {
                 _chart = result.Data;
                 _chartItems = _chart.Items.OrderBy(i => i.Rank).ToList();
-                
+
+                Logger.Debug($"Checking for image for chart ApiKey: {_chart.ApiKey}");
                 var imageResult = await ChartService.GetChartImageBytesAndEtagAsync(_chart.ApiKey, null);
                 _hasImage = imageResult.Bytes != null && imageResult.Bytes.Length > 0;
+                Logger.Debug($"Image check result - HasImage: {_hasImage}, BytesLength: {imageResult.Bytes?.Length ?? 0}");
             }
         }
         catch (Exception e)
         {
-            Logger.Error(e, "Loading Chart [{ChartId}]", ChartId);
+            Logger.Error(e, "Loading Chart [{ChartId}]", ApiKey);
         }
         finally
         {

@@ -1,6 +1,7 @@
 @page "/charts"
 
 @inherits MelodeeComponentBase
+@using Melodee.Blazor.Components.Pages.Admin
 @using Melodee.Common.Data.Models
 @using Melodee.Common.Enums
 
@@ -12,6 +13,7 @@
 @inject TooltipService TooltipService
 @inject NavigationManager NavigationManager
 @inject IAuthService AuthService
+@inject DefaultImages DefaultImages
 
 <PageTitle>Curated Charts</PageTitle>
 
@@ -20,7 +22,7 @@
     <RadzenBreadCrumbItem Icon="format_list_numbered" Text="Charts"/>
 </RadzenBreadCrumb>
 
-<RadzenStack>
+<RadzenStack Style="height: 100%">
     <RadzenRow AlignItems="AlignItems.Center">
         <RadzenColumn Size="12" SizeMD="6">
             <RadzenText Text="Curated Album Charts" TextStyle="TextStyle.DisplayH6" TagName="TagName.H1" style="margin: 0"/>
@@ -41,10 +43,10 @@
         </RadzenColumn>
     </RadzenRow>
 
-    <RadzenRow>
-        <RadzenDataGrid
+    <RadzenRow Style="flex: 1; overflow: hidden;">
+        <RadzenDataGrid TItem="Chart"
             @ref="_grid"
-            style="height: 600px;"
+            Style="height: 100%"
             IsLoading="@_isLoading"
             Count="@_count"
             Data="@_charts"
@@ -89,7 +91,7 @@
 
                 <RadzenDataGridColumn Property="@nameof(Chart.Title)" Title="Title" Width="250px">
                     <Template Context="data">
-                        <RadzenLink Path="@($"/charts/{data.Id}")" Text="@data.Title"/>
+                        <RadzenLink Path="@($"/charts/{data.ApiKey}")" Text="@data.Title"/>
                     </Template>
                 </RadzenDataGridColumn>
 
@@ -166,32 +168,45 @@
         _currentPage = args.PageIndex + 1;
     }
 
+    protected override async Task OnInitializedAsync()
+    {
+      await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (firstRender && _grid != null)
+        {
+            await _grid.FirstPage(true);
+        }
+    }
+
     async Task LoadData(LoadDataArgs args)
     {
         _isLoading = true;
         MainLayoutProxyService.ToggleSpinnerVisible();
         try
         {
-            var result = await ChartService.ListAsync(
-                new PagedRequest
-                {
-                    Page = _currentPage,
-                    PageSize = SafeParser.ToNumber<short>(args.Top)
-                },
-                includeHidden: AuthService.IsAdmin);
-            _charts = result.Data;
-            _count = result.TotalCount;
+          var result = await ChartService.ListAsync(
+            new PagedRequest
+            {
+              Page = _currentPage,
+              PageSize = SafeParser.ToNumber<short>(args.Top)
+            },
+            includeHidden: AuthService.IsAdmin);
+          _charts = result.Data;
+          _count = result.TotalCount;
         }
         catch (Exception e)
         {
-            Logger.Error(e, "Loading Charts");
+          Logger.Error(e, "Loading Charts");
         }
         finally
         {
-            MainLayoutProxyService.ToggleSpinnerVisible();
+          _isLoading = false;
+          MainLayoutProxyService.ToggleSpinnerVisible();
         }
-
-        _isLoading = false;
     }
 
     void CreateChartClick()
@@ -204,7 +219,7 @@
         var result = await DialogService.OpenAsync<ChartImportDialog>("Import Chart from JSON",
             new Dictionary<string, object>(),
             new DialogOptions { Width = "600px", Height = "500px", Resizable = true, Draggable = true });
-        
+
         if (result is true)
         {
             await _grid.RefreshDataAsync();
