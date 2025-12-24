@@ -55,12 +55,54 @@ else
             </RadzenColumn>
             <RadzenColumn>
                 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
-                    <RadzenButton Text="Back to List" Icon="arrow_back" ButtonStyle="ButtonStyle.Light" Click="@(() => NavigationManager.NavigateTo("/charts"))"/>
                     @if (AuthService.IsAdmin)
                     {
                         <RadzenButton Text="Edit" Icon="edit" ButtonStyle="ButtonStyle.Primary" Click="@(() => NavigationManager.NavigateTo($"/charts/edit/{ApiKey}"))"/>
                     }
                 </RadzenStack>
+            </RadzenColumn>
+        </RadzenRow>
+
+        <RadzenRow>
+            <RadzenColumn Size="12">
+                <RadzenCard>
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="2rem" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="2rem" AlignItems="AlignItems.Center">
+                            <RadzenStack Gap="0.25rem">
+                                <RadzenText TextStyle="TextStyle.Overline" class="rz-text-secondary-color">Total Albums</RadzenText>
+                                <RadzenText TextStyle="TextStyle.H4" style="margin: 0">@_chartItems.Count</RadzenText>
+                            </RadzenStack>
+
+                            <RadzenStack Gap="0.25rem">
+                                <RadzenText TextStyle="TextStyle.Overline" class="rz-text-secondary-color">Linked</RadzenText>
+                                <RadzenText TextStyle="TextStyle.H4" style="margin: 0">@_linkedCount</RadzenText>
+                            </RadzenStack>
+
+                            <RadzenStack Gap="0.25rem">
+                                <RadzenText TextStyle="TextStyle.Overline" class="rz-text-secondary-color">Completion</RadzenText>
+                                <RadzenText TextStyle="TextStyle.H4" style="margin: 0">@_completionPercentage%</RadzenText>
+                            </RadzenStack>
+                        </RadzenStack>
+
+                        <RadzenStack Gap="0.5rem" Style="min-width: 300px;">
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+                                <RadzenText TextStyle="TextStyle.Body2">
+                                    @if (_isCompleted)
+                                    {
+                                        <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="Completed" class="rz-mr-2"/>
+                                        <span>All albums available to play</span>
+                                    }
+                                    else
+                                    {
+                                        <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="In Progress" class="rz-mr-2"/>
+                                        <span>@_unlinkedCount albums not found in library</span>
+                                    }
+                                </RadzenText>
+                            </RadzenStack>
+                            <RadzenProgressBar Value="@_completionPercentage" Max="100" ShowValue="false" ProgressBarStyle="@(_isCompleted ? ProgressBarStyle.Success : ProgressBarStyle.Info)"/>
+                        </RadzenStack>
+                    </RadzenStack>
+                </RadzenCard>
             </RadzenColumn>
         </RadzenRow>
 
@@ -202,6 +244,11 @@ else
     bool _hasImage;
     string _imageVersion = DateTime.UtcNow.Ticks.ToString();
 
+    int _linkedCount;
+    int _unlinkedCount;
+    int _completionPercentage;
+    bool _isCompleted;
+
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
@@ -220,10 +267,10 @@ else
                 _chart = result.Data;
                 _chartItems = _chart.Items.OrderBy(i => i.Rank).ToList();
 
-                Logger.Debug($"Checking for image for chart ApiKey: {_chart.ApiKey}");
                 var imageResult = await ChartService.GetChartImageBytesAndEtagAsync(_chart.ApiKey, null);
                 _hasImage = imageResult.Bytes != null && imageResult.Bytes.Length > 0;
-                Logger.Debug($"Image check result - HasImage: {_hasImage}, BytesLength: {imageResult.Bytes?.Length ?? 0}");
+
+                CalculateStatistics();
             }
         }
         catch (Exception e)
@@ -235,5 +282,22 @@ else
             MainLayoutProxyService.ToggleSpinnerVisible();
             _isLoading = false;
         }
+    }
+
+    void CalculateStatistics()
+    {
+        if (_chartItems.Count == 0)
+        {
+            _linkedCount = 0;
+            _unlinkedCount = 0;
+            _completionPercentage = 0;
+            _isCompleted = false;
+            return;
+        }
+
+        _linkedCount = _chartItems.Count(i => i.LinkStatusValue == ChartItemLinkStatus.Linked);
+        _unlinkedCount = _chartItems.Count - _linkedCount;
+        _completionPercentage = (int)Math.Round((_linkedCount / (double)_chartItems.Count) * 100);
+        _isCompleted = _linkedCount == _chartItems.Count;
     }
 }

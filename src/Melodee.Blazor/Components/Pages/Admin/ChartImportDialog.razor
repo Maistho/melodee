@@ -6,6 +6,8 @@
 @inject NotificationService NotificationService
 @inject DialogService DialogService
 @inject IJSRuntime JS
+@inject HttpClient HttpClient
+@inject ILogger Logger
 
 <RadzenStack Gap="1rem">
     <RadzenAlert AlertStyle="AlertStyle.Info" Shade="Shade.Lighter" AllowClose="false">
@@ -19,6 +21,7 @@
   "year": 2024,                        // Optional
   "description": "Annual list...",     // Optional
   "tags": ["rock", "2024"],            // Optional
+  "imageUrl": "https://...",           // Optional - URL to chart image
   "isVisible": true,                   // Optional (default: false)
   "isGeneratedPlaylistEnabled": true,  // Optional (default: false)
   "items": [                           // Required, at least 1 item
@@ -65,7 +68,11 @@
                 <strong>Title:</strong> @_previewChart.Title<br/>
                 <strong>Source:</strong> @(_previewChart.SourceName ?? "N/A")<br/>
                 <strong>Year:</strong> @(_previewChart.Year?.ToString() ?? "N/A")<br/>
-                <strong>Items:</strong> @_previewChart.Items.Count
+                <strong>Items:</strong> @_previewChart.Items.Count<br/>
+                @if (!string.IsNullOrWhiteSpace(_previewChart.ImageUrl))
+                {
+                    <strong>Image URL:</strong> @_previewChart.ImageUrl<br/>
+                }
             </RadzenText>
         </RadzenAlert>
     }
@@ -198,12 +205,18 @@
             }
 
             var chartId = createResult.Data!.Id;
+            var chartApiKey = createResult.Data!.ApiKey;
 
             if (_previewChart.IsVisible || _previewChart.IsGeneratedPlaylistEnabled)
             {
                 await ChartService.UpdateAsync(chartId, _previewChart.Title, _previewChart.SourceName,
                     _previewChart.SourceUrl, _previewChart.Year, _previewChart.Description,
                     _previewChart.Tags?.ToArray(), _previewChart.IsVisible, _previewChart.IsGeneratedPlaylistEnabled);
+            }
+
+            if (!string.IsNullOrWhiteSpace(_previewChart.ImageUrl))
+            {
+                await DownloadAndSaveImageAsync(chartApiKey, _previewChart.ImageUrl);
             }
 
             var csvLines = _previewChart.Items
@@ -225,15 +238,23 @@
                 return;
             }
 
-            await ChartService.SaveItemsAsync(chartId, parseResult.Data!.Items, doAutoLink: true);
-
-            NotificationService.Notify(new NotificationMessage
+            var saveResult = await ChartService.SaveItemsAsync(chartId, parseResult.Data!.Items, doAutoLink: false);
+            
+            if (saveResult.IsSuccess)
             {
-                Severity = NotificationSeverity.Success,
-                Summary = "Chart Imported",
-                Detail = $"Created '{_previewChart.Title}' with {_previewChart.Items.Count} items.",
-                Duration = 5000
-            });
+                var linkResult = await ChartService.LinkItemsAsync(chartId, overwriteManualLinks: false);
+                var linkSummary = linkResult.IsSuccess && linkResult.Data != null 
+                    ? $"Linked: {linkResult.Data.LinkedCount}, Unlinked: {linkResult.Data.UnlinkedCount}, Ambiguous: {linkResult.Data.AmbiguousCount}"
+                    : "Linking status unavailable";
+                
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = "Chart Imported",
+                    Detail = $"Created '{_previewChart.Title}' with {_previewChart.Items.Count} items. {linkSummary}",
+                    Duration = 8000
+                });
+            }
 
             DialogService.Close(true);
         }
@@ -259,6 +280,71 @@
         return value;
     }
 
+    async Task DownloadAndSaveImageAsync(Guid chartApiKey, string imageUrl)
+    {
+        try
+        {
+            Logger.Debug("Downloading chart image from {ImageUrl}", imageUrl);
+            
+            var response = await HttpClient.GetAsync(imageUrl);
+            if (!response.IsSuccessStatusCode)
+            {
+                Logger.Warning("Failed to download image from {ImageUrl}: {StatusCode}", imageUrl, response.StatusCode);
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Warning,
+                    Summary = "Image Download Failed",
+                    Detail = $"Could not download image: {response.StatusCode}",
+                    Duration = 4000
+                });
+                return;
+            }
+
+            var imageBytes = await response.Content.ReadAsByteArrayAsync();
+            
+            if (imageBytes.Length == 0)
+            {
+                Logger.Warning("Downloaded image is empty from {ImageUrl}", imageUrl);
+                return;
+            }
+
+            Logger.Debug("Downloaded {ByteCount} bytes, uploading to chart {ChartApiKey}", imageBytes.Length, chartApiKey);
+            
+            var uploadResult = await ChartService.UploadChartImageAsync(chartApiKey, imageBytes);
+            
+            if (!uploadResult.IsSuccess)
+            {
+                Logger.Warning("Failed to save chart image: {Message}", uploadResult.Messages?.FirstOrDefault());
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Warning,
+                    Summary = "Image Upload Failed",
+                    Detail = uploadResult.Messages?.FirstOrDefault() ?? "Could not save image",
+                    Duration = 4000
+                });
+            }
+            else
+            {
+                Logger.Information("Successfully saved chart image from {ImageUrl}", imageUrl);
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Error(ex, "HTTP error downloading image from {ImageUrl}", imageUrl);
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Warning,
+                Summary = "Image Download Error",
+                Detail = "Could not download image from URL",
+                Duration = 4000
+            });
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Error processing chart image from {ImageUrl}", imageUrl);
+        }
+    }
+
     void Cancel()
     {
         DialogService.Close(false);
@@ -272,6 +358,7 @@
         public int? Year { get; set; }
         public string? Description { get; set; }
         public List<string>? Tags { get; set; }
+        public string? ImageUrl { get; set; }
         public bool IsVisible { get; set; }
         public bool IsGeneratedPlaylistEnabled { get; set; }
         public List<ChartItemImportModel> Items { get; set; } = [];
