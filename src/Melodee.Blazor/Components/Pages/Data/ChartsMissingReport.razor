@@ -1,0 +1,212 @@
+@page "/charts/missing-report"
+
+@inherits MelodeeComponentBase
+@using Melodee.Common.Data.Models
+@using Melodee.Common.Enums
+
+@inject MainLayoutProxyService MainLayoutProxyService
+@inject ILogger Logger
+@inject ChartService ChartService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Charts Missing Albums Report</PageTitle>
+
+<RadzenBreadCrumb Class="rz-pb-5">
+    <RadzenBreadCrumbItem Path="/" Text="Home"/>
+    <RadzenBreadCrumbItem Path="/charts" Icon="format_list_numbered" Text="Charts"/>
+    <RadzenBreadCrumbItem Icon="report" Text="Missing Report"/>
+</RadzenBreadCrumb>
+
+<RadzenStack Gap="1rem">
+    <RadzenRow AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+        <RadzenColumn>
+            <RadzenText Text="Missing Albums Report" TextStyle="TextStyle.DisplayH6" TagName="TagName.H1" style="margin: 0"/>
+            <RadzenText TextStyle="TextStyle.Subtitle1" class="rz-text-secondary-color">
+                Albums that appear on charts but are not found in the database
+            </RadzenText>
+        </RadzenColumn>
+        <RadzenColumn>
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                <RadzenButton Text="Back to Charts" Icon="arrow_back" ButtonStyle="ButtonStyle.Light" Click="@(() => NavigationManager.NavigateTo("/charts"))"/>
+            </RadzenStack>
+        </RadzenColumn>
+    </RadzenRow>
+
+    @if (_isLoading)
+    {
+        <RadzenProgressBarCircular
+            ProgressBarStyle="ProgressBarStyle.Primary"
+            Value="100"
+            ShowValue="false"
+            Mode="ProgressBarMode.Indeterminate"/>
+    }
+    else
+    {
+        <RadzenRow>
+            <RadzenColumn Size="12">
+                <RadzenCard>
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="2rem" AlignItems="AlignItems.Center">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText TextStyle="TextStyle.Overline" class="rz-text-secondary-color">Total Missing Albums</RadzenText>
+                            <RadzenText TextStyle="TextStyle.H4" style="margin: 0">@_missingAlbums.Count</RadzenText>
+                        </RadzenStack>
+                        
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText TextStyle="TextStyle.Overline" class="rz-text-secondary-color">Total Charts</RadzenText>
+                            <RadzenText TextStyle="TextStyle.H4" style="margin: 0">@_totalCharts</RadzenText>
+                        </RadzenStack>
+                        
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText TextStyle="TextStyle.Overline" class="rz-text-secondary-color">Total Missing Items</RadzenText>
+                            <RadzenText TextStyle="TextStyle.H4" style="margin: 0">@_totalMissingItems</RadzenText>
+                        </RadzenStack>
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+        </RadzenRow>
+
+        <RadzenRow>
+            <RadzenColumn Size="12">
+                <RadzenCard>
+                    <RadzenDataGrid TItem="MissingAlbumInfo"
+                                    Data="@_missingAlbums"
+                                    AllowPaging="true"
+                                    PageSize="50"
+                                    AllowSorting="true"
+                                    Density="Density.Compact">
+                        <Columns>
+                            <RadzenDataGridColumn Property="@nameof(MissingAlbumInfo.ArtistName)" Title="Artist" Width="250px" Sortable="true"/>
+                            
+                            <RadzenDataGridColumn Property="@nameof(MissingAlbumInfo.AlbumTitle)" Title="Album" Width="300px" Sortable="true"/>
+                            
+                            <RadzenDataGridColumn Property="@nameof(MissingAlbumInfo.ReleaseYear)" Title="Year" Width="100px" Sortable="true">
+                                <Template Context="item">
+                                    @(item.ReleaseYear?.ToString() ?? "—")
+                                </Template>
+                            </RadzenDataGridColumn>
+                            
+                            <RadzenDataGridColumn Property="@nameof(MissingAlbumInfo.ChartCount)" Title="Chart Count" Width="120px" Sortable="true">
+                                <Template Context="item">
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Info" Text="@item.ChartCount.ToString()" />
+                                </Template>
+                            </RadzenDataGridColumn>
+                            
+                            <RadzenDataGridColumn Title="Charts" Width="400px" Sortable="false">
+                                <Template Context="item">
+                                    <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="0.25rem">
+                                        @foreach (var chart in item.Charts)
+                                        {
+                                            <RadzenLink Path="@($"/charts/{chart.ApiKey}")" Text="@chart.Title" />
+                                            @if (chart != item.Charts.Last())
+                                            {
+                                                <span class="rz-text-secondary-color">|</span>
+                                            }
+                                        }
+                                    </RadzenStack>
+                                </Template>
+                            </RadzenDataGridColumn>
+                        </Columns>
+                    </RadzenDataGrid>
+                </RadzenCard>
+            </RadzenColumn>
+        </RadzenRow>
+    }
+</RadzenStack>
+
+@code {
+    bool _isLoading = true;
+    List<MissingAlbumInfo> _missingAlbums = [];
+    int _totalCharts;
+    int _totalMissingItems;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await LoadReportAsync();
+    }
+
+    async Task LoadReportAsync()
+    {
+        _isLoading = true;
+        MainLayoutProxyService.ToggleSpinnerVisible();
+        try
+        {
+            var chartsResult = await ChartService.ListAsync(new PagedRequest { Page = 1, PageSize = 10000 }, includeHidden: true);
+            
+            if (chartsResult.IsSuccess && chartsResult.Data != null)
+            {
+                var charts = chartsResult.Data.ToList();
+                _totalCharts = charts.Count;
+
+                var unlinkedItems = new Dictionary<string, MissingAlbumInfo>();
+
+                foreach (var chart in charts)
+                {
+                    var unlinked = chart.Items
+                        .Where(i => i.LinkStatusValue != ChartItemLinkStatus.Linked)
+                        .ToList();
+
+                    foreach (var item in unlinked)
+                    {
+                        var key = $"{item.ArtistName.ToUpperInvariant()}|{item.AlbumTitle.ToUpperInvariant()}";
+                        
+                        if (!unlinkedItems.TryGetValue(key, out var missingAlbum))
+                        {
+                            missingAlbum = new MissingAlbumInfo
+                            {
+                                ArtistName = item.ArtistName,
+                                AlbumTitle = item.AlbumTitle,
+                                ReleaseYear = item.ReleaseYear,
+                                Charts = []
+                            };
+                            unlinkedItems[key] = missingAlbum;
+                        }
+
+                        if (!missingAlbum.Charts.Any(c => c.Id == chart.Id))
+                        {
+                            missingAlbum.Charts.Add(new ChartInfo
+                            {
+                                Id = chart.Id,
+                                ApiKey = chart.ApiKey,
+                                Title = chart.Title
+                            });
+                        }
+                    }
+                }
+
+                _missingAlbums = unlinkedItems.Values
+                    .OrderByDescending(m => m.ChartCount)
+                    .ThenBy(m => m.ArtistName)
+                    .ThenBy(m => m.AlbumTitle)
+                    .ToList();
+
+                _totalMissingItems = _missingAlbums.Sum(m => m.ChartCount);
+            }
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e, "Loading Charts Missing Report");
+        }
+        finally
+        {
+            MainLayoutProxyService.ToggleSpinnerVisible();
+            _isLoading = false;
+        }
+    }
+
+    sealed class MissingAlbumInfo
+    {
+        public string ArtistName { get; set; } = string.Empty;
+        public string AlbumTitle { get; set; } = string.Empty;
+        public int? ReleaseYear { get; set; }
+        public List<ChartInfo> Charts { get; set; } = [];
+        public int ChartCount => Charts.Count;
+    }
+
+    sealed class ChartInfo
+    {
+        public int Id { get; set; }
+        public Guid ApiKey { get; set; }
+        public string Title { get; set; } = string.Empty;
+    }
+}

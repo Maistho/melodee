@@ -15,12 +15,14 @@
 @inject UserService UserService
 @inject SettingService SettingService
 @inject LibraryService LibraryService
+@inject ChartService ChartService
 @inject NotificationService NotificationService
 @inject DialogService DialogService
 @inject NavigationManager NavigationManager
 @inject DefaultImages DefaultImages
 @inject IHttpClientFactory HttpClientFactory
 @inject IJSRuntime JsRuntime
+@inject ILogger Logger
 
 <PageTitle>@_album.Name</PageTitle>
 
@@ -129,6 +131,12 @@
                             <Template>
                                 <RadzenIcon Icon="overview"/>
                                 @context.Text
+                            </Template>
+                        </RadzenTreeItem>
+                        <RadzenTreeItem Text="Charts">
+                            <Template>
+                                <RadzenIcon Icon="format_list_numbered"/>
+                                @($"{context.Text} ({_albumCharts.Count})")
                             </Template>
                         </RadzenTreeItem>
                         <RadzenTreeItem Text="Files">
@@ -370,6 +378,59 @@
                     </RadzenColumn>
                 </RadzenRow>
             }
+            else if (_showItem == ShowItem.Charts)
+            {
+                <RadzenPanel>
+                    <HeaderTemplate>
+                        <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-align-items-center rz-m-0">
+                            <RadzenIcon Icon="format_list_numbered" class="rz-me-1"/>
+                            Charts featuring this album
+                        </RadzenText>
+                    </HeaderTemplate>
+                    <ChildContent>
+                        @if (_albumCharts.Count == 0)
+                        {
+                            <RadzenAlert AlertStyle="AlertStyle.Info" Shade="Shade.Lighter">
+                                This album is not featured on any charts.
+                            </RadzenAlert>
+                        }
+                        else
+                        {
+                            <RadzenDataGrid TItem="AlbumChartInfo"
+                                            Data="@_albumCharts"
+                                            AllowPaging="false"
+                                            AllowSorting="true"
+                                            Density="Density.Compact">
+                                <Columns>
+                                    <RadzenDataGridColumn Property="@nameof(AlbumChartInfo.Rank)" Title="Rank" Width="100px" Sortable="true">
+                                        <Template Context="item">
+                                            <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="@($"#{item.Rank}")" />
+                                        </Template>
+                                    </RadzenDataGridColumn>
+
+                                    <RadzenDataGridColumn Property="@nameof(AlbumChartInfo.ChartTitle)" Title="Chart" Width="300px" Sortable="true">
+                                        <Template Context="item">
+                                            <RadzenLink Path="@($"/charts/{item.ChartApiKey}")" Text="@item.ChartTitle"/>
+                                        </Template>
+                                    </RadzenDataGridColumn>
+
+                                    <RadzenDataGridColumn Property="@nameof(AlbumChartInfo.SourceName)" Title="Source" Width="200px" Sortable="true">
+                                        <Template Context="item">
+                                            @(item.SourceName ?? "—")
+                                        </Template>
+                                    </RadzenDataGridColumn>
+
+                                    <RadzenDataGridColumn Property="@nameof(AlbumChartInfo.Year)" Title="Year" Width="100px" Sortable="true">
+                                        <Template Context="item">
+                                            @(item.Year?.ToString() ?? "—")
+                                        </Template>
+                                    </RadzenDataGridColumn>
+                                </Columns>
+                            </RadzenDataGrid>
+                        }
+                    </ChildContent>
+                </RadzenPanel>
+            }
             else if (_showItem == ShowItem.Files)
             {
                 <RadzenPanel>
@@ -462,6 +523,7 @@
     {
         Overview = 1,
         Contributors,
+        Charts,
         Files,
         Images
     }
@@ -497,6 +559,8 @@
         Directory = string.Empty,
         CreatedAt = default
     };
+
+    List<AlbumChartInfo> _albumCharts = [];
 
     string[] _albumsImagesInByteBase64 = [];
     // Album Images (selection + listing)
@@ -593,6 +657,7 @@
 
                 await RefreshAlbumImages();
                 RefreshAlbumFiles();
+                await LoadAlbumChartsAsync();
 
                 _isLoading = false;
             }
@@ -605,6 +670,9 @@
         {
             default:
                 _showItem = ShowItem.Overview;
+                break;
+            case "Charts":
+                _showItem = ShowItem.Charts;
                 break;
             case "Files":
                 _showItem = ShowItem.Files;
@@ -1001,6 +1069,44 @@
     private Task PlayAlbum()
     {
         return PlayAction(_album.Name, _album.Songs.Select(x => x.ToSongDataInfo()).ToList());
+    }
+
+    async Task LoadAlbumChartsAsync()
+    {
+        try
+        {
+            var chartsResult = await ChartService.ListAsync(new PagedRequest { Page = 1, PageSize = 10000 }, includeHidden: true);
+
+            if (chartsResult.IsSuccess && chartsResult.Data != null)
+            {
+                _albumCharts = chartsResult.Data
+                    .SelectMany(chart => chart.Items
+                        .Where(item => item.LinkedAlbumId == _album.Id)
+                        .Select(item => new AlbumChartInfo
+                        {
+                            Rank = item.Rank,
+                            ChartApiKey = chart.ApiKey,
+                            ChartTitle = chart.Title,
+                            SourceName = chart.SourceName,
+                            Year = chart.Year
+                        }))
+                    .OrderBy(c => c.Rank)
+                    .ToList();
+            }
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e, "Loading album charts for [{AlbumApiKey}]", ApiKey);
+        }
+    }
+
+    sealed class AlbumChartInfo
+    {
+        public int Rank { get; set; }
+        public Guid ChartApiKey { get; set; }
+        public string ChartTitle { get; set; } = string.Empty;
+        public string? SourceName { get; set; }
+        public int? Year { get; set; }
     }
 
 }

@@ -1,0 +1,310 @@
+@page "/charts/ranked-report"
+
+@inherits MelodeeComponentBase
+@using Melodee.Common.Data.Models
+@using Melodee.Common.Enums
+
+@inject MainLayoutProxyService MainLayoutProxyService
+@inject ILogger Logger
+@inject ChartService ChartService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Charts Ranked Albums Report</PageTitle>
+
+<RadzenBreadCrumb Class="rz-pb-5">
+    <RadzenBreadCrumbItem Path="/" Text="Home"/>
+    <RadzenBreadCrumbItem Path="/charts" Icon="format_list_numbered" Text="Charts"/>
+    <RadzenBreadCrumbItem Icon="trending_up" Text="Ranked Report"/>
+</RadzenBreadCrumb>
+
+<RadzenStack Gap="1rem">
+    <RadzenRow AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+        <RadzenColumn>
+            <RadzenText Text="Ranked Albums Report" TextStyle="TextStyle.DisplayH6" TagName="TagName.H1" style="margin: 0"/>
+            <RadzenText TextStyle="TextStyle.Subtitle1" class="rz-text-secondary-color">
+                Albums ranked by their aggregate position across multiple charts
+            </RadzenText>
+        </RadzenColumn>
+        <RadzenColumn>
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                <RadzenButton Text="Back to Charts" Icon="arrow_back" ButtonStyle="ButtonStyle.Light" Click="@(() => NavigationManager.NavigateTo("/charts"))"/>
+            </RadzenStack>
+        </RadzenColumn>
+    </RadzenRow>
+
+    @if (_isLoading)
+    {
+        <RadzenProgressBarCircular
+            ProgressBarStyle="ProgressBarStyle.Primary"
+            Value="100"
+            ShowValue="false"
+            Mode="ProgressBarMode.Indeterminate"/>
+    }
+    else
+    {
+        <RadzenRow>
+            <RadzenColumn Size="12">
+                <RadzenCard>
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="2rem" AlignItems="AlignItems.Center">
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText TextStyle="TextStyle.Overline" class="rz-text-secondary-color">Total Albums</RadzenText>
+                            <RadzenText TextStyle="TextStyle.H4" style="margin: 0">@_rankedAlbums.Count</RadzenText>
+                        </RadzenStack>
+
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText TextStyle="TextStyle.Overline" class="rz-text-secondary-color">Multi-Chart Albums</RadzenText>
+                            <RadzenText TextStyle="TextStyle.H4" style="margin: 0">@_rankedAlbums.Count(a => a.ChartCount > 1)</RadzenText>
+                        </RadzenStack>
+
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText TextStyle="TextStyle.Overline" class="rz-text-secondary-color">Total Charts</RadzenText>
+                            <RadzenText TextStyle="TextStyle.H4" style="margin: 0">@_totalCharts</RadzenText>
+                        </RadzenStack>
+
+                        <RadzenStack Gap="0.25rem">
+                            <RadzenText TextStyle="TextStyle.Overline" class="rz-text-secondary-color">Linked Albums</RadzenText>
+                            <RadzenText TextStyle="TextStyle.H4" style="margin: 0">@_rankedAlbums.Count(a => a.IsLinked)</RadzenText>
+                        </RadzenStack>
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+        </RadzenRow>
+
+        <RadzenRow>
+            <RadzenColumn Size="12">
+                <RadzenCard>
+                    <RadzenDataGrid TItem="RankedAlbumInfo"
+                                    Data="@_rankedAlbums"
+                                    AllowPaging="true"
+                                    PageSize="50"
+                                    AllowSorting="true"
+                                    Density="Density.Compact">
+                        <Columns>
+                            <RadzenDataGridColumn Property="@nameof(RankedAlbumInfo.CompositeScore)" Title="Score" Width="90px" Sortable="true" SortOrder="SortOrder.Ascending">
+                                <Template Context="item">
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Primary" Text="@($"{item.CompositeScore:F2}")" />
+                                </Template>
+                            </RadzenDataGridColumn>
+
+                            <RadzenDataGridColumn Property="@nameof(RankedAlbumInfo.ArtistName)" Title="Artist" Width="250px" Sortable="true">
+                                <Template Context="item">
+                                    @if (item.IsLinked && item.LinkedArtistApiKey.HasValue)
+                                    {
+                                        <RadzenLink Path="@($"/data/artist/{item.LinkedArtistApiKey}")" Text="@item.ArtistName"/>
+                                    }
+                                    else
+                                    {
+                                        <RadzenText>@item.ArtistName</RadzenText>
+                                    }
+                                </Template>
+                            </RadzenDataGridColumn>
+
+                            <RadzenDataGridColumn Property="@nameof(RankedAlbumInfo.AlbumTitle)" Title="Album" Width="300px" Sortable="true">
+                                <Template Context="item">
+                                    @if (item.IsLinked && item.LinkedAlbumApiKey.HasValue)
+                                    {
+                                        <RadzenLink Path="@($"/data/album/{item.LinkedAlbumApiKey}")" Text="@item.AlbumTitle"/>
+                                    }
+                                    else
+                                    {
+                                        <RadzenText>@item.AlbumTitle</RadzenText>
+                                    }
+                                </Template>
+                            </RadzenDataGridColumn>
+
+                            <RadzenDataGridColumn Property="@nameof(RankedAlbumInfo.ReleaseYear)" Title="Year" Width="80px" Sortable="true">
+                                <Template Context="item">
+                                    @(item.ReleaseYear?.ToString() ?? "—")
+                                </Template>
+                            </RadzenDataGridColumn>
+
+                            <RadzenDataGridColumn Property="@nameof(RankedAlbumInfo.ChartCount)" Title="Charts" Width="80px" Sortable="true">
+                                <Template Context="item">
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Info" Text="@item.ChartCount.ToString()" />
+                                </Template>
+                            </RadzenDataGridColumn>
+
+                            <RadzenDataGridColumn Property="@nameof(RankedAlbumInfo.BestRank)" Title="Best" Width="80px" Sortable="true">
+                                <Template Context="item">
+                                    <RadzenText TextStyle="TextStyle.Body2">#{@item.BestRank}</RadzenText>
+                                </Template>
+                            </RadzenDataGridColumn>
+
+                            <RadzenDataGridColumn Property="@nameof(RankedAlbumInfo.WorstRank)" Title="Worst" Width="80px" Sortable="true">
+                                <Template Context="item">
+                                    <RadzenText TextStyle="TextStyle.Body2">#{@item.WorstRank}</RadzenText>
+                                </Template>
+                            </RadzenDataGridColumn>
+
+                            <RadzenDataGridColumn Title="Status" Width="100px" Sortable="false">
+                                <Template Context="item">
+                                    @if (item.IsLinked)
+                                    {
+                                        <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="Linked"/>
+                                    }
+                                    else
+                                    {
+                                        <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="Not Found"/>
+                                    }
+                                </Template>
+                            </RadzenDataGridColumn>
+
+                            <RadzenDataGridColumn Title="Chart Details" Width="400px" Sortable="false">
+                                <Template Context="item">
+                                    <RadzenStack Orientation="Orientation.Vertical" Gap="0.25rem">
+                                        @foreach (var ranking in item.Rankings)
+                                        {
+                                            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                                                <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="@($"#{ranking.Rank}")" />
+                                                <RadzenLink Path="@($"/charts/{ranking.ChartApiKey}")" Text="@ranking.ChartTitle" />
+                                            </RadzenStack>
+                                        }
+                                    </RadzenStack>
+                                </Template>
+                            </RadzenDataGridColumn>
+                        </Columns>
+                    </RadzenDataGrid>
+                </RadzenCard>
+            </RadzenColumn>
+        </RadzenRow>
+    }
+</RadzenStack>
+
+@code {
+    bool _isLoading = true;
+    List<RankedAlbumInfo> _rankedAlbums = [];
+    int _totalCharts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await LoadReportAsync();
+    }
+
+    async Task LoadReportAsync()
+    {
+        _isLoading = true;
+        MainLayoutProxyService.ToggleSpinnerVisible();
+        try
+        {
+            var chartsResult = await ChartService.ListAsync(new PagedRequest { Page = 1, PageSize = 10000 }, includeHidden: true);
+
+            if (chartsResult.IsSuccess && chartsResult.Data != null)
+            {
+                var charts = chartsResult.Data.ToList();
+                _totalCharts = charts.Count;
+
+                var albumRankings = new Dictionary<string, RankedAlbumInfo>();
+
+                foreach (var chart in charts)
+                {
+                    foreach (var item in chart.Items)
+                    {
+                        var key = $"{item.ArtistName.ToUpperInvariant()}|{item.AlbumTitle.ToUpperInvariant()}";
+
+                        if (!albumRankings.TryGetValue(key, out var rankedAlbum))
+                        {
+                            rankedAlbum = new RankedAlbumInfo
+                            {
+                                ArtistName = item.ArtistName,
+                                AlbumTitle = item.AlbumTitle,
+                                ReleaseYear = item.ReleaseYear,
+                                Rankings = [],
+                                IsLinked = item.LinkStatusValue == ChartItemLinkStatus.Linked,
+                                LinkedAlbumApiKey = item.LinkedAlbum?.ApiKey,
+                                LinkedArtistApiKey = item.LinkedArtist?.ApiKey
+                            };
+                            albumRankings[key] = rankedAlbum;
+                        }
+
+                        rankedAlbum.Rankings.Add(new ChartRanking
+                        {
+                            ChartId = chart.Id,
+                            ChartApiKey = chart.ApiKey,
+                            ChartTitle = chart.Title,
+                            Rank = item.Rank
+                        });
+
+                        if (!rankedAlbum.IsLinked && item.LinkStatusValue == ChartItemLinkStatus.Linked)
+                        {
+                            rankedAlbum.IsLinked = true;
+                            rankedAlbum.LinkedAlbumApiKey = item.LinkedAlbum?.ApiKey;
+                            rankedAlbum.LinkedArtistApiKey = item.LinkedArtist?.ApiKey;
+                        }
+                    }
+                }
+
+                foreach (var album in albumRankings.Values)
+                {
+                    album.CalculateStatistics();
+                }
+
+                _rankedAlbums = albumRankings.Values
+                    .OrderBy(a => a.CompositeScore)
+                    .ThenBy(a => a.AverageRank)
+                    .ThenByDescending(a => a.ChartCount)
+                    .ThenBy(a => a.ArtistName)
+                    .ThenBy(a => a.AlbumTitle)
+                    .ToList();
+            }
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e, "Loading Charts Ranked Report");
+        }
+        finally
+        {
+            MainLayoutProxyService.ToggleSpinnerVisible();
+            _isLoading = false;
+        }
+    }
+
+    sealed class RankedAlbumInfo
+    {
+        public string ArtistName { get; set; } = string.Empty;
+        public string AlbumTitle { get; set; } = string.Empty;
+        public int? ReleaseYear { get; set; }
+        public List<ChartRanking> Rankings { get; set; } = [];
+        public bool IsLinked { get; set; }
+        public Guid? LinkedAlbumApiKey { get; set; }
+        public Guid? LinkedArtistApiKey { get; set; }
+
+        public int ChartCount => Rankings.Count;
+        public double AverageRank { get; private set; }
+        public int BestRank { get; private set; }
+        public int WorstRank { get; private set; }
+        public double CompositeScore { get; private set; }
+
+        public void CalculateStatistics()
+        {
+            if (Rankings.Count == 0) return;
+
+            AverageRank = Rankings.Average(r => r.Rank);
+            BestRank = Rankings.Min(r => r.Rank);
+            WorstRank = Rankings.Max(r => r.Rank);
+
+            // Composite Score Formula:
+            // Lower score is better (like golf)
+            // The formula heavily rewards appearing on multiple charts
+            //
+            // Score = AverageRank - (ChartCount * 2) - BestRankBonus
+            //
+            // - Each additional chart gives a 2-point bonus
+            // - Best rank in top 5 gives additional bonus
+            // - This ensures multi-chart albums rank better than single-chart albums
+
+            var chartCountBonus = ChartCount * 2.0;
+            var bestRankBonus = BestRank <= 5 ? (6 - BestRank) * 0.5 : 0;
+
+            CompositeScore = AverageRank - chartCountBonus - bestRankBonus;
+        }
+    }
+
+    sealed class ChartRanking
+    {
+        public int ChartId { get; set; }
+        public Guid ChartApiKey { get; set; }
+        public string ChartTitle { get; set; } = string.Empty;
+        public int Rank { get; set; }
+    }
+}

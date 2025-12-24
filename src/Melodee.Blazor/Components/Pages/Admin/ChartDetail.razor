@@ -123,6 +123,13 @@ else
                     Style="margin:auto;display: block;width: 300px;height: 300px;"
                     AlternateText="@_chart.Title"/>
                 }
+                else
+                {
+                  <RadzenImage
+                    Path=@(DefaultImages.ChartImageBase64)
+                    Style="margin:auto;display: block;width: 300px;height: 300px;"
+                    AlternateText="@_chart.Title"/>
+                }
                 <RadzenStack class="rz-mt-4" Gap="0.5rem">
                   <RadzenRow>
                     <RadzenColumn Size="6">

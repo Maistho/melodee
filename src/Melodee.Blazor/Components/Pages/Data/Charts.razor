@@ -33,6 +33,8 @@
                 AlignItems="AlignItems.Center"
                 JustifyContent="JustifyContent.End"
                 Gap="0.5rem">
+                <RadzenButton Icon="trending_up" Text="Ranked Report" Click="@(() => NavigationManager.NavigateTo("/charts/ranked-report"))" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Success"/>
+                <RadzenButton Icon="report" Text="Missing Report" Click="@(() => NavigationManager.NavigateTo("/charts/missing-report"))" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Info"/>
                 @if (AuthService.IsAdmin)
                 {
                     <RadzenButton Icon="upload_file" Text="Import JSON" Click="@ImportJsonClick" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary"/>
@@ -95,8 +97,6 @@
                     </Template>
                 </RadzenDataGridColumn>
 
-                <RadzenDataGridColumn Property="@nameof(Chart.Slug)" Title="Slug" Width="200px"/>
-
                 <RadzenDataGridColumn Property="@nameof(Chart.SourceName)" Title="Source" Width="150px"/>
 
                 <RadzenDataGridColumn Property="@nameof(Chart.Year)" Title="Year" Width="80px"/>
@@ -104,6 +104,29 @@
                 <RadzenDataGridColumn Title="Items" Width="80px" Sortable="false">
                     <Template Context="data">
                         <RadzenText>@data.Items.Count</RadzenText>
+                    </Template>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn Title="Completion" Width="120px" Sortable="false">
+                    <Template Context="data">
+                        @{
+                            var linkedCount = data.Items.Count(i => i.LinkStatusValue == ChartItemLinkStatus.Linked);
+                            var totalCount = data.Items.Count;
+                            var percentage = totalCount > 0 ? (int)Math.Round((linkedCount / (double)totalCount) * 100) : 0;
+                            var isCompleted = linkedCount == totalCount && totalCount > 0;
+                        }
+                        @if (isCompleted)
+                        {
+                            <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="@($"{percentage}%")" />
+                        }
+                        else if (percentage > 0)
+                        {
+                            <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="@($"{percentage}%")" />
+                        }
+                        else
+                        {
+                            <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="0%" />
+                        }
                     </Template>
                 </RadzenDataGridColumn>
 
