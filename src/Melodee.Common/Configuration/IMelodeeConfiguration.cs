@@ -18,6 +18,5 @@ public interface IMelodeeConfiguration
 
     void SetSetting<T>(string key, T? value);
 
-    string ApiVersion();
     TimeSpan? CacheDuration();
 }

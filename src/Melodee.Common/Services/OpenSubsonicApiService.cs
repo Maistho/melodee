@@ -1651,8 +1651,7 @@ public class OpenSubsonicApiService(
                 throw new InvalidOperationException(),
             Type = (await Configuration.Value).GetValue<string>(SettingRegistry.OpenSubsonicServerType) ??
                    throw new InvalidOperationException(),
-            ServerVersion = (await Configuration.Value).GetValue<string>(SettingRegistry.OpenSubsonicServerVersion) ??
-                            throw new InvalidOperationException(),
+            ServerVersion = typeof(OpenSubsonicApiService).Assembly.GetName().Version?.ToString() ?? "1.2.0.0",
             Error = error,
             Data = data,
             DataDetailPropertyName = dataDetailPropertyName,

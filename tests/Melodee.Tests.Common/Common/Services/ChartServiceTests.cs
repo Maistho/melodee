@@ -12,7 +12,7 @@ namespace Melodee.Tests.Common.Common.Services;
 
 public class ChartServiceTests : ServiceTestBase
 {
-    private ChartService GetChartService()
+    private new ChartService GetChartService()
     {
         return new ChartService(Logger, CacheManager, MockFactory(), GetLibraryService());
     }
@@ -688,7 +688,7 @@ public class ChartServiceTests : ServiceTestBase
     public async Task ListAsync_WithChartsHavingItems_ReturnsChartsWithItemCount()
     {
         var service = GetChartService();
-        
+
         var createResult = await service.CreateAsync("Test Chart", isVisible: true);
         var chartId = createResult.Data!.Id;
 
@@ -729,8 +729,8 @@ public class ChartServiceTests : ServiceTestBase
         await service.CreateAsync("Chart 3", sourceName: "NME", isVisible: true);
 
         var result = await service.ListAsync(
-            new PagedRequest { PageSize = 10 }, 
-            includeHidden: true, 
+            new PagedRequest { PageSize = 10 },
+            includeHidden: true,
             filterBySource: "ROLLING STONE");
 
         Assert.True(result.IsSuccess);

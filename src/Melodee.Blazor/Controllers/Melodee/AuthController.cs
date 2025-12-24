@@ -341,7 +341,7 @@ public class AuthController(
         return Ok(new AuthenticationResponse
         {
             User = user.ToUserModel(GetBaseUrl(melodeeConfig)),
-            ServerVersion = melodeeConfig.ApiVersion(),
+            ServerVersion = typeof(Program).Assembly.GetName().Version?.ToString() ?? "1.2.0.0",
             Token = accessToken,
             ExpiresAt = expiresAt,
             RefreshToken = rotateResult.Token,
@@ -387,7 +387,7 @@ public class AuthController(
         return Ok(new
         {
             user = user.ToUserModel(GetBaseUrl(melodeeConfig)),
-            serverVersion = melodeeConfig.ApiVersion(),
+            serverVersion = typeof(Program).Assembly.GetName().Version?.ToString() ?? "1.2.0.0",
             token,
             expiresAt
         });
@@ -569,7 +569,7 @@ public class AuthController(
         return Ok(new AuthenticationResponse
         {
             User = user.ToUserModel(GetBaseUrl(melodeeConfig)),
-            ServerVersion = melodeeConfig.ApiVersion(),
+            ServerVersion = typeof(Program).Assembly.GetName().Version?.ToString() ?? "1.2.0.0",
             Token = accessToken,
             ExpiresAt = expiresAt,
             RefreshToken = refreshResult.IsSuccess ? refreshResult.Token : null,

@@ -439,7 +439,7 @@
         _uptime = FormatUptime(DateTime.UtcNow - StartTime);
 
         var config = await MelodeeConfigurationFactory.GetConfigurationAsync();
-        _apiVersion = config.GetValue<string>(SettingRegistry.OpenSubsonicServerVersion) ?? "Unknown";
+        _apiVersion = _melodeeVersion;
 
         // Load cache statistics
         _cacheStatistics = CacheManager.CacheStatistics();

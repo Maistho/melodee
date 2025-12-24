@@ -6,7 +6,6 @@ using Melodee.Common.Configuration;
 using Melodee.Common.Constants;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services;
-using Melodee.Common.Utility;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -44,17 +43,10 @@ public sealed class SystemController(
     public async Task<IActionResult> GetServerInfo(CancellationToken cancellationToken = default)
     {
         var configuration = await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
-        var versionInfo = configuration.ApiVersion();
-
-        var versionParts = versionInfo.Split('.');
-        if (versionParts.Length < 3)
-        {
-            return ApiBadRequest("Invalid version format");
-        }
-
-        var majorVersion = SafeParser.ToNumber<int?>(versionParts[0]) ?? 0;
-        var minorVersion = SafeParser.ToNumber<int?>(versionParts[1]) ?? 0;
-        var patchVersion = SafeParser.ToNumber<int?>(versionParts[2]) ?? 0;
+        var version = typeof(Program).Assembly.GetName().Version;
+        var majorVersion = version?.Major ?? 0;
+        var minorVersion = version?.Minor ?? 0;
+        var patchVersion = version?.Build ?? 0;
 
         return Ok(new ServerInfo(configuration.GetValue<string>(SettingRegistry.OpenSubsonicServerType) ?? "Melodee",
             "Melodee API",

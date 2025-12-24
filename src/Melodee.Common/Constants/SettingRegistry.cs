@@ -43,7 +43,6 @@ public static class SettingRegistry
     public const string OpenSubsonicServerLicenseEmail = "openSubsonicServer.openSubsonicServerLicenseEmail";
     public const string OpenSubsonicServerSupportedVersion = "openSubsonicServer.openSubsonic.serverSupportedVersion";
     public const string OpenSubsonicServerType = "openSubsonicServer.openSubsonicServer.type";
-    public const string OpenSubsonicServerVersion = "openSubsonicServer.openSubsonicServer.version";
     public const string PlaylistDynamicPlaylistsDisabled = "playlist.dynamicPlaylist.disabled";
     public const string PlaylistMaximumAllowedPageSize = "playlist.maximumAllowedPageSize";
     public const string PluginEnabledCueSheet = "plugin.cueSheet.enabled";
@@ -104,7 +103,6 @@ public static class SettingRegistry
     public const string SecurityBlacklistedEmails = "security.blacklistedEmails";
     public const string SecurityBlacklistedIPs = "security.blacklistedIPs";
     public const string SystemBaseUrl = "system.baseUrl";
-    public const string SystemApiVersion = "system.apiVersion";
     public const string SystemIsDownloadingEnabled = "system.isDownloadingEnabled";
     public const string SystemMaxUploadSize = "system.maxUploadSize";
     // Streaming settings

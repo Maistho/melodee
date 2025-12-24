@@ -90,11 +90,6 @@ public record MelodeeConfiguration(Dictionary<string, object?> Configuration) : 
         return cacheDuration < 0 ? TimeSpan.MinValue : TimeSpan.FromMinutes(cacheDuration ?? 240);
     }
 
-    public string ApiVersion()
-    {
-        return GetValue<string?>(SettingRegistry.SystemApiVersion) ?? GetValue<string?>(SettingRegistry.OpenSubsonicServerVersion) ?? "1.0.0";
-    }
-
     public T? GetValue<T>(string key, Func<T?, T?>? returnValue = null)
     {
         return returnValue == null

@@ -576,15 +576,6 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
                 },
                 new Setting
                 {
-                    Id = 102,
-                    Category = (int)SettingCategory.Api,
-                    Key = SettingRegistry.OpenSubsonicServerVersion,
-                    Comment = "OpenSubsonic server actual version. [Ex: 1.2.3 (beta)]",
-                    Value = "1.0.1",
-                    CreatedAt = now
-                },
-                new Setting
-                {
                     Id = 103,
                     Category = (int)SettingCategory.Api,
                     Key = SettingRegistry.OpenSubsonicServerLicenseEmail,

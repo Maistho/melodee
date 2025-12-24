@@ -1,5 +1,3 @@
-using Melodee.Common.Enums;
-
 namespace Melodee.Tests.Blazor.Components;
 
 public class ChartsRankedReportTests

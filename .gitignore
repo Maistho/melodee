@@ -498,3 +498,16 @@ coverage/
 
 # BenchmarkDotNet
 BenchmarkDotNet.Artifacts/
+
+# Local secrets / environment overrides
+.env
+.env.*
+appsettings.Development.json
+appsettings.*.Development.json
+appsettings.*.local.json
+**/appsettings.Development.json
+**/appsettings.*.local.json
+
+# .NET User Secrets live outside the repo, but ignore any accidental exports
+secrets.json
+*.secrets.json

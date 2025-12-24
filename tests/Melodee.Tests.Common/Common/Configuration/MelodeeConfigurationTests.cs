@@ -99,33 +99,6 @@ public class MelodeeConfigurationTests
         Assert.Equal(expectedResult, result);
     }
 
-    [Theory]
-    [InlineData("1.0.0", null, null, "1.0.0")]
-    [InlineData(null, "2.0.0", null, "2.0.0")]
-    [InlineData(null, null, "3.0.0", "3.0.0")]
-    [InlineData("1.0.0", "2.0.0", "3.0.0", "1.0.0")]
-    public void ApiVersion_ReturnsCorrectVersion(string? apiVersion, string? subsonicVersion, string? fallbackVersion, string expected)
-    {
-        // Arrange
-        var config = new MelodeeConfiguration(new Dictionary<string, object?>
-        {
-            { SettingRegistry.SystemApiVersion, apiVersion },
-            { SettingRegistry.OpenSubsonicServerVersion, subsonicVersion }
-        });
-
-        // If needed for the test, manually update the default fallback value
-        if (fallbackVersion != null && apiVersion == null && subsonicVersion == null)
-        {
-            config.SetSetting(SettingRegistry.SystemApiVersion, fallbackVersion);
-        }
-
-        // Act
-        var result = config.ApiVersion();
-
-        // Assert
-        Assert.Equal(expected, result);
-    }
-
     [Fact]
     public void GetValue_ReturnsCorrectValueWithCorrectType()
     {

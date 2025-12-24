@@ -7,7 +7,6 @@ using Melodee.Common.Extensions;
 using Melodee.Common.Models;
 using Melodee.Common.Plugins.Conversion.Image;
 using Melodee.Common.Services.Caching;
-using Melodee.Common.Utility;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using Serilog;
