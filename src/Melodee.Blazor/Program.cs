@@ -306,6 +306,8 @@ builder.Services.AddRateLimiter(options =>
             }));
 });
 
+builder.Services.AddSingleton<IAppVersionProvider, AppVersionProvider>();
+
 // Health checks
 builder.Services.AddHealthChecks();
 

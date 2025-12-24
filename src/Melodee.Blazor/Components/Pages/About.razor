@@ -2,12 +2,12 @@
 @using System.Globalization
 @using System.Runtime.InteropServices
 @using System.Security.Claims
-@using Melodee.Blazor.Security.Extensions
 @using NodaTime
 @inherits MelodeeComponentBase
 
 @inject IMelodeeConfigurationFactory MelodeeConfigurationFactory
 @inject NavigationManager NavigationManager
+@inject IAppVersionProvider AppVersionProvider
 
 <PageTitle>About</PageTitle>
 
@@ -29,15 +29,6 @@
                     <RadzenText TextStyle="TextStyle.H6">@_serverNowUtc.InUtc().LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)</RadzenText>
                     <RadzenText TextStyle="TextStyle.Caption">You (@CurrentUser?.TimeZoneId())</RadzenText>
                     <RadzenText TextStyle="TextStyle.H6">@(CurrentUser?.FormatInstant(_serverNowUtc) ?? MelodeeConfiguration.DefaultNoValuePlaceHolder)</RadzenText>
-                </RadzenStack>
-            </RadzenCard>
-        </RadzenColumn>
-
-        <RadzenColumn Size="12" SizeMD="4">
-            <RadzenCard>
-                <RadzenStack Gap="0.25rem">
-                    <RadzenText TextStyle="TextStyle.Overline">Melodee (UI Version)</RadzenText>
-                    <RadzenText TextStyle="TextStyle.H5">@_uiVersion</RadzenText>
                 </RadzenStack>
             </RadzenCard>
         </RadzenColumn>
@@ -95,13 +86,11 @@
 @code {
 
     string _siteTitle = string.Empty;
-    string _uiVersion = string.Empty;
     BadgeStyle _securityBadgeStyle = BadgeStyle.Secondary;
     string _securityLabel = "user";
     Instant _serverNowUtc;
     readonly List<KeyValue> _serverStats = [];
     readonly List<string> _userRoles = [];
-
 
     protected override async Task OnInitializedAsync()
     {
@@ -112,12 +101,9 @@
         var configuration = await MelodeeConfigurationFactory.GetConfigurationAsync();
         _siteTitle = configuration.GetValue<string>(SettingRegistry.OpenSubsonicServerType) ?? string.Empty;
 
-        _uiVersion = typeof(Program).Assembly.GetName().Version?.ToString() ?? string.Empty;
-
-        _serverStats.Add(new KeyValue("API: Melodee Version", _uiVersion));
         _serverStats.Add(new KeyValue("dotnet core version", RuntimeInformation.FrameworkDescription));
         _serverStats.Add(new KeyValue("Melodee", "Melodee music system <a target=\"_blank\" href=\"https://github.com/melodee-project\">GitHub</a>"));
-        _serverStats.Add(new KeyValue("UI Version", _uiVersion));
+        _serverStats.Add(new KeyValue("Version", AppVersionProvider.GetSemVerForDisplay()));
 
         if (CurrentUser?.IsAdmin() ?? false)
         {
