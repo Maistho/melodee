@@ -33,6 +33,7 @@ using Melodee.Common.Utility;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Server.Circuits;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -67,6 +68,16 @@ builder.Host.UseSerilog((hostingContext, loggerConfiguration)
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.Configure<Microsoft.AspNetCore.Components.Server.CircuitOptions>(options =>
+{
+    options.DisconnectedCircuitMaxRetained = 100;
+    options.DisconnectedCircuitRetentionPeriod = TimeSpan.FromMinutes(3);
+    options.JSInteropDefaultCallTimeout = TimeSpan.FromMinutes(2);
+    options.MaxBufferedUnacknowledgedRenderBatches = 50;
+});
+
+builder.Services.AddScoped<CircuitHandler, MelodeeCircuitHandler>();
 
 builder.Services.AddControllers(options => { options.Filters.Add<ETagFilter>(); });
 

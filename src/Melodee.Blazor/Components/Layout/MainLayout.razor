@@ -66,6 +66,7 @@
                             <RadzenIcon Visible="@(!context.User.IsAdmin() && context.User.IsEditor())" IconColor="@Colors.Warning" title="You are a editor!" Icon="box_edit" />
                             <RadzenProfileMenu>
                                 <ChildContent>
+                                    <RadzenProfileMenuItem Path="@($"/user/{context.User.ToApiKey()}")" Icon="person" Text="About Me"/>
                                     <RadzenProfileMenuItem Path="/account/profile" Icon="settings" Text="Profile"/>
                                     <RadzenProfileMenuItem Path="/account/logout" Text="Logout" Value="Logout"
                                                            Icon="power_settings_new"/>

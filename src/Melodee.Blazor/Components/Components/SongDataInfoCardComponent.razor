@@ -4,15 +4,18 @@
             class="@CssClass"
             Style="@Style">
     <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Start" Gap="5px" class="rz-p-1">
-        <RadzenImage Path="@Song.ImageUrl()" Style="width: 50px; height: 50px; border-radius: 50%;"/>
+        <RadzenImage Path="@Song.ImageUrl()" Style="width: 60px; height: 60px; margin-right: 5px;"/>
         <RadzenStack Gap="0">
-            <RadzenText TextStyle="TextStyle.Body1">@(Song.Title)</RadzenText>
-            <RadzenText TextStyle="TextStyle.Subtitle2" Style="margin:0;padding:0;">
+            <RadzenText TextStyle="TextStyle.Subtitle1" Style="max-width:160px;margin:0;padding:0;">@(Song.Title)</RadzenText>
+            <RadzenText TextStyle="TextStyle.Subtitle2" Style="max-width:160px;margin:0;padding:0;">
                 <RadzenLink text="@Song.AlbumName" class="rz-text-wrap" Path="@Song.AlbumDetailUrl()"/>
             </RadzenText>
+            <RadzenText TextStyle="TextStyle.Subtitle2" Style="max-width:160px;margin:0;padding:0;">
+                <RadzenLink text="@Song.ArtistName" class="rz-text-wrap" Path="@ArtistDetailUrl()"/>
+            </RadzenText>
             <RadzenText TextStyle="TextStyle.Overline"
-                        class="rz-display-flex rz-mt-4 rz-mb-0">@SongDataInfo.InfoLineTitle</RadzenText>
-            <RadzenText TextStyle="TextStyle.Body1">@Song.InfoLineData</RadzenText>
+                        Style="margin:0;padding:0;">@SongDataInfo.InfoLineTitle</RadzenText>
+            <RadzenText TextStyle="TextStyle.Body1" Style="margin:0;padding:0;">@Song.InfoLineData</RadzenText>
         </RadzenStack>
     </RadzenStack>
 </RadzenCard>
@@ -21,4 +24,9 @@
     [Parameter] public SongDataInfo Song { get; set; } = null!;
     [Parameter] public string CssClass { get; set; } = "rz-mx-auto rz-my-2 rz-p-2";
     [Parameter] public string? Style { get; set; } = "max-width: 300px";
+
+    private string ArtistDetailUrl()
+    {
+        return $"/data/artist/{Song.ArtistApiKey}";
+    }
 }

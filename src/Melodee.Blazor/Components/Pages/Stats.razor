@@ -7,6 +7,7 @@
 @inherits MelodeeComponentBase
 
 @inject StatisticsService StatisticsService
+@inject NavigationManager NavigationManager
 
 <PageTitle>Stats</PageTitle>
 
@@ -60,7 +61,7 @@
                 <RadzenText TextStyle="TextStyle.H6">Your plays per day (last 30d)</RadzenText>
                 <RadzenChart Style="height:320px;">
                     <RadzenLineSeries Data="@_playsPerDay" CategoryProperty="Day" ValueProperty="Value" Title="Plays">
-                        <RadzenCategoryAxis FormatString="MM/dd" Step="3">
+                        <RadzenCategoryAxis FormatString="MM/dd" Step="7">
                             <RadzenAxisTitle Text="" />
                         </RadzenCategoryAxis>
                         <RadzenValueAxis>
@@ -75,7 +76,7 @@
                 <RadzenText TextStyle="TextStyle.H6">Songs added per day (last 30d)</RadzenText>
                 <RadzenChart Style="height:320px;">
                     <RadzenLineSeries Data="@_songsAddedPerDay" CategoryProperty="Day" ValueProperty="Value" Title="Added">
-                        <RadzenCategoryAxis FormatString="MM/dd" Step="3">
+                        <RadzenCategoryAxis FormatString="MM/dd" Step="7">
                             <RadzenAxisTitle Text="" />
                         </RadzenCategoryAxis>
                         <RadzenValueAxis>
@@ -90,9 +91,19 @@
     <RadzenCard>
         <RadzenStack Gap="0.5rem">
             <RadzenText TextStyle="TextStyle.H6" Text="Top played songs (you)"/>
-            <RadzenDataGrid TItem="TopItemStat" Data="@_topSongs" AllowPaging="false" AllowSorting="false" AllowFiltering="false" Density="Density.Compact">
+            <RadzenDataGrid TItem="TopItemStat" 
+                            Data="@_topSongs" 
+                            AllowPaging="false" 
+                            AllowSorting="false" 
+                            AllowFiltering="false" 
+                            Density="Density.Compact"
+                            RowClick="@OnTopSongRowClick">
                 <Columns>
-                    <RadzenDataGridColumn TItem="TopItemStat" Property="Label" Title="Song"/>
+                    <RadzenDataGridColumn TItem="TopItemStat" Property="Label" Title="Song">
+                        <Template Context="song">
+                            <span style="cursor: pointer;">@song.Label</span>
+                        </Template>
+                    </RadzenDataGridColumn>
                     <RadzenDataGridColumn TItem="TopItemStat" Property="Value" Title="Plays"/>
                 </Columns>
             </RadzenDataGrid>
@@ -123,19 +134,31 @@
                     <RadzenColumn Size="12" SizeMD="4">
                         <RadzenText TextStyle="TextStyle.Subtitle1">Searches per day</RadzenText>
                         <RadzenChart Style="height:240px;">
-                            <RadzenLineSeries Data="@_searchesPerDay" CategoryProperty="Day" ValueProperty="Value" />
+                            <RadzenLineSeries Data="@_searchesPerDay" CategoryProperty="Day" ValueProperty="Value">
+                                <RadzenCategoryAxis FormatString="MM/dd" Step="7">
+                                    <RadzenAxisTitle Text="" />
+                                </RadzenCategoryAxis>
+                            </RadzenLineSeries>
                         </RadzenChart>
                     </RadzenColumn>
                     <RadzenColumn Size="12" SizeMD="4">
                         <RadzenText TextStyle="TextStyle.Subtitle1">Share views per day</RadzenText>
                         <RadzenChart Style="height:240px;">
-                            <RadzenLineSeries Data="@_shareViewsPerDay" CategoryProperty="Day" ValueProperty="Value" />
+                            <RadzenLineSeries Data="@_shareViewsPerDay" CategoryProperty="Day" ValueProperty="Value">
+                                <RadzenCategoryAxis FormatString="MM/dd" Step="7">
+                                    <RadzenAxisTitle Text="" />
+                                </RadzenCategoryAxis>
+                            </RadzenLineSeries>
                         </RadzenChart>
                     </RadzenColumn>
                     <RadzenColumn Size="12" SizeMD="4">
                         <RadzenText TextStyle="TextStyle.Subtitle1">Library scans per day</RadzenText>
                         <RadzenChart Style="height:240px;">
-                            <RadzenLineSeries Data="@_libraryScansPerDay" CategoryProperty="Day" ValueProperty="Value" />
+                            <RadzenLineSeries Data="@_libraryScansPerDay" CategoryProperty="Day" ValueProperty="Value">
+                                <RadzenCategoryAxis FormatString="MM/dd" Step="7">
+                                    <RadzenAxisTitle Text="" />
+                                </RadzenCategoryAxis>
+                            </RadzenLineSeries>
                         </RadzenChart>
                     </RadzenColumn>
                 </RadzenRow>
@@ -158,6 +181,14 @@
     private LocalDate _rangeStart;
     private LocalDate _rangeEnd;
     private string _timeZoneId = "UTC";
+
+    void OnTopSongRowClick(DataGridRowMouseEventArgs<TopItemStat> args)
+    {
+        if (!string.IsNullOrWhiteSpace(args.Data.Extra) && Guid.TryParse(args.Data.Extra, out var albumApiKey))
+        {
+            NavigationManager.NavigateTo($"/data/album/{albumApiKey}");
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {

@@ -1,7 +1,6 @@
 @page "/about"
 @using System.Globalization
 @using System.Runtime.InteropServices
-@using System.Security.Claims
 @using NodaTime
 @inherits MelodeeComponentBase
 
@@ -12,7 +11,7 @@
 <PageTitle>About</PageTitle>
 
 <RadzenStack Gap="1rem">
-    <RadzenText TextStyle="TextStyle.H4">@_siteTitle</RadzenText>
+    <RadzenText TextStyle="TextStyle.H4">About @_siteTitle</RadzenText>
 
     <RadzenRow>
       <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
@@ -21,23 +20,26 @@
     </RadzenRow>
 
     <RadzenRow>
-        <RadzenColumn Size="12" SizeMD="4">
+        <RadzenColumn Size="12" SizeMD="6">
             <RadzenCard>
                 <RadzenStack Gap="0.25rem">
-                    <RadzenText TextStyle="TextStyle.Overline">Time</RadzenText>
-                    <RadzenText TextStyle="TextStyle.Caption">Server (UTC)</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Overline">Server Time</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Caption">UTC</RadzenText>
                     <RadzenText TextStyle="TextStyle.H6">@_serverNowUtc.InUtc().LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)</RadzenText>
-                    <RadzenText TextStyle="TextStyle.Caption">You (@CurrentUser?.TimeZoneId())</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Caption">Your Time (@CurrentUser?.TimeZoneId())</RadzenText>
                     <RadzenText TextStyle="TextStyle.H6">@(CurrentUser?.FormatInstant(_serverNowUtc) ?? MelodeeConfiguration.DefaultNoValuePlaceHolder)</RadzenText>
                 </RadzenStack>
             </RadzenCard>
         </RadzenColumn>
 
-        <RadzenColumn Size="12" SizeMD="4">
+        <RadzenColumn Size="12" SizeMD="6">
             <RadzenCard>
-                <RadzenStack Gap="0.5rem">
-                    <RadzenText TextStyle="TextStyle.Overline">Your Security</RadzenText>
-                    <RadzenBadge BadgeStyle="@_securityBadgeStyle" Shade="Shade.Light" Text="@_securityLabel"/>
+                <RadzenStack Gap="0.25rem">
+                    <RadzenText TextStyle="TextStyle.Overline">System Information</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Caption">Platform</RadzenText>
+                    <RadzenText TextStyle="TextStyle.H6">@RuntimeInformation.FrameworkDescription</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Caption">Version</RadzenText>
+                    <RadzenText TextStyle="TextStyle.H6">@AppVersionProvider.GetSemVerForDisplay()</RadzenText>
                 </RadzenStack>
             </RadzenCard>
         </RadzenColumn>
@@ -45,16 +47,16 @@
 
     <RadzenCard>
         <RadzenStack Gap="0.5rem">
-            <RadzenText TextStyle="TextStyle.H6" Text="Server"/>
+            <RadzenText TextStyle="TextStyle.H6" Text="Server Details"/>
             <RadzenDataGrid TItem="KeyValue"
-                            Data="@_serverStats.Where(x => x.Key != "UI Version").OrderBy(x => x.Key)"
+                            Data="@_serverStats.OrderBy(x => x.Key)"
                             AllowPaging="false"
                             AllowSorting="false"
                             AllowFiltering="true"
                             FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
                             Density="Density.Compact">
                 <Columns>
-                    <RadzenDataGridColumn TItem="KeyValue" Property="Key" Title="Key" Width="320px" />
+                    <RadzenDataGridColumn TItem="KeyValue" Property="Key" Title="Property" Width="320px" />
                     <RadzenDataGridColumn TItem="KeyValue" Title="Value">
                         <Template Context="kv">@((MarkupString)(kv.Value ?? string.Empty))</Template>
                     </RadzenDataGridColumn>
@@ -65,20 +67,13 @@
 
     <RadzenCard>
         <RadzenStack Gap="0.5rem">
-            <RadzenText TextStyle="TextStyle.H6" Text="Your Roles"/>
-            <RadzenDataGrid TItem="string"
-                            Data="@_userRoles"
-                            AllowPaging="false"
-                            AllowSorting="false"
-                            AllowFiltering="true"
-                            FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
-                            Density="Density.Compact">
-                <Columns>
-                    <RadzenDataGridColumn TItem="string" Title="Role">
-                        <Template Context="role">@role</Template>
-                    </RadzenDataGridColumn>
-                </Columns>
-            </RadzenDataGrid>
+            <RadzenText TextStyle="TextStyle.H6" Text="About Melodee"/>
+            <RadzenText TextStyle="TextStyle.Body1">
+                Melodee is a modern music server system that provides a comprehensive solution for managing and streaming your music collection.
+            </RadzenText>
+            <RadzenText TextStyle="TextStyle.Body2">
+                For more information, visit the <RadzenLink Path="https://github.com/melodee-project" Text="Melodee GitHub Project" Target="_blank" />.
+            </RadzenText>
         </RadzenStack>
     </RadzenCard>
 </RadzenStack>
@@ -86,11 +81,8 @@
 @code {
 
     string _siteTitle = string.Empty;
-    BadgeStyle _securityBadgeStyle = BadgeStyle.Secondary;
-    string _securityLabel = "user";
     Instant _serverNowUtc;
     readonly List<KeyValue> _serverStats = [];
-    readonly List<string> _userRoles = [];
 
     protected override async Task OnInitializedAsync()
     {
@@ -101,34 +93,12 @@
         var configuration = await MelodeeConfigurationFactory.GetConfigurationAsync();
         _siteTitle = configuration.GetValue<string>(SettingRegistry.OpenSubsonicServerType) ?? string.Empty;
 
-        _serverStats.Add(new KeyValue("dotnet core version", RuntimeInformation.FrameworkDescription));
-        _serverStats.Add(new KeyValue("Melodee", "Melodee music system <a target=\"_blank\" href=\"https://github.com/melodee-project\">GitHub</a>"));
+        _serverStats.Add(new KeyValue("Platform", RuntimeInformation.OSDescription));
+        _serverStats.Add(new KeyValue("Architecture", RuntimeInformation.OSArchitecture.ToString()));
+        _serverStats.Add(new KeyValue(".NET Runtime", RuntimeInformation.FrameworkDescription));
+        _serverStats.Add(new KeyValue("Application", "Melodee Music System"));
         _serverStats.Add(new KeyValue("Version", AppVersionProvider.GetSemVerForDisplay()));
-
-        if (CurrentUser?.IsAdmin() ?? false)
-        {
-            _securityLabel = "admin";
-            _securityBadgeStyle = BadgeStyle.Danger;
-        }
-        else if (CurrentUser?.IsEditor() ?? false)
-        {
-            _securityLabel = "editor";
-            _securityBadgeStyle = BadgeStyle.Info;
-        }
-        else
-        {
-            _securityLabel = "user";
-            _securityBadgeStyle = BadgeStyle.Secondary;
-        }
-
-        if (CurrentUser != null)
-        {
-            _userRoles.AddRange(CurrentUser.Claims
-                .Where(x => string.Equals(x.Type, ClaimTypes.Role, StringComparison.OrdinalIgnoreCase))
-                .Select(x => x.Value)
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(x => x));
-        }
+        _serverStats.Add(new KeyValue("GitHub", "<a target=\"_blank\" href=\"https://github.com/melodee-project\">melodee-project</a>"));
     }
 
 }

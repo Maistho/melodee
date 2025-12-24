@@ -14,6 +14,7 @@
 @inject AlbumService AlbumService
 @inject StatisticsService StatisticsService
 @inject IMelodeeConfigurationFactory ConfigurationFactory
+@inject NavigationManager NavigationManager
 
 <PageTitle>Dashboard</PageTitle>
 
@@ -41,7 +42,7 @@
                 <RadzenText TextStyle="TextStyle.H6">Your plays (last 30 days)</RadzenText>
                 <RadzenChart Style="height: 200px;">
                     <RadzenLineSeries Data="@_playsPerDay" CategoryProperty="Day" ValueProperty="Value" Title="Plays" Smooth="true">
-                        <RadzenCategoryAxis FormatString="MM/dd" Step="5">
+                        <RadzenCategoryAxis FormatString="MM/dd" Step="7">
                             <RadzenAxisTitle Text=""/>
                         </RadzenCategoryAxis>
                         <RadzenValueAxis>
@@ -56,9 +57,20 @@
                 <RadzenText TextStyle="TextStyle.H6">Top played songs (last 30 days)</RadzenText>
                 @if (_topSongs.Length > 0)
                 {
-                    <RadzenDataGrid TItem="TopItemStat" Data="@_topSongs" AllowPaging="false" AllowSorting="false" AllowFiltering="false" Density="Density.Compact" Style="max-height: 200px; overflow-y: auto;">
+                    <RadzenDataGrid TItem="TopItemStat" 
+                                    Data="@_topSongs" 
+                                    AllowPaging="false" 
+                                    AllowSorting="false" 
+                                    AllowFiltering="false" 
+                                    Density="Density.Compact" 
+                                    Style="max-height: 200px; overflow-y: auto;"
+                                    RowClick="@OnTopSongRowClick">
                         <Columns>
-                            <RadzenDataGridColumn TItem="TopItemStat" Property="Label" Title="Song" Width="70%"/>
+                            <RadzenDataGridColumn TItem="TopItemStat" Property="Label" Title="Song" Width="70%">
+                                <Template Context="song">
+                                    <span style="cursor: pointer;">@song.Label</span>
+                                </Template>
+                            </RadzenDataGridColumn>
                             <RadzenDataGridColumn TItem="TopItemStat" Property="Value" Title="Plays" Width="30%" TextAlign="TextAlign.Right"/>
                         </Columns>
                     </RadzenDataGrid>
@@ -181,6 +193,14 @@
     private LocalDate _rangeEnd;
     private string _timeZoneId = "UTC";
 
+    void OnTopSongRowClick(DataGridRowMouseEventArgs<TopItemStat> args)
+    {
+        if (!string.IsNullOrWhiteSpace(args.Data.Extra) && Guid.TryParse(args.Data.Extra, out var albumApiKey))
+        {
+            NavigationManager.NavigateTo($"/data/album/{albumApiKey}");
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
@@ -238,24 +258,31 @@
         {
             _recentlyPlayedSongs = _recentlyPlayed
                 .Where(x => x.ApiKey.HasValue)
-                .Select(x => new SongDataInfo(
-                    x.Id ?? 0,
-                    x.ApiKey!.Value,
-                    false,
-                    x.Label,
-                    x.Label.ToNormalizedString() ?? string.Empty,
-                    0,
-                    LocalDate.MinIsoValue,
-                    string.Empty,
-                    Guid.Empty,
-                    string.Empty,
-                    Guid.Empty,
-                    0,
-                    0,
-                    Instant.MinValue,
-                    string.Empty,
-                    false,
-                    0))
+                .Select(x =>
+                {
+                    var parts = x.Extra?.Split('|') ?? [];
+                    var albumApiKey = parts.Length > 0 && Guid.TryParse(parts[0], out var albumGuid) ? albumGuid : Guid.Empty;
+                    var artistApiKey = parts.Length > 1 && Guid.TryParse(parts[1], out var artistGuid) ? artistGuid : Guid.Empty;
+                    
+                    return new SongDataInfo(
+                        x.Id ?? 0,
+                        x.ApiKey!.Value,
+                        false,
+                        x.Label,
+                        x.Label.ToNormalizedString() ?? string.Empty,
+                        0,
+                        LocalDate.MinIsoValue,
+                        string.Empty,
+                        albumApiKey,
+                        string.Empty,
+                        artistApiKey,
+                        0,
+                        0,
+                        Instant.MinValue,
+                        string.Empty,
+                        false,
+                        0);
+                })
                 .ToArray();
         }
     }

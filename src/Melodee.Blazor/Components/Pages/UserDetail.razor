@@ -1,0 +1,405 @@
+@page "/user/{UserApiKey}"
+@using System.Globalization
+@using NodaTime
+@using Melodee.Common.Data
+@using Melodee.Common.Data.Models
+@using Microsoft.EntityFrameworkCore
+@inherits MelodeeComponentBase
+
+@inject UserService UserService
+@inject NavigationManager NavigationManager
+@inject ILogger Logger
+@inject NotificationService NotificationService
+@inject IDbContextFactory<MelodeeDbContext> DbContextFactory
+
+<PageTitle>User - @_userName</PageTitle>
+
+<RadzenStack Gap="1rem">
+    <RadzenBreadCrumb Class="rz-pb-5">
+        <RadzenBreadCrumbItem Path="/" Text="Dashboard"/>
+        <RadzenBreadCrumbItem Icon="person" Text="@_userName"/>
+    </RadzenBreadCrumb>
+
+    @if (_user == null && !_isLoading)
+    {
+        <RadzenCard>
+            <RadzenText TextStyle="TextStyle.H5">User not found</RadzenText>
+        </RadzenCard>
+    }
+    else if (_isLoading)
+    {
+        <RadzenCard>
+            <RadzenText TextStyle="TextStyle.Body1">Loading...</RadzenText>
+        </RadzenCard>
+    }
+    else
+    {
+        <RadzenRow>
+            <RadzenColumn Size="12" SizeMD="3">
+                <RadzenCard>
+                    <RadzenStack Gap="1rem" AlignItems="AlignItems.Center">
+                        <RadzenImage Path="@($"/images/{_user!.ApiKey}/{MelodeeConfiguration.DefaultImageSize}")"
+                                     Style="border-radius:50%;height:200px;width:200px;"
+                                     AlternateText="@_userName"/>
+                        <RadzenText TextStyle="TextStyle.H4">@_userName</RadzenText>
+                        <RadzenBadge BadgeStyle="@_securityBadgeStyle" Shade="Shade.Light" Text="@_securityLabel"/>
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+
+            <RadzenColumn Size="12" SizeMD="9">
+                <RadzenCard>
+                    <RadzenStack Gap="0.5rem">
+                        <RadzenText TextStyle="TextStyle.H6" Text="User Information"/>
+                        <RadzenDataGrid TItem="KeyValue"
+                                        Data="@_userInfo"
+                                        AllowPaging="false"
+                                        AllowSorting="false"
+                                        AllowFiltering="false"
+                                        Density="Density.Compact">
+                            <Columns>
+                                <RadzenDataGridColumn TItem="KeyValue" Property="Key" Title="Property" Width="200px"/>
+                                <RadzenDataGridColumn TItem="KeyValue" Title="Value">
+                                    <Template Context="kv">@((MarkupString)(kv.Value ?? string.Empty))</Template>
+                                </RadzenDataGridColumn>
+                            </Columns>
+                        </RadzenDataGrid>
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+        </RadzenRow>
+
+        <RadzenRow>
+            <RadzenColumn Size="12" SizeMD="3">
+                <RadzenCard Style="height:100%;">
+                    <RadzenStack Gap="0.25rem">
+                        <RadzenText TextStyle="TextStyle.Overline">Statistics</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption">Artists Starred</RadzenText>
+                        <RadzenText TextStyle="TextStyle.H6">@_stats.StarredArtistsCount.ToString("N0")</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption">Albums Starred</RadzenText>
+                        <RadzenText TextStyle="TextStyle.H6">@_stats.StarredAlbumsCount.ToString("N0")</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption">Songs Starred</RadzenText>
+                        <RadzenText TextStyle="TextStyle.H6">@_stats.StarredSongsCount.ToString("N0")</RadzenText>
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+
+            <RadzenColumn Size="12" SizeMD="3">
+                <RadzenCard Style="height:100%;">
+                    <RadzenStack Gap="0.25rem">
+                        <RadzenText TextStyle="TextStyle.Overline">Activity</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption">Total Plays</RadzenText>
+                        <RadzenText TextStyle="TextStyle.H6">@_stats.TotalPlaysCount.ToString("N0")</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption">Playlists</RadzenText>
+                        <RadzenText TextStyle="TextStyle.H6">@_stats.PlaylistsCount.ToString("N0")</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption">Shares</RadzenText>
+                        <RadzenText TextStyle="TextStyle.H6">@_stats.SharesCount.ToString("N0")</RadzenText>
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+
+            <RadzenColumn Size="12" SizeMD="3">
+                <RadzenCard Style="height:100%;">
+                    <RadzenStack Gap="0.25rem">
+                        <RadzenText TextStyle="TextStyle.Overline">Ratings</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption">Artists Rated</RadzenText>
+                        <RadzenText TextStyle="TextStyle.H6">@_stats.RatedArtistsCount.ToString("N0")</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption">Albums Rated</RadzenText>
+                        <RadzenText TextStyle="TextStyle.H6">@_stats.RatedAlbumsCount.ToString("N0")</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption">Songs Rated</RadzenText>
+                        <RadzenText TextStyle="TextStyle.H6">@_stats.RatedSongsCount.ToString("N0")</RadzenText>
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+
+            <RadzenColumn Size="12" SizeMD="3">
+                <RadzenCard Style="height:100%;">
+                    <RadzenStack Gap="0.25rem">
+                        <RadzenText TextStyle="TextStyle.Overline">Preferences</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption">Pinned Items</RadzenText>
+                        <RadzenText TextStyle="TextStyle.H6">@((_user?.Pins?.Count ?? 0)).ToString("N0")</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption">Bookmarks</RadzenText>
+                        <RadzenText TextStyle="TextStyle.H6">@_stats.BookmarksCount.ToString("N0")</RadzenText>
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+        </RadzenRow>
+
+        @if (_userRoles.Any())
+        {
+            <RadzenCard>
+                <RadzenStack Gap="0.5rem">
+                    <RadzenText TextStyle="TextStyle.H6" Text="Permissions"/>
+                    <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="5px">
+                        @foreach (var role in _userRoles)
+                        {
+                            <RadzenBadge IsPill="true" BadgeStyle="BadgeStyle.Info" Text="@role"/>
+                        }
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenCard>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(_user?.Tags))
+        {
+            <RadzenCard>
+                <RadzenStack Gap="0.5rem">
+                    <RadzenText TextStyle="TextStyle.H6" Text="Tags"/>
+                    <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="5px">
+                        @foreach (var tag in _user.Tags?.ToTags() ?? [])
+                        {
+                            <RadzenBadge IsPill="true" BadgeStyle="BadgeStyle.Primary" Text="@tag"/>
+                        }
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenCard>
+        }
+
+        @if (_user?.Pins?.Any() ?? false)
+        {
+            <RadzenCard>
+                <RadzenStack Gap="0.5rem">
+                    <RadzenText TextStyle="TextStyle.H6" Text="Pinned Items"/>
+                    <RadzenRow>
+                        @foreach (var pin in _user.Pins.OrderBy(p => p.SortOrder))
+                        {
+                            <RadzenColumn Size="12" SizeMD="3">
+                                <RadzenCard Style="cursor:pointer;" Click="@(() => NavigationManager.NavigateTo(pin.LinkUrl ?? "#"))">
+                                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                                        @if (!string.IsNullOrWhiteSpace(pin.ImageUrl))
+                                        {
+                                            <RadzenImage Path="@pin.ImageUrl" Style="height:48px;width:48px;" AlternateText="@pin.Text"/>
+                                        }
+                                        else if (!string.IsNullOrWhiteSpace(pin.Icon))
+                                        {
+                                            <RadzenIcon Icon="@pin.Icon"/>
+                                        }
+                                        <RadzenText TextStyle="TextStyle.Body2">@pin.Text</RadzenText>
+                                    </RadzenStack>
+                                </RadzenCard>
+                            </RadzenColumn>
+                        }
+                    </RadzenRow>
+                </RadzenStack>
+            </RadzenCard>
+        }
+    }
+</RadzenStack>
+
+@code {
+    [Parameter]
+    public string UserApiKey { get; set; } = string.Empty;
+
+    User? _user;
+    string _userName = string.Empty;
+    BadgeStyle _securityBadgeStyle = BadgeStyle.Secondary;
+    string _securityLabel = "user";
+    bool _isLoading = true;
+    readonly List<KeyValue> _userInfo = [];
+    readonly List<string> _userRoles = [];
+    UserStats _stats = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        try
+        {
+            var apiKey = ParseUserApiKey(UserApiKey);
+            if (!apiKey.HasValue)
+            {
+                NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Error", Detail = "Invalid user API key format" });
+                _isLoading = false;
+                return;
+            }
+
+            var userResult = await UserService.GetByApiKeyAsync(apiKey.Value);
+            if (!userResult.IsSuccess || userResult.Data == null)
+            {
+                NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Error", Detail = "User not found" });
+                _isLoading = false;
+                return;
+            }
+
+            _user = userResult.Data;
+            _userName = _user.UserName;
+
+            if (_user.IsAdmin)
+            {
+                _securityLabel = "admin";
+                _securityBadgeStyle = BadgeStyle.Danger;
+            }
+            else if (_user.IsEditor)
+            {
+                _securityLabel = "editor";
+                _securityBadgeStyle = BadgeStyle.Info;
+            }
+            else
+            {
+                _securityLabel = "user";
+                _securityBadgeStyle = BadgeStyle.Secondary;
+            }
+
+            _userInfo.Add(new KeyValue("Email", _user.Email));
+            _userInfo.Add(new KeyValue("API Key", _user.ApiKey.ToString()));
+            _userInfo.Add(new KeyValue("Time Zone", _user.TimeZoneId ?? "UTC"));
+            _userInfo.Add(new KeyValue("Created", CurrentUser?.FormatInstant(_user.CreatedAt) ?? _user.CreatedAt.ToString()));
+            _userInfo.Add(new KeyValue("Last Login", CurrentUser?.FormatInstant(_user.LastLoginAt) ?? _user.LastLoginAt?.ToString() ?? MelodeeConfiguration.DefaultNoValuePlaceHolder));
+            _userInfo.Add(new KeyValue("Last Activity", CurrentUser?.FormatInstant(_user.LastActivityAt) ?? _user.LastActivityAt?.ToString() ?? MelodeeConfiguration.DefaultNoValuePlaceHolder));
+
+            if (!string.IsNullOrWhiteSpace(_user.Description))
+            {
+                _userInfo.Add(new KeyValue("Description", _user.Description));
+            }
+
+            // Build roles list from user permissions
+            if (_user.IsAdmin)
+            {
+                _userRoles.Add("Administrator");
+            }
+            if (_user.IsEditor)
+            {
+                _userRoles.Add("Editor");
+            }
+            if (_user.HasSettingsRole)
+            {
+                _userRoles.Add("Settings");
+            }
+            if (_user.HasDownloadRole)
+            {
+                _userRoles.Add("Download");
+            }
+            if (_user.HasUploadRole)
+            {
+                _userRoles.Add("Upload");
+            }
+            if (_user.HasPlaylistRole)
+            {
+                _userRoles.Add("Playlist");
+            }
+            if (_user.HasCoverArtRole)
+            {
+                _userRoles.Add("Cover Art");
+            }
+            if (_user.HasCommentRole)
+            {
+                _userRoles.Add("Comment");
+            }
+            if (_user.HasPodcastRole)
+            {
+                _userRoles.Add("Podcast");
+            }
+            if (_user.HasStreamRole)
+            {
+                _userRoles.Add("Stream");
+            }
+            if (_user.HasJukeboxRole)
+            {
+                _userRoles.Add("Jukebox");
+            }
+            if (_user.HasShareRole)
+            {
+                _userRoles.Add("Share");
+            }
+
+            await LoadUserStatsAsync();
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e, "Error loading user detail");
+            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Error", Detail = e.Message });
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    async Task LoadUserStatsAsync()
+    {
+        if (_user == null) return;
+
+        await using var scopedContext = await DbContextFactory.CreateDbContextAsync();
+
+        _stats.StarredArtistsCount = await scopedContext.UserArtists
+            .Where(ua => ua.UserId == _user.Id && ua.IsStarred)
+            .CountAsync();
+
+        _stats.StarredAlbumsCount = await scopedContext.UserAlbums
+            .Where(ua => ua.UserId == _user.Id && ua.IsStarred)
+            .CountAsync();
+
+        _stats.StarredSongsCount = await scopedContext.UserSongs
+            .Where(us => us.UserId == _user.Id && us.IsStarred)
+            .CountAsync();
+
+        _stats.RatedArtistsCount = await scopedContext.UserArtists
+            .Where(ua => ua.UserId == _user.Id && ua.Rating > 0)
+            .CountAsync();
+
+        _stats.RatedAlbumsCount = await scopedContext.UserAlbums
+            .Where(ua => ua.UserId == _user.Id && ua.Rating > 0)
+            .CountAsync();
+
+        _stats.RatedSongsCount = await scopedContext.UserSongs
+            .Where(us => us.UserId == _user.Id && us.Rating > 0)
+            .CountAsync();
+
+        _stats.TotalPlaysCount = await scopedContext.UserSongs
+            .Where(us => us.UserId == _user.Id && us.PlayedCount > 0)
+            .SumAsync(us => us.PlayedCount);
+
+        _stats.PlaylistsCount = await scopedContext.Playlists
+            .Where(p => p.UserId == _user.Id)
+            .CountAsync();
+
+        _stats.SharesCount = await scopedContext.Shares
+            .Where(s => s.UserId == _user.Id)
+            .CountAsync();
+
+        _stats.BookmarksCount = await scopedContext.Bookmarks
+            .Where(b => b.UserId == _user.Id)
+            .CountAsync();
+    }
+
+    Guid? ParseUserApiKey(string apiKeyInput)
+    {
+        if (string.IsNullOrWhiteSpace(apiKeyInput))
+        {
+            return null;
+        }
+
+        // Try direct GUID parse first (Melodee format: "51b53687-e735-4f63-90f7-ab61f4249b06")
+        if (Guid.TryParse(apiKeyInput, out var directGuid))
+        {
+            return directGuid;
+        }
+
+        // Try OpenSubsonic format: "user_{guid}"
+        const string userPrefix = "user_";
+        if (apiKeyInput.StartsWith(userPrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            var guidPart = apiKeyInput.Substring(userPrefix.Length);
+            if (Guid.TryParse(guidPart, out var parsedGuid))
+            {
+                return parsedGuid;
+            }
+        }
+
+        return null;
+    }
+
+    sealed class UserStats
+    {
+        public int StarredArtistsCount { get; set; }
+        public int StarredAlbumsCount { get; set; }
+        public int StarredSongsCount { get; set; }
+        public int RatedArtistsCount { get; set; }
+        public int RatedAlbumsCount { get; set; }
+        public int RatedSongsCount { get; set; }
+        public int TotalPlaysCount { get; set; }
+        public int PlaylistsCount { get; set; }
+        public int SharesCount { get; set; }
+        public int BookmarksCount { get; set; }
+    }
+}

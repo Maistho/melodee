@@ -106,9 +106,10 @@
                                       Icon="edit"
                                       ButtonStyle="ButtonStyle.Secondary"/>
                         <RadzenImage Path=@($"/images/{data.ToApiKey()}/{ ImageSize.Thumbnail }")
-                                     Style="float:left;margin-right: 5px;"
-                                     AlternateText="@data.UserName"/>
-                        <RadzenText Text="@data.UserName"/>
+                                     Style="float:left;margin-right: 5px;cursor:pointer;"
+                                     AlternateText="@data.UserName"
+                                     Click=@(_ => NavigationManager.NavigateTo($"/user/{data.ApiKey}"))/>
+                        <RadzenLink Path=@($"/user/{data.ApiKey}") Text="@data.UserName"/>
                     </Template>
                 </RadzenDataGridColumn>
                 <RadzenDataGridColumn Property="@nameof(UserDataInfo.Email)" Title="Email"/>

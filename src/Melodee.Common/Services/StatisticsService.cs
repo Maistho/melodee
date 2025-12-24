@@ -401,8 +401,9 @@ public sealed class StatisticsService(
         var songIds = query.Select(x => x.SongId).ToArray();
         var songs = await context.Songs
             .AsNoTracking()
+            .Include(x => x.Album)
             .Where(x => songIds.Contains(x.Id))
-            .Select(x => new { x.Id, x.Title, x.ApiKey })
+            .Select(x => new { x.Id, x.Title, x.ApiKey, AlbumApiKey = x.Album.ApiKey })
             .ToDictionaryAsync(x => x.Id, cancellationToken)
             .ConfigureAwait(false);
 
@@ -410,7 +411,7 @@ public sealed class StatisticsService(
             .Select(x =>
             {
                 songs.TryGetValue(x.SongId, out var song);
-                return new TopItemStat(song?.Title ?? $"Song {x.SongId}", x.Count, song?.ApiKey, x.SongId);
+                return new TopItemStat(song?.Title ?? $"Song {x.SongId}", x.Count, song?.ApiKey, x.SongId, song?.AlbumApiKey.ToString());
             })
             .ToArray();
 
@@ -443,15 +444,17 @@ public sealed class StatisticsService(
         var songIds = histories.Select(x => x.SongId).Distinct().ToArray();
         var songs = await context.Songs
             .AsNoTracking()
+            .Include(x => x.Album)
             .Where(x => songIds.Contains(x.Id))
-            .Select(x => new { x.Id, x.Title, x.ApiKey })
+            .Select(x => new { x.Id, x.Title, x.ApiKey, AlbumApiKey = x.Album.ApiKey, ArtistApiKey = x.Album.ArtistApiKey })
             .ToDictionaryAsync(x => x.Id, cancellationToken)
             .ConfigureAwait(false);
 
         var result = histories.Select(x =>
         {
             songs.TryGetValue(x.SongId, out var song);
-            return new TopItemStat(song?.Title ?? $"Song {x.SongId}", x.PlayedAt.ToUnixTimeTicks(), song?.ApiKey, x.SongId, x.PlayedAt.ToString());
+            var extra = song != null ? $"{song.AlbumApiKey}|{song.ArtistApiKey}" : null;
+            return new TopItemStat(song?.Title ?? $"Song {x.SongId}", x.PlayedAt.ToUnixTimeTicks(), song?.ApiKey, x.SongId, extra);
         }).ToArray();
 
         return new OperationResult<TopItemStat[]>
