@@ -73,7 +73,12 @@ public sealed class ChartService(
     {
         await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
 
-        var query = scopedContext.Charts.Include(c => c.Items).AsNoTracking();
+        var query = scopedContext.Charts
+            .Include(c => c.Items)
+                .ThenInclude(i => i.LinkedAlbum)
+            .Include(c => c.Items)
+                .ThenInclude(i => i.LinkedArtist)
+            .AsNoTracking();
 
         if (!includeHidden)
         {
