@@ -359,6 +359,7 @@ builder.Services
     .AddScoped<ShareService>()
     .AddScoped<RadioStationService>()
     .AddScoped<PlaylistService>()
+    .AddScoped<ChartService>()
     .AddScoped<MelodeeMetadataMaker>()
     .AddScoped<AlbumRescanEventHandler>()
     .AddScoped<AlbumAddEventHandler>()

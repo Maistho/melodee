@@ -1,0 +1,257 @@
+@page "/charts"
+
+@inherits MelodeeComponentBase
+@using Melodee.Common.Data.Models
+@using Melodee.Common.Enums
+
+@inject MainLayoutProxyService MainLayoutProxyService
+@inject ILogger Logger
+@inject ChartService ChartService
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+@inject TooltipService TooltipService
+@inject NavigationManager NavigationManager
+@inject IAuthService AuthService
+
+<PageTitle>Curated Charts</PageTitle>
+
+<RadzenBreadCrumb Class="rz-pb-5">
+    <RadzenBreadCrumbItem Path="/" Text="Home"/>
+    <RadzenBreadCrumbItem Icon="format_list_numbered" Text="Charts"/>
+</RadzenBreadCrumb>
+
+<RadzenStack>
+    <RadzenRow AlignItems="AlignItems.Center">
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenText Text="Curated Album Charts" TextStyle="TextStyle.DisplayH6" TagName="TagName.H1" style="margin: 0"/>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenStack
+                Orientation="Orientation.Horizontal"
+                AlignItems="AlignItems.Center"
+                JustifyContent="JustifyContent.End"
+                Gap="0.5rem">
+                @if (AuthService.IsAdmin)
+                {
+                    <RadzenButton Icon="upload_file" Text="Import JSON" Click="@ImportJsonClick" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary"/>
+                    <RadzenButton Icon="add_circle_outline" Text="Create Chart" Click="@CreateChartClick" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Primary"/>
+                    <RadzenButton Icon="delete" Disabled="!_selectedCharts.Any()" Text="Delete" Click="@DeleteSelectedButtonClick" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Warning"/>
+                }
+            </RadzenStack>
+        </RadzenColumn>
+    </RadzenRow>
+
+    <RadzenRow>
+        <RadzenDataGrid
+            @ref="_grid"
+            style="height: 600px;"
+            IsLoading="@_isLoading"
+            Count="@_count"
+            Data="@_charts"
+            LoadData="@LoadData"
+            AllowSorting="true"
+            AllowFiltering="false"
+            AllowRowSelectOnRowClick="false"
+            AllowPaging="true"
+            Page="OnPage"
+            PageSize="DefaultPageSize"
+            PagerHorizontalAlign="HorizontalAlign.Center"
+            ShowPagingSummary="true"
+            PageSizeOptions="@PageSizeOptions"
+            PagingSummaryFormat="@ViewConstants.PagingSummaryFormat"
+            ColumnWidth="200px"
+            SelectionMode="@(AuthService.IsAdmin ? DataGridSelectionMode.Multiple : DataGridSelectionMode.Single)"
+            @bind-Value="@_selectedCharts">
+            <Columns>
+                @if (AuthService.IsAdmin)
+                {
+                    <RadzenDataGridColumn Width="60px" Sortable="false" Filterable="false">
+                        <HeaderTemplate>
+                            <RadzenCheckBox
+                                TabIndex="-1"
+                                TriState="false"
+                                TValue="bool?"
+                                InputAttributes="@(new Dictionary<string, object> { { "aria-label", "Select all items" } })"
+                                Value="@(_selectedCharts.Any() != true ? false : !_charts.All(i => _selectedCharts.Contains(i)) ? null : _charts.Any(i => _selectedCharts.Contains(i)))"
+                                Change="@(args => _selectedCharts = args == true ? _charts.ToList() : [])"/>
+                        </HeaderTemplate>
+                        <Template Context="data">
+                            <RadzenCheckBox
+                                TabIndex="-1"
+                                TriState="false"
+                                Value="@(_selectedCharts.Contains(data))"
+                                InputAttributes="@(new Dictionary<string, object> { { "aria-label", "Select item" } })"
+                                Change="@(_ => { _grid.SelectRow(data); })"
+                                TValue="bool"/>
+                        </Template>
+                    </RadzenDataGridColumn>
+                }
+
+                <RadzenDataGridColumn Property="@nameof(Chart.Title)" Title="Title" Width="250px">
+                    <Template Context="data">
+                        <RadzenLink Path="@($"/charts/{data.Id}")" Text="@data.Title"/>
+                    </Template>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn Property="@nameof(Chart.Slug)" Title="Slug" Width="200px"/>
+
+                <RadzenDataGridColumn Property="@nameof(Chart.SourceName)" Title="Source" Width="150px"/>
+
+                <RadzenDataGridColumn Property="@nameof(Chart.Year)" Title="Year" Width="80px"/>
+
+                <RadzenDataGridColumn Title="Items" Width="80px" Sortable="false">
+                    <Template Context="data">
+                        <RadzenText>@data.Items.Count</RadzenText>
+                    </Template>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn Property="@nameof(Chart.IsVisible)" Title="Visible" Width="100px" Visible="@AuthService.IsAdmin">
+                    <Template Context="data">
+                        @if (data.IsVisible)
+                        {
+                            <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="Visible"/>
+                        }
+                        else
+                        {
+                            <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="Hidden"/>
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn Property="@nameof(Chart.IsGeneratedPlaylistEnabled)" Title="Playlist" Width="100px">
+                    <Template Context="data">
+                        @if (data.IsGeneratedPlaylistEnabled)
+                        {
+                            <RadzenBadge BadgeStyle="BadgeStyle.Info" Text="Enabled"/>
+                        }
+                        else
+                        {
+                            <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="Disabled"/>
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+
+                <RadzenDataGridColumn Property="@nameof(Chart.CreatedAt)" Title="Created" Width="150px">
+                    <Template Context="data">
+                        <RadzenText Text="@CurrentUser?.FormatInstant(data.CreatedAt)"/>
+                    </Template>
+                </RadzenDataGridColumn>
+
+                @if (AuthService.IsAdmin)
+                {
+                    <RadzenDataGridColumn Title="Actions" Width="120px" Sortable="false">
+                        <Template Context="data">
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem">
+                                <RadzenButton Icon="edit" Size="ButtonSize.Small" Click="@(() => EditChart(data))" ButtonStyle="ButtonStyle.Light" MouseEnter="@(args => ShowTooltip(args, "Edit chart"))"/>
+                                <RadzenButton Icon="delete" Size="ButtonSize.Small" Click="@(() => DeleteChart(data))" ButtonStyle="ButtonStyle.Danger" MouseEnter="@(args => ShowTooltip(args, "Delete chart"))"/>
+                            </RadzenStack>
+                        </Template>
+                    </RadzenDataGridColumn>
+                }
+            </Columns>
+        </RadzenDataGrid>
+    </RadzenRow>
+</RadzenStack>
+
+@code {
+    RadzenDataGrid<Chart> _grid = null!;
+    int _count;
+    IEnumerable<Chart> _charts = [];
+    bool _isLoading;
+    int _currentPage = 1;
+    IList<Chart> _selectedCharts = [];
+
+    void OnPage(PagerEventArgs args)
+    {
+        _currentPage = args.PageIndex + 1;
+    }
+
+    async Task LoadData(LoadDataArgs args)
+    {
+        _isLoading = true;
+        MainLayoutProxyService.ToggleSpinnerVisible();
+        try
+        {
+            var result = await ChartService.ListAsync(
+                new PagedRequest
+                {
+                    Page = _currentPage,
+                    PageSize = SafeParser.ToNumber<short>(args.Top)
+                },
+                includeHidden: AuthService.IsAdmin);
+            _charts = result.Data;
+            _count = result.TotalCount;
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e, "Loading Charts");
+        }
+        finally
+        {
+            MainLayoutProxyService.ToggleSpinnerVisible();
+        }
+
+        _isLoading = false;
+    }
+
+    void CreateChartClick()
+    {
+        NavigationManager.NavigateTo("/charts/create");
+    }
+
+    async Task ImportJsonClick()
+    {
+        var result = await DialogService.OpenAsync<ChartImportDialog>("Import Chart from JSON",
+            new Dictionary<string, object>(),
+            new DialogOptions { Width = "600px", Height = "500px", Resizable = true, Draggable = true });
+        
+        if (result is true)
+        {
+            await _grid.RefreshDataAsync();
+        }
+    }
+
+    void EditChart(Chart chart)
+    {
+        NavigationManager.NavigateTo($"/charts/edit/{chart.Id}");
+    }
+
+    async Task DeleteChart(Chart chart)
+    {
+        var confirm = await DialogService.Confirm($"Are you sure you want to delete '{chart.Title}'?", "Delete Chart", new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" });
+        if (confirm ?? false)
+        {
+            var result = await ChartService.DeleteAsync(chart.Id);
+            NotificationService.Notify(NotificationMessageForResult(result, "Deleting Chart", ToastTime));
+            if (result.IsSuccess)
+            {
+                await _grid.RefreshDataAsync();
+            }
+        }
+    }
+
+    async Task DeleteSelectedButtonClick()
+    {
+        var confirm = await DialogService.Confirm($"Are you sure you want to delete {_selectedCharts.Count} selected chart(s)?", "Delete Charts", new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" });
+        if (confirm ?? false)
+        {
+            foreach (var chart in _selectedCharts.ToList())
+            {
+                await ChartService.DeleteAsync(chart.Id);
+            }
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = "Charts Deleted",
+                Duration = ToastTime
+            });
+            _selectedCharts.Clear();
+            await _grid.RefreshDataAsync();
+        }
+    }
+
+    void ShowTooltip(ElementReference elementReference, string message)
+    {
+        TooltipService.Open(elementReference, message);
+    }
+}

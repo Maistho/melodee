@@ -1004,4 +1004,25 @@ public static partial class StringExtensions
     //Regex.Replace(input, @"[\uFEFF\u0000-\u001F\u007F\u0080-\uFFFF]|\p{C}", string.Empty)
     [GeneratedRegex(@"(\\0|\\u0+|\\x0+|\u0000|\uFEFF|\t|\r|\n|␀)", RegexOptions.IgnoreCase)]
     private static partial Regex CleanStringReplacementRegex();
+
+    [GeneratedRegex("[^a-z0-9-]")]
+    private static partial Regex SlugInvalidCharRegex();
+
+    [GeneratedRegex("-+")]
+    private static partial Regex SlugMultipleDashRegex();
+
+    public static string ToSlug(this string? input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            return string.Empty;
+        }
+
+        var slug = input.ToLowerInvariant().Trim();
+        slug = slug.Replace(' ', '-');
+        slug = SlugInvalidCharRegex().Replace(slug, string.Empty);
+        slug = SlugMultipleDashRegex().Replace(slug, "-");
+        slug = slug.Trim('-');
+        return slug.Length > 200 ? slug[..200] : slug;
+    }
 }

@@ -10,6 +10,7 @@ public static class LibraryExtensions
         return library.TypeValue switch
         {
             LibraryType.Inbound or LibraryType.Staging => ("stock_media", "Media queue type library"),
+            LibraryType.Chart => ("format_list_numbered", "Chart type library"),
             LibraryType.UserImages => ("photo_library", "Images type library"),
             LibraryType.Playlist => ("queue_music", "Playlist data library"),
             _ => ("inventory_2", "Storage type library")

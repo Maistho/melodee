@@ -27,5 +27,10 @@ public enum LibraryType
     /// <summary>
     ///     Holds data related to playlists including smart definitions and images, should be 1
     /// </summary>
-    Playlist
+    Playlist,
+
+    /// <summary>
+    ///     Holds images for Charts
+    /// </summary>
+    Chart
 }

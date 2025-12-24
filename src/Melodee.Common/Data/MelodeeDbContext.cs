@@ -65,6 +65,10 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
 
     public DbSet<RefreshToken> RefreshTokens { get; set; }
 
+    public DbSet<Chart> Charts { get; set; }
+
+    public DbSet<ChartItem> ChartItems { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         var now = Instant.FromDateTimeUtc(DateTime.UtcNow);
@@ -1001,6 +1005,24 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
             s.HasIndex(x => new { x.UserId, x.PlayedAt });
             s.HasIndex(x => new { x.SongId, x.PlayedAt });
             s.HasIndex(x => x.PlayedAt);
+        });
+
+        modelBuilder.Entity<ChartItem>(ci =>
+        {
+            ci.HasOne(x => x.Chart)
+                .WithMany(c => c.Items)
+                .HasForeignKey(x => x.ChartId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            ci.HasOne(x => x.LinkedArtist)
+                .WithMany()
+                .HasForeignKey(x => x.LinkedArtistId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            ci.HasOne(x => x.LinkedAlbum)
+                .WithMany()
+                .HasForeignKey(x => x.LinkedAlbumId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // sph; left here for example of GIN FTS. More info here https://www.npgsql.org/efcore/mapping/full-text-search.html?tabs=pg12%2Cv5

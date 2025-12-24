@@ -151,6 +151,25 @@ public class LibraryService : ServiceBase
         };
     }
 
+    public async Task<MelodeeModels.OperationResult<Library>> GetChartLibraryAsync(CancellationToken cancellationToken = default)
+    {
+        const int libraryType = (int)LibraryType.Chart;
+        var result = await CacheManager.GetAsync(CacheKeyDetailLibraryByType.FormatSmart(libraryType), async () =>
+        {
+            var library = await LibraryByType(libraryType, cancellationToken);
+            if (library == null)
+            {
+                throw new Exception("Chart library not found. A Library record must be setup with a type of '6' (Chart).");
+            }
+
+            return library;
+        }, cancellationToken).ConfigureAwait(false);
+        return new MelodeeModels.OperationResult<Library>
+        {
+            Data = result
+        };
+    }
+
     public async Task<MelodeeModels.OperationResult<Library?>> GetByApiKeyAsync(Guid apiKey, CancellationToken cancellationToken = default)
     {
         Guard.Against.Expression(_ => apiKey == Guid.Empty, apiKey, nameof(apiKey));
@@ -1588,7 +1607,7 @@ public class LibraryService : ServiceBase
                                             artistsWithoutAlbumsInDirectories++;
                                         }
 
-                                        // If the artist isn't in the database, then none of the artists folders will be in the database.                                        
+                                        // If the artist isn't in the database, then none of the artists folders will be in the database.
                                         continue;
                                     }
 
@@ -2011,6 +2030,61 @@ public class LibraryService : ServiceBase
         };
     }
 
+    public async Task<MelodeeModels.OperationResult<Library?>> CreateAsync(Library library,
+        CancellationToken cancellationToken = default)
+    {
+        Guard.Against.Null(library, nameof(library));
+
+        var validationResult = ValidateModel(library);
+        if (!validationResult.IsSuccess)
+        {
+            return new MelodeeModels.OperationResult<Library?>(validationResult.Data.Item2
+                ?.Where(x => !string.IsNullOrWhiteSpace(x.ErrorMessage)).Select(x => x.ErrorMessage!).ToArray() ?? [])
+            {
+                Data = null,
+                Type = MelodeeModels.OperationResponseType.ValidationFailure
+            };
+        }
+
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var now = Instant.FromDateTimeUtc(DateTime.UtcNow);
+        var newLibrary = new Library
+        {
+            Name = library.Name,
+            Path = library.Path,
+            Type = library.Type,
+            Description = library.Description,
+            Notes = library.Notes,
+            SortOrder = library.SortOrder,
+            Tags = library.Tags,
+            IsLocked = library.IsLocked,
+            CreatedAt = now,
+            ApiKey = Guid.NewGuid()
+        };
+
+        scopedContext.Libraries.Add(newLibrary);
+        var result = await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false) > 0;
+
+        if (!result)
+        {
+            return new MelodeeModels.OperationResult<Library?>
+            {
+                Data = null,
+                Type = MelodeeModels.OperationResponseType.Error
+            };
+        }
+
+        if (!Directory.Exists(newLibrary.Path))
+        {
+            Directory.CreateDirectory(newLibrary.Path);
+        }
+
+        return new MelodeeModels.OperationResult<Library?>
+        {
+            Data = newLibrary
+        };
+    }
 
     /// <summary>
     ///     Look in the dynamic playlist directory and find the json file with the matching Id.

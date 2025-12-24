@@ -1,0 +1,862 @@
+@page "/charts/create"
+@page "/charts/edit/{ChartId:int}"
+
+@inherits MelodeeComponentBase
+@using Melodee.Common.Data.Models
+@using Melodee.Common.Enums
+@using Melodee.Common.Extensions
+
+@inject MainLayoutProxyService MainLayoutProxyService
+@inject ILogger Logger
+@inject ChartService ChartService
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+@inject TooltipService TooltipService
+@inject NavigationManager NavigationManager
+
+@attribute [Authorize(Roles = "Administrator")]
+
+<PageTitle>@(_isEditMode ? $"Edit Chart: {_title}" : "Create Chart")</PageTitle>
+
+<RadzenBreadCrumb Class="rz-pb-5">
+    <RadzenBreadCrumbItem Path="/" Text="Home"/>
+    <RadzenBreadCrumbItem Path="/charts" Icon="format_list_numbered" Text="Charts"/>
+    <RadzenBreadCrumbItem Text="@(_isEditMode ? "Edit" : "Create")"/>
+</RadzenBreadCrumb>
+
+<RadzenStack Gap="1rem">
+    <RadzenRow AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+        <RadzenColumn>
+            <RadzenText Text="@(_isEditMode ? $"Edit Chart: {_title}" : "Create New Chart")" TextStyle="TextStyle.DisplayH6" TagName="TagName.H1" style="margin: 0"/>
+        </RadzenColumn>
+        <RadzenColumn>
+            <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                <RadzenButton Text="Back to List" Icon="arrow_back" ButtonStyle="ButtonStyle.Light" Click="@(() => NavigationManager.NavigateTo("/charts"))"/>
+            </RadzenStack>
+        </RadzenColumn>
+    </RadzenRow>
+
+    @* Metadata Form *@
+    <RadzenCard>
+        <RadzenText TextStyle="TextStyle.H6" class="rz-mb-4">
+            <RadzenIcon Icon="info" class="rz-mr-1"/> Chart Details
+        </RadzenText>
+        <RadzenStack Gap="20px" class="rz-p-2 rz-p-md-1">
+            <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
+                <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
+                    <RadzenLabel Text="Title" Component="Title"/>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="10">
+                    <RadzenTextBox @bind-Value="@_title" Placeholder="Chart title (required)" class="rz-w-100" Name="Title"
+                                   @onblur="OnTitleBlurAsync"/>
+                </RadzenColumn>
+            </RadzenRow>
+            <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
+                <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
+                    <RadzenLabel Text="Slug" Component="Slug"/>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="10">
+                    <RadzenTextBox Value="@_slug" Disabled="true" Placeholder="Auto-generated from title" class="rz-w-100" Name="Slug"/>
+                </RadzenColumn>
+            </RadzenRow>
+            <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
+                <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
+                    <RadzenLabel Text="Source Name" Component="SourceName"/>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="10">
+                    <RadzenTextBox @bind-Value="@_sourceName" Placeholder="e.g., Rolling Stone" class="rz-w-100" Name="SourceName"/>
+                </RadzenColumn>
+            </RadzenRow>
+            <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
+                <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
+                    <RadzenLabel Text="Source URL" Component="SourceUrl"/>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="10">
+                    <RadzenTextBox @bind-Value="@_sourceUrl" Placeholder="https://..." class="rz-w-100" Name="SourceUrl"/>
+                </RadzenColumn>
+            </RadzenRow>
+            <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
+                <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
+                    <RadzenLabel Text="Year" Component="Year"/>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="10">
+                    <RadzenNumeric @bind-Value="@_year" TValue="int?" Placeholder="e.g., 2025" class="rz-w-100" Name="Year"/>
+                </RadzenColumn>
+            </RadzenRow>
+            <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
+                <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
+                    <RadzenLabel Text="Description" Component="Description"/>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="10">
+                    <RadzenTextArea @bind-Value="@_description" Rows="3" Placeholder="Optional description (supports markdown)" class="rz-w-100" Name="Description"/>
+                </RadzenColumn>
+            </RadzenRow>
+            <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
+                <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
+                    <RadzenLabel Text="Tags" Component="Tags"/>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="10">
+                    <RadzenTextBox @bind-Value="@_tagsInput" Placeholder="Comma-separated, e.g., rock, progressive, 2025" class="rz-w-100" Name="Tags"/>
+                </RadzenColumn>
+            </RadzenRow>
+            <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
+                <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
+                    <RadzenLabel Text="Visible" Component="IsVisible"/>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="10">
+                    <RadzenSwitch @bind-Value="@_isVisible" Name="IsVisible"/>
+                </RadzenColumn>
+            </RadzenRow>
+            <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
+                <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
+                    <RadzenLabel Text="Generate Playlist" Component="PlaylistEnabled"/>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="10">
+                    <RadzenSwitch @bind-Value="@_isGeneratedPlaylistEnabled" Name="PlaylistEnabled"/>
+                </RadzenColumn>
+            </RadzenRow>
+            
+            @* CSV Input - Required for Create, shown inline *@
+            @if (!_isEditMode)
+            {
+                <RadzenRow AlignItems="AlignItems.Start" RowGap="0.25rem">
+                    <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end rz-pt-2">
+                        <RadzenLabel Text="Chart Items (CSV)" Component="CsvInput"/>
+                        <RadzenText TextStyle="TextStyle.Caption" class="rz-text-secondary-color rz-display-block">(Required)</RadzenText>
+                    </RadzenColumn>
+                    <RadzenColumn Size="12" SizeMD="10">
+                        <RadzenStack Gap="0.5rem">
+                            <RadzenText TextStyle="TextStyle.Caption" class="rz-text-secondary-color">
+                                Format: <code>Rank,Artist,Album,Year (optional)</code> — one entry per line
+                            </RadzenText>
+                            <RadzenTextArea @bind-Value="@_csvInput" Rows="8" class="rz-w-100" Name="CsvInput"
+                                Placeholder="1,The Beatles,Abbey Road,1969&#10;2,Pink Floyd,The Dark Side of the Moon,1973&#10;3,Led Zeppelin,IV,1971&#10;4,Fleetwood Mac,Rumours,1977&#10;5,Nirvana,Nevermind,1991"/>
+                            
+                            @if (_csvErrors.Count > 0)
+                            {
+                                <RadzenAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false" Size="AlertSize.Small">
+                                    <RadzenText TextStyle="TextStyle.Caption"><strong>Validation Errors:</strong></RadzenText>
+                                    <ul class="rz-mt-1 rz-mb-0" style="padding-left: 1.5rem; margin: 0;">
+                                        @foreach (var error in _csvErrors.Take(5))
+                                        {
+                                            <li style="font-size: 0.85rem;">Row @error.RowNumber: @error.Message</li>
+                                        }
+                                        @if (_csvErrors.Count > 5)
+                                        {
+                                            <li style="font-size: 0.85rem;">...and @(_csvErrors.Count - 5) more errors</li>
+                                        }
+                                    </ul>
+                                </RadzenAlert>
+                            }
+                            
+                            @if (_previewItems.Count > 0 && _csvErrors.Count == 0)
+                            {
+                                <RadzenAlert AlertStyle="AlertStyle.Success" ShowIcon="true" AllowClose="false" Size="AlertSize.Small">
+                                    <RadzenText TextStyle="TextStyle.Caption">✓ @_previewItems.Count valid items ready to import</RadzenText>
+                                </RadzenAlert>
+                            }
+                            
+                            <RadzenButton Text="Validate CSV" Icon="check_circle" Size="ButtonSize.Small" 
+                                ButtonStyle="ButtonStyle.Secondary" Click="@PreviewCsvAsync"/>
+                        </RadzenStack>
+                    </RadzenColumn>
+                </RadzenRow>
+                
+                @* Chart Image - Optional for Create *@
+                <RadzenRow AlignItems="AlignItems.Start" RowGap="0.25rem">
+                    <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end rz-pt-2">
+                        <RadzenLabel Text="Chart Image" Component="ChartImage"/>
+                        <RadzenText TextStyle="TextStyle.Caption" class="rz-text-secondary-color rz-display-block">(Optional)</RadzenText>
+                    </RadzenColumn>
+                    <RadzenColumn Size="12" SizeMD="10">
+                        <RadzenStack Gap="0.5rem">
+                            <RadzenText TextStyle="TextStyle.Caption" class="rz-text-secondary-color">
+                                Upload an image for this chart. Supported formats: JPG, PNG, GIF, WebP (max 10MB)
+                            </RadzenText>
+                            <RadzenCard Variant="Variant.Outlined" Style="padding: 0.5rem;">
+                                <InputFile OnChange="@OnCreateImageFileSelected" accept="image/*"/>
+                            </RadzenCard>
+                            @if (_createImageBytes != null)
+                            {
+                                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                                    <img style="width: 100px; height: auto; border-radius: 4px;" alt="Preview" 
+                                         src="data:image;base64,@Convert.ToBase64String(_createImageBytes)"/>
+                                    <RadzenText TextStyle="TextStyle.Caption" class="rz-text-secondary-color">Image selected - will be uploaded when chart is created</RadzenText>
+                                    <RadzenButton Text="Remove" Icon="close" Click="@CancelCreateImageSelection" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"/>
+                                </RadzenStack>
+                            }
+                        </RadzenStack>
+                    </RadzenColumn>
+                </RadzenRow>
+            }
+            
+            <RadzenRow AlignItems="AlignItems.Center" class="rz-mt-4">
+                <RadzenColumn Size="12" Offset="0" SizeMD="10" OffsetMD="2">
+                    <RadzenButton Text="@(_isEditMode ? "Save Changes" : "Create Chart")" Icon="save" Click="@SaveMetadataAsync" ButtonStyle="ButtonStyle.Primary"/>
+                </RadzenColumn>
+            </RadzenRow>
+        </RadzenStack>
+    </RadzenCard>
+
+    @* Chart Image Section (only show for existing charts) *@
+    @if (_isEditMode && _chartId > 0)
+    {
+        <RadzenCard>
+            <RadzenText TextStyle="TextStyle.H6" class="rz-mb-4">
+                <RadzenIcon Icon="image" class="rz-mr-1"/> Chart Image
+            </RadzenText>
+            <RadzenStack Gap="1rem">
+                <RadzenRow AlignItems="AlignItems.Start">
+                    <RadzenColumn Size="12" SizeMD="4">
+                        @if (_hasImage)
+                        {
+                            <RadzenImage Path="@($"/api/v1/charts/{_chartApiKey}/image?v={_imageVersion}")" 
+                                         Style="width: 100%; max-width: 300px; height: auto; border-radius: 8px;" 
+                                         AlternateText="@_title"/>
+                        }
+                        else
+                        {
+                            <div style="width: 100%; max-width: 300px; aspect-ratio: 1; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                <RadzenIcon Icon="format_list_numbered" Style="font-size: 64px; color: white;"/>
+                            </div>
+                        }
+                    </RadzenColumn>
+                    <RadzenColumn Size="12" SizeMD="8">
+                        <RadzenStack Gap="1rem">
+                            <RadzenText TextStyle="TextStyle.Body2" class="rz-text-secondary-color">
+                                Upload an image for this chart. Supported formats: JPG, PNG, GIF, WebP.
+                            </RadzenText>
+                            <RadzenCard Variant="Variant.Outlined">
+                                <InputFile OnChange="@OnImageFileSelected" accept="image/*"/>
+                            </RadzenCard>
+                            @if (_selectedImageBytes != null)
+                            {
+                                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                                    <img style="width: 100px; height: auto; border-radius: 4px;" alt="Preview" 
+                                         src="data:image;base64,@Convert.ToBase64String(_selectedImageBytes)"/>
+                                    <RadzenButton Text="Upload" Icon="cloud_upload" Click="@UploadImageAsync" ButtonStyle="ButtonStyle.Primary"/>
+                                    <RadzenButton Text="Cancel" Icon="close" Click="@CancelImageSelection" ButtonStyle="ButtonStyle.Light"/>
+                                </RadzenStack>
+                            }
+                            @if (_hasImage)
+                            {
+                                <RadzenButton Text="Delete Image" Icon="delete" Click="@DeleteImageAsync" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"/>
+                            }
+                        </RadzenStack>
+                    </RadzenColumn>
+                </RadzenRow>
+            </RadzenStack>
+        </RadzenCard>
+    }
+
+    @* CSV Import Section (only show for existing charts) *@
+    @if (_isEditMode && _chartId > 0)
+    {
+        <RadzenCard>
+            <RadzenText TextStyle="TextStyle.H6" class="rz-mb-4">
+                <RadzenIcon Icon="upload_file" class="rz-mr-1"/> Import Chart Items (CSV)
+            </RadzenText>
+            <RadzenStack Gap="1rem">
+                <RadzenText TextStyle="TextStyle.Body2" class="rz-text-secondary-color">
+                    Paste CSV data below. Format: <code>Rank,ArtistName,AlbumTitle,Year (optional)</code>
+                </RadzenText>
+                <RadzenFormField Text="CSV Data" Style="width: 100%;">
+                    <RadzenTextArea @bind-Value="@_csvInput" Rows="10" Placeholder="1,The Beatles,Abbey Road,1969&#10;2,Pink Floyd,The Dark Side of the Moon,1973&#10;3,Led Zeppelin,IV,1971"/>
+                </RadzenFormField>
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                    <RadzenButton Text="Preview" Icon="preview" Click="@PreviewCsvAsync" ButtonStyle="ButtonStyle.Secondary"/>
+                    <RadzenButton Text="Import & Save" Icon="save" Click="@ImportAndSaveCsvAsync" ButtonStyle="ButtonStyle.Primary" Disabled="@(!_hasValidPreview)"/>
+                </RadzenStack>
+
+                @if (_csvErrors.Count > 0)
+                {
+                    <RadzenAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="false">
+                        <RadzenText TextStyle="TextStyle.Subtitle2">CSV Validation Errors:</RadzenText>
+                        <ul class="rz-mt-2">
+                            @foreach (var error in _csvErrors)
+                            {
+                                <li>Row @error.RowNumber: @error.Message</li>
+                            }
+                        </ul>
+                    </RadzenAlert>
+                }
+
+                @if (_previewItems.Count > 0)
+                {
+                    <RadzenText TextStyle="TextStyle.Subtitle1">Preview (@_previewItems.Count items)</RadzenText>
+                    <RadzenDataGrid Data="@_previewItems" TItem="ChartCsvPreviewItem" AllowPaging="true" PageSize="20" Density="Density.Compact">
+                        <Columns>
+                            <RadzenDataGridColumn Property="@nameof(ChartCsvPreviewItem.Rank)" Title="Rank" Width="80px"/>
+                            <RadzenDataGridColumn Property="@nameof(ChartCsvPreviewItem.ArtistName)" Title="Artist"/>
+                            <RadzenDataGridColumn Property="@nameof(ChartCsvPreviewItem.AlbumTitle)" Title="Album"/>
+                            <RadzenDataGridColumn Property="@nameof(ChartCsvPreviewItem.ReleaseYear)" Title="Year" Width="80px"/>
+                        </Columns>
+                    </RadzenDataGrid>
+                }
+            </RadzenStack>
+        </RadzenCard>
+
+        @* Chart Items List *@
+        <RadzenCard>
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" class="rz-mb-4">
+                <RadzenText TextStyle="TextStyle.H6">
+                    <RadzenIcon Icon="list" class="rz-mr-1"/> Chart Items (@_chartItems.Count)
+                </RadzenText>
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                    <RadzenButton Text="Re-link All" Icon="link" Click="@RelinkAllAsync" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small"/>
+                </RadzenStack>
+            </RadzenStack>
+
+            @if (_linkingResult != null)
+            {
+                <RadzenAlert AlertStyle="AlertStyle.Info" ShowIcon="true" AllowClose="true" class="rz-mb-4">
+                    Linking complete: @_linkingResult.LinkedCount linked, @_linkingResult.AmbiguousCount ambiguous, @_linkingResult.UnlinkedCount unlinked, @_linkingResult.SkippedCount skipped
+                </RadzenAlert>
+            }
+
+            <RadzenDataGrid @ref="_itemsGrid" Data="@_chartItems" TItem="ChartItem" AllowPaging="true" PageSize="50" Density="Density.Compact" AllowSorting="true">
+                <Columns>
+                    <RadzenDataGridColumn Property="@nameof(ChartItem.Rank)" Title="#" Width="60px"/>
+                    <RadzenDataGridColumn Property="@nameof(ChartItem.ArtistName)" Title="Artist" Width="200px"/>
+                    <RadzenDataGridColumn Property="@nameof(ChartItem.AlbumTitle)" Title="Album" Width="250px"/>
+                    <RadzenDataGridColumn Property="@nameof(ChartItem.ReleaseYear)" Title="Year" Width="80px"/>
+                    <RadzenDataGridColumn Title="Link Status" Width="120px">
+                        <Template Context="item">
+                            @switch (item.LinkStatusValue)
+                            {
+                                case ChartItemLinkStatus.Linked:
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="Linked"/>
+                                    break;
+                                case ChartItemLinkStatus.Ambiguous:
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="Ambiguous"/>
+                                    break;
+                                case ChartItemLinkStatus.Ignored:
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="Ignored"/>
+                                    break;
+                                default:
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Danger" Text="Unlinked"/>
+                                    break;
+                            }
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn Title="Linked Album" Width="200px">
+                        <Template Context="item">
+                            @if (item.LinkedAlbum != null)
+                            {
+                                <RadzenText>@item.LinkedArtist?.Name - @item.LinkedAlbum.Name</RadzenText>
+                            }
+                            else
+                            {
+                                <RadzenText class="rz-text-secondary-color">—</RadzenText>
+                            }
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn Property="@nameof(ChartItem.LinkConfidence)" Title="Confidence" Width="100px">
+                        <Template Context="item">
+                            @if (item.LinkConfidence.HasValue)
+                            {
+                                <RadzenText>@(item.LinkConfidence.Value.ToString("P0"))</RadzenText>
+                            }
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn Title="Actions" Width="140px">
+                        <Template Context="item">
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem">
+                                <RadzenButton Icon="link" Size="ButtonSize.ExtraSmall" Click="@(() => OpenResolveDialogAsync(item))" ButtonStyle="ButtonStyle.Light" MouseEnter="@(args => ShowTooltip(args, "Resolve/Re-link"))"/>
+                                <RadzenButton Icon="block" Size="ButtonSize.ExtraSmall" Click="@(() => IgnoreItemAsync(item))" ButtonStyle="ButtonStyle.Light" MouseEnter="@(args => ShowTooltip(args, "Mark as ignored"))"/>
+                            </RadzenStack>
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+        </RadzenCard>
+    }
+</RadzenStack>
+
+@code {
+    [Parameter] public int ChartId { get; set; }
+
+    bool _isEditMode => ChartId > 0;
+    int _chartId;
+
+    string _title = "";
+    string _slug = "";
+    string? _sourceName;
+    string? _sourceUrl;
+    int? _year;
+    string? _description;
+    string _tagsInput = "";
+    bool _isVisible;
+    bool _isGeneratedPlaylistEnabled;
+
+    string _csvInput = "";
+    List<ChartCsvPreviewItem> _previewItems = [];
+    List<ChartCsvError> _csvErrors = [];
+    bool _hasValidPreview;
+
+    List<ChartItem> _chartItems = [];
+    ChartLinkingResult? _linkingResult;
+
+    RadzenDataGrid<ChartItem>? _itemsGrid;
+
+    // Image for create mode
+    byte[]? _createImageBytes;
+
+    // Image handling
+    bool _hasImage;
+    Guid _chartApiKey;
+    long _imageVersion = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+    byte[]? _selectedImageBytes;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        if (_isEditMode)
+        {
+            _chartId = ChartId;
+            await LoadChartAsync();
+        }
+    }
+
+    async Task LoadChartAsync()
+    {
+        MainLayoutProxyService.ToggleSpinnerVisible();
+        try
+        {
+            var result = await ChartService.GetByIdAsync(_chartId);
+            if (result.IsSuccess && result.Data != null)
+            {
+                var chart = result.Data;
+                _title = chart.Title;
+                _slug = chart.Slug;
+                _sourceName = chart.SourceName;
+                _sourceUrl = chart.SourceUrl;
+                _year = chart.Year;
+                _description = chart.Description;
+                _tagsInput = chart.Tags?.Replace('|', ',') ?? "";
+                _isVisible = chart.IsVisible;
+                _isGeneratedPlaylistEnabled = chart.IsGeneratedPlaylistEnabled;
+                _chartItems = chart.Items.OrderBy(i => i.Rank).ToList();
+                _chartApiKey = chart.ApiKey;
+
+                var imageResult = await ChartService.GetChartImageBytesAndEtagAsync(chart.ApiKey, null);
+                _hasImage = imageResult.Bytes != null && imageResult.Bytes.Length > 0;
+            }
+            else
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Chart not found",
+                    Duration = ToastTime
+                });
+                NavigationManager.NavigateTo("/charts");
+            }
+        }
+        finally
+        {
+            MainLayoutProxyService.ToggleSpinnerVisible();
+        }
+    }
+
+    async Task OnTitleBlurAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_title))
+        {
+            _slug = "";
+            return;
+        }
+
+        var result = await ChartService.GenerateSlugPreviewAsync(_title, _isEditMode ? _chartId : null);
+        if (result.IsSuccess && result.Data != null)
+        {
+            _slug = result.Data;
+        }
+    }
+
+    async Task SaveMetadataAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_title))
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Warning,
+                Summary = "Title is required",
+                Duration = ToastTime
+            });
+            return;
+        }
+
+        // For create mode, CSV is required
+        if (!_isEditMode)
+        {
+            if (string.IsNullOrWhiteSpace(_csvInput))
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Warning,
+                    Summary = "Chart items (CSV) are required",
+                    Duration = ToastTime
+                });
+                return;
+            }
+            
+            // Validate CSV before creating
+            var parseResult = await ChartService.ParseCsvAsync(_csvInput);
+            if (parseResult.Data is null || parseResult.Data.Errors.Count > 0 || parseResult.Data.Items.Count == 0)
+            {
+                _csvErrors = parseResult.Data?.Errors ?? [];
+                if (_csvErrors.Count == 0)
+                {
+                    _csvErrors.Add(new ChartCsvError(0, "CSV contains no valid items"));
+                }
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Warning,
+                    Summary = "Please fix CSV errors before creating",
+                    Duration = ToastTime
+                });
+                return;
+            }
+            _previewItems = parseResult.Data.Items;
+        }
+
+        MainLayoutProxyService.ToggleSpinnerVisible();
+        try
+        {
+            var tags = string.IsNullOrWhiteSpace(_tagsInput)
+                ? null
+                : _tagsInput.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+            if (_isEditMode)
+            {
+                var result = await ChartService.UpdateAsync(
+                    _chartId,
+                    _title,
+                    _sourceName,
+                    _sourceUrl,
+                    _year,
+                    _description,
+                    tags,
+                    _isVisible,
+                    _isGeneratedPlaylistEnabled);
+                NotificationService.Notify(NotificationMessageForResult(result, "Updated chart", ToastTime));
+                if (result.IsSuccess)
+                {
+                    await LoadChartAsync();
+                }
+            }
+            else
+            {
+                // Create chart first
+                var result = await ChartService.CreateAsync(
+                    _title,
+                    _sourceName,
+                    _sourceUrl,
+                    _year,
+                    _description,
+                    tags,
+                    _isVisible,
+                    _isGeneratedPlaylistEnabled);
+                
+                if (result.IsSuccess && result.Data != null)
+                {
+                    // Now save the chart items
+                    var itemsResult = await ChartService.SaveItemsAsync(result.Data.Id, _previewItems, doAutoLink: true);
+                    if (itemsResult.IsSuccess)
+                    {
+                        NotificationService.Notify(new NotificationMessage
+                        {
+                            Severity = NotificationSeverity.Success,
+                            Summary = $"Created chart with {_previewItems.Count} items",
+                            Duration = ToastTime
+                        });
+                    }
+                    else
+                    {
+                        NotificationService.Notify(new NotificationMessage
+                        {
+                            Severity = NotificationSeverity.Warning,
+                            Summary = "Chart created but items failed to save",
+                            Detail = itemsResult.Messages?.FirstOrDefault(),
+                            Duration = ToastTime
+                        });
+                    }
+                    
+                    // Upload image if one was selected
+                    if (_createImageBytes != null)
+                    {
+                        var imageResult = await ChartService.UploadChartImageAsync(result.Data.ApiKey, _createImageBytes);
+                        if (!imageResult.IsSuccess)
+                        {
+                            NotificationService.Notify(new NotificationMessage
+                            {
+                                Severity = NotificationSeverity.Warning,
+                                Summary = "Chart created but image upload failed",
+                                Detail = imageResult.Messages?.FirstOrDefault(),
+                                Duration = ToastTime
+                            });
+                        }
+                    }
+                    
+                    NavigationManager.NavigateTo($"/charts/edit/{result.Data.Id}");
+                }
+                else
+                {
+                    NotificationService.Notify(NotificationMessageForResult(result, "Failed to create chart", ToastTime));
+                }
+            }
+        }
+        finally
+        {
+            MainLayoutProxyService.ToggleSpinnerVisible();
+        }
+    }
+
+    async Task PreviewCsvAsync()
+    {
+        _previewItems.Clear();
+        _csvErrors.Clear();
+        _hasValidPreview = false;
+
+        if (string.IsNullOrWhiteSpace(_csvInput))
+        {
+            _csvErrors.Add(new ChartCsvError(0, "CSV input is empty"));
+            return;
+        }
+
+        var result = await ChartService.ParseCsvAsync(_csvInput);
+        if (result.Data != null)
+        {
+            _previewItems = result.Data.Items;
+            _csvErrors = result.Data.Errors;
+            _hasValidPreview = _previewItems.Count > 0 && _csvErrors.Count == 0;
+        }
+    }
+
+    async Task ImportAndSaveCsvAsync()
+    {
+        if (!_hasValidPreview || _previewItems.Count == 0)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Warning,
+                Summary = "Please preview the CSV first",
+                Duration = ToastTime
+            });
+            return;
+        }
+
+        MainLayoutProxyService.ToggleSpinnerVisible();
+        try
+        {
+            var result = await ChartService.SaveItemsAsync(_chartId, _previewItems, doAutoLink: true);
+            NotificationService.Notify(NotificationMessageForResult(result, "Imported chart items", ToastTime));
+            if (result.IsSuccess)
+            {
+                _csvInput = "";
+                _previewItems.Clear();
+                _hasValidPreview = false;
+                await LoadChartAsync();
+            }
+        }
+        finally
+        {
+            MainLayoutProxyService.ToggleSpinnerVisible();
+        }
+    }
+
+    async Task RelinkAllAsync()
+    {
+        MainLayoutProxyService.ToggleSpinnerVisible();
+        try
+        {
+            var overwrite = await DialogService.Confirm(
+                "Do you want to overwrite manually resolved links?",
+                "Re-link Options",
+                new ConfirmOptions { OkButtonText = "Yes, overwrite", CancelButtonText = "No, keep manual links" });
+
+            var result = await ChartService.LinkItemsAsync(_chartId, overwrite ?? false);
+            _linkingResult = result.Data;
+            NotificationService.Notify(NotificationMessageForResult(result, "Re-linked items", ToastTime));
+            await LoadChartAsync();
+        }
+        finally
+        {
+            MainLayoutProxyService.ToggleSpinnerVisible();
+        }
+    }
+
+    async Task OpenResolveDialogAsync(ChartItem item)
+    {
+        var dialogResult = await DialogService.OpenAsync<ChartItemResolveDialog>(
+            $"Resolve: {item.ArtistName} - {item.AlbumTitle}",
+            new Dictionary<string, object>
+            {
+                { "ChartItem", item },
+                { "ChartService", ChartService }
+            },
+            new DialogOptions
+            {
+                Width = "700px",
+                Height = "600px",
+                Resizable = true,
+                Draggable = true
+            });
+
+        if (dialogResult == true)
+        {
+            await LoadChartAsync();
+        }
+    }
+
+    async Task IgnoreItemAsync(ChartItem item)
+    {
+        var confirm = await DialogService.Confirm(
+            $"Mark '{item.ArtistName} - {item.AlbumTitle}' as ignored?",
+            "Confirm Ignore",
+            new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" });
+
+        if (confirm ?? false)
+        {
+            var result = await ChartService.IgnoreItemAsync(item.Id);
+            NotificationService.Notify(NotificationMessageForResult(result, "Marked as ignored", ToastTime));
+            if (result.IsSuccess)
+            {
+                await LoadChartAsync();
+            }
+        }
+    }
+
+    void ShowTooltip(ElementReference elementReference, string message)
+    {
+        TooltipService.Open(elementReference, message);
+    }
+
+    async Task OnImageFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file == null) return;
+
+        var allowedContentTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
+        if (!allowedContentTypes.Contains(file.ContentType.ToLowerInvariant()))
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Warning,
+                Summary = "Invalid image type. Allowed: JPEG, PNG, GIF, WebP.",
+                Duration = ToastTime
+            });
+            return;
+        }
+
+        const long maxFileSize = 10 * 1024 * 1024; // 10MB
+        if (file.Size > maxFileSize)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Warning,
+                Summary = "Image file size must be less than 10MB.",
+                Duration = ToastTime
+            });
+            return;
+        }
+
+        using var ms = new MemoryStream();
+        await file.OpenReadStream(maxFileSize).CopyToAsync(ms);
+        _selectedImageBytes = ms.ToArray();
+    }
+
+    void CancelImageSelection()
+    {
+        _selectedImageBytes = null;
+    }
+
+    async Task UploadImageAsync()
+    {
+        if (_selectedImageBytes == null || _chartApiKey == Guid.Empty) return;
+
+        MainLayoutProxyService.ToggleSpinnerVisible();
+        try
+        {
+            var result = await ChartService.UploadChartImageAsync(_chartApiKey, _selectedImageBytes);
+            NotificationService.Notify(NotificationMessageForResult(result, "Uploaded image", ToastTime));
+            if (result.IsSuccess)
+            {
+                _selectedImageBytes = null;
+                _hasImage = true;
+                _imageVersion = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            }
+        }
+        finally
+        {
+            MainLayoutProxyService.ToggleSpinnerVisible();
+        }
+    }
+
+    async Task DeleteImageAsync()
+    {
+        var confirm = await DialogService.Confirm(
+            "Are you sure you want to delete the chart image?",
+            "Confirm Delete",
+            new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" });
+
+        if (confirm ?? false)
+        {
+            MainLayoutProxyService.ToggleSpinnerVisible();
+            try
+            {
+                var result = await ChartService.DeleteChartImageAsync(_chartApiKey);
+                NotificationService.Notify(NotificationMessageForResult(result, "Deleted image", ToastTime));
+                if (result.IsSuccess)
+                {
+                    _hasImage = false;
+                    _imageVersion = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                }
+            }
+            finally
+            {
+                MainLayoutProxyService.ToggleSpinnerVisible();
+            }
+        }
+    }
+
+    async Task OnCreateImageFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file == null) return;
+
+        var allowedContentTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
+        if (!allowedContentTypes.Contains(file.ContentType.ToLowerInvariant()))
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Warning,
+                Summary = "Invalid image type. Allowed: JPEG, PNG, GIF, WebP.",
+                Duration = ToastTime
+            });
+            return;
+        }
+
+        const long maxFileSize = 10 * 1024 * 1024; // 10MB
+        if (file.Size > maxFileSize)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Warning,
+                Summary = "Image file size must be less than 10MB.",
+                Duration = ToastTime
+            });
+            return;
+        }
+
+        using var ms = new MemoryStream();
+        await file.OpenReadStream(maxFileSize).CopyToAsync(ms);
+        _createImageBytes = ms.ToArray();
+    }
+
+    void CancelCreateImageSelection()
+    {
+        _createImageBytes = null;
+    }
+}

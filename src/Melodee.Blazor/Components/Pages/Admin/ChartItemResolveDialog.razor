@@ -1,0 +1,167 @@
+@using Melodee.Common.Data.Models
+@using Melodee.Common.Enums
+
+@inject NotificationService NotificationService
+
+<RadzenStack Gap="1rem" Style="height: 100%;">
+    <RadzenCard>
+        <RadzenText TextStyle="TextStyle.Subtitle1">Current Entry</RadzenText>
+        <RadzenStack Gap="0.5rem" class="rz-mt-2">
+            <RadzenRow>
+                <RadzenColumn Size="3"><RadzenText class="rz-text-secondary-color">Rank:</RadzenText></RadzenColumn>
+                <RadzenColumn><RadzenText>@ChartItem.Rank</RadzenText></RadzenColumn>
+            </RadzenRow>
+            <RadzenRow>
+                <RadzenColumn Size="3"><RadzenText class="rz-text-secondary-color">Artist:</RadzenText></RadzenColumn>
+                <RadzenColumn><RadzenText>@ChartItem.ArtistName</RadzenText></RadzenColumn>
+            </RadzenRow>
+            <RadzenRow>
+                <RadzenColumn Size="3"><RadzenText class="rz-text-secondary-color">Album:</RadzenText></RadzenColumn>
+                <RadzenColumn><RadzenText>@ChartItem.AlbumTitle</RadzenText></RadzenColumn>
+            </RadzenRow>
+            <RadzenRow>
+                <RadzenColumn Size="3"><RadzenText class="rz-text-secondary-color">Year:</RadzenText></RadzenColumn>
+                <RadzenColumn><RadzenText>@(ChartItem.ReleaseYear?.ToString() ?? "—")</RadzenText></RadzenColumn>
+            </RadzenRow>
+            <RadzenRow>
+                <RadzenColumn Size="3"><RadzenText class="rz-text-secondary-color">Status:</RadzenText></RadzenColumn>
+                <RadzenColumn>
+                    @switch (ChartItem.LinkStatusValue)
+                    {
+                        case ChartItemLinkStatus.Linked:
+                            <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="Linked"/>
+                            break;
+                        case ChartItemLinkStatus.Ambiguous:
+                            <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="Ambiguous"/>
+                            break;
+                        case ChartItemLinkStatus.Ignored:
+                            <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="Ignored"/>
+                            break;
+                        default:
+                            <RadzenBadge BadgeStyle="BadgeStyle.Danger" Text="Unlinked"/>
+                            break;
+                    }
+                </RadzenColumn>
+            </RadzenRow>
+            @if (ChartItem.LinkedAlbum != null)
+            {
+                <RadzenRow>
+                    <RadzenColumn Size="3"><RadzenText class="rz-text-secondary-color">Current Link:</RadzenText></RadzenColumn>
+                    <RadzenColumn><RadzenText>@ChartItem.LinkedArtist?.Name - @ChartItem.LinkedAlbum.Name</RadzenText></RadzenColumn>
+                </RadzenRow>
+            }
+            @if (!string.IsNullOrEmpty(ChartItem.LinkNotes))
+            {
+                <RadzenRow>
+                    <RadzenColumn Size="3"><RadzenText class="rz-text-secondary-color">Notes:</RadzenText></RadzenColumn>
+                    <RadzenColumn><RadzenText>@ChartItem.LinkNotes</RadzenText></RadzenColumn>
+                </RadzenRow>
+            }
+        </RadzenStack>
+    </RadzenCard>
+
+    <RadzenCard Style="flex: 1; overflow: hidden; display: flex; flex-direction: column;">
+        <RadzenText TextStyle="TextStyle.Subtitle1">Search & Select Album</RadzenText>
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" class="rz-mt-2">
+            <RadzenTextBox @bind-Value="@_searchQuery" Placeholder="Search by artist or album name..." Style="flex: 1;"/>
+            <RadzenButton Text="Search" Icon="search" Click="@SearchAlbumsAsync" ButtonStyle="ButtonStyle.Primary"/>
+        </RadzenStack>
+
+        <RadzenDataGrid
+            Data="@_searchResults"
+            TItem="ChartAlbumSearchResult"
+            AllowPaging="true"
+            PageSize="10"
+            Density="Density.Compact"
+            SelectionMode="DataGridSelectionMode.Single"
+            @bind-Value="@_selectedAlbums"
+            Style="flex: 1; overflow: auto; margin-top: 1rem;">
+            <Columns>
+                <RadzenDataGridColumn Title="Artist" Width="200px">
+                    <Template Context="album">@album.ArtistName</Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Title="Album">
+                    <Template Context="album">@album.AlbumName</Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Title="Year" Width="80px">
+                    <Template Context="album">@album.ReleaseYear</Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    </RadzenCard>
+
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+        <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@CancelClick"/>
+        <RadzenButton Text="Link Selected Album" Icon="link" ButtonStyle="ButtonStyle.Primary" Disabled="@(!_selectedAlbums.Any())" Click="@LinkSelectedAlbumAsync"/>
+    </RadzenStack>
+</RadzenStack>
+
+@code {
+    [Parameter] public required ChartItem ChartItem { get; set; }
+    [Parameter] public required ChartService ChartService { get; set; }
+
+    [CascadingParameter] public required DialogService DialogService { get; set; }
+
+    string _searchQuery = "";
+    List<ChartAlbumSearchResult> _searchResults = [];
+    IList<ChartAlbumSearchResult> _selectedAlbums = [];
+
+    protected override void OnInitialized()
+    {
+        _searchQuery = $"{ChartItem.ArtistName} {ChartItem.AlbumTitle}";
+    }
+
+    async Task SearchAlbumsAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_searchQuery))
+        {
+            return;
+        }
+
+        _searchResults.Clear();
+        _selectedAlbums = [];
+
+        var result = await ChartService.SearchAlbumsAsync(_searchQuery, limit: 50);
+        if (result.IsSuccess && result.Data != null)
+        {
+            _searchResults = result.Data.ToList();
+        }
+    }
+
+    async Task LinkSelectedAlbumAsync()
+    {
+        if (!_selectedAlbums.Any())
+        {
+            return;
+        }
+
+        var selected = _selectedAlbums.First();
+        var result = await ChartService.ResolveItemAsync(ChartItem.Id, selected.AlbumId);
+
+        if (result.IsSuccess)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = $"Linked to: {selected.ArtistName} - {selected.AlbumName}",
+                Duration = 3000
+            });
+            DialogService.Close(true);
+        }
+        else
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Failed to link album",
+                Detail = result.Messages?.FirstOrDefault(),
+                Duration = 5000
+            });
+        }
+    }
+
+    void CancelClick()
+    {
+        DialogService.Close(false);
+    }
+}

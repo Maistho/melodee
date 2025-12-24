@@ -1,0 +1,287 @@
+@inherits MelodeeComponentBase
+@using System.Text.Json
+@using Melodee.Common.Enums
+
+@inject ChartService ChartService
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+@inject IJSRuntime JS
+
+<RadzenStack Gap="1rem">
+    <RadzenAlert AlertStyle="AlertStyle.Info" Shade="Shade.Lighter" AllowClose="false">
+        <RadzenText TextStyle="TextStyle.Subtitle2">JSON Import Schema:</RadzenText>
+        <RadzenText TextStyle="TextStyle.Body2">
+            <pre style="font-size: 0.75rem; margin: 0.5rem 0;">
+{
+  "title": "Best Albums of 2024",      // Required
+  "sourceName": "Rolling Stone",       // Optional
+  "sourceUrl": "https://...",          // Optional
+  "year": 2024,                        // Optional
+  "description": "Annual list...",     // Optional
+  "tags": ["rock", "2024"],            // Optional
+  "isVisible": true,                   // Optional (default: false)
+  "isGeneratedPlaylistEnabled": true,  // Optional (default: false)
+  "items": [                           // Required, at least 1 item
+    {
+      "rank": 1,                       // Required, unique per chart
+      "artistName": "Artist Name",     // Required
+      "albumTitle": "Album Title",     // Required
+      "releaseYear": 2024              // Optional
+    }
+  ]
+}
+            </pre>
+        </RadzenText>
+    </RadzenAlert>
+
+    <RadzenFormField Text="JSON Content" Variant="Variant.Outlined" Style="width: 100%;">
+        <RadzenTextArea @bind-Value="@_jsonContent" Rows="12" Style="width: 100%; font-family: monospace;" Placeholder="Paste JSON here or upload a file..."/>
+    </RadzenFormField>
+
+    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+        <InputFile OnChange="@OnFileSelected" accept=".json" style="display: none;" id="jsonFileInput"/>
+        <RadzenButton Text="Upload File" Icon="upload_file" ButtonStyle="ButtonStyle.Secondary" Click="@TriggerFileInput"/>
+        <RadzenText TextStyle="TextStyle.Caption" Style="align-self: center;">@_fileName</RadzenText>
+    </RadzenStack>
+
+    @if (_validationErrors.Any())
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Shade="Shade.Lighter" AllowClose="false">
+            <RadzenText TextStyle="TextStyle.Subtitle2">Validation Errors:</RadzenText>
+            <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                @foreach (var error in _validationErrors)
+                {
+                    <li><RadzenText TextStyle="TextStyle.Body2">@error</RadzenText></li>
+                }
+            </ul>
+        </RadzenAlert>
+    }
+
+    @if (_previewChart != null)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Success" Shade="Shade.Lighter" AllowClose="false">
+            <RadzenText TextStyle="TextStyle.Subtitle2">Preview:</RadzenText>
+            <RadzenText TextStyle="TextStyle.Body2">
+                <strong>Title:</strong> @_previewChart.Title<br/>
+                <strong>Source:</strong> @(_previewChart.SourceName ?? "N/A")<br/>
+                <strong>Year:</strong> @(_previewChart.Year?.ToString() ?? "N/A")<br/>
+                <strong>Items:</strong> @_previewChart.Items.Count
+            </RadzenText>
+        </RadzenAlert>
+    }
+
+    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End">
+        <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@Cancel"/>
+        <RadzenButton Text="Validate" Icon="check_circle" ButtonStyle="ButtonStyle.Secondary" Click="@ValidateJson" Disabled="@string.IsNullOrWhiteSpace(_jsonContent)"/>
+        <RadzenButton Text="Import" Icon="download" ButtonStyle="ButtonStyle.Primary" Click="@ImportChart" Disabled="@(_previewChart == null)"/>
+    </RadzenStack>
+</RadzenStack>
+
+@code {
+    string _jsonContent = string.Empty;
+    string _fileName = string.Empty;
+    List<string> _validationErrors = [];
+    ChartImportModel? _previewChart;
+
+    async Task TriggerFileInput()
+    {
+        await JS.InvokeVoidAsync("eval", "document.getElementById('jsonFileInput').click()");
+    }
+
+    async Task OnFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file != null)
+        {
+            _fileName = file.Name;
+            using var stream = file.OpenReadStream(maxAllowedSize: 1024 * 1024);
+            using var reader = new StreamReader(stream);
+            _jsonContent = await reader.ReadToEndAsync();
+            _validationErrors.Clear();
+            _previewChart = null;
+        }
+    }
+
+    void ValidateJson()
+    {
+        _validationErrors.Clear();
+        _previewChart = null;
+
+        if (string.IsNullOrWhiteSpace(_jsonContent))
+        {
+            _validationErrors.Add("JSON content is required.");
+            return;
+        }
+
+        try
+        {
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var model = JsonSerializer.Deserialize<ChartImportModel>(_jsonContent, options);
+
+            if (model == null)
+            {
+                _validationErrors.Add("Failed to parse JSON.");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(model.Title))
+            {
+                _validationErrors.Add("'title' is required.");
+            }
+
+            if (model.Items == null || model.Items.Count == 0)
+            {
+                _validationErrors.Add("'items' array is required and must contain at least one item.");
+            }
+            else
+            {
+                var ranks = new HashSet<int>();
+                for (var i = 0; i < model.Items.Count; i++)
+                {
+                    var item = model.Items[i];
+                    if (item.Rank <= 0)
+                    {
+                        _validationErrors.Add($"Item {i + 1}: 'rank' must be a positive integer.");
+                    }
+                    else if (!ranks.Add(item.Rank))
+                    {
+                        _validationErrors.Add($"Item {i + 1}: duplicate rank {item.Rank}.");
+                    }
+
+                    if (string.IsNullOrWhiteSpace(item.ArtistName))
+                    {
+                        _validationErrors.Add($"Item {i + 1}: 'artistName' is required.");
+                    }
+
+                    if (string.IsNullOrWhiteSpace(item.AlbumTitle))
+                    {
+                        _validationErrors.Add($"Item {i + 1}: 'albumTitle' is required.");
+                    }
+                }
+            }
+
+            if (!_validationErrors.Any())
+            {
+                _previewChart = model;
+            }
+        }
+        catch (JsonException ex)
+        {
+            _validationErrors.Add($"Invalid JSON: {ex.Message}");
+        }
+    }
+
+    async Task ImportChart()
+    {
+        if (_previewChart == null) return;
+
+        try
+        {
+            var createResult = await ChartService.CreateAsync(
+                _previewChart.Title,
+                _previewChart.SourceName,
+                _previewChart.SourceUrl,
+                _previewChart.Year,
+                _previewChart.Description,
+                _previewChart.Tags?.ToArray());
+
+            if (!createResult.IsSuccess)
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Import Failed",
+                    Detail = createResult.Messages?.FirstOrDefault() ?? "Unknown error",
+                    Duration = 5000
+                });
+                return;
+            }
+
+            var chartId = createResult.Data!.Id;
+
+            if (_previewChart.IsVisible || _previewChart.IsGeneratedPlaylistEnabled)
+            {
+                await ChartService.UpdateAsync(chartId, _previewChart.Title, _previewChart.SourceName,
+                    _previewChart.SourceUrl, _previewChart.Year, _previewChart.Description,
+                    _previewChart.Tags?.ToArray(), _previewChart.IsVisible, _previewChart.IsGeneratedPlaylistEnabled);
+            }
+
+            var csvLines = _previewChart.Items
+                .OrderBy(i => i.Rank)
+                .Select(i => $"{i.Rank},{EscapeCsv(i.ArtistName)},{EscapeCsv(i.AlbumTitle)},{i.ReleaseYear?.ToString() ?? ""}");
+            var csv = string.Join("\n", csvLines);
+
+            var parseResult = await ChartService.ParseCsvAsync(csv);
+            if (!parseResult.IsSuccess)
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Warning,
+                    Summary = "Chart created but items failed to parse",
+                    Detail = parseResult.Messages?.FirstOrDefault() ?? "Unknown error",
+                    Duration = 5000
+                });
+                DialogService.Close(true);
+                return;
+            }
+
+            await ChartService.SaveItemsAsync(chartId, parseResult.Data!.Items, doAutoLink: true);
+
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = "Chart Imported",
+                Detail = $"Created '{_previewChart.Title}' with {_previewChart.Items.Count} items.",
+                Duration = 5000
+            });
+
+            DialogService.Close(true);
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Import Failed",
+                Detail = ex.Message,
+                Duration = 5000
+            });
+        }
+    }
+
+    static string EscapeCsv(string value)
+    {
+        if (string.IsNullOrEmpty(value)) return value;
+        if (value.Contains(',') || value.Contains('"') || value.Contains('\n'))
+        {
+            return $"\"{value.Replace("\"", "\"\"")}\"";
+        }
+        return value;
+    }
+
+    void Cancel()
+    {
+        DialogService.Close(false);
+    }
+
+    sealed class ChartImportModel
+    {
+        public string Title { get; set; } = string.Empty;
+        public string? SourceName { get; set; }
+        public string? SourceUrl { get; set; }
+        public int? Year { get; set; }
+        public string? Description { get; set; }
+        public List<string>? Tags { get; set; }
+        public bool IsVisible { get; set; }
+        public bool IsGeneratedPlaylistEnabled { get; set; }
+        public List<ChartItemImportModel> Items { get; set; } = [];
+    }
+
+    sealed class ChartItemImportModel
+    {
+        public int Rank { get; set; }
+        public string ArtistName { get; set; } = string.Empty;
+        public string AlbumTitle { get; set; } = string.Empty;
+        public int? ReleaseYear { get; set; }
+    }
+}

@@ -1,0 +1,170 @@
+@page "/data/libraryedit/{ApiKey:guid}"
+@inherits MelodeeComponentBase
+@using Melodee.Common.Enums
+@using Library = Melodee.Common.Data.Models.Library
+
+@inject LibraryService LibraryService
+@inject NotificationService NotificationService
+@inject NavigationManager NavigationManager
+
+@attribute [Authorize(Roles = "Administrator")]
+
+<PageTitle>@(IsNew ? "Add Library" : "Edit Library")</PageTitle>
+
+<RadzenBreadCrumb Class="rz-pb-5">
+    <RadzenBreadCrumbItem Path="/" Text="Dashboard"/>
+    <RadzenBreadCrumbItem Path="/data/libraries" Text="Libraries"/>
+    <RadzenBreadCrumbItem Icon="@(IsNew ? "add" : "edit")" Text="@(IsNew ? "Adding" : "Editing")"/>
+</RadzenBreadCrumb>
+
+<RadzenTemplateForm TItem="Library" Data="@_library" Submit="@OnSubmit">
+    <RadzenFieldset Text="@(IsNew ? "New Library" : $"Edit {_library.Name}")">
+        <RadzenStack Gap="1rem">
+            <RadzenRow>
+                <RadzenColumn Size="12">
+                    <RadzenFormField Text="Name" Variant="Variant.Outlined" Style="width:100%">
+                        <RadzenTextBox @bind-Value="_library.Name" Placeholder="Library name" Style="width:100%"/>
+                    </RadzenFormField>
+                </RadzenColumn>
+            </RadzenRow>
+
+            <RadzenRow>
+                <RadzenColumn Size="12">
+                    <RadzenFormField Text="Path" Variant="Variant.Outlined" Style="width:100%">
+                        <RadzenTextBox @bind-Value="_library.Path" Placeholder="Filesystem path" Style="width:100%"/>
+                    </RadzenFormField>
+                </RadzenColumn>
+            </RadzenRow>
+
+            <RadzenRow>
+                <RadzenColumn Size="12">
+                    <RadzenFormField Text="Type" Variant="Variant.Outlined" Style="width:100%">
+                        <RadzenDropDown @bind-Value="_library.Type" Data="@_libraryTypes" TextProperty="Text" ValueProperty="Value" Style="width:100%"/>
+                    </RadzenFormField>
+                </RadzenColumn>
+            </RadzenRow>
+
+            <RadzenRow>
+                <RadzenColumn Size="12">
+                    <RadzenFormField Text="Description" Variant="Variant.Outlined" Style="width:100%">
+                        <RadzenTextArea @bind-Value="_library.Description" Rows="3" Placeholder="Optional description" Style="width:100%"/>
+                    </RadzenFormField>
+                </RadzenColumn>
+            </RadzenRow>
+
+            <RadzenRow>
+                <RadzenColumn Size="12">
+                    <RadzenFormField Text="Notes" Variant="Variant.Outlined" Style="width:100%">
+                        <RadzenTextArea @bind-Value="_library.Notes" Rows="3" Placeholder="Optional notes" Style="width:100%"/>
+                    </RadzenFormField>
+                </RadzenColumn>
+            </RadzenRow>
+
+            <RadzenRow>
+                <RadzenColumn Size="12">
+                    <RadzenFormField Text="Tags" Variant="Variant.Outlined" Style="width:100%">
+                        <RadzenTextBox @bind-Value="_library.Tags" Placeholder="Comma-separated tags" Style="width:100%"/>
+                    </RadzenFormField>
+                </RadzenColumn>
+            </RadzenRow>
+
+            <RadzenRow>
+                <RadzenColumn Size="6">
+                    <RadzenFormField Text="Sort Order" Variant="Variant.Outlined" Style="width:100%">
+                        <RadzenNumeric @bind-Value="_library.SortOrder" Style="width:100%"/>
+                    </RadzenFormField>
+                </RadzenColumn>
+                <RadzenColumn Size="6">
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Style="height:100%">
+                        <RadzenSwitch @bind-Value="_library.IsLocked" Name="IsLocked"/>
+                        <RadzenLabel Text="Locked" Component="IsLocked"/>
+                    </RadzenStack>
+                </RadzenColumn>
+            </RadzenRow>
+
+            <RadzenRow>
+                <RadzenColumn Size="12">
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End">
+                        <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Secondary" Click="@(() => NavigationManager.NavigateTo("/data/libraries"))"/>
+                        <RadzenButton Icon="save" Text="Save" ButtonType="ButtonType.Submit"/>
+                    </RadzenStack>
+                </RadzenColumn>
+            </RadzenRow>
+        </RadzenStack>
+    </RadzenFieldset>
+</RadzenTemplateForm>
+
+@code {
+    [Parameter] public Guid ApiKey { get; set; }
+    bool IsNew => ApiKey == Guid.Empty;
+
+    Library _library = new()
+    {
+        Name = string.Empty,
+        Path = string.Empty,
+        Type = (int)LibraryType.Storage,
+        CreatedAt = default
+    };
+
+    List<LibraryTypeOption> _libraryTypes = [];
+
+    class LibraryTypeOption
+    {
+        public int Value { get; init; }
+        public string Text { get; init; } = string.Empty;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        _libraryTypes = Enum.GetValues<LibraryType>()
+            .Where(t => t != LibraryType.NotSet)
+            .Select(t => new LibraryTypeOption { Value = (int)t, Text = t.ToString() })
+            .ToList();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!IsNew)
+        {
+            var result = await LibraryService.GetByApiKeyAsync(ApiKey);
+            if (result.Data != null)
+            {
+                _library = result.Data;
+            }
+        }
+    }
+
+    private async Task OnSubmit(Library _)
+    {
+        if (IsNew)
+        {
+            var result = await LibraryService.CreateAsync(_library);
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = result.IsSuccess ? NotificationSeverity.Success : NotificationSeverity.Error,
+                Summary = result.IsSuccess ? "Created" : "Error",
+                Detail = result.IsSuccess ? "Library created" : string.Join(";", result.Messages ?? [])
+            });
+            if (result.IsSuccess)
+            {
+                NavigationManager.NavigateTo("/data/libraries", true);
+            }
+        }
+        else
+        {
+            var result = await LibraryService.UpdateAsync(_library);
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = result.IsSuccess ? NotificationSeverity.Success : NotificationSeverity.Error,
+                Summary = result.IsSuccess ? "Saved" : "Error",
+                Detail = result.IsSuccess ? "Library saved" : string.Join(";", result.Messages ?? [])
+            });
+            if (result.IsSuccess)
+            {
+                NavigationManager.NavigateTo("/data/libraries", true);
+            }
+        }
+    }
+}
