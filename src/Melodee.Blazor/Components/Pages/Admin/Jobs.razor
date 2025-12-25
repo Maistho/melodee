@@ -2,12 +2,17 @@
 @inherits MelodeeComponentBase
 @using System.Globalization
 @using Melodee.Blazor.ViewModels
+@using Melodee.Common.Data
+@using Microsoft.EntityFrameworkCore
+@using NodaTime
 @using Quartz
 @using Quartz.Impl.Matchers
 @using Quartz.Impl.Triggers
+@using Serilog
 @inject ISchedulerFactory SchedulerFactory
 @inject IConfiguration AppSettingsConfiguration
 @inject NotificationService NotificationService
+@inject IDbContextFactory<MelodeeDbContext> DbContextFactory
 
 @attribute [Authorize(Roles = "Administrator")]
 
@@ -47,19 +52,19 @@
     {
         @* Scheduler Status Overview *@
         <RadzenRow Gap="1rem">
-            <RadzenColumn Size="6" SizeMD="3">
+            <RadzenColumn Size="6" SizeMD="2">
                 <RadzenCard Style="height: 100%;">
                     <RadzenStack Gap="0.25rem" AlignItems="AlignItems.Center">
                         <RadzenIcon Icon="@(_schedulerStarted ? "check_circle" : "pause_circle")" 
                                     Style="@($"font-size: 2rem; color: var(--rz-{(_schedulerStarted ? "success" : "warning")});")"/>
-                        <RadzenText TextStyle="TextStyle.Overline">Scheduler Status</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Overline">Scheduler</RadzenText>
                         <RadzenText TextStyle="TextStyle.H6" Style="@($"color: var(--rz-{(_schedulerStarted ? "success" : "warning")});")">
                             @(_schedulerStarted ? "Running" : "Paused")
                         </RadzenText>
                     </RadzenStack>
                 </RadzenCard>
             </RadzenColumn>
-            <RadzenColumn Size="6" SizeMD="3">
+            <RadzenColumn Size="6" SizeMD="2">
                 <RadzenCard Style="height: 100%;">
                     <RadzenStack Gap="0.25rem" AlignItems="AlignItems.Center">
                         <RadzenIcon Icon="list_alt" Style="font-size: 2rem; color: var(--rz-primary);"/>
@@ -68,21 +73,39 @@
                     </RadzenStack>
                 </RadzenCard>
             </RadzenColumn>
-            <RadzenColumn Size="6" SizeMD="3">
+            <RadzenColumn Size="6" SizeMD="2">
                 <RadzenCard Style="height: 100%;">
                     <RadzenStack Gap="0.25rem" AlignItems="AlignItems.Center">
                         <RadzenIcon Icon="play_circle" Style="font-size: 2rem; color: var(--rz-info);"/>
-                        <RadzenText TextStyle="TextStyle.Overline">Currently Running</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Overline">Running</RadzenText>
                         <RadzenText TextStyle="TextStyle.H6">@_currentlyExecutingCount</RadzenText>
                     </RadzenStack>
                 </RadzenCard>
             </RadzenColumn>
-            <RadzenColumn Size="6" SizeMD="3">
+            <RadzenColumn Size="6" SizeMD="2">
                 <RadzenCard Style="height: 100%;">
                     <RadzenStack Gap="0.25rem" AlignItems="AlignItems.Center">
                         <RadzenIcon Icon="pause_circle" Style="font-size: 2rem; color: var(--rz-warning);"/>
-                        <RadzenText TextStyle="TextStyle.Overline">Paused Jobs</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Overline">Paused</RadzenText>
                         <RadzenText TextStyle="TextStyle.H6">@_pausedJobsCount</RadzenText>
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+            <RadzenColumn Size="6" SizeMD="2">
+                <RadzenCard Style="height: 100%;">
+                    <RadzenStack Gap="0.25rem" AlignItems="AlignItems.Center">
+                        <RadzenIcon Icon="history" Style="font-size: 2rem; color: var(--rz-secondary);"/>
+                        <RadzenText TextStyle="TextStyle.Overline">History Records</RadzenText>
+                        <RadzenText TextStyle="TextStyle.H6">@_totalHistoryRecords.ToString("N0")</RadzenText>
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+            <RadzenColumn Size="6" SizeMD="2">
+                <RadzenCard Style="height: 100%;">
+                    <RadzenStack Gap="0.25rem" AlignItems="AlignItems.Center">
+                        <RadzenIcon Icon="error" Style="@($"font-size: 2rem; color: var(--rz-{(_totalFailures24h > 0 ? "danger" : "success")});")"/>
+                        <RadzenText TextStyle="TextStyle.Overline">Failures (24h)</RadzenText>
+                        <RadzenText TextStyle="TextStyle.H6" Style="@($"color: var(--rz-{(_totalFailures24h > 0 ? "danger" : "success")});")">@_totalFailures24h</RadzenText>
                     </RadzenStack>
                 </RadzenCard>
             </RadzenColumn>
@@ -110,7 +133,7 @@
                         <RadzenCard Variant="Variant.Flat" class="rz-background-color-base-100">
                             <RadzenRow Gap="1rem">
                                 @* Job Details *@
-                                <RadzenColumn Size="12" SizeMD="6">
+                                <RadzenColumn Size="12" SizeMD="4">
                                     <RadzenText TextStyle="TextStyle.Subtitle1" class="rz-mb-2">
                                         <RadzenIcon Icon="info" class="rz-me-1"/>
                                         Job Details
@@ -144,15 +167,59 @@
                                                 </RadzenColumn>
                                             </RadzenRow>
                                         }
+                                    </RadzenStack>
+                                </RadzenColumn>
+
+                                @* Execution Statistics *@
+                                <RadzenColumn Size="12" SizeMD="4">
+                                    <RadzenText TextStyle="TextStyle.Subtitle1" class="rz-mb-2">
+                                        <RadzenIcon Icon="analytics" class="rz-me-1"/>
+                                        Execution Statistics
+                                    </RadzenText>
+                                    <RadzenStack Gap="0.25rem">
                                         <RadzenRow>
-                                            <RadzenColumn Size="4"><RadzenText TextStyle="TextStyle.Caption">Times Triggered</RadzenText></RadzenColumn>
-                                            <RadzenColumn Size="8"><RadzenText>@job.TimesTriggered.ToString("N0")</RadzenText></RadzenColumn>
+                                            <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">Total Runs</RadzenText></RadzenColumn>
+                                            <RadzenColumn Size="6"><RadzenText>@job.TotalRunCount.ToString("N0")</RadzenText></RadzenColumn>
+                                        </RadzenRow>
+                                        <RadzenRow>
+                                            <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">Success Rate</RadzenText></RadzenColumn>
+                                            <RadzenColumn Size="6">
+                                                @if (job.TotalRunCount > 0)
+                                                {
+                                                    <RadzenBadge BadgeStyle="@(job.SuccessRate >= 95 ? BadgeStyle.Success : job.SuccessRate >= 80 ? BadgeStyle.Warning : BadgeStyle.Danger)" 
+                                                                 Text="@job.SuccessRateDisplay" Shade="Shade.Light"/>
+                                                }
+                                                else
+                                                {
+                                                    <RadzenText>---</RadzenText>
+                                                }
+                                            </RadzenColumn>
+                                        </RadzenRow>
+                                        <RadzenRow>
+                                            <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">Successes / Failures</RadzenText></RadzenColumn>
+                                            <RadzenColumn Size="6">
+                                                <RadzenText Style="color: var(--rz-success);">@job.SuccessCount</RadzenText>
+                                                <RadzenText> / </RadzenText>
+                                                <RadzenText Style="@(job.FailureCount > 0 ? "color: var(--rz-danger);" : "")">@job.FailureCount</RadzenText>
+                                            </RadzenColumn>
+                                        </RadzenRow>
+                                        <RadzenRow>
+                                            <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">Manual Triggers</RadzenText></RadzenColumn>
+                                            <RadzenColumn Size="6"><RadzenText>@job.ManualTriggerCount</RadzenText></RadzenColumn>
+                                        </RadzenRow>
+                                        <RadzenRow>
+                                            <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">Avg Duration</RadzenText></RadzenColumn>
+                                            <RadzenColumn Size="6"><RadzenText>@job.AverageDurationDisplay</RadzenText></RadzenColumn>
+                                        </RadzenRow>
+                                        <RadzenRow>
+                                            <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">Min / Max Duration</RadzenText></RadzenColumn>
+                                            <RadzenColumn Size="6"><RadzenText>@job.MinMaxDurationDisplay</RadzenText></RadzenColumn>
                                         </RadzenRow>
                                     </RadzenStack>
                                 </RadzenColumn>
 
                                 @* Job Configuration *@
-                                <RadzenColumn Size="12" SizeMD="6">
+                                <RadzenColumn Size="12" SizeMD="4">
                                     <RadzenText TextStyle="TextStyle.Subtitle1" class="rz-mb-2">
                                         <RadzenIcon Icon="settings" class="rz-me-1"/>
                                         Configuration
@@ -173,7 +240,7 @@
                                             </RadzenColumn>
                                         </RadzenRow>
                                         <RadzenRow>
-                                            <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">Persist Data After Execution</RadzenText></RadzenColumn>
+                                            <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">Persist Data</RadzenText></RadzenColumn>
                                             <RadzenColumn Size="6">
                                                 <RadzenBadge BadgeStyle="@(job.PersistJobDataAfterExecution ? BadgeStyle.Info : BadgeStyle.Light)" 
                                                              Text="@(job.PersistJobDataAfterExecution ? "Yes" : "No")" Shade="Shade.Light"/>
@@ -188,6 +255,19 @@
                                         </RadzenRow>
                                     </RadzenStack>
                                 </RadzenColumn>
+
+                                @* Last Error *@
+                                @if (!string.IsNullOrEmpty(job.LastErrorMessage))
+                                {
+                                    <RadzenColumn Size="12">
+                                        <RadzenAlert AlertStyle="AlertStyle.Danger" Shade="Shade.Lighter" AllowClose="false" Size="AlertSize.Small">
+                                            <RadzenText TextStyle="TextStyle.Caption">
+                                                <strong>Last Error</strong> (@(job.LastFailureTime?.LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss") ?? "Unknown time"))
+                                            </RadzenText>
+                                            <RadzenText TextStyle="TextStyle.Body2">@job.LastErrorMessage</RadzenText>
+                                        </RadzenAlert>
+                                    </RadzenColumn>
+                                }
 
                                 @* Job Data Map *@
                                 @if (job.JobData != null && job.JobData.Count > 0)
@@ -214,7 +294,7 @@
                         </RadzenCard>
                     </Template>
                     <Columns>
-                        <RadzenDataGridColumn TItem="JobStatusDetail" Property="JobName" Title="Job Name" Width="220px">
+                        <RadzenDataGridColumn TItem="JobStatusDetail" Property="JobName" Title="Job Name" Width="200px">
                             <Template Context="job">
                                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
                                     @if (job.IsCurrentlyExecuting)
@@ -225,27 +305,45 @@
                                 </RadzenStack>
                             </Template>
                         </RadzenDataGridColumn>
-                        <RadzenDataGridColumn TItem="JobStatusDetail" Property="TriggerState" Title="Status" Width="100px">
+                        <RadzenDataGridColumn TItem="JobStatusDetail" Property="TriggerState" Title="Status" Width="90px">
                             <Template Context="job">
                                 <RadzenBadge BadgeStyle="@GetBadgeStyle(job.TriggerState)" Text="@job.TriggerState" Shade="Shade.Light"/>
                             </Template>
                         </RadzenDataGridColumn>
-                        <RadzenDataGridColumn TItem="JobStatusDetail" Property="PreviousFireTimeUtc" Title="Last Run" Width="160px">
+                        <RadzenDataGridColumn TItem="JobStatusDetail" Property="TotalRunCount" Title="Runs" Width="70px">
+                            <Template Context="job">
+                                <RadzenText TextStyle="TextStyle.Caption">@job.TotalRunCount.ToString("N0")</RadzenText>
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="JobStatusDetail" Property="SuccessRate" Title="Success" Width="80px" Sortable="true">
+                            <Template Context="job">
+                                @if (job.TotalRunCount > 0)
+                                {
+                                    <RadzenBadge BadgeStyle="@(job.SuccessRate >= 95 ? BadgeStyle.Success : job.SuccessRate >= 80 ? BadgeStyle.Warning : BadgeStyle.Danger)" 
+                                                 Text="@job.SuccessRateDisplay" Shade="Shade.Light" Style="font-size: 0.75rem;"/>
+                                }
+                                else
+                                {
+                                    <RadzenText TextStyle="TextStyle.Caption">---</RadzenText>
+                                }
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="JobStatusDetail" Property="PreviousFireTimeUtc" Title="Last Run" Width="140px">
                             <Template Context="job">
                                 <RadzenText TextStyle="TextStyle.Caption">@job.PreviousFireTimeDisplay</RadzenText>
                             </Template>
                         </RadzenDataGridColumn>
-                        <RadzenDataGridColumn TItem="JobStatusDetail" Property="NextFireTimeUtc" Title="Next Run" Width="160px">
+                        <RadzenDataGridColumn TItem="JobStatusDetail" Property="NextFireTimeUtc" Title="Next Run" Width="140px">
                             <Template Context="job">
                                 <RadzenText TextStyle="TextStyle.Caption">@job.NextFireTimeDisplay</RadzenText>
                             </Template>
                         </RadzenDataGridColumn>
-                        <RadzenDataGridColumn TItem="JobStatusDetail" Property="RunTime" Title="Last Duration" Width="100px">
+                        <RadzenDataGridColumn TItem="JobStatusDetail" Property="AverageDurationMs" Title="Avg Time" Width="90px">
                             <Template Context="job">
-                                <RadzenText TextStyle="TextStyle.Caption">@job.RunTimeDisplay</RadzenText>
+                                <RadzenText TextStyle="TextStyle.Caption">@job.AverageDurationDisplay</RadzenText>
                             </Template>
                         </RadzenDataGridColumn>
-                        <RadzenDataGridColumn TItem="JobStatusDetail" Title="Actions" Width="280px" Sortable="false">
+                        <RadzenDataGridColumn TItem="JobStatusDetail" Title="Actions" Width="250px" Sortable="false">
                             <Template Context="job">
                                 <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem">
                                     <RadzenButton Icon="play_arrow" 
@@ -332,6 +430,8 @@
     private int _threadPoolSize;
     private int _currentlyExecutingCount;
     private int _pausedJobsCount;
+    private int _totalHistoryRecords;
+    private int _totalFailures24h;
 
     protected override async Task OnInitializedAsync()
     {
@@ -360,6 +460,32 @@
             var currentlyExecuting = await scheduler.GetCurrentlyExecutingJobs();
             var currentlyExecutingKeys = currentlyExecuting.Select(j => j.JobDetail.Key).ToHashSet();
             _currentlyExecutingCount = currentlyExecuting.Count;
+
+            // Get comprehensive job history stats from database
+            await using var dbContext = await DbContextFactory.CreateDbContextAsync();
+            var jobHistoryStats = await dbContext.JobHistories
+                .GroupBy(h => h.JobName)
+                .Select(g => new
+                {
+                    JobName = g.Key,
+                    TotalRunCount = g.Count(),
+                    SuccessCount = g.Count(h => h.Success),
+                    FailureCount = g.Count(h => !h.Success),
+                    ManualTriggerCount = g.Count(h => h.WasManualTrigger),
+                    AverageDurationMs = g.Where(h => h.DurationInMs.HasValue).Average(h => h.DurationInMs),
+                    MinDurationMs = g.Where(h => h.DurationInMs.HasValue).Min(h => h.DurationInMs),
+                    MaxDurationMs = g.Where(h => h.DurationInMs.HasValue).Max(h => h.DurationInMs),
+                    LastRun = g.Max(h => h.CompletedAt),
+                    LastDuration = g.OrderByDescending(h => h.CompletedAt).First().DurationInMs,
+                    LastFailure = g.Where(h => !h.Success).OrderByDescending(h => h.CompletedAt).Select(h => new { h.CompletedAt, h.ErrorMessage }).FirstOrDefault()
+                })
+                .ToDictionaryAsync(x => x.JobName);
+
+            // Get aggregate stats for summary cards
+            _totalHistoryRecords = await dbContext.JobHistories.CountAsync();
+            var twentyFourHoursAgo = SystemClock.Instance.GetCurrentInstant().Minus(Duration.FromHours(24));
+            _totalFailures24h = await dbContext.JobHistories
+                .CountAsync(h => !h.Success && h.StartedAt > twentyFourHoursAgo);
 
             var jobGroups = await scheduler.GetJobGroupNames();
             _pausedJobsCount = 0;
@@ -401,6 +527,44 @@
                         ? jobDetail.JobDataMap.ToDictionary(k => k.Key, k => k.Value) 
                         : null;
 
+                    // Get stats from JobHistory
+                    DateTimeOffset? previousFireTime = null;
+                    TimeSpan? lastRunDuration = null;
+                    int totalRunCount = 0, successCount = 0, failureCount = 0, manualTriggerCount = 0;
+                    double? avgDuration = null, minDuration = null, maxDuration = null;
+                    string? lastErrorMessage = null;
+                    DateTimeOffset? lastFailureTime = null;
+
+                    if (jobHistoryStats.TryGetValue(jobKey.Name, out var stats))
+                    {
+                        if (stats.LastRun.HasValue)
+                        {
+                            previousFireTime = stats.LastRun.Value.ToDateTimeOffset();
+                        }
+                        lastRunDuration = stats.LastDuration.HasValue ? TimeSpan.FromMilliseconds(stats.LastDuration.Value) : null;
+                        totalRunCount = stats.TotalRunCount;
+                        successCount = stats.SuccessCount;
+                        failureCount = stats.FailureCount;
+                        manualTriggerCount = stats.ManualTriggerCount;
+                        avgDuration = stats.AverageDurationMs;
+                        minDuration = stats.MinDurationMs;
+                        maxDuration = stats.MaxDurationMs;
+                        if (stats.LastFailure != null)
+                        {
+                            lastErrorMessage = stats.LastFailure.ErrorMessage;
+                            lastFailureTime = stats.LastFailure.CompletedAt?.ToDateTimeOffset();
+                        }
+                    }
+                    else
+                    {
+                        // Fall back to trigger data for jobs without history (like NowPlayingCleanup)
+                        previousFireTime = triggers
+                            .Select(t => t.GetPreviousFireTimeUtc())
+                            .Where(t => t.HasValue)
+                            .OrderByDescending(t => t!.Value)
+                            .FirstOrDefault();
+                    }
+
                     _jobs.Add(new JobStatusDetail
                     {
                         JobName = jobKey.Name,
@@ -412,17 +576,26 @@
                         CronExpression = cronExpression,
                         CronDescription = cronDescription,
                         NextFireTimeUtc = trigger.GetNextFireTimeUtc(),
-                        PreviousFireTimeUtc = trigger.GetPreviousFireTimeUtc(),
+                        PreviousFireTimeUtc = previousFireTime,
                         StartTimeUtc = trigger.StartTimeUtc,
                         EndTimeUtc = trigger.EndTimeUtc,
                         TimesTriggered = trigger is ISimpleTrigger simpleTrigger ? simpleTrigger.TimesTriggered : 0,
                         IsCurrentlyExecuting = currentlyExecutingKeys.Contains(jobKey),
-                        RunTime = runTime,
+                        RunTime = runTime ?? lastRunDuration,
                         IsDurable = jobDetail.Durable,
                         DisallowConcurrentExecution = jobDetail.ConcurrentExecutionDisallowed,
                         PersistJobDataAfterExecution = jobDetail.PersistJobDataAfterExecution,
                         RequestsRecovery = jobDetail.RequestsRecovery,
-                        JobData = jobData
+                        JobData = jobData,
+                        TotalRunCount = totalRunCount,
+                        SuccessCount = successCount,
+                        FailureCount = failureCount,
+                        ManualTriggerCount = manualTriggerCount,
+                        AverageDurationMs = avgDuration,
+                        MinDurationMs = minDuration,
+                        MaxDurationMs = maxDuration,
+                        LastErrorMessage = lastErrorMessage,
+                        LastFailureTime = lastFailureTime
                     });
                 }
             }
@@ -460,6 +633,10 @@
         try
         {
             var scheduler = await SchedulerFactory.GetScheduler();
+            
+            // Log before triggering
+            Log.Information("[Jobs UI] Manually triggering job {JobName}", job.JobName);
+            
             await scheduler.TriggerJob(job.JobKey);
             
             NotificationService.Notify(new NotificationMessage
@@ -469,11 +646,13 @@
                 Duration = ToastTime
             });
             
-            await Task.Delay(500);
+            // Wait longer to allow fast jobs to complete
+            await Task.Delay(1000);
             await RefreshJobsAsync();
         }
         catch (Exception ex)
         {
+            Log.Error(ex, "[Jobs UI] Failed to trigger job {JobName}", job.JobName);
             NotificationService.Notify(new NotificationMessage
             {
                 Severity = NotificationSeverity.Error,

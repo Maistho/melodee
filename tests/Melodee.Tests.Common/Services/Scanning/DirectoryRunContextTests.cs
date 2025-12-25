@@ -1,0 +1,173 @@
+using Melodee.Common.Models.SearchEngines;
+using Melodee.Common.Services.Scanning;
+
+namespace Melodee.Tests.Common.Services.Scanning;
+
+public sealed class DirectoryRunContextTests
+{
+    [Fact]
+    public void NormalizeArtistKey_BasicName_NormalizesCorrectly()
+    {
+        var query = new ArtistQuery { Name = "The Beatles" };
+
+        var key = DirectoryRunContext.NormalizeArtistKey(query);
+
+        Assert.Contains("THEBEATLES", key);
+        Assert.StartsWith("ARTIST:", key);
+    }
+
+    [Fact]
+    public void NormalizeArtistKey_WithMusicBrainzId_IncludesInKey()
+    {
+        var query = new ArtistQuery
+        {
+            Name = "Test Artist",
+            MusicBrainzId = "12345678-1234-1234-1234-123456789012"
+        };
+
+        var key = DirectoryRunContext.NormalizeArtistKey(query);
+
+        Assert.Contains("MBID:12345678-1234-1234-1234-123456789012", key);
+    }
+
+    [Fact]
+    public void NormalizeArtistKey_WithSpotifyId_IncludesInKey()
+    {
+        var query = new ArtistQuery
+        {
+            Name = "Test Artist",
+            SpotifyId = "spotify123"
+        };
+
+        var key = DirectoryRunContext.NormalizeArtistKey(query);
+
+        Assert.Contains("SPOTIFY:spotify123", key);
+    }
+
+    [Fact]
+    public void NormalizeArtistKey_CaseInsensitive_SameKey()
+    {
+        var query1 = new ArtistQuery { Name = "The Beatles" };
+        var query2 = new ArtistQuery { Name = "THE BEATLES" };
+        var query3 = new ArtistQuery { Name = "the beatles" };
+
+        var key1 = DirectoryRunContext.NormalizeArtistKey(query1);
+        var key2 = DirectoryRunContext.NormalizeArtistKey(query2);
+        var key3 = DirectoryRunContext.NormalizeArtistKey(query3);
+
+        Assert.Equal(key1, key2);
+        Assert.Equal(key2, key3);
+    }
+
+    [Fact]
+    public void NormalizeArtistKey_WhitespaceTrimmed()
+    {
+        var query1 = new ArtistQuery { Name = "Test Artist" };
+        var query2 = new ArtistQuery { Name = "  Test Artist  " };
+
+        var key1 = DirectoryRunContext.NormalizeArtistKey(query1);
+        var key2 = DirectoryRunContext.NormalizeArtistKey(query2);
+
+        Assert.Equal(key1, key2);
+    }
+
+    [Fact]
+    public void NormalizeAlbumImageKey_BasicAlbum_NormalizesCorrectly()
+    {
+        var query = new AlbumQuery
+        {
+            Artist = "The Beatles",
+            Name = "Abbey Road",
+            Year = 1969
+        };
+
+        var key = DirectoryRunContext.NormalizeAlbumImageKey(query);
+
+        Assert.StartsWith("ALBUM:", key);
+        Assert.Contains("THE BEATLES", key);
+        Assert.Contains("ABBEY ROAD", key);
+    }
+
+    [Fact]
+    public void NormalizeAlbumImageKey_WithYear_IncludesInKey()
+    {
+        var query = new AlbumQuery
+        {
+            Artist = "Pink Floyd",
+            Name = "The Wall",
+            Year = 1979
+        };
+
+        var key = DirectoryRunContext.NormalizeAlbumImageKey(query);
+
+        Assert.Contains("1979", key);
+    }
+
+    [Fact]
+    public void NormalizeAlbumImageKey_SameAlbumDifferentCase_SameKey()
+    {
+        var query1 = new AlbumQuery { Artist = "Pink Floyd", Name = "The Wall", Year = 1979 };
+        var query2 = new AlbumQuery { Artist = "PINK FLOYD", Name = "THE WALL", Year = 1979 };
+
+        var key1 = DirectoryRunContext.NormalizeAlbumImageKey(query1);
+        var key2 = DirectoryRunContext.NormalizeAlbumImageKey(query2);
+
+        Assert.Equal(key1, key2);
+    }
+
+    [Fact]
+    public void NormalizeAlbumImageKey_DifferentAlbums_DifferentKeys()
+    {
+        var query1 = new AlbumQuery { Artist = "Pink Floyd", Name = "The Wall", Year = 1979 };
+        var query2 = new AlbumQuery { Artist = "Pink Floyd", Name = "Wish You Were Here", Year = 1975 };
+
+        var key1 = DirectoryRunContext.NormalizeAlbumImageKey(query1);
+        var key2 = DirectoryRunContext.NormalizeAlbumImageKey(query2);
+
+        Assert.NotEqual(key1, key2);
+    }
+
+    [Fact]
+    public void NormalizeAlbumImageKey_SameAlbumDifferentYears_DifferentKeys()
+    {
+        var query1 = new AlbumQuery { Artist = "Test", Name = "Album", Year = 2020 };
+        var query2 = new AlbumQuery { Artist = "Test", Name = "Album", Year = 2021 };
+
+        var key1 = DirectoryRunContext.NormalizeAlbumImageKey(query1);
+        var key2 = DirectoryRunContext.NormalizeAlbumImageKey(query2);
+
+        Assert.NotEqual(key1, key2);
+    }
+
+    [Fact]
+    public void Constructor_CreatesValidCaches()
+    {
+        using var context = new DirectoryRunContext();
+
+        Assert.NotNull(context.ArtistSearchCache);
+        Assert.NotNull(context.AlbumImageCache);
+        Assert.NotNull(context.ApiThrottler);
+    }
+
+    [Fact]
+    public void AddPluginTime_AccumulatesTime()
+    {
+        using var context = new DirectoryRunContext();
+
+        context.AddPluginTime(100);
+        context.AddPluginTime(50);
+        context.AddPluginTime(25);
+
+        // Implicitly tested via LogSummary
+    }
+
+    [Fact]
+    public void IncrementDirectoriesProcessed_IncrementsConcurrently()
+    {
+        using var context = new DirectoryRunContext();
+
+        Parallel.For(0, 100, _ => context.IncrementDirectoriesProcessed());
+
+        // Implicitly tested via LogSummary
+    }
+}

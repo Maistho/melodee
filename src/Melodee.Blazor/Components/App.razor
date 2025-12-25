@@ -24,8 +24,9 @@
 <body>
 <Routes @rendermode="InteractiveServer"/>
 
-<!-- Load scripts with defer to reduce blocking (addresses Lighthouse: Eliminate render-blocking resources) -->
-<script src="_framework/blazor.web.js" defer></script>
+<!-- Load Blazor framework first without defer to ensure it's available for reconnect script -->
+<script src="_framework/blazor.web.js"></script>
+<!-- Load reconnect script with defer - it will wait for Blazor to be initialized -->
 <script src="js/blazorReconnect.js" defer></script>
 <script defer>
     window.getUserAgent = () => {

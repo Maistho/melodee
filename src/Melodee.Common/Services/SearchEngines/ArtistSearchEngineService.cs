@@ -16,6 +16,7 @@ using Melodee.Common.Plugins.SearchEngine.MusicBrainz;
 using Melodee.Common.Plugins.SearchEngine.MusicBrainz.Data;
 using Melodee.Common.Plugins.SearchEngine.Spotify;
 using Melodee.Common.Services.Caching;
+using Melodee.Common.Services.Scanning;
 using Melodee.Common.Utility;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -44,6 +45,18 @@ public class ArtistSearchEngineService(
     private IMelodeeConfiguration _configuration = new MelodeeConfiguration([]);
     private bool _initialized;
     private readonly ArtistSearchCache _searchCache = new();
+
+    /// <summary>
+    ///     MusicBrainz rate limit: 1 request per second.
+    /// </summary>
+    private const string MusicBrainzProvider = "MusicBrainz";
+    private static readonly TimeSpan MusicBrainzRateLimit = TimeSpan.FromSeconds(1);
+
+    /// <summary>
+    ///     Spotify concurrency limit (conservative default).
+    /// </summary>
+    private const string SpotifyProvider = "Spotify";
+    private const int SpotifyMaxConcurrency = 2;
 
     public async Task InitializeAsync(IMelodeeConfiguration? configuration = null,
         CancellationToken cancellationToken = default)
@@ -481,6 +494,51 @@ public class ArtistSearchEngineService(
         }
 
         return null;
+    }
+
+    /// <summary>
+    ///     Performs artist search with directory-run caching and request coalescing.
+    ///     When a runContext is provided, uses the run-scoped cache to avoid duplicate API calls.
+    /// </summary>
+    public async Task<PagedResult<ArtistSearchResult>> DoSearchAsync(
+        ArtistQuery query,
+        int? maxResults,
+        DirectoryRunContext? runContext,
+        CancellationToken cancellationToken = default)
+    {
+        if (runContext == null)
+        {
+            return await DoSearchAsync(query, maxResults, cancellationToken).ConfigureAwait(false);
+        }
+
+        var startTicks = Stopwatch.GetTimestamp();
+
+        var (results, wasHit, wasCoalesced) = await runContext.ArtistSearchCache.GetOrCreateAsync(
+            query,
+            async (q, ct) =>
+            {
+                var searchResult = await DoSearchAsync(q, maxResults, ct).ConfigureAwait(false);
+                return searchResult.Data.ToArray();
+            },
+            cancellationToken).ConfigureAwait(false);
+
+        var elapsedMs = Stopwatch.GetElapsedTime(startTicks).TotalMilliseconds;
+        runContext.AddEnrichmentTime((long)elapsedMs);
+
+        Logger.Debug(
+            "[{Name}] Artist search for [{Artist}]: cacheHit={Hit}, coalesced={Coalesced}, duration={Duration}ms",
+            nameof(ArtistSearchEngineService),
+            query.Name,
+            wasHit,
+            wasCoalesced,
+            elapsedMs);
+
+        return new PagedResult<ArtistSearchResult>
+        {
+            Data = results ?? [],
+            TotalCount = results?.Length ?? 0,
+            TotalPages = 1
+        };
     }
 
     public async Task<PagedResult<ArtistSearchResult>> DoSearchAsync(ArtistQuery query, int? maxResults,

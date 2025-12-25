@@ -36,6 +36,11 @@ public class NowPlayingCleanupJob(
     IMelodeeConfigurationFactory configurationFactory,
     NowPlayingDatabaseRepository nowPlayingRepository) : JobBase(logger, configurationFactory)
 {
+    /// <summary>
+    ///     Disabled for this high-frequency job to avoid cluttering JobHistory.
+    /// </summary>
+    public override bool DoCreateJobHistory => false;
+
     public override async Task Execute(IJobExecutionContext context)
     {
         Logger.Debug("[{JobName}] Starting now playing cleanup", nameof(NowPlayingCleanupJob));

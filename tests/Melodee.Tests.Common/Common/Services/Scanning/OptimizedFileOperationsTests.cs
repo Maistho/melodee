@@ -71,7 +71,7 @@ public class OptimizedFileOperationsTests : IDisposable
         var result = await OptimizedFileOperations.CopyFilesAsync(filePairs);
 
         // Assert
-        Assert.Equal(2, result);
+        Assert.Equal(2, result.FilesCopied);
         Assert.True(File.Exists(destFile1));
         Assert.True(File.Exists(destFile2));
         Assert.Equal("content1", File.ReadAllText(destFile1));
@@ -92,7 +92,7 @@ public class OptimizedFileOperationsTests : IDisposable
         var result = await OptimizedFileOperations.CopyFilesAsync(filePairs, deleteOriginal: true);
 
         // Assert
-        Assert.Equal(1, result);
+        Assert.Equal(1, result.FilesCopied);
         Assert.False(File.Exists(sourceFile));
         Assert.True(File.Exists(destFile));
         Assert.Equal("test content", File.ReadAllText(destFile));
@@ -125,7 +125,7 @@ public class OptimizedFileOperationsTests : IDisposable
         var result = await OptimizedFileOperations.CopyFilesAsync(filePairs, cancellationToken: cts.Token);
 
         // Assert - Should copy fewer files than requested due to cancellation
-        Assert.True(result < fileCount);
+        Assert.True(result.FilesCopied < fileCount);
     }
 
     [Fact]
@@ -139,8 +139,8 @@ public class OptimizedFileOperationsTests : IDisposable
         // Act
         var result = await OptimizedFileOperations.CopyFilesAsync(filePairs);
 
-        // Assert
-        Assert.Equal(1, result); // Returns 1 because task was attempted, even if source doesn't exist
+        // Assert - FilesCopied is 0 because source doesn't exist and was skipped
+        Assert.Equal(0, result.FilesCopied);
         Assert.False(File.Exists(destFile));
     }
 
@@ -154,8 +154,8 @@ public class OptimizedFileOperationsTests : IDisposable
         // Act
         var result = await OptimizedFileOperations.CopyFilesAsync(filePairs);
 
-        // Assert
-        Assert.Equal(1, result);
+        // Assert - FilesCopied is 0 because source==dest and was skipped
+        Assert.Equal(0, result.FilesCopied);
         Assert.True(File.Exists(sourceFile));
         Assert.Equal("content", File.ReadAllText(sourceFile));
     }
@@ -176,8 +176,8 @@ public class OptimizedFileOperationsTests : IDisposable
         // Act
         var result = await OptimizedFileOperations.CopyFilesAsync(filePairs);
 
-        // Assert
-        Assert.Equal(1, result);
+        // Assert - FilesCopied is 0 because files are identical and was skipped
+        Assert.Equal(0, result.FilesCopied);
         Assert.True(File.Exists(destFile));
     }
 
@@ -469,7 +469,7 @@ public class OptimizedFileOperationsTests : IDisposable
         var result = await OptimizedFileOperations.CopyFilesAsync(filePairs, bufferSize: customBufferSize);
 
         // Assert
-        Assert.Equal(1, result);
+        Assert.Equal(1, result.FilesCopied);
         Assert.True(File.Exists(destFile));
         Assert.Equal("test content", File.ReadAllText(destFile));
 

@@ -1114,7 +1114,15 @@ public class LibraryService : ServiceBase
                     numberOfAlbumsToMove,
                     $"Completed processing. Found [{albumsForFromLibrary.Length}] melodee files, ready [{numberOfAlbumsToMove}], moved [{movedAlbumCount}], merged [{mergedExistingCount}], skipped status/condition [{skippedByStatus}], duplicate directories [{skippedByDuplicatePrefix}], failed to load [{deserializationFailures}].",
                     BytesProcessed: totalBytes,
-                    TotalBytes: totalBytes
+                    TotalBytes: totalBytes,
+                    Statistics: new ProcessingEventStatistics(
+                        TotalMelodeeFilesFound: albumsForFromLibrary.Length,
+                        AlbumsReadyToMove: numberOfAlbumsToMove,
+                        AlbumsMoved: movedAlbumCount,
+                        AlbumsMergedWithExisting: mergedExistingCount,
+                        AlbumsSkippedByStatus: skippedByStatus,
+                        AlbumsSkippedAsDuplicateDirectory: skippedByDuplicatePrefix,
+                        AlbumsFailedToLoad: deserializationFailures)
                 ));
             return new MelodeeModels.OperationResult<bool>
             {
@@ -1301,7 +1309,15 @@ public class LibraryService : ServiceBase
                     numberOfAlbumsToMove,
                     $"Completed processing. Found [{albumsForFromPath.Length}] melodee files, ready [{numberOfAlbumsToMove}], moved [{movedAlbumCount}], merged [{mergedExistingCount}], skipped status/condition [{skippedByStatus}], duplicate directories [{skippedByDuplicatePrefix}], failed to load [{deserializationFailures}].",
                     BytesProcessed: totalBytes,
-                    TotalBytes: totalBytes
+                    TotalBytes: totalBytes,
+                    Statistics: new ProcessingEventStatistics(
+                        TotalMelodeeFilesFound: albumsForFromPath.Length,
+                        AlbumsReadyToMove: numberOfAlbumsToMove,
+                        AlbumsMoved: movedAlbumCount,
+                        AlbumsMergedWithExisting: mergedExistingCount,
+                        AlbumsSkippedByStatus: skippedByStatus,
+                        AlbumsSkippedAsDuplicateDirectory: skippedByDuplicatePrefix,
+                        AlbumsFailedToLoad: deserializationFailures)
                 ));
             return new MelodeeModels.OperationResult<bool>
             {

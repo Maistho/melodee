@@ -3,6 +3,7 @@ using Melodee.Cli.CommandSettings;
 using Melodee.Common.Enums;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services;
+using Melodee.Common.Services.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -26,6 +27,7 @@ public class LibraryMoveOkCommand : CommandBase<LibraryMoveOkSettings>
             var libraryService = scope.ServiceProvider.GetRequiredService<LibraryService>();
 
             Common.Models.OperationResult<bool>? result = null;
+            ProcessingEventStatistics? finalStatistics = null;
             var startTime = Stopwatch.GetTimestamp();
 
             // Display initial configuration
@@ -139,6 +141,8 @@ public class LibraryMoveOkCommand : CommandBase<LibraryMoveOkSettings>
                                 progressTask.Value = progressTask.MaxValue;
                                 progressTask.StopTask();
 
+                                finalStatistics = e.Statistics;
+
                                 var totalElapsed = Stopwatch.GetElapsedTime(startTime);
                                 var avgBytesPerSecond = totalElapsed.TotalSeconds > 0
                                     ? e.BytesProcessed / totalElapsed.TotalSeconds
@@ -204,6 +208,68 @@ public class LibraryMoveOkCommand : CommandBase<LibraryMoveOkSettings>
             }
             else
             {
+                if (finalStatistics != null)
+                {
+                    var statsTable = new Table()
+                        .Border(TableBorder.Rounded)
+                        .BorderColor(Color.Blue)
+                        .AddColumn(new TableColumn("[bold]Metric[/]").LeftAligned())
+                        .AddColumn(new TableColumn("[bold]Count[/]").RightAligned())
+                        .AddColumn(new TableColumn("[bold]Description[/]").LeftAligned());
+
+                    statsTable.AddRow(
+                        "[yellow]Total Albums Found[/]",
+                        $"{finalStatistics.TotalMelodeeFilesFound:N0}",
+                        "Albums with melodee.json in source library");
+
+                    statsTable.AddRow(
+                        "[green]Albums Ready to Move[/]",
+                        $"{finalStatistics.AlbumsReadyToMove:N0}",
+                        "Albums with 'Ok' status matching move criteria");
+
+                    statsTable.AddRow(
+                        "[green]Albums Moved[/]",
+                        $"{finalStatistics.AlbumsMoved:N0}",
+                        "New albums moved to destination");
+
+                    statsTable.AddRow(
+                        "[cyan]Albums Merged[/]",
+                        $"{finalStatistics.AlbumsMergedWithExisting:N0}",
+                        "Albums merged with existing albums in destination");
+
+                    if (finalStatistics.AlbumsSkippedByStatus > 0)
+                    {
+                        statsTable.AddRow(
+                            "[grey]Skipped (Status)[/]",
+                            $"{finalStatistics.AlbumsSkippedByStatus:N0}",
+                            "Albums skipped due to non-Ok status (Invalid/New)");
+                    }
+
+                    if (finalStatistics.AlbumsSkippedAsDuplicateDirectory > 0)
+                    {
+                        statsTable.AddRow(
+                            "[grey]Skipped (Duplicate Dir)[/]",
+                            $"{finalStatistics.AlbumsSkippedAsDuplicateDirectory:N0}",
+                            "Albums in duplicate-prefixed directories");
+                    }
+
+                    if (finalStatistics.AlbumsFailedToLoad > 0)
+                    {
+                        statsTable.AddRow(
+                            "[red]Failed to Load[/]",
+                            $"{finalStatistics.AlbumsFailedToLoad:N0}",
+                            "Albums that couldn't be deserialized");
+                    }
+
+                    AnsiConsole.Write(
+                        new Panel(statsTable)
+                            .Header("[yellow]Move Operation Summary[/]")
+                            .RoundedBorder()
+                            .BorderColor(Color.Yellow));
+
+                    AnsiConsole.WriteLine();
+                }
+
                 var rule = new Rule("[green]Move operation completed successfully[/]")
                 {
                     Justification = Justify.Left

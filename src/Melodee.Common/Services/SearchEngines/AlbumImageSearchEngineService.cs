@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Melodee.Common.Configuration;
 using Melodee.Common.Constants;
 using Melodee.Common.Data;
@@ -14,6 +15,7 @@ using Melodee.Common.Plugins.SearchEngine.MusicBrainz.Data;
 using Melodee.Common.Plugins.SearchEngine.Spotify;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services.Caching;
+using Melodee.Common.Services.Scanning;
 using Melodee.Common.Utility;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -35,6 +37,50 @@ public class AlbumImageSearchEngineService(
     IHttpClientFactory httpClientFactory)
     : ServiceBase(logger, cacheManager, contextFactory)
 {
+    /// <summary>
+    ///     Performs album image search with directory-run caching and request coalescing.
+    ///     When a runContext is provided, uses the run-scoped cache to avoid duplicate API calls.
+    /// </summary>
+    public async Task<OperationResult<ImageSearchResult[]>> DoSearchAsync(
+        AlbumQuery query,
+        int? maxResults,
+        DirectoryRunContext? runContext,
+        CancellationToken token = default)
+    {
+        if (runContext == null)
+        {
+            return await DoSearchAsync(query, maxResults, token).ConfigureAwait(false);
+        }
+
+        var startTicks = Stopwatch.GetTimestamp();
+
+        var (results, wasHit, wasCoalesced) = await runContext.AlbumImageCache.GetOrCreateAsync(
+            query,
+            async (q, ct) =>
+            {
+                var searchResult = await DoSearchAsync(q, maxResults, ct).ConfigureAwait(false);
+                return searchResult.Data;
+            },
+            token).ConfigureAwait(false);
+
+        var elapsedMs = Stopwatch.GetElapsedTime(startTicks).TotalMilliseconds;
+        runContext.AddEnrichmentTime((long)elapsedMs);
+
+        Logger.Debug(
+            "[{Name}] Album image search for [{Artist}]/[{Album}]: cacheHit={Hit}, coalesced={Coalesced}, duration={Duration}ms",
+            nameof(AlbumImageSearchEngineService),
+            query.Artist,
+            query.Name,
+            wasHit,
+            wasCoalesced,
+            elapsedMs);
+
+        return new OperationResult<ImageSearchResult[]>
+        {
+            Data = results ?? []
+        };
+    }
+
     public async Task<OperationResult<ImageSearchResult[]>> DoSearchAsync(AlbumQuery query, int? maxResults,
         CancellationToken token = default)
     {

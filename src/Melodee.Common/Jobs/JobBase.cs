@@ -20,5 +20,11 @@ public abstract class JobBase(
 
     protected IMelodeeConfigurationFactory ConfigurationFactory { get; } = configurationFactory;
 
+    /// <summary>
+    ///     Whether to create a JobHistory record when this job completes.
+    ///     Default is true. Set to false for high-frequency jobs like NowPlayingCleanup.
+    /// </summary>
+    public virtual bool DoCreateJobHistory => true;
+
     public abstract Task Execute(IJobExecutionContext context);
 }

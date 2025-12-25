@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Serilog;
 
@@ -9,68 +10,125 @@ namespace Melodee.Common.Services.Scanning;
 /// </summary>
 public static class OptimizedFileOperations
 {
-    private static readonly SemaphoreSlim FileOperationSemaphore = new(Environment.ProcessorCount * 2);
     private static readonly ConcurrentDictionary<string, DateTime> FileHashCache = new();
     private const int MaxIoRetries = 5;
     private static readonly TimeSpan MaxIoBackoff = TimeSpan.FromSeconds(8);
 
     /// <summary>
-    ///     Asynchronously copy files in batches with optimized performance
+    ///     Default max concurrent file copies (conservative for network storage).
     /// </summary>
-    public static async Task<int> CopyFilesAsync(
+    public const int DefaultMaxConcurrentCopies = 4;
+
+    /// <summary>
+    ///     Default streaming buffer size (moderate to avoid memory pressure).
+    /// </summary>
+    public const int DefaultBufferSize = 256 * 1024; // 256KB streaming buffer
+
+    /// <summary>
+    ///     Asynchronously copy files with controlled concurrency and streaming.
+    /// </summary>
+    /// <param name="filePairs">Source and destination path pairs.</param>
+    /// <param name="deleteOriginal">Whether to delete originals after copy.</param>
+    /// <param name="bufferSize">Streaming buffer size per file.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <param name="maxConcurrentCopies">Maximum concurrent copy operations (default: 4).</param>
+    /// <returns>Result containing count and timing metrics.</returns>
+    public static async Task<FileCopyResult> CopyFilesAsync(
         IEnumerable<(string sourcePath, string destinationPath)> filePairs,
         bool deleteOriginal = false,
-        int bufferSize = 1024 * 1024, // 1MB buffer
-        CancellationToken cancellationToken = default)
+        int bufferSize = DefaultBufferSize,
+        CancellationToken cancellationToken = default,
+        int maxConcurrentCopies = DefaultMaxConcurrentCopies)
     {
-        var copiedCount = 0;
-        var tasks = new List<Task>();
+        var stopwatch = Stopwatch.StartNew();
+        var pairs = filePairs.ToList();
 
-        foreach (var (sourcePath, destinationPath) in filePairs)
+        if (pairs.Count == 0)
+        {
+            return new FileCopyResult(0, 0, 0, TimeSpan.Zero);
+        }
+
+        var copiedCount = 0;
+        long totalBytesCopied = 0;
+
+        using var semaphore = new SemaphoreSlim(maxConcurrentCopies, maxConcurrentCopies);
+        var tasks = new List<Task<(int count, long bytes)>>();
+
+        foreach (var (sourcePath, destinationPath) in pairs)
         {
             if (cancellationToken.IsCancellationRequested)
             {
                 break;
             }
 
-            var task = CopyFileWithThrottleAsync(sourcePath, destinationPath, deleteOriginal, bufferSize, cancellationToken);
+            await semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+
+            var task = CopyFileWithThrottleAsync(
+                sourcePath,
+                destinationPath,
+                deleteOriginal,
+                bufferSize,
+                semaphore,
+                cancellationToken);
             tasks.Add(task);
-
-            // Process in batches to avoid overwhelming the system
-            if (tasks.Count >= Environment.ProcessorCount)
-            {
-                await Task.WhenAll(tasks).ConfigureAwait(false);
-                copiedCount += tasks.Count;
-                tasks.Clear();
-            }
         }
 
-        // Process remaining tasks
-        if (tasks.Count > 0)
+        var results = await Task.WhenAll(tasks).ConfigureAwait(false);
+
+        foreach (var (count, bytes) in results)
         {
-            await Task.WhenAll(tasks).ConfigureAwait(false);
-            copiedCount += tasks.Count;
+            copiedCount += count;
+            totalBytesCopied += bytes;
         }
 
-        return copiedCount;
+        stopwatch.Stop();
+        var result = new FileCopyResult(copiedCount, pairs.Count, totalBytesCopied, stopwatch.Elapsed);
+
+        Log.Information(
+            "[OptimizedFileOperations] Copied {Copied}/{Total} files, {Bytes:N0} bytes in {Duration:N1}ms ({ThroughputMBs:N2} MB/s)",
+            result.FilesCopied,
+            result.FilesAttempted,
+            result.TotalBytes,
+            result.Duration.TotalMilliseconds,
+            result.ThroughputMBPerSecond);
+
+        return result;
     }
 
     /// <summary>
-    ///     Copy a single file with throttling and optimized buffering
+    ///     Legacy overload for backward compatibility.
     /// </summary>
-    private static async Task CopyFileWithThrottleAsync(
-        string sourcePath,
-        string destinationPath,
+    public static async Task<int> CopyFilesAsync(
+        IEnumerable<(string sourcePath, string destinationPath)> filePairs,
         bool deleteOriginal,
         int bufferSize,
         CancellationToken cancellationToken)
     {
-        await FileOperationSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+        var result = await CopyFilesAsync(
+            filePairs,
+            deleteOriginal,
+            bufferSize,
+            cancellationToken,
+            DefaultMaxConcurrentCopies).ConfigureAwait(false);
+        return result.FilesCopied;
+    }
+
+    /// <summary>
+    ///     Copy a single file with throttling and optimized streaming.
+    /// </summary>
+    private static async Task<(int count, long bytes)> CopyFileWithThrottleAsync(
+        string sourcePath,
+        string destinationPath,
+        bool deleteOriginal,
+        int bufferSize,
+        SemaphoreSlim semaphore,
+        CancellationToken cancellationToken)
+    {
         try
         {
-            await CopyFileOptimizedAsync(sourcePath, destinationPath, bufferSize, cancellationToken).ConfigureAwait(false);
+            var bytes = await CopyFileOptimizedAsync(sourcePath, destinationPath, bufferSize, cancellationToken).ConfigureAwait(false);
 
-            if (deleteOriginal)
+            if (deleteOriginal && bytes > 0)
             {
                 try
                 {
@@ -78,20 +136,23 @@ public static class OptimizedFileOperations
                 }
                 catch (Exception ex)
                 {
-                    Log.Warning(ex, "Failed to delete original file after copy: {SourcePath}", sourcePath);
+                    Log.Warning(ex, "Failed to delete original file after copy");
                 }
             }
+
+            return (bytes > 0 ? 1 : 0, bytes);
         }
         finally
         {
-            FileOperationSemaphore.Release();
+            semaphore.Release();
         }
     }
 
     /// <summary>
-    ///     Optimized file copy using streams with large buffers
+    ///     Optimized file copy using streaming with bounded buffers.
+    ///     Returns bytes copied or 0 if skipped/failed.
     /// </summary>
-    private static async Task CopyFileOptimizedAsync(
+    private static async Task<long> CopyFileOptimizedAsync(
         string sourcePath,
         string destinationPath,
         int bufferSize,
@@ -104,58 +165,66 @@ public static class OptimizedFileOperations
             cancellationToken.ThrowIfCancellationRequested();
             if (!await WaitForFileStabilityAsync(sourcePath, cancellationToken: cancellationToken).ConfigureAwait(false))
             {
-                Log.Warning("File [{Source}] not stable for copy, skipping.", sourcePath);
-                return;
+                Log.Warning("File not stable for copy, skipping");
+                return 0;
             }
 
             try
             {
-                // Ensure destination directory exists
                 var destinationDir = Path.GetDirectoryName(destinationPath);
                 if (!string.IsNullOrEmpty(destinationDir) && !Directory.Exists(destinationDir))
                 {
                     Directory.CreateDirectory(destinationDir);
                 }
 
-                // Skip if files are identical
                 if (string.Equals(sourcePath, destinationPath, StringComparison.OrdinalIgnoreCase))
                 {
-                    return;
+                    return 0;
                 }
 
                 var sourceInfo = new FileInfo(sourcePath);
                 if (!sourceInfo.Exists)
                 {
-                    return;
+                    return 0;
                 }
 
-                // Check if destination exists and has same size/date (quick duplicate check)
                 var destInfo = new FileInfo(destinationPath);
                 if (destInfo.Exists && destInfo.Length == sourceInfo.Length &&
                     Math.Abs((destInfo.LastWriteTime - sourceInfo.LastWriteTime).TotalSeconds) < 2)
                 {
-                    return; // Files appear to be identical
+                    return 0;
                 }
 
-                // Use optimized async file copy
-                await using var sourceStream = new FileStream(sourcePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, bufferSize, FileOptions.SequentialScan);
-                await using var destStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize, FileOptions.SequentialScan);
+                // Streaming copy with bounded buffer (does not allocate large buffers in parallel)
+                await using var sourceStream = new FileStream(
+                    sourcePath,
+                    FileMode.Open,
+                    FileAccess.Read,
+                    FileShare.ReadWrite,
+                    bufferSize,
+                    FileOptions.SequentialScan | FileOptions.Asynchronous);
+
+                await using var destStream = new FileStream(
+                    destinationPath,
+                    FileMode.Create,
+                    FileAccess.Write,
+                    FileShare.None,
+                    bufferSize,
+                    FileOptions.SequentialScan | FileOptions.Asynchronous);
 
                 await sourceStream.CopyToAsync(destStream, bufferSize, cancellationToken).ConfigureAwait(false);
 
-                // Preserve timestamps
                 File.SetLastWriteTime(destinationPath, sourceInfo.LastWriteTime);
                 File.SetCreationTime(destinationPath, sourceInfo.CreationTime);
-                return;
+
+                return sourceInfo.Length;
             }
             catch (IOException ex) when (IsSharingViolation(ex) && attempt < MaxIoRetries)
             {
                 attempt++;
                 var delay = IoBackoff(attempt);
                 Log.Warning(ex,
-                    "Retrying copy for locked file [{Source}] -> [{Destination}] attempt [{Attempt}/{MaxAttempts}] after {Delay}ms",
-                    sourcePath,
-                    destinationPath,
+                    "Retrying copy for locked file attempt {Attempt}/{MaxAttempts} after {Delay}ms",
                     attempt,
                     MaxIoRetries,
                     delay.TotalMilliseconds);
@@ -164,11 +233,9 @@ public static class OptimizedFileOperations
             catch (IOException ex) when (IsSharingViolation(ex))
             {
                 Log.Warning(ex,
-                    "Giving up copy for locked file [{Source}] -> [{Destination}] after [{Attempts}] attempts",
-                    sourcePath,
-                    destinationPath,
+                    "Giving up copy for locked file after {Attempts} attempts",
                     attempt);
-                return;
+                return 0;
             }
         }
     }
@@ -405,4 +472,21 @@ public static class OptimizedFileOperations
             }
         }
     }
+}
+
+/// <summary>
+///     Result of a batch file copy operation with timing metrics.
+/// </summary>
+public readonly record struct FileCopyResult(
+    int FilesCopied,
+    int FilesAttempted,
+    long TotalBytes,
+    TimeSpan Duration)
+{
+    /// <summary>
+    ///     Copy throughput in MB/s.
+    /// </summary>
+    public double ThroughputMBPerSecond => Duration.TotalSeconds > 0
+        ? TotalBytes / 1024.0 / 1024.0 / Duration.TotalSeconds
+        : 0;
 }

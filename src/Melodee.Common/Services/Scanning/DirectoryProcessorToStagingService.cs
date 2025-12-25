@@ -198,7 +198,6 @@ public sealed class DirectoryProcessorToStagingService(
         var directoryPluginProcessedFileCount = 0;
         var numberOfAlbumFilesProcessed = 0;
 
-        // Use HashSet for faster lookups and deduplication
         var artistsIdsSeen = new ConcurrentBag<long?>();
         var albumsIdsSeen = new ConcurrentBag<long?>();
         var songsIdsSeen = new ConcurrentBag<Guid>();
@@ -220,6 +219,9 @@ public sealed class DirectoryProcessorToStagingService(
         _maxAlbumProcessingCount = maxAlbumsToProcess ?? _maxAlbumProcessingCount;
 
         var startTicks = Stopwatch.GetTimestamp();
+
+        // Create a run context for caching and observability
+        using var runContext = new DirectoryRunContext();
 
         // Ensure directory to process exists
         Trace.WriteLine($"Ensuring processing path [{fileSystemDirectoryInfo.Path}] exists...");
@@ -325,17 +327,24 @@ public sealed class DirectoryProcessorToStagingService(
         {
             await Parallel.ForEachAsync(directoriesToProcess, parallelOptions, async (directoryInfoToProcess, ct) =>
             {
-                // Check for cancellation before acquiring semaphore
                 ct.ThrowIfCancellationRequested();
 
                 await _processingThrottle.WaitAsync(ct);
                 try
                 {
-                    var processingResult = await ProcessSingleDirectoryAsync(directoryInfoToProcess, processingMessages, processingErrors, artistsIdsSeen, albumsIdsSeen, songsIdsSeen, ct);
+                    var processingResult = await ProcessSingleDirectoryAsync(
+                        directoryInfoToProcess,
+                        processingMessages,
+                        processingErrors,
+                        artistsIdsSeen,
+                        albumsIdsSeen,
+                        songsIdsSeen,
+                        runContext,
+                        ct);
                     numberOfAlbumsProcessed += processingResult.Item1;
                     numberOfValidAlbumsProcessed += processingResult.Item2;
+                    runContext.IncrementDirectoriesProcessed();
 
-                    // Progress reporting
                     var currentCount = Interlocked.Increment(ref processedCount);
                     if (currentCount >= nextProgressReport || currentCount == totalDirectories)
                     {
@@ -460,14 +469,15 @@ public sealed class DirectoryProcessorToStagingService(
         ConcurrentBag<long?> artistsIdsSeen,
         ConcurrentBag<long?> albumsIdsSeen,
         ConcurrentBag<Guid> songsIdsSeen,
+        DirectoryRunContext runContext,
         CancellationToken cancellationToken)
     {
-        // Add performance monitoring
         using var operation = Operation.At(LogEventLevel.Debug)
             .Time("ProcessSingleDirectoryAsync for directory [{DirectoryName}]", directoryInfoToProcess.Name);
 
         var numberOfValidAlbumsProcessed = 0;
         var numberOfAlbumsProcessed = 0;
+        var dirStartTicks = Stopwatch.GetTimestamp();
 
         Trace.WriteLine($"DirectoryInfoToProcess: [{directoryInfoToProcess}]");
         try
@@ -669,9 +679,20 @@ public sealed class DirectoryProcessorToStagingService(
                 }
             }
 
-            // For each Album json find all image files and add to Album to be moved below to staging directory.
+            // Track plugin time
+            var pluginTimeMs = Stopwatch.GetElapsedTime(dirStartTicks).TotalMilliseconds;
+            runContext.AddPluginTime((long)pluginTimeMs);
+
             Trace.WriteLine("Loading images for album...");
-            var processingResult = await ProcessAlbumsAsync(directoryInfoToProcess, albumsForDirectory, processingMessages, artistsIdsSeen, albumsIdsSeen, songsIdsSeen, cancellationToken);
+            var processingResult = await ProcessAlbumsAsync(
+                directoryInfoToProcess,
+                albumsForDirectory,
+                processingMessages,
+                artistsIdsSeen,
+                albumsIdsSeen,
+                songsIdsSeen,
+                runContext,
+                cancellationToken);
             numberOfAlbumsProcessed += processingResult.Item1;
             numberOfValidAlbumsProcessed += processingResult.Item2;
         }
@@ -691,11 +712,13 @@ public sealed class DirectoryProcessorToStagingService(
         ConcurrentBag<long?> artistsIdsSeen,
         ConcurrentBag<long?> albumsIdsSeen,
         ConcurrentBag<Guid> songsIdsSeen,
+        DirectoryRunContext runContext,
         CancellationToken cancellationToken)
     {
         var httpClient = httpClientFactory.CreateClient();
         var numberOfValidAlbumsProcessed = 0;
         var numberOfAlbumsProcessed = 0;
+        var albumStartTicks = Stopwatch.GetTimestamp();
 
         foreach (var album in albumsForDirectory.Take(_maxAlbumProcessingCount))
         {
@@ -815,21 +838,24 @@ public sealed class DirectoryProcessorToStagingService(
                     }
                 }
 
-                // Perform batch file operations if any files need to be copied
+                // Perform batch file operations with streaming and timing
                 if (filesToCopy.Count > 0)
                 {
+                    var copyStartTicks = Stopwatch.GetTimestamp();
                     using (Operation.At(LogEventLevel.Debug)
                                .Time("Copying [{FileCount}] files for album [{AlbumName}]", filesToCopy.Count, album.AlbumTitle() ?? string.Empty))
                     {
-                        var copiedCount = await OptimizedFileOperations.CopyFilesAsync(
+                        var copyResult = await OptimizedFileOperations.CopyFilesAsync(
                             filesToCopy,
                             deleteOriginal,
-                            2 * 1024 * 1024, // 2MB buffer for media files
-                            cancellationToken).ConfigureAwait(false);
+                            OptimizedFileOperations.DefaultBufferSize,
+                            cancellationToken,
+                            OptimizedFileOperations.DefaultMaxConcurrentCopies).ConfigureAwait(false);
 
                         LogAndRaiseEvent(LogEventLevel.Debug, "Copied [{0}] files for album [{1}]", null,
-                            copiedCount, album.AlbumTitle() ?? string.Empty);
+                            copyResult.FilesCopied, album.AlbumTitle() ?? string.Empty);
                     }
+                    runContext.AddCopyTime((long)Stopwatch.GetElapsedTime(copyStartTicks).TotalMilliseconds);
                 }
 
                 if (album.Songs != null)
@@ -874,14 +900,16 @@ public sealed class DirectoryProcessorToStagingService(
 
                 album.Directory = albumDirectorySystemInfo;
 
-                // See if artist can be found using ArtistSearchEngine to populate metadata, set UniqueId and MusicBrainzId
+                // Artist search with run-context caching to avoid duplicate API calls
                 Trace.WriteLine("Querying for artist...");
                 var searchRequest = album.Artist.ToArtistQuery([
                     new KeyValue((album.AlbumYear() ?? 0).ToString(),
                         album.AlbumTitle().ToNormalizedString() ?? album.AlbumTitle())
                 ]);
-                var artistSearchResult = await artistSearchEngineService.DoSearchAsync(searchRequest,
+                var artistSearchResult = await artistSearchEngineService.DoSearchAsync(
+                        searchRequest,
                         1,
+                        runContext,
                         cancellationToken)
                     .ConfigureAwait(false);
                 if (artistSearchResult.IsSuccess)
@@ -924,7 +952,6 @@ public sealed class DirectoryProcessorToStagingService(
                                     ? searchResultRelease.AlbumType
                                     : album.AlbumType;
 
-                                // Artist result should override any in place for Album as its more specific and likely more accurate
                                 album.MusicBrainzId = searchResultRelease.MusicBrainzId;
                                 album.SpotifyId = searchResultRelease.SpotifyId;
 
@@ -949,7 +976,7 @@ public sealed class DirectoryProcessorToStagingService(
                 }
 
                 Trace.WriteLine("Testing for album images...");
-                // If album has no images then see if ImageSearchEngine can find any
+                // Album image search with run-context caching
                 if (album.Images?.Count() == 0)
                 {
                     Trace.WriteLine("Querying for album image...");
@@ -957,6 +984,7 @@ public sealed class DirectoryProcessorToStagingService(
                     var albumImageSearchResult = await albumImageSearchEngineService.DoSearchAsync(
                             albumImageSearchRequest,
                             1,
+                            runContext,
                             cancellationToken)
                         .ConfigureAwait(false);
                     if (albumImageSearchResult.IsSuccess)
@@ -1120,6 +1148,8 @@ public sealed class DirectoryProcessorToStagingService(
                     e);
             }
         }
+
+        runContext.AddAlbumProcessingTime((long)Stopwatch.GetElapsedTime(albumStartTicks).TotalMilliseconds);
         return new ValueTuple<int, int>(numberOfAlbumsProcessed, numberOfValidAlbumsProcessed);
     }
 }

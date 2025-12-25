@@ -43,6 +43,7 @@ using NodaTime;
 using Npgsql;
 using Quartz;
 using Quartz.AspNetCore;
+using Quartz.Impl.Matchers;
 using Radzen;
 using Rebus.Compression;
 using Rebus.Config;
@@ -511,6 +512,12 @@ if (!isQuartzDisabled)
     var quartzScheduler = await quartzSchedulerFactory.GetScheduler();
     var melodeeConfigurationFactory = app.Services.GetRequiredService<IMelodeeConfigurationFactory>();
     var melodeeConfiguration = await melodeeConfigurationFactory.GetConfigurationAsync();
+
+    // Register job history listener to track all job executions
+    var scopeFactory = app.Services.GetRequiredService<IServiceScopeFactory>();
+    quartzScheduler.ListenerManager.AddJobListener(
+        new JobHistoryListener(scopeFactory, Log.Logger),
+        GroupMatcher<JobKey>.AnyGroup());
 
     var artistHousekeepingCronExpression = melodeeConfiguration.GetValue<string>(SettingRegistry.JobsArtistHousekeepingCronExpression);
     if (artistHousekeepingCronExpression.Nullify() != null)
