@@ -145,8 +145,8 @@
                 {
                     <RadzenChart Style="height: 280px;">
                         <RadzenAreaSeries Data="@_songsAddedPerDay" CategoryProperty="Day" ValueProperty="Value" Title="Songs" Fill="var(--rz-primary-light)" Stroke="var(--rz-primary)">
-                            <RadzenCategoryAxis Visible="false">
-                                <RadzenAxisTitle Text=""/>
+                            <RadzenCategoryAxis Step="7" FormatString="{0:MM/dd}">
+                                <RadzenAxisTitle Text="Date"/>
                             </RadzenCategoryAxis>
                             <RadzenValueAxis>
                                 <RadzenAxisTitle Text="Songs"/>
@@ -170,8 +170,8 @@
                 {
                     <RadzenChart Style="height: 280px;">
                         <RadzenAreaSeries Data="@_searchesPerDay" CategoryProperty="Day" ValueProperty="Value" Title="Searches" Fill="var(--rz-info-light)" Stroke="var(--rz-info)">
-                            <RadzenCategoryAxis Visible="false">
-                                <RadzenAxisTitle Text=""/>
+                            <RadzenCategoryAxis Step="7" FormatString="{0:MM/dd}">
+                                <RadzenAxisTitle Text="Date"/>
                             </RadzenCategoryAxis>
                             <RadzenValueAxis>
                                 <RadzenAxisTitle Text="Searches"/>

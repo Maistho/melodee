@@ -241,7 +241,6 @@
             }
 
             _userInfo.Add(new KeyValue("Email", _user.Email));
-            _userInfo.Add(new KeyValue("API Key", _user.ApiKey.ToString()));
             _userInfo.Add(new KeyValue("Time Zone", _user.TimeZoneId ?? "UTC"));
             _userInfo.Add(new KeyValue("Created", CurrentUser?.FormatInstant(_user.CreatedAt) ?? _user.CreatedAt.ToString()));
             _userInfo.Add(new KeyValue("Last Login", CurrentUser?.FormatInstant(_user.LastLoginAt) ?? _user.LastLoginAt?.ToString() ?? MelodeeConfiguration.DefaultNoValuePlaceHolder));
