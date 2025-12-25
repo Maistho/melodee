@@ -13,7 +13,19 @@ excluded_in_search: true
     font-size: 0.8rem;
     line-height: 1.2;
     color: white;
-    white-space: nowrap;
+    /* Allow wrapping so long repo names aren't cut off in the header. */
+    white-space: normal;
+    /* Make the link content participate well in Bootstrap's flex navbar. */
+    min-width: 0;
+}
+    display: block;
+    padding-right: 1.2rem;
+    transition: opacity .25s;
+    font-size: 0.8rem;
+    line-height: 1.2;
+    color: white;
+    /* Allow wrapping so long repo names aren't cut off in the header. */
+    white-space: normal;
 }
 [dir=rtl] .gh-source {
     padding-right: 0;
@@ -37,8 +49,22 @@ excluded_in_search: true
     max-width: 100%;
     margin-left: 1.2rem;
     font-weight: 700;
-    text-overflow: ellipsis;
-    overflow: hidden;
+    /* Prefer wrapping over truncation so the full org/repo shows. */
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    vertical-align: middle;
+    /* Allow wrapping inside flex parents without overflowing. */
+    min-width: 0;
+}
+    display: inline-block;
+    max-width: 100%;
+    margin-left: 1.2rem;
+    font-weight: 700;
+    /* Prefer wrapping over truncation so the full org/repo shows. */
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
     vertical-align: middle;
 }
 .gh-source__facts {
@@ -49,6 +75,8 @@ excluded_in_search: true
     list-style-type: none;
     opacity: .75;
     overflow: hidden;
+    /* Keep facts readable if the repo name wraps onto multiple lines. */
+    clear: both;
 }
 [data-md-state=done] .gh-source__facts {
     -webkit-animation: md-source__facts--done .25s ease-in;
@@ -18614,5 +18642,5 @@ footer {
         margin-top: 30px;
         margin-bottom: 30px;
     }
-    
+
 }

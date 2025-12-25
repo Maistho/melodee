@@ -60,12 +60,12 @@
             <RadzenCard>
                 <RadzenText TextStyle="TextStyle.H6">Your plays per day (last 30d)</RadzenText>
                 <RadzenChart Style="height:320px;">
-                    <RadzenLineSeries Data="@_playsPerDay" CategoryProperty="Day" ValueProperty="Value" Title="Plays">
-                        <RadzenCategoryAxis Visible="false">
-                            <RadzenAxisTitle Text="" />
+                    <RadzenLineSeries Data="@_playsPerDay" CategoryProperty="DayAsDateTime" ValueProperty="Value" Title="Plays">
+                        <RadzenCategoryAxis Step="@TimeSpan.FromDays(7)" FormatString="{0:MM/dd}">
+                            <RadzenAxisTitle Text="Date"/>
                         </RadzenCategoryAxis>
                         <RadzenValueAxis>
-                            <RadzenAxisTitle Text="Plays" />
+                            <RadzenAxisTitle Text="Plays"/>
                         </RadzenValueAxis>
                     </RadzenLineSeries>
                 </RadzenChart>
@@ -75,12 +75,12 @@
             <RadzenCard>
                 <RadzenText TextStyle="TextStyle.H6">Songs added per day (last 30d)</RadzenText>
                 <RadzenChart Style="height:320px;">
-                    <RadzenLineSeries Data="@_songsAddedPerDay" CategoryProperty="Day" ValueProperty="Value" Title="Added">
-                        <RadzenCategoryAxis Visible="false">
-                            <RadzenAxisTitle Text="" />
+                    <RadzenLineSeries Data="@_songsAddedPerDay" CategoryProperty="DayAsDateTime" ValueProperty="Value" Title="Added">
+                        <RadzenCategoryAxis Step="@TimeSpan.FromDays(7)" FormatString="{0:MM/dd}">
+                            <RadzenAxisTitle Text="Date"/>
                         </RadzenCategoryAxis>
                         <RadzenValueAxis>
-                            <RadzenAxisTitle Text="Songs" />
+                            <RadzenAxisTitle Text="Songs"/>
                         </RadzenValueAxis>
                     </RadzenLineSeries>
                 </RadzenChart>
@@ -134,30 +134,39 @@
                     <RadzenColumn Size="12" SizeMD="4">
                         <RadzenText TextStyle="TextStyle.Subtitle1">Searches per day</RadzenText>
                         <RadzenChart Style="height:240px;">
-                            <RadzenLineSeries Data="@_searchesPerDay" CategoryProperty="Day" ValueProperty="Value">
-                                <RadzenCategoryAxis Visible="false">
-                                    <RadzenAxisTitle Text="" />
+                            <RadzenLineSeries Data="@_searchesPerDay" CategoryProperty="DayAsDateTime" ValueProperty="Value">
+                                <RadzenCategoryAxis Step="@TimeSpan.FromDays(7)" FormatString="{0:MM/dd}">
+                                    <RadzenAxisTitle Text=""/>
                                 </RadzenCategoryAxis>
+                                <RadzenValueAxis>
+                                    <RadzenAxisTitle Text=""/>
+                                </RadzenValueAxis>
                             </RadzenLineSeries>
                         </RadzenChart>
                     </RadzenColumn>
                     <RadzenColumn Size="12" SizeMD="4">
                         <RadzenText TextStyle="TextStyle.Subtitle1">Share views per day</RadzenText>
                         <RadzenChart Style="height:240px;">
-                            <RadzenLineSeries Data="@_shareViewsPerDay" CategoryProperty="Day" ValueProperty="Value">
-                                <RadzenCategoryAxis Visible="false">
-                                    <RadzenAxisTitle Text="" />
+                            <RadzenLineSeries Data="@_shareViewsPerDay" CategoryProperty="DayAsDateTime" ValueProperty="Value">
+                                <RadzenCategoryAxis Step="@TimeSpan.FromDays(7)" FormatString="{0:MM/dd}">
+                                    <RadzenAxisTitle Text=""/>
                                 </RadzenCategoryAxis>
+                                <RadzenValueAxis>
+                                    <RadzenAxisTitle Text=""/>
+                                </RadzenValueAxis>
                             </RadzenLineSeries>
                         </RadzenChart>
                     </RadzenColumn>
                     <RadzenColumn Size="12" SizeMD="4">
                         <RadzenText TextStyle="TextStyle.Subtitle1">Library scans per day</RadzenText>
                         <RadzenChart Style="height:240px;">
-                            <RadzenLineSeries Data="@_libraryScansPerDay" CategoryProperty="Day" ValueProperty="Value">
-                                <RadzenCategoryAxis Visible="false">
-                                    <RadzenAxisTitle Text="" />
+                            <RadzenLineSeries Data="@_libraryScansPerDay" CategoryProperty="DayAsDateTime" ValueProperty="Value">
+                                <RadzenCategoryAxis Step="@TimeSpan.FromDays(7)" FormatString="{0:MM/dd}">
+                                    <RadzenAxisTitle Text=""/>
                                 </RadzenCategoryAxis>
+                                <RadzenValueAxis>
+                                    <RadzenAxisTitle Text=""/>
+                                </RadzenValueAxis>
                             </RadzenLineSeries>
                         </RadzenChart>
                     </RadzenColumn>

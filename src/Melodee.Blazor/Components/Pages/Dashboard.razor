@@ -41,9 +41,9 @@
             <RadzenCard>
                 <RadzenText TextStyle="TextStyle.H6">Your plays (last 30 days)</RadzenText>
                 <RadzenChart Style="height: 200px;">
-                    <RadzenLineSeries Data="@_playsPerDay" CategoryProperty="Day" ValueProperty="Value" Title="Plays" Smooth="true">
-                        <RadzenCategoryAxis Visible="false">
-                            <RadzenAxisTitle Text=""/>
+                    <RadzenLineSeries Data="@_playsPerDay" CategoryProperty="DayAsDateTime" ValueProperty="Value" Title="Plays" Smooth="true">
+                        <RadzenCategoryAxis Step="@TimeSpan.FromDays(7)" FormatString="{0:MM/dd}">
+                            <RadzenAxisTitle Text="Date"/>
                         </RadzenCategoryAxis>
                         <RadzenValueAxis>
                             <RadzenAxisTitle Text="Plays"/>
