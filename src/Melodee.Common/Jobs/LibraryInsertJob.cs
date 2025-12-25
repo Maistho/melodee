@@ -807,72 +807,61 @@ public class LibraryInsertJob(
         string? scanJustDirectory,
         DateTime lastScanAtUtc)
     {
-        ConcurrentBag<FileInfo> melodeeFilesToProcess = new();
+        var melodeeFilesToProcess = new List<FileInfo>();
 
         Logger.Debug("[{JobName}] Starting to enumerate melodee.json files in library [{LibraryName}] at path [{Path}]",
             nameof(LibraryInsertJob), library.Name, scanJustDirectory.Nullify() ?? library.Path);
 
-        string[] allMelodeeFilesInLibrary;
+        var searchPath = scanJustDirectory.Nullify() != null
+            ? scanJustDirectory!
+            : library.Path;
+
         if (scanJustDirectory.Nullify() != null)
         {
             var scanJustDir = scanJustDirectory!.ToFileSystemDirectoryInfo();
-            if (scanJustDir.Exists())
-            {
-                Logger.Debug("[{JobName}] Scanning just directory [{ScanDir}] for melodee.json files",
-                    nameof(LibraryInsertJob), scanJustDir.FullName);
-                allMelodeeFilesInLibrary = Directory.GetFiles(scanJustDir.FullName(), Album.JsonFileName,
-                    SearchOption.AllDirectories);
-            }
-            else
+            if (!scanJustDir.Exists())
             {
                 Logger.Warning("[{JobName}] Scan directory [{ScanDir}] does not exist, skipping",
                     nameof(LibraryInsertJob), scanJustDirectory);
-                return melodeeFilesToProcess.ToList();
+                return melodeeFilesToProcess;
             }
         }
-        else
+
+        Logger.Debug("[{JobName}] Scanning path [{Path}] for melodee.json files modified since [{LastScanAt}]",
+            nameof(LibraryInsertJob), searchPath, lastScanAtUtc);
+
+        var scannedCount = 0;
+        var matchedCount = 0;
+
+        foreach (var melodeeFile in Directory.EnumerateFiles(searchPath, Album.JsonFileName, SearchOption.AllDirectories))
         {
-            Logger.Debug("[{JobName}] Scanning entire library path [{Path}] for melodee.json files",
-                nameof(LibraryInsertJob), library.Path);
-            allMelodeeFilesInLibrary = Directory.GetFiles(library.Path, Album.JsonFileName,
-                SearchOption.AllDirectories);
-        }
-
-        _melodeeFilesDiscovered = allMelodeeFilesInLibrary.Length;
-
-        Logger.Information("[{JobName}] Found [{TotalCount}] total melodee.json files in library [{LibraryName}], filtering by last scan date [{LastScanAt}]",
-            nameof(LibraryInsertJob), allMelodeeFilesInLibrary.Length, library.Name, lastScanAtUtc);
-
-        Logger.Debug("[{JobName}] Starting parallel filtering of [{Count}] files by LastWriteTimeUtc >= [{LastScanAt}]",
-            nameof(LibraryInsertJob), allMelodeeFilesInLibrary.Length, lastScanAtUtc);
-
-        var processedCount = 0;
-        Parallel.ForEach(allMelodeeFilesInLibrary, melodeeFile =>
-        {
+            scannedCount++;
             var f = new FileInfo(melodeeFile);
-            if (f is { Directory: not null, Name.Length: > 3 })
+            if (f is { Directory: not null, Name.Length: > 3 } && f.LastWriteTimeUtc >= lastScanAtUtc)
             {
-                // Check if the melodee.json file itself has been modified since last scan
-                if (f.LastWriteTimeUtc >= lastScanAtUtc)
-                {
-                    melodeeFilesToProcess.Add(f);
-                }
+                melodeeFilesToProcess.Add(f);
+                matchedCount++;
             }
-            // Log progress every 1000 files
-            var currentProcessed = Interlocked.Increment(ref processedCount);
-            if (currentProcessed % 1000 == 0)
+
+            if (scannedCount % 500 == 0)
             {
-                Logger.Debug("[{JobName}] Processed [{Processed}/{Total}] melodee.json files for filtering",
-                    nameof(LibraryInsertJob), currentProcessed, allMelodeeFilesInLibrary.Length);
+                OnProcessingEvent?.Invoke(
+                    this,
+                    new ProcessingEvent(ProcessingEventType.Processing,
+                        nameof(LibraryInsertJob),
+                        0,
+                        matchedCount,
+                        $"Scanning [{library.Name}]... {matchedCount:N0} albums to process ({scannedCount:N0} scanned)"));
             }
-        });
+        }
 
-        Logger.Information("[{JobName}] Filtered to [{FilteredCount}] melodee.json files that have been modified since last scan",
-            nameof(LibraryInsertJob), melodeeFilesToProcess.Count);
+        _melodeeFilesDiscovered = scannedCount;
+        _melodeeFilesFiltered = matchedCount;
 
-        _melodeeFilesFiltered = melodeeFilesToProcess.Count;
+        Logger.Information("[{JobName}] Scanned [{TotalCount}] albums, [{FilteredCount}] need processing in library [{LibraryName}]",
+            nameof(LibraryInsertJob), scannedCount, matchedCount, library.Name);
 
-        return melodeeFilesToProcess.ToList();
+        return melodeeFilesToProcess;
     }
 
     private async Task<List<Album>> LoadAlbumsInParallelAsync(
