@@ -610,6 +610,22 @@ if (!isQuartzDisabled)
                 .StartNow()
                 .Build());
     }
+
+    var stagingAutoMoveCronExpression = melodeeConfiguration.GetValue<string>(SettingRegistry.JobsStagingAutoMoveCronExpression);
+    if (stagingAutoMoveCronExpression.Nullify() != null)
+    {
+        await quartzScheduler.ScheduleJob(
+            JobBuilder.Create<StagingAutoMoveJob>()
+                .WithIdentity(JobKeyRegistry.StagingAutoMoveJobKey)
+                .Build(),
+            TriggerBuilder.Create()
+                .WithIdentity("StagingAutoMoveJob-trigger")
+                .UsingJobData(JobMapNameRegistry.ScanStatus, ScanStatus.Idle.ToString())
+                .UsingJobData(JobMapNameRegistry.Count, 0)
+                .WithCronSchedule(stagingAutoMoveCronExpression!)
+                .StartNow()
+                .Build());
+    }
 }
 
 #endregion

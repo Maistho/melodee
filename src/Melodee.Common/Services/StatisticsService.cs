@@ -447,11 +447,12 @@ public sealed class StatisticsService(
             .Include(x => x.Album)
                 .ThenInclude(a => a.Artist)
             .Where(x => songIds.Contains(x.Id))
-            .Select(x => new { 
-                x.Id, 
-                x.Title, 
-                x.ApiKey, 
-                AlbumApiKey = x.Album.ApiKey, 
+            .Select(x => new
+            {
+                x.Id,
+                x.Title,
+                x.ApiKey,
+                AlbumApiKey = x.Album.ApiKey,
                 AlbumName = x.Album.Name,
                 ArtistApiKey = x.Album.Artist.ApiKey,
                 ArtistName = x.Album.Artist.Name

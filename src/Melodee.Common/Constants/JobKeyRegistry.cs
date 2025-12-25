@@ -14,4 +14,5 @@ public static class JobKeyRegistry
         new("ArtistSearchEngineHousekeepingJobJobKey");
 
     public static readonly JobKey ChartUpdateJobKey = new("ChartUpdateJob");
+    public static readonly JobKey StagingAutoMoveJobKey = new("StagingAutoMoveJob");
 }

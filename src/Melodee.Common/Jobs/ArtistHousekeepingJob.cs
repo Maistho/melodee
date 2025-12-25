@@ -18,8 +18,33 @@ using Serilog;
 namespace Melodee.Common.Jobs;
 
 /// <summary>
-///     Housekeeping for Artist
+///     Performs housekeeping tasks for artists that are missing images.
 /// </summary>
+/// <remarks>
+///     <para>
+///         This job runs periodically to find artists in the database that have no images assigned.
+///         For each artist found, it searches external image services (configured via ArtistImageSearchEngineService)
+///         and downloads the first valid image found.
+///     </para>
+///     <para>
+///         Processing flow:
+///         <list type="number">
+///             <item>Queries artists with ImageCount of 0 or null that are not locked and have ReadyToProcess status</item>
+///             <item>For each artist, searches for images using the artist name and their albums as search context</item>
+///             <item>Downloads the first valid image to the artist's file system directory</item>
+///             <item>Validates the downloaded image using ImageValidator rules (dimensions, format, etc.)</item>
+///             <item>Updates the artist record with new image count and UpdatedImages status</item>
+///             <item>Clears the artist cache to ensure the new image is served</item>
+///         </list>
+///     </para>
+///     <para>
+///         Configuration settings used:
+///         <list type="bullet">
+///             <item>DefaultsBatchSize: Maximum number of artists to process per job run</item>
+///             <item>ImagingMaximumNumberOfArtistImages: Maximum images allowed per artist</item>
+///         </list>
+///     </para>
+/// </remarks>
 public class ArtistHousekeepingJob(
     ILogger logger,
     IMelodeeConfigurationFactory configurationFactory,

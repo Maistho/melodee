@@ -6,10 +6,31 @@ using Serilog;
 namespace Melodee.Common.Jobs;
 
 /// <summary>
-///     Background job to clean up stale "now playing" entries in the database.
-///     Runs periodically to mark entries as no longer playing if they haven't
-///     received a heartbeat within the configured threshold.
+///     Removes stale "now playing" entries from the database when users stop listening without explicit notification.
 /// </summary>
+/// <remarks>
+///     <para>
+///         The OpenSubsonic/Subsonic API uses a "now playing" mechanism where clients periodically report
+///         what the user is currently listening to. However, clients don't always send a "stopped playing"
+///         notification (e.g., app crash, network disconnect, user closes app).
+///     </para>
+///     <para>
+///         This job cleans up entries that haven't received a heartbeat update within the configured
+///         threshold, ensuring the "now playing" list accurately reflects active listeners.
+///     </para>
+///     <para>
+///         Processing flow:
+///         <list type="number">
+///             <item>Queries the NowPlaying table for entries older than the stale threshold</item>
+///             <item>Deletes entries that haven't been updated recently</item>
+///             <item>Logs the count of cleaned entries for monitoring</item>
+///         </list>
+///     </para>
+///     <para>
+///         This is a lightweight job that runs frequently to keep the now playing display current.
+///         The stale threshold is configured in the NowPlayingDatabaseRepository.
+///     </para>
+/// </remarks>
 public class NowPlayingCleanupJob(
     ILogger logger,
     IMelodeeConfigurationFactory configurationFactory,

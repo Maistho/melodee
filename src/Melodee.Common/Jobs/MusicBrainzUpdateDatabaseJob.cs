@@ -17,6 +17,57 @@ using Stopwatch = System.Diagnostics.Stopwatch;
 
 namespace Melodee.Common.Jobs;
 
+/// <summary>
+///     Downloads and imports the latest MusicBrainz database dump to enable local artist/album lookups.
+/// </summary>
+/// <remarks>
+///     <para>
+///         MusicBrainz is an open music encyclopedia that provides metadata for millions of albums and artists.
+///         This job downloads the full database export and imports it into a local SQLite database for fast,
+///         offline lookups during media processing.
+///     </para>
+///     <para>
+///         Processing flow:
+///         <list type="number">
+///             <item>Checks if MusicBrainz search engine is enabled in settings</item>
+///             <item>Creates a lock file to prevent concurrent runs (job can take hours)</item>
+///             <item>Temporarily disables the MusicBrainz search engine during import</item>
+///             <item>Downloads LATEST version info from data.metabrainz.org</item>
+///             <item>Skips if the latest export has already been imported (based on timestamp)</item>
+///             <item>Downloads mbdump.tar.bz2 (~3GB compressed) containing core data</item>
+///             <item>Downloads mbdump-derived.tar.bz2 containing calculated/derived data</item>
+///             <item>Extracts both archives to staging directory</item>
+///             <item>Imports the extracted data into local SQLite database</item>
+///             <item>On success, deletes the old database; on failure, restores it</item>
+///             <item>Re-enables the MusicBrainz search engine</item>
+///         </list>
+///     </para>
+///     <para>
+///         This job is marked with [DisallowConcurrentExecution] because it involves large file downloads
+///         and database operations that should not run in parallel.
+///     </para>
+///     <para>
+///         Safety features:
+///         <list type="bullet">
+///             <item>Lock file prevents duplicate runs across application restarts</item>
+///             <item>Existing database is renamed (not deleted) until import succeeds</item>
+///             <item>Search engine is disabled during import to prevent queries against incomplete data</item>
+///             <item>Lock file is always deleted in finally block</item>
+///         </list>
+///     </para>
+///     <para>
+///         Configuration settings used:
+///         <list type="bullet">
+///             <item>SearchEngineMusicBrainzEnabled: Must be true for job to run</item>
+///             <item>SearchEngineMusicBrainzStoragePath: Directory for database and staging files</item>
+///             <item>SearchEngineMusicBrainzImportLastImportTimestamp: Tracks last successful import</item>
+///         </list>
+///     </para>
+///     <para>
+///         Default schedule: Monthly on the 1st at noon (configurable via jobs.musicBrainzUpdateDatabase.cronExpression).
+///         MusicBrainz publishes new dumps weekly, but monthly updates are usually sufficient.
+///     </para>
+/// </remarks>
 [DisallowConcurrentExecution]
 public class MusicBrainzUpdateDatabaseJob(
     ILogger logger,

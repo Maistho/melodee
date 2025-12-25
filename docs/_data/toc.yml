@@ -23,3 +23,5 @@
       url: "hardware"
     - title: "Backup & Recovery"
       url: "backup"
+    - title: "Background Jobs"
+      url: "jobs"

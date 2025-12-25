@@ -27,8 +27,60 @@ using SearchOption = System.IO.SearchOption;
 namespace Melodee.Common.Jobs;
 
 /// <summary>
-///     Process non staging and inbound libraries and insert into database metadata found in existing melodee data files.
+///     Reads melodee.json metadata files from storage libraries and inserts artists, albums, and songs into the database.
 /// </summary>
+/// <remarks>
+///     <para>
+///         This is the final stage of the Melodee media import pipeline. After media has been processed and
+///         validated in staging, it is moved to a storage library. This job reads the melodee.json metadata
+///         files and creates the corresponding database records, making songs available for API clients to stream.
+///     </para>
+///     <para>
+///         This job is part of the media ingestion chain:
+///         <code>
+///         LibraryInboundProcessJob → StagingAutoMoveJob → LibraryInsertJob
+///         </code>
+///         This is the terminal job in the chain - it does not trigger any subsequent jobs.
+///     </para>
+///     <para>
+///         Processing flow:
+///         <list type="number">
+///             <item>Scans all storage libraries (LibraryType.Storage) for melodee.json files</item>
+///             <item>Filters to files modified since the last scan (unless force mode is enabled)</item>
+///             <item>Loads and validates album metadata from each melodee.json file</item>
+///             <item>Creates or finds existing Artist records (matching by name, MusicBrainz ID, or Spotify ID)</item>
+///             <item>Creates Album records with all metadata (genres, release date, duration, etc.)</item>
+///             <item>Creates Song records with media file details (bitrate, duration, file hash, etc.)</item>
+///             <item>Creates Contributor records for performers, producers, and publishers</item>
+///             <item>Updates library aggregates (total albums, songs, duration)</item>
+///             <item>Records scan history for monitoring and debugging</item>
+///         </list>
+///     </para>
+///     <para>
+///         This job is marked with [DisallowConcurrentExecution] to prevent database conflicts from
+///         simultaneous inserts. It processes files in batches to manage memory usage.
+///     </para>
+///     <para>
+///         Special handling:
+///         <list type="bullet">
+///             <item>Duplicate albums are detected and prefixed with "__duplicate_" for manual review</item>
+///             <item>Invalid melodee.json files trigger a reprocess event and are moved to staging</item>
+///             <item>Missing media files (referenced in JSON but not on disk) trigger reprocessing</item>
+///             <item>Locked libraries are skipped</item>
+///         </list>
+///     </para>
+///     <para>
+///         Configuration settings used:
+///         <list type="bullet">
+///             <item>ProcessingMaximumProcessingCount: Maximum songs to process per run (0 = unlimited)</item>
+///             <item>ProcessingDuplicateAlbumPrefix: Prefix added to duplicate album directories</item>
+///             <item>ProcessingIgnoredPerformers/Publishers/Production: Names to exclude from contributors</item>
+///         </list>
+///     </para>
+///     <para>
+///         Default schedule: Daily at midnight (configurable via jobs.libraryInsert.cronExpression setting).
+///     </para>
+/// </remarks>
 [DisallowConcurrentExecution]
 public class LibraryInsertJob(
     ILogger logger,

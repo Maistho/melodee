@@ -10,8 +10,33 @@ Libraries are the backbone of how Melodee organizes media through its lifecycle.
 ## Lifecycle Overview
 
 ```
-Inbound  ->  Processing / Normalization  ->  Staging  ->  Review / Edit  ->  Storage (Published)
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   INBOUND   │ ──▶ │   STAGING   │ ──▶ │   STORAGE   │ ──▶ │  DATABASE   │
+│  (Drop zone)│     │  (Review)   │     │ (Published) │     │ (Playable)  │
+└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
+       │                   │                   │                   │
+ LibraryInbound      StagingAuto         LibraryInsert        API Clients
+   ProcessJob         MoveJob                Job              can stream
 ```
+
+### Automated Job Chain
+
+When jobs are triggered by the scheduler (not manually), they automatically chain:
+
+1. **LibraryInboundProcessJob** → scans inbound, creates melodee.json, moves to staging
+2. **StagingAutoMoveJob** → moves "Ok" validated albums from staging to storage
+3. **LibraryInsertJob** → reads melodee.json from storage, inserts into database
+
+This means: drop files into inbound → within ~20 minutes they can be playable (if fully validated).
+
+### Manual Curation Mode
+
+Manual job triggers do NOT chain, allowing troubleshooting and review:
+
+- Run LibraryInboundProcessJob alone to process new files
+- Review albums in staging, edit metadata, mark as "Ok"
+- Run "Move Ok" button or StagingAutoMoveJob to move approved albums
+- Run LibraryInsertJob to index newly moved albums
 
 ### Inbound Library
 
@@ -34,7 +59,8 @@ You can:
 - Attach or replace artwork.
 - Resolve duplicates or conflicting releases.
 
-Promotion from staging to storage triggers indexing and exposes content for streaming/search.
+Albums with "Ok" status are automatically moved to storage by the StagingAutoMoveJob.
+Manual promotion is also available via the "Move Ok" button in the library UI.
 
 ### Storage Libraries
 

@@ -7,9 +7,31 @@ using Serilog;
 namespace Melodee.Common.Jobs;
 
 /// <summary>
-///     Background job to update all chart items with album links.
-///     Runs nightly to ensure charts reflect newly added albums in the system.
+///     Links chart entries to albums in the database by matching artist name and album title.
 /// </summary>
+/// <remarks>
+///     <para>
+///         Charts (e.g., Billboard, UK Charts) contain entries with artist and album names but no direct
+///         database links. This job attempts to match those entries to albums in the Melodee library,
+///         enabling features like "Show chart position" on album details.
+///     </para>
+///     <para>
+///         Processing flow:
+///         <list type="number">
+///             <item>Retrieves all charts from the database (including hidden charts)</item>
+///             <item>For each chart, calls LinkItemsAsync to match unlinked entries to albums</item>
+///             <item>Matching uses normalized artist/album names and optional MusicBrainz/Spotify IDs</item>
+///             <item>Reports statistics: linked (exact match), ambiguous (multiple matches), unlinked (no match), skipped (already linked)</item>
+///         </list>
+///     </para>
+///     <para>
+///         The job respects manual links by setting overwriteManualLinks=false, so user corrections are preserved.
+///         Run this job after importing new albums to update chart links for newly added content.
+///     </para>
+///     <para>
+///         Default schedule: Daily at 02:00 AM (configurable via jobs.chartUpdate.cronExpression setting).
+///     </para>
+/// </remarks>
 public class ChartUpdateJob(
     ILogger logger,
     IMelodeeConfigurationFactory configurationFactory,

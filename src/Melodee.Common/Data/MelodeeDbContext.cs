@@ -987,6 +987,26 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
                         "Cron expression to run the artist search engine house keeping job, set empty to disable. Default of '0 0 0 * * ?' will run every day at 00:00. See https://www.freeformatter.com/cron-expression-generator-quartz.html",
                     Value = "0 0 0 * * ?",
                     CreatedAt = now
+                },
+                new Setting
+                {
+                    Id = 1405,
+                    Category = (int)SettingCategory.Jobs,
+                    Key = SettingRegistry.JobsChartUpdateCronExpression,
+                    Comment =
+                        "Cron expression to run the chart update job which links chart items to albums, set empty to disable. Default of '0 0 2 * * ?' will run every day at 02:00. See https://www.freeformatter.com/cron-expression-generator-quartz.html",
+                    Value = "0 0 2 * * ?",
+                    CreatedAt = now
+                },
+                new Setting
+                {
+                    Id = 1406,
+                    Category = (int)SettingCategory.Jobs,
+                    Key = SettingRegistry.JobsStagingAutoMoveCronExpression,
+                    Comment =
+                        "Cron expression for staging auto-move job. Moves 'Ok' albums to storage. Default '0 */15 * * * ?' runs every 15 min. Also triggered after inbound processing.",
+                    Value = "0 */15 * * * ?",
+                    CreatedAt = now
                 }
             );
         });

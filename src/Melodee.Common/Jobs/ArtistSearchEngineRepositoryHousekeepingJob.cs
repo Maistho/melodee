@@ -12,8 +12,34 @@ using Serilog;
 namespace Melodee.Common.Jobs;
 
 /// <summary>
-///     Housekeeping for Artist Search Engine Repository
+///     Maintains the local Artist Search Engine cache by refreshing stale artist album data from external sources.
 /// </summary>
+/// <remarks>
+///     <para>
+///         The Artist Search Engine Repository is a local SQLite database that caches artist and album information
+///         from external services (MusicBrainz, Spotify, etc.). This job ensures the cached data stays current
+///         by periodically refreshing records that haven't been updated within the configured refresh interval.
+///     </para>
+///     <para>
+///         Processing flow:
+///         <list type="number">
+///             <item>Queries artists from the search engine cache that are older than the refresh threshold</item>
+///             <item>For each stale artist, re-fetches their album information from external APIs</item>
+///             <item>Updates the local cache with fresh data and sets the LastRefreshed timestamp</item>
+///         </list>
+///     </para>
+///     <para>
+///         This job processes artists in batches to avoid rate limiting issues with external APIs.
+///         Locked artists (IsLocked=true) are skipped to preserve manually curated data.
+///     </para>
+///     <para>
+///         Configuration settings used:
+///         <list type="bullet">
+///             <item>SearchEngineArtistSearchDatabaseRefreshInDays: How old records must be before refresh (0 disables)</item>
+///             <item>DefaultsBatchSize: Maximum artists to refresh per job run</item>
+///         </list>
+///     </para>
+/// </remarks>
 public class ArtistSearchEngineRepositoryHousekeepingJob(
     ILogger logger,
     IMelodeeConfigurationFactory configurationFactory,

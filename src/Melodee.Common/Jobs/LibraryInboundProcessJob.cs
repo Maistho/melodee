@@ -13,14 +13,56 @@ using Serilog;
 namespace Melodee.Common.Jobs;
 
 /// <summary>
-///     Processes inbound directory for media and puts processed into staging directory.
+///     Scans the inbound library directory for new media files and processes them into the staging directory.
 /// </summary>
+/// <remarks>
+///     <para>
+///         This is the first stage of the Melodee media import pipeline. The inbound directory is where users
+///         drop new music files. This job scans for changes, parses metadata, and moves processed albums to staging.
+///     </para>
+///     <para>
+///         Processing flow:
+///         <list type="number">
+///             <item>Checks if the inbound library needs scanning (compares LastScanAt with directory modification time)</item>
+///             <item>Scans all subdirectories for supported audio files (MP3, FLAC, etc.)</item>
+///             <item>Parses ID3/Vorbis tags and extracts album artwork</item>
+///             <item>Validates and normalizes metadata (artist names, album titles, track numbers)</item>
+///             <item>Creates melodee.json metadata files for each discovered album</item>
+///             <item>Moves processed albums to the staging directory for review or further processing</item>
+///             <item>Records scan history with counts of new artists, albums, and songs discovered</item>
+///         </list>
+///     </para>
+///     <para>
+///         This job is part of the media ingestion chain:
+///         <code>
+///         LibraryInboundProcessJob → StagingAutoMoveJob → LibraryInsertJob
+///         </code>
+///         When triggered by the scheduler (not manually), it will automatically trigger
+///         StagingAutoMoveJob upon successful completion to continue the pipeline.
+///     </para>
+///     <para>
+///         This job is marked with [DisallowConcurrentExecution] to prevent multiple scans from running
+///         simultaneously, which could cause file conflicts and duplicate processing.
+///     </para>
+///     <para>
+///         Skipped conditions:
+///         <list type="bullet">
+///             <item>Inbound library path not configured</item>
+///             <item>Library is locked (IsLocked=true)</item>
+///             <item>No changes detected since last scan</item>
+///         </list>
+///     </para>
+///     <para>
+///         Default schedule: Every 10 minutes (configurable via jobs.libraryProcess.cronExpression setting).
+///     </para>
+/// </remarks>
 [DisallowConcurrentExecution]
 public sealed class LibraryInboundProcessJob(
     ILogger logger,
     IMelodeeConfigurationFactory configurationFactory,
     LibraryService libraryService,
-    DirectoryProcessorToStagingService directoryProcessorToStagingService) : JobBase(logger, configurationFactory)
+    DirectoryProcessorToStagingService directoryProcessorToStagingService,
+    ISchedulerFactory schedulerFactory) : JobBase(logger, configurationFactory)
 {
     public override async Task Execute(IJobExecutionContext context)
     {
@@ -51,6 +93,7 @@ public sealed class LibraryInboundProcessJob(
         }
 
         var dataMap = context.JobDetail.JobDataMap;
+        var processedCount = 0;
         try
         {
             dataMap.Put(JobMapNameRegistry.ScanStatus, ScanStatus.InProcess.ToString());
@@ -67,9 +110,9 @@ public sealed class LibraryInboundProcessJob(
                 Logger.Warning("[{JobName}] Failed to Scan inbound library.", nameof(LibraryInboundProcessJob));
             }
 
+            processedCount = result.Data.NewAlbumsCount + result.Data.NewArtistsCount + result.Data.NewSongsCount;
             dataMap.Put(JobMapNameRegistry.ScanStatus, ScanStatus.Idle.ToString());
-            dataMap.Put(JobMapNameRegistry.Count,
-                result.Data.NewAlbumsCount + result.Data.NewArtistsCount + result.Data.NewSongsCount);
+            dataMap.Put(JobMapNameRegistry.Count, processedCount);
             await libraryService.CreateLibraryScanHistory(inboundLibrary, new LibraryScanHistory
             {
                 CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow),
@@ -79,10 +122,44 @@ public sealed class LibraryInboundProcessJob(
                 FoundArtistsCount = result.Data.NewArtistsCount,
                 FoundSongsCount = result.Data.NewSongsCount
             }, context.CancellationToken).ConfigureAwait(false);
+
+            // Chain to StagingAutoMoveJob if this was a scheduled run (not manual) and we processed something
+            if (!IsManualTrigger(context) && processedCount > 0)
+            {
+                await TriggerNextJobAsync(context, JobKeyRegistry.StagingAutoMoveJobKey).ConfigureAwait(false);
+            }
         }
         catch (Exception e)
         {
             Logger.Error(e, "[{JobName}] Failed to Scan inbound library.", nameof(LibraryInboundProcessJob));
+        }
+    }
+
+    private static bool IsManualTrigger(IJobExecutionContext context)
+    {
+        return context.Trigger is not ICronTrigger;
+    }
+
+    private async Task TriggerNextJobAsync(IJobExecutionContext context, JobKey nextJobKey)
+    {
+        try
+        {
+            var scheduler = await schedulerFactory.GetScheduler(context.CancellationToken).ConfigureAwait(false);
+            var nextJobExists = await scheduler.CheckExists(nextJobKey, context.CancellationToken).ConfigureAwait(false);
+
+            if (nextJobExists)
+            {
+                Logger.Debug("[{JobName}] Triggering next job in chain: {NextJob}", nameof(LibraryInboundProcessJob), nextJobKey.Name);
+                await scheduler.TriggerJob(nextJobKey, context.CancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                Logger.Debug("[{JobName}] Next job {NextJob} not scheduled, skipping chain trigger", nameof(LibraryInboundProcessJob), nextJobKey.Name);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning(ex, "[{JobName}] Failed to trigger next job {NextJob}", nameof(LibraryInboundProcessJob), nextJobKey.Name);
         }
     }
 }

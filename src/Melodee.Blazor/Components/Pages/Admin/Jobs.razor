@@ -4,108 +4,679 @@
 @using Melodee.Blazor.ViewModels
 @using Quartz
 @using Quartz.Impl.Matchers
+@using Quartz.Impl.Triggers
 @inject ISchedulerFactory SchedulerFactory
 @inject IConfiguration AppSettingsConfiguration
+@inject NotificationService NotificationService
 
 @attribute [Authorize(Roles = "Administrator")]
 
-@if (AppSettingsConfiguration.GetValue<bool>(AppSettingsKeys.QuartzDisabled))
-{
-    <p>Jobs are disabled in the appsettings.json file. Set the setting "@AppSettingsKeys.QuartzDisabled" to "false" (or
-        remove entirely) enable.</p>
-}
-else if (_jobs.Count == 0)
-{
-    <p>No jobs found</p>
-    <p>Check your configuration and enable the Cron Expressions for Jobs.</p>
-}
+<PageTitle>Background Jobs</PageTitle>
 
+<RadzenStack Gap="1rem">
+    @* Header *@
+    <RadzenRow AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenText TextStyle="TextStyle.H4">
+                <RadzenIcon Icon="schedule" class="rz-me-1"/>
+                Background Jobs
+            </RadzenText>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                <RadzenButton Icon="refresh" Text="Refresh" Click="@RefreshJobsClicked" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Primary" Disabled="@_isLoading"/>
+                @if (_schedulerStarted)
+                {
+                    <RadzenButton Icon="pause" Text="Pause All" Click="@PauseAllJobsClicked" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Warning" Disabled="@_isLoading"/>
+                }
+                else
+                {
+                    <RadzenButton Icon="play_arrow" Text="Resume All" Click="@ResumeAllJobsClicked" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Success" Disabled="@_isLoading"/>
+                }
+            </RadzenStack>
+        </RadzenColumn>
+    </RadzenRow>
 
+    @if (AppSettingsConfiguration.GetValue<bool>(AppSettingsKeys.QuartzDisabled))
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Warning" Shade="Shade.Light" AllowClose="false">
+            <RadzenText>Jobs are disabled in the appsettings.json file. Set the setting "<strong>@AppSettingsKeys.QuartzDisabled</strong>" to "false" (or remove entirely) to enable.</RadzenText>
+        </RadzenAlert>
+    }
+    else
+    {
+        @* Scheduler Status Overview *@
+        <RadzenRow Gap="1rem">
+            <RadzenColumn Size="6" SizeMD="3">
+                <RadzenCard Style="height: 100%;">
+                    <RadzenStack Gap="0.25rem" AlignItems="AlignItems.Center">
+                        <RadzenIcon Icon="@(_schedulerStarted ? "check_circle" : "pause_circle")" 
+                                    Style="@($"font-size: 2rem; color: var(--rz-{(_schedulerStarted ? "success" : "warning")});")"/>
+                        <RadzenText TextStyle="TextStyle.Overline">Scheduler Status</RadzenText>
+                        <RadzenText TextStyle="TextStyle.H6" Style="@($"color: var(--rz-{(_schedulerStarted ? "success" : "warning")});")">
+                            @(_schedulerStarted ? "Running" : "Paused")
+                        </RadzenText>
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+            <RadzenColumn Size="6" SizeMD="3">
+                <RadzenCard Style="height: 100%;">
+                    <RadzenStack Gap="0.25rem" AlignItems="AlignItems.Center">
+                        <RadzenIcon Icon="list_alt" Style="font-size: 2rem; color: var(--rz-primary);"/>
+                        <RadzenText TextStyle="TextStyle.Overline">Total Jobs</RadzenText>
+                        <RadzenText TextStyle="TextStyle.H6">@_jobs.Count</RadzenText>
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+            <RadzenColumn Size="6" SizeMD="3">
+                <RadzenCard Style="height: 100%;">
+                    <RadzenStack Gap="0.25rem" AlignItems="AlignItems.Center">
+                        <RadzenIcon Icon="play_circle" Style="font-size: 2rem; color: var(--rz-info);"/>
+                        <RadzenText TextStyle="TextStyle.Overline">Currently Running</RadzenText>
+                        <RadzenText TextStyle="TextStyle.H6">@_currentlyExecutingCount</RadzenText>
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+            <RadzenColumn Size="6" SizeMD="3">
+                <RadzenCard Style="height: 100%;">
+                    <RadzenStack Gap="0.25rem" AlignItems="AlignItems.Center">
+                        <RadzenIcon Icon="pause_circle" Style="font-size: 2rem; color: var(--rz-warning);"/>
+                        <RadzenText TextStyle="TextStyle.Overline">Paused Jobs</RadzenText>
+                        <RadzenText TextStyle="TextStyle.H6">@_pausedJobsCount</RadzenText>
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+        </RadzenRow>
 
-<RadzenDataList
-    AllowVirtualization="false"
-    WrapItems="true"
-    AllowPaging="false"
-    Data="@_jobs"
-    TItem="JobStatus">
-    <Template Context="jobStatus">
-        <RadzenCard Variant="Variant.Outlined" class="rz-p-0" Style="width: 100%; overflow: hidden;">
-            <RadzenRow Gap="0">
-                <RadzenColumn Size="12" SizeLG="3" class="rz-p-4 product-title">
-                    <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H5"
-                                class="rz-color-on-secondary-lighter">@(jobStatus.Name)</RadzenText>
+        @if (_jobs.Count == 0 && !_isLoading)
+        {
+            <RadzenAlert AlertStyle="AlertStyle.Info" Shade="Shade.Light" AllowClose="false">
+                <RadzenText>No jobs found. Check your configuration and enable the Cron Expressions for Jobs in Settings.</RadzenText>
+            </RadzenAlert>
+        }
+        else
+        {
+            @* Jobs Data Grid *@
+            <RadzenCard>
+                <RadzenDataGrid TItem="JobStatusDetail" 
+                                Data="@_jobs" 
+                                AllowPaging="false" 
+                                AllowSorting="true" 
+                                AllowFiltering="false"
+                                Density="Density.Compact"
+                                RowExpand="@OnRowExpand"
+                                ExpandMode="DataGridExpandMode.Single">
+                    <Template Context="job">
+                        <RadzenCard Variant="Variant.Flat" class="rz-background-color-base-100">
+                            <RadzenRow Gap="1rem">
+                                @* Job Details *@
+                                <RadzenColumn Size="12" SizeMD="6">
+                                    <RadzenText TextStyle="TextStyle.Subtitle1" class="rz-mb-2">
+                                        <RadzenIcon Icon="info" class="rz-me-1"/>
+                                        Job Details
+                                    </RadzenText>
+                                    <RadzenStack Gap="0.25rem">
+                                        @if (!string.IsNullOrEmpty(job.Description))
+                                        {
+                                            <RadzenRow>
+                                                <RadzenColumn Size="4"><RadzenText TextStyle="TextStyle.Caption">Description</RadzenText></RadzenColumn>
+                                                <RadzenColumn Size="8"><RadzenText>@job.Description</RadzenText></RadzenColumn>
+                                            </RadzenRow>
+                                        }
+                                        <RadzenRow>
+                                            <RadzenColumn Size="4"><RadzenText TextStyle="TextStyle.Caption">Job Group</RadzenText></RadzenColumn>
+                                            <RadzenColumn Size="8"><RadzenText>@job.JobGroup</RadzenText></RadzenColumn>
+                                        </RadzenRow>
+                                        <RadzenRow>
+                                            <RadzenColumn Size="4"><RadzenText TextStyle="TextStyle.Caption">Trigger Type</RadzenText></RadzenColumn>
+                                            <RadzenColumn Size="8"><RadzenText>@job.TriggerType</RadzenText></RadzenColumn>
+                                        </RadzenRow>
+                                        @if (!string.IsNullOrEmpty(job.CronExpression))
+                                        {
+                                            <RadzenRow>
+                                                <RadzenColumn Size="4"><RadzenText TextStyle="TextStyle.Caption">Cron Expression</RadzenText></RadzenColumn>
+                                                <RadzenColumn Size="8">
+                                                    <RadzenText><code>@job.CronExpression</code></RadzenText>
+                                                    @if (!string.IsNullOrEmpty(job.CronDescription))
+                                                    {
+                                                        <br/><RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">@job.CronDescription</RadzenText>
+                                                    }
+                                                </RadzenColumn>
+                                            </RadzenRow>
+                                        }
+                                        <RadzenRow>
+                                            <RadzenColumn Size="4"><RadzenText TextStyle="TextStyle.Caption">Times Triggered</RadzenText></RadzenColumn>
+                                            <RadzenColumn Size="8"><RadzenText>@job.TimesTriggered.ToString("N0")</RadzenText></RadzenColumn>
+                                        </RadzenRow>
+                                    </RadzenStack>
+                                </RadzenColumn>
+
+                                @* Job Configuration *@
+                                <RadzenColumn Size="12" SizeMD="6">
+                                    <RadzenText TextStyle="TextStyle.Subtitle1" class="rz-mb-2">
+                                        <RadzenIcon Icon="settings" class="rz-me-1"/>
+                                        Configuration
+                                    </RadzenText>
+                                    <RadzenStack Gap="0.25rem">
+                                        <RadzenRow>
+                                            <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">Durable</RadzenText></RadzenColumn>
+                                            <RadzenColumn Size="6">
+                                                <RadzenBadge BadgeStyle="@(job.IsDurable ? BadgeStyle.Success : BadgeStyle.Light)" 
+                                                             Text="@(job.IsDurable ? "Yes" : "No")" Shade="Shade.Light"/>
+                                            </RadzenColumn>
+                                        </RadzenRow>
+                                        <RadzenRow>
+                                            <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">Disallow Concurrent</RadzenText></RadzenColumn>
+                                            <RadzenColumn Size="6">
+                                                <RadzenBadge BadgeStyle="@(job.DisallowConcurrentExecution ? BadgeStyle.Info : BadgeStyle.Light)" 
+                                                             Text="@(job.DisallowConcurrentExecution ? "Yes" : "No")" Shade="Shade.Light"/>
+                                            </RadzenColumn>
+                                        </RadzenRow>
+                                        <RadzenRow>
+                                            <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">Persist Data After Execution</RadzenText></RadzenColumn>
+                                            <RadzenColumn Size="6">
+                                                <RadzenBadge BadgeStyle="@(job.PersistJobDataAfterExecution ? BadgeStyle.Info : BadgeStyle.Light)" 
+                                                             Text="@(job.PersistJobDataAfterExecution ? "Yes" : "No")" Shade="Shade.Light"/>
+                                            </RadzenColumn>
+                                        </RadzenRow>
+                                        <RadzenRow>
+                                            <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">Requests Recovery</RadzenText></RadzenColumn>
+                                            <RadzenColumn Size="6">
+                                                <RadzenBadge BadgeStyle="@(job.RequestsRecovery ? BadgeStyle.Warning : BadgeStyle.Light)" 
+                                                             Text="@(job.RequestsRecovery ? "Yes" : "No")" Shade="Shade.Light"/>
+                                            </RadzenColumn>
+                                        </RadzenRow>
+                                    </RadzenStack>
+                                </RadzenColumn>
+
+                                @* Job Data Map *@
+                                @if (job.JobData != null && job.JobData.Count > 0)
+                                {
+                                    <RadzenColumn Size="12">
+                                        <RadzenText TextStyle="TextStyle.Subtitle1" class="rz-mb-2">
+                                            <RadzenIcon Icon="data_object" class="rz-me-1"/>
+                                            Job Data
+                                        </RadzenText>
+                                        <RadzenDataGrid TItem="KeyValuePair<string, object>" 
+                                                        Data="@job.JobData" 
+                                                        AllowPaging="false" 
+                                                        Density="Density.Compact">
+                                            <Columns>
+                                                <RadzenDataGridColumn TItem="KeyValuePair<string, object>" Property="Key" Title="Key" Width="200px"/>
+                                                <RadzenDataGridColumn TItem="KeyValuePair<string, object>" Title="Value">
+                                                    <Template Context="kvp">@kvp.Value?.ToString()</Template>
+                                                </RadzenDataGridColumn>
+                                            </Columns>
+                                        </RadzenDataGrid>
+                                    </RadzenColumn>
+                                }
+                            </RadzenRow>
+                        </RadzenCard>
+                    </Template>
+                    <Columns>
+                        <RadzenDataGridColumn TItem="JobStatusDetail" Property="JobName" Title="Job Name" Width="220px">
+                            <Template Context="job">
+                                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                                    @if (job.IsCurrentlyExecuting)
+                                    {
+                                        <RadzenIcon Icon="sync" Style="color: var(--rz-info); animation: spin 1s linear infinite;"/>
+                                    }
+                                    <RadzenText Style="font-weight: 500;">@job.JobName</RadzenText>
+                                </RadzenStack>
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="JobStatusDetail" Property="TriggerState" Title="Status" Width="100px">
+                            <Template Context="job">
+                                <RadzenBadge BadgeStyle="@GetBadgeStyle(job.TriggerState)" Text="@job.TriggerState" Shade="Shade.Light"/>
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="JobStatusDetail" Property="PreviousFireTimeUtc" Title="Last Run" Width="160px">
+                            <Template Context="job">
+                                <RadzenText TextStyle="TextStyle.Caption">@job.PreviousFireTimeDisplay</RadzenText>
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="JobStatusDetail" Property="NextFireTimeUtc" Title="Next Run" Width="160px">
+                            <Template Context="job">
+                                <RadzenText TextStyle="TextStyle.Caption">@job.NextFireTimeDisplay</RadzenText>
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="JobStatusDetail" Property="RunTime" Title="Last Duration" Width="100px">
+                            <Template Context="job">
+                                <RadzenText TextStyle="TextStyle.Caption">@job.RunTimeDisplay</RadzenText>
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn TItem="JobStatusDetail" Title="Actions" Width="280px" Sortable="false">
+                            <Template Context="job">
+                                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem">
+                                    <RadzenButton Icon="play_arrow" 
+                                                  Text="Run" 
+                                                  Size="ButtonSize.ExtraSmall" 
+                                                  ButtonStyle="ButtonStyle.Success"
+                                                  Disabled="@(job.IsCurrentlyExecuting)"
+                                                  Click="@(() => TriggerJobClicked(job))"/>
+                                    @if (job.TriggerState == "Paused")
+                                    {
+                                        <RadzenButton Icon="play_circle" 
+                                                      Text="Resume" 
+                                                      Size="ButtonSize.ExtraSmall" 
+                                                      ButtonStyle="ButtonStyle.Info"
+                                                      Click="@(() => ResumeJobClicked(job))"/>
+                                    }
+                                    else
+                                    {
+                                        <RadzenButton Icon="pause_circle" 
+                                                      Text="Pause" 
+                                                      Size="ButtonSize.ExtraSmall" 
+                                                      ButtonStyle="ButtonStyle.Warning"
+                                                      Disabled="@(job.IsCurrentlyExecuting)"
+                                                      Click="@(() => PauseJobClicked(job))"/>
+                                    }
+                                    @if (job.IsCurrentlyExecuting)
+                                    {
+                                        <RadzenButton Icon="stop" 
+                                                      Text="Interrupt" 
+                                                      Size="ButtonSize.ExtraSmall" 
+                                                      ButtonStyle="ButtonStyle.Danger"
+                                                      Click="@(() => InterruptJobClicked(job))"/>
+                                    }
+                                </RadzenStack>
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            </RadzenCard>
+        }
+
+        @* Scheduler Information *@
+        <RadzenCard>
+            <RadzenText TextStyle="TextStyle.H6">
+                <RadzenIcon Icon="info" class="rz-me-1"/>
+                Scheduler Information
+            </RadzenText>
+            <RadzenRow Gap="1rem" class="rz-mt-2">
+                <RadzenColumn Size="6" SizeMD="3">
+                    <RadzenText TextStyle="TextStyle.Caption">Scheduler Name</RadzenText>
+                    <RadzenText>@_schedulerName</RadzenText>
                 </RadzenColumn>
-                <RadzenColumn Size="12" SizeLG="7" class="rz-p-4">
-                    <RadzenRow Gap="0">
-                        <RadzenColumn Size="12" SizeMD="6" SizeLG="2">
-                            <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H5" class="rz-mb-0">Last Run
-                            </RadzenText>
-                            <RadzenText TextStyle="TextStyle.Body2">@(jobStatus.PreviousFireTime)</RadzenText>
-                        </RadzenColumn>
-                        <RadzenColumn Size="12" SizeMD="6" SizeLG="2">
-                            <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H5" class="rz-mb-0">Next Run
-                            </RadzenText>
-                            <RadzenText TextStyle="TextStyle.Body2">@(jobStatus.NextFireTime)</RadzenText>
-                        </RadzenColumn>
-                    </RadzenRow>
+                <RadzenColumn Size="6" SizeMD="3">
+                    <RadzenText TextStyle="TextStyle.Caption">Instance ID</RadzenText>
+                    <RadzenText>@_schedulerInstanceId</RadzenText>
                 </RadzenColumn>
-                <RadzenColumn Size="12" SizeLG="2" class="rz-p-4">
-                    <RadzenButton Text="Run now" Style="width: 100%"
-                                  Size="ButtonSize.Small"
-                                  Click="@(_ => RunJob(jobStatus))"/>
+                <RadzenColumn Size="6" SizeMD="3">
+                    <RadzenText TextStyle="TextStyle.Caption">Scheduler Started</RadzenText>
+                    <RadzenText>@_schedulerStartTimeDisplay</RadzenText>
+                </RadzenColumn>
+                <RadzenColumn Size="6" SizeMD="3">
+                    <RadzenText TextStyle="TextStyle.Caption">Thread Pool Size</RadzenText>
+                    <RadzenText>@_threadPoolSize</RadzenText>
                 </RadzenColumn>
             </RadzenRow>
         </RadzenCard>
-    </Template>
-</RadzenDataList>
+    }
+</RadzenStack>
 
+<style>
+    @@keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+</style>
 
 @code {
-
-    private readonly List<JobStatus> _jobs = [];
-
-    private async Task RefreshJobs()
-    {
-        _jobs.Clear();
-
-        var scheduler = await SchedulerFactory.GetScheduler();
-        var jobGroups = await scheduler.GetJobGroupNames();
-
-        foreach (var group in jobGroups)
-        {
-            var groupMatcher = GroupMatcher<JobKey>.GroupContains(group);
-            var jobKeys = await scheduler.GetJobKeys(groupMatcher);
-            foreach (var jobKey in jobKeys)
-            {
-                var triggers = await scheduler.GetTriggersOfJob(jobKey);
-                foreach (var trigger in triggers)
-                {
-                    var nextFireTime = trigger.GetNextFireTimeUtc();
-                    var previousFireTime = trigger.GetPreviousFireTimeUtc();
-                    _jobs.Add(new JobStatus(group,
-                        jobKey.Name,
-                        trigger.Key.Name,
-                        trigger.Key.Group,
-                        trigger.GetType().Name,
-                        scheduler.GetTriggerState(trigger.Key).ToString()!,
-                        nextFireTime?.LocalDateTime.ToString(CultureInfo.InvariantCulture) ?? "---",
-                        previousFireTime?.LocalDateTime.ToString(CultureInfo.InvariantCulture) ?? "---"));
-                }
-            }
-        }
-    }
+    private readonly List<JobStatusDetail> _jobs = [];
+    private bool _isLoading;
+    private bool _schedulerStarted;
+    private string _schedulerName = "---";
+    private string _schedulerInstanceId = "---";
+    private string _schedulerStartTimeDisplay = "---";
+    private int _threadPoolSize;
+    private int _currentlyExecutingCount;
+    private int _pausedJobsCount;
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        
-        await RefreshJobs();
+        await RefreshJobsAsync();
     }
 
-    private async Task RunJob(JobStatus jobStatus)
+    private async Task RefreshJobsAsync()
     {
-        var scheduler = await SchedulerFactory.GetScheduler();
-        await scheduler.TriggerJob(new JobKey(jobStatus.Name));
+        _isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            _jobs.Clear();
+
+            var scheduler = await SchedulerFactory.GetScheduler();
+            var metadata = await scheduler.GetMetaData();
+            
+            _schedulerStarted = scheduler.IsStarted && !scheduler.IsShutdown;
+            _schedulerName = metadata.SchedulerName;
+            _schedulerInstanceId = metadata.SchedulerInstanceId;
+            _schedulerStartTimeDisplay = metadata.RunningSince?.LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss") ?? "Not started";
+            _threadPoolSize = metadata.ThreadPoolSize;
+
+            var currentlyExecuting = await scheduler.GetCurrentlyExecutingJobs();
+            var currentlyExecutingKeys = currentlyExecuting.Select(j => j.JobDetail.Key).ToHashSet();
+            _currentlyExecutingCount = currentlyExecuting.Count;
+
+            var jobGroups = await scheduler.GetJobGroupNames();
+            _pausedJobsCount = 0;
+
+            foreach (var group in jobGroups)
+            {
+                var groupMatcher = GroupMatcher<JobKey>.GroupContains(group);
+                var jobKeys = await scheduler.GetJobKeys(groupMatcher);
+                
+                foreach (var jobKey in jobKeys)
+                {
+                    var jobDetail = await scheduler.GetJobDetail(jobKey);
+                    if (jobDetail == null) continue;
+
+                    var triggers = await scheduler.GetTriggersOfJob(jobKey);
+                    var trigger = triggers.FirstOrDefault();
+                    
+                    if (trigger == null) continue;
+
+                    var triggerState = await scheduler.GetTriggerState(trigger.Key);
+                    if (triggerState == TriggerState.Paused) _pausedJobsCount++;
+
+                    string? cronExpression = null;
+                    string? cronDescription = null;
+                    if (trigger is ICronTrigger cronTrigger)
+                    {
+                        cronExpression = cronTrigger.CronExpressionString;
+                        cronDescription = GetCronDescription(cronExpression);
+                    }
+
+                    var executingJob = currentlyExecuting.FirstOrDefault(j => j.JobDetail.Key.Equals(jobKey));
+                    TimeSpan? runTime = null;
+                    if (executingJob != null)
+                    {
+                        runTime = DateTimeOffset.UtcNow - executingJob.FireTimeUtc;
+                    }
+
+                    var jobData = jobDetail.JobDataMap.Count > 0 
+                        ? jobDetail.JobDataMap.ToDictionary(k => k.Key, k => k.Value) 
+                        : null;
+
+                    _jobs.Add(new JobStatusDetail
+                    {
+                        JobName = jobKey.Name,
+                        JobGroup = jobKey.Group,
+                        JobKey = jobKey,
+                        Description = jobDetail.Description,
+                        TriggerState = triggerState.ToString(),
+                        TriggerType = trigger.GetType().Name.Replace("Impl", "").Replace("Trigger", ""),
+                        CronExpression = cronExpression,
+                        CronDescription = cronDescription,
+                        NextFireTimeUtc = trigger.GetNextFireTimeUtc(),
+                        PreviousFireTimeUtc = trigger.GetPreviousFireTimeUtc(),
+                        StartTimeUtc = trigger.StartTimeUtc,
+                        EndTimeUtc = trigger.EndTimeUtc,
+                        TimesTriggered = trigger is ISimpleTrigger simpleTrigger ? simpleTrigger.TimesTriggered : 0,
+                        IsCurrentlyExecuting = currentlyExecutingKeys.Contains(jobKey),
+                        RunTime = runTime,
+                        IsDurable = jobDetail.Durable,
+                        DisallowConcurrentExecution = jobDetail.ConcurrentExecutionDisallowed,
+                        PersistJobDataAfterExecution = jobDetail.PersistJobDataAfterExecution,
+                        RequestsRecovery = jobDetail.RequestsRecovery,
+                        JobData = jobData
+                    });
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Error loading jobs",
+                Detail = ex.Message,
+                Duration = ToastTime
+            });
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
     }
 
+    private async Task RefreshJobsClicked()
+    {
+        await RefreshJobsAsync();
+        NotificationService.Notify(new NotificationMessage
+        {
+            Severity = NotificationSeverity.Info,
+            Summary = "Jobs refreshed",
+            Duration = ToastTime
+        });
+    }
+
+    private async Task TriggerJobClicked(JobStatusDetail job)
+    {
+        try
+        {
+            var scheduler = await SchedulerFactory.GetScheduler();
+            await scheduler.TriggerJob(job.JobKey);
+            
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = $"Job '{job.JobName}' triggered",
+                Duration = ToastTime
+            });
+            
+            await Task.Delay(500);
+            await RefreshJobsAsync();
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Failed to trigger job",
+                Detail = ex.Message,
+                Duration = ToastTime
+            });
+        }
+    }
+
+    private async Task PauseJobClicked(JobStatusDetail job)
+    {
+        try
+        {
+            var scheduler = await SchedulerFactory.GetScheduler();
+            await scheduler.PauseJob(job.JobKey);
+            
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Warning,
+                Summary = $"Job '{job.JobName}' paused",
+                Duration = ToastTime
+            });
+            
+            await RefreshJobsAsync();
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Failed to pause job",
+                Detail = ex.Message,
+                Duration = ToastTime
+            });
+        }
+    }
+
+    private async Task ResumeJobClicked(JobStatusDetail job)
+    {
+        try
+        {
+            var scheduler = await SchedulerFactory.GetScheduler();
+            await scheduler.ResumeJob(job.JobKey);
+            
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = $"Job '{job.JobName}' resumed",
+                Duration = ToastTime
+            });
+            
+            await RefreshJobsAsync();
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Failed to resume job",
+                Detail = ex.Message,
+                Duration = ToastTime
+            });
+        }
+    }
+
+    private async Task InterruptJobClicked(JobStatusDetail job)
+    {
+        try
+        {
+            var scheduler = await SchedulerFactory.GetScheduler();
+            await scheduler.Interrupt(job.JobKey);
+            
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Warning,
+                Summary = $"Job '{job.JobName}' interrupted",
+                Duration = ToastTime
+            });
+            
+            await Task.Delay(500);
+            await RefreshJobsAsync();
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Failed to interrupt job",
+                Detail = ex.Message,
+                Duration = ToastTime
+            });
+        }
+    }
+
+    private async Task PauseAllJobsClicked()
+    {
+        try
+        {
+            var scheduler = await SchedulerFactory.GetScheduler();
+            await scheduler.PauseAll();
+            
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Warning,
+                Summary = "All jobs paused",
+                Duration = ToastTime
+            });
+            
+            await RefreshJobsAsync();
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Failed to pause all jobs",
+                Detail = ex.Message,
+                Duration = ToastTime
+            });
+        }
+    }
+
+    private async Task ResumeAllJobsClicked()
+    {
+        try
+        {
+            var scheduler = await SchedulerFactory.GetScheduler();
+            await scheduler.ResumeAll();
+            
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = "All jobs resumed",
+                Duration = ToastTime
+            });
+            
+            await RefreshJobsAsync();
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Failed to resume all jobs",
+                Detail = ex.Message,
+                Duration = ToastTime
+            });
+        }
+    }
+
+    private void OnRowExpand(JobStatusDetail job)
+    {
+        // Row expansion handling if needed
+    }
+
+    private static BadgeStyle GetBadgeStyle(string triggerState) => triggerState switch
+    {
+        "Normal" => BadgeStyle.Success,
+        "Paused" => BadgeStyle.Warning,
+        "Blocked" => BadgeStyle.Info,
+        "Error" => BadgeStyle.Danger,
+        "Complete" => BadgeStyle.Secondary,
+        _ => BadgeStyle.Light
+    };
+
+    private static string? GetCronDescription(string? cronExpression)
+    {
+        if (string.IsNullOrEmpty(cronExpression)) return null;
+        
+        try
+        {
+            var parts = cronExpression.Split(' ');
+            if (parts.Length < 6) return null;
+
+            var seconds = parts[0];
+            var minutes = parts[1];
+            var hours = parts[2];
+            var dayOfMonth = parts[3];
+            var month = parts[4];
+            var dayOfWeek = parts[5];
+
+            if (minutes.StartsWith("*/") && hours == "*" && dayOfMonth == "*")
+            {
+                var interval = minutes[2..];
+                return $"Every {interval} minutes";
+            }
+
+            if (minutes != "*" && hours != "*" && dayOfMonth == "*" && month == "*" && dayOfWeek == "*")
+            {
+                return $"Daily at {hours}:{minutes.PadLeft(2, '0')}";
+            }
+
+            if (dayOfWeek != "*" && dayOfWeek != "?")
+            {
+                return $"Weekly on specified days at {hours}:{minutes.PadLeft(2, '0')}";
+            }
+
+            return null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
 }
