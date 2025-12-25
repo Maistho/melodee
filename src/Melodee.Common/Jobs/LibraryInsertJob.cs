@@ -196,7 +196,7 @@ public class LibraryInsertJob(
                         nameof(LibraryInsertJob),
                         melodeeFilesToProcess.Count,
                         0,
-                        $"Found [{melodeeFilesToProcess.Count}] albums in [{libraryIndex.library.Name}]"));
+                        $"Found [{melodeeFilesToProcess.Count}] albums to process"));
 
                 var batches = (melodeeFilesToProcess.Count + _batchSize - 1) / _batchSize;
                 Logger.Debug("[{JobName}] Found [{DirName}] melodee files to scan in [{Batches}] batches.",
@@ -211,6 +211,14 @@ public class LibraryInsertJob(
                 {
                     var batchFiles = melodeeFilesToProcess.Skip(_batchSize * batch).Take(_batchSize).ToList();
 
+                    OnProcessingEvent?.Invoke(
+                        this,
+                        new ProcessingEvent(ProcessingEventType.Processing,
+                            nameof(LibraryInsertJob),
+                            melodeeFilesToProcess.Count,
+                            albumsProcessedInLibrary,
+                            $"Loading batch {batch + 1}/{batches} ({batchFiles.Count} albums)..."));
+
                     // Load albums in parallel for better I/O performance
                     var melodeeAlbumsForBatch = await LoadAlbumsInParallelAsync(
                         batchFiles,
@@ -220,8 +228,23 @@ public class LibraryInsertJob(
                     if (melodeeAlbumsForBatch.Count == 0)
                     {
                         albumsProcessedInLibrary += batchFiles.Count;
+                        OnProcessingEvent?.Invoke(
+                            this,
+                            new ProcessingEvent(ProcessingEventType.Processing,
+                                nameof(LibraryInsertJob),
+                                melodeeFilesToProcess.Count,
+                                albumsProcessedInLibrary,
+                                $"Batch {batch + 1}/{batches} had no valid albums"));
                         continue;
                     }
+
+                    OnProcessingEvent?.Invoke(
+                        this,
+                        new ProcessingEvent(ProcessingEventType.Processing,
+                            nameof(LibraryInsertJob),
+                            melodeeFilesToProcess.Count,
+                            albumsProcessedInLibrary,
+                            $"Processing {melodeeAlbumsForBatch.Count} artists..."));
 
                     // Process artists and albums with dedicated contexts for each operation
                     var processedArtistsResult = await ProcessArtistsAsync(
@@ -234,6 +257,14 @@ public class LibraryInsertJob(
                         continue;
                     }
 
+                    OnProcessingEvent?.Invoke(
+                        this,
+                        new ProcessingEvent(ProcessingEventType.Processing,
+                            nameof(LibraryInsertJob),
+                            melodeeFilesToProcess.Count,
+                            albumsProcessedInLibrary,
+                            $"Inserting {melodeeAlbumsForBatch.Count} albums into database..."));
+
                     var processedAlbumsResult = await ProcessAlbumsAsync(melodeeAlbumsForBatch, context.CancellationToken);
                     if (!processedAlbumsResult)
                     {
@@ -245,13 +276,17 @@ public class LibraryInsertJob(
                     totalMelodeeFilesProcessed += melodeeAlbumsForBatch.Count;
 
                     var currentAlbumName = melodeeAlbumsForBatch.LastOrDefault()?.AlbumTitle() ?? "Processing...";
+                    if (currentAlbumName.Length > 40)
+                    {
+                        currentAlbumName = currentAlbumName[..37] + "...";
+                    }
                     OnProcessingEvent?.Invoke(
                         this,
                         new ProcessingEvent(ProcessingEventType.Processing,
                             nameof(LibraryInsertJob),
                             melodeeFilesToProcess.Count,
                             albumsProcessedInLibrary,
-                            $"Processing [{currentAlbumName}]"));
+                            $"{albumsProcessedInLibrary}/{melodeeFilesToProcess.Count} | {currentAlbumName}"));
                 }
 
                 // Update library aggregates and scan history with dedicated context
