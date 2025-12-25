@@ -447,14 +447,22 @@ public sealed class StatisticsService(
             .Include(x => x.Album)
                 .ThenInclude(a => a.Artist)
             .Where(x => songIds.Contains(x.Id))
-            .Select(x => new { x.Id, x.Title, x.ApiKey, AlbumApiKey = x.Album.ApiKey, ArtistApiKey = x.Album.Artist.ApiKey })
+            .Select(x => new { 
+                x.Id, 
+                x.Title, 
+                x.ApiKey, 
+                AlbumApiKey = x.Album.ApiKey, 
+                AlbumName = x.Album.Name,
+                ArtistApiKey = x.Album.Artist.ApiKey,
+                ArtistName = x.Album.Artist.Name
+            })
             .ToDictionaryAsync(x => x.Id, cancellationToken)
             .ConfigureAwait(false);
 
         var result = histories.Select(x =>
         {
             songs.TryGetValue(x.SongId, out var song);
-            var extra = song != null ? $"{song.AlbumApiKey}|{song.ArtistApiKey}" : null;
+            var extra = song != null ? $"{song.AlbumApiKey}|{song.ArtistApiKey}|{song.AlbumName}|{song.ArtistName}" : null;
             return new TopItemStat(song?.Title ?? $"Song {x.SongId}", x.PlayedAt.ToUnixTimeTicks(), song?.ApiKey, x.SongId, extra);
         }).ToArray();
 

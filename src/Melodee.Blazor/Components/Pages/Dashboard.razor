@@ -42,7 +42,7 @@
                 <RadzenText TextStyle="TextStyle.H6">Your plays (last 30 days)</RadzenText>
                 <RadzenChart Style="height: 200px;">
                     <RadzenLineSeries Data="@_playsPerDay" CategoryProperty="Day" ValueProperty="Value" Title="Plays" Smooth="true">
-                        <RadzenCategoryAxis FormatString="MM/dd" Step="7">
+                        <RadzenCategoryAxis Visible="false">
                             <RadzenAxisTitle Text=""/>
                         </RadzenCategoryAxis>
                         <RadzenValueAxis>
@@ -263,6 +263,8 @@
                     var parts = x.Extra?.Split('|') ?? [];
                     var albumApiKey = parts.Length > 0 && Guid.TryParse(parts[0], out var albumGuid) ? albumGuid : Guid.Empty;
                     var artistApiKey = parts.Length > 1 && Guid.TryParse(parts[1], out var artistGuid) ? artistGuid : Guid.Empty;
+                    var albumName = parts.Length > 2 ? parts[2] : string.Empty;
+                    var artistName = parts.Length > 3 ? parts[3] : string.Empty;
                     
                     return new SongDataInfo(
                         x.Id ?? 0,
@@ -272,9 +274,9 @@
                         x.Label.ToNormalizedString() ?? string.Empty,
                         0,
                         LocalDate.MinIsoValue,
-                        string.Empty,
+                        albumName,
                         albumApiKey,
-                        string.Empty,
+                        artistName,
                         artistApiKey,
                         0,
                         0,
