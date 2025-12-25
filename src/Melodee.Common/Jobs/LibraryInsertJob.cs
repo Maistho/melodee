@@ -130,15 +130,9 @@ public class LibraryInsertJob(
 
             var librariesToProcess = libraries.Data.Where(x => x.TypeValue == LibraryType.Storage).ToArray();
             _dataMap.Put(JobMapNameRegistry.ScanStatus, nameof(ScanStatus.InProcess));
-            OnProcessingEvent?.Invoke(
-                this,
-                new ProcessingEvent(ProcessingEventType.Start,
-                    nameof(LibraryInsertJob),
-                    librariesToProcess.Count(),
-                    0,
-                    "Started library processing libraries."));
 
             var totalMelodeeFilesProcessed = 0;
+            var totalMelodeeFilesToProcess = 0;
 
             // Process each library with its own scope to avoid long-lived contexts
             foreach (var libraryIndex in librariesToProcess.Select((library, index) => new { library, index }))
@@ -162,7 +156,14 @@ public class LibraryInsertJob(
                     ? defaultNeverScannedDate
                     : libraryIndex.library.LastScanAt ?? defaultNeverScannedDate;
 
-                // Pre-filter melodee files more efficiently
+                OnProcessingEvent?.Invoke(
+                    this,
+                    new ProcessingEvent(ProcessingEventType.Processing,
+                        nameof(LibraryInsertJob),
+                        0,
+                        0,
+                        $"Discovering albums in [{libraryIndex.library.Name}]..."));
+
                 Logger.Information("[{JobName}] Starting to find melodee files for library [{LibraryName}] at path [{Path}]",
                     nameof(LibraryInsertJob), libraryIndex.library.Name, libraryIndex.library.Path);
                 var melodeeFilesToProcess = GetMelodeeFilesToProcess(
@@ -177,14 +178,33 @@ public class LibraryInsertJob(
                     Logger.Information("[{JobName}] found no melodee files to process for directory [{PathName}].",
                         nameof(LibraryInsertJob),
                         scanJustDirectory.Nullify() ?? libraryIndex.library.Path);
+                    OnProcessingEvent?.Invoke(
+                        this,
+                        new ProcessingEvent(ProcessingEventType.Processing,
+                            nameof(LibraryInsertJob),
+                            0,
+                            0,
+                            $"No albums found in [{libraryIndex.library.Name}]"));
                     continue;
                 }
+
+                totalMelodeeFilesToProcess += melodeeFilesToProcess.Count;
+
+                OnProcessingEvent?.Invoke(
+                    this,
+                    new ProcessingEvent(ProcessingEventType.Start,
+                        nameof(LibraryInsertJob),
+                        melodeeFilesToProcess.Count,
+                        0,
+                        $"Found [{melodeeFilesToProcess.Count}] albums in [{libraryIndex.library.Name}]"));
 
                 var batches = (melodeeFilesToProcess.Count + _batchSize - 1) / _batchSize;
                 Logger.Debug("[{JobName}] Found [{DirName}] melodee files to scan in [{Batches}] batches.",
                     nameof(LibraryInsertJob),
                     melodeeFilesToProcess.Count,
                     batches);
+
+                var albumsProcessedInLibrary = 0;
 
                 // Process batches with optimized database operations
                 for (var batch = 0; batch < batches; batch++)
@@ -199,6 +219,7 @@ public class LibraryInsertJob(
 
                     if (melodeeAlbumsForBatch.Count == 0)
                     {
+                        albumsProcessedInLibrary += batchFiles.Count;
                         continue;
                     }
 
@@ -209,24 +230,28 @@ public class LibraryInsertJob(
                         context.CancellationToken);
                     if (!processedArtistsResult)
                     {
+                        albumsProcessedInLibrary += batchFiles.Count;
                         continue;
                     }
 
                     var processedAlbumsResult = await ProcessAlbumsAsync(melodeeAlbumsForBatch, context.CancellationToken);
                     if (!processedAlbumsResult)
                     {
+                        albumsProcessedInLibrary += batchFiles.Count;
                         continue;
                     }
 
+                    albumsProcessedInLibrary += batchFiles.Count;
+                    totalMelodeeFilesProcessed += melodeeAlbumsForBatch.Count;
+
+                    var currentAlbumName = melodeeAlbumsForBatch.LastOrDefault()?.AlbumTitle() ?? "Processing...";
                     OnProcessingEvent?.Invoke(
                         this,
                         new ProcessingEvent(ProcessingEventType.Processing,
                             nameof(LibraryInsertJob),
-                            batches,
-                            batch,
-                            $"Batch [{batch}] of [{batches}] for library [{libraryIndex.library.Name}]."));
-
-                    totalMelodeeFilesProcessed += melodeeAlbumsForBatch.Count;
+                            melodeeFilesToProcess.Count,
+                            albumsProcessedInLibrary,
+                            $"Processing [{currentAlbumName}]"));
                 }
 
                 // Update library aggregates and scan history with dedicated context
@@ -252,23 +277,23 @@ public class LibraryInsertJob(
                     this,
                     new ProcessingEvent(ProcessingEventType.Processing,
                         nameof(LibraryInsertJob),
-                        librariesToProcess.Length,
-                        libraryIndex.index,
-                        $"Library [{libraryIndex.library.Name}]."));
+                        melodeeFilesToProcess.Count,
+                        melodeeFilesToProcess.Count,
+                        $"Completed library [{libraryIndex.library.Name}]"));
             }
 
             _dataMap.Put(JobMapNameRegistry.ScanStatus, nameof(ScanStatus.Idle));
             _dataMap.Put(JobMapNameRegistry.Count, _totalAlbumsInserted + _totalArtistsInserted + _totalSongsInserted);
 
             var stopSummary =
-                $"Processed [{totalMelodeeFilesProcessed}] melodee data albums (found [{_melodeeFilesDiscovered}], filtered [{_melodeeFilesFiltered}], invalid [{_invalidMelodeeFiles}], already in db [{_albumsAlreadyInDatabase}]) and inserted [{_totalAlbumsInserted}] db albums, [{_totalSongsInserted}] db songs in [{Stopwatch.GetElapsedTime(startTicks)}]";
+                $"Processed [{totalMelodeeFilesProcessed}] albums, inserted [{_totalAlbumsInserted}] albums, [{_totalSongsInserted}] songs";
 
             OnProcessingEvent?.Invoke(
                 this,
                 new ProcessingEvent(ProcessingEventType.Stop,
                     nameof(LibraryInsertJob),
-                    0,
-                    0,
+                    totalMelodeeFilesToProcess,
+                    totalMelodeeFilesProcessed,
                     stopSummary));
 
             foreach (var message in messagesForJobRun)

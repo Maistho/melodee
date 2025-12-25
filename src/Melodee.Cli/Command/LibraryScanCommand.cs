@@ -31,7 +31,6 @@ public class LibraryScanCommand : CommandBase<LibraryScanSettings>
         {
             var startTime = Stopwatch.GetTimestamp();
 
-            // Display initial configuration
             var configGrid = new Grid()
                 .AddColumn(new GridColumn().NoWrap().PadRight(4))
                 .AddColumn();
@@ -62,6 +61,11 @@ public class LibraryScanCommand : CommandBase<LibraryScanSettings>
                 scope.ServiceProvider.GetRequiredService<IBus>()
             );
 
+            var currentMessage = "Initializing...";
+            var maxValue = 0;
+            var currentValue = 0;
+            var isComplete = false;
+
             await AnsiConsole.Progress()
                 .AutoRefresh(true)
                 .AutoClear(false)
@@ -76,52 +80,69 @@ public class LibraryScanCommand : CommandBase<LibraryScanSettings>
                 ])
                 .StartAsync(async ctx =>
                 {
-                    var progressTask = ctx.AddTask("[green]Initializing...[/]", maxValue: 100);
+                    var progressTask = ctx.AddTask("[green]Initializing...[/]", autoStart: false);
+                    progressTask.IsIndeterminate = true;
+                    progressTask.StartTask();
 
-                    job.OnProcessingEvent += (sender, e) =>
+                    job.OnProcessingEvent += (_, e) =>
                     {
                         switch (e.Type)
                         {
                             case ProcessingEventType.Start:
+                                maxValue = e.Max;
+                                currentValue = 0;
                                 if (e.Max == 0)
                                 {
-                                    progressTask.Description = "[yellow]No albums found to scan[/]";
-                                    progressTask.StopTask();
+                                    progressTask.Description = $"[yellow]{Markup.Escape(e.Message)}[/]";
                                 }
                                 else
                                 {
+                                    progressTask.IsIndeterminate = false;
                                     progressTask.MaxValue = e.Max;
-                                    progressTask.Description = $"[green]Scanning:[/] 0/{FormatNumber(e.Max)} (0.0%)";
+                                    progressTask.Value = 0;
+                                    progressTask.Description = $"[green]{Markup.Escape(e.Message)}[/]";
                                 }
                                 break;
 
                             case ProcessingEventType.Processing:
+                                currentMessage = e.Message;
                                 if (e.Max > 0)
                                 {
-                                    var percentComplete = (double)e.Current / e.Max * 100;
+                                    maxValue = e.Max;
+                                    currentValue = e.Current;
+                                    progressTask.IsIndeterminate = false;
+                                    progressTask.MaxValue = e.Max;
                                     progressTask.Value = e.Current;
 
-                                    // Extract album name from message if present
-                                    var albumName = e.Message;
-                                    if (albumName.StartsWith("Processing [") && albumName.EndsWith("]"))
+                                    var displayMessage = e.Message;
+                                    if (displayMessage.Length > 60)
                                     {
-                                        albumName = albumName[12..^1];
-                                        if (albumName.Length > 50)
-                                        {
-                                            albumName = albumName[..47] + "...";
-                                        }
+                                        displayMessage = displayMessage[..57] + "...";
                                     }
 
-                                    progressTask.Description = $"[green]Albums:[/] {FormatNumber(e.Current)}/{FormatNumber(e.Max)} ([cyan]{percentComplete:F1}%[/]) | [yellow]{Markup.Escape(albumName)}[/]";
+                                    var percentComplete = (double)e.Current / e.Max * 100;
+                                    progressTask.Description = $"[green]Scanning:[/] {FormatNumber(e.Current)}/{FormatNumber(e.Max)} ([cyan]{percentComplete:F1}%[/]) [dim]{Markup.Escape(displayMessage)}[/]";
+                                }
+                                else
+                                {
+                                    var displayMessage = e.Message;
+                                    if (displayMessage.Length > 60)
+                                    {
+                                        displayMessage = displayMessage[..57] + "...";
+                                    }
+                                    progressTask.Description = $"[yellow]{Markup.Escape(displayMessage)}[/]";
                                 }
                                 break;
 
                             case ProcessingEventType.Stop:
-                                progressTask.Value = progressTask.MaxValue;
-                                progressTask.StopTask();
-
+                                isComplete = true;
+                                if (progressTask.MaxValue > 0)
+                                {
+                                    progressTask.Value = progressTask.MaxValue;
+                                }
                                 var elapsed = Stopwatch.GetElapsedTime(startTime);
-                                progressTask.Description = $"[green]✓ Completed:[/] {FormatNumber(e.Max)} albums scanned | [cyan]Time: {elapsed:hh\\:mm\\:ss}[/]";
+                                progressTask.Description = $"[green]✓ Complete:[/] {Markup.Escape(e.Message)} [cyan]({elapsed:hh\\:mm\\:ss})[/]";
+                                progressTask.StopTask();
                                 break;
                         }
                     };
@@ -130,6 +151,11 @@ public class LibraryScanCommand : CommandBase<LibraryScanSettings>
                     jobExecutionContext.Put(MelodeeJobExecutionContext.ForceMode, settings.ForceMode);
                     jobExecutionContext.Put(MelodeeJobExecutionContext.Verbose, settings.Verbose);
                     await job.Execute(jobExecutionContext);
+
+                    if (!isComplete)
+                    {
+                        progressTask.StopTask();
+                    }
                 });
 
             AnsiConsole.WriteLine();
