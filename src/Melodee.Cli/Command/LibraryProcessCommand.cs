@@ -21,11 +21,6 @@ public class ProcessInboundCommand : CommandBase<LibraryProcessSettings>
 {
     public override async Task<int> ExecuteAsync(CommandContext context, LibraryProcessSettings settings, CancellationToken cancellationToken)
     {
-        if (settings.Verbose)
-        {
-            Trace.Listeners.Add(new ConsoleTraceListener());
-        }
-
         using (var scope = CreateServiceProvider().CreateScope())
         {
             var serializer = scope.ServiceProvider.GetRequiredService<ISerializer>();
@@ -95,18 +90,70 @@ public class ProcessInboundCommand : CommandBase<LibraryProcessSettings>
 
             OperationResult<DirectoryProcessorResult>? result = null;
 
-            await AnsiConsole.Status()
-                .StartAsync("[yellow]Processing inbound directory...[/]", async ctx =>
+            var totalDirectories = 0;
+            var processedDirectories = 0;
+            var currentActivity = "Initializing...";
+            var lastProcessedAlbum = string.Empty;
+
+            processor.OnProcessingStart += (_, count) =>
+            {
+                totalDirectories = count;
+            };
+
+            processor.OnDirectoryProcessed += (_, fsInfo) =>
+            {
+                Interlocked.Increment(ref processedDirectories);
+                lastProcessedAlbum = fsInfo.Name;
+            };
+
+            processor.OnProcessingEvent += (_, message) =>
+            {
+                currentActivity = message.Length > 60 ? message[..57] + "..." : message;
+            };
+
+            await AnsiConsole.Progress()
+                .AutoClear(false)
+                .HideCompleted(false)
+                .Columns(
+                    new TaskDescriptionColumn(),
+                    new ProgressBarColumn(),
+                    new PercentageColumn(),
+                    new RemainingTimeColumn(),
+                    new SpinnerColumn())
+                .StartAsync(async ctx =>
                 {
-                    ctx.Spinner(Spinner.Known.Dots);
-                    result = await processor.ProcessDirectoryAsync(fileSystemDirectoryInfo, lastScanAt, settings.ProcessLimit, cancellationToken);
+                    var mainTask = ctx.AddTask("[yellow]Processing inbound directory[/]", autoStart: false);
+                    mainTask.IsIndeterminate = true;
+                    mainTask.StartTask();
+
+                    var processingTask = processor.ProcessDirectoryAsync(fileSystemDirectoryInfo, lastScanAt, settings.ProcessLimit, cancellationToken);
+
+                    while (!processingTask.IsCompleted)
+                    {
+                        if (totalDirectories > 0)
+                        {
+                            mainTask.IsIndeterminate = false;
+                            mainTask.MaxValue = totalDirectories;
+                            mainTask.Value = processedDirectories;
+                            mainTask.Description = $"[yellow]Processing:[/] [dim]{currentActivity.EscapeMarkup()}[/]";
+                        }
+
+                        await Task.Delay(100, cancellationToken).ConfigureAwait(false);
+                    }
+
+                    mainTask.Value = mainTask.MaxValue > 0 ? mainTask.MaxValue : 1;
+                    mainTask.Description = "[green]Processing complete[/]";
+                    mainTask.StopTask();
+
+                    result = await processingTask;
                 });
 
-            Log.Debug("ℹ️ Processed directory [{Inbound}] in [{ElapsedTime}]", directoryInbound, Stopwatch.GetElapsedTime(startTicks));
+            var elapsed = Stopwatch.GetElapsedTime(startTicks);
+            Log.Debug("ℹ️ Processed directory [{Inbound}] in [{ElapsedTime}]", directoryInbound, elapsed);
 
             AnsiConsole.WriteLine();
 
-            if (result != null && result.IsSuccess && result.Data != null)
+            if (result is { IsSuccess: true, Data: not null })
             {
                 var resultData = result.Data;
                 var statsGrid = new Grid()
@@ -114,8 +161,11 @@ public class ProcessInboundCommand : CommandBase<LibraryProcessSettings>
                     .AddColumn();
 
                 statsGrid
+                    .AddRow("[b]Elapsed Time[/]", $"[cyan]{elapsed:hh\\:mm\\:ss}[/]")
+                    .AddRow("[b]Directories Processed[/]", $"[green]{processedDirectories:N0}[/]")
                     .AddRow("[b]Albums Processed[/]", $"[green]{resultData.NumberOfAlbumsProcessed:N0}[/]")
                     .AddRow("[b]Valid Albums[/]", $"[green]{resultData.NumberOfValidAlbumsProcessed:N0}[/] ([cyan]{resultData.FormattedValidPercentageProcessed}[/])")
+                    .AddRow("[b]New Artists[/]", $"[yellow]{resultData.NewArtistsCount:N0}[/]")
                     .AddRow("[b]New Albums[/]", $"[yellow]{resultData.NewAlbumsCount:N0}[/]")
                     .AddRow("[b]New Songs[/]", $"[yellow]{resultData.NewSongsCount:N0}[/]");
 
@@ -139,10 +189,5 @@ public class ProcessInboundCommand : CommandBase<LibraryProcessSettings>
 
             return result?.IsSuccess == true ? 0 : 1;
         }
-    }
-
-    private static string YesNo(bool value)
-    {
-        return value ? "Yes" : "No";
     }
 }
