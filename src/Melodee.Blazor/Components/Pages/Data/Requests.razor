@@ -19,7 +19,7 @@
 <RadzenStack Style="height: 100%">
     <RadzenBreadCrumb Class="rz-pb-5">
         <RadzenBreadCrumbItem Path="/" Text="Dashboard"/>
-        <RadzenBreadCrumbItem Icon="request_page" Text="Requests"/>
+        <RadzenBreadCrumbItem Icon="assignment" Text="Requests"/>
     </RadzenBreadCrumb>
     <RadzenRow AlignItems="AlignItems.Center">
         <RadzenColumn Size="12" SizeMD="6">
@@ -171,12 +171,23 @@
         _currentPage = args.PageIndex + 1;
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+      await base.OnAfterRenderAsync(firstRender);
+      if (firstRender && _grid != null)
+      {
+        await _grid.FirstPage(true);
+      }
+    }
+
     async Task LoadData(LoadDataArgs args)
     {
         _isLoading = true;
         MainLayoutProxyService.ToggleSpinnerVisible();
         try
         {
+            Logger.Debug($"LoadData called: Page={_currentPage}, Top={args.Top}, CurrentUsersId={CurrentUsersId}");
+
             var filters = new List<FilterOperatorInfo>();
 
             if (!string.IsNullOrWhiteSpace(_searchQuery))
@@ -209,14 +220,20 @@
                 filters.Add(new FilterOperatorInfo("TargetAlbumApiKey", FilterOperator.Equals, AlbumApiKey.Value));
             }
 
+            var pageSize = SafeParser.ToNumber<short>(args.Top) > 0 ? SafeParser.ToNumber<short>(args.Top) : DefaultPageSize;
+            Logger.Debug($"Request list query: Page={_currentPage}, PageSize={pageSize}, FilterCount={filters.Count}");
+
             var result = await RequestService.ListAsync(new PagedRequest
             {
                 FilterBy = filters.Count > 0 ? filters.ToArray() : null,
                 Page = _currentPage,
-                PageSize = SafeParser.ToNumber<short>(args.Top)
+                PageSize = pageSize
             });
+
             _requests = result.Data;
             _count = SafeParser.ToNumber<int>(result.TotalCount);
+
+            Logger.Debug($"LoadData result: TotalCount={_count}, DataCount={_requests.Count()}, IsSuccess={result.IsSuccess}");
         }
         catch (Exception e)
         {
@@ -224,10 +241,9 @@
         }
         finally
         {
-            MainLayoutProxyService.ToggleSpinnerVisible();
+            MainLayoutProxyService.ToggleSpinnerVisible(false);
+            _isLoading = false;
         }
-
-        _isLoading = false;
     }
 
     private void NewRequestClick()
@@ -241,7 +257,7 @@
         {
             queryParams.Add($"targetAlbumApiKey={AlbumApiKey.Value}");
         }
-        
+
         var url = "/requests/new";
         if (queryParams.Count > 0)
         {

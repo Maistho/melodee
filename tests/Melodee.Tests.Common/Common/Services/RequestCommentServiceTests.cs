@@ -182,4 +182,32 @@ public class RequestCommentServiceTests : ServiceTestBase
         Assert.Equal("First comment", result.Data.First().Body);
         Assert.Equal("Third comment", result.Data.Last().Body);
     }
+
+    [Fact]
+    public async Task ListAsync_ReturnsThreadedComments_WithReplies()
+    {
+        var user = await CreateTestUserAsync();
+        var request = await CreateTestRequestAsync(user.Id);
+        var service = GetCommentService();
+
+        var parent1Result = await service.CreateAsync(request.Id, user.Id, "Parent comment 1", null);
+        await Task.Delay(10);
+        var reply1Result = await service.CreateAsync(request.Id, user.Id, "Reply to parent 1", parent1Result.Data!.ApiKey);
+        await Task.Delay(10);
+        var parent2Result = await service.CreateAsync(request.Id, user.Id, "Parent comment 2", null);
+        await Task.Delay(10);
+        var reply2Result = await service.CreateAsync(request.Id, user.Id, "Another reply to parent 1", parent1Result.Data!.ApiKey);
+
+        var result = await service.ListAsync(request.Id, new PagedRequest { PageSize = 10 });
+
+        Assert.Equal(4, result.TotalCount);
+        
+        var topLevelComments = result.Data.Where(c => c.ParentCommentId == null).ToList();
+        Assert.Equal(2, topLevelComments.Count);
+        
+        var repliestoParent1 = result.Data.Where(c => c.ParentCommentId == parent1Result.Data.Id).ToList();
+        Assert.Equal(2, repliestoParent1.Count);
+        Assert.Equal("Reply to parent 1", repliestoParent1[0].Body);
+        Assert.Equal("Another reply to parent 1", repliestoParent1[1].Body);
+    }
 }

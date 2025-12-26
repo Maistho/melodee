@@ -132,6 +132,58 @@ public class RequestServiceTests : ServiceTestBase
         Assert.All(result.Data, r => Assert.Equal(user1.Id, r.CreatedByUserId));
     }
 
+    [Fact]
+    public async Task ListAsync_ReturnsNewlyCreatedRequest_ImmediatelyAfterCreation()
+    {
+        var service = GetRequestService();
+        var user = await CreateTestUserAsync();
+        var request = CreateValidRequest();
+        request.Description = "Newly created request";
+        request.ArtistName = "Test Artist";
+
+        var createResult = await service.CreateAsync(request, user.Id);
+        Assert.True(createResult.IsSuccess);
+        Assert.NotNull(createResult.Data);
+
+        var listResult = await service.ListAsync(new PagedRequest
+        {
+            PageSize = 10,
+            Page = 1
+        });
+
+        Assert.True(listResult.IsSuccess);
+        Assert.True(listResult.TotalCount > 0);
+        Assert.Contains(listResult.Data, r => r.ApiKey == createResult.Data.ApiKey);
+    }
+
+    [Fact]
+    public async Task ListAsync_ReturnsUserRequests_WhenFilteringByUserId()
+    {
+        var service = GetRequestService();
+        var user = await CreateTestUserAsync();
+        
+        var request1 = CreateValidRequest();
+        request1.Description = "First request";
+        await service.CreateAsync(request1, user.Id);
+
+        var request2 = CreateValidRequest();
+        request2.Description = "Second request";
+        await service.CreateAsync(request2, user.Id);
+
+        var pagedRequest = new PagedRequest
+        {
+            PageSize = 10,
+            Page = 1,
+            FilterBy = [new FilterOperatorInfo("CreatedByUserId", FilterOperator.Equals, user.Id)]
+        };
+
+        var result = await service.ListAsync(pagedRequest);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(2, result.TotalCount);
+        Assert.All(result.Data, r => Assert.Equal(user.Id, r.CreatedByUserId));
+    }
+
     #endregion
 
     #region CreateAsync Tests

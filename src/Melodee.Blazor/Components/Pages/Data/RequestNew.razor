@@ -14,13 +14,13 @@
 <RadzenStack Style="height: 100%; overflow-y: auto;" Gap="1rem">
     <RadzenBreadCrumb Class="rz-pb-3">
         <RadzenBreadCrumbItem Path="/" Text="Dashboard"/>
-        <RadzenBreadCrumbItem Path="/requests" Icon="request_page" Text="Requests"/>
+        <RadzenBreadCrumbItem Path="/requests" Icon="assignment" Text="Requests"/>
         <RadzenBreadCrumbItem Text="New Request"/>
     </RadzenBreadCrumb>
 
     <RadzenCard>
         <RadzenText TextStyle="TextStyle.H5" Text="Create New Request" Class="rz-mb-4"/>
-        
+
         <RadzenTemplateForm TItem="RequestModel" Data="@_model" Submit="@OnSubmit">
             <RadzenStack Gap="1rem">
                 <RadzenRow Gap="1rem">
@@ -101,7 +101,7 @@
 
 @code {
     [SupplyParameterFromQuery(Name = "category")]
-    public RequestCategory? InitialCategory { get; set; }
+    public int? InitialCategoryInt { get; set; }
 
     [SupplyParameterFromQuery(Name = "targetArtistApiKey")]
     public Guid? TargetArtistApiKey { get; set; }
@@ -142,9 +142,15 @@
     {
         await base.OnInitializedAsync();
 
+        RequestCategory? initialCategory = null;
+        if (InitialCategoryInt.HasValue && Enum.IsDefined(typeof(RequestCategory), InitialCategoryInt.Value))
+        {
+            initialCategory = (RequestCategory)InitialCategoryInt.Value;
+        }
+
         _model = new RequestModel
         {
-            Category = InitialCategory ?? RequestCategory.AddAlbum,
+            Category = initialCategory ?? RequestCategory.AddAlbum,
             ArtistName = InitialArtistName,
             AlbumTitle = InitialAlbumTitle,
             SongTitle = InitialSongTitle,

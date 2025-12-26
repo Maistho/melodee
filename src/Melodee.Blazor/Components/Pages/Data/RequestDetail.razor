@@ -26,7 +26,7 @@ else
     <RadzenStack Style="height: 100%; overflow-y: auto;" Gap="1rem">
         <RadzenBreadCrumb Class="rz-pb-3">
             <RadzenBreadCrumbItem Path="/" Text="Dashboard"/>
-            <RadzenBreadCrumbItem Path="/requests" Icon="request_page" Text="Requests"/>
+            <RadzenBreadCrumbItem Path="/requests" Icon="assignment" Text="Requests"/>
             <RadzenBreadCrumbItem Text="@(_request.Description.Length > 30 ? _request.Description[..30] + "..." : _request.Description)"/>
         </RadzenBreadCrumb>
 
@@ -124,40 +124,11 @@ else
 
         <RadzenCard>
             <RadzenText TextStyle="TextStyle.Subtitle1" Text="Comments" Class="rz-mb-3"/>
-            
+
             <RadzenStack Gap="1rem">
-                @foreach (var comment in _comments)
+                @foreach (var comment in GetTopLevelComments())
                 {
-                    <RadzenCard Style="@(comment.IsSystem ? "background-color: var(--rz-base-100);" : "")">
-                        <RadzenRow AlignItems="AlignItems.Start">
-                            <RadzenColumn Size="12">
-                                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
-                                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
-                                        @if (comment.IsSystem)
-                                        {
-                                            <RadzenIcon Icon="computer" Style="color: var(--rz-text-disabled-color)"/>
-                                            <RadzenText TextStyle="TextStyle.Body2" Text="System"/>
-                                        }
-                                        else
-                                        {
-                                            <RadzenIcon Icon="person"/>
-                                            <RadzenText TextStyle="TextStyle.Body2" Text="@(comment.CreatedByUser?.UserName ?? "Unknown")"/>
-                                        }
-                                    </RadzenStack>
-                                    <RadzenText TextStyle="TextStyle.Caption" Text="@CurrentUser?.FormatInstant(comment.CreatedAt)"/>
-                                </RadzenStack>
-                            </RadzenColumn>
-                            <RadzenColumn Size="12" Class="rz-mt-2">
-                                <RadzenText Style="white-space: pre-wrap;">@((MarkupString)RenderMarkdown(comment.Body))</RadzenText>
-                            </RadzenColumn>
-                            @if (!comment.IsSystem)
-                            {
-                                <RadzenColumn Size="12" Class="rz-mt-2">
-                                    <RadzenButton Text="Reply" Size="ButtonSize.ExtraSmall" Variant="Variant.Text" Click="@(() => ReplyToComment(comment))"/>
-                                </RadzenColumn>
-                            }
-                        </RadzenRow>
-                    </RadzenCard>
+                    @RenderCommentThread(comment, 0)
                 }
 
                 @if (!_comments.Any())
@@ -189,6 +160,58 @@ else
     RequestComment? _replyingTo;
 
     bool IsCreator => _request != null && _request.CreatedByUserId == CurrentUsersId;
+
+    RenderFragment RenderCommentThread(RequestComment comment, int depth) => __builder =>
+    {
+        var leftMargin = depth > 0 ? $"margin-left: {depth * 2}rem;" : "";
+        var borderLeft = depth > 0 ? "border-left: 2px solid var(--rz-border-color);" : "";
+
+        <RadzenCard Style="@($"{leftMargin}{borderLeft}{(comment.IsSystem ? "background-color: var(--rz-base-100);" : "")}")">
+            <RadzenRow AlignItems="AlignItems.Start">
+                <RadzenColumn Size="12">
+                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                            @if (comment.IsSystem)
+                            {
+                                <RadzenIcon Icon="computer" Style="color: var(--rz-text-disabled-color)"/>
+                                <RadzenText TextStyle="TextStyle.Body2" Text="System"/>
+                            }
+                            else
+                            {
+                                <RadzenIcon Icon="person"/>
+                                <RadzenText TextStyle="TextStyle.Body2" Text="@(comment.CreatedByUser?.UserName ?? "Unknown")"/>
+                            }
+                        </RadzenStack>
+                        <RadzenText TextStyle="TextStyle.Caption" Text="@CurrentUser?.FormatInstant(comment.CreatedAt)"/>
+                    </RadzenStack>
+                </RadzenColumn>
+                <RadzenColumn Size="12" Class="rz-mt-2">
+                    <RadzenText Style="white-space: pre-wrap;">@((MarkupString)RenderMarkdown(comment.Body))</RadzenText>
+                </RadzenColumn>
+                @if (!comment.IsSystem)
+                {
+                    <RadzenColumn Size="12" Class="rz-mt-2">
+                        <RadzenButton Text="Reply" Size="ButtonSize.ExtraSmall" Variant="Variant.Text" Click="@(() => ReplyToComment(comment))"/>
+                    </RadzenColumn>
+                }
+            </RadzenRow>
+        </RadzenCard>
+
+        @foreach (var reply in GetReplies(comment.Id))
+        {
+            @RenderCommentThread(reply, depth + 1)
+        }
+    };
+
+    List<RequestComment> GetTopLevelComments()
+    {
+        return _comments.Where(c => c.ParentCommentId == null).OrderBy(c => c.CreatedAt).ToList();
+    }
+
+    List<RequestComment> GetReplies(int parentCommentId)
+    {
+        return _comments.Where(c => c.ParentCommentId == parentCommentId).OrderBy(c => c.CreatedAt).ToList();
+    }
 
     protected override async Task OnInitializedAsync()
     {
