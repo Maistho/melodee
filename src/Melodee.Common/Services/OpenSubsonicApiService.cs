@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Melodee.Common.Configuration;
 using Melodee.Common.Constants;
 using Melodee.Common.Data;
@@ -1191,158 +1192,173 @@ public class OpenSubsonicApiService(
         var badEtag = Instant.MinValue.ToEtag();
         var sizeValue = size.Nullify() == null ? ImageSize.Large : SafeParser.ToEnum<ImageSize>(size);
 
-        var cacheKey = GenerateImageCacheKeyForApiId(apiId, sizeValue);
-        var imageBytesAndEtag = await CacheManager.GetAsync(cacheKey, async () =>
+        ImageBytesAndEtag imageBytesAndEtag;
+        
+        using (Operation.At(LogEventLevel.Debug)
+                   .Time("GetImageForApiKeyId: [{ApiId}] Size [{Size}]", apiId, sizeValue))
         {
-            using (Operation.At(LogEventLevel.Debug)
-                       .Time("GetImageForApiKeyId: [{Username}] Size [{Size}]", apiId, sizeValue))
+            var doCheckResize = true;
+            byte[]? result = null;
+            var eTag = string.Empty;
+            try
             {
-                var doCheckResize = true;
-                byte[]? result = null;
-                var eTag = string.Empty;
-                try
+                var apiKey = ApiKeyFromId(apiId);
+                if (apiKey == null)
                 {
-                    var apiKey = ApiKeyFromId(apiId);
-                    if (apiKey == null)
+                    imageBytesAndEtag = new ImageBytesAndEtag(null, null);
+                }
+                else if (IsApiIdForArtist(apiId))
+                {
+                    // Artist service handles resizing and caching
+                    var artistImageBytesAndEtag = await artistService.GetArtistImageBytesAndEtagAsync(apiKey, size, cancellationToken);
+                    result = artistImageBytesAndEtag.Bytes ?? defaultImages.ArtistBytes;
+                    eTag = artistImageBytesAndEtag.Etag ?? badEtag;
+                    imageBytesAndEtag = new ImageBytesAndEtag(result, eTag);
+                    doCheckResize = false;
+                }
+                else if (IsApiIdForDynamicPlaylist(apiId))
+                {
+                    // Dynamic playlists don't exist in the database they are created on demand from configured json files.
+                    var dynamicPlaylist = await libraryService
+                        .GetDynamicPlaylistAsync(apiKey.Value, cancellationToken).ConfigureAwait(false);
+                    var playlistImageFileInfo = new FileInfo(dynamicPlaylist.Data?.ImageFileName ?? string.Empty);
+                    if (playlistImageFileInfo.Exists)
                     {
-                        return new ImageBytesAndEtag(null, null);
+                        result = await File.ReadAllBytesAsync(playlistImageFileInfo.FullName, cancellationToken)
+                            .ConfigureAwait(false);
+                        eTag = playlistImageFileInfo.LastWriteTimeUtc.ToEtag();
+                    }
+                    else
+                    {
+                        result = defaultImages.PlaylistImageBytes;
+                        eTag = badEtag;
+                    }
+                    imageBytesAndEtag = new ImageBytesAndEtag(result, eTag);
+                }
+                else if (IsApiIdForPlaylist(apiId))
+                {
+                    var playlistImageBytesAndEtag = await playlistService.GetPlaylistImageBytesAndEtagAsync(apiKey.Value, size, cancellationToken).ConfigureAwait(false);
+                    result = playlistImageBytesAndEtag.Bytes ?? defaultImages.PlaylistImageBytes;
+                    eTag = playlistImageBytesAndEtag.Etag ?? badEtag;
+                    imageBytesAndEtag = new ImageBytesAndEtag(result, eTag);
+                }
+                else if (IsApiIdForChart(apiId))
+                {
+                    var chartImageBytesAndEtab = await chartService.GetChartImageBytesAndEtagAsync(apiKey.Value, size, cancellationToken).ConfigureAwait(false);
+                    result = chartImageBytesAndEtab.Bytes ?? defaultImages.ChartImageBytes;
+                    eTag = chartImageBytesAndEtab.Etag ?? badEtag;
+                    imageBytesAndEtag = new ImageBytesAndEtag(result, eTag);
+                }
+                else if (isUserImageRequest)
+                {
+                    var userResult = await userService.GetByApiKeyAsync(apiKey.Value, cancellationToken)
+                        .ConfigureAwait(false);
+                    var userImageLibrary = await libraryService.GetUserImagesLibraryAsync(cancellationToken)
+                        .ConfigureAwait(false);
+                    var userImageFileName = userResult.Data?.ToAvatarFileName(userImageLibrary.Data.Path);
+                    var userImageFileInfo = new FileInfo(userImageFileName ?? string.Empty);
+                    if (userImageFileInfo.Exists)
+                    {
+                        result = await File.ReadAllBytesAsync(userImageFileInfo.FullName, cancellationToken)
+                            .ConfigureAwait(false);
+                        eTag = userImageFileInfo.LastWriteTimeUtc.ToEtag();
+                    }
+                    else
+                    {
+                        result = defaultImages.UserAvatarBytes;
+                        eTag = badEtag;
+                    }
+                    imageBytesAndEtag = new ImageBytesAndEtag(result, eTag);
+                }
+                else if (IsApiIdForSong(apiId) || IsApiIdForAlbum(apiId))
+                {
+                    if (IsApiIdForSong(apiId))
+                    {
+                        // If it's a song get the album ApiKey and proceed to get Album cover
+                        var songInfo = await DatabaseSongIdsInfoForSongApiKey(apiKey.Value, cancellationToken)
+                            .ConfigureAwait(false);
+                        if (songInfo != null)
+                        {
+                            apiKey = songInfo.AlbumApiKey;
+                        }
                     }
 
-                    if (IsApiIdForArtist(apiId))
+                    // Album service handles resizing and caching
+                    var albumImageBytesAndEtag = await albumService.GetAlbumImageBytesAndEtagAsync(apiKey, size, cancellationToken);
+                    result = albumImageBytesAndEtag.Bytes ?? defaultImages.AlbumCoverBytes;
+                    eTag = albumImageBytesAndEtag.Etag ?? badEtag;
+                    imageBytesAndEtag = new ImageBytesAndEtag(result, eTag);
+                    doCheckResize = false;
+                }
+                else
+                {
+                    imageBytesAndEtag = new ImageBytesAndEtag(null, null);
+                }
+
+                result = imageBytesAndEtag.Bytes;
+                eTag = imageBytesAndEtag.Etag ?? badEtag;
+
+                if (result != null && !isForPlaylist && doCheckResize)
+                {
+                    if (sizeValue != ImageSize.Large)
                     {
-                        var artistImageBytesAndEtag = await artistService.GetArtistImageBytesAndEtagAsync(apiKey, size, cancellationToken);
-                        result = artistImageBytesAndEtag.Bytes ?? defaultImages.ArtistBytes;
-                        eTag = artistImageBytesAndEtag.Etag ?? badEtag;
-                    }
-                    else if (IsApiIdForDynamicPlaylist(apiId))
-                    {
-                        // Dynamic playlists don't exist in the database they are created on demand from configured json files.
-                        var dynamicPlaylist = await libraryService
-                            .GetDynamicPlaylistAsync(apiKey.Value, cancellationToken).ConfigureAwait(false);
-                        var playlistImageFileInfo = new FileInfo(dynamicPlaylist.Data?.ImageFileName ?? string.Empty);
-                        if (playlistImageFileInfo.Exists)
+                        var sizeParsedToInt = SafeParser.ToNumber<int>(size);
+                        if (sizeParsedToInt > 0)
                         {
-                            result = await File.ReadAllBytesAsync(playlistImageFileInfo.FullName, cancellationToken)
-                                .ConfigureAwait(false);
-                            eTag = playlistImageFileInfo.LastWriteTimeUtc.ToEtag();
+                            result = ImageConvertor.ResizeImageIfNeeded(result,
+                                sizeParsedToInt,
+                                sizeParsedToInt, isUserImageRequest);
+                            eTag = HashHelper.CreateSha256(eTag + sizeParsedToInt);
                         }
                         else
                         {
-                            result = defaultImages.PlaylistImageBytes;
-                            eTag = badEtag;
-                        }
-                    }
-                    else if (IsApiIdForPlaylist(apiId))
-                    {
-                        var playlistImageBytesAndEtag = await playlistService.GetPlaylistImageBytesAndEtagAsync(apiKey.Value, size, cancellationToken).ConfigureAwait(false);
-                        result = playlistImageBytesAndEtag.Bytes ?? defaultImages.PlaylistImageBytes;
-                        eTag = playlistImageBytesAndEtag.Etag ?? badEtag;
-                    }
-                    else if (IsApiIdForChart(apiId))
-                    {
-                        var chartImageBytesAndEtab = await chartService.GetChartImageBytesAndEtagAsync(apiKey.Value, size, cancellationToken).ConfigureAwait(false);
-                        result = chartImageBytesAndEtab.Bytes ?? defaultImages.ChartImageBytes;
-                        eTag = chartImageBytesAndEtab.Etag ?? badEtag;
-                    }
-                    else if (isUserImageRequest)
-                    {
-                        var userResult = await userService.GetByApiKeyAsync(apiKey.Value, cancellationToken)
-                            .ConfigureAwait(false);
-                        var userImageLibrary = await libraryService.GetUserImagesLibraryAsync(cancellationToken)
-                            .ConfigureAwait(false);
-                        var userImageFileName = userResult.Data?.ToAvatarFileName(userImageLibrary.Data.Path);
-                        var userImageFileInfo = new FileInfo(userImageFileName ?? string.Empty);
-                        if (userImageFileInfo.Exists)
-                        {
-                            result = await File.ReadAllBytesAsync(userImageFileInfo.FullName, cancellationToken)
-                                .ConfigureAwait(false);
-                            eTag = userImageFileInfo.LastWriteTimeUtc.ToEtag();
-                        }
-                        else
-                        {
-                            result = defaultImages.UserAvatarBytes;
-                            eTag = badEtag;
-                        }
-                    }
-                    else if (IsApiIdForSong(apiId) || IsApiIdForAlbum(apiId))
-                    {
-                        if (IsApiIdForSong(apiId))
-                        {
-                            // If it's a song get the album ApiKey and proceed to get Album cover
-                            var songInfo = await DatabaseSongIdsInfoForSongApiKey(apiKey.Value, cancellationToken)
-                                .ConfigureAwait(false);
-                            if (songInfo != null)
+                            switch (sizeValue)
                             {
-                                apiKey = songInfo.AlbumApiKey;
+                                case ImageSize.Thumbnail:
+                                    var thumbnailSize = (await Configuration.Value).GetValue<int?>(SettingRegistry.ImagingThumbnailSize) ?? SafeParser.ToNumber<int>(ImageSize.Thumbnail);
+                                    result = ImageConvertor.ResizeImageIfNeeded(result,
+                                        thumbnailSize,
+                                        thumbnailSize,
+                                        isUserImageRequest);
+                                    eTag = HashHelper.CreateSha256(eTag + nameof(ImageSize.Thumbnail));
+                                    break;
+
+                                case ImageSize.Small:
+                                    var smallSize = (await Configuration.Value).GetValue<int?>(SettingRegistry.ImagingSmallSize) ??
+                                                    throw new Exception($"Invalid configuration [{SettingRegistry.ImagingSmallSize}] not found.");
+                                    result = ImageConvertor.ResizeImageIfNeeded(result,
+                                        smallSize,
+                                        smallSize,
+                                        isUserImageRequest);
+                                    eTag = HashHelper.CreateSha256(eTag + nameof(ImageSize.Small));
+                                    break;
+
+                                case ImageSize.Medium:
+                                    var mediumSize =
+                                        (await Configuration.Value).GetValue<int?>(
+                                            SettingRegistry.ImagingMediumSize) ??
+                                        throw new Exception(
+                                            $"Invalid configuration [{SettingRegistry.ImagingMediumSize}] not found.");
+                                    result = ImageConvertor.ResizeImageIfNeeded(result,
+                                        mediumSize,
+                                        mediumSize,
+                                        isUserImageRequest);
+                                    eTag = HashHelper.CreateSha256(eTag + nameof(ImageSize.Medium));
+                                    break;
                             }
                         }
-
-                        var albumImageBytesAndEtag = await albumService.GetAlbumImageBytesAndEtagAsync(apiKey, size, cancellationToken);
-                        result = albumImageBytesAndEtag.Bytes ?? defaultImages.AlbumCoverBytes;
-                        eTag = albumImageBytesAndEtag.Etag ?? badEtag;
-                    }
-
-                    if (result != null && !isForPlaylist && doCheckResize)
-                    {
-                        if (sizeValue != ImageSize.Large)
-                        {
-                            var sizeParsedToInt = SafeParser.ToNumber<int>(size);
-                            if (sizeParsedToInt > 0)
-                            {
-                                result = ImageConvertor.ResizeImageIfNeeded(result,
-                                    sizeParsedToInt,
-                                    sizeParsedToInt, isUserImageRequest);
-                                eTag = HashHelper.CreateSha256(eTag + sizeParsedToInt);
-                            }
-                            else
-                            {
-                                switch (sizeValue)
-                                {
-                                    case ImageSize.Thumbnail:
-                                        var thumbnailSize = (await Configuration.Value).GetValue<int?>(SettingRegistry.ImagingThumbnailSize) ?? SafeParser.ToNumber<int>(ImageSize.Thumbnail);
-                                        result = ImageConvertor.ResizeImageIfNeeded(result,
-                                            thumbnailSize,
-                                            thumbnailSize,
-                                            isUserImageRequest);
-                                        eTag = HashHelper.CreateSha256(eTag + nameof(ImageSize.Thumbnail));
-                                        break;
-
-                                    case ImageSize.Small:
-                                        var smallSize = (await Configuration.Value).GetValue<int?>(SettingRegistry.ImagingSmallSize) ??
-                                                        throw new Exception($"Invalid configuration [{SettingRegistry.ImagingSmallSize}] not found.");
-                                        result = ImageConvertor.ResizeImageIfNeeded(result,
-                                            smallSize,
-                                            smallSize,
-                                            isUserImageRequest);
-                                        eTag = HashHelper.CreateSha256(eTag + nameof(ImageSize.Small));
-                                        break;
-
-                                    case ImageSize.Medium:
-                                        var mediumSize =
-                                            (await Configuration.Value).GetValue<int?>(
-                                                SettingRegistry.ImagingMediumSize) ??
-                                            throw new Exception(
-                                                $"Invalid configuration [{SettingRegistry.ImagingMediumSize}] not found.");
-                                        result = ImageConvertor.ResizeImageIfNeeded(result,
-                                            mediumSize,
-                                            mediumSize,
-                                            isUserImageRequest);
-                                        eTag = HashHelper.CreateSha256(eTag + nameof(ImageSize.Medium));
-                                        break;
-                                }
-                            }
-                        }
+                        
+                        imageBytesAndEtag = new ImageBytesAndEtag(result, eTag);
                     }
                 }
-                catch (Exception e)
-                {
-                    error = Error.GenericError("Failed to get image for ApiKey.");
-                    Logger.Error(e, "Failed to get cover image for requested resource.");
-                }
-
-                return new ImageBytesAndEtag(result, eTag);
             }
-        }, cancellationToken, (await Configuration.Value).CacheDuration(), ImageCacheRegion);
+            catch (Exception e)
+            {
+                error = Error.GenericError("Failed to get image for ApiKey.");
+                Logger.Error(e, "Failed to get cover image for requested resource.");
+                imageBytesAndEtag = new ImageBytesAndEtag(null, null);
+            }
+        }
 
         return new ResponseModel
         {

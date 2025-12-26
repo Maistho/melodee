@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Linq.Expressions;
 using Ardalis.GuardClauses;
 using Melodee.Common.Configuration;
@@ -82,9 +83,6 @@ public class AlbumService(
         CacheManager.Remove(CacheKeyAlbumImageBytesAndEtagTemplate.FormatSmart(album.Id, ImageSize.Medium), Album.CacheRegion);
         CacheManager.Remove(CacheKeyAlbumImageBytesAndEtagTemplate.FormatSmart(album.Id, ImageSize.Large), Album.CacheRegion);
 
-
-        // This is needed because the OpenSubsonicApiService caches the image bytes after potentially resizing
-        CacheManager.ClearRegion(OpenSubsonicApiService.ImageCacheRegion);
 
         if (album.MusicBrainzId != null)
         {
@@ -837,42 +835,96 @@ public class AlbumService(
         var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
         var sizeValue = size ?? nameof(ImageSize.Large);
         
-        // Use apiKey in cache key to avoid database lookup on cache hit
+        // Use apiKey and size in cache key - resized images are cached separately
         var cacheKey = CacheKeyAlbumImageBytesAndEtagTemplate.FormatSmart(apiKey.Value, sizeValue);
-        return await CacheManager.GetAsync(cacheKey, async () =>
+        var overallStopwatch = Stopwatch.StartNew();
+        var wasCacheMiss = false;
+        
+        var result = await CacheManager.GetAsync(cacheKey, async () =>
         {
+            wasCacheMiss = true;
             var badEtag = Instant.MinValue.ToEtag();
             
             // Database lookup only happens on cache miss
+            var dbStopwatch = Stopwatch.StartNew();
             var album = await GetByApiKeyAsync(apiKey.Value, cancellationToken).ConfigureAwait(false);
+            dbStopwatch.Stop();
+            
             if (!album.IsSuccess || album.Data == null)
             {
+                Logger.Debug("GetAlbumImageBytesAndEtagAsync: DB lookup failed for ApiKey [{ApiKey}] in {DbMs}ms", apiKey.Value, dbStopwatch.ElapsedMilliseconds);
                 return new MelodeeModels.ImageBytesAndEtag(null, null);
             }
 
             var albumDirectory = album.Data.ToFileSystemDirectoryInfo();
             if (!albumDirectory.Exists())
             {
-                Logger.Warning("Album directory [{Directory}] does not exist for album [{AlbumId}].", albumDirectory.FullName(), album.Data.Id);
+                Logger.Warning("Album directory [{Directory}] does not exist for album [{AlbumId}]. DB: {DbMs}ms", albumDirectory.FullName(), album.Data.Id, dbStopwatch.ElapsedMilliseconds);
                 return new MelodeeModels.ImageBytesAndEtag(null, badEtag);
             }
 
-            // The size parameter allows for the admin to pre-create sized images so on the fly resize doesn't happen
+            // Check if a pre-sized image exists on disk first
             var albumImages = albumDirectory.AllFileImageTypeFileInfos().ToArray();
             var imageFile = albumImages
-                .FirstOrDefault(x => x.Name.Contains($"-{sizeValue}", StringComparison.OrdinalIgnoreCase) ||
-                                     x.Name.Contains($"-{sizeValue}", StringComparison.OrdinalIgnoreCase)) ?? albumImages.OrderBy(x => x.Name).FirstOrDefault();
+                .FirstOrDefault(x => x.Name.Contains($"-{sizeValue}", StringComparison.OrdinalIgnoreCase)) 
+                            ?? albumImages.OrderBy(x => x.Name).FirstOrDefault();
 
             if (imageFile is not { Exists: true })
             {
-                Logger.Warning("No image found for album [{AlbumId}].", album.Data.Id);
+                Logger.Warning("No image found for album [{AlbumId}]. DB: {DbMs}ms", album.Data.Id, dbStopwatch.ElapsedMilliseconds);
                 return new MelodeeModels.ImageBytesAndEtag(null, badEtag);
             }
 
+            var fileStopwatch = Stopwatch.StartNew();
             var imageBytes = await File.ReadAllBytesAsync(imageFile.FullName, cancellationToken).ConfigureAwait(false);
-            Logger.Information("Image found for album [{AlbumId}].", album);
-            return new MelodeeModels.ImageBytesAndEtag(imageBytes, (album.Data.LastUpdatedAt ?? album.Data.CreatedAt).ToEtag());
+            fileStopwatch.Stop();
+            
+            var eTag = (album.Data.LastUpdatedAt ?? album.Data.CreatedAt).ToEtag();
+            
+            // Resize if needed (when size is not Large and no pre-sized image was found)
+            var parsedSize = SafeParser.ToEnum<ImageSize>(sizeValue);
+            if (parsedSize != ImageSize.Large && !imageFile.Name.Contains($"-{sizeValue}", StringComparison.OrdinalIgnoreCase))
+            {
+                var resizeStopwatch = Stopwatch.StartNew();
+                var targetSize = parsedSize switch
+                {
+                    ImageSize.Thumbnail => configuration.GetValue<int?>(SettingRegistry.ImagingThumbnailSize) ?? SafeParser.ToNumber<int>(ImageSize.Thumbnail),
+                    ImageSize.Small => configuration.GetValue<int?>(SettingRegistry.ImagingSmallSize) ?? SafeParser.ToNumber<int>(ImageSize.Small),
+                    ImageSize.Medium => configuration.GetValue<int?>(SettingRegistry.ImagingMediumSize) ?? SafeParser.ToNumber<int>(ImageSize.Medium),
+                    _ => SafeParser.ToNumber<int>(sizeValue)
+                };
+                
+                if (targetSize > 0)
+                {
+                    imageBytes = ImageConvertor.ResizeImageIfNeeded(imageBytes, targetSize, targetSize, false);
+                    eTag = HashHelper.CreateSha256(eTag + targetSize);
+                }
+                resizeStopwatch.Stop();
+                
+                Logger.Debug("GetAlbumImageBytesAndEtagAsync MISS: Album [{AlbumId}] DB: {DbMs}ms, FileRead: {FileMs}ms, Resize: {ResizeMs}ms, Size: {Size}bytes", 
+                    album.Data.Id, dbStopwatch.ElapsedMilliseconds, fileStopwatch.ElapsedMilliseconds, resizeStopwatch.ElapsedMilliseconds, imageBytes.Length);
+            }
+            else
+            {
+                Logger.Debug("GetAlbumImageBytesAndEtagAsync MISS: Album [{AlbumId}] DB: {DbMs}ms, FileRead: {FileMs}ms, Size: {Size}bytes", 
+                    album.Data.Id, dbStopwatch.ElapsedMilliseconds, fileStopwatch.ElapsedMilliseconds, imageBytes.Length);
+            }
+            
+            return new MelodeeModels.ImageBytesAndEtag(imageBytes, eTag);
         }, cancellationToken, configuration.CacheDuration(), Album.CacheRegion);
+        
+        overallStopwatch.Stop();
+        
+        if (!wasCacheMiss)
+        {
+            Logger.Debug("GetAlbumImageBytesAndEtagAsync HIT: ApiKey [{ApiKey}] Total: {TotalMs}ms", apiKey.Value, overallStopwatch.ElapsedMilliseconds);
+        }
+        else
+        {
+            Logger.Debug("GetAlbumImageBytesAndEtagAsync MISS Total: ApiKey [{ApiKey}] Total: {TotalMs}ms", apiKey.Value, overallStopwatch.ElapsedMilliseconds);
+        }
+        
+        return result;
     }
 
     public async Task<MelodeeModels.OperationResult<bool>> SaveImageAsAlbumImageAsync(
