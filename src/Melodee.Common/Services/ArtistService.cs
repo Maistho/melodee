@@ -1559,29 +1559,23 @@ public class ArtistService(
         foreach (var resolution in resolutions.Where(r => r.Action == MelodeeModels.AlbumMerge.AlbumMergeResolutionAction.ReplaceWithSource))
         {
             var conflict = resolution.ConflictId;
-            if (conflict.StartsWith("field_year_"))
+            if (conflict.StartsWith("field_year_") && resolution.SelectedFromAlbumId is > 0)
             {
-                if (resolution.SelectedFromAlbumId.HasValue && resolution.SelectedFromAlbumId > 0)
+                var sourceAlbum = sourceAlbums.FirstOrDefault(a => a.Id == resolution.SelectedFromAlbumId);
+                if (sourceAlbum != null)
                 {
-                    var sourceAlbum = sourceAlbums.FirstOrDefault(a => a.Id == resolution.SelectedFromAlbumId);
-                    if (sourceAlbum != null)
-                    {
-                        targetAlbum.ReleaseDate = sourceAlbum.ReleaseDate;
-                        actionLog.Add($"Updated release year to {sourceAlbum.ReleaseDate.Year} from {sourceAlbum.Name}");
-                    }
+                    targetAlbum.ReleaseDate = sourceAlbum.ReleaseDate;
+                    actionLog.Add($"Updated release year to {sourceAlbum.ReleaseDate.Year} from {sourceAlbum.Name}");
                 }
             }
-            else if (conflict.StartsWith("field_title_"))
+            else if (conflict.StartsWith("field_title_") && resolution.SelectedFromAlbumId is > 0)
             {
-                if (resolution.SelectedFromAlbumId.HasValue && resolution.SelectedFromAlbumId > 0)
+                var sourceAlbum = sourceAlbums.FirstOrDefault(a => a.Id == resolution.SelectedFromAlbumId);
+                if (sourceAlbum != null)
                 {
-                    var sourceAlbum = sourceAlbums.FirstOrDefault(a => a.Id == resolution.SelectedFromAlbumId);
-                    if (sourceAlbum != null)
-                    {
-                        targetAlbum.Name = sourceAlbum.Name;
-                        targetAlbum.NameNormalized = sourceAlbum.NameNormalized;
-                        actionLog.Add($"Updated title to '{sourceAlbum.Name}' from source album ID {sourceAlbum.Id}");
-                    }
+                    targetAlbum.Name = sourceAlbum.Name;
+                    targetAlbum.NameNormalized = sourceAlbum.NameNormalized;
+                    actionLog.Add($"Updated title to '{sourceAlbum.Name}' from {sourceAlbum.Name}");
                 }
             }
         }
