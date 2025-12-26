@@ -43,6 +43,12 @@ public class ArtistService(
     private const string CacheKeyDetailByMusicBrainzIdTemplate = "urn:artist:musicbrainzid:{0}";
     private const string CacheKeyDetailTemplate = "urn:artist:{0}";
     private const string CacheKeyArtistImageBytesAndEtagTemplate = "urn:artist:imagebytesandetag:{0}:{1}";
+    
+    /// <summary>
+    /// Duration tolerance in milliseconds for considering songs as equal during merge operations.
+    /// Songs with duration difference within this threshold are considered identical.
+    /// </summary>
+    private const double SongDurationToleranceMs = 1000;
 
     public async Task<MelodeeModels.PagedResult<ArtistDataInfo>> ListAsync(
         MelodeeModels.PagedRequest pagedRequest,
@@ -1105,9 +1111,10 @@ public class ArtistService(
         if (distinctYears.Length > 1 || (distinctYears.Length == 1 && distinctYears[0] != targetAlbum.ReleaseDate.Year))
         {
             var sourceValues = sourceAlbums.ToDictionary(a => a.Id, a => a.ReleaseDate.Year.ToString());
+            // Use deterministic conflict ID based on target album ID
             conflicts.Add(new MelodeeModels.AlbumMerge.AlbumMergeConflict
             {
-                ConflictId = $"field_year_{Guid.NewGuid()}",
+                ConflictId = $"field_year_{targetAlbum.Id}",
                 ConflictType = Enums.AlbumMergeConflictType.AlbumFieldConflict,
                 Description = "Albums have different release years",
                 FieldName = "ReleaseYear",
@@ -1122,9 +1129,10 @@ public class ArtistService(
         if (distinctTitles.Length > 1 || (distinctTitles.Length == 1 && distinctTitles[0] != targetAlbum.Name))
         {
             var sourceValues = sourceAlbums.ToDictionary(a => a.Id, a => a.Name);
+            // Use deterministic conflict ID based on target album ID
             conflicts.Add(new MelodeeModels.AlbumMerge.AlbumMergeConflict
             {
-                ConflictId = $"field_title_{Guid.NewGuid()}",
+                ConflictId = $"field_title_{targetAlbum.Id}",
                 ConflictType = Enums.AlbumMergeConflictType.AlbumFieldConflict,
                 Description = "Albums have different titles",
                 FieldName = "Title",
@@ -1150,9 +1158,10 @@ public class ArtistService(
                     // Different songs with same track number
                     if (!AreSongsEqual(targetSongSameNumber, sourceSong))
                     {
+                        // Use deterministic conflict ID based on track number and source album ID
                         conflicts.Add(new MelodeeModels.AlbumMerge.AlbumMergeConflict
                         {
-                            ConflictId = $"track_number_{sourceSong.SongNumber}_{sourceAlbum.Id}_{Guid.NewGuid()}",
+                            ConflictId = $"track_number_{sourceSong.SongNumber}_{sourceAlbum.Id}",
                             ConflictType = Enums.AlbumMergeConflictType.TrackNumberCollision,
                             Description = $"Track {sourceSong.SongNumber} exists in both albums with different content",
                             TrackNumber = sourceSong.SongNumber,
@@ -1179,9 +1188,10 @@ public class ArtistService(
 
                     if (targetSongSameTitle != null && targetSongSameTitle.SongNumber != sourceSong.SongNumber)
                     {
+                        // Use deterministic conflict ID based on normalized title and source album ID
                         conflicts.Add(new MelodeeModels.AlbumMerge.AlbumMergeConflict
                         {
-                            ConflictId = $"track_title_{sourceSong.TitleNormalized}_{sourceAlbum.Id}_{Guid.NewGuid()}",
+                            ConflictId = $"track_title_{sourceSong.TitleNormalized}_{sourceAlbum.Id}",
                             ConflictType = Enums.AlbumMergeConflictType.DuplicateTitleDifferentNumber,
                             Description = $"Track '{sourceSong.Title}' exists at different track numbers",
                             TargetValue = $"Track {targetSongSameTitle.SongNumber}: {targetSongSameTitle.Title}",
@@ -1211,9 +1221,10 @@ public class ArtistService(
         var newGenres = allSourceGenres.Except(targetGenres, StringComparer.OrdinalIgnoreCase).ToArray();
         if (newGenres.Any())
         {
+            // Use deterministic conflict ID based on target album ID
             conflicts.Add(new MelodeeModels.AlbumMerge.AlbumMergeConflict
             {
-                ConflictId = $"metadata_genres_{Guid.NewGuid()}",
+                ConflictId = $"metadata_genres_{targetAlbum.Id}",
                 ConflictType = Enums.AlbumMergeConflictType.MetadataCollision,
                 Description = "Source albums have additional genres not in target",
                 FieldName = "Genres",
@@ -1233,9 +1244,10 @@ public class ArtistService(
         var newMoods = allSourceMoods.Except(targetMoods, StringComparer.OrdinalIgnoreCase).ToArray();
         if (newMoods.Any())
         {
+            // Use deterministic conflict ID based on target album ID
             conflicts.Add(new MelodeeModels.AlbumMerge.AlbumMergeConflict
             {
-                ConflictId = $"metadata_moods_{Guid.NewGuid()}",
+                ConflictId = $"metadata_moods_{targetAlbum.Id}",
                 ConflictType = Enums.AlbumMergeConflictType.MetadataCollision,
                 Description = "Source albums have additional moods not in target",
                 FieldName = "Moods",
@@ -1257,23 +1269,23 @@ public class ArtistService(
             return false;
         }
 
-        // Compare duration (within 1 second tolerance)
-        if (Math.Abs(song1.Duration - song2.Duration) > 1000)
+        // Compare duration (within tolerance threshold)
+        if (Math.Abs(song1.Duration - song2.Duration) > SongDurationToleranceMs)
         {
             return false;
         }
 
+        // If both songs have file hash, compare them for definitive equality check
         var hasHash1 = !string.IsNullOrEmpty(song1.FileHash);
         var hasHash2 = !string.IsNullOrEmpty(song2.FileHash);
 
-        if (hasHash1 || hasHash2)
+        if (hasHash1 && hasHash2)
         {
-            // When any hash information is available, require both hashes to be present and equal
-            return hasHash1
-                && hasHash2
-                && string.Equals(song1.FileHash, song2.FileHash, StringComparison.OrdinalIgnoreCase);
+            // Both hashes present - they must match for songs to be equal
+            return string.Equals(song1.FileHash, song2.FileHash, StringComparison.OrdinalIgnoreCase);
         }
 
+        // If hashes not available or only one has hash, rely on title and duration match
         return true;
     }
 
@@ -1422,7 +1434,7 @@ public class ArtistService(
                 var existingSong = targetAlbum.Songs.FirstOrDefault(s =>
                     s.SongNumber == sourceSong.SongNumber ||
                     (string.Equals(s.TitleNormalized, sourceSong.TitleNormalized, StringComparison.OrdinalIgnoreCase) &&
-                     Math.Abs(s.Duration - sourceSong.Duration) < 1000));
+                     Math.Abs(s.Duration - sourceSong.Duration) < SongDurationToleranceMs));
 
                 if (existingSong != null)
                 {
@@ -1455,14 +1467,27 @@ public class ArtistService(
                     var sourceFilePath = Path.Combine(sourceAlbumDirectory, sourceSong.FileName);
                     var targetFilePath = Path.Combine(targetAlbumDirectory, sourceSong.FileName);
 
-                    if (fileSystemService.FileExists(sourceFilePath) && !fileSystemService.FileExists(targetFilePath))
+                    if (fileSystemService.FileExists(sourceFilePath))
                     {
-                        fileSystemService.MoveFile(sourceFilePath, targetFilePath);
+                        if (!fileSystemService.FileExists(targetFilePath))
+                        {
+                            fileSystemService.MoveDirectory(sourceFilePath, targetFilePath);
+                        }
+                        else
+                        {
+                            actionLog.Add($"File move skipped for track {sourceSong.SongNumber}: target file already exists");
+                        }
+                    }
+                    else
+                    {
+                        Logger.Warning("Source file not found for song [{SongId}]: {SourcePath}", sourceSong.Id, sourceFilePath);
+                        actionLog.Add($"Warning: Source file missing for track {sourceSong.SongNumber}: {sourceSong.Title}");
                     }
                 }
                 catch (Exception ex)
                 {
                     Logger.Warning(ex, "Failed to move file for song [{SongId}]", sourceSong.Id);
+                    actionLog.Add($"Failed to move file for track {sourceSong.SongNumber}: {sourceSong.Title}. See logs for details.");
                 }
             }
 
@@ -1503,16 +1528,19 @@ public class ArtistService(
                         {
                             fileSystemService.MoveDirectory(imageFile, targetPath);
                             imagesMoved++;
+                            actionLog.Add($"Moved image file: {fileName}");
                         }
                         catch (Exception ex)
                         {
                             Logger.Warning(ex, "Failed to move image file [{File}]", imageFile);
                             imagesSkipped++;
+                            actionLog.Add($"Failed to move image file: {fileName}. See logs for details.");
                         }
                     }
                     else
                     {
                         imagesSkipped++;
+                        actionLog.Add($"Image file skipped (already exists): {fileName}");
                     }
                 }
             }
@@ -1561,6 +1589,7 @@ public class ArtistService(
             return;
         }
 
+        // Handle ReplaceWithSource resolutions
         foreach (var resolution in resolutions.Where(r => r.Action == MelodeeModels.AlbumMerge.AlbumMergeResolutionAction.ReplaceWithSource))
         {
             var conflict = resolution.ConflictId;
@@ -1570,7 +1599,7 @@ public class ArtistService(
                 if (sourceAlbum != null)
                 {
                     targetAlbum.ReleaseDate = sourceAlbum.ReleaseDate;
-                    actionLog.Add($"Updated release year to {sourceAlbum.ReleaseDate.Year} from {sourceAlbum.Name}");
+                    actionLog.Add($"Updated release year to {sourceAlbum.ReleaseDate.Year} from source album '{sourceAlbum.Name}'");
                 }
             }
             else if (conflict.StartsWith("field_title_") && resolution.SelectedFromAlbumId is > 0)
@@ -1580,8 +1609,22 @@ public class ArtistService(
                 {
                     targetAlbum.Name = sourceAlbum.Name;
                     targetAlbum.NameNormalized = sourceAlbum.NameNormalized;
-                    actionLog.Add($"Updated title to '{sourceAlbum.Name}' from {sourceAlbum.Name}");
+                    actionLog.Add($"Updated title to '{sourceAlbum.Name}' from source album ID {sourceAlbum.Id}");
                 }
+            }
+        }
+
+        // Handle KeepTarget resolutions - log for audit purposes
+        foreach (var resolution in resolutions.Where(r => r.Action == MelodeeModels.AlbumMerge.AlbumMergeResolutionAction.KeepTarget))
+        {
+            var conflict = resolution.ConflictId;
+            if (conflict.StartsWith("field_year_"))
+            {
+                actionLog.Add($"Kept existing release year {targetAlbum.ReleaseDate.Year} for '{targetAlbum.Name}'");
+            }
+            else if (conflict.StartsWith("field_title_"))
+            {
+                actionLog.Add($"Kept existing title '{targetAlbum.Name}'");
             }
         }
     }

@@ -36,11 +36,6 @@ public record AlbumMergeResolution
     public Dictionary<int, int>? TrackIds { get; init; }
 
     /// <summary>
-    /// For renumbering: the new track number
-    /// </summary>
-    public int? NewTrackNumber { get; init; }
-
-    /// <summary>
     /// Additional resolution context
     /// </summary>
     public Dictionary<string, object>? Context { get; init; }
@@ -69,10 +64,5 @@ public enum AlbumMergeResolutionAction
     /// <summary>
     /// Keep both items (for metadata union)
     /// </summary>
-    KeepBoth = 4,
-
-    /// <summary>
-    /// Renumber the track
-    /// </summary>
-    Renumber = 5
+    KeepBoth = 4
 }
