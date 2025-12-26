@@ -31,6 +31,11 @@ public record AlbumMergeResolution
     public int? SelectedTrackId { get; init; }
 
     /// <summary>
+    /// For track conflicts: mapping of album ID to track ID
+    /// </summary>
+    public Dictionary<int, int>? TrackIds { get; init; }
+
+    /// <summary>
     /// For renumbering: the new track number
     /// </summary>
     public int? NewTrackNumber { get; init; }

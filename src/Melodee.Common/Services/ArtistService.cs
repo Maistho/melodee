@@ -1013,6 +1013,621 @@ public class ArtistService(
         };
     }
 
+    /// <summary>
+    /// Detect conflicts when merging albums
+    /// </summary>
+    public async Task<MelodeeModels.OperationResult<MelodeeModels.AlbumMerge.AlbumMergeConflictDetectionResult>> DetectAlbumMergeConflictsAsync(
+        int artistId,
+        int targetAlbumId,
+        int[] sourceAlbumIds,
+        CancellationToken cancellationToken = default)
+    {
+        Guard.Against.Expression(x => x < 1, artistId, nameof(artistId));
+        Guard.Against.Expression(x => x < 1, targetAlbumId, nameof(targetAlbumId));
+        Guard.Against.NullOrEmpty(sourceAlbumIds, nameof(sourceAlbumIds));
+
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        // Validate artist exists
+        var artist = await scopedContext.Artists
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == artistId, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (artist == null)
+        {
+            return new MelodeeModels.OperationResult<MelodeeModels.AlbumMerge.AlbumMergeConflictDetectionResult>($"Unknown artist [{artistId}].")
+            {
+                Data = null!
+            };
+        }
+
+        // Load target album with songs
+        var targetAlbum = await scopedContext.Albums
+            .Include(a => a.Songs)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == targetAlbumId && x.ArtistId == artistId, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (targetAlbum == null)
+        {
+            return new MelodeeModels.OperationResult<MelodeeModels.AlbumMerge.AlbumMergeConflictDetectionResult>($"Unknown target album [{targetAlbumId}] for artist [{artistId}].")
+            {
+                Data = null!
+            };
+        }
+
+        // Load source albums with songs
+        var sourceAlbums = await scopedContext.Albums
+            .Include(a => a.Songs)
+            .AsNoTracking()
+            .Where(x => sourceAlbumIds.Contains(x.Id) && x.ArtistId == artistId)
+            .ToArrayAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        if (sourceAlbums.Length != sourceAlbumIds.Length)
+        {
+            return new MelodeeModels.OperationResult<MelodeeModels.AlbumMerge.AlbumMergeConflictDetectionResult>("One or more source albums not found or do not belong to the artist.")
+            {
+                Data = null!
+            };
+        }
+
+        var conflicts = new List<MelodeeModels.AlbumMerge.AlbumMergeConflict>();
+
+        // Detect album-level field conflicts
+        DetectAlbumFieldConflicts(targetAlbum, sourceAlbums, conflicts);
+
+        // Detect track conflicts
+        DetectTrackConflicts(targetAlbum, sourceAlbums, conflicts);
+
+        // Detect metadata conflicts
+        DetectMetadataConflicts(targetAlbum, sourceAlbums, conflicts);
+
+        var result = new MelodeeModels.AlbumMerge.AlbumMergeConflictDetectionResult
+        {
+            TargetAlbumId = targetAlbumId,
+            SourceAlbumIds = sourceAlbumIds,
+            Conflicts = conflicts.ToArray(),
+            MergeSummary = $"Merging {sourceAlbums.Length} album(s) into '{targetAlbum.Name}'. Total songs to merge: {sourceAlbums.Sum(a => a.Songs.Count)}"
+        };
+
+        return new MelodeeModels.OperationResult<MelodeeModels.AlbumMerge.AlbumMergeConflictDetectionResult>
+        {
+            Data = result
+        };
+    }
+
+    private void DetectAlbumFieldConflicts(Album targetAlbum, Album[] sourceAlbums, List<MelodeeModels.AlbumMerge.AlbumMergeConflict> conflicts)
+    {
+        // Check year conflicts
+        var distinctYears = sourceAlbums.Select(a => a.ReleaseDate.Year).Distinct().ToArray();
+        if (distinctYears.Length > 1 || (distinctYears.Length == 1 && distinctYears[0] != targetAlbum.ReleaseDate.Year))
+        {
+            var sourceValues = sourceAlbums.ToDictionary(a => a.Id, a => a.ReleaseDate.Year.ToString());
+            conflicts.Add(new MelodeeModels.AlbumMerge.AlbumMergeConflict
+            {
+                ConflictId = $"field_year_{Guid.NewGuid()}",
+                ConflictType = Enums.AlbumMergeConflictType.AlbumFieldConflict,
+                Description = "Albums have different release years",
+                FieldName = "ReleaseYear",
+                TargetValue = targetAlbum.ReleaseDate.Year.ToString(),
+                SourceValues = sourceValues,
+                IsRequired = true
+            });
+        }
+
+        // Check title conflicts
+        var distinctTitles = sourceAlbums.Select(a => a.Name).Distinct().ToArray();
+        if (distinctTitles.Length > 1 || (distinctTitles.Length == 1 && distinctTitles[0] != targetAlbum.Name))
+        {
+            var sourceValues = sourceAlbums.ToDictionary(a => a.Id, a => a.Name);
+            conflicts.Add(new MelodeeModels.AlbumMerge.AlbumMergeConflict
+            {
+                ConflictId = $"field_title_{Guid.NewGuid()}",
+                ConflictType = Enums.AlbumMergeConflictType.AlbumFieldConflict,
+                Description = "Albums have different titles",
+                FieldName = "Title",
+                TargetValue = targetAlbum.Name,
+                SourceValues = sourceValues,
+                IsRequired = true
+            });
+        }
+    }
+
+    private void DetectTrackConflicts(Album targetAlbum, Album[] sourceAlbums, List<MelodeeModels.AlbumMerge.AlbumMergeConflict> conflicts)
+    {
+        var targetSongs = targetAlbum.Songs.ToArray();
+
+        foreach (var sourceAlbum in sourceAlbums)
+        {
+            foreach (var sourceSong in sourceAlbum.Songs)
+            {
+                // Check for track number collision
+                var targetSongSameNumber = targetSongs.FirstOrDefault(s => s.SongNumber == sourceSong.SongNumber);
+                if (targetSongSameNumber != null)
+                {
+                    // Different songs with same track number
+                    if (!AreSongsEqual(targetSongSameNumber, sourceSong))
+                    {
+                        conflicts.Add(new MelodeeModels.AlbumMerge.AlbumMergeConflict
+                        {
+                            ConflictId = $"track_number_{sourceSong.SongNumber}_{sourceAlbum.Id}_{Guid.NewGuid()}",
+                            ConflictType = Enums.AlbumMergeConflictType.TrackNumberCollision,
+                            Description = $"Track {sourceSong.SongNumber} exists in both albums with different content",
+                            TrackNumber = sourceSong.SongNumber,
+                            TargetValue = $"{targetSongSameNumber.Title} ({FormatDuration(targetSongSameNumber.Duration)})",
+                            SourceValues = new Dictionary<int, string>
+                            {
+                                { sourceAlbum.Id, $"{sourceSong.Title} ({FormatDuration(sourceSong.Duration)})" }
+                            },
+                            TrackIds = new Dictionary<int, int>
+                            {
+                                { 0, targetSongSameNumber.Id },
+                                { sourceAlbum.Id, sourceSong.Id }
+                            },
+                            IsRequired = true
+                        });
+                    }
+                    // If songs are equal, no conflict (will be skipped during merge)
+                }
+                else
+                {
+                    // Check for duplicate title at different number (compilation case)
+                    var targetSongSameTitle = targetSongs.FirstOrDefault(s =>
+                        string.Equals(s.TitleNormalized, sourceSong.TitleNormalized, StringComparison.OrdinalIgnoreCase));
+
+                    if (targetSongSameTitle != null && targetSongSameTitle.SongNumber != sourceSong.SongNumber)
+                    {
+                        conflicts.Add(new MelodeeModels.AlbumMerge.AlbumMergeConflict
+                        {
+                            ConflictId = $"track_title_{sourceSong.TitleNormalized}_{sourceAlbum.Id}_{Guid.NewGuid()}",
+                            ConflictType = Enums.AlbumMergeConflictType.DuplicateTitleDifferentNumber,
+                            Description = $"Track '{sourceSong.Title}' exists at different track numbers",
+                            TargetValue = $"Track {targetSongSameTitle.SongNumber}: {targetSongSameTitle.Title}",
+                            SourceValues = new Dictionary<int, string>
+                            {
+                                { sourceAlbum.Id, $"Track {sourceSong.SongNumber}: {sourceSong.Title}" }
+                            },
+                            TrackIds = new Dictionary<int, int>
+                            {
+                                { 0, targetSongSameTitle.Id },
+                                { sourceAlbum.Id, sourceSong.Id }
+                            },
+                            IsRequired = true
+                        });
+                    }
+                }
+            }
+        }
+    }
+
+    private void DetectMetadataConflicts(Album targetAlbum, Album[] sourceAlbums, List<MelodeeModels.AlbumMerge.AlbumMergeConflict> conflicts)
+    {
+        // Check for genre conflicts
+        var allSourceGenres = sourceAlbums.SelectMany(a => a.Genres ?? Array.Empty<string>()).Distinct().ToArray();
+        var targetGenres = targetAlbum.Genres ?? Array.Empty<string>();
+
+        var newGenres = allSourceGenres.Except(targetGenres, StringComparer.OrdinalIgnoreCase).ToArray();
+        if (newGenres.Any())
+        {
+            conflicts.Add(new MelodeeModels.AlbumMerge.AlbumMergeConflict
+            {
+                ConflictId = $"metadata_genres_{Guid.NewGuid()}",
+                ConflictType = Enums.AlbumMergeConflictType.MetadataCollision,
+                Description = "Source albums have additional genres not in target",
+                FieldName = "Genres",
+                TargetValue = string.Join(", ", targetGenres),
+                SourceValues = new Dictionary<int, string>
+                {
+                    { -1, string.Join(", ", newGenres) }
+                },
+                IsRequired = false // Can default to union
+            });
+        }
+
+        // Check for mood conflicts
+        var allSourceMoods = sourceAlbums.SelectMany(a => a.Moods ?? Array.Empty<string>()).Distinct().ToArray();
+        var targetMoods = targetAlbum.Moods ?? Array.Empty<string>();
+
+        var newMoods = allSourceMoods.Except(targetMoods, StringComparer.OrdinalIgnoreCase).ToArray();
+        if (newMoods.Any())
+        {
+            conflicts.Add(new MelodeeModels.AlbumMerge.AlbumMergeConflict
+            {
+                ConflictId = $"metadata_moods_{Guid.NewGuid()}",
+                ConflictType = Enums.AlbumMergeConflictType.MetadataCollision,
+                Description = "Source albums have additional moods not in target",
+                FieldName = "Moods",
+                TargetValue = string.Join(", ", targetMoods),
+                SourceValues = new Dictionary<int, string>
+                {
+                    { -1, string.Join(", ", newMoods) }
+                },
+                IsRequired = false // Can default to union
+            });
+        }
+    }
+
+    private bool AreSongsEqual(Song song1, Song song2)
+    {
+        // Compare normalized titles
+        if (!string.Equals(song1.TitleNormalized, song2.TitleNormalized, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        // Compare duration (within 1 second tolerance)
+        if (Math.Abs(song1.Duration - song2.Duration) > 1000)
+        {
+            return false;
+        }
+
+        // If file hash is available and identical, consider them equal
+        if (!string.IsNullOrEmpty(song1.FileHash) && !string.IsNullOrEmpty(song2.FileHash))
+        {
+            return string.Equals(song1.FileHash, song2.FileHash, StringComparison.OrdinalIgnoreCase);
+        }
+
+        return true;
+    }
+
+    private string FormatDuration(double milliseconds)
+    {
+        var ts = TimeSpan.FromMilliseconds(milliseconds);
+        return $"{(int)ts.TotalMinutes}:{ts.Seconds:D2}";
+    }
+
+    /// <summary>
+    /// Merge multiple albums into a single target album with conflict resolution
+    /// </summary>
+    public async Task<MelodeeModels.OperationResult<MelodeeModels.AlbumMerge.AlbumMergeReport>> MergeAlbumsAsync(
+        MelodeeModels.AlbumMerge.AlbumMergeRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        Guard.Against.Null(request, nameof(request));
+        Guard.Against.Expression(x => x < 1, request.ArtistId, nameof(request.ArtistId));
+        Guard.Against.Expression(x => x < 1, request.TargetAlbumId, nameof(request.TargetAlbumId));
+        Guard.Against.NullOrEmpty(request.SourceAlbumIds, nameof(request.SourceAlbumIds));
+
+        // First detect conflicts
+        var conflictDetection = await DetectAlbumMergeConflictsAsync(
+            request.ArtistId,
+            request.TargetAlbumId,
+            request.SourceAlbumIds,
+            cancellationToken).ConfigureAwait(false);
+
+        if (!conflictDetection.IsSuccess)
+        {
+            return new MelodeeModels.OperationResult<MelodeeModels.AlbumMerge.AlbumMergeReport>(conflictDetection.Messages)
+            {
+                Data = null!
+            };
+        }
+
+        // Validate that all required conflicts have resolutions
+        if (conflictDetection.Data.HasConflicts)
+        {
+            var requiredConflicts = conflictDetection.Data.Conflicts!.Where(c => c.IsRequired).ToArray();
+            if (requiredConflicts.Any())
+            {
+                var resolutionIds = request.Resolutions?.Select(r => r.ConflictId).ToHashSet() ?? new HashSet<string>();
+                var unresolvedConflicts = requiredConflicts.Where(c => !resolutionIds.Contains(c.ConflictId)).ToArray();
+
+                if (unresolvedConflicts.Any())
+                {
+                    return new MelodeeModels.OperationResult<MelodeeModels.AlbumMerge.AlbumMergeReport>($"Missing resolutions for {unresolvedConflicts.Length} required conflict(s).")
+                    {
+                        Data = null!
+                    };
+                }
+            }
+        }
+
+        // Execute merge in transaction
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        await using var transaction = await scopedContext.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+
+        try
+        {
+            var report = await ExecuteMergeAsync(scopedContext, request, conflictDetection.Data, cancellationToken).ConfigureAwait(false);
+
+            await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+
+            // Clear caches
+            await ClearCacheAsync(request.ArtistId, cancellationToken).ConfigureAwait(false);
+
+            return new MelodeeModels.OperationResult<MelodeeModels.AlbumMerge.AlbumMergeReport>
+            {
+                Data = report
+            };
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+            Logger.Error(ex, "Error merging albums for artist [{ArtistId}]", request.ArtistId);
+
+            return new MelodeeModels.OperationResult<MelodeeModels.AlbumMerge.AlbumMergeReport>(ex)
+            {
+                Data = null!
+            };
+        }
+    }
+
+    private async Task<MelodeeModels.AlbumMerge.AlbumMergeReport> ExecuteMergeAsync(
+        MelodeeDbContext context,
+        MelodeeModels.AlbumMerge.AlbumMergeRequest request,
+        MelodeeModels.AlbumMerge.AlbumMergeConflictDetectionResult conflictResult,
+        CancellationToken cancellationToken)
+    {
+        var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
+        var now = Instant.FromDateTimeUtc(DateTime.UtcNow);
+
+        // Load target album with all necessary includes
+        var targetAlbum = await context.Albums
+            .Include(a => a.Songs)
+            .Include(a => a.Contributors)
+            .Include(a => a.Artist)
+            .ThenInclude(a => a.Library)
+            .FirstAsync(x => x.Id == request.TargetAlbumId, cancellationToken)
+            .ConfigureAwait(false);
+
+        // Load source albums
+        var sourceAlbums = await context.Albums
+            .Include(a => a.Songs)
+            .Include(a => a.Contributors)
+            .Include(a => a.UserAlbums)
+            .Include(a => a.Artist)
+            .ThenInclude(a => a.Library)
+            .Where(x => request.SourceAlbumIds.Contains(x.Id))
+            .ToArrayAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var actionLog = new List<string>();
+        var songsMoved = 0;
+        var songsSkipped = 0;
+        var imagesMoved = 0;
+        var imagesSkipped = 0;
+        var metadataMerged = 0;
+
+        // Calculate target album directory once
+        var targetAlbumDirectory = Path.Combine(targetAlbum.Artist.Library.Path, targetAlbum.Artist.Directory, targetAlbum.Directory);
+
+        // Apply field resolutions
+        ApplyFieldResolutions(targetAlbum, sourceAlbums, request.Resolutions, actionLog);
+
+        // Merge songs
+        foreach (var sourceAlbum in sourceAlbums)
+        {
+            var sourceAlbumDirectory = Path.Combine(sourceAlbum.Artist.Library.Path, sourceAlbum.Artist.Directory, sourceAlbum.Directory);
+
+            foreach (var sourceSong in sourceAlbum.Songs.ToArray())
+            {
+                var resolution = GetTrackResolution(sourceSong, request.Resolutions);
+
+                if (resolution?.Action == MelodeeModels.AlbumMerge.AlbumMergeResolutionAction.SkipSource)
+                {
+                    songsSkipped++;
+                    actionLog.Add($"Skipped track {sourceSong.SongNumber}: {sourceSong.Title} from {sourceAlbum.Name}");
+                    continue;
+                }
+
+                // Check if song already exists in target
+                var existingSong = targetAlbum.Songs.FirstOrDefault(s =>
+                    s.SongNumber == sourceSong.SongNumber ||
+                    (string.Equals(s.TitleNormalized, sourceSong.TitleNormalized, StringComparison.OrdinalIgnoreCase) &&
+                     Math.Abs(s.Duration - sourceSong.Duration) < 1000));
+
+                if (existingSong != null)
+                {
+                    if (resolution?.Action == MelodeeModels.AlbumMerge.AlbumMergeResolutionAction.ReplaceWithSource)
+                    {
+                        // Remove existing and add source
+                        context.Songs.Remove(existingSong);
+                        sourceSong.AlbumId = targetAlbum.Id;
+                        songsMoved++;
+                        actionLog.Add($"Replaced track {sourceSong.SongNumber}: {existingSong.Title} with {sourceSong.Title}");
+                    }
+                    else
+                    {
+                        songsSkipped++;
+                        actionLog.Add($"Skipped duplicate track {sourceSong.SongNumber}: {sourceSong.Title}");
+                        continue;
+                    }
+                }
+                else
+                {
+                    // Move song to target album
+                    sourceSong.AlbumId = targetAlbum.Id;
+                    songsMoved++;
+                    actionLog.Add($"Moved track {sourceSong.SongNumber}: {sourceSong.Title} from {sourceAlbum.Name}");
+                }
+
+                // Move the file
+                try
+                {
+                    var sourceFilePath = Path.Combine(sourceAlbumDirectory, sourceSong.FileName);
+                    var targetFilePath = Path.Combine(targetAlbumDirectory, sourceSong.FileName);
+
+                    if (fileSystemService.FileExists(sourceFilePath) && !fileSystemService.FileExists(targetFilePath))
+                    {
+                        fileSystemService.MoveDirectory(sourceFilePath, targetFilePath);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Warning(ex, "Failed to move file for song [{SongId}]", sourceSong.Id);
+                }
+            }
+
+            // Merge UserAlbums
+            foreach (var userAlbum in sourceAlbum.UserAlbums)
+            {
+                userAlbum.AlbumId = targetAlbum.Id;
+                userAlbum.LastUpdatedAt = now;
+            }
+
+            // Merge images
+            var sourceAlbumDir = fileSystemService.CombinePath(sourceAlbum.Artist.Library.Path, sourceAlbum.Artist.Directory, sourceAlbum.Directory);
+            var targetAlbumDir = fileSystemService.CombinePath(targetAlbum.Artist.Library.Path, targetAlbum.Artist.Directory, targetAlbum.Directory);
+
+            if (fileSystemService.DirectoryExists(sourceAlbumDir))
+            {
+                var imageFiles = fileSystemService.GetFiles(sourceAlbumDir, "*.jpg");
+                foreach (var imageFile in imageFiles)
+                {
+                    var fileName = fileSystemService.GetFileName(imageFile);
+                    var targetPath = fileSystemService.CombinePath(targetAlbumDir, fileName);
+
+                    if (!fileSystemService.FileExists(targetPath))
+                    {
+                        try
+                        {
+                            fileSystemService.MoveDirectory(imageFile, targetPath);
+                            imagesMoved++;
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Warning(ex, "Failed to move image file [{File}]", imageFile);
+                            imagesSkipped++;
+                        }
+                    }
+                    else
+                    {
+                        imagesSkipped++;
+                    }
+                }
+            }
+
+            // Delete source album
+            context.Albums.Remove(sourceAlbum);
+            actionLog.Add($"Deleted source album: {sourceAlbum.Name}");
+        }
+
+        // Merge metadata (genres, moods)
+        MergeMetadata(targetAlbum, sourceAlbums, request.Resolutions, ref metadataMerged);
+
+        // Update target album timestamps and counts
+        targetAlbum.LastUpdatedAt = now;
+        targetAlbum.SongCount = (short?)targetAlbum.Songs.Count;
+        targetAlbum.Duration = targetAlbum.Songs.Sum(s => s.Duration);
+        targetAlbum.ImageCount = fileSystemService.DirectoryExists(targetAlbumDirectory)
+            ? fileSystemService.GetFiles(targetAlbumDirectory, "*.jpg").Length
+            : 0;
+
+        return new MelodeeModels.AlbumMerge.AlbumMergeReport
+        {
+            TargetAlbumId = targetAlbum.Id,
+            TargetAlbumName = targetAlbum.Name,
+            SourceAlbumIds = sourceAlbums.Select(a => a.Id).ToArray(),
+            SourceAlbumNames = sourceAlbums.Select(a => a.Name).ToArray(),
+            SongsMoved = songsMoved,
+            SongsSkipped = songsSkipped,
+            ImagesMoved = imagesMoved,
+            ImagesSkipped = imagesSkipped,
+            MetadataMerged = metadataMerged,
+            ResolvedConflicts = conflictResult.Conflicts,
+            AppliedResolutions = request.Resolutions,
+            ActionLog = actionLog.ToArray()
+        };
+    }
+
+    private void ApplyFieldResolutions(
+        Album targetAlbum,
+        Album[] sourceAlbums,
+        MelodeeModels.AlbumMerge.AlbumMergeResolution[]? resolutions,
+        List<string> actionLog)
+    {
+        if (resolutions == null || !resolutions.Any())
+        {
+            return;
+        }
+
+        foreach (var resolution in resolutions.Where(r => r.Action == MelodeeModels.AlbumMerge.AlbumMergeResolutionAction.ReplaceWithSource))
+        {
+            var conflict = resolution.ConflictId;
+            if (conflict.StartsWith("field_year_"))
+            {
+                if (resolution.SelectedFromAlbumId.HasValue && resolution.SelectedFromAlbumId > 0)
+                {
+                    var sourceAlbum = sourceAlbums.FirstOrDefault(a => a.Id == resolution.SelectedFromAlbumId);
+                    if (sourceAlbum != null)
+                    {
+                        targetAlbum.ReleaseDate = sourceAlbum.ReleaseDate;
+                        actionLog.Add($"Updated release year to {sourceAlbum.ReleaseDate.Year} from {sourceAlbum.Name}");
+                    }
+                }
+            }
+            else if (conflict.StartsWith("field_title_"))
+            {
+                if (resolution.SelectedFromAlbumId.HasValue && resolution.SelectedFromAlbumId > 0)
+                {
+                    var sourceAlbum = sourceAlbums.FirstOrDefault(a => a.Id == resolution.SelectedFromAlbumId);
+                    if (sourceAlbum != null)
+                    {
+                        targetAlbum.Name = sourceAlbum.Name;
+                        targetAlbum.NameNormalized = sourceAlbum.NameNormalized;
+                        actionLog.Add($"Updated title to '{sourceAlbum.Name}' from {sourceAlbum.Name}");
+                    }
+                }
+            }
+        }
+    }
+
+    private MelodeeModels.AlbumMerge.AlbumMergeResolution? GetTrackResolution(
+        Song song,
+        MelodeeModels.AlbumMerge.AlbumMergeResolution[]? resolutions)
+    {
+        if (resolutions == null)
+        {
+            return null;
+        }
+
+        return resolutions.FirstOrDefault(r =>
+            r.TrackIds != null &&
+            r.TrackIds.Values.Contains(song.Id));
+    }
+
+    private void MergeMetadata(
+        Album targetAlbum,
+        Album[] sourceAlbums,
+        MelodeeModels.AlbumMerge.AlbumMergeResolution[]? resolutions,
+        ref int metadataMerged)
+    {
+        // Default to union for genres unless user specified otherwise
+        var genreResolution = resolutions?.FirstOrDefault(r => r.ConflictId.StartsWith("metadata_genres_"));
+        if (genreResolution == null || genreResolution.Action == MelodeeModels.AlbumMerge.AlbumMergeResolutionAction.KeepBoth)
+        {
+            var allGenres = (targetAlbum.Genres ?? Array.Empty<string>())
+                .Union(sourceAlbums.SelectMany(a => a.Genres ?? Array.Empty<string>()))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+
+            if (allGenres.Length != (targetAlbum.Genres?.Length ?? 0))
+            {
+                targetAlbum.Genres = allGenres;
+                metadataMerged++;
+            }
+        }
+
+        // Default to union for moods unless user specified otherwise
+        var moodResolution = resolutions?.FirstOrDefault(r => r.ConflictId.StartsWith("metadata_moods_"));
+        if (moodResolution == null || moodResolution.Action == MelodeeModels.AlbumMerge.AlbumMergeResolutionAction.KeepBoth)
+        {
+            var allMoods = (targetAlbum.Moods ?? Array.Empty<string>())
+                .Union(sourceAlbums.SelectMany(a => a.Moods ?? Array.Empty<string>()))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+
+            if (allMoods.Length != (targetAlbum.Moods?.Length ?? 0))
+            {
+                targetAlbum.Moods = allMoods;
+                metadataMerged++;
+            }
+        }
+    }
+
     public async Task<MelodeeModels.ImageBytesAndEtag> GetArtistImageBytesAndEtagAsync(Guid? apiKey, string? size = null, CancellationToken cancellationToken = default)
     {
         Guard.Against.Null(apiKey, nameof(apiKey));
