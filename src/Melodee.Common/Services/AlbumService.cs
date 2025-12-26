@@ -46,6 +46,7 @@ public class AlbumService(
     private const string CacheKeyDetailByMusicBrainzIdTemplate = "urn:album:musicbrainzid:{0}";
     private const string CacheKeyDetailTemplate = "urn:album:{0}";
     private const string CacheKeyAlbumImageBytesAndEtagTemplate = "urn:album:imagebytesandetag:{0}:{1}";
+    private const string CacheKeyGenres = "urn:album:genres";
 
     public async Task ClearCacheForArtist(int artistId, CancellationToken cancellationToken = default)
     {
@@ -83,6 +84,8 @@ public class AlbumService(
         CacheManager.Remove(CacheKeyAlbumImageBytesAndEtagTemplate.FormatSmart(album.Id, ImageSize.Medium), Album.CacheRegion);
         CacheManager.Remove(CacheKeyAlbumImageBytesAndEtagTemplate.FormatSmart(album.Id, ImageSize.Large), Album.CacheRegion);
 
+        // Clear genres cache as album genres may have changed
+        CacheManager.Remove(CacheKeyGenres, Album.CacheRegion);
 
         if (album.MusicBrainzId != null)
         {
@@ -1179,62 +1182,75 @@ public class AlbumService(
     /// </summary>
     public async Task<MelodeeModels.OperationResult<Dictionary<string, (int songCount, int albumCount)>>> GetGenresAsync(CancellationToken cancellationToken = default)
     {
-        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
-
-        // Get all albums and songs with their genres using EF Core
-        var albums = await scopedContext.Albums
-            .AsNoTracking()
-            .Where(a => a.Genres != null && a.Genres.Length > 0)
-            .Select(a => a.Genres)
-            .ToArrayAsync(cancellationToken)
-            .ConfigureAwait(false);
-
-        var songs = await scopedContext.Songs
-            .AsNoTracking()
-            .Where(s => s.Genres != null && s.Genres.Length > 0)
-            .Select(s => s.Genres)
-            .ToArrayAsync(cancellationToken)
-            .ConfigureAwait(false);
-
-        // Flatten and collect all unique genres
-        var genreCounts = new Dictionary<string, (int songCount, int albumCount)>();
-
-        // Process album genres
-        foreach (var albumGenres in albums.Where(g => g != null))
+        var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
+        
+        return await CacheManager.GetAsync(CacheKeyGenres, async () =>
         {
-            foreach (var genre in albumGenres!)
+            var overallStopwatch = Stopwatch.StartNew();
+            
+            await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+            // Get all albums and songs with their genres using EF Core
+            var dbStopwatch = Stopwatch.StartNew();
+            var albums = await scopedContext.Albums
+                .AsNoTracking()
+                .Where(a => a.Genres != null && a.Genres.Length > 0)
+                .Select(a => a.Genres)
+                .ToArrayAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            var songs = await scopedContext.Songs
+                .AsNoTracking()
+                .Where(s => s.Genres != null && s.Genres.Length > 0)
+                .Select(s => s.Genres)
+                .ToArrayAsync(cancellationToken)
+                .ConfigureAwait(false);
+            dbStopwatch.Stop();
+
+            // Flatten and collect all unique genres
+            var genreCounts = new Dictionary<string, (int songCount, int albumCount)>();
+
+            // Process album genres
+            foreach (var albumGenres in albums.Where(g => g != null))
             {
-                if (genreCounts.ContainsKey(genre))
+                foreach (var genre in albumGenres!)
                 {
-                    genreCounts[genre] = (genreCounts[genre].songCount, genreCounts[genre].albumCount + 1);
-                }
-                else
-                {
-                    genreCounts[genre] = (0, 1);
+                    if (genreCounts.TryGetValue(genre, out var current))
+                    {
+                        genreCounts[genre] = (current.songCount, current.albumCount + 1);
+                    }
+                    else
+                    {
+                        genreCounts[genre] = (0, 1);
+                    }
                 }
             }
-        }
 
-        // Process song genres  
-        foreach (var songGenres in songs.Where(g => g != null))
-        {
-            foreach (var genre in songGenres!)
+            // Process song genres  
+            foreach (var songGenres in songs.Where(g => g != null))
             {
-                if (genreCounts.ContainsKey(genre))
+                foreach (var genre in songGenres!)
                 {
-                    genreCounts[genre] = (genreCounts[genre].songCount + 1, genreCounts[genre].albumCount);
-                }
-                else
-                {
-                    genreCounts[genre] = (1, 0);
+                    if (genreCounts.TryGetValue(genre, out var current))
+                    {
+                        genreCounts[genre] = (current.songCount + 1, current.albumCount);
+                    }
+                    else
+                    {
+                        genreCounts[genre] = (1, 0);
+                    }
                 }
             }
-        }
 
-        return new MelodeeModels.OperationResult<Dictionary<string, (int songCount, int albumCount)>>
-        {
-            Data = genreCounts
-        };
+            overallStopwatch.Stop();
+            Logger.Debug("GetGenresAsync MISS: DB: {DbMs}ms, Total: {TotalMs}ms, GenreCount: {GenreCount}", 
+                dbStopwatch.ElapsedMilliseconds, overallStopwatch.ElapsedMilliseconds, genreCounts.Count);
+
+            return new MelodeeModels.OperationResult<Dictionary<string, (int songCount, int albumCount)>>
+            {
+                Data = genreCounts
+            };
+        }, cancellationToken, configuration.CacheDuration(), Album.CacheRegion);
     }
 
     public async Task<MelodeeModels.OperationResult<(long totalCount, AlbumList[] albums)>> GetAlbumListAsync(

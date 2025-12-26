@@ -1214,7 +1214,8 @@ public class OpenSubsonicApiService(
                     result = artistImageBytesAndEtag.Bytes ?? defaultImages.ArtistBytes;
                     eTag = artistImageBytesAndEtag.Etag ?? badEtag;
                     imageBytesAndEtag = new ImageBytesAndEtag(result, eTag);
-                    doCheckResize = false;
+                    // Only skip resize if we got actual image bytes from service (not default)
+                    doCheckResize = artistImageBytesAndEtag.Bytes == null;
                 }
                 else if (IsApiIdForDynamicPlaylist(apiId))
                 {
@@ -1288,7 +1289,8 @@ public class OpenSubsonicApiService(
                     result = albumImageBytesAndEtag.Bytes ?? defaultImages.AlbumCoverBytes;
                     eTag = albumImageBytesAndEtag.Etag ?? badEtag;
                     imageBytesAndEtag = new ImageBytesAndEtag(result, eTag);
-                    doCheckResize = false;
+                    // Only skip resize if we got actual image bytes from service (not default)
+                    doCheckResize = albumImageBytesAndEtag.Bytes == null;
                 }
                 else
                 {
