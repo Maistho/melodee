@@ -1452,7 +1452,7 @@ public class ArtistService(
 
                     if (fileSystemService.FileExists(sourceFilePath) && !fileSystemService.FileExists(targetFilePath))
                     {
-                        fileSystemService.MoveDirectory(sourceFilePath, targetFilePath);
+                        fileSystemService.MoveFile(sourceFilePath, targetFilePath);
                     }
                 }
                 catch (Exception ex)
