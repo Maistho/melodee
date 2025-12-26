@@ -51,11 +51,6 @@ public record AlbumMergeReport
     public int MetadataMerged { get; init; }
 
     /// <summary>
-    /// Number of metadata items skipped
-    /// </summary>
-    public int MetadataSkipped { get; init; }
-
-    /// <summary>
     /// Conflicts that were resolved
     /// </summary>
     public AlbumMergeConflict[]? ResolvedConflicts { get; init; }
