@@ -1580,7 +1580,7 @@ public class ArtistService(
                     {
                         targetAlbum.Name = sourceAlbum.Name;
                         targetAlbum.NameNormalized = sourceAlbum.NameNormalized;
-                        actionLog.Add($"Updated title to '{sourceAlbum.Name}' from {sourceAlbum.Name}");
+                        actionLog.Add($"Updated title to '{sourceAlbum.Name}' from source album ID {sourceAlbum.Id}");
                     }
                 }
             }
