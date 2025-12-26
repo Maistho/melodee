@@ -1263,10 +1263,15 @@ public class ArtistService(
             return false;
         }
 
-        // If file hash is available and identical, consider them equal
-        if (!string.IsNullOrEmpty(song1.FileHash) && !string.IsNullOrEmpty(song2.FileHash))
+        var hasHash1 = !string.IsNullOrEmpty(song1.FileHash);
+        var hasHash2 = !string.IsNullOrEmpty(song2.FileHash);
+
+        if (hasHash1 || hasHash2)
         {
-            return string.Equals(song1.FileHash, song2.FileHash, StringComparison.OrdinalIgnoreCase);
+            // When any hash information is available, require both hashes to be present and equal
+            return hasHash1
+                && hasHash2
+                && string.Equals(song1.FileHash, song2.FileHash, StringComparison.OrdinalIgnoreCase);
         }
 
         return true;
