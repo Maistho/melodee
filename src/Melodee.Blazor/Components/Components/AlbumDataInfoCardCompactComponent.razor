@@ -17,11 +17,11 @@
         }
         @if (Album.ApiKey != Guid.Empty)
         {
-            <RadzenImage Path="@Album.ImageUrl()" Style="width: 60px; height: 60px; margin-right: 5px;"/>
+            <RadzenImage Path="@Album.ImageUrl()" Style="width: 60px; height: 60px; margin-right: 5px; object-fit: cover;"/>
         }
         else
         {
-            <RadzenImage Path="@DefaultImages.AlbumCoverBase64" Style="width: 60px; height: 60px; margin-right: 5px;"/>
+            <RadzenImage Path="@DefaultImages.AlbumCoverBase64" Style="width: 60px; height: 60px; margin-right: 5px; object-fit: cover;"/>
         }
         <RadzenStack>
             <RadzenText TextStyle="TextStyle.Subtitle1" Style="margin:0;padding:0;">
