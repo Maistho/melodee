@@ -1342,6 +1342,10 @@ public class ArtistService(
         }
 
         // Execute merge in transaction
+        // NOTE: File system operations (moving song and image files) occur within the transaction
+        // but cannot be rolled back if the database transaction fails. This is a known limitation.
+        // If an error occurs after files are moved, those files will remain in the target directory
+        // even though the database changes are rolled back.
         await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
         await using var transaction = await scopedContext.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
 
