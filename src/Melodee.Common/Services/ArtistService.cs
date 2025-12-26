@@ -1461,11 +1461,23 @@ public class ArtistService(
                 }
             }
 
-            // Merge UserAlbums
-            foreach (var userAlbum in sourceAlbum.UserAlbums)
+            // Merge UserAlbums, avoiding duplicates on the target album
+            foreach (var userAlbum in sourceAlbum.UserAlbums.ToList())
             {
-                userAlbum.AlbumId = targetAlbum.Id;
-                userAlbum.LastUpdatedAt = now;
+                var existingUserAlbum = targetAlbum.UserAlbums
+                    .FirstOrDefault(ua => ua.UserId == userAlbum.UserId);
+
+                if (existingUserAlbum is not null)
+                {
+                    // Prefer the existing UserAlbum on the target album to avoid duplicates
+                    existingUserAlbum.LastUpdatedAt = now;
+                    context.UserAlbums.Remove(userAlbum);
+                }
+                else
+                {
+                    userAlbum.AlbumId = targetAlbum.Id;
+                    userAlbum.LastUpdatedAt = now;
+                }
             }
 
             // Merge images
