@@ -36,6 +36,18 @@
     function openInNewTab(url) {
         window.open(url, '_blank');
     }
+
+    async function downloadFileFromStream(fileName, contentStreamReference) {
+        const arrayBuffer = await contentStreamReference.arrayBuffer();
+        const blob = new Blob([arrayBuffer]);
+        const url = URL.createObjectURL(blob);
+        const anchorElement = document.createElement('a');
+        anchorElement.href = url;
+        anchorElement.download = fileName ?? '';
+        anchorElement.click();
+        anchorElement.remove();
+        URL.revokeObjectURL(url);
+    }
 </script>
 <script src="_content/Radzen.Blazor/Radzen.Blazor.js?v=@(typeof(Colors).Assembly.GetName().Version)" defer></script>
 <script src="/_content/PSC.Blazor.Components.MarkdownEditor/js/easymde.min.js" defer></script>

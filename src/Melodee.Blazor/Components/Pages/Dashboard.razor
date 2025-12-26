@@ -18,163 +18,167 @@
 
 <PageTitle>Dashboard</PageTitle>
 
+
 <RadzenStack Gap="1rem">
+
+  @if (_userPins.Length > 0)
+  {
     <RadzenRow>
-        @foreach (var kpi in _userKpis)
+    <RadzenPanel AllowCollapse="true">
+      <HeaderTemplate>
+        <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-align-items-center rz-m-0">
+          <RadzenIcon Icon="push_pin" class="rz-me-1"/>
+          Your pins
+        </RadzenText>
+      </HeaderTemplate>
+      <ChildContent>
+        <RadzenStack
+          Orientation="Orientation.Horizontal"
+          Wrap="FlexWrap.Wrap"
+          JustifyContent="JustifyContent.Left"
+          class="rz-p-2"
+          Gap="8px">
+          @foreach (var pin in _userPins)
+          {
+            <UserPinCardComponent UserPin="@pin"/>
+          }
+        </RadzenStack>
+      </ChildContent>
+    </RadzenPanel>
+    </RadzenRow>
+  }
+
+  <RadzenRow>
+    @foreach (var kpi in _userKpis)
+    {
+      <RadzenColumn Size="6" SizeSM="4" SizeMD="3" SizeLG="2">
+        <RadzenCard>
+          <RadzenStack Gap="0.25rem">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+              <RadzenIcon Icon="@kpi.Icon" Style="font-size: 1.25rem; opacity: 0.7;"/>
+              <RadzenText TextStyle="TextStyle.Overline" Style="margin: 0;">@kpi.Title</RadzenText>
+            </RadzenStack>
+            <RadzenText TextStyle="TextStyle.H5" Style="margin: 0;">@kpi.Data</RadzenText>
+          </RadzenStack>
+        </RadzenCard>
+      </RadzenColumn>
+    }
+  </RadzenRow>
+
+  <RadzenRow>
+    <RadzenColumn Size="12" SizeMD="6">
+      <RadzenCard>
+        <RadzenText TextStyle="TextStyle.H6">Your plays (last 30 days)</RadzenText>
+        <RadzenChart Style="height: 200px;">
+          <RadzenLineSeries Data="@_playsPerDay" CategoryProperty="DayAsDateTime" ValueProperty="Value" Title="Plays" Smooth="true">
+            <RadzenCategoryAxis Step="@TimeSpan.FromDays(7)" FormatString="{0:MM/dd}">
+              <RadzenAxisTitle Text="Date"/>
+            </RadzenCategoryAxis>
+            <RadzenValueAxis>
+              <RadzenAxisTitle Text="Plays"/>
+            </RadzenValueAxis>
+          </RadzenLineSeries>
+        </RadzenChart>
+      </RadzenCard>
+    </RadzenColumn>
+    <RadzenColumn Size="12" SizeMD="6">
+      <RadzenCard>
+        <RadzenText TextStyle="TextStyle.H6">Top played songs (last 30 days)</RadzenText>
+        @if (_topSongs.Length > 0)
         {
-            <RadzenColumn Size="6" SizeSM="4" SizeMD="3" SizeLG="2">
-                <RadzenCard>
-                    <RadzenStack Gap="0.25rem">
-                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-                            <RadzenIcon Icon="@kpi.Icon" Style="font-size: 1.25rem; opacity: 0.7;"/>
-                            <RadzenText TextStyle="TextStyle.Overline" Style="margin: 0;">@kpi.Title</RadzenText>
-                        </RadzenStack>
-                        <RadzenText TextStyle="TextStyle.H5" Style="margin: 0;">@kpi.Data</RadzenText>
-                    </RadzenStack>
-                </RadzenCard>
-            </RadzenColumn>
+          <RadzenDataGrid TItem="TopItemStat"
+                          Data="@_topSongs"
+                          AllowPaging="false"
+                          AllowSorting="false"
+                          AllowFiltering="false"
+                          Density="Density.Compact"
+                          Style="max-height: 200px; overflow-y: auto;"
+                          RowClick="@OnTopSongRowClick">
+            <Columns>
+              <RadzenDataGridColumn TItem="TopItemStat" Property="Label" Title="Song" Width="70%">
+                <Template Context="song">
+                  <span style="cursor: pointer;">@song.Label</span>
+                </Template>
+              </RadzenDataGridColumn>
+              <RadzenDataGridColumn TItem="TopItemStat" Property="Value" Title="Plays" Width="30%" TextAlign="TextAlign.Right"/>
+            </Columns>
+          </RadzenDataGrid>
         }
-    </RadzenRow>
+        else
+        {
+          <RadzenText TextStyle="TextStyle.Body2" Style="opacity: 0.7; padding: 1rem;">No play history yet. Start listening to see your top songs!</RadzenText>
+        }
+      </RadzenCard>
+    </RadzenColumn>
+  </RadzenRow>
 
-    <RadzenRow>
-        <RadzenColumn Size="12" SizeMD="6">
-            <RadzenCard>
-                <RadzenText TextStyle="TextStyle.H6">Your plays (last 30 days)</RadzenText>
-                <RadzenChart Style="height: 200px;">
-                    <RadzenLineSeries Data="@_playsPerDay" CategoryProperty="DayAsDateTime" ValueProperty="Value" Title="Plays" Smooth="true">
-                        <RadzenCategoryAxis Step="@TimeSpan.FromDays(7)" FormatString="{0:MM/dd}">
-                            <RadzenAxisTitle Text="Date"/>
-                        </RadzenCategoryAxis>
-                        <RadzenValueAxis>
-                            <RadzenAxisTitle Text="Plays"/>
-                        </RadzenValueAxis>
-                    </RadzenLineSeries>
-                </RadzenChart>
-            </RadzenCard>
-        </RadzenColumn>
-        <RadzenColumn Size="12" SizeMD="6">
-            <RadzenCard>
-                <RadzenText TextStyle="TextStyle.H6">Top played songs (last 30 days)</RadzenText>
-                @if (_topSongs.Length > 0)
-                {
-                    <RadzenDataGrid TItem="TopItemStat" 
-                                    Data="@_topSongs" 
-                                    AllowPaging="false" 
-                                    AllowSorting="false" 
-                                    AllowFiltering="false" 
-                                    Density="Density.Compact" 
-                                    Style="max-height: 200px; overflow-y: auto;"
-                                    RowClick="@OnTopSongRowClick">
-                        <Columns>
-                            <RadzenDataGridColumn TItem="TopItemStat" Property="Label" Title="Song" Width="70%">
-                                <Template Context="song">
-                                    <span style="cursor: pointer;">@song.Label</span>
-                                </Template>
-                            </RadzenDataGridColumn>
-                            <RadzenDataGridColumn TItem="TopItemStat" Property="Value" Title="Plays" Width="30%" TextAlign="TextAlign.Right"/>
-                        </Columns>
-                    </RadzenDataGrid>
-                }
-                else
-                {
-                    <RadzenText TextStyle="TextStyle.Body2" Style="opacity: 0.7; padding: 1rem;">No play history yet. Start listening to see your top songs!</RadzenText>
-                }
-            </RadzenCard>
-        </RadzenColumn>
-    </RadzenRow>
-
-    @if (_recentlyPlayed.Length > 0)
-    {
-        <RadzenPanel AllowCollapse="true">
-            <HeaderTemplate>
-                <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-align-items-center rz-m-0">
-                    <RadzenIcon Icon="history" class="rz-me-1"/>
-                    Recently played
-                </RadzenText>
-            </HeaderTemplate>
-            <ChildContent>
-                <RadzenStack
-                    Orientation="Orientation.Horizontal"
-                    Wrap="FlexWrap.Wrap"
-                    JustifyContent="JustifyContent.Left"
-                    class="rz-p-2"
-                    Gap="8px">
-                    @foreach (var song in _recentlyPlayedSongs)
-                    {
-                        <SongDataInfoCardComponent Song="@song" Style="width: 280px;"/>
-                    }
-                </RadzenStack>
-            </ChildContent>
-        </RadzenPanel>
-    }
-
-    @if (_userPins.Length > 0)
-    {
-        <RadzenPanel AllowCollapse="true">
-            <HeaderTemplate>
-                <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-align-items-center rz-m-0">
-                    <RadzenIcon Icon="push_pin" class="rz-me-1"/>
-                    Your pins
-                </RadzenText>
-            </HeaderTemplate>
-            <ChildContent>
-                <RadzenStack
-                    Orientation="Orientation.Horizontal"
-                    Wrap="FlexWrap.Wrap"
-                    JustifyContent="JustifyContent.Left"
-                    class="rz-p-2"
-                    Gap="8px">
-                    @foreach (var pin in _userPins)
-                    {
-                        <UserPinCardComponent UserPin="@pin"/>
-                    }
-                </RadzenStack>
-            </ChildContent>
-        </RadzenPanel>
-    }
-
+  @if (_recentlyPlayed.Length > 0)
+  {
     <RadzenPanel AllowCollapse="true">
-        <HeaderTemplate>
-            <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-m-0">
-                <RadzenIcon Icon="person" class="rz-me-1"/>
-                Recently added artists
-            </RadzenText>
-        </HeaderTemplate>
-        <ChildContent>
-            <RadzenStack
-                Orientation="Orientation.Horizontal"
-                Wrap="FlexWrap.Wrap"
-                JustifyContent="JustifyContent.Left"
-                class="rz-p-1"
-                Gap="10px">
-                @foreach (var artist in _latestArtists)
-                {
-                    <ArtistDataInfoCardComponent Artist="@artist"/>
-                }
-            </RadzenStack>
-        </ChildContent>
+      <HeaderTemplate>
+        <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-align-items-center rz-m-0">
+          <RadzenIcon Icon="history" class="rz-me-1"/>
+          Recently played
+        </RadzenText>
+      </HeaderTemplate>
+      <ChildContent>
+        <RadzenStack
+          Orientation="Orientation.Horizontal"
+          Wrap="FlexWrap.Wrap"
+          JustifyContent="JustifyContent.Left"
+          class="rz-p-2"
+          Gap="8px">
+          @foreach (var song in _recentlyPlayedSongs)
+          {
+            <SongDataInfoCardComponent Song="@song" Style="width: 280px;"/>
+          }
+        </RadzenStack>
+      </ChildContent>
     </RadzenPanel>
-    <RadzenPanel AllowCollapse="true">
-        <HeaderTemplate>
-            <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-m-0">
-                <RadzenIcon Icon="album" class="rz-me-1"/>
-                Recently added albums
-            </RadzenText>
-        </HeaderTemplate>
-        <ChildContent>
-            <RadzenStack
-                Orientation="Orientation.Horizontal"
-                Wrap="FlexWrap.Wrap"
-                JustifyContent="JustifyContent.Left"
-                class="rz-p-1"
-                Gap="10px">
-                @foreach (var album in _latestAlbums)
-                {
-                    <AlbumDataInfoCardComponent Album="@album"/>
-                }
-            </RadzenStack>
-        </ChildContent>
-    </RadzenPanel>
+  }
+
+  <RadzenPanel AllowCollapse="true">
+    <HeaderTemplate>
+      <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-m-0">
+        <RadzenIcon Icon="person" class="rz-me-1"/>
+        Recently added artists
+      </RadzenText>
+    </HeaderTemplate>
+    <ChildContent>
+      <RadzenStack
+        Orientation="Orientation.Horizontal"
+        Wrap="FlexWrap.Wrap"
+        JustifyContent="JustifyContent.Left"
+        class="rz-p-1"
+        Gap="10px">
+        @foreach (var artist in _latestArtists)
+        {
+          <ArtistDataInfoCardComponent Artist="@artist"/>
+        }
+      </RadzenStack>
+    </ChildContent>
+  </RadzenPanel>
+  <RadzenPanel AllowCollapse="true">
+    <HeaderTemplate>
+      <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-m-0">
+        <RadzenIcon Icon="album" class="rz-me-1"/>
+        Recently added albums
+      </RadzenText>
+    </HeaderTemplate>
+    <ChildContent>
+      <RadzenStack
+        Orientation="Orientation.Horizontal"
+        Wrap="FlexWrap.Wrap"
+        JustifyContent="JustifyContent.Left"
+        class="rz-p-1"
+        Gap="10px">
+        @foreach (var album in _latestAlbums)
+        {
+          <AlbumDataInfoCardComponent Album="@album"/>
+        }
+      </RadzenStack>
+    </ChildContent>
+  </RadzenPanel>
 </RadzenStack>
 
 @code {
@@ -265,21 +269,23 @@
                     var artistApiKey = parts.Length > 1 && Guid.TryParse(parts[1], out var artistGuid) ? artistGuid : Guid.Empty;
                     var albumName = parts.Length > 2 ? parts[2] : string.Empty;
                     var artistName = parts.Length > 3 ? parts[3] : string.Empty;
-                    
+                    var songNumber = parts.Length > 4 && int.TryParse(parts[4], out var num) ? num : 0;
+                    var duration = parts.Length > 5 && double.TryParse(parts[5], out var dur) ? dur : 0;
+
                     return new SongDataInfo(
                         x.Id ?? 0,
                         x.ApiKey!.Value,
                         false,
                         x.Label,
                         x.Label.ToNormalizedString() ?? string.Empty,
-                        0,
+                        songNumber,
                         LocalDate.MinIsoValue,
                         albumName,
                         albumApiKey,
                         artistName,
                         artistApiKey,
                         0,
-                        0,
+                        duration,
                         Instant.MinValue,
                         string.Empty,
                         false,

@@ -452,6 +452,8 @@ public sealed class StatisticsService(
                 x.Id,
                 x.Title,
                 x.ApiKey,
+                x.SongNumber,
+                x.Duration,
                 AlbumApiKey = x.Album.ApiKey,
                 AlbumName = x.Album.Name,
                 ArtistApiKey = x.Album.Artist.ApiKey,
@@ -463,7 +465,7 @@ public sealed class StatisticsService(
         var result = histories.Select(x =>
         {
             songs.TryGetValue(x.SongId, out var song);
-            var extra = song != null ? $"{song.AlbumApiKey}|{song.ArtistApiKey}|{song.AlbumName}|{song.ArtistName}" : null;
+            var extra = song != null ? $"{song.AlbumApiKey}|{song.ArtistApiKey}|{song.AlbumName}|{song.ArtistName}|{song.SongNumber}|{song.Duration}" : null;
             return new TopItemStat(song?.Title ?? $"Song {x.SongId}", x.PlayedAt.ToUnixTimeTicks(), song?.ApiKey, x.SongId, extra);
         }).ToArray();
 

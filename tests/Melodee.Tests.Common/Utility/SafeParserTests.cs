@@ -343,9 +343,9 @@ public sealed class SafeParserTests : TestsBase
     }
 
     #endregion
-    
+
     #region ToEnum Tests
-    
+
     [Theory]
     [InlineData("Thumbnail", Melodee.Common.Enums.ImageSize.Thumbnail)]
     [InlineData("Small", Melodee.Common.Enums.ImageSize.Small)]
@@ -358,13 +358,13 @@ public sealed class SafeParserTests : TestsBase
         var result = SafeParser.ToEnum<Melodee.Common.Enums.ImageSize>(input);
         Assert.Equal(expected, result);
     }
-    
+
     [Fact]
     public void ToEnum_WithInvalidString_ReturnsDefault()
     {
         var result = SafeParser.ToEnum<Melodee.Common.Enums.ImageSize>("InvalidSize");
         Assert.Equal(Melodee.Common.Enums.ImageSize.NotSet, result);
     }
-    
+
     #endregion
 }

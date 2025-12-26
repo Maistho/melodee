@@ -837,22 +837,22 @@ public class AlbumService(
 
         var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
         var sizeValue = size ?? nameof(ImageSize.Large);
-        
+
         // Use apiKey and size in cache key - resized images are cached separately
         var cacheKey = CacheKeyAlbumImageBytesAndEtagTemplate.FormatSmart(apiKey.Value, sizeValue);
         var overallStopwatch = Stopwatch.StartNew();
         var wasCacheMiss = false;
-        
+
         var result = await CacheManager.GetAsync(cacheKey, async () =>
         {
             wasCacheMiss = true;
             var badEtag = Instant.MinValue.ToEtag();
-            
+
             // Database lookup only happens on cache miss
             var dbStopwatch = Stopwatch.StartNew();
             var album = await GetByApiKeyAsync(apiKey.Value, cancellationToken).ConfigureAwait(false);
             dbStopwatch.Stop();
-            
+
             if (!album.IsSuccess || album.Data == null)
             {
                 Logger.Debug("GetAlbumImageBytesAndEtagAsync: DB lookup failed for ApiKey [{ApiKey}] in {DbMs}ms", apiKey.Value, dbStopwatch.ElapsedMilliseconds);
@@ -869,7 +869,7 @@ public class AlbumService(
             // Check if a pre-sized image exists on disk first
             var albumImages = albumDirectory.AllFileImageTypeFileInfos().ToArray();
             var imageFile = albumImages
-                .FirstOrDefault(x => x.Name.Contains($"-{sizeValue}", StringComparison.OrdinalIgnoreCase)) 
+                .FirstOrDefault(x => x.Name.Contains($"-{sizeValue}", StringComparison.OrdinalIgnoreCase))
                             ?? albumImages.OrderBy(x => x.Name).FirstOrDefault();
 
             if (imageFile is not { Exists: true })
@@ -881,9 +881,9 @@ public class AlbumService(
             var fileStopwatch = Stopwatch.StartNew();
             var imageBytes = await File.ReadAllBytesAsync(imageFile.FullName, cancellationToken).ConfigureAwait(false);
             fileStopwatch.Stop();
-            
+
             var eTag = (album.Data.LastUpdatedAt ?? album.Data.CreatedAt).ToEtag();
-            
+
             // Resize if needed (when size is not Large and no pre-sized image was found)
             var parsedSize = SafeParser.ToEnum<ImageSize>(sizeValue);
             if (parsedSize != ImageSize.Large && !imageFile.Name.Contains($"-{sizeValue}", StringComparison.OrdinalIgnoreCase))
@@ -896,28 +896,28 @@ public class AlbumService(
                     ImageSize.Medium => configuration.GetValue<int?>(SettingRegistry.ImagingMediumSize) ?? SafeParser.ToNumber<int>(ImageSize.Medium),
                     _ => SafeParser.ToNumber<int>(sizeValue)
                 };
-                
+
                 if (targetSize > 0)
                 {
                     imageBytes = ImageConvertor.ResizeImageIfNeeded(imageBytes, targetSize, targetSize, false);
                     eTag = HashHelper.CreateSha256(eTag + targetSize);
                 }
                 resizeStopwatch.Stop();
-                
-                Logger.Debug("GetAlbumImageBytesAndEtagAsync MISS: Album [{AlbumId}] DB: {DbMs}ms, FileRead: {FileMs}ms, Resize: {ResizeMs}ms, Size: {Size}bytes", 
+
+                Logger.Debug("GetAlbumImageBytesAndEtagAsync MISS: Album [{AlbumId}] DB: {DbMs}ms, FileRead: {FileMs}ms, Resize: {ResizeMs}ms, Size: {Size}bytes",
                     album.Data.Id, dbStopwatch.ElapsedMilliseconds, fileStopwatch.ElapsedMilliseconds, resizeStopwatch.ElapsedMilliseconds, imageBytes.Length);
             }
             else
             {
-                Logger.Debug("GetAlbumImageBytesAndEtagAsync MISS: Album [{AlbumId}] DB: {DbMs}ms, FileRead: {FileMs}ms, Size: {Size}bytes", 
+                Logger.Debug("GetAlbumImageBytesAndEtagAsync MISS: Album [{AlbumId}] DB: {DbMs}ms, FileRead: {FileMs}ms, Size: {Size}bytes",
                     album.Data.Id, dbStopwatch.ElapsedMilliseconds, fileStopwatch.ElapsedMilliseconds, imageBytes.Length);
             }
-            
+
             return new MelodeeModels.ImageBytesAndEtag(imageBytes, eTag);
         }, cancellationToken, configuration.CacheDuration(), Album.CacheRegion);
-        
+
         overallStopwatch.Stop();
-        
+
         if (!wasCacheMiss)
         {
             Logger.Debug("GetAlbumImageBytesAndEtagAsync HIT: ApiKey [{ApiKey}] Total: {TotalMs}ms", apiKey.Value, overallStopwatch.ElapsedMilliseconds);
@@ -926,7 +926,7 @@ public class AlbumService(
         {
             Logger.Debug("GetAlbumImageBytesAndEtagAsync MISS Total: ApiKey [{ApiKey}] Total: {TotalMs}ms", apiKey.Value, overallStopwatch.ElapsedMilliseconds);
         }
-        
+
         return result;
     }
 
@@ -1183,11 +1183,11 @@ public class AlbumService(
     public async Task<MelodeeModels.OperationResult<Dictionary<string, (int songCount, int albumCount)>>> GetGenresAsync(CancellationToken cancellationToken = default)
     {
         var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
-        
+
         return await CacheManager.GetAsync(CacheKeyGenres, async () =>
         {
             var overallStopwatch = Stopwatch.StartNew();
-            
+
             await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
 
             // Get all albums and songs with their genres using EF Core
@@ -1243,7 +1243,7 @@ public class AlbumService(
             }
 
             overallStopwatch.Stop();
-            Logger.Debug("GetGenresAsync MISS: DB: {DbMs}ms, Total: {TotalMs}ms, GenreCount: {GenreCount}", 
+            Logger.Debug("GetGenresAsync MISS: DB: {DbMs}ms, Total: {TotalMs}ms, GenreCount: {GenreCount}",
                 dbStopwatch.ElapsedMilliseconds, overallStopwatch.ElapsedMilliseconds, genreCounts.Count);
 
             return new MelodeeModels.OperationResult<Dictionary<string, (int songCount, int albumCount)>>

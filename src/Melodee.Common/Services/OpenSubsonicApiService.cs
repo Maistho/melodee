@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Melodee.Common.Configuration;
 using Melodee.Common.Constants;
 using Melodee.Common.Data;
@@ -1193,7 +1192,7 @@ public class OpenSubsonicApiService(
         var sizeValue = size.Nullify() == null ? ImageSize.Large : SafeParser.ToEnum<ImageSize>(size);
 
         ImageBytesAndEtag imageBytesAndEtag;
-        
+
         using (Operation.At(LogEventLevel.Debug)
                    .Time("GetImageForApiKeyId: [{ApiId}] Size [{Size}]", apiId, sizeValue))
         {
@@ -1349,7 +1348,7 @@ public class OpenSubsonicApiService(
                                     break;
                             }
                         }
-                        
+
                         imageBytesAndEtag = new ImageBytesAndEtag(result, eTag);
                     }
                 }

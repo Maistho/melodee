@@ -43,7 +43,7 @@ public class ArtistService(
     private const string CacheKeyDetailByMusicBrainzIdTemplate = "urn:artist:musicbrainzid:{0}";
     private const string CacheKeyDetailTemplate = "urn:artist:{0}";
     private const string CacheKeyArtistImageBytesAndEtagTemplate = "urn:artist:imagebytesandetag:{0}:{1}";
-    
+
     /// <summary>
     /// Duration tolerance in milliseconds for considering songs as equal during merge operations.
     /// Songs with duration difference within this threshold are considered identical.
@@ -1708,7 +1708,7 @@ public class ArtistService(
             var dbStopwatch = Stopwatch.StartNew();
             var artist = await GetByApiKeyAsync(apiKey.Value, cancellationToken).ConfigureAwait(false);
             dbStopwatch.Stop();
-            
+
             if (!artist.IsSuccess || artist.Data == null)
             {
                 Logger.Debug("GetArtistImageBytesAndEtagAsync: DB lookup failed for ApiKey [{ApiKey}] in {DbMs}ms", apiKey.Value, dbStopwatch.ElapsedMilliseconds);
@@ -1725,7 +1725,7 @@ public class ArtistService(
             // Check if a pre-sized image exists on disk first
             var artistImages = artistDirectory.AllFileImageTypeFileInfos().ToArray();
             var imageFile = artistImages
-                .FirstOrDefault(x => x.Name.Contains($"-{sizeValue}", StringComparison.OrdinalIgnoreCase)) 
+                .FirstOrDefault(x => x.Name.Contains($"-{sizeValue}", StringComparison.OrdinalIgnoreCase))
                             ?? artistImages.OrderBy(x => x.Name).FirstOrDefault();
 
             if (imageFile is not { Exists: true })
@@ -1737,9 +1737,9 @@ public class ArtistService(
             var fileStopwatch = Stopwatch.StartNew();
             var imageBytes = await fileSystemService.ReadAllBytesAsync(imageFile.FullName, cancellationToken).ConfigureAwait(false);
             fileStopwatch.Stop();
-            
+
             var eTag = (artist.Data.LastUpdatedAt ?? artist.Data.CreatedAt).ToEtag();
-            
+
             // Resize if needed (when size is not Large and no pre-sized image was found)
             var parsedSize = SafeParser.ToEnum<ImageSize>(sizeValue);
             if (parsedSize != ImageSize.Large && !imageFile.Name.Contains($"-{sizeValue}", StringComparison.OrdinalIgnoreCase))
@@ -1752,28 +1752,28 @@ public class ArtistService(
                     ImageSize.Medium => configuration.GetValue<int?>(SettingRegistry.ImagingMediumSize) ?? SafeParser.ToNumber<int>(ImageSize.Medium),
                     _ => SafeParser.ToNumber<int>(sizeValue)
                 };
-                
+
                 if (targetSize > 0)
                 {
                     imageBytes = ImageConvertor.ResizeImageIfNeeded(imageBytes, targetSize, targetSize, false);
                     eTag = HashHelper.CreateSha256(eTag + targetSize);
                 }
                 resizeStopwatch.Stop();
-                
-                Logger.Debug("GetArtistImageBytesAndEtagAsync MISS: Artist [{ArtistId}] DB: {DbMs}ms, FileRead: {FileMs}ms, Resize: {ResizeMs}ms, Size: {Size}bytes", 
+
+                Logger.Debug("GetArtistImageBytesAndEtagAsync MISS: Artist [{ArtistId}] DB: {DbMs}ms, FileRead: {FileMs}ms, Resize: {ResizeMs}ms, Size: {Size}bytes",
                     artist.Data.Id, dbStopwatch.ElapsedMilliseconds, fileStopwatch.ElapsedMilliseconds, resizeStopwatch.ElapsedMilliseconds, imageBytes.Length);
             }
             else
             {
-                Logger.Debug("GetArtistImageBytesAndEtagAsync MISS: Artist [{ArtistId}] DB: {DbMs}ms, FileRead: {FileMs}ms, Size: {Size}bytes", 
+                Logger.Debug("GetArtistImageBytesAndEtagAsync MISS: Artist [{ArtistId}] DB: {DbMs}ms, FileRead: {FileMs}ms, Size: {Size}bytes",
                     artist.Data.Id, dbStopwatch.ElapsedMilliseconds, fileStopwatch.ElapsedMilliseconds, imageBytes.Length);
             }
-            
+
             return new MelodeeModels.ImageBytesAndEtag(imageBytes, eTag);
         }, cancellationToken, configuration.CacheDuration(), Artist.CacheRegion);
-        
+
         overallStopwatch.Stop();
-        
+
         if (!wasCacheMiss)
         {
             Logger.Debug("GetArtistImageBytesAndEtagAsync HIT: ApiKey [{ApiKey}] Total: {TotalMs}ms", apiKey.Value, overallStopwatch.ElapsedMilliseconds);
@@ -1782,7 +1782,7 @@ public class ArtistService(
         {
             Logger.Debug("GetArtistImageBytesAndEtagAsync MISS Total: ApiKey [{ApiKey}] Total: {TotalMs}ms", apiKey.Value, overallStopwatch.ElapsedMilliseconds);
         }
-        
+
         return result;
     }
 

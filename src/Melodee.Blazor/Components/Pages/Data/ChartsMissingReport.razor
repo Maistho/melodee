@@ -3,11 +3,15 @@
 @inherits MelodeeComponentBase
 @using Melodee.Common.Data.Models
 @using Melodee.Common.Enums
+@using System.Text.Json
+@using System.Text
+@using Microsoft.JSInterop
 
 @inject MainLayoutProxyService MainLayoutProxyService
 @inject ILogger Logger
 @inject ChartService ChartService
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
 
 <PageTitle>Charts Missing Albums Report</PageTitle>
 
@@ -27,6 +31,7 @@
         </RadzenColumn>
         <RadzenColumn>
             <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                <RadzenButton Text="Download JSON" Icon="download" ButtonStyle="ButtonStyle.Secondary" Disabled="@(_isLoading || _missingAlbums.Count == 0)" Click="@DownloadJson"/>
                 <RadzenButton Text="Back to Charts" Icon="arrow_back" ButtonStyle="ButtonStyle.Light" Click="@(() => NavigationManager.NavigateTo("/charts"))"/>
             </RadzenStack>
         </RadzenColumn>
@@ -123,6 +128,32 @@
     {
         await base.OnInitializedAsync();
         await LoadReportAsync();
+    }
+
+    async Task DownloadJson()
+    {
+        var payload = new
+        {
+            missing = _missingAlbums.Select(m => new
+            {
+                artistName = m.ArtistName,
+                albumTitle = m.AlbumTitle,
+                releaseYear = m.ReleaseYear ?? 0
+            })
+        };
+
+        var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = true
+        });
+
+        var bytes = Encoding.UTF8.GetBytes(json);
+        var fileStream = new MemoryStream(bytes);
+
+        using var streamRef = new DotNetStreamReference(stream: fileStream);
+
+        await JsRuntime.InvokeVoidAsync("downloadFileFromStream", "missing-albums.json", streamRef);
     }
 
     async Task LoadReportAsync()
