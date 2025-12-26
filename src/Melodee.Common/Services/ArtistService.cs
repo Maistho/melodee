@@ -1361,7 +1361,7 @@ public class ArtistService(
         MelodeeModels.AlbumMerge.AlbumMergeConflictDetectionResult conflictResult,
         CancellationToken cancellationToken)
     {
-        var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
+        _ = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
         var now = Instant.FromDateTimeUtc(DateTime.UtcNow);
 
         // Load target album with all necessary includes
