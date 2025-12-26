@@ -951,7 +951,13 @@ public static partial class StringExtensions
 
     public static string? ToSafeXmlString(this string? input)
     {
-        return SecurityElement.Escape(input);
+        if (input == null)
+        {
+            return null;
+        }
+
+        var cleanedInput = RemoveXmlInvalidCharactersRegex().Replace(input, string.Empty);
+        return SecurityElement.Escape(cleanedInput);
     }
 
     public static string? ToHtmlString(this string? input)
@@ -1007,6 +1013,9 @@ public static partial class StringExtensions
 
     [GeneratedRegex("[^a-z0-9-]")]
     private static partial Regex SlugInvalidCharRegex();
+
+    [GeneratedRegex("[\x00-\x08\x0B\x0C\x0E-\x1F]")]
+    private static partial Regex RemoveXmlInvalidCharactersRegex();
 
     [GeneratedRegex("-+")]
     private static partial Regex SlugMultipleDashRegex();
