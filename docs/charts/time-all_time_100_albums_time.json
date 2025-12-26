@@ -1,0 +1,618 @@
+{
+  "title": "All-TIME 100 Albums",
+  "sourceName": "TIME",
+  "sourceUrl": "https://entertainment.time.com/2006/11/02/the-all-time-100-albums/slide/all/",
+  "year": 2006,
+  "description": "TIME’s All‑TIME 100 Albums (published 2006). TIME presented the list in chronological order (not a ranked list); ranks here reflect the list order.",
+  "tags": [
+    "all-time",
+    "best-of",
+    "albums",
+    "TIME"
+  ],
+  "isVisible": true,
+  "isGeneratedPlaylistEnabled": true,
+  "items": [
+    {
+      "rank": 1,
+      "artistName": "Robert Johnson",
+      "albumTitle": "King of the Delta Blues Singers",
+      "releaseYear": 1961
+    },
+    {
+      "rank": 2,
+      "artistName": "Hank Williams",
+      "albumTitle": "Turn Back the Years: The Essential Collection",
+      "releaseYear": 2005
+    },
+    {
+      "rank": 3,
+      "artistName": "Frank Sinatra",
+      "albumTitle": "In the Wee Small Hours",
+      "releaseYear": 1955
+    },
+    {
+      "rank": 4,
+      "artistName": "Elvis Presley",
+      "albumTitle": "The Sun Sessions",
+      "releaseYear": 1976
+    },
+    {
+      "rank": 5,
+      "artistName": "Frank Sinatra",
+      "albumTitle": "Songs for Swingin’ Lovers!",
+      "releaseYear": 1956
+    },
+    {
+      "rank": 6,
+      "artistName": "Little Richard",
+      "albumTitle": "Here’s Little Richard",
+      "releaseYear": 1957
+    },
+    {
+      "rank": 7,
+      "artistName": "Miles Davis",
+      "albumTitle": "Kind of Blue",
+      "releaseYear": 1959
+    },
+    {
+      "rank": 8,
+      "artistName": "Ray Charles",
+      "albumTitle": "Modern Sounds in Country and Western Music",
+      "releaseYear": 1962
+    },
+    {
+      "rank": 9,
+      "artistName": "James Brown",
+      "albumTitle": "Live at the Apollo Volume 1",
+      "releaseYear": 1962
+    },
+    {
+      "rank": 10,
+      "artistName": "Sam Cooke",
+      "albumTitle": "Portrait of a Legend",
+      "releaseYear": 2003
+    },
+    {
+      "rank": 11,
+      "artistName": "John Coltrane",
+      "albumTitle": "A Love Supreme",
+      "releaseYear": 1965
+    },
+    {
+      "rank": 12,
+      "artistName": "Bob Dylan",
+      "albumTitle": "Highway 61 Revisited",
+      "releaseYear": 1965
+    },
+    {
+      "rank": 13,
+      "artistName": "Otis Redding",
+      "albumTitle": "Otis Blue",
+      "releaseYear": 1965
+    },
+    {
+      "rank": 14,
+      "artistName": "The Beatles",
+      "albumTitle": "Rubber Soul",
+      "releaseYear": 1965
+    },
+    {
+      "rank": 15,
+      "artistName": "Chuck Berry",
+      "albumTitle": "The Great Twenty-Eight",
+      "releaseYear": 1982
+    },
+    {
+      "rank": 16,
+      "artistName": "The Beach Boys",
+      "albumTitle": "Pet Sounds",
+      "releaseYear": 1966
+    },
+    {
+      "rank": 17,
+      "artistName": "Bob Dylan",
+      "albumTitle": "Blonde on Blonde",
+      "releaseYear": 1966
+    },
+    {
+      "rank": 18,
+      "artistName": "The Beatles",
+      "albumTitle": "Revolver",
+      "releaseYear": 1966
+    },
+    {
+      "rank": 19,
+      "artistName": "Velvet Underground & Nico",
+      "albumTitle": "Velvet Underground & Nico",
+      "releaseYear": 1967
+    },
+    {
+      "rank": 20,
+      "artistName": "Aretha Franklin",
+      "albumTitle": "I Never Loved a Man the Way I Love You",
+      "releaseYear": 1967
+    },
+    {
+      "rank": 21,
+      "artistName": "The Jimi Hendrix Experience",
+      "albumTitle": "Are You Experienced?",
+      "releaseYear": 1967
+    },
+    {
+      "rank": 22,
+      "artistName": "The Beatles",
+      "albumTitle": "Sgt. Peppers Lonely Hearts Club Band",
+      "releaseYear": 1967
+    },
+    {
+      "rank": 23,
+      "artistName": "Johnny Cash",
+      "albumTitle": "At Folsom Prison",
+      "releaseYear": 1968
+    },
+    {
+      "rank": 24,
+      "artistName": "Aretha Franklin",
+      "albumTitle": "Lady Soul",
+      "releaseYear": 1968
+    },
+    {
+      "rank": 25,
+      "artistName": "The Beatles",
+      "albumTitle": "The Beatles (aka “The White Album”)",
+      "releaseYear": 1968
+    },
+    {
+      "rank": 26,
+      "artistName": "Van Morrison",
+      "albumTitle": "Astral Weeks",
+      "releaseYear": 1968
+    },
+    {
+      "rank": 27,
+      "artistName": "Sly & the Family Stone",
+      "albumTitle": "Stand!",
+      "releaseYear": 1969
+    },
+    {
+      "rank": 28,
+      "artistName": "The Band",
+      "albumTitle": "The Band",
+      "releaseYear": 1969
+    },
+    {
+      "rank": 29,
+      "artistName": "The Beatles",
+      "albumTitle": "Abbey Road",
+      "releaseYear": 1969
+    },
+    {
+      "rank": 30,
+      "artistName": "Various Artists produced by Phil Spector",
+      "albumTitle": "Back to Mono",
+      "releaseYear": 1991
+    },
+    {
+      "rank": 31,
+      "artistName": "Simon & Garfunkel",
+      "albumTitle": "Bridge Over Troubled Water",
+      "releaseYear": 1970
+    },
+    {
+      "rank": 32,
+      "artistName": "Van Morrison",
+      "albumTitle": "Moondance",
+      "releaseYear": 1970
+    },
+    {
+      "rank": 33,
+      "artistName": "Miles Davis",
+      "albumTitle": "Bitches Brew",
+      "releaseYear": 1970
+    },
+    {
+      "rank": 34,
+      "artistName": "Neil Young",
+      "albumTitle": "After the Gold Rush",
+      "releaseYear": 1970
+    },
+    {
+      "rank": 35,
+      "artistName": "Black Sabbath",
+      "albumTitle": "Paranoid",
+      "releaseYear": 1970
+    },
+    {
+      "rank": 36,
+      "artistName": "John Lennon",
+      "albumTitle": "Plastic Ono Band",
+      "releaseYear": 1970
+    },
+    {
+      "rank": 37,
+      "artistName": "Carole King",
+      "albumTitle": "Tapestry",
+      "releaseYear": 1971
+    },
+    {
+      "rank": 38,
+      "artistName": "The Rolling Stones",
+      "albumTitle": "Sticky Fingers",
+      "releaseYear": 1971
+    },
+    {
+      "rank": 39,
+      "artistName": "Marvin Gaye",
+      "albumTitle": "What’s Going On",
+      "releaseYear": 1971
+    },
+    {
+      "rank": 40,
+      "artistName": "Joni Mitchell",
+      "albumTitle": "Blue",
+      "releaseYear": 1971
+    },
+    {
+      "rank": 41,
+      "artistName": "The Who",
+      "albumTitle": "Who’s Next",
+      "releaseYear": 1971
+    },
+    {
+      "rank": 42,
+      "artistName": "Dolly Parton",
+      "albumTitle": "Coat of Many Colors",
+      "releaseYear": 1971
+    },
+    {
+      "rank": 43,
+      "artistName": "Led Zeppelin",
+      "albumTitle": "Led Zeppelin IV",
+      "releaseYear": 1971
+    },
+    {
+      "rank": 44,
+      "artistName": "David Bowie",
+      "albumTitle": "Hunky Dory",
+      "releaseYear": 1971
+    },
+    {
+      "rank": 45,
+      "artistName": "The Rolling Stones",
+      "albumTitle": "Exile on Main Street",
+      "releaseYear": 1972
+    },
+    {
+      "rank": 46,
+      "artistName": "David Bowie",
+      "albumTitle": "The Rise and Fall of Ziggy Stardust and the Spiders from Mars",
+      "releaseYear": 1972
+    },
+    {
+      "rank": 47,
+      "artistName": "Stevie Wonder",
+      "albumTitle": "Talking Book",
+      "releaseYear": 1972
+    },
+    {
+      "rank": 48,
+      "artistName": "Muddy Waters",
+      "albumTitle": "The Anthology",
+      "releaseYear": 2001
+    },
+    {
+      "rank": 49,
+      "artistName": "Jimmy Cliff et al",
+      "albumTitle": "The Harder They Come",
+      "releaseYear": 1972
+    },
+    {
+      "rank": 50,
+      "artistName": "Al Green",
+      "albumTitle": "Call Me",
+      "releaseYear": 1973
+    },
+    {
+      "rank": 51,
+      "artistName": "Elton John",
+      "albumTitle": "Goodbye Yellow Brick Road",
+      "releaseYear": 1973
+    },
+    {
+      "rank": 52,
+      "artistName": "Willie Nelson",
+      "albumTitle": "Red Headed Stranger",
+      "releaseYear": 1975
+    },
+    {
+      "rank": 53,
+      "artistName": "Bruce Springsteen",
+      "albumTitle": "Born to Run",
+      "releaseYear": 1975
+    },
+    {
+      "rank": 54,
+      "artistName": "Patti Smith",
+      "albumTitle": "Horses",
+      "releaseYear": 1975
+    },
+    {
+      "rank": 55,
+      "artistName": "Ramones",
+      "albumTitle": "Ramones",
+      "releaseYear": 1976
+    },
+    {
+      "rank": 56,
+      "artistName": "Stevie Wonder",
+      "albumTitle": "Songs in the Key of Life",
+      "releaseYear": 1976
+    },
+    {
+      "rank": 57,
+      "artistName": "Eagles",
+      "albumTitle": "Hotel California",
+      "releaseYear": 1976
+    },
+    {
+      "rank": 58,
+      "artistName": "Fleetwood Mac",
+      "albumTitle": "Rumours",
+      "releaseYear": 1977
+    },
+    {
+      "rank": 59,
+      "artistName": "Sex Pistols",
+      "albumTitle": "Never Mind the Bollocks, Here’s the Sex Pistols",
+      "releaseYear": 1977
+    },
+    {
+      "rank": 60,
+      "artistName": "Elvis Presley",
+      "albumTitle": "30 #1 Hits",
+      "releaseYear": 2002
+    },
+    {
+      "rank": 61,
+      "artistName": "Funkadelic",
+      "albumTitle": "One Nation Under a Groove",
+      "releaseYear": 1978
+    },
+    {
+      "rank": 62,
+      "artistName": "The Clash",
+      "albumTitle": "London Calling",
+      "releaseYear": 1979
+    },
+    {
+      "rank": 63,
+      "artistName": "AC/DC",
+      "albumTitle": "Back in Black",
+      "releaseYear": 1980
+    },
+    {
+      "rank": 64,
+      "artistName": "Michael Jackson",
+      "albumTitle": "Thriller",
+      "releaseYear": 1982
+    },
+    {
+      "rank": 65,
+      "artistName": "Talking Heads",
+      "albumTitle": "Stop Making Sense",
+      "releaseYear": 1984
+    },
+    {
+      "rank": 66,
+      "artistName": "Bob Marley & the Wailers",
+      "albumTitle": "Legend",
+      "releaseYear": 1984
+    },
+    {
+      "rank": 67,
+      "artistName": "Prince & the Revolution",
+      "albumTitle": "Purple Rain",
+      "releaseYear": 1984
+    },
+    {
+      "rank": 68,
+      "artistName": "James Brown",
+      "albumTitle": "Star Time ",
+      "releaseYear": 1991
+    },
+    {
+      "rank": 69,
+      "artistName": "Metallica",
+      "albumTitle": "Master of Puppets",
+      "releaseYear": 1986
+    },
+    {
+      "rank": 70,
+      "artistName": "Run-D.M.C.",
+      "albumTitle": "Raising Hell",
+      "releaseYear": 1986
+    },
+    {
+      "rank": 71,
+      "artistName": "Paul Simon",
+      "albumTitle": "Graceland",
+      "releaseYear": 1986
+    },
+    {
+      "rank": 72,
+      "artistName": "U2",
+      "albumTitle": "The Joshua Tree",
+      "releaseYear": 1987
+    },
+    {
+      "rank": 73,
+      "artistName": "Prince",
+      "albumTitle": "Sign ‘O’ the Times",
+      "releaseYear": 1987
+    },
+    {
+      "rank": 74,
+      "artistName": "Eric B. & Rakim",
+      "albumTitle": "Paid in Full",
+      "releaseYear": 1987
+    },
+    {
+      "rank": 75,
+      "artistName": "R.E.M.",
+      "albumTitle": "Document",
+      "releaseYear": 1987
+    },
+    {
+      "rank": 76,
+      "artistName": "Public Enemy",
+      "albumTitle": "It Takes a Nation of Millions to Hold Us Back",
+      "releaseYear": 1988
+    },
+    {
+      "rank": 77,
+      "artistName": "N.W.A.",
+      "albumTitle": "Straight Outta Compton",
+      "releaseYear": 1989
+    },
+    {
+      "rank": 78,
+      "artistName": "Madonna",
+      "albumTitle": "Like a Prayer",
+      "releaseYear": 1989
+    },
+    {
+      "rank": 79,
+      "artistName": "The Stone Roses",
+      "albumTitle": "The Stone Roses",
+      "releaseYear": 1989
+    },
+    {
+      "rank": 80,
+      "artistName": "Beastie Boys",
+      "albumTitle": "Paul’s Boutique",
+      "releaseYear": 1989
+    },
+    {
+      "rank": 81,
+      "artistName": "R.E.M.",
+      "albumTitle": "Out of Time",
+      "releaseYear": 1991
+    },
+    {
+      "rank": 82,
+      "artistName": "Garth Brooks",
+      "albumTitle": "Ropin’ the Wind",
+      "releaseYear": 1991
+    },
+    {
+      "rank": 83,
+      "artistName": "Nirvana",
+      "albumTitle": "Nevermind",
+      "releaseYear": 1991
+    },
+    {
+      "rank": 84,
+      "artistName": "A Tribe Called Quest",
+      "albumTitle": "The Low-End Theory",
+      "releaseYear": 1991
+    },
+    {
+      "rank": 85,
+      "artistName": "U2",
+      "albumTitle": "Achtung Baby",
+      "releaseYear": 1991
+    },
+    {
+      "rank": 86,
+      "artistName": "Pavement",
+      "albumTitle": "Slanted and Enchanted",
+      "releaseYear": 1992
+    },
+    {
+      "rank": 87,
+      "artistName": "Dr. Dre",
+      "albumTitle": "The Chronic",
+      "releaseYear": 1992
+    },
+    {
+      "rank": 88,
+      "artistName": "Hole",
+      "albumTitle": "Live Through This",
+      "releaseYear": 1994
+    },
+    {
+      "rank": 89,
+      "artistName": "The Notorious B.I.G.",
+      "albumTitle": "Ready to Die",
+      "releaseYear": 1994
+    },
+    {
+      "rank": 90,
+      "artistName": "Mary J. Blige",
+      "albumTitle": "My Life",
+      "releaseYear": 1994
+    },
+    {
+      "rank": 91,
+      "artistName": "Oasis",
+      "albumTitle": "(What’s the Story) Morning Glory",
+      "releaseYear": 1995
+    },
+    {
+      "rank": 92,
+      "artistName": "DJ Shadow",
+      "albumTitle": "Endtroducing…",
+      "releaseYear": 1996
+    },
+    {
+      "rank": 93,
+      "artistName": "Radiohead",
+      "albumTitle": "OK Computer",
+      "releaseYear": 1997
+    },
+    {
+      "rank": 94,
+      "artistName": "Bob Dylan",
+      "albumTitle": "Time Out of Mind",
+      "releaseYear": 1997
+    },
+    {
+      "rank": 95,
+      "artistName": "Lucinda Williams",
+      "albumTitle": "Car Wheels on a Gravel Road",
+      "releaseYear": 1998
+    },
+    {
+      "rank": 96,
+      "artistName": "Eminem",
+      "albumTitle": "The Marshall Mathers LP",
+      "releaseYear": 2000
+    },
+    {
+      "rank": 97,
+      "artistName": "Radiohead",
+      "albumTitle": "Kid A",
+      "releaseYear": 2000
+    },
+    {
+      "rank": 98,
+      "artistName": "PJ Harvey",
+      "albumTitle": "Stories from the City, Stories from the Sea",
+      "releaseYear": 2000
+    },
+    {
+      "rank": 99,
+      "artistName": "OutKast",
+      "albumTitle": "Stankonia",
+      "releaseYear": 2000
+    },
+    {
+      "rank": 100,
+      "artistName": "Kanye West",
+      "albumTitle": "The College Dropout",
+      "releaseYear": 2004
+    }
+  ],
+  "imageUrl": null
+}

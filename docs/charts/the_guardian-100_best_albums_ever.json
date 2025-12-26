@@ -1,0 +1,619 @@
+{
+  "title": "100 Best Albums Ever",
+  "sourceName": "The Guardian",
+  "sourceUrl": "https://music.co.uk/rocklist/guardian100.htm",
+  "year": 1997,
+  "description": "As appeared in The Guardian (UK), September 19, 1997. Ranked list of 100 albums.",
+  "tags": [
+    "all-time",
+    "albums",
+    "top-100",
+    "guardian",
+    "1997"
+  ],
+  "imageUrl": null,
+  "isVisible": true,
+  "isGeneratedPlaylistEnabled": true,
+  "items": [
+    {
+      "rank": 1,
+      "artistName": "Marvin Gaye",
+      "albumTitle": "What's Going On",
+      "releaseYear": 1971
+    },
+    {
+      "rank": 2,
+      "artistName": "The Beatles",
+      "albumTitle": "Revolver",
+      "releaseYear": 1966
+    },
+    {
+      "rank": 3,
+      "artistName": "Sex Pistols",
+      "albumTitle": "Never Mind the Bollocks, Here's the Sex Pistols",
+      "releaseYear": 1977
+    },
+    {
+      "rank": 4,
+      "artistName": "Nirvana",
+      "albumTitle": "Nevermind",
+      "releaseYear": 1991
+    },
+    {
+      "rank": 5,
+      "artistName": "The Stone Roses",
+      "albumTitle": "The Stone Roses",
+      "releaseYear": 1989
+    },
+    {
+      "rank": 6,
+      "artistName": "The Beach Boys",
+      "albumTitle": "Pet Sounds",
+      "releaseYear": 1966
+    },
+    {
+      "rank": 7,
+      "artistName": "David Bowie",
+      "albumTitle": "The Rise and Fall of Ziggy Stardust and the Spiders from Mars",
+      "releaseYear": 1972
+    },
+    {
+      "rank": 8,
+      "artistName": "The Velvet Underground",
+      "albumTitle": "The Velvet Underground & Nico",
+      "releaseYear": 1967
+    },
+    {
+      "rank": 9,
+      "artistName": "The Beatles",
+      "albumTitle": "The Beatles (White Album)",
+      "releaseYear": 1968
+    },
+    {
+      "rank": 10,
+      "artistName": "Van Morrison",
+      "albumTitle": "Astral Weeks",
+      "releaseYear": 1968
+    },
+    {
+      "rank": 11,
+      "artistName": "Bob Dylan",
+      "albumTitle": "Highway 61 Revisited",
+      "releaseYear": 1965
+    },
+    {
+      "rank": 12,
+      "artistName": "Massive Attack",
+      "albumTitle": "Blue Lines",
+      "releaseYear": 1991
+    },
+    {
+      "rank": 13,
+      "artistName": "David Bowie",
+      "albumTitle": "Hunky Dory",
+      "releaseYear": 1971
+    },
+    {
+      "rank": 14,
+      "artistName": "Miles Davis",
+      "albumTitle": "Kind of Blue",
+      "releaseYear": 1959
+    },
+    {
+      "rank": 15,
+      "artistName": "Radiohead",
+      "albumTitle": "The Bends",
+      "releaseYear": 1995
+    },
+    {
+      "rank": 16,
+      "artistName": "Primal Scream",
+      "albumTitle": "Screamadelica",
+      "releaseYear": 1991
+    },
+    {
+      "rank": 17,
+      "artistName": "The Clash",
+      "albumTitle": "London Calling",
+      "releaseYear": 1979
+    },
+    {
+      "rank": 18,
+      "artistName": "Oasis",
+      "albumTitle": "(What's the Story) Morning Glory?",
+      "releaseYear": 1995
+    },
+    {
+      "rank": 19,
+      "artistName": "The Beatles",
+      "albumTitle": "Sgt. Pepper's Lonely Hearts Club Band",
+      "releaseYear": 1967
+    },
+    {
+      "rank": 20,
+      "artistName": "Public Enemy",
+      "albumTitle": "It Takes a Nation of Millions to Hold Us Back",
+      "releaseYear": 1988
+    },
+    {
+      "rank": 21,
+      "artistName": "Oasis",
+      "albumTitle": "Definitely Maybe",
+      "releaseYear": 1994
+    },
+    {
+      "rank": 22,
+      "artistName": "The Beatles",
+      "albumTitle": "Abbey Road",
+      "releaseYear": 1969
+    },
+    {
+      "rank": 23,
+      "artistName": "Lou Reed",
+      "albumTitle": "Transformer",
+      "releaseYear": 1972
+    },
+    {
+      "rank": 24,
+      "artistName": "Bob Dylan",
+      "albumTitle": "Blonde on Blonde",
+      "releaseYear": 1966
+    },
+    {
+      "rank": 25,
+      "artistName": "The Rolling Stones",
+      "albumTitle": "Exile on Main St.",
+      "releaseYear": 1972
+    },
+    {
+      "rank": 26,
+      "artistName": "R.E.M.",
+      "albumTitle": "Automatic for the People",
+      "releaseYear": 1992
+    },
+    {
+      "rank": 27,
+      "artistName": "The Rolling Stones",
+      "albumTitle": "Let It Bleed",
+      "releaseYear": 1969
+    },
+    {
+      "rank": 28,
+      "artistName": "The Smiths",
+      "albumTitle": "The Queen Is Dead",
+      "releaseYear": 1986
+    },
+    {
+      "rank": 29,
+      "artistName": "The Jimi Hendrix Experience",
+      "albumTitle": "Electric Ladyland",
+      "releaseYear": 1968
+    },
+    {
+      "rank": 30,
+      "artistName": "The Jimi Hendrix Experience",
+      "albumTitle": "Are You Experienced",
+      "releaseYear": 1967
+    },
+    {
+      "rank": 31,
+      "artistName": "Bob Marley and the Wailers",
+      "albumTitle": "Natty Dread",
+      "releaseYear": 1974
+    },
+    {
+      "rank": 32,
+      "artistName": "Patti Smith",
+      "albumTitle": "Horses",
+      "releaseYear": 1975
+    },
+    {
+      "rank": 33,
+      "artistName": "Television",
+      "albumTitle": "Marquee Moon",
+      "releaseYear": 1977
+    },
+    {
+      "rank": 34,
+      "artistName": "The Clash",
+      "albumTitle": "The Clash",
+      "releaseYear": 1977
+    },
+    {
+      "rank": 35,
+      "artistName": "Joni Mitchell",
+      "albumTitle": "Blue",
+      "releaseYear": 1971
+    },
+    {
+      "rank": 36,
+      "artistName": "Portishead",
+      "albumTitle": "Dummy",
+      "releaseYear": 1994
+    },
+    {
+      "rank": 37,
+      "artistName": "Pink Floyd",
+      "albumTitle": "The Dark Side of the Moon",
+      "releaseYear": 1973
+    },
+    {
+      "rank": 38,
+      "artistName": "Stevie Wonder",
+      "albumTitle": "Songs in the Key of Life",
+      "releaseYear": 1976
+    },
+    {
+      "rank": 39,
+      "artistName": "Bob Dylan",
+      "albumTitle": "Blood on the Tracks",
+      "releaseYear": 1975
+    },
+    {
+      "rank": 40,
+      "artistName": "The Verve",
+      "albumTitle": "A Northern Soul",
+      "releaseYear": 1995
+    },
+    {
+      "rank": 41,
+      "artistName": "John Lennon",
+      "albumTitle": "John Lennon/Plastic Ono Band",
+      "releaseYear": 1970
+    },
+    {
+      "rank": 42,
+      "artistName": "Joy Division",
+      "albumTitle": "Unknown Pleasures",
+      "releaseYear": 1979
+    },
+    {
+      "rank": 43,
+      "artistName": "Talking Heads",
+      "albumTitle": "Remain in Light",
+      "releaseYear": 1980
+    },
+    {
+      "rank": 44,
+      "artistName": "Bruce Springsteen",
+      "albumTitle": "Born to Run",
+      "releaseYear": 1975
+    },
+    {
+      "rank": 45,
+      "artistName": "John Coltrane",
+      "albumTitle": "A Love Supreme",
+      "releaseYear": 1965
+    },
+    {
+      "rank": 46,
+      "artistName": "Aretha Franklin",
+      "albumTitle": "Queen of Soul: The Atlantic Recordings",
+      "releaseYear": 1992
+    },
+    {
+      "rank": 47,
+      "artistName": "Neil Young",
+      "albumTitle": "After the Gold Rush",
+      "releaseYear": 1970
+    },
+    {
+      "rank": 48,
+      "artistName": "Alanis Morissette",
+      "albumTitle": "Jagged Little Pill",
+      "releaseYear": 1995
+    },
+    {
+      "rank": 49,
+      "artistName": "Captain Beefheart and the Magic Band",
+      "albumTitle": "Trout Mask Replica",
+      "releaseYear": 1969
+    },
+    {
+      "rank": 50,
+      "artistName": "Public Enemy",
+      "albumTitle": "Fear of a Black Planet",
+      "releaseYear": 1990
+    },
+    {
+      "rank": 51,
+      "artistName": "The Jam",
+      "albumTitle": "All Mod Cons",
+      "releaseYear": 1978
+    },
+    {
+      "rank": 52,
+      "artistName": "Bee Gees",
+      "albumTitle": "Saturday Night Fever (Soundtrack)",
+      "releaseYear": 1977
+    },
+    {
+      "rank": 53,
+      "artistName": "Stevie Wonder",
+      "albumTitle": "Innervisions",
+      "releaseYear": 1973
+    },
+    {
+      "rank": 54,
+      "artistName": "Bob Marley and the Wailers",
+      "albumTitle": "Legend",
+      "releaseYear": 1984
+    },
+    {
+      "rank": 55,
+      "artistName": "Garbage",
+      "albumTitle": "Garbage",
+      "releaseYear": 1995
+    },
+    {
+      "rank": 56,
+      "artistName": "Michael Jackson",
+      "albumTitle": "Off the Wall",
+      "releaseYear": 1979
+    },
+    {
+      "rank": 57,
+      "artistName": "U2",
+      "albumTitle": "The Joshua Tree",
+      "releaseYear": 1987
+    },
+    {
+      "rank": 58,
+      "artistName": "The Who",
+      "albumTitle": "Who's Next",
+      "releaseYear": 1971
+    },
+    {
+      "rank": 59,
+      "artistName": "Beastie Boys",
+      "albumTitle": "Licensed to Ill",
+      "releaseYear": 1986
+    },
+    {
+      "rank": 60,
+      "artistName": "Led Zeppelin",
+      "albumTitle": "Led Zeppelin II",
+      "releaseYear": 1969
+    },
+    {
+      "rank": 61,
+      "artistName": "Prefab Sprout",
+      "albumTitle": "Steve McQueen",
+      "releaseYear": 1985
+    },
+    {
+      "rank": 62,
+      "artistName": "David Bowie",
+      "albumTitle": "Low",
+      "releaseYear": 1977
+    },
+    {
+      "rank": 63,
+      "artistName": "Tricky",
+      "albumTitle": "Maxinquaye",
+      "releaseYear": 1995
+    },
+    {
+      "rank": 64,
+      "artistName": "Ian Dury and the Blockheads",
+      "albumTitle": "New Boots and Panties!!",
+      "releaseYear": 1977
+    },
+    {
+      "rank": 65,
+      "artistName": "Ramones",
+      "albumTitle": "Ramones",
+      "releaseYear": 1976
+    },
+    {
+      "rank": 66,
+      "artistName": "The Beach Boys",
+      "albumTitle": "Sunflower",
+      "releaseYear": 1970
+    },
+    {
+      "rank": 67,
+      "artistName": "Happy Mondays",
+      "albumTitle": "Pills 'n' Thrills and Bellyaches",
+      "releaseYear": 1990
+    },
+    {
+      "rank": 68,
+      "artistName": "Underworld",
+      "albumTitle": "Second Toughest in the Infants",
+      "releaseYear": 1996
+    },
+    {
+      "rank": 69,
+      "artistName": "Paul Simon",
+      "albumTitle": "Graceland",
+      "releaseYear": 1986
+    },
+    {
+      "rank": 70,
+      "artistName": "The Byrds",
+      "albumTitle": "Younger Than Yesterday",
+      "releaseYear": 1967
+    },
+    {
+      "rank": 71,
+      "artistName": "U2",
+      "albumTitle": "Achtung Baby",
+      "releaseYear": 1991
+    },
+    {
+      "rank": 72,
+      "artistName": "Burning Spear",
+      "albumTitle": "Marcus Garvey",
+      "releaseYear": 1975
+    },
+    {
+      "rank": 73,
+      "artistName": "The Smiths",
+      "albumTitle": "The Smiths",
+      "releaseYear": 1984
+    },
+    {
+      "rank": 74,
+      "artistName": "James Brown",
+      "albumTitle": "Live at the Apollo, October 24, 1962",
+      "releaseYear": 1963
+    },
+    {
+      "rank": 75,
+      "artistName": "Pulp",
+      "albumTitle": "Different Class",
+      "releaseYear": 1995
+    },
+    {
+      "rank": 76,
+      "artistName": "The Doors",
+      "albumTitle": "The Doors",
+      "releaseYear": 1967
+    },
+    {
+      "rank": 77,
+      "artistName": "David Bowie",
+      "albumTitle": "\"Heroes\"",
+      "releaseYear": 1977
+    },
+    {
+      "rank": 78,
+      "artistName": "Fleetwood Mac",
+      "albumTitle": "Rumours",
+      "releaseYear": 1977
+    },
+    {
+      "rank": 79,
+      "artistName": "Bob Marley and the Wailers",
+      "albumTitle": "Live!",
+      "releaseYear": 1975
+    },
+    {
+      "rank": 80,
+      "artistName": "Bob Marley and the Wailers",
+      "albumTitle": "Exodus",
+      "releaseYear": 1977
+    },
+    {
+      "rank": 81,
+      "artistName": "The Rolling Stones",
+      "albumTitle": "Beggars Banquet",
+      "releaseYear": 1968
+    },
+    {
+      "rank": 82,
+      "artistName": "Goldie",
+      "albumTitle": "Timeless",
+      "releaseYear": 1995
+    },
+    {
+      "rank": 83,
+      "artistName": "Pixies",
+      "albumTitle": "Doolittle",
+      "releaseYear": 1989
+    },
+    {
+      "rank": 84,
+      "artistName": "The Beatles",
+      "albumTitle": "1962–1966 (Red Album)",
+      "releaseYear": 1973
+    },
+    {
+      "rank": 85,
+      "artistName": "Cocteau Twins",
+      "albumTitle": "Treasure",
+      "releaseYear": 1984
+    },
+    {
+      "rank": 86,
+      "artistName": "Prince",
+      "albumTitle": "Sign o' the Times",
+      "releaseYear": 1987
+    },
+    {
+      "rank": 87,
+      "artistName": "The Specials",
+      "albumTitle": "The Specials",
+      "releaseYear": 1979
+    },
+    {
+      "rank": 88,
+      "artistName": "ABC",
+      "albumTitle": "The Lexicon of Love",
+      "releaseYear": 1982
+    },
+    {
+      "rank": 89,
+      "artistName": "Led Zeppelin",
+      "albumTitle": "Led Zeppelin IV",
+      "releaseYear": 1971
+    },
+    {
+      "rank": 90,
+      "artistName": "Iggy Pop & The Stooges",
+      "albumTitle": "Raw Power",
+      "releaseYear": 1973
+    },
+    {
+      "rank": 91,
+      "artistName": "The Velvet Underground",
+      "albumTitle": "Loaded",
+      "releaseYear": 1970
+    },
+    {
+      "rank": 92,
+      "artistName": "Adam and the Ants",
+      "albumTitle": "Kings of the Wild Frontier",
+      "releaseYear": 1980
+    },
+    {
+      "rank": 93,
+      "artistName": "Dexys Midnight Runners",
+      "albumTitle": "Searching for the Young Soul Rebels",
+      "releaseYear": 1980
+    },
+    {
+      "rank": 94,
+      "artistName": "Frank Sinatra",
+      "albumTitle": "Songs for Swingin' Lovers!",
+      "releaseYear": 1956
+    },
+    {
+      "rank": 95,
+      "artistName": "Joy Division",
+      "albumTitle": "Closer",
+      "releaseYear": 1980
+    },
+    {
+      "rank": 96,
+      "artistName": "Pretenders",
+      "albumTitle": "Pretenders",
+      "releaseYear": 1979
+    },
+    {
+      "rank": 97,
+      "artistName": "R.E.M.",
+      "albumTitle": "Out of Time",
+      "releaseYear": 1991
+    },
+    {
+      "rank": 98,
+      "artistName": "Stereo MC's",
+      "albumTitle": "Connected",
+      "releaseYear": 1992
+    },
+    {
+      "rank": 99,
+      "artistName": "John Lennon",
+      "albumTitle": "Imagine",
+      "releaseYear": 1971
+    },
+    {
+      "rank": 100,
+      "artistName": "Augustus Pablo",
+      "albumTitle": "King Tubby Meets Rockers Uptown",
+      "releaseYear": 1976
+    }
+  ]
+}

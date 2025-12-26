@@ -1,0 +1,633 @@
+{
+  "title": "List of best-selling albums",
+  "items": [
+    {
+      "rank": 1,
+      "artistName": "Michael Jackson",
+      "albumTitle": "Thriller",
+      "releaseYear": 1982
+    },
+    {
+      "rank": 2,
+      "artistName": "AC/DC",
+      "albumTitle": "Back in Black",
+      "releaseYear": 1980
+    },
+    {
+      "rank": 3,
+      "artistName": "Whitney Houston / Various artists",
+      "albumTitle": "The Bodyguard",
+      "releaseYear": 1992
+    },
+    {
+      "rank": 4,
+      "artistName": "Pink Floyd",
+      "albumTitle": "The Dark Side of the Moon",
+      "releaseYear": 1973
+    },
+    {
+      "rank": 5,
+      "artistName": "Eagles",
+      "albumTitle": "Their Greatest Hits (1971–1975)",
+      "releaseYear": 1971
+    },
+    {
+      "rank": 6,
+      "artistName": "Eagles",
+      "albumTitle": "Hotel California",
+      "releaseYear": 1976
+    },
+    {
+      "rank": 7,
+      "artistName": "Shania Twain",
+      "albumTitle": "Come On Over",
+      "releaseYear": 1997
+    },
+    {
+      "rank": 8,
+      "artistName": "Fleetwood Mac",
+      "albumTitle": "Rumours",
+      "releaseYear": 1977
+    },
+    {
+      "rank": 9,
+      "artistName": "Meat Loaf",
+      "albumTitle": "Bat Out of Hell",
+      "releaseYear": 1977
+    },
+    {
+      "rank": 10,
+      "artistName": "Bee Gees / Various artists",
+      "albumTitle": "Saturday Night Fever",
+      "releaseYear": 1977
+    },
+    {
+      "rank": 11,
+      "artistName": "Led Zeppelin",
+      "albumTitle": "Led Zeppelin IV",
+      "releaseYear": 1971
+    },
+    {
+      "rank": 12,
+      "artistName": "Michael Jackson",
+      "albumTitle": "Bad",
+      "releaseYear": 1987
+    },
+    {
+      "rank": 13,
+      "artistName": "Alanis Morissette",
+      "albumTitle": "Jagged Little Pill",
+      "releaseYear": 1995
+    },
+    {
+      "rank": 14,
+      "artistName": "Various artists",
+      "albumTitle": "Dirty Dancing",
+      "releaseYear": 1987
+    },
+    {
+      "rank": 15,
+      "artistName": "Celine Dion",
+      "albumTitle": "Falling into You",
+      "releaseYear": 1996
+    },
+    {
+      "rank": 16,
+      "artistName": "Michael Jackson",
+      "albumTitle": "Dangerous",
+      "releaseYear": 1991
+    },
+    {
+      "rank": 17,
+      "artistName": "Adele",
+      "albumTitle": "21",
+      "releaseYear": 2011
+    },
+    {
+      "rank": 18,
+      "artistName": "The Beatles",
+      "albumTitle": "1",
+      "releaseYear": 2000
+    },
+    {
+      "rank": 19,
+      "artistName": "Metallica",
+      "albumTitle": "Metallica",
+      "releaseYear": 1991
+    },
+    {
+      "rank": 20,
+      "artistName": "Celine Dion",
+      "albumTitle": "Let's Talk About Love",
+      "releaseYear": 1997
+    },
+    {
+      "rank": 21,
+      "artistName": "Bob Marley and the Wailers",
+      "albumTitle": "Legend: The Best of Bob Marley & The Wailers",
+      "releaseYear": 1984
+    },
+    {
+      "rank": 22,
+      "artistName": "Nirvana",
+      "albumTitle": "Nevermind",
+      "releaseYear": 1991
+    },
+    {
+      "rank": 23,
+      "artistName": "Guns N' Roses",
+      "albumTitle": "Appetite for Destruction",
+      "releaseYear": 1987
+    },
+    {
+      "rank": 24,
+      "artistName": "Bruce Springsteen",
+      "albumTitle": "Born in the U.S.A.",
+      "releaseYear": 1984
+    },
+    {
+      "rank": 25,
+      "artistName": "ABBA",
+      "albumTitle": "Gold: Greatest Hits",
+      "releaseYear": 1992
+    },
+    {
+      "rank": 26,
+      "artistName": "Dire Straits",
+      "albumTitle": "Brothers in Arms",
+      "releaseYear": 1985
+    },
+    {
+      "rank": 27,
+      "artistName": "Madonna",
+      "albumTitle": "The Immaculate Collection",
+      "releaseYear": 1990
+    },
+    {
+      "rank": 28,
+      "artistName": "Santana",
+      "albumTitle": "Supernatural",
+      "releaseYear": 1999
+    },
+    {
+      "rank": 29,
+      "artistName": "Pink Floyd",
+      "albumTitle": "The Wall",
+      "releaseYear": 1979
+    },
+    {
+      "rank": 30,
+      "artistName": "The Beatles",
+      "albumTitle": "Sgt. Pepper's Lonely Hearts Club Band",
+      "releaseYear": 1967
+    },
+    {
+      "rank": 31,
+      "artistName": "The Beatles",
+      "albumTitle": "Abbey Road",
+      "releaseYear": 1969
+    },
+    {
+      "rank": 32,
+      "artistName": "Norah Jones",
+      "albumTitle": "Come Away with Me",
+      "releaseYear": 2002
+    },
+    {
+      "rank": 33,
+      "artistName": "Various artists",
+      "albumTitle": "Grease: The Original Soundtrack from the Motion Picture",
+      "releaseYear": 1978
+    },
+    {
+      "rank": 34,
+      "artistName": "Mariah Carey",
+      "albumTitle": "Music Box",
+      "releaseYear": 1993
+    },
+    {
+      "rank": 35,
+      "artistName": "Eminem",
+      "albumTitle": "The Eminem Show",
+      "releaseYear": 2002
+    },
+    {
+      "rank": 36,
+      "artistName": "James Horner",
+      "albumTitle": "Titanic: Music from the Motion Picture",
+      "releaseYear": 1997
+    },
+    {
+      "rank": 37,
+      "artistName": "Eric Clapton",
+      "albumTitle": "Unplugged",
+      "releaseYear": 1992
+    },
+    {
+      "rank": 38,
+      "artistName": "Queen",
+      "albumTitle": "Greatest Hits",
+      "releaseYear": 1981
+    },
+    {
+      "rank": 39,
+      "artistName": "Britney Spears",
+      "albumTitle": "...Baby One More Time",
+      "releaseYear": 1999
+    },
+    {
+      "rank": 40,
+      "artistName": "Bon Jovi",
+      "albumTitle": "Slippery When Wet",
+      "releaseYear": 1986
+    },
+    {
+      "rank": 41,
+      "artistName": "Journey",
+      "albumTitle": "Greatest Hits",
+      "releaseYear": 1988
+    },
+    {
+      "rank": 42,
+      "artistName": "Whitney Houston",
+      "albumTitle": "Whitney Houston",
+      "releaseYear": 1985
+    },
+    {
+      "rank": 43,
+      "artistName": "Phil Collins",
+      "albumTitle": "No Jacket Required",
+      "releaseYear": 1985
+    },
+    {
+      "rank": 44,
+      "artistName": "Eminem",
+      "albumTitle": "The Marshall Mathers LP",
+      "releaseYear": 2000
+    },
+    {
+      "rank": 45,
+      "artistName": "Linkin Park",
+      "albumTitle": "Hybrid Theory",
+      "releaseYear": 2000
+    },
+    {
+      "rank": 46,
+      "artistName": "U2",
+      "albumTitle": "The Joshua Tree",
+      "releaseYear": 1987
+    },
+    {
+      "rank": 47,
+      "artistName": "Prince and The Revolution",
+      "albumTitle": "Purple Rain",
+      "releaseYear": 1984
+    },
+    {
+      "rank": 48,
+      "artistName": "Carole King",
+      "albumTitle": "Tapestry",
+      "releaseYear": 1971
+    },
+    {
+      "rank": 49,
+      "artistName": "Madonna",
+      "albumTitle": "True Blue",
+      "releaseYear": 1986
+    },
+    {
+      "rank": 50,
+      "artistName": "George Michael",
+      "albumTitle": "Faith",
+      "releaseYear": 1987
+    },
+    {
+      "rank": 51,
+      "artistName": "Simon & Garfunkel",
+      "albumTitle": "Bridge over Troubled Water",
+      "releaseYear": 1970
+    },
+    {
+      "rank": 52,
+      "artistName": "Elton John",
+      "albumTitle": "Greatest Hits",
+      "releaseYear": 1974
+    },
+    {
+      "rank": 53,
+      "artistName": "Backstreet Boys",
+      "albumTitle": "Millennium",
+      "releaseYear": 1999
+    },
+    {
+      "rank": 54,
+      "artistName": "Adele",
+      "albumTitle": "25",
+      "releaseYear": 2015
+    },
+    {
+      "rank": 55,
+      "artistName": "Spice Girls",
+      "albumTitle": "Spice",
+      "releaseYear": 1996
+    },
+    {
+      "rank": 56,
+      "artistName": "Ace of Base",
+      "albumTitle": "Happy Nation / The Sign",
+      "releaseYear": 1993
+    },
+    {
+      "rank": 57,
+      "artistName": "Green Day",
+      "albumTitle": "American Idiot",
+      "releaseYear": 2004
+    },
+    {
+      "rank": 58,
+      "artistName": "Michael Jackson",
+      "albumTitle": "HIStory: Past, Present and Future, Book I",
+      "releaseYear": 1995
+    },
+    {
+      "rank": 59,
+      "artistName": "Celine Dion",
+      "albumTitle": "All the Way... A Decade of Song",
+      "releaseYear": 1999
+    },
+    {
+      "rank": 60,
+      "artistName": "Oasis",
+      "albumTitle": "(What's the Story) Morning Glory?",
+      "releaseYear": 1995
+    },
+    {
+      "rank": 61,
+      "artistName": "Madonna",
+      "albumTitle": "Like a Virgin",
+      "releaseYear": 1984
+    },
+    {
+      "rank": 62,
+      "artistName": "Bon Jovi",
+      "albumTitle": "Cross Road",
+      "releaseYear": 1994
+    },
+    {
+      "rank": 63,
+      "artistName": "Green Day",
+      "albumTitle": "Dookie",
+      "releaseYear": 1994
+    },
+    {
+      "rank": 64,
+      "artistName": "Hootie & the Blowfish",
+      "albumTitle": "Cracked Rear View",
+      "releaseYear": 1994
+    },
+    {
+      "rank": 65,
+      "artistName": "Elvis Presley",
+      "albumTitle": "Elvis' Christmas Album",
+      "releaseYear": 1957
+    },
+    {
+      "rank": 66,
+      "artistName": "Boston",
+      "albumTitle": "Boston",
+      "releaseYear": 1976
+    },
+    {
+      "rank": 67,
+      "artistName": "Mariah Carey",
+      "albumTitle": "Daydream",
+      "releaseYear": 1995
+    },
+    {
+      "rank": 68,
+      "artistName": "Whitney Houston",
+      "albumTitle": "Whitney",
+      "releaseYear": 1987
+    },
+    {
+      "rank": 69,
+      "artistName": "Shania Twain",
+      "albumTitle": "The Woman in Me",
+      "releaseYear": 1995
+    },
+    {
+      "rank": 70,
+      "artistName": "Britney Spears",
+      "albumTitle": "Oops!... I Did It Again",
+      "releaseYear": 2000
+    },
+    {
+      "rank": 71,
+      "artistName": "Def Leppard",
+      "albumTitle": "Hysteria",
+      "releaseYear": 1987
+    },
+    {
+      "rank": 72,
+      "artistName": "Lauryn Hill",
+      "albumTitle": "The Miseducation of Lauryn Hill",
+      "releaseYear": 1998
+    },
+    {
+      "rank": 73,
+      "artistName": "Tracy Chapman",
+      "albumTitle": "Tracy Chapman",
+      "releaseYear": 1988
+    },
+    {
+      "rank": 74,
+      "artistName": "Michael Jackson",
+      "albumTitle": "Off the Wall",
+      "releaseYear": 1979
+    },
+    {
+      "rank": 75,
+      "artistName": "Lionel Richie",
+      "albumTitle": "Can't Slow Down",
+      "releaseYear": 1983
+    },
+    {
+      "rank": 76,
+      "artistName": "Celine Dion",
+      "albumTitle": "The Colour of My Love",
+      "releaseYear": 1993
+    },
+    {
+      "rank": 77,
+      "artistName": "Pink Floyd",
+      "albumTitle": "Wish You Were Here",
+      "releaseYear": 1975
+    },
+    {
+      "rank": 78,
+      "artistName": "Andrea Bocelli",
+      "albumTitle": "Romanza",
+      "releaseYear": 1997
+    },
+    {
+      "rank": 79,
+      "artistName": "Amy Winehouse",
+      "albumTitle": "Back to Black",
+      "releaseYear": 2006
+    },
+    {
+      "rank": 80,
+      "artistName": "Various Artists",
+      "albumTitle": "Oklahoma! (78 rpm album)",
+      "releaseYear": 1945
+    },
+    {
+      "rank": 81,
+      "artistName": "Al Jolson",
+      "albumTitle": "The Jolson Story",
+      "releaseYear": 1946
+    },
+    {
+      "rank": 82,
+      "artistName": "Various Artists",
+      "albumTitle": "Oklahoma! (LP album)",
+      "releaseYear": 1956
+    },
+    {
+      "rank": 83,
+      "artistName": "Various Artists",
+      "albumTitle": "My Fair Lady",
+      "releaseYear": 1956
+    },
+    {
+      "rank": 84,
+      "artistName": "Various Artists",
+      "albumTitle": "South Pacific",
+      "releaseYear": 1960
+    },
+    {
+      "rank": 85,
+      "artistName": "Vaughn Meader",
+      "albumTitle": "The First Family",
+      "releaseYear": 1963
+    },
+    {
+      "rank": 86,
+      "artistName": "Various Artists",
+      "albumTitle": "The Sound of Music",
+      "releaseYear": 1968
+    },
+    {
+      "rank": 87,
+      "artistName": "Iron Butterfly",
+      "albumTitle": "In-A-Gadda-Da-Vida",
+      "releaseYear": 1969
+    },
+    {
+      "rank": 88,
+      "artistName": "Usher",
+      "albumTitle": "Confessions",
+      "releaseYear": 2004
+    },
+    {
+      "rank": 89,
+      "artistName": "Coldplay",
+      "albumTitle": "X&Y",
+      "releaseYear": 2005
+    },
+    {
+      "rank": 90,
+      "artistName": "Various Artists",
+      "albumTitle": "High School Musical",
+      "releaseYear": 2006
+    },
+    {
+      "rank": 91,
+      "artistName": "6.0",
+      "albumTitle": "High School Musical 2",
+      "releaseYear": 2007
+    },
+    {
+      "rank": 92,
+      "artistName": "Coldplay",
+      "albumTitle": "Viva la Vida or Death and All His Friends",
+      "releaseYear": 2008
+    },
+    {
+      "rank": 93,
+      "artistName": "Susan Boyle",
+      "albumTitle": "I Dreamed a Dream",
+      "releaseYear": 2009
+    },
+    {
+      "rank": 94,
+      "artistName": "Eminem",
+      "albumTitle": "Recovery",
+      "releaseYear": 2010
+    },
+    {
+      "rank": 95,
+      "artistName": "One Direction",
+      "albumTitle": "Midnight Memories",
+      "releaseYear": 2013
+    },
+    {
+      "rank": 96,
+      "artistName": "Various Artists",
+      "albumTitle": "Frozen",
+      "releaseYear": 2014
+    },
+    {
+      "rank": 97,
+      "artistName": "Beyoncé",
+      "albumTitle": "Lemonade",
+      "releaseYear": 2016
+    },
+    {
+      "rank": 98,
+      "artistName": "Hugh Jackman & Various Artists",
+      "albumTitle": "The Greatest Showman",
+      "releaseYear": 2018
+    },
+    {
+      "rank": 99,
+      "artistName": "Arashi",
+      "albumTitle": "5x20 All the Best!! 1999–2019",
+      "releaseYear": 2019
+    },
+    {
+      "rank": 100,
+      "artistName": "BTS",
+      "albumTitle": "Map of the Soul: 7",
+      "releaseYear": 2020
+    },
+    {
+      "rank": 101,
+      "artistName": "Adele",
+      "albumTitle": "30",
+      "releaseYear": 2021
+    },
+    {
+      "rank": 102,
+      "artistName": "Jay Chou",
+      "albumTitle": "Greatest Works of Art",
+      "releaseYear": 2022
+    },
+    {
+      "rank": 103,
+      "artistName": "Seventeen",
+      "albumTitle": "FML",
+      "releaseYear": 2023
+    },
+    {
+      "rank": 104,
+      "artistName": "Taylor Swift",
+      "albumTitle": "The Tortured Poets Department",
+      "releaseYear": 2024
+    }
+  ],
+  "sourceName": "Wikipedia",
+  "sourceUrl": "https://en.wikipedia.org/wiki/List_of_best-selling_albums",
+  "isVisible": false,
+  "isGeneratedPlaylistEnabled": false
+}
