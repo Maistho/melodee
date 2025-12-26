@@ -1,0 +1,282 @@
+@page "/requests/{ApiKey:guid}/edit"
+
+@inherits MelodeeComponentBase
+@using Request = Melodee.Common.Data.Models.Request
+
+@inject MainLayoutProxyService MainLayoutProxyService
+@inject ILogger Logger
+@inject RequestService RequestService
+@inject NotificationService NotificationService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Edit Request</PageTitle>
+
+@if (_request == null)
+{
+    <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="height: 100%">
+        <RadzenProgressBarCircular ShowValue="true" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large"/>
+    </RadzenStack>
+}
+else
+{
+    <RadzenStack Style="height: 100%; overflow-y: auto;" Gap="1rem">
+        <RadzenBreadCrumb Class="rz-pb-3">
+            <RadzenBreadCrumbItem Path="/" Text="Dashboard"/>
+            <RadzenBreadCrumbItem Path="/requests" Icon="request_page" Text="Requests"/>
+            <RadzenBreadCrumbItem Path="@($"/requests/{ApiKey}")" Text="Detail"/>
+            <RadzenBreadCrumbItem Text="Edit"/>
+        </RadzenBreadCrumb>
+
+        <RadzenCard>
+            <RadzenText TextStyle="TextStyle.H5" Text="Edit Request" Class="rz-mb-4"/>
+
+            <RadzenTemplateForm TItem="RequestModel" Data="@_model" Submit="@OnSubmit">
+                <RadzenStack Gap="1rem">
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="12" SizeMD="6">
+                            <RadzenFormField Text="Category" Variant="Variant.Outlined" Style="width: 100%">
+                                <RadzenDropDown @bind-Value="@_model.Category"
+                                                Data="@_categoryOptions"
+                                                TextProperty="Text"
+                                                ValueProperty="Value"
+                                                Style="width: 100%"
+                                                Disabled="true"/>
+                            </RadzenFormField>
+                            <RadzenText TextStyle="TextStyle.Caption" Text="Category cannot be changed"/>
+                        </RadzenColumn>
+                        <RadzenColumn Size="12" SizeMD="6">
+                            <RadzenFormField Text="Status" Variant="Variant.Outlined" Style="width: 100%">
+                                <RadzenBadge IsPill="true" BadgeStyle="@GetStatusBadgeStyle(_request.StatusValue)" Text="@_request.StatusValue.ToString()"/>
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenRow>
+                        <RadzenColumn Size="12">
+                            <RadzenFormField Text="Description" Variant="Variant.Outlined" Style="width: 100%">
+                                <RadzenTextArea @bind-Value="@_model.Description" Rows="4" Style="width: 100%" Name="Description"/>
+                            </RadzenFormField>
+                            <RadzenRequiredValidator Component="Description" Text="Description is required"/>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenText TextStyle="TextStyle.Subtitle1" Text="Optional Details" Class="rz-mt-2"/>
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="12" SizeMD="6">
+                            <RadzenFormField Text="Artist Name" Variant="Variant.Outlined" Style="width: 100%">
+                                <RadzenTextBox @bind-Value="@_model.ArtistName" Style="width: 100%"/>
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="12" SizeMD="6">
+                            <RadzenFormField Text="Album Title" Variant="Variant.Outlined" Style="width: 100%">
+                                <RadzenTextBox @bind-Value="@_model.AlbumTitle" Style="width: 100%"/>
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="12" SizeMD="6">
+                            <RadzenFormField Text="Song Title" Variant="Variant.Outlined" Style="width: 100%">
+                                <RadzenTextBox @bind-Value="@_model.SongTitle" Style="width: 100%"/>
+                            </RadzenFormField>
+                        </RadzenColumn>
+                        <RadzenColumn Size="12" SizeMD="6">
+                            <RadzenFormField Text="Release Year" Variant="Variant.Outlined" Style="width: 100%">
+                                <RadzenNumeric @bind-Value="@_model.ReleaseYear" Style="width: 100%" Min="1900" Max="2100"/>
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenRow Gap="1rem">
+                        <RadzenColumn Size="12">
+                            <RadzenFormField Text="External URL" Variant="Variant.Outlined" Style="width: 100%">
+                                <RadzenTextBox @bind-Value="@_model.ExternalUrl" Style="width: 100%" Placeholder="https://..."/>
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenRow>
+                        <RadzenColumn Size="12">
+                            <RadzenFormField Text="Additional Notes" Variant="Variant.Outlined" Style="width: 100%">
+                                <RadzenTextArea @bind-Value="@_model.Notes" Rows="3" Style="width: 100%"/>
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+
+                    <RadzenRow JustifyContent="JustifyContent.End" Gap="0.5rem" Class="rz-mt-4">
+                        <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@Cancel"/>
+                        <RadzenButton Text="Save Changes" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary" Icon="save"/>
+                    </RadzenRow>
+                </RadzenStack>
+            </RadzenTemplateForm>
+        </RadzenCard>
+    </RadzenStack>
+}
+
+@code {
+    [Parameter]
+    public Guid ApiKey { get; set; }
+
+    Request? _request;
+    RequestModel _model = new();
+
+    readonly List<object> _categoryOptions =
+    [
+        new { Text = "Add Album", Value = RequestCategory.AddAlbum },
+        new { Text = "Add Song", Value = RequestCategory.AddSong },
+        new { Text = "Artist Correction", Value = RequestCategory.ArtistCorrection },
+        new { Text = "Album Correction", Value = RequestCategory.AlbumCorrection },
+        new { Text = "General", Value = RequestCategory.General }
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await LoadRequestAsync();
+    }
+
+    async Task LoadRequestAsync()
+    {
+        MainLayoutProxyService.ToggleSpinnerVisible();
+        try
+        {
+            var result = await RequestService.GetByApiKeyAsync(ApiKey);
+            if (result.IsSuccess && result.Data != null)
+            {
+                _request = result.Data;
+
+                if (_request.CreatedByUserId != CurrentUsersId)
+                {
+                    NotificationService.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = "You can only edit your own requests"
+                    });
+                    NavigationManager.NavigateTo($"/requests/{ApiKey}");
+                    return;
+                }
+
+                _model = new RequestModel
+                {
+                    Category = _request.CategoryValue,
+                    Description = _request.Description,
+                    ArtistName = _request.ArtistName,
+                    AlbumTitle = _request.AlbumTitle,
+                    SongTitle = _request.SongTitle,
+                    ReleaseYear = _request.ReleaseYear,
+                    ExternalUrl = _request.ExternalUrl,
+                    Notes = _request.Notes
+                };
+            }
+            else
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Request not found"
+                });
+                NavigationManager.NavigateTo("/requests");
+            }
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e, "Loading Request");
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Error loading request"
+            });
+        }
+        finally
+        {
+            MainLayoutProxyService.ToggleSpinnerVisible();
+        }
+    }
+
+    async Task OnSubmit()
+    {
+        if (string.IsNullOrWhiteSpace(_model.Description))
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Description is required"
+            });
+            return;
+        }
+
+        MainLayoutProxyService.ToggleSpinnerVisible();
+        try
+        {
+            var result = await RequestService.UpdateAsync(ApiKey, CurrentUsersId, r =>
+            {
+                r.Description = _model.Description;
+                r.ArtistName = _model.ArtistName;
+                r.AlbumTitle = _model.AlbumTitle;
+                r.SongTitle = _model.SongTitle;
+                r.ReleaseYear = _model.ReleaseYear;
+                r.ExternalUrl = _model.ExternalUrl;
+                r.Notes = _model.Notes;
+            });
+
+            if (result.IsSuccess)
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = "Request updated successfully"
+                });
+                NavigationManager.NavigateTo($"/requests/{ApiKey}");
+            }
+            else
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error updating request",
+                    Detail = result.Messages?.FirstOrDefault()
+                });
+            }
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e, "Updating Request");
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Error updating request"
+            });
+        }
+        finally
+        {
+            MainLayoutProxyService.ToggleSpinnerVisible();
+        }
+    }
+
+    void Cancel()
+    {
+        NavigationManager.NavigateTo($"/requests/{ApiKey}");
+    }
+
+    static BadgeStyle GetStatusBadgeStyle(RequestStatus status) => status switch
+    {
+        RequestStatus.Pending => BadgeStyle.Warning,
+        RequestStatus.InProgress => BadgeStyle.Info,
+        RequestStatus.Completed => BadgeStyle.Success,
+        RequestStatus.Rejected => BadgeStyle.Danger,
+        _ => BadgeStyle.Light
+    };
+
+    class RequestModel
+    {
+        public RequestCategory Category { get; set; }
+        public string Description { get; set; } = "";
+        public string? ArtistName { get; set; }
+        public string? AlbumTitle { get; set; }
+        public string? SongTitle { get; set; }
+        public int? ReleaseYear { get; set; }
+        public string? ExternalUrl { get; set; }
+        public string? Notes { get; set; }
+    }
+}

@@ -27,6 +27,7 @@ Designed with homelab enthusiasts in mind, Melodee runs efficiently on a wide ra
 - **🎛️ Staging Workflow**: Optional manual editing before adding to production libraries
 - **⚡ Automatic Ingestion**: Drop files → play music (validated albums flow through automatically)
 - **🔄 Automated Jobs**: Cron-based scheduling with intelligent job chaining
+- **📝 User Requests**: Submit and track requests for missing albums/songs, with automatic completion when matches are detected
 - **🎵 OpenSubsonic API**: Compatible with popular Subsonic and OpenSubsonic clients
 - **🌐 Melodee API**: Fast RESTful API for custom integrations
 - **🌐 Modern Web UI**: Blazor Server interface with Radzen UI components

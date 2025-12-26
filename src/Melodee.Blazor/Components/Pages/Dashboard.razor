@@ -7,12 +7,14 @@
 @using Melodee.Common.Models.Collection.Extensions
 @using NodaTime
 @using TextStyle = Radzen.Blazor.TextStyle
+@using Request = Melodee.Common.Data.Models.Request
 @inherits MelodeeComponentBase
 
 @inject UserService UserService
 @inject ArtistService ArtistService
 @inject AlbumService AlbumService
 @inject StatisticsService StatisticsService
+@inject RequestActivityService RequestActivityService
 @inject IMelodeeConfigurationFactory ConfigurationFactory
 @inject NavigationManager NavigationManager
 
@@ -137,6 +139,52 @@
     </RadzenPanel>
   }
 
+  @if (_unreadRequests.Length > 0)
+  {
+    <RadzenPanel AllowCollapse="true">
+      <HeaderTemplate>
+        <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-align-items-center rz-m-0">
+          <RadzenIcon Icon="request_page" class="rz-me-1"/>
+          Request Activity
+          <RadzenBadge BadgeStyle="BadgeStyle.Danger" IsPill="true" Text="@_unreadRequests.Length.ToString()" Class="rz-ms-2"/>
+        </RadzenText>
+      </HeaderTemplate>
+      <ChildContent>
+        <RadzenDataGrid TItem="Request"
+                        Data="@_unreadRequests"
+                        AllowPaging="false"
+                        AllowSorting="false"
+                        AllowFiltering="false"
+                        Density="Density.Compact"
+                        Style="max-height: 300px; overflow-y: auto;"
+                        RowClick="@OnRequestRowClick">
+          <Columns>
+            <RadzenDataGridColumn TItem="Request" Property="CategoryValue" Title="Category" Width="120px">
+              <Template Context="req">
+                <RadzenBadge IsPill="true" BadgeStyle="@GetCategoryBadgeStyle(req.CategoryValue)" Text="@req.CategoryValue.ToString()"/>
+              </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="Request" Property="Description" Title="Description">
+              <Template Context="req">
+                <span style="cursor: pointer;">@(req.Description.Length > 80 ? req.Description[..80] + "..." : req.Description)</span>
+              </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="Request" Property="LastActivityTypeValue" Title="Activity" Width="120px">
+              <Template Context="req">
+                <RadzenText Text="@req.LastActivityTypeValue.ToString()"/>
+              </Template>
+            </RadzenDataGridColumn>
+            <RadzenDataGridColumn TItem="Request" Property="LastActivityAt" Title="When" Width="150px">
+              <Template Context="req">
+                <RadzenText Text="@CurrentUser?.FormatInstant(req.LastActivityAt)"/>
+              </Template>
+            </RadzenDataGridColumn>
+          </Columns>
+        </RadzenDataGrid>
+      </ChildContent>
+    </RadzenPanel>
+  }
+
   <RadzenPanel AllowCollapse="true">
     <HeaderTemplate>
       <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-m-0">
@@ -191,6 +239,7 @@
     private TopItemStat[] _topSongs = [];
     private TopItemStat[] _recentlyPlayed = [];
     private SongDataInfo[] _recentlyPlayedSongs = [];
+    private Request[] _unreadRequests = [];
 
     private short _latestPageSize;
     private LocalDate _rangeStart;
@@ -204,6 +253,21 @@
             NavigationManager.NavigateTo($"/data/album/{albumApiKey}");
         }
     }
+
+    void OnRequestRowClick(DataGridRowMouseEventArgs<Request> args)
+    {
+        NavigationManager.NavigateTo($"/requests/{args.Data.ApiKey}");
+    }
+
+    static BadgeStyle GetCategoryBadgeStyle(RequestCategory category) => category switch
+    {
+        RequestCategory.AddAlbum => BadgeStyle.Primary,
+        RequestCategory.AddSong => BadgeStyle.Secondary,
+        RequestCategory.ArtistCorrection => BadgeStyle.Info,
+        RequestCategory.AlbumCorrection => BadgeStyle.Info,
+        RequestCategory.General => BadgeStyle.Light,
+        _ => BadgeStyle.Light
+    };
 
     protected override async Task OnInitializedAsync()
     {
@@ -243,8 +307,9 @@
         var playsTask = StatisticsService.GetUserSongPlaysPerDayAsync(userApiKey, _rangeStart, _rangeEnd, _timeZoneId);
         var topSongsTask = StatisticsService.GetUserTopPlayedSongsAsync(userApiKey, _rangeStart, _rangeEnd, _timeZoneId, 10);
         var recentlyPlayedTask = StatisticsService.GetUserRecentlyPlayedSongsAsync(userApiKey, 10);
+        var unreadRequestsTask = RequestActivityService.GetUnreadRequestsAsync(CurrentUser?.UserId() ?? 0, new PagedRequest { PageSize = 10 });
 
-        await Task.WhenAll(albumLatestTask, artistLatestTask, userTask, kpiTask, playsTask, topSongsTask, recentlyPlayedTask);
+        await Task.WhenAll(albumLatestTask, artistLatestTask, userTask, kpiTask, playsTask, topSongsTask, recentlyPlayedTask, unreadRequestsTask);
 
         _latestAlbums = albumLatestTask.Result.Data.ToArray();
         _latestArtists = artistLatestTask.Result.Data.ToArray();
@@ -252,6 +317,7 @@
         _playsPerDay = playsTask.Result.Data ?? [];
         _topSongs = topSongsTask.Result.Data ?? [];
         _recentlyPlayed = recentlyPlayedTask.Result.Data ?? [];
+        _unreadRequests = unreadRequestsTask.Result.Data.ToArray();
 
         if (userTask.Result is { IsSuccess: true, Data: not null })
         {

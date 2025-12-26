@@ -10,6 +10,7 @@
 @inject IAuthService AuthService
 @inject NavigationManager NavigationManager
 @inject IMelodeeConfigurationFactory MelodeeConfigurationFactory
+@inject RequestActivityService RequestActivityService
 
 @* Without this Radzen doesn't restore the theme from cookie <shrug /> *@
 @* ReSharper disable once UnusedMember.Local *@
@@ -95,6 +96,17 @@
                     <RadzenPanelMenuItem Text="Radio Stations" Path="/data/radiostations" Icon="radio"/>
                     <RadzenPanelMenuItem Text="Songs" Path="/data/songs" Icon="music_note"/>
                     <RadzenPanelMenuItem Text="Shares" Path="/data/shares" Icon="share"/>
+                    <RadzenPanelMenuItem Path="/requests" Icon="request_page">
+                        <Template>
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem">
+                                <span>Requests</span>
+                                @if (_hasUnreadRequests)
+                                {
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Danger" IsPill="true" Text=" " Style="width: 8px; height: 8px; min-width: 8px; padding: 0;"/>
+                                }
+                            </RadzenStack>
+                        </Template>
+                    </RadzenPanelMenuItem>
                     <RadzenPanelMenuItem Text="Users" Path="/data/users" Icon="group"/>
                     <RadzenPanelMenuItem Text="Admin" Icon="admin_panel_settings" IconColor="@Colors.Danger"
                                          Visible="@AuthService.IsAdmin">
@@ -123,6 +135,8 @@
 @code {
     bool _sidebarExpanded = true;
     string _siteTitle = string.Empty;
+    bool _hasUnreadRequests;
+    Timer? _activityTimer;
 
     string _debounceInputValue = "";
 
@@ -166,6 +180,7 @@
     {
         MainLayoutProxyService.HeaderChanged -= OnHeaderChange;
         MainLayoutProxyService.SpinnerVisibleChanged -= OnSpinnerChange;
+        _activityTimer?.Dispose();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -181,7 +196,28 @@
                 .ToArray();
 
             MainLayoutProxyService.ShowSpinner = false;
+            
+            await CheckUnreadRequestsAsync();
+            _activityTimer = new Timer(async _ => await CheckUnreadRequestsAsync(), null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
+            
             StateHasChanged();
+        }
+    }
+
+    private async Task CheckUnreadRequestsAsync()
+    {
+        try
+        {
+            var userId = AuthService.CurrentUser?.UserId() ?? 0;
+            if (userId > 0)
+            {
+                _hasUnreadRequests = await RequestActivityService.HasUnreadAsync(userId);
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch
+        {
+            // Silently ignore errors in background polling
         }
     }
 

@@ -1,0 +1,355 @@
+@page "/requests/{ApiKey:guid}"
+
+@inherits MelodeeComponentBase
+@using Request = Melodee.Common.Data.Models.Request
+@using RequestComment = Melodee.Common.Data.Models.RequestComment
+
+@inject MainLayoutProxyService MainLayoutProxyService
+@inject ILogger Logger
+@inject RequestService RequestService
+@inject RequestCommentService CommentService
+@inject RequestActivityService ActivityService
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Request Detail</PageTitle>
+
+@if (_request == null)
+{
+    <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="height: 100%">
+        <RadzenProgressBarCircular ShowValue="true" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large"/>
+    </RadzenStack>
+}
+else
+{
+    <RadzenStack Style="height: 100%; overflow-y: auto;" Gap="1rem">
+        <RadzenBreadCrumb Class="rz-pb-3">
+            <RadzenBreadCrumbItem Path="/" Text="Dashboard"/>
+            <RadzenBreadCrumbItem Path="/requests" Icon="request_page" Text="Requests"/>
+            <RadzenBreadCrumbItem Text="@(_request.Description.Length > 30 ? _request.Description[..30] + "..." : _request.Description)"/>
+        </RadzenBreadCrumb>
+
+        <RadzenCard>
+            <RadzenRow AlignItems="AlignItems.Start">
+                <RadzenColumn Size="12" SizeMD="8">
+                    <RadzenStack Gap="0.5rem">
+                        <RadzenRow AlignItems="AlignItems.Center" Gap="0.5rem">
+                            <RadzenBadge IsPill="true" BadgeStyle="@GetCategoryBadgeStyle(_request.CategoryValue)" Text="@_request.CategoryValue.ToString()"/>
+                            <RadzenBadge IsPill="true" BadgeStyle="@GetStatusBadgeStyle(_request.StatusValue)" Text="@_request.StatusValue.ToString()"/>
+                        </RadzenRow>
+                        <RadzenText TextStyle="TextStyle.H5" Text="@_request.Description" Style="white-space: pre-wrap;"/>
+                    </RadzenStack>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="4">
+                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                        @if (IsCreator)
+                        {
+                            <RadzenButton Icon="edit" Text="Edit" Size="ButtonSize.Small" Click="@EditClick"/>
+                            @if (_request.StatusValue == RequestStatus.Pending)
+                            {
+                                <RadzenButton Icon="delete" Text="Delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Click="@DeleteClick"/>
+                            }
+                            @if (_request.StatusValue != RequestStatus.Completed)
+                            {
+                                <RadzenButton Icon="check_circle" Text="Mark Complete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Success" Click="@CompleteClick"/>
+                            }
+                        }
+                    </RadzenStack>
+                </RadzenColumn>
+            </RadzenRow>
+        </RadzenCard>
+
+        <RadzenCard>
+            <RadzenText TextStyle="TextStyle.Subtitle1" Text="Details" Class="rz-mb-3"/>
+            <RadzenRow Gap="1rem">
+                @if (!string.IsNullOrWhiteSpace(_request.ArtistName))
+                {
+                    <RadzenColumn Size="12" SizeMD="6">
+                        <RadzenText TextStyle="TextStyle.Body2" Text="Artist"/>
+                        <RadzenText TextStyle="TextStyle.Body1" Text="@_request.ArtistName"/>
+                    </RadzenColumn>
+                }
+                @if (!string.IsNullOrWhiteSpace(_request.AlbumTitle))
+                {
+                    <RadzenColumn Size="12" SizeMD="6">
+                        <RadzenText TextStyle="TextStyle.Body2" Text="Album"/>
+                        <RadzenText TextStyle="TextStyle.Body1" Text="@_request.AlbumTitle"/>
+                    </RadzenColumn>
+                }
+                @if (!string.IsNullOrWhiteSpace(_request.SongTitle))
+                {
+                    <RadzenColumn Size="12" SizeMD="6">
+                        <RadzenText TextStyle="TextStyle.Body2" Text="Song"/>
+                        <RadzenText TextStyle="TextStyle.Body1" Text="@_request.SongTitle"/>
+                    </RadzenColumn>
+                }
+                @if (_request.ReleaseYear.HasValue)
+                {
+                    <RadzenColumn Size="12" SizeMD="6">
+                        <RadzenText TextStyle="TextStyle.Body2" Text="Release Year"/>
+                        <RadzenText TextStyle="TextStyle.Body1" Text="@_request.ReleaseYear.Value.ToString()"/>
+                    </RadzenColumn>
+                }
+                @if (!string.IsNullOrWhiteSpace(_request.ExternalUrl))
+                {
+                    <RadzenColumn Size="12" SizeMD="6">
+                        <RadzenText TextStyle="TextStyle.Body2" Text="External URL"/>
+                        <RadzenLink Path="@_request.ExternalUrl" Text="@_request.ExternalUrl" Target="_blank"/>
+                    </RadzenColumn>
+                }
+                @if (!string.IsNullOrWhiteSpace(_request.Notes))
+                {
+                    <RadzenColumn Size="12">
+                        <RadzenText TextStyle="TextStyle.Body2" Text="Notes"/>
+                        <RadzenText TextStyle="TextStyle.Body1" Text="@_request.Notes" Style="white-space: pre-wrap;"/>
+                    </RadzenColumn>
+                }
+            </RadzenRow>
+            <RadzenRow Gap="1rem" Class="rz-mt-4">
+                <RadzenColumn Size="12" SizeMD="4">
+                    <RadzenText TextStyle="TextStyle.Body2" Text="Created By"/>
+                    <RadzenText TextStyle="TextStyle.Body1" Text="@_request.CreatedByUser.UserName"/>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="4">
+                    <RadzenText TextStyle="TextStyle.Body2" Text="Created"/>
+                    <RadzenText TextStyle="TextStyle.Body1" Text="@CurrentUser?.FormatInstant(_request.CreatedAt)"/>
+                </RadzenColumn>
+                <RadzenColumn Size="12" SizeMD="4">
+                    <RadzenText TextStyle="TextStyle.Body2" Text="Last Activity"/>
+                    <RadzenText TextStyle="TextStyle.Body1" Text="@CurrentUser?.FormatInstant(_request.LastActivityAt)"/>
+                </RadzenColumn>
+            </RadzenRow>
+        </RadzenCard>
+
+        <RadzenCard>
+            <RadzenText TextStyle="TextStyle.Subtitle1" Text="Comments" Class="rz-mb-3"/>
+            
+            <RadzenStack Gap="1rem">
+                @foreach (var comment in _comments)
+                {
+                    <RadzenCard Style="@(comment.IsSystem ? "background-color: var(--rz-base-100);" : "")">
+                        <RadzenRow AlignItems="AlignItems.Start">
+                            <RadzenColumn Size="12">
+                                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                                        @if (comment.IsSystem)
+                                        {
+                                            <RadzenIcon Icon="computer" Style="color: var(--rz-text-disabled-color)"/>
+                                            <RadzenText TextStyle="TextStyle.Body2" Text="System"/>
+                                        }
+                                        else
+                                        {
+                                            <RadzenIcon Icon="person"/>
+                                            <RadzenText TextStyle="TextStyle.Body2" Text="@(comment.CreatedByUser?.UserName ?? "Unknown")"/>
+                                        }
+                                    </RadzenStack>
+                                    <RadzenText TextStyle="TextStyle.Caption" Text="@CurrentUser?.FormatInstant(comment.CreatedAt)"/>
+                                </RadzenStack>
+                            </RadzenColumn>
+                            <RadzenColumn Size="12" Class="rz-mt-2">
+                                <RadzenText Style="white-space: pre-wrap;">@((MarkupString)RenderMarkdown(comment.Body))</RadzenText>
+                            </RadzenColumn>
+                            @if (!comment.IsSystem)
+                            {
+                                <RadzenColumn Size="12" Class="rz-mt-2">
+                                    <RadzenButton Text="Reply" Size="ButtonSize.ExtraSmall" Variant="Variant.Text" Click="@(() => ReplyToComment(comment))"/>
+                                </RadzenColumn>
+                            }
+                        </RadzenRow>
+                    </RadzenCard>
+                }
+
+                @if (!_comments.Any())
+                {
+                    <RadzenText TextStyle="TextStyle.Body2" Text="No comments yet."/>
+                }
+
+                <RadzenCard>
+                    <RadzenText TextStyle="TextStyle.Body2" Text="@(_replyingTo != null ? $"Replying to {_replyingTo.CreatedByUser?.UserName ?? "comment"}..." : "Add a comment")" Class="rz-mb-2"/>
+                    @if (_replyingTo != null)
+                    {
+                        <RadzenButton Text="Cancel Reply" Size="ButtonSize.ExtraSmall" Variant="Variant.Text" Click="@CancelReply" Class="rz-mb-2"/>
+                    }
+                    <RadzenTextArea @bind-Value="@_newCommentBody" Rows="3" Style="width: 100%;" Placeholder="Write your comment..." Class="rz-mb-2"/>
+                    <RadzenButton Text="Post Comment" Icon="send" Size="ButtonSize.Small" Click="@PostComment" Disabled="@string.IsNullOrWhiteSpace(_newCommentBody)"/>
+                </RadzenCard>
+            </RadzenStack>
+        </RadzenCard>
+    </RadzenStack>
+}
+
+@code {
+    [Parameter]
+    public Guid ApiKey { get; set; }
+
+    Request? _request;
+    List<RequestComment> _comments = [];
+    string _newCommentBody = "";
+    RequestComment? _replyingTo;
+
+    bool IsCreator => _request != null && _request.CreatedByUserId == CurrentUsersId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await LoadRequestAsync();
+    }
+
+    async Task LoadRequestAsync()
+    {
+        MainLayoutProxyService.ToggleSpinnerVisible();
+        try
+        {
+            var result = await RequestService.GetByApiKeyAsync(ApiKey);
+            if (result.IsSuccess && result.Data != null)
+            {
+                _request = result.Data;
+                await LoadCommentsAsync();
+                await ActivityService.MarkSeenByIdAsync(_request.Id, CurrentUsersId);
+            }
+            else
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Request not found"
+                });
+                NavigationManager.NavigateTo("/requests");
+            }
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e, "Loading Request");
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Error loading request"
+            });
+        }
+        finally
+        {
+            MainLayoutProxyService.ToggleSpinnerVisible();
+        }
+    }
+
+    async Task LoadCommentsAsync()
+    {
+        if (_request == null) return;
+
+        var result = await CommentService.ListAsync(_request.Id, new PagedRequest { PageSize = 500 });
+        _comments = result.Data.ToList();
+    }
+
+    void EditClick()
+    {
+        NavigationManager.NavigateTo($"/requests/{ApiKey}/edit");
+    }
+
+    async Task DeleteClick()
+    {
+        var confirm = await DialogService.Confirm("Are you sure you want to delete this request?", "Delete Request", new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" });
+        if (confirm ?? false)
+        {
+            var result = await RequestService.DeleteAsync(ApiKey, CurrentUsersId);
+            if (result.IsSuccess)
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = "Request deleted"
+                });
+                NavigationManager.NavigateTo("/requests");
+            }
+            else
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = "Error deleting request",
+                    Detail = result.Messages?.FirstOrDefault()
+                });
+            }
+        }
+    }
+
+    async Task CompleteClick()
+    {
+        var result = await RequestService.CompleteAsync(ApiKey, CurrentUsersId);
+        if (result.IsSuccess)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = "Request marked as complete"
+            });
+            await LoadRequestAsync();
+        }
+        else
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Error completing request",
+                Detail = result.Messages?.FirstOrDefault()
+            });
+        }
+    }
+
+    void ReplyToComment(RequestComment comment)
+    {
+        _replyingTo = comment;
+    }
+
+    void CancelReply()
+    {
+        _replyingTo = null;
+    }
+
+    async Task PostComment()
+    {
+        if (_request == null || string.IsNullOrWhiteSpace(_newCommentBody)) return;
+
+        var result = await CommentService.CreateAsync(_request.Id, CurrentUsersId, _newCommentBody, _replyingTo?.ApiKey);
+        if (result.IsSuccess)
+        {
+            _newCommentBody = "";
+            _replyingTo = null;
+            await LoadCommentsAsync();
+            StateHasChanged();
+        }
+        else
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Error posting comment",
+                Detail = result.Messages?.FirstOrDefault()
+            });
+        }
+    }
+
+    static string RenderMarkdown(string text)
+    {
+        return System.Net.WebUtility.HtmlEncode(text).Replace("\n", "<br/>");
+    }
+
+    static BadgeStyle GetStatusBadgeStyle(RequestStatus status) => status switch
+    {
+        RequestStatus.Pending => BadgeStyle.Warning,
+        RequestStatus.InProgress => BadgeStyle.Info,
+        RequestStatus.Completed => BadgeStyle.Success,
+        RequestStatus.Rejected => BadgeStyle.Danger,
+        _ => BadgeStyle.Light
+    };
+
+    static BadgeStyle GetCategoryBadgeStyle(RequestCategory category) => category switch
+    {
+        RequestCategory.AddAlbum => BadgeStyle.Primary,
+        RequestCategory.AddSong => BadgeStyle.Secondary,
+        RequestCategory.ArtistCorrection => BadgeStyle.Info,
+        RequestCategory.AlbumCorrection => BadgeStyle.Info,
+        RequestCategory.General => BadgeStyle.Light,
+        _ => BadgeStyle.Light
+    };
+}

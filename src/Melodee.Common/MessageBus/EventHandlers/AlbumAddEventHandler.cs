@@ -34,7 +34,8 @@ public sealed class AlbumAddEventHandler(
     IMelodeeConfigurationFactory configurationFactory,
     IDbContextFactory<MelodeeDbContext> contextFactory,
     ArtistService artistService,
-    LibraryService libraryService
+    LibraryService libraryService,
+    RequestAutoCompletionService requestAutoCompletionService
 ) : IHandleMessages<AlbumAddEvent>
 {
     public async Task Handle(AlbumAddEvent message)
@@ -368,6 +369,17 @@ public sealed class AlbumAddEventHandler(
                         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
                         logger.Information("[{Name}] Successfully added album [{Album}] with [{SongCount}] songs and [{ContributorCount}] contributors",
                             nameof(AlbumAddEventHandler), albumTitle, newAlbumSongs.Count, dbContributorsToAdd.Count);
+
+                        // Process request auto-completion
+                        try
+                        {
+                            await requestAutoCompletionService.ProcessAlbumAddedAsync(newAlbum, cancellationToken).ConfigureAwait(false);
+                        }
+                        catch (Exception e)
+                        {
+                            logger.Error(e, "[{Name}] Failed to process request auto-completion for album [{Album}]",
+                                nameof(AlbumAddEventHandler), albumTitle);
+                        }
 
                         // Update aggregates after successful commit
                         if (!message.IsFromArtistScan)

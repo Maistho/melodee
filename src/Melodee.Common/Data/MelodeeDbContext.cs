@@ -73,6 +73,14 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
 
     public DbSet<JobHistory> JobHistories { get; set; }
 
+    public DbSet<Request> Requests { get; set; }
+
+    public DbSet<RequestComment> RequestComments { get; set; }
+
+    public DbSet<RequestUserState> RequestUserStates { get; set; }
+
+    public DbSet<RequestParticipant> RequestParticipants { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Use a fixed timestamp for seed data to prevent migration churn
@@ -1147,6 +1155,105 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
                 .WithMany()
                 .HasForeignKey(x => x.LinkedAlbumId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<Request>(r =>
+        {
+            r.HasOne(x => x.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(x => x.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            r.HasOne(x => x.UpdatedByUser)
+                .WithMany()
+                .HasForeignKey(x => x.UpdatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            r.HasOne(x => x.LastActivityUser)
+                .WithMany()
+                .HasForeignKey(x => x.LastActivityUserId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Index for index-page default sort
+            r.HasIndex(x => new { x.CreatedAt, x.Id })
+                .IsDescending(true, true);
+
+            // Filter + sort combos
+            r.HasIndex(x => new { x.Status, x.CreatedAt, x.Id })
+                .IsDescending(false, true, true);
+
+            r.HasIndex(x => new { x.CreatedByUserId, x.CreatedAt, x.Id })
+                .IsDescending(false, true, true);
+
+            r.HasIndex(x => new { x.Status, x.CreatedByUserId, x.CreatedAt, x.Id })
+                .IsDescending(false, false, true, true);
+
+            // Entity filter (ApiKey-based)
+            r.HasIndex(x => new { x.TargetArtistApiKey, x.CreatedAt, x.Id })
+                .IsDescending(false, true, true);
+
+            r.HasIndex(x => new { x.TargetAlbumApiKey, x.CreatedAt, x.Id })
+                .IsDescending(false, true, true);
+
+            // Activity hot path
+            r.HasIndex(x => new { x.LastActivityAt, x.Id })
+                .IsDescending(true, true);
+        });
+
+        modelBuilder.Entity<RequestComment>(rc =>
+        {
+            rc.HasOne(x => x.Request)
+                .WithMany(r => r.Comments)
+                .HasForeignKey(x => x.RequestId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            rc.HasOne(x => x.ParentComment)
+                .WithMany(c => c.Replies)
+                .HasForeignKey(x => x.ParentCommentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            rc.HasOne(x => x.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(x => x.CreatedByUserId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Chronological ordering for comments
+            rc.HasIndex(x => new { x.RequestId, x.CreatedAt, x.Id });
+
+            // Replies ordering
+            rc.HasIndex(x => new { x.RequestId, x.ParentCommentId, x.CreatedAt, x.Id });
+        });
+
+        modelBuilder.Entity<RequestUserState>(rus =>
+        {
+            rus.HasOne(x => x.Request)
+                .WithMany(r => r.UserStates)
+                .HasForeignKey(x => x.RequestId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            rus.HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Dashboard list index
+            rus.HasIndex(x => new { x.UserId, x.LastSeenAt });
+        });
+
+        modelBuilder.Entity<RequestParticipant>(rp =>
+        {
+            rp.HasOne(x => x.Request)
+                .WithMany(r => r.Participants)
+                .HasForeignKey(x => x.RequestId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            rp.HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Navbar unread lookup index
+            rp.HasIndex(x => new { x.UserId, x.RequestId });
         });
 
         // sph; left here for example of GIN FTS. More info here https://www.npgsql.org/efcore/mapping/full-text-search.html?tabs=pg12%2Cv5

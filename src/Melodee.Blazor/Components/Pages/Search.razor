@@ -10,14 +10,16 @@
 @inject MainLayoutProxyService MainLayoutProxyService
 @inject IMelodeeConfigurationFactory ConfigurationFactory
 @inject IJSRuntime JsRuntime
+@inject NavigationManager NavigationManager
 
 @inherits MelodeeComponentBase
 
 <PageTitle>Search Results</PageTitle>
 
 <RadzenStack>
-    <RadzenStack Orientation="Orientation.Horizontal">
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
         <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-m-0">Results for: @Query</RadzenText>
+        <RadzenButton Text="Request Music" Icon="add" ButtonStyle="ButtonStyle.Primary" Click="@NavigateToRequestMusic" />
     </RadzenStack>
     <RadzenPanel AllowCollapse="true" Visible="_searchResult.Artists.Any()">
         <HeaderTemplate>
@@ -239,6 +241,12 @@
             }
         };
         await PlayAction(song.Title, songs.Select(x => x.ToSongDataInfo()).ToList());
+    }
+
+    private void NavigateToRequestMusic()
+    {
+        var encodedQuery = Uri.EscapeDataString($"User Searched for: {Query}");
+        NavigationManager.NavigateTo($"/requests/new?notes={encodedQuery}");
     }
 
 }

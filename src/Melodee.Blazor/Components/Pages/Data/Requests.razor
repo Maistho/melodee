@@ -1,0 +1,295 @@
+@page "/requests"
+
+@inherits MelodeeComponentBase
+@using Melodee.Common.Filtering
+@using FilterOperator = Melodee.Common.Filtering.FilterOperator
+@using Request = Melodee.Common.Data.Models.Request
+
+@inject MainLayoutProxyService MainLayoutProxyService
+@inject ILogger Logger
+@inject IMelodeeConfigurationFactory ConfigurationFactory
+@inject RequestService RequestService
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+@inject TooltipService TooltipService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Requests</PageTitle>
+
+<RadzenStack Style="height: 100%">
+    <RadzenBreadCrumb Class="rz-pb-5">
+        <RadzenBreadCrumbItem Path="/" Text="Dashboard"/>
+        <RadzenBreadCrumbItem Icon="request_page" Text="Requests"/>
+    </RadzenBreadCrumb>
+    <RadzenRow AlignItems="AlignItems.Center">
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenText Text="Requests" TextStyle="TextStyle.DisplayH6" TagName="TagName.H1" style="margin: 0"/>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenStack
+                Orientation="Orientation.Horizontal"
+                AlignItems="AlignItems.Center"
+                JustifyContent="JustifyContent.End"
+                Gap="0.5rem">
+                <RadzenButton Icon="add" Text="New Request"
+                              Click="@NewRequestClick"
+                              Size="ButtonSize.Small"
+                              ButtonStyle="ButtonStyle.Primary"/>
+            </RadzenStack>
+        </RadzenColumn>
+    </RadzenRow>
+    <RadzenRow Gap="0.5rem" Class="rz-pb-3">
+        <RadzenColumn Size="12" SizeMD="4">
+            <DebounceInput class="rz-textbox rz-w-100"
+                           autocomplete="off"
+                           placeholder="Search requests..."
+                           @bind-Value="@_searchQuery"
+                           @bind-Value:event="OnInput"
+                           DebounceTime="800"
+                           MinLength="3"
+                           OnValueChanged="@DoSearchAsync"
+                           ForceNotifyByEnter="true"
+                           ForceNotifyOnBlur="true"/>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="3">
+            <RadzenDropDown TValue="RequestStatus?"
+                            Data="@_statusOptions"
+                            TextProperty="Text"
+                            ValueProperty="Value"
+                            Placeholder="Filter by status"
+                            AllowClear="true"
+                            @bind-Value="@_selectedStatus"
+                            Change="@OnFilterChanged"
+                            Style="width: 100%"/>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="3">
+            <RadzenDropDown TValue="RequestCategory?"
+                            Data="@_categoryOptions"
+                            TextProperty="Text"
+                            ValueProperty="Value"
+                            Placeholder="Filter by category"
+                            AllowClear="true"
+                            @bind-Value="@_selectedCategory"
+                            Change="@OnFilterChanged"
+                            Style="width: 100%"/>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="2">
+            <RadzenCheckBox TValue="bool" Value="@_mineOnly" Name="mineOnly" Change="@(args => OnMineOnlyChanged(args))"/>
+            <RadzenLabel Text="My Requests" Component="mineOnly" Style="margin-left: 8px"/>
+        </RadzenColumn>
+    </RadzenRow>
+    <RadzenRow Style="flex: 1; overflow: hidden;">
+        <RadzenDataGrid
+            @ref="_grid"
+            Style="height: 100%"
+            IsLoading="@_isLoading"
+            Count="@_count"
+            Data="@_requests"
+            LoadData="@LoadData"
+            AllowSorting="false"
+            AllowFiltering="false"
+            AllowPaging="true"
+            Page="OnPage"
+            PageSize="DefaultPageSize"
+            PagerHorizontalAlign="HorizontalAlign.Center"
+            ShowPagingSummary="true"
+            PageSizeOptions="@PageSizeOptions"
+            PagingSummaryFormat="@ViewConstants.PagingSummaryFormat"
+            ColumnWidth="200px"
+            RowSelect="@OnRowSelect"
+            TItem="Request">
+            <Columns>
+                <RadzenDataGridColumn Property="@nameof(Request.CategoryValue)" Title="Category" Width="120px">
+                    <Template Context="data">
+                        <RadzenBadge IsPill="true" BadgeStyle="@GetCategoryBadgeStyle(data.CategoryValue)" Text="@data.CategoryValue.ToString()"/>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(Request.StatusValue)" Title="Status" Width="100px">
+                    <Template Context="data">
+                        <RadzenBadge IsPill="true" BadgeStyle="@GetStatusBadgeStyle(data.StatusValue)" Text="@data.StatusValue.ToString()"/>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(Request.Description)" Title="Description">
+                    <Template Context="data">
+                        <RadzenText Text="@(data.Description.Length > 100 ? data.Description[..100] + "..." : data.Description)"/>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(Request.ArtistName)" Title="Artist" Width="150px"/>
+                <RadzenDataGridColumn Property="@nameof(Request.AlbumTitle)" Title="Album" Width="150px"/>
+                <RadzenDataGridColumn Property="@nameof(Request.CreatedAt)" Title="Created" Width="150px">
+                    <Template Context="data">
+                        <RadzenText Text="@CurrentUser?.FormatInstant(data.CreatedAt)"/>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(Request.LastActivityAt)" Title="Last Activity" Width="150px">
+                    <Template Context="data">
+                        <RadzenText Text="@CurrentUser?.FormatInstant(data.LastActivityAt)"/>
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    </RadzenRow>
+</RadzenStack>
+
+@code {
+    [SupplyParameterFromQuery(Name = "artistApiKey")]
+    public Guid? ArtistApiKey { get; set; }
+
+    [SupplyParameterFromQuery(Name = "albumApiKey")]
+    public Guid? AlbumApiKey { get; set; }
+
+    RadzenDataGrid<Request> _grid = null!;
+    int _count;
+    IEnumerable<Request> _requests = [];
+    bool _isLoading;
+    int _currentPage = 1;
+
+    string _searchQuery = "";
+    RequestStatus? _selectedStatus;
+    RequestCategory? _selectedCategory;
+    bool _mineOnly;
+
+    readonly List<object> _statusOptions =
+    [
+        new { Text = "Pending", Value = RequestStatus.Pending },
+        new { Text = "In Progress", Value = RequestStatus.InProgress },
+        new { Text = "Completed", Value = RequestStatus.Completed },
+        new { Text = "Rejected", Value = RequestStatus.Rejected }
+    ];
+
+    readonly List<object> _categoryOptions =
+    [
+        new { Text = "Add Album", Value = RequestCategory.AddAlbum },
+        new { Text = "Add Song", Value = RequestCategory.AddSong },
+        new { Text = "Artist Correction", Value = RequestCategory.ArtistCorrection },
+        new { Text = "Album Correction", Value = RequestCategory.AlbumCorrection },
+        new { Text = "General", Value = RequestCategory.General }
+    ];
+
+    void OnPage(PagerEventArgs args)
+    {
+        _currentPage = args.PageIndex + 1;
+    }
+
+    async Task LoadData(LoadDataArgs args)
+    {
+        _isLoading = true;
+        MainLayoutProxyService.ToggleSpinnerVisible();
+        try
+        {
+            var filters = new List<FilterOperatorInfo>();
+
+            if (!string.IsNullOrWhiteSpace(_searchQuery))
+            {
+                filters.Add(new FilterOperatorInfo("Query", FilterOperator.Contains, _searchQuery));
+            }
+
+            if (_selectedStatus.HasValue)
+            {
+                filters.Add(new FilterOperatorInfo("Status", FilterOperator.Equals, (int)_selectedStatus.Value));
+            }
+
+            if (_selectedCategory.HasValue)
+            {
+                filters.Add(new FilterOperatorInfo("Category", FilterOperator.Equals, (int)_selectedCategory.Value));
+            }
+
+            if (_mineOnly)
+            {
+                filters.Add(new FilterOperatorInfo("CreatedByUserId", FilterOperator.Equals, CurrentUsersId));
+            }
+
+            if (ArtistApiKey.HasValue && ArtistApiKey.Value != Guid.Empty)
+            {
+                filters.Add(new FilterOperatorInfo("TargetArtistApiKey", FilterOperator.Equals, ArtistApiKey.Value));
+            }
+
+            if (AlbumApiKey.HasValue && AlbumApiKey.Value != Guid.Empty)
+            {
+                filters.Add(new FilterOperatorInfo("TargetAlbumApiKey", FilterOperator.Equals, AlbumApiKey.Value));
+            }
+
+            var result = await RequestService.ListAsync(new PagedRequest
+            {
+                FilterBy = filters.Count > 0 ? filters.ToArray() : null,
+                Page = _currentPage,
+                PageSize = SafeParser.ToNumber<short>(args.Top)
+            });
+            _requests = result.Data;
+            _count = SafeParser.ToNumber<int>(result.TotalCount);
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e, "Loading Requests");
+        }
+        finally
+        {
+            MainLayoutProxyService.ToggleSpinnerVisible();
+        }
+
+        _isLoading = false;
+    }
+
+    private void NewRequestClick()
+    {
+        var queryParams = new List<string>();
+        if (ArtistApiKey.HasValue && ArtistApiKey.Value != Guid.Empty)
+        {
+            queryParams.Add($"targetArtistApiKey={ArtistApiKey.Value}");
+        }
+        if (AlbumApiKey.HasValue && AlbumApiKey.Value != Guid.Empty)
+        {
+            queryParams.Add($"targetAlbumApiKey={AlbumApiKey.Value}");
+        }
+        
+        var url = "/requests/new";
+        if (queryParams.Count > 0)
+        {
+            url += "?" + string.Join("&", queryParams);
+        }
+        NavigationManager.NavigateTo(url);
+    }
+
+    private void OnRowSelect(Request request)
+    {
+        NavigationManager.NavigateTo($"/requests/{request.ApiKey}");
+    }
+
+    private async Task OnFilterChanged(object? _)
+    {
+        _currentPage = 1;
+        await _grid.Reload();
+    }
+
+    private async Task OnMineOnlyChanged(bool value)
+    {
+        _mineOnly = value;
+        _currentPage = 1;
+        await _grid.Reload();
+    }
+
+    private async Task DoSearchAsync(string s)
+    {
+        _currentPage = 1;
+        await _grid.Reload();
+    }
+
+    private static BadgeStyle GetStatusBadgeStyle(RequestStatus status) => status switch
+    {
+        RequestStatus.Pending => BadgeStyle.Warning,
+        RequestStatus.InProgress => BadgeStyle.Info,
+        RequestStatus.Completed => BadgeStyle.Success,
+        RequestStatus.Rejected => BadgeStyle.Danger,
+        _ => BadgeStyle.Light
+    };
+
+    private static BadgeStyle GetCategoryBadgeStyle(RequestCategory category) => category switch
+    {
+        RequestCategory.AddAlbum => BadgeStyle.Primary,
+        RequestCategory.AddSong => BadgeStyle.Secondary,
+        RequestCategory.ArtistCorrection => BadgeStyle.Info,
+        RequestCategory.AlbumCorrection => BadgeStyle.Info,
+        RequestCategory.General => BadgeStyle.Light,
+        _ => BadgeStyle.Light
+    };
+}

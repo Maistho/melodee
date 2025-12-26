@@ -8,19 +8,51 @@ This document is the implementation specification for adding **Requests** to Mel
 2. **Predictable pagination** (stable sort keys; avoid expensive OFFSET scans where possible)
 3. **Low write amplification** (denormalize only what we need, and only when it’s proven hot)
 
+## Coding Agent Template
+
+```
+You are a coding agent working in the Melodee repo. Implement EXACTLY ONE phase of the Requests feature per `prompts/REQUESTS-SPEC.md` (source reqs:
+   `prompts/REQUESTS-REQUIREMENT.md`).
+
+     PHASE
+     - Phase 0: Data model + migrations
+
+     HARD RULES (from spec)
+     - Performance-first: normalize on write; sargable indexed filters; deterministic sorts.
+     - IDs in URLs/DTOs are `api_key` (uuid) only.
+     - REST controllers (`src/Melodee.Blazor/Controllers/Melodee/*`) are for external clients only.
+     - Blazor UI MUST use services via DI (must NOT call `/api/...`).
+     - Enforce invariants/permissions exactly as specified (creator-only, delete only Pending, etc.).
+
+     DO
+     1) Read the spec sections for Phase 0.
+     2) Implement the phase using existing Melodee patterns (EF models/migrations, services in `Melodee.Common.Services`, controllers in `Melodee.Blazor` when in scope).
+     3) Add/update tests for phase logic (prioritize services layer).
+     4) Validate: `dotnet build` and `dotnet test` (fix phase-related failures only).
+
+     OUTPUT
+     - Summary of changes (bullets)
+     - Files changed (relative paths)
+     - Verification commands
+     - Any deviations (should be none)
+
+     Start by listing the files you expect to touch and a short checklist for Phase 0.
+ 
+```
+
 ---
 
 ## Phase Map (Progress)
 
 | Phase | Name | Status | Deliverable |
 | ----- | ---- | ------ | ----------- |
-| 0 | Data model + migrations | ⬜ | Tables + indexes + constraints |
-| 1 | Requests API (non-admin) | ⬜ | `/api/v1/requests*` CRUD + complete |
-| 2 | Comments API (non-admin) | ⬜ | `/api/v1/requests/{requestApiKey}/comments*` |
-| 3 | Requests UI (index/detail/create/edit) | ⬜ | Blazor pages + navbar item |
-| 4 | Activity tracking (navbar + dashboard) | ⬜ | unread model + endpoints + UI |
-| 5 | Auto-completion + system comments | ⬜ | event-driven matching |
-| 6 | Perf hardening + docs | ⬜ | query plans, indexes, README/docs |
+| 0 | Data model + migrations | ✅ | Tables + indexes + constraints |
+| 1 | Requests API (non-admin) | ✅ | `/api/v1/requests*` CRUD + complete |
+| 2 | Comments API (non-admin) | ✅ | `/api/v1/requests/{requestApiKey}/comments*` |
+| 3 | Requests UI (index/detail/create/edit) | ✅ | Blazor pages + navbar item |
+| 4 | Activity tracking (navbar + dashboard) | ✅ | unread model + endpoints + UI |
+| 5 | Auto-completion + system comments | ✅ | event-driven matching |
+| 6 | Perf hardening + docs | ✅ | query plans, indexes, README/docs |
 
 ---
 
