@@ -1021,25 +1021,26 @@ public class ArtistService(
         Guard.Against.Expression(x => x == Guid.Empty, apiKey.Value, nameof(apiKey));
 
         var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
-        var artist = await GetByApiKeyAsync(apiKey.Value, cancellationToken).ConfigureAwait(false);
-        if (!artist.IsSuccess || artist.Data == null)
-        {
-            return new MelodeeModels.ImageBytesAndEtag(null, null);
-        }
+        var sizeValue = size ?? nameof(ImageSize.Large);
 
-        var artistId = artist.Data.Id;
-
-        var cacheKey = CacheKeyArtistImageBytesAndEtagTemplate.FormatSmart(artistId, size ?? nameof(ImageSize.Large));
+        // Use apiKey in cache key to avoid database lookup on cache hit
+        var cacheKey = CacheKeyArtistImageBytesAndEtagTemplate.FormatSmart(apiKey.Value, sizeValue);
 
         return await CacheManager.GetAsync(cacheKey, async () =>
         {
             var badEtag = Instant.MinValue.ToEtag();
-            var sizeValue = size ?? nameof(ImageSize.Large);
+
+            // Database lookup only happens on cache miss
+            var artist = await GetByApiKeyAsync(apiKey.Value, cancellationToken).ConfigureAwait(false);
+            if (!artist.IsSuccess || artist.Data == null)
+            {
+                return new MelodeeModels.ImageBytesAndEtag(null, null);
+            }
 
             var artistDirectory = artist.Data.ToFileSystemDirectoryInfo();
             if (!artistDirectory.Exists())
             {
-                Logger.Warning("Artist directory [{Directory}] does not exist for artist [{ArtistId}].", artistDirectory.FullName(), artistId);
+                Logger.Warning("Artist directory [{Directory}] does not exist for artist [{ArtistId}].", artistDirectory.FullName(), artist.Data.Id);
                 return new MelodeeModels.ImageBytesAndEtag(null, badEtag);
             }
 
@@ -1051,12 +1052,12 @@ public class ArtistService(
 
             if (imageFile is not { Exists: true })
             {
-                Logger.Warning("No image found for artist [{ArtistId}].", artistId);
+                Logger.Warning("No image found for artist [{ArtistId}].", artist.Data.Id);
                 return new MelodeeModels.ImageBytesAndEtag(null, badEtag);
             }
 
             var imageBytes = await fileSystemService.ReadAllBytesAsync(imageFile.FullName, cancellationToken).ConfigureAwait(false);
-            Logger.Information("Image found for artist [{ArtistId}].", artistId);
+            Logger.Information("Image found for artist [{ArtistId}].", artist.Data.Id);
             return new MelodeeModels.ImageBytesAndEtag(imageBytes, (artist.Data.LastUpdatedAt ?? artist.Data.CreatedAt).ToEtag());
         }, cancellationToken, configuration.CacheDuration(), Artist.CacheRegion);
     }

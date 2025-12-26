@@ -835,23 +835,25 @@ public class AlbumService(
         Guard.Against.Expression(x => x == Guid.Empty, apiKey.Value, nameof(apiKey));
 
         var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
-        var album = await GetByApiKeyAsync(apiKey.Value, cancellationToken).ConfigureAwait(false);
-        if (!album.IsSuccess || album.Data == null)
-        {
-            return new MelodeeModels.ImageBytesAndEtag(null, null);
-        }
-
-        var albumId = album.Data.Id;
-        var cacheKey = CacheKeyAlbumImageBytesAndEtagTemplate.FormatSmart(albumId, size ?? nameof(ImageSize.Large));
+        var sizeValue = size ?? nameof(ImageSize.Large);
+        
+        // Use apiKey in cache key to avoid database lookup on cache hit
+        var cacheKey = CacheKeyAlbumImageBytesAndEtagTemplate.FormatSmart(apiKey.Value, sizeValue);
         return await CacheManager.GetAsync(cacheKey, async () =>
         {
             var badEtag = Instant.MinValue.ToEtag();
-            var sizeValue = size ?? nameof(ImageSize.Large);
+            
+            // Database lookup only happens on cache miss
+            var album = await GetByApiKeyAsync(apiKey.Value, cancellationToken).ConfigureAwait(false);
+            if (!album.IsSuccess || album.Data == null)
+            {
+                return new MelodeeModels.ImageBytesAndEtag(null, null);
+            }
 
             var albumDirectory = album.Data.ToFileSystemDirectoryInfo();
             if (!albumDirectory.Exists())
             {
-                Logger.Warning("Album directory [{Directory}] does not exist for album [{AlbumId}].", albumDirectory.FullName(), albumId);
+                Logger.Warning("Album directory [{Directory}] does not exist for album [{AlbumId}].", albumDirectory.FullName(), album.Data.Id);
                 return new MelodeeModels.ImageBytesAndEtag(null, badEtag);
             }
 
@@ -863,7 +865,7 @@ public class AlbumService(
 
             if (imageFile is not { Exists: true })
             {
-                Logger.Warning("No image found for album [{AlbumId}].", albumId);
+                Logger.Warning("No image found for album [{AlbumId}].", album.Data.Id);
                 return new MelodeeModels.ImageBytesAndEtag(null, badEtag);
             }
 
