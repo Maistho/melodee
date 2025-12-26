@@ -951,4 +951,174 @@ public class ChartServiceTests : ServiceTestBase
     }
 
     #endregion
+
+    #region IdentifyMissingAlbum Tests
+
+    [Fact]
+    public async Task IdentifyMissingAlbumAsync_WithValidData_LinksAllMatchingChartItems()
+    {
+        var service = GetChartService();
+
+        var artist = await CreateTestArtistAsync("The Beatles");
+        var album = await CreateTestAlbumAsync(artist.Id, "Abbey Road", 1969);
+
+        var chart1 = await service.CreateAsync("Chart 1");
+        var chart2 = await service.CreateAsync("Chart 2");
+
+        var items1 = new[]
+        {
+            new ChartCsvPreviewItem { RowNumber = 1, Rank = 1, ArtistName = "The Beatles", AlbumTitle = "Abby Road" }
+        };
+        await service.SaveItemsAsync(chart1.Data!.Id, items1, doAutoLink: false);
+
+        var items2 = new[]
+        {
+            new ChartCsvPreviewItem { RowNumber = 1, Rank = 1, ArtistName = "The Beatles", AlbumTitle = "Abby Road" }
+        };
+        await service.SaveItemsAsync(chart2.Data!.Id, items2, doAutoLink: false);
+
+        var result = await service.IdentifyMissingAlbumAsync("The Beatles", "Abby Road", album.Id);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+        Assert.Equal(2, result.Data.LinkedItemCount);
+        Assert.Equal(2, result.Data.ChartsUpdatedCount);
+        Assert.Equal(album.Id, result.Data.AlbumId);
+        Assert.Equal("Abbey Road", result.Data.AlbumName);
+        Assert.Equal("The Beatles", result.Data.ArtistName);
+
+        var chart1Result = await service.GetByIdAsync(chart1.Data.Id);
+        var chart1Item = chart1Result.Data!.Items.First();
+        Assert.Equal(album.Id, chart1Item.LinkedAlbumId);
+        Assert.Equal(artist.Id, chart1Item.LinkedArtistId);
+        Assert.Equal(ChartItemLinkStatus.Linked, chart1Item.LinkStatusValue);
+
+        var chart2Result = await service.GetByIdAsync(chart2.Data.Id);
+        var chart2Item = chart2Result.Data!.Items.First();
+        Assert.Equal(album.Id, chart2Item.LinkedAlbumId);
+        Assert.Equal(artist.Id, chart2Item.LinkedArtistId);
+        Assert.Equal(ChartItemLinkStatus.Linked, chart2Item.LinkStatusValue);
+    }
+
+    [Fact]
+    public async Task IdentifyMissingAlbumAsync_WithValidData_AddsAlternateNameToAlbum()
+    {
+        var service = GetChartService();
+
+        var artist = await CreateTestArtistAsync("Test Artist");
+        var album = await CreateTestAlbumAsync(artist.Id, "The Album", 2020);
+
+        var chart = await service.CreateAsync("Test Chart");
+        var items = new[]
+        {
+            new ChartCsvPreviewItem { RowNumber = 1, Rank = 1, ArtistName = "Test Artist", AlbumTitle = "Album (Misspelled)" }
+        };
+        await service.SaveItemsAsync(chart.Data!.Id, items, doAutoLink: false);
+
+        await service.IdentifyMissingAlbumAsync("Test Artist", "Album (Misspelled)", album.Id);
+
+        await using var context = await MockFactory().CreateDbContextAsync();
+        var updatedAlbum = await context.Albums.FindAsync(album.Id);
+
+        Assert.NotNull(updatedAlbum);
+        Assert.NotNull(updatedAlbum.AlternateNames);
+        Assert.Contains("ALBUMMISSPELLED", updatedAlbum.AlternateNames);
+    }
+
+    [Fact]
+    public async Task IdentifyMissingAlbumAsync_WithEmptyArtistName_ReturnsValidationFailure()
+    {
+        var service = GetChartService();
+
+        var result = await service.IdentifyMissingAlbumAsync("", "Album Title", 1);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(OperationResponseType.ValidationFailure, result.Type);
+    }
+
+    [Fact]
+    public async Task IdentifyMissingAlbumAsync_WithEmptyAlbumTitle_ReturnsValidationFailure()
+    {
+        var service = GetChartService();
+
+        var result = await service.IdentifyMissingAlbumAsync("Artist Name", "", 1);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(OperationResponseType.ValidationFailure, result.Type);
+    }
+
+    [Fact]
+    public async Task IdentifyMissingAlbumAsync_WithNonExistentAlbum_ReturnsNotFound()
+    {
+        var service = GetChartService();
+
+        var result = await service.IdentifyMissingAlbumAsync("Artist", "Album", 99999);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(OperationResponseType.NotFound, result.Type);
+    }
+
+    [Fact]
+    public async Task IdentifyMissingAlbumAsync_WithNoMatchingChartItems_ReturnsNotFound()
+    {
+        var service = GetChartService();
+
+        var artist = await CreateTestArtistAsync("Test Artist");
+        var album = await CreateTestAlbumAsync(artist.Id, "Test Album", 2020);
+
+        var result = await service.IdentifyMissingAlbumAsync("Unknown Artist", "Unknown Album", album.Id);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(OperationResponseType.NotFound, result.Type);
+    }
+
+    [Fact]
+    public async Task IdentifyMissingAlbumAsync_SkipsAlreadyLinkedItems()
+    {
+        var service = GetChartService();
+
+        var artist = await CreateTestArtistAsync("Test Artist");
+        var album1 = await CreateTestAlbumAsync(artist.Id, "Album One", 2020);
+        var album2 = await CreateTestAlbumAsync(artist.Id, "Album Two", 2021);
+
+        var chart = await service.CreateAsync("Test Chart");
+        var items = new[]
+        {
+            new ChartCsvPreviewItem { RowNumber = 1, Rank = 1, ArtistName = "Test Artist", AlbumTitle = "Misspelled Album" }
+        };
+        await service.SaveItemsAsync(chart.Data!.Id, items, doAutoLink: false);
+        await service.LinkItemsAsync(chart.Data.Id);
+
+        var chartResult = await service.GetByIdAsync(chart.Data.Id);
+        var item = chartResult.Data!.Items.First();
+        await service.ResolveItemAsync(item.Id, album1.Id);
+
+        var result = await service.IdentifyMissingAlbumAsync("Test Artist", "Misspelled Album", album2.Id);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(OperationResponseType.NotFound, result.Type);
+    }
+
+    [Fact]
+    public async Task IdentifyMissingAlbumAsync_CaseInsensitiveMatching()
+    {
+        var service = GetChartService();
+
+        var artist = await CreateTestArtistAsync("Test Artist");
+        var album = await CreateTestAlbumAsync(artist.Id, "Test Album", 2020);
+
+        var chart = await service.CreateAsync("Test Chart");
+        var items = new[]
+        {
+            new ChartCsvPreviewItem { RowNumber = 1, Rank = 1, ArtistName = "TEST ARTIST", AlbumTitle = "test album (special)" }
+        };
+        await service.SaveItemsAsync(chart.Data!.Id, items, doAutoLink: false);
+
+        var result = await service.IdentifyMissingAlbumAsync("test artist", "TEST ALBUM (SPECIAL)", album.Id);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(1, result.Data!.LinkedItemCount);
+    }
+
+    #endregion
 }

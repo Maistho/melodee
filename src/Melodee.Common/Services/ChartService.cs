@@ -769,6 +769,108 @@ public sealed class ChartService(
         return new OperationResult<IEnumerable<ChartAlbumSearchResult>> { Data = albums };
     }
 
+    /// <summary>
+    /// Identifies a missing album by linking all chart items with matching artist/album name
+    /// and adding the chart album title as an alternate name to the album.
+    /// </summary>
+    public async Task<OperationResult<IdentifyMissingAlbumResult>> IdentifyMissingAlbumAsync(
+        string artistName,
+        string albumTitle,
+        int albumId,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(artistName) || string.IsNullOrWhiteSpace(albumTitle))
+        {
+            return new OperationResult<IdentifyMissingAlbumResult>(["Artist name and album title are required"])
+            {
+                Data = new IdentifyMissingAlbumResult(),
+                Type = OperationResponseType.ValidationFailure
+            };
+        }
+
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var album = await scopedContext.Albums
+            .Include(a => a.Artist)
+            .FirstOrDefaultAsync(a => a.Id == albumId, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (album == null)
+        {
+            return new OperationResult<IdentifyMissingAlbumResult>(["Album not found"])
+            {
+                Data = new IdentifyMissingAlbumResult(),
+                Type = OperationResponseType.NotFound
+            };
+        }
+
+        var normalizedArtistName = artistName.ToUpperInvariant();
+        var normalizedAlbumTitle = albumTitle.ToUpperInvariant();
+        var linkedStatus = (short)ChartItemLinkStatus.Linked;
+
+        var matchingItems = await scopedContext.ChartItems
+            .Include(i => i.Chart)
+            .Where(i => i.ArtistName.ToUpper() == normalizedArtistName &&
+                        i.AlbumTitle.ToUpper() == normalizedAlbumTitle &&
+                        i.LinkStatus != linkedStatus)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        if (matchingItems.Count == 0)
+        {
+            return new OperationResult<IdentifyMissingAlbumResult>(["No unlinked chart items found for the specified artist/album"])
+            {
+                Data = new IdentifyMissingAlbumResult(),
+                Type = OperationResponseType.NotFound
+            };
+        }
+
+        var now = SystemClock.Instance.GetCurrentInstant();
+        var chartsUpdated = new HashSet<int>();
+
+        foreach (var item in matchingItems)
+        {
+            item.LinkedAlbumId = album.Id;
+            item.LinkedArtistId = album.ArtistId;
+            item.LinkStatus = (short)ChartItemLinkStatus.Linked;
+            item.LinkConfidence = 1.0m;
+            item.LinkNotes = "Identified from missing report";
+            item.LastUpdatedAt = now;
+            chartsUpdated.Add(item.ChartId);
+        }
+
+        var normalizedAlternateNameToAdd = albumTitle.ToNormalizedString();
+        if (!string.IsNullOrEmpty(normalizedAlternateNameToAdd))
+        {
+            album.AlternateNames = album.AlternateNames.AddTags([normalizedAlternateNameToAdd], doNormalize: true);
+            album.LastUpdatedAt = now;
+        }
+
+        await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        foreach (var chartId in chartsUpdated)
+        {
+            var chart = matchingItems.First(i => i.ChartId == chartId).Chart;
+            ClearCache(chart);
+        }
+
+        Logger.Information(
+            "Identified missing album [{ArtistName} - {AlbumTitle}] as [{AlbumId}], linked {ItemCount} chart items across {ChartCount} charts",
+            artistName, albumTitle, albumId, matchingItems.Count, chartsUpdated.Count);
+
+        return new OperationResult<IdentifyMissingAlbumResult>
+        {
+            Data = new IdentifyMissingAlbumResult
+            {
+                LinkedItemCount = matchingItems.Count,
+                ChartsUpdatedCount = chartsUpdated.Count,
+                AlbumId = album.Id,
+                AlbumName = album.Name,
+                ArtistName = album.Artist.Name
+            }
+        };
+    }
+
     private async Task<string> GenerateUniqueSlugAsync(string title, int? excludeChartId, CancellationToken cancellationToken)
     {
         var baseSlug = title.ToSlug();
@@ -1039,4 +1141,13 @@ public sealed record ChartAlbumSearchResult
     public Guid ArtistApiKey { get; init; }
     public required string ArtistName { get; init; }
     public int ReleaseYear { get; init; }
+}
+
+public sealed record IdentifyMissingAlbumResult
+{
+    public int LinkedItemCount { get; init; }
+    public int ChartsUpdatedCount { get; init; }
+    public int AlbumId { get; init; }
+    public string AlbumName { get; init; } = string.Empty;
+    public string ArtistName { get; init; } = string.Empty;
 }

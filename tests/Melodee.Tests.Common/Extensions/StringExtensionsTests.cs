@@ -368,6 +368,47 @@ public class StringExtensionsTests
         Assert.Contains("TAG2", tagNoLower.ToTags() ?? throw new InvalidOperationException());
     }
 
+    [Fact]
+    public void AddTags_WithDoNormalize_ReturnsNormalizedTags()
+    {
+        var existingTags = "EXISTINGTAG";
+        var newTags = new[] { "New Tag With Spaces!", "Another (Tag)" };
+
+        var result = existingTags.AddTags(newTags, doNormalize: true);
+
+        Assert.NotNull(result);
+        Assert.Contains("EXISTINGTAG", result);
+        Assert.Contains("NEWTAGWITHSPACES", result);
+        Assert.Contains("ANOTHERTAG", result);
+    }
+
+    [Fact]
+    public void AddTags_WithDoNormalize_PreservesCaseWhenNormalized()
+    {
+        var existingTags = "";
+        var newTags = new[] { "Test Album Title" };
+
+        var result = existingTags.AddTags(newTags, doNormalize: true);
+
+        Assert.NotNull(result);
+        Assert.Contains("TESTALBUMTITLE", result);
+    }
+
+    [Fact]
+    public void AddTags_WithDoNormalize_ProducesUniqueValues()
+    {
+        var existingTags = "TESTALBUM";
+        var newTags = new[] { "Test Album" };
+
+        var result = existingTags.AddTags(newTags, doNormalize: true);
+
+        Assert.NotNull(result);
+        var tags = result.ToTags()?.ToArray();
+        Assert.NotNull(tags);
+        Assert.Single(tags);
+        Assert.Equal("TESTALBUM", tags[0]);
+    }
+
     [Theory]
     [InlineData(null, 0, null)]
     [InlineData(null, 6, null)]

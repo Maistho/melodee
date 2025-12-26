@@ -1,0 +1,315 @@
+@using Melodee.Common.Data.Models
+@using Melodee.Common.Enums
+@using Melodee.Common.Extensions
+@using Melodee.Common.Filtering
+@using Melodee.Common.Models
+
+@inject NotificationService NotificationService
+@inject ArtistService ArtistService
+@inject AlbumService AlbumService
+
+<RadzenStack Gap="1rem" Style="height: 100%; min-width: 800px;">
+    <RadzenCard>
+        <RadzenText TextStyle="TextStyle.Subtitle1">Missing Album</RadzenText>
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="2rem" class="rz-mt-2">
+            <RadzenStack Gap="0.25rem">
+                <RadzenText class="rz-text-secondary-color" TextStyle="TextStyle.Overline">Artist</RadzenText>
+                <RadzenText>@ArtistName</RadzenText>
+            </RadzenStack>
+            <RadzenStack Gap="0.25rem">
+                <RadzenText class="rz-text-secondary-color" TextStyle="TextStyle.Overline">Album</RadzenText>
+                <RadzenText>@AlbumTitle</RadzenText>
+            </RadzenStack>
+            <RadzenStack Gap="0.25rem">
+                <RadzenText class="rz-text-secondary-color" TextStyle="TextStyle.Overline">Year</RadzenText>
+                <RadzenText>@(ReleaseYear?.ToString() ?? "—")</RadzenText>
+            </RadzenStack>
+            <RadzenStack Gap="0.25rem">
+                <RadzenText class="rz-text-secondary-color" TextStyle="TextStyle.Overline">Chart Count</RadzenText>
+                <RadzenBadge BadgeStyle="BadgeStyle.Info" Text="@ChartCount.ToString()" />
+            </RadzenStack>
+        </RadzenStack>
+    </RadzenCard>
+
+    <RadzenRow Gap="1rem" Style="flex: 1; overflow: hidden;">
+        <RadzenColumn Size="6">
+            <RadzenCard Style="height: 100%; display: flex; flex-direction: column;">
+                <RadzenText TextStyle="TextStyle.Subtitle1">Artists</RadzenText>
+                <RadzenTextBox 
+                    @bind-Value="@_artistFilter" 
+                    Placeholder="Type to filter artists..." 
+                    Style="width: 100%;"
+                    class="rz-mt-2"
+                    @oninput="@OnArtistFilterInput" />
+                
+                @if (_isLoadingArtists)
+                {
+                    <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="flex: 1;">
+                        <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Primary" Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+                    </RadzenStack>
+                }
+                else
+                {
+                    <RadzenDataGrid 
+                        TItem="ArtistSearchResult"
+                        Data="@_filteredArtists"
+                        Density="Density.Compact"
+                        SelectionMode="DataGridSelectionMode.Single"
+                        @bind-Value="@_selectedArtists"
+                        RowSelect="@OnArtistSelected"
+                        Style="flex: 1; margin-top: 0.5rem; max-height: 300px; overflow: auto;"
+                        AllowPaging="false">
+                        <Columns>
+                            <RadzenDataGridColumn Title="Name" Property="@nameof(ArtistSearchResult.Name)" />
+                            <RadzenDataGridColumn Title="Albums" Property="@nameof(ArtistSearchResult.AlbumCount)" Width="80px" TextAlign="TextAlign.Center" />
+                        </Columns>
+                    </RadzenDataGrid>
+                }
+            </RadzenCard>
+        </RadzenColumn>
+        
+        <RadzenColumn Size="6">
+            <RadzenCard Style="height: 100%; display: flex; flex-direction: column;">
+                <RadzenText TextStyle="TextStyle.Subtitle1">
+                    Albums
+                    @if (_selectedArtist != null)
+                    {
+                        <span class="rz-text-secondary-color"> for @_selectedArtist.Name</span>
+                    }
+                </RadzenText>
+                
+                @if (_selectedArtist == null)
+                {
+                    <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="flex: 1;">
+                        <RadzenText class="rz-text-secondary-color">Select an artist to view albums</RadzenText>
+                    </RadzenStack>
+                }
+                else if (_isLoadingAlbums)
+                {
+                    <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="flex: 1;">
+                        <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Primary" Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+                    </RadzenStack>
+                }
+                else if (_albumResults.Count == 0)
+                {
+                    <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="flex: 1;">
+                        <RadzenAlert AlertStyle="AlertStyle.Warning" Shade="Shade.Lighter" Size="AlertSize.Small">
+                            No albums found for this artist.
+                        </RadzenAlert>
+                    </RadzenStack>
+                }
+                else
+                {
+                    <RadzenDataGrid 
+                        TItem="AlbumSearchResult"
+                        Data="@_albumResults"
+                        Density="Density.Compact"
+                        SelectionMode="DataGridSelectionMode.Single"
+                        @bind-Value="@_selectedAlbums"
+                        Style="flex: 1; margin-top: 0.5rem; max-height: 300px; overflow: auto;"
+                        AllowPaging="false">
+                        <Columns>
+                            <RadzenDataGridColumn Title="Name" Property="@nameof(AlbumSearchResult.Name)" />
+                            <RadzenDataGridColumn Title="Year" Property="@nameof(AlbumSearchResult.ReleaseYear)" Width="80px" TextAlign="TextAlign.Center" />
+                        </Columns>
+                    </RadzenDataGrid>
+                }
+            </RadzenCard>
+        </RadzenColumn>
+    </RadzenRow>
+
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+        <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@CancelClick"/>
+        <RadzenButton 
+            Text="Identify" 
+            Icon="link" 
+            ButtonStyle="ButtonStyle.Primary" 
+            Disabled="@(!_selectedAlbums.Any())" 
+            Click="@IdentifyAlbumAsync"/>
+    </RadzenStack>
+</RadzenStack>
+
+@code {
+    [Parameter] public required string ArtistName { get; set; }
+    [Parameter] public required string AlbumTitle { get; set; }
+    [Parameter] public int? ReleaseYear { get; set; }
+    [Parameter] public int ChartCount { get; set; }
+    [Parameter] public required ChartService ChartService { get; set; }
+
+    [CascadingParameter] public required DialogService DialogService { get; set; }
+
+    string _artistFilter = string.Empty;
+    List<ArtistSearchResult> _allArtists = [];
+    List<ArtistSearchResult> _filteredArtists = [];
+    IList<ArtistSearchResult> _selectedArtists = [];
+    ArtistSearchResult? _selectedArtist;
+    bool _isLoadingArtists = true;
+
+    List<AlbumSearchResult> _albumResults = [];
+    IList<AlbumSearchResult> _selectedAlbums = [];
+    bool _isLoadingAlbums;
+    
+    System.Timers.Timer? _debounceTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _artistFilter = ArtistName;
+        await LoadArtistsAsync();
+    }
+
+    async Task LoadArtistsAsync()
+    {
+        _isLoadingArtists = true;
+        
+        try
+        {
+            var result = await ArtistService.ListAsync(new PagedRequest 
+            { 
+                Page = 1, 
+                PageSize = 500,
+                FilterBy = string.IsNullOrWhiteSpace(_artistFilter) 
+                    ? null 
+                    : [new FilterOperatorInfo("Name", Melodee.Common.Filtering.FilterOperator.Contains, _artistFilter)]
+            });
+            
+            if (result.IsSuccess && result.Data != null)
+            {
+                _allArtists = result.Data
+                    .Select(a => new ArtistSearchResult 
+                    { 
+                        Id = a.Id, 
+                        ApiKey = a.ApiKey, 
+                        Name = a.Name, 
+                        AlbumCount = a.AlbumCount 
+                    })
+                    .ToList();
+                _filteredArtists = _allArtists;
+            }
+        }
+        finally
+        {
+            _isLoadingArtists = false;
+        }
+    }
+
+    void OnArtistFilterInput(ChangeEventArgs args)
+    {
+        _artistFilter = args.Value?.ToString() ?? string.Empty;
+        
+        _albumResults = [];
+        _selectedAlbums = [];
+        _selectedArtist = null;
+        _selectedArtists = [];
+        
+        _debounceTimer?.Stop();
+        _debounceTimer?.Dispose();
+        _debounceTimer = new System.Timers.Timer(500);
+        _debounceTimer.Elapsed += async (_, _) =>
+        {
+            _debounceTimer?.Stop();
+            await InvokeAsync(async () =>
+            {
+                await LoadArtistsAsync();
+                StateHasChanged();
+            });
+        };
+        _debounceTimer.AutoReset = false;
+        _debounceTimer.Start();
+    }
+
+    async Task OnArtistSelected(ArtistSearchResult artist)
+    {
+        _selectedArtist = artist;
+        _albumResults = [];
+        _selectedAlbums = [];
+        _isLoadingAlbums = true;
+        StateHasChanged();
+
+        try
+        {
+            var result = await AlbumService.ListForArtistApiKeyAsync(
+                new PagedRequest { Page = 1, PageSize = 500 },
+                artist.ApiKey);
+
+            if (result.IsSuccess && result.Data != null)
+            {
+                _albumResults = result.Data
+                    .Select(a => new AlbumSearchResult 
+                    { 
+                        Id = a.Id, 
+                        ApiKey = a.ApiKey, 
+                        Name = a.Name, 
+                        ReleaseYear = a.ReleaseDate.Year 
+                    })
+                    .OrderBy(a => a.Name)
+                    .ToList();
+            }
+        }
+        finally
+        {
+            _isLoadingAlbums = false;
+            StateHasChanged();
+        }
+    }
+
+    async Task IdentifyAlbumAsync()
+    {
+        if (!_selectedAlbums.Any())
+        {
+            return;
+        }
+
+        var selectedAlbumId = _selectedAlbums.First().Id;
+        DialogService.Close(true);
+        
+        var result = await ChartService.IdentifyMissingAlbumAsync(ArtistName, AlbumTitle, selectedAlbumId);
+
+        if (result.IsSuccess && result.Data != null)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = "Album Identified",
+                Detail = $"Linked {result.Data.LinkedItemCount} chart items to {result.Data.ArtistName} - {result.Data.AlbumName}",
+                Duration = 5000
+            });
+        }
+        else
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Failed to identify album",
+                Detail = result.Messages?.FirstOrDefault(),
+                Duration = 5000
+            });
+        }
+    }
+
+    void CancelClick()
+    {
+        DialogService.Close(false);
+    }
+    
+    public void Dispose()
+    {
+        _debounceTimer?.Stop();
+        _debounceTimer?.Dispose();
+    }
+
+    record ArtistSearchResult
+    {
+        public int Id { get; init; }
+        public Guid ApiKey { get; init; }
+        public string Name { get; init; } = string.Empty;
+        public int AlbumCount { get; init; }
+    }
+
+    record AlbumSearchResult
+    {
+        public int Id { get; init; }
+        public Guid ApiKey { get; init; }
+        public string Name { get; init; } = string.Empty;
+        public int ReleaseYear { get; init; }
+    }
+}

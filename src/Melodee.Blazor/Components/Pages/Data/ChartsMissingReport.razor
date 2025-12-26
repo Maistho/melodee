@@ -1,6 +1,8 @@
 @page "/charts/missing-report"
 
 @inherits MelodeeComponentBase
+@attribute [Authorize(Roles = "Administrator")]
+@using Melodee.Blazor.Components.Pages.Admin
 @using Melodee.Common.Data.Models
 @using Melodee.Common.Enums
 @using System.Text.Json
@@ -10,6 +12,8 @@
 @inject MainLayoutProxyService MainLayoutProxyService
 @inject ILogger Logger
 @inject ChartService ChartService
+@inject DialogService DialogService
+@inject NotificationService NotificationService
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JsRuntime
 
@@ -108,6 +112,17 @@
                                             }
                                         }
                                     </RadzenStack>
+                                </Template>
+                            </RadzenDataGridColumn>
+                            
+                            <RadzenDataGridColumn Title="Actions" Width="100px" Sortable="false" TextAlign="TextAlign.Center">
+                                <Template Context="item">
+                                    <RadzenButton 
+                                        Icon="link" 
+                                        ButtonStyle="ButtonStyle.Info" 
+                                        Size="ButtonSize.Small"
+                                        title="Identify this album"
+                                        Click="@(() => IdentifyAlbumClick(item))" />
                                 </Template>
                             </RadzenDataGridColumn>
                         </Columns>
@@ -222,6 +237,32 @@
         {
             MainLayoutProxyService.ToggleSpinnerVisible();
             _isLoading = false;
+        }
+    }
+
+    async Task IdentifyAlbumClick(MissingAlbumInfo item)
+    {
+        var result = await DialogService.OpenAsync<MissingAlbumIdentifyDialog>(
+            "Identify Missing Album",
+            new Dictionary<string, object?>
+            {
+                { nameof(MissingAlbumIdentifyDialog.ArtistName), item.ArtistName },
+                { nameof(MissingAlbumIdentifyDialog.AlbumTitle), item.AlbumTitle },
+                { nameof(MissingAlbumIdentifyDialog.ReleaseYear), item.ReleaseYear },
+                { nameof(MissingAlbumIdentifyDialog.ChartCount), item.ChartCount },
+                { nameof(MissingAlbumIdentifyDialog.ChartService), ChartService }
+            },
+            new DialogOptions
+            {
+                Width = "900px",
+                Height = "650px",
+                Resizable = true,
+                Draggable = true
+            });
+
+        if (result is true)
+        {
+            await LoadReportAsync();
         }
     }
 
