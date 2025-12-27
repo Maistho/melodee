@@ -7,49 +7,48 @@
 @inject NotificationService NotificationService
 @inject ArtistService ArtistService
 @inject AlbumService AlbumService
+@inject DialogService DialogService
 
-<RadzenStack Gap="1rem" Style="height: 100%; min-width: 800px;">
-    <RadzenCard>
-        <RadzenText TextStyle="TextStyle.Subtitle1">Missing Album</RadzenText>
-        <RadzenStack Orientation="Orientation.Horizontal" Gap="2rem" class="rz-mt-2">
-            <RadzenStack Gap="0.25rem">
-                <RadzenText class="rz-text-secondary-color" TextStyle="TextStyle.Overline">Artist</RadzenText>
-                <RadzenText>@ArtistName</RadzenText>
+<div style="display: flex; flex-direction: column; height: 100%; gap: 0.5rem;">
+    <RadzenCard Style="padding: 0.75rem;">
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="2rem" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap">
+            <RadzenStack Gap="0" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+                <RadzenText class="rz-text-secondary-color" Style="margin-right: 0.5rem;">Artist:</RadzenText>
+                <RadzenText Style="font-weight: 500;">@ArtistName</RadzenText>
             </RadzenStack>
-            <RadzenStack Gap="0.25rem">
-                <RadzenText class="rz-text-secondary-color" TextStyle="TextStyle.Overline">Album</RadzenText>
-                <RadzenText>@AlbumTitle</RadzenText>
+            <RadzenStack Gap="0" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+                <RadzenText class="rz-text-secondary-color" Style="margin-right: 0.5rem;">Album:</RadzenText>
+                <RadzenText Style="font-weight: 500;">@AlbumTitle</RadzenText>
             </RadzenStack>
-            <RadzenStack Gap="0.25rem">
-                <RadzenText class="rz-text-secondary-color" TextStyle="TextStyle.Overline">Year</RadzenText>
+            <RadzenStack Gap="0" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+                <RadzenText class="rz-text-secondary-color" Style="margin-right: 0.5rem;">Year:</RadzenText>
                 <RadzenText>@(ReleaseYear?.ToString() ?? "—")</RadzenText>
             </RadzenStack>
-            <RadzenStack Gap="0.25rem">
-                <RadzenText class="rz-text-secondary-color" TextStyle="TextStyle.Overline">Chart Count</RadzenText>
+            <RadzenStack Gap="0" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+                <RadzenText class="rz-text-secondary-color" Style="margin-right: 0.5rem;">Charts:</RadzenText>
                 <RadzenBadge BadgeStyle="BadgeStyle.Info" Text="@ChartCount.ToString()" />
             </RadzenStack>
         </RadzenStack>
     </RadzenCard>
 
-    <RadzenRow Gap="1rem" Style="flex: 1; overflow: hidden;">
-        <RadzenColumn Size="6">
-            <RadzenCard Style="height: 100%; display: flex; flex-direction: column;">
-                <RadzenText TextStyle="TextStyle.Subtitle1">Artists</RadzenText>
-                <RadzenTextBox 
-                    @bind-Value="@_artistFilter" 
-                    Placeholder="Type to filter artists..." 
-                    Style="width: 100%;"
-                    class="rz-mt-2"
-                    @oninput="@OnArtistFilterInput" />
-                
-                @if (_isLoadingArtists)
-                {
-                    <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="flex: 1;">
-                        <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Primary" Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
-                    </RadzenStack>
-                }
-                else
-                {
+    <div style="display: flex; flex: 1; gap: 0.5rem; min-height: 0;">
+        <RadzenCard Style="flex: 1; display: flex; flex-direction: column; padding: 0.75rem;">
+            <RadzenText TextStyle="TextStyle.Subtitle2" Style="margin-bottom: 0.5rem;">Artists</RadzenText>
+            <RadzenTextBox 
+                @bind-Value="@_artistFilter" 
+                Placeholder="Type to filter artists..." 
+                Style="width: 100%; margin-bottom: 0.5rem;"
+                @oninput="@OnArtistFilterInput" />
+            
+            @if (_isLoadingArtists)
+            {
+                <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="flex: 1;">
+                    <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Primary" Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+                </RadzenStack>
+            }
+            else
+            {
+                <div style="flex: 1; overflow-y: auto;">
                     <RadzenDataGrid 
                         TItem="ArtistSearchResult"
                         Data="@_filteredArtists"
@@ -57,66 +56,62 @@
                         SelectionMode="DataGridSelectionMode.Single"
                         @bind-Value="@_selectedArtists"
                         RowSelect="@OnArtistSelected"
-                        Style="flex: 1; margin-top: 0.5rem; max-height: 300px; overflow: auto;"
                         AllowPaging="false">
                         <Columns>
                             <RadzenDataGridColumn Title="Name" Property="@nameof(ArtistSearchResult.Name)" />
-                            <RadzenDataGridColumn Title="Albums" Property="@nameof(ArtistSearchResult.AlbumCount)" Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Title="Albums" Property="@nameof(ArtistSearchResult.AlbumCount)" Width="70px" TextAlign="TextAlign.Center" />
                         </Columns>
                     </RadzenDataGrid>
-                }
-            </RadzenCard>
-        </RadzenColumn>
+                </div>
+            }
+        </RadzenCard>
         
-        <RadzenColumn Size="6">
-            <RadzenCard Style="height: 100%; display: flex; flex-direction: column;">
-                <RadzenText TextStyle="TextStyle.Subtitle1">
-                    Albums
-                    @if (_selectedArtist != null)
-                    {
-                        <span class="rz-text-secondary-color"> for @_selectedArtist.Name</span>
-                    }
-                </RadzenText>
-                
-                @if (_selectedArtist == null)
+        <RadzenCard Style="flex: 1; display: flex; flex-direction: column; padding: 0.75rem;">
+            <RadzenText TextStyle="TextStyle.Subtitle2" Style="margin-bottom: 0.5rem;">
+                Albums
+                @if (_selectedArtist != null)
                 {
-                    <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="flex: 1;">
-                        <RadzenText class="rz-text-secondary-color">Select an artist to view albums</RadzenText>
-                    </RadzenStack>
+                    <span class="rz-text-secondary-color"> — @_selectedArtist.Name</span>
                 }
-                else if (_isLoadingAlbums)
-                {
-                    <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="flex: 1;">
-                        <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Primary" Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
-                    </RadzenStack>
-                }
-                else if (_albumResults.Count == 0)
-                {
-                    <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="flex: 1;">
-                        <RadzenAlert AlertStyle="AlertStyle.Warning" Shade="Shade.Lighter" Size="AlertSize.Small">
-                            No albums found for this artist.
-                        </RadzenAlert>
-                    </RadzenStack>
-                }
-                else
-                {
+            </RadzenText>
+            
+            @if (_selectedArtist == null)
+            {
+                <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="flex: 1;">
+                    <RadzenText class="rz-text-secondary-color">Select an artist</RadzenText>
+                </RadzenStack>
+            }
+            else if (_isLoadingAlbums)
+            {
+                <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="flex: 1;">
+                    <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Primary" Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+                </RadzenStack>
+            }
+            else if (_albumResults.Count == 0)
+            {
+                <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="flex: 1;">
+                    <RadzenText class="rz-text-secondary-color">No albums found</RadzenText>
+                </RadzenStack>
+            }
+            else
+            {
+                <div style="flex: 1; overflow-y: auto;">
                     <RadzenDataGrid 
                         TItem="AlbumSearchResult"
                         Data="@_albumResults"
                         Density="Density.Compact"
                         SelectionMode="DataGridSelectionMode.Single"
                         @bind-Value="@_selectedAlbums"
-                        Style="flex: 1; margin-top: 0.5rem; max-height: 300px; overflow: auto;"
                         AllowPaging="false">
                         <Columns>
                             <RadzenDataGridColumn Title="Name" Property="@nameof(AlbumSearchResult.Name)" />
-                            <RadzenDataGridColumn Title="Year" Property="@nameof(AlbumSearchResult.ReleaseYear)" Width="80px" TextAlign="TextAlign.Center" />
+                            <RadzenDataGridColumn Title="Year" Property="@nameof(AlbumSearchResult.ReleaseYear)" Width="70px" TextAlign="TextAlign.Center" />
                         </Columns>
                     </RadzenDataGrid>
-                }
-            </RadzenCard>
-        </RadzenColumn>
-    </RadzenRow>
+                </div>
+            }
+        </RadzenCard>
+    </div>
 
     <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
         <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@CancelClick"/>
@@ -127,7 +122,7 @@
             Disabled="@(!_selectedAlbums.Any())" 
             Click="@IdentifyAlbumAsync"/>
     </RadzenStack>
-</RadzenStack>
+</div>
 
 @code {
     [Parameter] public required string ArtistName { get; set; }
@@ -135,8 +130,6 @@
     [Parameter] public int? ReleaseYear { get; set; }
     [Parameter] public int ChartCount { get; set; }
     [Parameter] public required ChartService ChartService { get; set; }
-
-    [CascadingParameter] public required DialogService DialogService { get; set; }
 
     string _artistFilter = string.Empty;
     List<ArtistSearchResult> _allArtists = [];
@@ -154,10 +147,10 @@
     protected override async Task OnInitializedAsync()
     {
         _artistFilter = ArtistName;
-        await LoadArtistsAsync();
+        await LoadArtistsAsync(autoSelectSingle: true);
     }
 
-    async Task LoadArtistsAsync()
+    async Task LoadArtistsAsync(bool autoSelectSingle = false)
     {
         _isLoadingArtists = true;
         
@@ -184,6 +177,13 @@
                     })
                     .ToList();
                 _filteredArtists = _allArtists;
+                
+                if (autoSelectSingle && _filteredArtists.Count == 1)
+                {
+                    var artist = _filteredArtists[0];
+                    _selectedArtists = [artist];
+                    await OnArtistSelected(artist);
+                }
             }
         }
         finally
@@ -241,7 +241,7 @@
                         Name = a.Name, 
                         ReleaseYear = a.ReleaseDate.Year 
                     })
-                    .OrderBy(a => a.Name)
+                    .OrderBy(a => a.Name, StringComparer.OrdinalIgnoreCase)
                     .ToList();
             }
         }
@@ -260,7 +260,6 @@
         }
 
         var selectedAlbumId = _selectedAlbums.First().Id;
-        DialogService.Close(true);
         
         var result = await ChartService.IdentifyMissingAlbumAsync(ArtistName, AlbumTitle, selectedAlbumId);
 
@@ -284,6 +283,8 @@
                 Duration = 5000
             });
         }
+        
+        DialogService.Close(true);
     }
 
     void CancelClick()
