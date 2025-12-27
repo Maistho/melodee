@@ -3579,4 +3579,13 @@
   <data name="AlbumEdit.EditingAlbum" xml:space="preserve">
     <value>Editing Album</value>
   </data>
+  <data name="Message.SuccessfullyAction" xml:space="preserve">
+    <value>Avec succès {0}</value>
+  </data>
+  <data name="Message.ErrorAction" xml:space="preserve">
+    <value>Erreur {0}</value>
+  </data>
+  <data name="Message.Huzzah" xml:space="preserve">
+    <value>HOURRA!</value>
+  </data>
 </root>

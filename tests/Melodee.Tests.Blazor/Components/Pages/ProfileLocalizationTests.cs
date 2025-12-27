@@ -178,12 +178,12 @@ public class ProfileLocalizationTests
         foreach (var key in allKeys)
         {
             var result = _localizationService.Localize(key);
-            
+
             result.Should().NotBeNullOrEmpty($"Resource key '{key}' should exist");
             result.Should().Contain("Localized_", $"Resource key '{key}' should be localized");
-            
+
             // Verify the localizer was called for this key
-            _mockLocalizer.Verify(x => x[key], Times.AtLeastOnce, 
+            _mockLocalizer.Verify(x => x[key], Times.AtLeastOnce,
                 $"Localization service should be called for key '{key}'");
         }
     }

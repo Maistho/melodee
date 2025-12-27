@@ -92,13 +92,13 @@
         {
             case OperationResponseType.Ok:
                 severity = NotificationSeverity.Success;
-                message = $"Successfully {action}";
-                detailMessage = "HUZZAH!";
+                message = L("Message.SuccessfullyAction", action);
+                detailMessage = L("Message.Huzzah");
                 break;
 
             default:
                 severity = NotificationSeverity.Error;
-                message = $"Error {action}";
+                message = L("Message.ErrorAction", action);
                 detailMessage = string.Join("</br>", result.Messages ?? []);
                 break;
         }
@@ -111,7 +111,7 @@
             DetailContent = ns =>
                 @<RadzenStack>
                     <RadzenText TextStyle="TextStyle.Subtitle1">@detailMessage</RadzenText>
-                    <RadzenButton Text="Close" Click="@(args => ns.Messages.Clear())"></RadzenButton>
+                    <RadzenButton Text="@L("Actions.Close")" Click="@(args => ns.Messages.Clear())"></RadzenButton>
                 </RadzenStack>
         };
     }

@@ -740,7 +740,7 @@ public class LocalizationServiceTests
         // Arrange
         _mockLocalStorage.Setup(x => x.SetItemAsStringAsync(It.IsAny<string>(), It.IsAny<string>()))
             .Returns(Task.CompletedTask);
-        
+
         // Start with English (LTR)
         await _service.SetCultureAsync("en-US");
         _service.IsRightToLeft().Should().BeFalse();
@@ -759,7 +759,7 @@ public class LocalizationServiceTests
         // Arrange
         _mockLocalStorage.Setup(x => x.SetItemAsStringAsync(It.IsAny<string>(), It.IsAny<string>()))
             .Returns(Task.CompletedTask);
-        
+
         // Start with Arabic (RTL)
         await _service.SetCultureAsync("ar-SA");
         _service.IsRightToLeft().Should().BeTrue();

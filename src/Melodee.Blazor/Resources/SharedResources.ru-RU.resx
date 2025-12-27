@@ -3579,4 +3579,13 @@
   <data name="AlbumEdit.EditingAlbum" xml:space="preserve">
     <value>Editing Album</value>
   </data>
+  <data name="Message.SuccessfullyAction" xml:space="preserve">
+    <value>Успешно {0}</value>
+  </data>
+  <data name="Message.ErrorAction" xml:space="preserve">
+    <value>Ошибка {0}</value>
+  </data>
+  <data name="Message.Huzzah" xml:space="preserve">
+    <value>УРА!</value>
+  </data>
 </root>

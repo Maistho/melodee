@@ -3,7 +3,6 @@ using System.Security.Claims;
 using Bunit;
 using FluentAssertions;
 using Melodee.Blazor.Components.Pages;
-using Melodee.Common.Configuration.Extensions;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -95,7 +94,7 @@ public class MelodeeComponentBaseLocalizationTests : BunitContext
 
         // Act & Assert - Should propagate exception (no error handling in component)
         var act = () => Render<TestLocalizableComponent>();
-        
+
         await Task.Run(() => act.Should().Throw<InvalidOperationException>()
             .WithMessage("Culture error"));
     }
@@ -433,7 +432,7 @@ public class MelodeeComponentBaseLocalizationTests : BunitContext
         var cultures = new[] { "en-US", "es-ES", "fr-FR", "ru-RU" };
         _mockLocalizationService.Setup(x => x.Localize("Navigation.Dashboard"))
             .Returns("Dashboard");
-        
+
         var cut = Render<TestLocalizableComponent>();
 
         // Act - Change culture multiple times
@@ -468,7 +467,7 @@ public class TestLocalizableComponent : MelodeeComponentBase
         builder.AddContent(1, "Test Component");
         builder.CloseElement();
     }
-    
+
     public string TestL(string key) => L(key);
     public string TestLWithFallback(string key, string fallback) => L(key, fallback);
     public string TestLWithArgs(string key, params object[] args) => L(key, args);
