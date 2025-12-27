@@ -192,4 +192,14 @@ public class LocalizationService : ILocalizationService
             return number.ToString("N2");
         }
     }
+
+    public bool IsRightToLeft()
+    {
+        return _currentCulture.TextInfo.IsRightToLeft;
+    }
+
+    public string GetTextDirection()
+    {
+        return IsRightToLeft() ? "rtl" : "ltr";
+    }
 }

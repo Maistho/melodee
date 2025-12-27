@@ -976,4 +976,828 @@
   <data name="Validation.PasswordsDoNotMatch" xml:space="preserve">
     <value>Passwords do not match</value>
   </data>
+
+  <!-- Stats Page -->
+  <data name="Stats.PageTitle" xml:space="preserve">
+    <value>Stats</value>
+  </data>
+  <data name="Stats.Statistics" xml:space="preserve">
+    <value>Statistics</value>
+  </data>
+  <data name="Stats.Summary" xml:space="preserve">
+    <value>Summary</value>
+  </data>
+  <data name="Stats.YourPlaysPerDayLast30d" xml:space="preserve">
+    <value>Your plays per day (last 30d)</value>
+  </data>
+  <data name="Stats.PlaysChartTitle" xml:space="preserve">
+    <value>Plays</value>
+  </data>
+  <data name="Stats.DateAxisTitle" xml:space="preserve">
+    <value>Date</value>
+  </data>
+  <data name="Stats.SongsAddedPerDayLast30d" xml:space="preserve">
+    <value>Songs added per day (last 30d)</value>
+  </data>
+  <data name="Stats.AddedChartTitle" xml:space="preserve">
+    <value>Added</value>
+  </data>
+  <data name="Stats.SongsAxisTitle" xml:space="preserve">
+    <value>Songs</value>
+  </data>
+  <data name="Stats.TopPlayedSongsYou" xml:space="preserve">
+    <value>Top played songs (you)</value>
+  </data>
+  <data name="Stats.SongColumnTitle" xml:space="preserve">
+    <value>Song</value>
+  </data>
+  <data name="Stats.PlaysColumnTitle" xml:space="preserve">
+    <value>Plays</value>
+  </data>
+  <data name="Stats.EditorMissingImages" xml:space="preserve">
+    <value>Editor — Missing Images</value>
+  </data>
+  <data name="Stats.ItemColumnTitle" xml:space="preserve">
+    <value>Item</value>
+  </data>
+  <data name="Stats.CountColumnTitle" xml:space="preserve">
+    <value>Count</value>
+  </data>
+  <data name="Stats.AdminActivity" xml:space="preserve">
+    <value>Admin — Activity</value>
+  </data>
+  <data name="Stats.SearchesPerDay" xml:space="preserve">
+    <value>Searches per day</value>
+  </data>
+  <data name="Stats.ShareViewsPerDay" xml:space="preserve">
+    <value>Share views per day</value>
+  </data>
+  <data name="Stats.LibraryScansPerDay" xml:space="preserve">
+    <value>Library scans per day</value>
+  </data>
+
+  <!-- Search Page -->
+  <data name="Search.PageTitle" xml:space="preserve">
+    <value>Search Results</value>
+  </data>
+  <data name="Search.ResultsFor" xml:space="preserve">
+    <value>Results for: {0}</value>
+  </data>
+  <data name="Search.RequestMusic" xml:space="preserve">
+    <value>Request Music</value>
+  </data>
+  <data name="Search.ArtistsCount" xml:space="preserve">
+    <value>Artists ({0})</value>
+  </data>
+  <data name="Search.AlbumsCount" xml:space="preserve">
+    <value>Albums ({0})</value>
+  </data>
+  <data name="Search.SongsCount" xml:space="preserve">
+    <value>Songs ({0})</value>
+  </data>
+  <data name="Search.ArtistColumnTitle" xml:space="preserve">
+    <value>Artist</value>
+  </data>
+  <data name="Search.AlbumColumnTitle" xml:space="preserve">
+    <value>Album</value>
+  </data>
+  <data name="Search.YearColumnTitle" xml:space="preserve">
+    <value>Year</value>
+  </data>
+  <data name="Search.TitleColumnTitle" xml:space="preserve">
+    <value>Title</value>
+  </data>
+  <data name="Search.PlaySong" xml:space="preserve">
+    <value>Play song</value>
+  </data>
+
+  <!-- Now Playing Page -->
+  <data name="NowPlaying.PageTitle" xml:space="preserve">
+    <value>Now Playing</value>
+  </data>
+  <data name="NowPlaying.Header" xml:space="preserve">
+    <value>Now Playing</value>
+  </data>
+  <data name="NowPlaying.NoSongsPlaying" xml:space="preserve">
+    <value>No songs are currently playing.</value>
+  </data>
+
+  <!-- Users Page -->
+  <data name="Users.PageTitle" xml:space="preserve">
+    <value>Users</value>
+  </data>
+  <data name="Users.Header" xml:space="preserve">
+    <value>Users</value>
+  </data>
+  <data name="Users.Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Users.Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+
+  <!-- Shares Page -->
+  <data name="Shares.PageTitle" xml:space="preserve">
+    <value>Shares</value>
+  </data>
+  <data name="Shares.Header" xml:space="preserve">
+    <value>Shares</value>
+  </data>
+  <data name="Shares.Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Shares.Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+
+  <!-- Radio Stations Page -->
+  <data name="RadioStations.PageTitle" xml:space="preserve">
+    <value>Radio Stations</value>
+  </data>
+  <data name="RadioStations.Header" xml:space="preserve">
+    <value>Radio Stations</value>
+  </data>
+  <data name="RadioStations.Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="RadioStations.Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+
+  <!-- Common Navigation Keys -->
+  <data name="Nav.Back" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="Nav.GoBack" xml:space="preserve">
+    <value>Go back</value>
+  </data>
+  <data name="Nav.Overview" xml:space="preserve">
+    <value>Overview</value>
+  </data>
+  <data name="Nav.Images" xml:space="preserve">
+    <value>Images</value>
+  </data>
+  <data name="Nav.Files" xml:space="preserve">
+    <value>Files</value>
+  </data>
+  <data name="Nav.Relationships" xml:space="preserve">
+    <value>Relationships</value>
+  </data>
+  <data name="Nav.Contributors" xml:space="preserve">
+    <value>Contributors</value>
+  </data>
+  <data name="Nav.ScanHistory" xml:space="preserve">
+    <value>Scan History</value>
+  </data>
+  <data name="Nav.ProcessHistory" xml:space="preserve">
+    <value>Process History</value>
+  </data>
+  <data name="Nav.Home" xml:space="preserve">
+    <value>Home</value>
+  </data>
+  <data name="Nav.Charts" xml:space="preserve">
+    <value>Charts</value>
+  </data>
+  <data name="Nav.Requests" xml:space="preserve">
+    <value>Requests</value>
+  </data>
+  <data name="Nav.Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Nav.Users" xml:space="preserve">
+    <value>Users</value>
+  </data>
+  <data name="Nav.Libraries" xml:space="preserve">
+    <value>Libraries</value>
+  </data>
+
+  <!-- Common Action Keys -->
+  <data name="Actions.Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Actions.Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Actions.Submit" xml:space="preserve">
+    <value>Submit</value>
+  </data>
+  <data name="Actions.Search" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="Actions.Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Actions.Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="Actions.Upload" xml:space="preserve">
+    <value>Upload</value>
+  </data>
+  <data name="Actions.Download" xml:space="preserve">
+    <value>Download</value>
+  </data>
+  <data name="Actions.SelectAll" xml:space="preserve">
+    <value>Select All</value>
+  </data>
+  <data name="Actions.SelectNone" xml:space="preserve">
+    <value>Select None</value>
+  </data>
+  <data name="Actions.DeleteSelected" xml:space="preserve">
+    <value>Delete Selected</value>
+  </data>
+  <data name="Actions.Lock" xml:space="preserve">
+    <value>Lock</value>
+  </data>
+  <data name="Actions.Unlock" xml:space="preserve">
+    <value>Unlock</value>
+  </data>
+  <data name="Actions.Rescan" xml:space="preserve">
+    <value>Rescan</value>
+  </data>
+  <data name="Actions.Process" xml:space="preserve">
+    <value>Process</value>
+  </data>
+  <data name="Actions.Clean" xml:space="preserve">
+    <value>Clean</value>
+  </data>
+  <data name="Actions.Purge" xml:space="preserve">
+    <value>Purge</value>
+  </data>
+  <data name="Actions.Scan" xml:space="preserve">
+    <value>Scan</value>
+  </data>
+  <data name="Actions.Play" xml:space="preserve">
+    <value>Play</value>
+  </data>
+  <data name="Actions.Pause" xml:space="preserve">
+    <value>Pause</value>
+  </data>
+  <data name="Actions.Resume" xml:space="preserve">
+    <value>Resume</value>
+  </data>
+  <data name="Actions.Run" xml:space="preserve">
+    <value>Run</value>
+  </data>
+  <data name="Actions.Interrupt" xml:space="preserve">
+    <value>Interrupt</value>
+  </data>
+  <data name="Actions.Manage" xml:space="preserve">
+    <value>Manage</value>
+  </data>
+  <data name="Actions.Validate" xml:space="preserve">
+    <value>Validate</value>
+  </data>
+  <data name="Actions.Import" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="Actions.Preview" xml:space="preserve">
+    <value>Preview</value>
+  </data>
+  <data name="Actions.Json" xml:space="preserve">
+    <value>Json</value>
+  </data>
+  <data name="Actions.WebSearch" xml:space="preserve">
+    <value>Web Search</value>
+  </data>
+  <data name="Actions.Sort" xml:space="preserve">
+    <value>Sort</value>
+  </data>
+  <data name="Actions.AddRelationship" xml:space="preserve">
+    <value>Add Relationship</value>
+  </data>
+  <data name="Actions.Remove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="Actions.SetCoverImage" xml:space="preserve">
+    <value>Set Cover Image</value>
+  </data>
+  <data name="Actions.SaveChanges" xml:space="preserve">
+    <value>Save Changes</value>
+  </data>
+  <data name="Actions.CreateRequest" xml:space="preserve">
+    <value>Create Request</value>
+  </data>
+  <data name="Actions.NewRequest" xml:space="preserve">
+    <value>New Request</value>
+  </data>
+  <data name="Actions.Reply" xml:space="preserve">
+    <value>Reply</value>
+  </data>
+  <data name="Actions.CancelReply" xml:space="preserve">
+    <value>Cancel Reply</value>
+  </data>
+  <data name="Actions.PostComment" xml:space="preserve">
+    <value>Post Comment</value>
+  </data>
+  <data name="Actions.MarkComplete" xml:space="preserve">
+    <value>Mark Complete</value>
+  </data>
+  <data name="Actions.UpdateAggregates" xml:space="preserve">
+    <value>Update Aggregates</value>
+  </data>
+  <data name="Actions.Image" xml:space="preserve">
+    <value>Image</value>
+  </data>
+  <data name="Actions.CreateChart" xml:space="preserve">
+    <value>Create Chart</value>
+  </data>
+  <data name="Actions.ImportJSON" xml:space="preserve">
+    <value>Import JSON</value>
+  </data>
+  <data name="Actions.BackToCharts" xml:space="preserve">
+    <value>Back to Charts</value>
+  </data>
+  <data name="Actions.BackToList" xml:space="preserve">
+    <value>Back to List</value>
+  </data>
+  <data name="Actions.DownloadJSON" xml:space="preserve">
+    <value>Download JSON</value>
+  </data>
+  <data name="Actions.IdentifyThisAlbum" xml:space="preserve">
+    <value>Identify this album</value>
+  </data>
+  <data name="Actions.RelinkAll" xml:space="preserve">
+    <value>Re-link All</value>
+  </data>
+  <data name="Actions.ResolveRelink" xml:space="preserve">
+    <value>Resolve/Re-link</value>
+  </data>
+  <data name="Actions.MarkAsIgnored" xml:space="preserve">
+    <value>Mark as ignored</value>
+  </data>
+  <data name="Actions.LinkSelectedAlbum" xml:space="preserve">
+    <value>Link Selected Album</value>
+  </data>
+  <data name="Actions.Identify" xml:space="preserve">
+    <value>Identify</value>
+  </data>
+  <data name="Actions.PauseAll" xml:space="preserve">
+    <value>Pause All</value>
+  </data>
+  <data name="Actions.ResumeAll" xml:space="preserve">
+    <value>Resume All</value>
+  </data>
+  <data name="Actions.ClearCache" xml:space="preserve">
+    <value>Clear Cache</value>
+  </data>
+  <data name="Actions.ClearNowPlaying" xml:space="preserve">
+    <value>Clear Now Playing</value>
+  </data>
+  <data name="Actions.ViewAll" xml:space="preserve">
+    <value>View All</value>
+  </data>
+
+  <!-- Common Label Keys -->
+  <data name="Label.Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Label.Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="Label.Details" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="Label.Statistics" xml:space="preserve">
+    <value>Statistics</value>
+  </data>
+  <data name="Label.Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Label.Created" xml:space="preserve">
+    <value>Created</value>
+  </data>
+  <data name="Label.LastUpdated" xml:space="preserve">
+    <value>Last Updated</value>
+  </data>
+  <data name="Label.Duration" xml:space="preserve">
+    <value>Duration</value>
+  </data>
+  <data name="Label.Artist" xml:space="preserve">
+    <value>Artist</value>
+  </data>
+  <data name="Label.Album" xml:space="preserve">
+    <value>Album</value>
+  </data>
+  <data name="Label.Song" xml:space="preserve">
+    <value>Song</value>
+  </data>
+  <data name="Label.Year" xml:space="preserve">
+    <value>Year</value>
+  </data>
+  <data name="Label.Tags" xml:space="preserve">
+    <value>Tags</value>
+  </data>
+  <data name="Label.Type" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="Label.Path" xml:space="preserve">
+    <value>Path</value>
+  </data>
+  <data name="Label.Library" xml:space="preserve">
+    <value>Library</value>
+  </data>
+  <data name="Label.RealName" xml:space="preserve">
+    <value>Real Name</value>
+  </data>
+  <data name="Label.Directory" xml:space="preserve">
+    <value>Directory</value>
+  </data>
+  <data name="Label.SortName" xml:space="preserve">
+    <value>Sort Name</value>
+  </data>
+  <data name="Label.SortOrder" xml:space="preserve">
+    <value>Sort Order</value>
+  </data>
+  <data name="Label.AlternateNames" xml:space="preserve">
+    <value>Alternate Names</value>
+  </data>
+  <data name="Label.Rating" xml:space="preserve">
+    <value>Rating</value>
+  </data>
+  <data name="Label.AlbumCount" xml:space="preserve">
+    <value>Album Count</value>
+  </data>
+  <data name="Label.SongCount" xml:space="preserve">
+    <value>Song Count</value>
+  </data>
+  <data name="Label.PlayedTotal" xml:space="preserve">
+    <value>Played Total</value>
+  </data>
+  <data name="Label.LastPlayed" xml:space="preserve">
+    <value>Last Played</value>
+  </data>
+  <data name="Label.Genres" xml:space="preserve">
+    <value>Genres</value>
+  </data>
+  <data name="Label.ReleaseDate" xml:space="preserve">
+    <value>Release Date</value>
+  </data>
+  <data name="Label.ExternalLinks" xml:space="preserve">
+    <value>External Links</value>
+  </data>
+  <data name="Label.Notes" xml:space="preserve">
+    <value>Notes</value>
+  </data>
+  <data name="Label.Biography" xml:space="preserve">
+    <value>Biography</value>
+  </data>
+  <data name="Label.Locked" xml:space="preserve">
+    <value>Locked</value>
+  </data>
+  <data name="Label.Public" xml:space="preserve">
+    <value>Public</value>
+  </data>
+  <data name="Label.Owner" xml:space="preserve">
+    <value>Owner</value>
+  </data>
+  <data name="Label.Category" xml:space="preserve">
+    <value>Category</value>
+  </data>
+  <data name="Label.ArtistName" xml:space="preserve">
+    <value>Artist Name</value>
+  </data>
+  <data name="Label.AlbumTitle" xml:space="preserve">
+    <value>Album Title</value>
+  </data>
+  <data name="Label.SongTitle" xml:space="preserve">
+    <value>Song Title</value>
+  </data>
+  <data name="Label.ReleaseYear" xml:space="preserve">
+    <value>Release Year</value>
+  </data>
+  <data name="Label.ExternalURL" xml:space="preserve">
+    <value>External URL</value>
+  </data>
+  <data name="Label.AdditionalNotes" xml:space="preserve">
+    <value>Additional Notes</value>
+  </data>
+  <data name="Label.OptionalDetails" xml:space="preserve">
+    <value>Optional Details</value>
+  </data>
+  <data name="Label.Username" xml:space="preserve">
+    <value>Username</value>
+  </data>
+  <data name="Label.Email" xml:space="preserve">
+    <value>Email</value>
+  </data>
+  <data name="Label.Password" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="Label.AlbumType" xml:space="preserve">
+    <value>Album Type</value>
+  </data>
+  <data name="Label.TotalDuration" xml:space="preserve">
+    <value>Total Duration</value>
+  </data>
+  <data name="Label.TotalFileSize" xml:space="preserve">
+    <value>Total File Size</value>
+  </data>
+  <data name="Label.ArtistCount" xml:space="preserve">
+    <value>Artist Count</value>
+  </data>
+  <data name="Label.DataCounts" xml:space="preserve">
+    <value>Data Counts</value>
+  </data>
+  <data name="Label.Issues" xml:space="preserve">
+    <value>Issues</value>
+  </data>
+  <data name="Label.MusicBrainzId" xml:space="preserve">
+    <value>MusicBrainz Id</value>
+  </data>
+  <data name="Label.AmgId" xml:space="preserve">
+    <value>Amg Id</value>
+  </data>
+  <data name="Label.DeezerId" xml:space="preserve">
+    <value>Deezer Id</value>
+  </data>
+  <data name="Label.DiscogsId" xml:space="preserve">
+    <value>Discogs Id</value>
+  </data>
+  <data name="Label.ItunesId" xml:space="preserve">
+    <value>ITunes Id</value>
+  </data>
+  <data name="Label.LastFmId" xml:space="preserve">
+    <value>LastFm Id</value>
+  </data>
+  <data name="Label.SpotifyId" xml:space="preserve">
+    <value>Spotify Id</value>
+  </data>
+  <data name="Label.WikiDataId" xml:space="preserve">
+    <value>WikiData Id</value>
+  </data>
+  <data name="Label.Roles" xml:space="preserve">
+    <value>Roles</value>
+  </data>
+  <data name="Label.Title" xml:space="preserve">
+    <value>Title</value>
+  </data>
+  <data name="Label.Genre" xml:space="preserve">
+    <value>Genre</value>
+  </data>
+  <data name="Label.Slug" xml:space="preserve">
+    <value>Slug</value>
+  </data>
+  <data name="Label.SourceName" xml:space="preserve">
+    <value>Source Name</value>
+  </data>
+  <data name="Label.SourceURL" xml:space="preserve">
+    <value>Source URL</value>
+  </data>
+  <data name="Label.Visible" xml:space="preserve">
+    <value>Visible</value>
+  </data>
+  <data name="Label.GeneratePlaylist" xml:space="preserve">
+    <value>Generate Playlist</value>
+  </data>
+  <data name="Label.ChartImage" xml:space="preserve">
+    <value>Chart Image</value>
+  </data>
+  <data name="Label.CSVData" xml:space="preserve">
+    <value>CSV Data</value>
+  </data>
+
+  <!-- Common Status Keys -->
+  <data name="Status.Locked" xml:space="preserve">
+    <value>Locked</value>
+  </data>
+  <data name="Status.Unlocked" xml:space="preserve">
+    <value>Unlocked</value>
+  </data>
+  <data name="Status.Visible" xml:space="preserve">
+    <value>Visible</value>
+  </data>
+  <data name="Status.Hidden" xml:space="preserve">
+    <value>Hidden</value>
+  </data>
+  <data name="Status.Enabled" xml:space="preserve">
+    <value>Enabled</value>
+  </data>
+  <data name="Status.Disabled" xml:space="preserve">
+    <value>Disabled</value>
+  </data>
+  <data name="Status.Linked" xml:space="preserve">
+    <value>Linked</value>
+  </data>
+  <data name="Status.Unlinked" xml:space="preserve">
+    <value>Unlinked</value>
+  </data>
+  <data name="Status.Ambiguous" xml:space="preserve">
+    <value>Ambiguous</value>
+  </data>
+  <data name="Status.Ignored" xml:space="preserve">
+    <value>Ignored</value>
+  </data>
+  <data name="Status.Pending" xml:space="preserve">
+    <value>Pending</value>
+  </data>
+  <data name="Status.InProgress" xml:space="preserve">
+    <value>In Progress</value>
+  </data>
+  <data name="Status.Completed" xml:space="preserve">
+    <value>Completed</value>
+  </data>
+  <data name="Status.Rejected" xml:space="preserve">
+    <value>Rejected</value>
+  </data>
+  <data name="Status.Ok" xml:space="preserve">
+    <value>Ok</value>
+  </data>
+  <data name="Status.New" xml:space="preserve">
+    <value>New</value>
+  </data>
+  <data name="Status.Invalid" xml:space="preserve">
+    <value>Invalid</value>
+  </data>
+  <data name="Status.Running" xml:space="preserve">
+    <value>Running</value>
+  </data>
+  <data name="Status.Paused" xml:space="preserve">
+    <value>Paused</value>
+  </data>
+  <data name="Status.Online" xml:space="preserve">
+    <value>Online</value>
+  </data>
+  <data name="Status.Normal" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="Status.Blocked" xml:space="preserve">
+    <value>Blocked</value>
+  </data>
+  <data name="Status.Error" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="Status.Complete" xml:space="preserve">
+    <value>Complete</value>
+  </data>
+
+  <!-- Common Dialog Keys -->
+  <data name="Dialog.AreYouSure" xml:space="preserve">
+    <value>Are you sure?</value>
+  </data>
+  <data name="Dialog.DeleteConfirmation" xml:space="preserve">
+    <value>Delete confirmation</value>
+  </data>
+  <data name="Dialog.Confirm" xml:space="preserve">
+    <value>Confirm</value>
+  </data>
+  <data name="Dialog.PurgeConfirmation" xml:space="preserve">
+    <value>Purge confirmation</value>
+  </data>
+  <data name="Dialog.ScanConfirmation" xml:space="preserve">
+    <value>Scan confirmation</value>
+  </data>
+  <data name="Dialog.RescanConfirmation" xml:space="preserve">
+    <value>Rescan confirmation</value>
+  </data>
+  <data name="Dialog.ProceedToPurge" xml:space="preserve">
+    <value>Proceed to purge</value>
+  </data>
+  <data name="Dialog.StartScan" xml:space="preserve">
+    <value>Start scan</value>
+  </data>
+
+  <!-- Common Table Header Keys -->
+  <data name="TableHeader.Hash" xml:space="preserve">
+    <value>#</value>
+  </data>
+  <data name="TableHeader.Title" xml:space="preserve">
+    <value>Title</value>
+  </data>
+  <data name="TableHeader.Actions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="TableHeader.Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="TableHeader.Type" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="TableHeader.Path" xml:space="preserve">
+    <value>Path</value>
+  </data>
+  <data name="TableHeader.Artists" xml:space="preserve">
+    <value>Artists</value>
+  </data>
+  <data name="TableHeader.Albums" xml:space="preserve">
+    <value>Albums</value>
+  </data>
+  <data name="TableHeader.Songs" xml:space="preserve">
+    <value>Songs</value>
+  </data>
+  <data name="TableHeader.Created" xml:space="preserve">
+    <value>Created</value>
+  </data>
+  <data name="TableHeader.Tags" xml:space="preserve">
+    <value>Tags</value>
+  </data>
+  <data name="TableHeader.Duration" xml:space="preserve">
+    <value>Duration</value>
+  </data>
+  <data name="TableHeader.Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="TableHeader.Artist" xml:space="preserve">
+    <value>Artist</value>
+  </data>
+  <data name="TableHeader.Album" xml:space="preserve">
+    <value>Album</value>
+  </data>
+  <data name="TableHeader.Year" xml:space="preserve">
+    <value>Year</value>
+  </data>
+  <data name="TableHeader.Rank" xml:space="preserve">
+    <value>Rank</value>
+  </data>
+  <data name="TableHeader.Chart" xml:space="preserve">
+    <value>Chart</value>
+  </data>
+  <data name="TableHeader.Source" xml:space="preserve">
+    <value>Source</value>
+  </data>
+  <data name="TableHeader.Category" xml:space="preserve">
+    <value>Category</value>
+  </data>
+  <data name="TableHeader.Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="TableHeader.LastActivity" xml:space="preserve">
+    <value>Last Activity</value>
+  </data>
+  <data name="TableHeader.Items" xml:space="preserve">
+    <value>Items</value>
+  </data>
+  <data name="TableHeader.Completion" xml:space="preserve">
+    <value>Completion</value>
+  </data>
+  <data name="TableHeader.Playlist" xml:space="preserve">
+    <value>Playlist</value>
+  </data>
+  <data name="TableHeader.LinkedAlbum" xml:space="preserve">
+    <value>Linked Album</value>
+  </data>
+  <data name="TableHeader.Confidence" xml:space="preserve">
+    <value>Confidence</value>
+  </data>
+  <data name="TableHeader.Charts" xml:space="preserve">
+    <value>Charts</value>
+  </data>
+  <data name="TableHeader.ChartCount" xml:space="preserve">
+    <value>Chart Count</value>
+  </data>
+  <data name="TableHeader.Size" xml:space="preserve">
+    <value>Size</value>
+  </data>
+  <data name="TableHeader.Action" xml:space="preserve">
+    <value>Action</value>
+  </data>
+  <data name="TableHeader.StatusReasons" xml:space="preserve">
+    <value>Status Reasons</value>
+  </data>
+  <data name="TableHeader.Normalized" xml:space="preserve">
+    <value>Normalized</value>
+  </data>
+  <data name="TableHeader.AlbumCount" xml:space="preserve">
+    <value>AlbumCount</value>
+  </data>
+  <data name="TableHeader.MusicBrainzId" xml:space="preserve">
+    <value>MusicBrainzId</value>
+  </data>
+  <data name="TableHeader.SpotifyId" xml:space="preserve">
+    <value>SpotifyId</value>
+  </data>
+
+  <!-- Common Message Keys -->
+  <data name="Message.DisplayingPage" xml:space="preserve">
+    <value>Displaying page {0} of {1} (total {2} records)</value>
+  </data>
+  <data name="Message.DragAndDropImages" xml:space="preserve">
+    <value>Drag and drop or paste images here</value>
+  </data>
+  <data name="Message.ReplaceAllImagesOnUpload" xml:space="preserve">
+    <value>Replace all images on upload</value>
+  </data>
+  <data name="Message.NoDataAvailable" xml:space="preserve">
+    <value>No data available</value>
+  </data>
+  <data name="Message.NoCommentsYet" xml:space="preserve">
+    <value>No comments yet.</value>
+  </data>
+  <data name="Message.NoImagesFound" xml:space="preserve">
+    <value>No images found for this album.</value>
+  </data>
+  <data name="Message.ImageNotAvailable" xml:space="preserve">
+    <value>Image not available</value>
+  </data>
+  <data name="Message.SelectAnArtist" xml:space="preserve">
+    <value>Select an artist</value>
+  </data>
+  <data name="Message.NoAlbumsFound" xml:space="preserve">
+    <value>No albums found</value>
+  </data>
+  <data name="Message.DirectoryNotFound" xml:space="preserve">
+    <value>{0} directory [{1}] is not found.</value>
+  </data>
+  <data name="Message.NoActiveListeners" xml:space="preserve">
+    <value>No active listeners</value>
+  </data>
 </root>

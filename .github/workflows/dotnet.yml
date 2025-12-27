@@ -25,6 +25,8 @@ jobs:
         dotnet-version: 10.0.x
     - name: Restore dependencies
       run: dotnet restore
+    - name: Validate localization resources
+      run: bash scripts/validate-resources.sh
     - name: Build
       run: dotnet build --no-restore
     - name: Test with coverage

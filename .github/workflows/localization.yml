@@ -1,0 +1,88 @@
+# Localization Validation Workflow
+# Validates that all resource files have consistent keys across all languages
+# Runs on push, pull requests, and can be manually triggered
+
+name: Localization Validation
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'src/Melodee.Blazor/Resources/**'
+      - 'scripts/validate-resources.sh'
+      - '.github/workflows/localization.yml'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'src/Melodee.Blazor/Resources/**'
+      - 'scripts/validate-resources.sh'
+      - '.github/workflows/localization.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-localization:
+    name: Validate Resource Files
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Validate resource key consistency
+      run: bash scripts/validate-resources.sh
+
+    - name: Count resource keys
+      run: |
+        echo "## Resource Key Counts" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Language | Key Count |" >> $GITHUB_STEP_SUMMARY
+        echo "|----------|-----------|" >> $GITHUB_STEP_SUMMARY
+        
+        BASE_COUNT=$(grep -o '<data name="[^"]*"' src/Melodee.Blazor/Resources/SharedResources.resx | wc -l)
+        echo "| en-US (Base) | $BASE_COUNT |" >> $GITHUB_STEP_SUMMARY
+        
+        for lang in es-ES ru-RU zh-CN fr-FR ar-SA; do
+          COUNT=$(grep -o '<data name="[^"]*"' src/Melodee.Blazor/Resources/SharedResources.$lang.resx | wc -l)
+          echo "| $lang | $COUNT |" >> $GITHUB_STEP_SUMMARY
+        done
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "✅ All language files validated successfully!" >> $GITHUB_STEP_SUMMARY
+
+  test-localization:
+    name: Run Localization Tests
+    runs-on: ubuntu-latest
+    needs: validate-localization
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.0.x
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --no-restore
+
+    - name: Run localization unit tests
+      run: dotnet test tests/Melodee.Tests.Blazor/Melodee.Tests.Blazor.csproj --no-build --filter "FullyQualifiedName~Localization" --verbosity normal
+
+    - name: Test summary
+      if: success()
+      run: |
+        echo "## Localization Test Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "✅ All localization tests passed!" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Total Tests:** 209+ (including RTL support tests)" >> $GITHUB_STEP_SUMMARY
+        echo "- LocalizationService tests: 61" >> $GITHUB_STEP_SUMMARY
+        echo "- Component localization tests: 119" >> $GITHUB_STEP_SUMMARY
+        echo "- MelodeeComponentBase tests: 29" >> $GITHUB_STEP_SUMMARY

@@ -9,10 +9,10 @@
 @inject StatisticsService StatisticsService
 @inject NavigationManager NavigationManager
 
-<PageTitle>Stats</PageTitle>
+<PageTitle>@L("Stats.PageTitle")</PageTitle>
 
 <RadzenStack Gap="1rem">
-    <RadzenText TextStyle="TextStyle.H4">Statistics</RadzenText>
+    <RadzenText TextStyle="TextStyle.H4">@L("Stats.Statistics")</RadzenText>
 
     <RadzenRow>
         @foreach (var kpi in _userKpis)
@@ -30,7 +30,7 @@
 
     <RadzenCard>
         <RadzenStack Gap="0.5rem">
-            <RadzenText TextStyle="TextStyle.H6" Text="Summary"/>
+            <RadzenText TextStyle="TextStyle.H6" Text="@L("Stats.Summary")"/>
             <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="8px" class="rz-p-2">
                 @foreach (var statistic in _statistics)
                 {
@@ -58,14 +58,14 @@
     <RadzenRow>
         <RadzenColumn Size="12" SizeMD="6">
             <RadzenCard>
-                <RadzenText TextStyle="TextStyle.H6">Your plays per day (last 30d)</RadzenText>
+                <RadzenText TextStyle="TextStyle.H6">@L("Stats.YourPlaysPerDayLast30d")</RadzenText>
                 <RadzenChart Style="height:320px;">
-                    <RadzenLineSeries Data="@_playsPerDay" CategoryProperty="DayAsDateTime" ValueProperty="Value" Title="Plays">
+                    <RadzenLineSeries Data="@_playsPerDay" CategoryProperty="DayAsDateTime" ValueProperty="Value" Title="@L("Stats.PlaysChartTitle")">
                         <RadzenCategoryAxis Step="@TimeSpan.FromDays(7)" FormatString="{0:MM/dd}">
-                            <RadzenAxisTitle Text="Date"/>
+                            <RadzenAxisTitle Text="@L("Stats.DateAxisTitle")"/>
                         </RadzenCategoryAxis>
                         <RadzenValueAxis>
-                            <RadzenAxisTitle Text="Plays"/>
+                            <RadzenAxisTitle Text="@L("Stats.PlaysChartTitle")"/>
                         </RadzenValueAxis>
                     </RadzenLineSeries>
                 </RadzenChart>
@@ -73,14 +73,14 @@
         </RadzenColumn>
         <RadzenColumn Size="12" SizeMD="6">
             <RadzenCard>
-                <RadzenText TextStyle="TextStyle.H6">Songs added per day (last 30d)</RadzenText>
+                <RadzenText TextStyle="TextStyle.H6">@L("Stats.SongsAddedPerDayLast30d")</RadzenText>
                 <RadzenChart Style="height:320px;">
-                    <RadzenLineSeries Data="@_songsAddedPerDay" CategoryProperty="DayAsDateTime" ValueProperty="Value" Title="Added">
+                    <RadzenLineSeries Data="@_songsAddedPerDay" CategoryProperty="DayAsDateTime" ValueProperty="Value" Title="@L("Stats.AddedChartTitle")">
                         <RadzenCategoryAxis Step="@TimeSpan.FromDays(7)" FormatString="{0:MM/dd}">
-                            <RadzenAxisTitle Text="Date"/>
+                            <RadzenAxisTitle Text="@L("Stats.DateAxisTitle")"/>
                         </RadzenCategoryAxis>
                         <RadzenValueAxis>
-                            <RadzenAxisTitle Text="Songs"/>
+                            <RadzenAxisTitle Text="@L("Stats.SongsAxisTitle")"/>
                         </RadzenValueAxis>
                     </RadzenLineSeries>
                 </RadzenChart>
@@ -90,7 +90,7 @@
 
     <RadzenCard>
         <RadzenStack Gap="0.5rem">
-            <RadzenText TextStyle="TextStyle.H6" Text="Top played songs (you)"/>
+            <RadzenText TextStyle="TextStyle.H6" Text="@L("Stats.TopPlayedSongsYou")"/>
             <RadzenDataGrid TItem="TopItemStat" 
                             Data="@_topSongs" 
                             AllowPaging="false" 
@@ -99,12 +99,12 @@
                             Density="Density.Compact"
                             RowClick="@OnTopSongRowClick">
                 <Columns>
-                    <RadzenDataGridColumn TItem="TopItemStat" Property="Label" Title="Song">
+                    <RadzenDataGridColumn TItem="TopItemStat" Property="Label" Title="@L("Stats.SongColumnTitle")">
                         <Template Context="song">
                             <span style="cursor: pointer;">@song.Label</span>
                         </Template>
                     </RadzenDataGridColumn>
-                    <RadzenDataGridColumn TItem="TopItemStat" Property="Value" Title="Plays"/>
+                    <RadzenDataGridColumn TItem="TopItemStat" Property="Value" Title="@L("Stats.PlaysColumnTitle")"/>
                 </Columns>
             </RadzenDataGrid>
         </RadzenStack>
@@ -114,11 +114,11 @@
     {
         <RadzenCard>
             <RadzenStack Gap="0.5rem">
-                <RadzenText TextStyle="TextStyle.H6" Text="Editor — Missing Images"/>
+                <RadzenText TextStyle="TextStyle.H6" Text="@L("Stats.EditorMissingImages")"/>
                 <RadzenDataGrid TItem="Statistic" Data="@_missingImages" AllowPaging="false" AllowSorting="false" Density="Density.Compact">
                     <Columns>
-                        <RadzenDataGridColumn TItem="Statistic" Property="Title" Title="Item"/>
-                        <RadzenDataGridColumn TItem="Statistic" Property="Data" Title="Count"/>
+                        <RadzenDataGridColumn TItem="Statistic" Property="Title" Title="@L("Stats.ItemColumnTitle")"/>
+                        <RadzenDataGridColumn TItem="Statistic" Property="Data" Title="@L("Stats.CountColumnTitle")"/>
                     </Columns>
                 </RadzenDataGrid>
             </RadzenStack>
@@ -129,10 +129,10 @@
     {
         <RadzenCard>
             <RadzenStack Gap="0.5rem">
-                <RadzenText TextStyle="TextStyle.H6" Text="Admin — Activity"/>
+                <RadzenText TextStyle="TextStyle.H6" Text="@L("Stats.AdminActivity")"/>
                 <RadzenRow>
                     <RadzenColumn Size="12" SizeMD="4">
-                        <RadzenText TextStyle="TextStyle.Subtitle1">Searches per day</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Subtitle1">@L("Stats.SearchesPerDay")</RadzenText>
                         <RadzenChart Style="height:240px;">
                             <RadzenLineSeries Data="@_searchesPerDay" CategoryProperty="DayAsDateTime" ValueProperty="Value">
                                 <RadzenCategoryAxis Step="@TimeSpan.FromDays(7)" FormatString="{0:MM/dd}">
@@ -145,7 +145,7 @@
                         </RadzenChart>
                     </RadzenColumn>
                     <RadzenColumn Size="12" SizeMD="4">
-                        <RadzenText TextStyle="TextStyle.Subtitle1">Share views per day</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Subtitle1">@L("Stats.ShareViewsPerDay")</RadzenText>
                         <RadzenChart Style="height:240px;">
                             <RadzenLineSeries Data="@_shareViewsPerDay" CategoryProperty="DayAsDateTime" ValueProperty="Value">
                                 <RadzenCategoryAxis Step="@TimeSpan.FromDays(7)" FormatString="{0:MM/dd}">
@@ -158,7 +158,7 @@
                         </RadzenChart>
                     </RadzenColumn>
                     <RadzenColumn Size="12" SizeMD="4">
-                        <RadzenText TextStyle="TextStyle.Subtitle1">Library scans per day</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Subtitle1">@L("Stats.LibraryScansPerDay")</RadzenText>
                         <RadzenChart Style="height:240px;">
                             <RadzenLineSeries Data="@_libraryScansPerDay" CategoryProperty="DayAsDateTime" ValueProperty="Value">
                                 <RadzenCategoryAxis Step="@TimeSpan.FromDays(7)" FormatString="{0:MM/dd}">

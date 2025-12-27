@@ -16,16 +16,16 @@
 @inject TooltipService TooltipService
 @inject NavigationManager NavigationManager
 
-<PageTitle>Users</PageTitle>
+<PageTitle>@L("Users.PageTitle")</PageTitle>
 
 <RadzenStack Style="height: 100%">
     <RadzenBreadCrumb Class="rz-pb-5">
-        <RadzenBreadCrumbItem Path="/" Text="Dashboard"/>
-        <RadzenBreadCrumbItem Icon="group" Text="Users"/>
+        <RadzenBreadCrumbItem Path="/" Text="@L("Navigation.Dashboard")"/>
+        <RadzenBreadCrumbItem Icon="group" Text="@L("Users.Header")"/>
     </RadzenBreadCrumb>
     <RadzenRow AlignItems="AlignItems.Center">
         <RadzenColumn Size="12" SizeMD="6">
-            <RadzenText Text="Users" TextStyle="TextStyle.DisplayH6" TagName="TagName.H1" style="margin: 0"/>
+            <RadzenText Text="@L("Users.Header")" TextStyle="TextStyle.DisplayH6" TagName="TagName.H1" style="margin: 0"/>
         </RadzenColumn>
         <RadzenColumn Size="12" SizeMD="6" Visible="CurrentUser?.IsEditor() ?? false">
             <RadzenStack
@@ -33,10 +33,10 @@
                 AlignItems="AlignItems.Center"
                 JustifyContent="JustifyContent.End"
                 Gap="0.5rem">
-                <RadzenButton Icon="add_circle_outline" Text="Add"
+                <RadzenButton Icon="add_circle_outline" Text="@L("Users.Add")"
                               Size="ButtonSize.Small"
                               Click="@AddButtonClick"/>
-                <RadzenButton Icon="delete" Disabled="!_selectedUsers.Any()" Text="Delete"
+                <RadzenButton Icon="delete" Disabled="!_selectedUsers.Any()" Text="@L("Users.Delete")"
                               Click="@DeleteSelectedButtonClick"
                               Size="ButtonSize.Small"
                               ButtonStyle="ButtonStyle.Warning"/>

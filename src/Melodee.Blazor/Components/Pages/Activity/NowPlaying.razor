@@ -7,20 +7,20 @@
 @inject INowPlayingRepository NowPlayingRepository
 @inject SongService SongService
 
-<PageTitle>Now Playing</PageTitle>
+<PageTitle>@L("NowPlaying.PageTitle")</PageTitle>
 
 <RadzenPanel AllowCollapse="true">
     <HeaderTemplate>
         <RadzenText TextStyle="TextStyle.Subtitle2" class="rz-display-flex rz-m-0">
             <RadzenIcon Icon="sound_sampler" class="rz-me-1"/>
-            Now Playing
+            @L("NowPlaying.Header")
         </RadzenText>
     </HeaderTemplate>
     <ChildContent>
         <RadzenStack Orientation="Orientation.Horizontal">
             @if (_nowPlayingSongs.Length == 0)
             {
-                <RadzenText Text="No songs are currently playing." class="rz-m-2"/>
+                <RadzenText Text="@L("NowPlaying.NoSongsPlaying")" class="rz-m-2"/>
             }
             @foreach (var nowPlayingSong in _nowPlayingSongs)
             {

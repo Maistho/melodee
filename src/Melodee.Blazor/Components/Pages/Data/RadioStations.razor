@@ -15,17 +15,17 @@
 @inject NavigationManager NavigationManager
 @inject DefaultImages DefaultImages
 
-<PageTitle>Radio Stations</PageTitle>
+<PageTitle>@L("RadioStations.PageTitle")</PageTitle>
 
 <RadzenBreadCrumb Class="rz-pb-5">
-    <RadzenBreadCrumbItem Path="/" Text="Dashboard"/>
-    <RadzenBreadCrumbItem Icon="radio" Text="Radio Stations"/>
+    <RadzenBreadCrumbItem Path="/" Text="@L("Navigation.Dashboard")"/>
+    <RadzenBreadCrumbItem Icon="radio" Text="@L("RadioStations.Header")"/>
 </RadzenBreadCrumb>
 
 <RadzenStack>
     <RadzenRow AlignItems="AlignItems.Center">
         <RadzenColumn Size="12" SizeMD="6">
-            <RadzenText Text="Radio Stations" TextStyle="TextStyle.DisplayH6" TagName="TagName.H1" style="margin: 0"/>
+            <RadzenText Text="@L("RadioStations.Header")" TextStyle="TextStyle.DisplayH6" TagName="TagName.H1" style="margin: 0"/>
         </RadzenColumn>
         <RadzenColumn Size="12" SizeMD="6" Visible="CurrentUser?.IsEditor() ?? false">
             <RadzenStack
@@ -33,7 +33,7 @@
                 AlignItems="AlignItems.Center"
                 JustifyContent="JustifyContent.End"
                 Gap="0.5rem">
-                <RadzenButton Icon="delete" Disabled="!_selectedRadioStations.Any()" Text="Delete"
+                <RadzenButton Icon="delete" Disabled="!_selectedRadioStations.Any()" Text="@L("RadioStations.Delete")"
                               Click="@DeleteSelectedButtonClick"
                               Size="ButtonSize.Small"
                               ButtonStyle="ButtonStyle.Warning"/>

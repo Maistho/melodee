@@ -80,4 +80,16 @@ public interface ILocalizationService
     /// <param name="format">Optional format string</param>
     /// <returns>Formatted number string</returns>
     string FormatNumber(decimal number, string? format = null);
+
+    /// <summary>
+    /// Determines if the current culture is a right-to-left (RTL) language.
+    /// </summary>
+    /// <returns>True if current culture is RTL, false otherwise</returns>
+    bool IsRightToLeft();
+
+    /// <summary>
+    /// Gets the text direction for the current culture.
+    /// </summary>
+    /// <returns>"rtl" for right-to-left languages, "ltr" for left-to-right languages</returns>
+    string GetTextDirection();
 }

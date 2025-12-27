@@ -689,4 +689,137 @@ public class LocalizationServiceTests
     }
 
     #endregion
+
+    #region RTL (Right-to-Left) Tests
+
+    [Theory]
+    [InlineData("ar-SA", true)]  // Arabic is RTL
+    [InlineData("en-US", false)] // English is LTR
+    [InlineData("es-ES", false)] // Spanish is LTR
+    [InlineData("ru-RU", false)] // Russian is LTR
+    [InlineData("zh-CN", false)] // Chinese is LTR
+    [InlineData("fr-FR", false)] // French is LTR
+    public async Task IsRightToLeft_ReturnsCorrectValueForCulture(string cultureCode, bool expectedRtl)
+    {
+        // Arrange
+        _mockLocalStorage.Setup(x => x.SetItemAsStringAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(Task.CompletedTask);
+        await _service.SetCultureAsync(cultureCode);
+
+        // Act
+        var isRtl = _service.IsRightToLeft();
+
+        // Assert
+        isRtl.Should().Be(expectedRtl);
+    }
+
+    [Theory]
+    [InlineData("ar-SA", "rtl")]  // Arabic should return "rtl"
+    [InlineData("en-US", "ltr")]  // English should return "ltr"
+    [InlineData("es-ES", "ltr")]  // Spanish should return "ltr"
+    [InlineData("ru-RU", "ltr")]  // Russian should return "ltr"
+    [InlineData("zh-CN", "ltr")]  // Chinese should return "ltr"
+    [InlineData("fr-FR", "ltr")]  // French should return "ltr"
+    public async Task GetTextDirection_ReturnsCorrectDirectionForCulture(string cultureCode, string expectedDirection)
+    {
+        // Arrange
+        _mockLocalStorage.Setup(x => x.SetItemAsStringAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(Task.CompletedTask);
+        await _service.SetCultureAsync(cultureCode);
+
+        // Act
+        var direction = _service.GetTextDirection();
+
+        // Assert
+        direction.Should().Be(expectedDirection);
+    }
+
+    [Fact]
+    public async Task IsRightToLeft_WhenCultureChangesToArabic_ReturnsTrue()
+    {
+        // Arrange
+        _mockLocalStorage.Setup(x => x.SetItemAsStringAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(Task.CompletedTask);
+        
+        // Start with English (LTR)
+        await _service.SetCultureAsync("en-US");
+        _service.IsRightToLeft().Should().BeFalse();
+
+        // Act - Change to Arabic (RTL)
+        await _service.SetCultureAsync("ar-SA");
+
+        // Assert
+        _service.IsRightToLeft().Should().BeTrue();
+        _service.GetTextDirection().Should().Be("rtl");
+    }
+
+    [Fact]
+    public async Task IsRightToLeft_WhenCultureChangesFromArabicToEnglish_ReturnsFalse()
+    {
+        // Arrange
+        _mockLocalStorage.Setup(x => x.SetItemAsStringAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(Task.CompletedTask);
+        
+        // Start with Arabic (RTL)
+        await _service.SetCultureAsync("ar-SA");
+        _service.IsRightToLeft().Should().BeTrue();
+
+        // Act - Change to English (LTR)
+        await _service.SetCultureAsync("en-US");
+
+        // Assert
+        _service.IsRightToLeft().Should().BeFalse();
+        _service.GetTextDirection().Should().Be("ltr");
+    }
+
+    [Fact]
+    public void IsRightToLeft_WithDefaultCulture_ReturnsFalse()
+    {
+        // Act
+        var isRtl = _service.IsRightToLeft();
+
+        // Assert
+        // Default culture should be LTR (likely en-US or system default)
+        isRtl.Should().BeFalse();
+    }
+
+    [Fact]
+    public void GetTextDirection_WithDefaultCulture_ReturnsLtr()
+    {
+        // Act
+        var direction = _service.GetTextDirection();
+
+        // Assert
+        // Default culture should return "ltr"
+        direction.Should().Be("ltr");
+    }
+
+    [Fact]
+    public async Task GetTextDirection_ConsistentWithIsRightToLeft()
+    {
+        // Arrange
+        _mockLocalStorage.Setup(x => x.SetItemAsStringAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(Task.CompletedTask);
+
+        // Test all supported cultures
+        foreach (var culture in _service.SupportedCultures)
+        {
+            // Act
+            await _service.SetCultureAsync(culture);
+            var isRtl = _service.IsRightToLeft();
+            var direction = _service.GetTextDirection();
+
+            // Assert
+            if (isRtl)
+            {
+                direction.Should().Be("rtl", $"Culture {culture.Name} is RTL");
+            }
+            else
+            {
+                direction.Should().Be("ltr", $"Culture {culture.Name} is LTR");
+            }
+        }
+    }
+
+    #endregion
 }

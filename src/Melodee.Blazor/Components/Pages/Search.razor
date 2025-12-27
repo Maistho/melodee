@@ -14,18 +14,18 @@
 
 @inherits MelodeeComponentBase
 
-<PageTitle>Search Results</PageTitle>
+<PageTitle>@L("Search.PageTitle")</PageTitle>
 
 <RadzenStack>
     <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
-        <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-m-0">Results for: @Query</RadzenText>
-        <RadzenButton Text="Request Music" Icon="add" ButtonStyle="ButtonStyle.Primary" Click="@NavigateToRequestMusic" />
+        <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-m-0">@L("Search.ResultsFor", Query)</RadzenText>
+        <RadzenButton Text="@L("Search.RequestMusic")" Icon="add" ButtonStyle="ButtonStyle.Primary" Click="@NavigateToRequestMusic" />
     </RadzenStack>
     <RadzenPanel AllowCollapse="true" Visible="_searchResult.Artists.Any()">
         <HeaderTemplate>
             <RadzenText TextStyle="TextStyle.Subtitle2" class="rz-display-flex rz-m-0">
                 <RadzenIcon Icon="artist" class="rz-me-1"/>
-                Artists (@_searchResult.Artists.Length)
+                @L("Search.ArtistsCount", _searchResult.Artists.Length)
             </RadzenText>
         </HeaderTemplate>
         <ChildContent>
@@ -46,7 +46,7 @@
         <HeaderTemplate>
             <RadzenText TextStyle="TextStyle.Subtitle2" class="rz-display-flex rz-m-0">
                 <RadzenIcon Icon="album" class="rz-me-1"/>
-                Albums (@_searchResult.Albums.Length)
+                @L("Search.AlbumsCount", _searchResult.Albums.Length)
             </RadzenText>
         </HeaderTemplate>
         <ChildContent>
@@ -54,13 +54,13 @@
                 <RadzenTableHeader>
                     <RadzenTableHeaderRow>
                         <RadzenTableHeaderCell>
-                            Artist
+                            @L("Search.ArtistColumnTitle")
                         </RadzenTableHeaderCell>
                         <RadzenTableHeaderCell>
-                            Album
+                            @L("Search.AlbumColumnTitle")
                         </RadzenTableHeaderCell>
                         <RadzenTableHeaderCell style="width: 100px;">
-                            Year
+                            @L("Search.YearColumnTitle")
                         </RadzenTableHeaderCell>
                     </RadzenTableHeaderRow>
                 </RadzenTableHeader>
@@ -95,7 +95,7 @@
         <HeaderTemplate>
             <RadzenText TextStyle="TextStyle.Subtitle2" class="rz-display-flex rz-m-0">
                 <RadzenIcon Icon="album" class="rz-me-1"/>
-                Songs (@_searchResult.Songs.Length)
+                @L("Search.SongsCount", _searchResult.Songs.Length)
             </RadzenText>
         </HeaderTemplate>
         <ChildContent>
@@ -103,16 +103,16 @@
                 <RadzenTableHeader>
                     <RadzenTableHeaderRow>
                         <RadzenTableHeaderCell>
-                            Artist
+                            @L("Search.ArtistColumnTitle")
                         </RadzenTableHeaderCell>
                         <RadzenTableHeaderCell>
-                            Album
+                            @L("Search.AlbumColumnTitle")
                         </RadzenTableHeaderCell>
                         <RadzenTableHeaderCell style="width: 100px;">
-                            Year
+                            @L("Search.YearColumnTitle")
                         </RadzenTableHeaderCell>
                         <RadzenTableHeaderCell>
-                            Title
+                            @L("Search.TitleColumnTitle")
                         </RadzenTableHeaderCell>
                     </RadzenTableHeaderRow>
                 </RadzenTableHeader>
@@ -142,7 +142,7 @@
                                     Icon="play_arrow"
                                     class="filled-icon"
                                     IconColor="@Colors.Info"
-                                    title="Play song"
+                                    title="@L("Search.PlaySong")"
                                     @onclick="@(() => PlaySong(song))"
                                     Style="cursor:pointer;font-size:14px;"/>
                                 @song.Title

@@ -16,3 +16,57 @@
   right: 0.75rem;
   top: 0.5rem;
 }
+
+/* RTL (Right-to-Left) Layout Support for Arabic */
+.rtl-layout {
+    direction: rtl;
+    text-align: right;
+}
+
+.rtl-layout .rz-sidebar {
+    right: 0;
+    left: auto;
+}
+
+.rtl-layout .rz-panel-menu-item-text {
+    text-align: right;
+}
+
+.rtl-layout .rz-panel-menu-item-icon {
+    margin-right: 0;
+    margin-left: 8px;
+}
+
+.rtl-layout .rz-stack-horizontal {
+    flex-direction: row-reverse;
+}
+
+.rtl-layout input,
+.rtl-layout .rz-textbox {
+    text-align: right;
+}
+
+.rtl-layout .rz-dropdown,
+.rtl-layout .rz-dropdown-items {
+    text-align: right;
+}
+
+.rtl-layout .rz-datatable-data td {
+    text-align: right;
+}
+
+.rtl-layout .rz-button-icon-left {
+    margin-right: 0;
+    margin-left: 0.5rem;
+}
+
+.rtl-layout .rz-button-icon-right {
+    margin-left: 0;
+    margin-right: 0.5rem;
+}
+
+/* LTR (Left-to-Right) Layout - Default behavior */
+.ltr-layout {
+    direction: ltr;
+    text-align: left;
+}

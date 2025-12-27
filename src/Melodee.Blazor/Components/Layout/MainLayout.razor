@@ -1,5 +1,6 @@
 @inherits LayoutComponentBase
 @using System.Drawing
+@using System.Globalization
 @using Melodee.Common.Enums
 @using Microsoft.AspNetCore.Components.Authorization
 @using HttpUtility = System.Web.HttpUtility
@@ -28,7 +29,7 @@
         @Body
     </NotAuthorized>
     <Authorized>
-        <RadzenLayout>
+        <RadzenLayout dir="@LocalizationService.GetTextDirection()" class="@(_isRtl ? "rtl-layout" : "ltr-layout")">
             <RadzenHeader>
                 <RadzenRow JustifyContent="JustifyContent.Start" AlignItems="AlignItems.Center" Gap="0">
                     <RadzenColumn Size="5">
@@ -139,6 +140,7 @@
     string _siteTitle = string.Empty;
     bool _hasUnreadRequests;
     Timer? _activityTimer;
+    bool _isRtl = false;
 
     string _debounceInputValue = "";
 
@@ -164,8 +166,20 @@
             }
         }
 
+        // Initialize RTL state
+        _isRtl = LocalizationService.IsRightToLeft();
+
+        // Subscribe to culture changes
+        LocalizationService.CultureChanged += OnCultureChanged;
+
         MainLayoutProxyService.HeaderChanged += OnHeaderChange;
         MainLayoutProxyService.SpinnerVisibleChanged += OnSpinnerChange;
+    }
+
+    private void OnCultureChanged(CultureInfo culture)
+    {
+        _isRtl = LocalizationService.IsRightToLeft();
+        InvokeAsync(StateHasChanged);
     }
 
     private void OnHeaderChange(object? sender, EventArgs e)
@@ -180,6 +194,7 @@
 
     public void Dispose()
     {
+        LocalizationService.CultureChanged -= OnCultureChanged;
         MainLayoutProxyService.HeaderChanged -= OnHeaderChange;
         MainLayoutProxyService.SpinnerVisibleChanged -= OnSpinnerChange;
         _activityTimer?.Dispose();
