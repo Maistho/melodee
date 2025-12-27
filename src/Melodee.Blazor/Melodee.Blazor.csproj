@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <AssemblyName>server</AssemblyName>
+    <RootNamespace>Melodee.Blazor</RootNamespace>
     <Deterministic>false</Deterministic>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <IncludeSourceRevisionInInformationalVersion>true</IncludeSourceRevisionInInformationalVersion>

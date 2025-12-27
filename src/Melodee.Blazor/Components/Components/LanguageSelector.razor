@@ -1,5 +1,6 @@
 @inject ILocalizationService LocalizationService
 @inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
 @implements IDisposable
 
 <RadzenDropDown @bind-Value="@_selectedCulture"
@@ -21,12 +22,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Get current culture from service
         _selectedCulture = LocalizationService.CurrentCulture.Name;
-        
-        // Subscribe to culture changes
         LocalizationService.CultureChanged += OnCultureChangedExternally;
-        
         _isInitialized = true;
         await base.OnInitializedAsync();
     }
@@ -40,14 +37,20 @@
 
         try
         {
+            // Set cookie for the middleware to read on next request
+            // The cookie name must match what RequestLocalizationMiddleware expects
+            var cookieValue = $"c={cultureCode}|uic={cultureCode}";
+            await JSRuntime.InvokeVoidAsync("eval", 
+                $"document.cookie = '.AspNetCore.Culture={Uri.EscapeDataString(cookieValue)}; path=/; max-age=31536000; samesite=lax'");
+            
+            // Also update localStorage for the LocalizationService
             await LocalizationService.SetCultureAsync(cultureCode);
             
-            // Reload the page to apply culture changes throughout the app
-            await JSRuntime.InvokeVoidAsync("location.reload");
+            // Force full page reload to let middleware apply the new culture
+            NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
         }
         catch (Exception ex)
         {
-            // Log error but don't crash
             Console.Error.WriteLine($"Error changing culture: {ex.Message}");
         }
     }

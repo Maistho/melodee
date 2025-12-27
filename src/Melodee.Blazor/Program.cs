@@ -18,6 +18,7 @@ using Melodee.Common.Jobs;
 using Melodee.Common.MessageBus.EventHandlers;
 using Melodee.Common.Metadata;
 using Melodee.Common.Models;
+using Microsoft.Extensions.Localization;
 using Melodee.Common.Models.SearchEngines.ArtistSearchEngineServiceData;
 using Melodee.Common.Plugins.MetaData.Song;
 using Melodee.Common.Plugins.Scrobbling;
@@ -71,10 +72,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 // Configure localization
-builder.Services.AddLocalization(options =>
-{
-    options.ResourcesPath = "Resources";
-});
+builder.Services.AddLocalization();
 
 builder.Services.Configure<Microsoft.AspNetCore.Components.Server.CircuitOptions>(options =>
 {
@@ -700,11 +698,16 @@ app.UseCors(bb => bb
     .WithExposedHeaders("Accept-Ranges", "Content-Range", "Content-Length", "Content-Type"));
 
 // Configure request localization with supported cultures
-var supportedCultures = new[] { "en-US", "es-ES", "ru-RU", "zh-CN", "fr-FR", "ar-SA" };
+var supportedCultures = new[] { "en-US", "de-DE", "es-ES", "fr-FR", "it-IT", "ja-JP", "pt-BR", "ru-RU", "zh-CN", "ar-SA" };
 var localizationOptions = new RequestLocalizationOptions()
     .SetDefaultCulture("en-US")
     .AddSupportedCultures(supportedCultures)
     .AddSupportedUICultures(supportedCultures);
+
+// Ensure cookie provider is checked first for culture determination
+localizationOptions.RequestCultureProviders.Insert(0, 
+    new Microsoft.AspNetCore.Localization.CookieRequestCultureProvider());
+
 app.UseRequestLocalization(localizationOptions);
 
 app.UseAntiforgery();

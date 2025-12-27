@@ -1,3 +1,7 @@
+using Microsoft.Extensions.Localization;
+
+[assembly: RootNamespace("Melodee.Blazor")]
+
 namespace Melodee.Blazor.Resources;
 
 /// <summary>
