@@ -61,69 +61,69 @@ else
         </RadzenCard>
 
         <RadzenCard>
-            <RadzenText TextStyle="TextStyle.Subtitle1" Text="Details" Class="rz-mb-3"/>
+            <RadzenText TextStyle="TextStyle.Subtitle1" Text="@L("Label.Details")" Class="rz-mb-3"/>
             <RadzenRow Gap="1rem">
                 @if (!string.IsNullOrWhiteSpace(_request.ArtistName))
                 {
                     <RadzenColumn Size="12" SizeMD="6">
-                        <RadzenText TextStyle="TextStyle.Body2" Text="Artist"/>
+                        <RadzenText TextStyle="TextStyle.Body2" Text="@L("Label.Artist")"/>
                         <RadzenText TextStyle="TextStyle.Body1" Text="@_request.ArtistName"/>
                     </RadzenColumn>
                 }
                 @if (!string.IsNullOrWhiteSpace(_request.AlbumTitle))
                 {
                     <RadzenColumn Size="12" SizeMD="6">
-                        <RadzenText TextStyle="TextStyle.Body2" Text="Album"/>
+                        <RadzenText TextStyle="TextStyle.Body2" Text="@L("Common.Album")"/>
                         <RadzenText TextStyle="TextStyle.Body1" Text="@_request.AlbumTitle"/>
                     </RadzenColumn>
                 }
                 @if (!string.IsNullOrWhiteSpace(_request.SongTitle))
                 {
                     <RadzenColumn Size="12" SizeMD="6">
-                        <RadzenText TextStyle="TextStyle.Body2" Text="Song"/>
+                        <RadzenText TextStyle="TextStyle.Body2" Text="@L("Common.Song")"/>
                         <RadzenText TextStyle="TextStyle.Body1" Text="@_request.SongTitle"/>
                     </RadzenColumn>
                 }
                 @if (_request.ReleaseYear.HasValue)
                 {
                     <RadzenColumn Size="12" SizeMD="6">
-                        <RadzenText TextStyle="TextStyle.Body2" Text="Release Year"/>
+                        <RadzenText TextStyle="TextStyle.Body2" Text="@L("Label.ReleaseYear")"/>
                         <RadzenText TextStyle="TextStyle.Body1" Text="@_request.ReleaseYear.Value.ToString()"/>
                     </RadzenColumn>
                 }
                 @if (!string.IsNullOrWhiteSpace(_request.ExternalUrl))
                 {
                     <RadzenColumn Size="12" SizeMD="6">
-                        <RadzenText TextStyle="TextStyle.Body2" Text="External URL"/>
+                        <RadzenText TextStyle="TextStyle.Body2" Text="@L("Label.ExternalURL")"/>
                         <RadzenLink Path="@_request.ExternalUrl" Text="@_request.ExternalUrl" Target="_blank"/>
                     </RadzenColumn>
                 }
                 @if (!string.IsNullOrWhiteSpace(_request.Notes))
                 {
                     <RadzenColumn Size="12">
-                        <RadzenText TextStyle="TextStyle.Body2" Text="Notes"/>
+                        <RadzenText TextStyle="TextStyle.Body2" Text="@L("Label.Notes")"/>
                         <RadzenText TextStyle="TextStyle.Body1" Text="@_request.Notes" Style="white-space: pre-wrap;"/>
                     </RadzenColumn>
                 }
             </RadzenRow>
             <RadzenRow Gap="1rem" Class="rz-mt-4">
                 <RadzenColumn Size="12" SizeMD="4">
-                    <RadzenText TextStyle="TextStyle.Body2" Text="Created By"/>
+                    <RadzenText TextStyle="TextStyle.Body2" Text="@L("RequestDetail.CreatedBy")"/>
                     <RadzenText TextStyle="TextStyle.Body1" Text="@_request.CreatedByUser.UserName"/>
                 </RadzenColumn>
                 <RadzenColumn Size="12" SizeMD="4">
-                    <RadzenText TextStyle="TextStyle.Body2" Text="Created"/>
+                    <RadzenText TextStyle="TextStyle.Body2" Text="@L("Common.Created")"/>
                     <RadzenText TextStyle="TextStyle.Body1" Text="@CurrentUser?.FormatInstant(_request.CreatedAt)"/>
                 </RadzenColumn>
                 <RadzenColumn Size="12" SizeMD="4">
-                    <RadzenText TextStyle="TextStyle.Body2" Text="Last Activity"/>
+                    <RadzenText TextStyle="TextStyle.Body2" Text="@L("Label.LastActivity")"/>
                     <RadzenText TextStyle="TextStyle.Body1" Text="@CurrentUser?.FormatInstant(_request.LastActivityAt)"/>
                 </RadzenColumn>
             </RadzenRow>
         </RadzenCard>
 
         <RadzenCard>
-            <RadzenText TextStyle="TextStyle.Subtitle1" Text="Comments" Class="rz-mb-3"/>
+            <RadzenText TextStyle="TextStyle.Subtitle1" Text="@L("RequestDetail.Comments")" Class="rz-mb-3"/>
 
             <RadzenStack Gap="1rem">
                 @foreach (var comment in GetTopLevelComments())
@@ -133,17 +133,17 @@ else
 
                 @if (!_comments.Any())
                 {
-                    <RadzenText TextStyle="TextStyle.Body2" Text="No comments yet."/>
+                    <RadzenText TextStyle="TextStyle.Body2" Text="@L("RequestDetail.NoCommentsYet")"/>
                 }
 
                 <RadzenCard>
-                    <RadzenText TextStyle="TextStyle.Body2" Text="@(_replyingTo != null ? $"Replying to {_replyingTo.CreatedByUser?.UserName ?? "comment"}..." : "Add a comment")" Class="rz-mb-2"/>
+                    <RadzenText TextStyle="TextStyle.Body2" Text="@(_replyingTo != null ? string.Format(L("RequestDetail.ReplyingTo"), _replyingTo.CreatedByUser?.UserName ?? "comment") : L("RequestDetail.AddComment"))" Class="rz-mb-2"/>
                     @if (_replyingTo != null)
                     {
-                        <RadzenButton Text="Cancel Reply" Size="ButtonSize.ExtraSmall" Variant="Variant.Text" Click="@CancelReply" Class="rz-mb-2"/>
+                        <RadzenButton Text="@L("Actions.CancelReply")" Size="ButtonSize.ExtraSmall" Variant="Variant.Text" Click="@CancelReply" Class="rz-mb-2"/>
                     }
-                    <RadzenTextArea @bind-Value="@_newCommentBody" Rows="3" Style="width: 100%;" Placeholder="Write your comment..." Class="rz-mb-2"/>
-                    <RadzenButton Text="Post Comment" Icon="send" Size="ButtonSize.Small" Click="@PostComment" Disabled="@string.IsNullOrWhiteSpace(_newCommentBody)"/>
+                    <RadzenTextArea @bind-Value="@_newCommentBody" Rows="3" Style="width: 100%;" Placeholder="@L("RequestDetail.WriteComment")" Class="rz-mb-2"/>
+                    <RadzenButton Text="@L("Actions.PostComment")" Icon="send" Size="ButtonSize.Small" Click="@PostComment" Disabled="@string.IsNullOrWhiteSpace(_newCommentBody)"/>
                 </RadzenCard>
             </RadzenStack>
         </RadzenCard>
@@ -174,12 +174,12 @@ else
                             @if (comment.IsSystem)
                             {
                                 <RadzenIcon Icon="computer" Style="color: var(--rz-text-disabled-color)"/>
-                                <RadzenText TextStyle="TextStyle.Body2" Text="System"/>
+                                <RadzenText TextStyle="TextStyle.Body2" Text="@L("RequestDetail.System")"/>
                             }
                             else
                             {
                                 <RadzenIcon Icon="person"/>
-                                <RadzenText TextStyle="TextStyle.Body2" Text="@(comment.CreatedByUser?.UserName ?? "Unknown")"/>
+                                <RadzenText TextStyle="TextStyle.Body2" Text="@(comment.CreatedByUser?.UserName ?? L("RequestDetail.Unknown"))"/>
                             }
                         </RadzenStack>
                         <RadzenText TextStyle="TextStyle.Caption" Text="@CurrentUser?.FormatInstant(comment.CreatedAt)"/>
@@ -191,7 +191,7 @@ else
                 @if (!comment.IsSystem)
                 {
                     <RadzenColumn Size="12" Class="rz-mt-2">
-                        <RadzenButton Text="Reply" Size="ButtonSize.ExtraSmall" Variant="Variant.Text" Click="@(() => ReplyToComment(comment))"/>
+                        <RadzenButton Text="@L("Actions.Reply")" Size="ButtonSize.ExtraSmall" Variant="Variant.Text" Click="@(() => ReplyToComment(comment))"/>
                     </RadzenColumn>
                 }
             </RadzenRow>
@@ -236,7 +236,7 @@ else
                 NotificationService.Notify(new NotificationMessage
                 {
                     Severity = NotificationSeverity.Error,
-                    Summary = "Request not found"
+                    Summary = L("RequestDetail.RequestNotFound")
                 });
                 NavigationManager.NavigateTo("/requests");
             }
@@ -247,7 +247,7 @@ else
             NotificationService.Notify(new NotificationMessage
             {
                 Severity = NotificationSeverity.Error,
-                Summary = "Error loading request"
+                Summary = L("RequestDetail.ErrorLoading")
             });
         }
         finally
@@ -271,7 +271,7 @@ else
 
     async Task DeleteClick()
     {
-        var confirm = await DialogService.Confirm("Are you sure you want to delete this request?", "Delete Request", new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" });
+        var confirm = await DialogService.Confirm(L("RequestDetail.ConfirmDelete"), L("RequestDetail.DeleteRequest"), new ConfirmOptions { OkButtonText = L("Actions.Yes"), CancelButtonText = L("Actions.No") });
         if (confirm ?? false)
         {
             var result = await RequestService.DeleteAsync(ApiKey, CurrentUsersId);
@@ -280,7 +280,7 @@ else
                 NotificationService.Notify(new NotificationMessage
                 {
                     Severity = NotificationSeverity.Success,
-                    Summary = "Request deleted"
+                    Summary = L("RequestDetail.RequestDeleted")
                 });
                 NavigationManager.NavigateTo("/requests");
             }
@@ -289,7 +289,7 @@ else
                 NotificationService.Notify(new NotificationMessage
                 {
                     Severity = NotificationSeverity.Error,
-                    Summary = "Error deleting request",
+                    Summary = L("RequestDetail.ErrorDeleting"),
                     Detail = result.Messages?.FirstOrDefault()
                 });
             }
@@ -304,7 +304,7 @@ else
             NotificationService.Notify(new NotificationMessage
             {
                 Severity = NotificationSeverity.Success,
-                Summary = "Request marked as complete"
+                Summary = L("RequestDetail.MarkedComplete")
             });
             await LoadRequestAsync();
         }
@@ -313,7 +313,7 @@ else
             NotificationService.Notify(new NotificationMessage
             {
                 Severity = NotificationSeverity.Error,
-                Summary = "Error completing request",
+                Summary = L("RequestDetail.ErrorCompleting"),
                 Detail = result.Messages?.FirstOrDefault()
             });
         }
@@ -346,7 +346,7 @@ else
             NotificationService.Notify(new NotificationMessage
             {
                 Severity = NotificationSeverity.Error,
-                Summary = "Error posting comment",
+                Summary = L("RequestDetail.ErrorPosting"),
                 Detail = result.Messages?.FirstOrDefault()
             });
         }

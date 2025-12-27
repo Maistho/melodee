@@ -11,7 +11,7 @@
 
 <RadzenStack Gap="1rem">
     <RadzenAlert AlertStyle="AlertStyle.Info" Shade="Shade.Lighter" AllowClose="false">
-        <RadzenText TextStyle="TextStyle.Subtitle2">JSON Import Schema:</RadzenText>
+        <RadzenText TextStyle="TextStyle.Subtitle2">@L("ChartImportDialog.JSONImportSchema")</RadzenText>
         <RadzenText TextStyle="TextStyle.Body2">
             <pre style="font-size: 0.75rem; margin: 0.5rem 0;">
 {
@@ -37,20 +37,20 @@
         </RadzenText>
     </RadzenAlert>
 
-    <RadzenFormField Text="JSON Content" Variant="Variant.Outlined" Style="width: 100%;">
-        <RadzenTextArea @bind-Value="@_jsonContent" Rows="12" Style="width: 100%; font-family: monospace;" Placeholder="Paste JSON here or upload a file..."/>
+    <RadzenFormField Text="@L("ChartImportDialog.JSONContent")" Variant="Variant.Outlined" Style="width: 100%;">
+        <RadzenTextArea @bind-Value="@_jsonContent" Rows="12" Style="width: 100%; font-family: monospace;" Placeholder="@L("ChartImportDialog.PasteJSON")"/>
     </RadzenFormField>
 
     <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
         <InputFile OnChange="@OnFileSelected" accept=".json" style="display: none;" id="jsonFileInput"/>
-        <RadzenButton Text="Upload File" Icon="upload_file" ButtonStyle="ButtonStyle.Secondary" Click="@TriggerFileInput"/>
+        <RadzenButton Text="@L("ChartImportDialog.UploadFile")" Icon="upload_file" ButtonStyle="ButtonStyle.Secondary" Click="@TriggerFileInput"/>
         <RadzenText TextStyle="TextStyle.Caption" Style="align-self: center;">@_fileName</RadzenText>
     </RadzenStack>
 
     @if (_validationErrors.Any())
     {
         <RadzenAlert AlertStyle="AlertStyle.Danger" Shade="Shade.Lighter" AllowClose="false">
-            <RadzenText TextStyle="TextStyle.Subtitle2">Validation Errors:</RadzenText>
+            <RadzenText TextStyle="TextStyle.Subtitle2">@L("ChartImportDialog.ValidationErrors")</RadzenText>
             <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
                 @foreach (var error in _validationErrors)
                 {
@@ -63,24 +63,24 @@
     @if (_previewChart != null)
     {
         <RadzenAlert AlertStyle="AlertStyle.Success" Shade="Shade.Lighter" AllowClose="false">
-            <RadzenText TextStyle="TextStyle.Subtitle2">Preview:</RadzenText>
+            <RadzenText TextStyle="TextStyle.Subtitle2">@L("Actions.Preview")</RadzenText>
             <RadzenText TextStyle="TextStyle.Body2">
-                <strong>Title:</strong> @_previewChart.Title<br/>
-                <strong>Source:</strong> @(_previewChart.SourceName ?? "N/A")<br/>
-                <strong>Year:</strong> @(_previewChart.Year?.ToString() ?? "N/A")<br/>
-                <strong>Items:</strong> @_previewChart.Items.Count<br/>
+                <strong>@L("Common.Title"):</strong> @_previewChart.Title<br/>
+                <strong>@L("TableHeader.Source"):</strong> @(_previewChart.SourceName ?? "N/A")<br/>
+                <strong>@L("Common.Year"):</strong> @(_previewChart.Year?.ToString() ?? "N/A")<br/>
+                <strong>@L("TableHeader.Items"):</strong> @_previewChart.Items.Count<br/>
                 @if (!string.IsNullOrWhiteSpace(_previewChart.ImageUrl))
                 {
-                    <strong>Image URL:</strong> @_previewChart.ImageUrl<br/>
+                    <strong>@L("ChartImportDialog.ImageUrl"):</strong> @_previewChart.ImageUrl<br/>
                 }
             </RadzenText>
         </RadzenAlert>
     }
 
     <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End">
-        <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@Cancel"/>
-        <RadzenButton Text="Validate" Icon="check_circle" ButtonStyle="ButtonStyle.Secondary" Click="@ValidateJson" Disabled="@string.IsNullOrWhiteSpace(_jsonContent)"/>
-        <RadzenButton Text="Import" Icon="download" ButtonStyle="ButtonStyle.Primary" Click="@ImportChart" Disabled="@(_previewChart == null)"/>
+        <RadzenButton Text="@L("Actions.Cancel")" ButtonStyle="ButtonStyle.Light" Click="@Cancel"/>
+        <RadzenButton Text="@L("Actions.Validate")" Icon="check_circle" ButtonStyle="ButtonStyle.Secondary" Click="@ValidateJson" Disabled="@string.IsNullOrWhiteSpace(_jsonContent)"/>
+        <RadzenButton Text="@L("Actions.Import")" Icon="download" ButtonStyle="ButtonStyle.Primary" Click="@ImportChart" Disabled="@(_previewChart == null)"/>
     </RadzenStack>
 </RadzenStack>
 
@@ -116,7 +116,7 @@
 
         if (string.IsNullOrWhiteSpace(_jsonContent))
         {
-            _validationErrors.Add("JSON content is required.");
+            _validationErrors.Add(L("ChartImportDialog.Error.JsonRequired"));
             return;
         }
 
@@ -127,18 +127,18 @@
 
             if (model == null)
             {
-                _validationErrors.Add("Failed to parse JSON.");
+                _validationErrors.Add(L("ChartImportDialog.Error.ParseFailed"));
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(model.Title))
             {
-                _validationErrors.Add("'title' is required.");
+                _validationErrors.Add(L("ChartImportDialog.Error.TitleRequired"));
             }
 
             if (model.Items == null || model.Items.Count == 0)
             {
-                _validationErrors.Add("'items' array is required and must contain at least one item.");
+                _validationErrors.Add(L("ChartImportDialog.Error.ItemsRequired"));
             }
             else
             {
@@ -148,21 +148,21 @@
                     var item = model.Items[i];
                     if (item.Rank <= 0)
                     {
-                        _validationErrors.Add($"Item {i + 1}: 'rank' must be a positive integer.");
+                        _validationErrors.Add(string.Format(L("ChartImportDialog.Error.RankPositive"), i + 1));
                     }
                     else if (!ranks.Add(item.Rank))
                     {
-                        _validationErrors.Add($"Item {i + 1}: duplicate rank {item.Rank}.");
+                        _validationErrors.Add(string.Format(L("ChartImportDialog.Error.DuplicateRank"), i + 1, item.Rank));
                     }
 
                     if (string.IsNullOrWhiteSpace(item.ArtistName))
                     {
-                        _validationErrors.Add($"Item {i + 1}: 'artistName' is required.");
+                        _validationErrors.Add(string.Format(L("ChartImportDialog.Error.ArtistRequired"), i + 1));
                     }
 
                     if (string.IsNullOrWhiteSpace(item.AlbumTitle))
                     {
-                        _validationErrors.Add($"Item {i + 1}: 'albumTitle' is required.");
+                        _validationErrors.Add(string.Format(L("ChartImportDialog.Error.AlbumRequired"), i + 1));
                     }
                 }
             }
@@ -174,7 +174,7 @@
         }
         catch (JsonException ex)
         {
-            _validationErrors.Add($"Invalid JSON: {ex.Message}");
+            _validationErrors.Add(string.Format(L("ChartImportDialog.Error.InvalidJson"), ex.Message));
         }
     }
 
@@ -197,8 +197,8 @@
                 NotificationService.Notify(new NotificationMessage
                 {
                     Severity = NotificationSeverity.Error,
-                    Summary = "Import Failed",
-                    Detail = createResult.Messages?.FirstOrDefault() ?? "Unknown error",
+                    Summary = L("ChartImportDialog.ImportFailed"),
+                    Detail = createResult.Messages?.FirstOrDefault() ?? L("ChartImportDialog.UnknownError"),
                     Duration = 5000
                 });
                 return;
@@ -230,8 +230,8 @@
                 NotificationService.Notify(new NotificationMessage
                 {
                     Severity = NotificationSeverity.Warning,
-                    Summary = "Chart created but items failed to parse",
-                    Detail = parseResult.Messages?.FirstOrDefault() ?? "Unknown error",
+                    Summary = L("ChartImportDialog.ChartCreatedItemsFailed"),
+                    Detail = parseResult.Messages?.FirstOrDefault() ?? L("ChartImportDialog.UnknownError"),
                     Duration = 5000
                 });
                 DialogService.Close(true);
@@ -244,14 +244,14 @@
             {
                 var linkResult = await ChartService.LinkItemsAsync(chartId, overwriteManualLinks: false);
                 var linkSummary = linkResult.IsSuccess && linkResult.Data != null 
-                    ? $"Linked: {linkResult.Data.LinkedCount}, Unlinked: {linkResult.Data.UnlinkedCount}, Ambiguous: {linkResult.Data.AmbiguousCount}"
-                    : "Linking status unavailable";
+                    ? string.Format(L("ChartImportDialog.LinkSummary"), linkResult.Data.LinkedCount, linkResult.Data.UnlinkedCount, linkResult.Data.AmbiguousCount)
+                    : L("ChartImportDialog.LinkStatusUnavailable");
                 
                 NotificationService.Notify(new NotificationMessage
                 {
                     Severity = NotificationSeverity.Success,
-                    Summary = "Chart Imported",
-                    Detail = $"Created '{_previewChart.Title}' with {_previewChart.Items.Count} items. {linkSummary}",
+                    Summary = L("ChartImportDialog.ChartImported"),
+                    Detail = string.Format(L("ChartImportDialog.ChartImportedDetail"), _previewChart.Title, _previewChart.Items.Count, linkSummary),
                     Duration = 8000
                 });
             }
@@ -263,7 +263,7 @@
             NotificationService.Notify(new NotificationMessage
             {
                 Severity = NotificationSeverity.Error,
-                Summary = "Import Failed",
+                Summary = L("ChartImportDialog.ImportFailed"),
                 Detail = ex.Message,
                 Duration = 5000
             });
@@ -293,8 +293,8 @@
                 NotificationService.Notify(new NotificationMessage
                 {
                     Severity = NotificationSeverity.Warning,
-                    Summary = "Image Download Failed",
-                    Detail = $"Could not download image: {response.StatusCode}",
+                    Summary = L("ChartImportDialog.ImageDownloadFailed"),
+                    Detail = string.Format(L("ChartImportDialog.ImageDownloadFailedDetail"), response.StatusCode),
                     Duration = 4000
                 });
                 return;
@@ -318,8 +318,8 @@
                 NotificationService.Notify(new NotificationMessage
                 {
                     Severity = NotificationSeverity.Warning,
-                    Summary = "Image Upload Failed",
-                    Detail = uploadResult.Messages?.FirstOrDefault() ?? "Could not save image",
+                    Summary = L("ChartImportDialog.ImageUploadFailed"),
+                    Detail = uploadResult.Messages?.FirstOrDefault() ?? L("ChartImportDialog.ImageUploadFailedDetail"),
                     Duration = 4000
                 });
             }
@@ -334,8 +334,8 @@
             NotificationService.Notify(new NotificationMessage
             {
                 Severity = NotificationSeverity.Warning,
-                Summary = "Image Download Error",
-                Detail = "Could not download image from URL",
+                Summary = L("ChartImportDialog.ImageDownloadError"),
+                Detail = L("ChartImportDialog.ImageDownloadErrorDetail"),
                 Duration = 4000
             });
         }

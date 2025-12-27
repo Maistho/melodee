@@ -15,17 +15,17 @@
 @inject IAuthService AuthService
 @inject DefaultImages DefaultImages
 
-<PageTitle>Curated Charts</PageTitle>
+<PageTitle>@L("Charts.PageTitle")</PageTitle>
 
 <RadzenBreadCrumb Class="rz-pb-5">
-    <RadzenBreadCrumbItem Path="/" Text="Home"/>
-    <RadzenBreadCrumbItem Icon="format_list_numbered" Text="Charts"/>
+    <RadzenBreadCrumbItem Path="/" Text="@L("Nav.Home")"/>
+    <RadzenBreadCrumbItem Icon="format_list_numbered" Text="@L("Navigation.Charts")"/>
 </RadzenBreadCrumb>
 
 <RadzenStack Style="height: 100%">
     <RadzenRow AlignItems="AlignItems.Center">
         <RadzenColumn Size="12" SizeMD="6">
-            <RadzenText Text="Curated Album Charts" TextStyle="TextStyle.DisplayH6" TagName="TagName.H1" style="margin: 0"/>
+            <RadzenText Text="@L("Charts.PageTitle")" TextStyle="TextStyle.DisplayH6" TagName="TagName.H1" style="margin: 0"/>
         </RadzenColumn>
         <RadzenColumn Size="12" SizeMD="6">
             <RadzenStack
@@ -33,13 +33,13 @@
                 AlignItems="AlignItems.Center"
                 JustifyContent="JustifyContent.End"
                 Gap="0.5rem">
-                <RadzenButton Icon="trending_up" Text="Ranked Report" Click="@(() => NavigationManager.NavigateTo("/charts/ranked-report"))" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Success"/>
-                <RadzenButton Icon="report" Text="Missing Report" Click="@(() => NavigationManager.NavigateTo("/charts/missing-report"))" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Info"/>
+                <RadzenButton Icon="trending_up" Text="@L("Charts.RankedReport")" Click="@(() => NavigationManager.NavigateTo("/charts/ranked-report"))" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Success"/>
+                <RadzenButton Icon="report" Text="@L("Charts.MissingReport")" Click="@(() => NavigationManager.NavigateTo("/charts/missing-report"))" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Info"/>
                 @if (AuthService.IsAdmin)
                 {
-                    <RadzenButton Icon="upload_file" Text="Import JSON" Click="@ImportJsonClick" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary"/>
-                    <RadzenButton Icon="add_circle_outline" Text="Create Chart" Click="@CreateChartClick" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Primary"/>
-                    <RadzenButton Icon="delete" Disabled="!_selectedCharts.Any()" Text="Delete" Click="@DeleteSelectedButtonClick" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Warning"/>
+                    <RadzenButton Icon="upload_file" Text="@L("Actions.ImportJSON")" Click="@ImportJsonClick" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary"/>
+                    <RadzenButton Icon="add_circle_outline" Text="@L("Actions.CreateChart")" Click="@CreateChartClick" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Primary"/>
+                    <RadzenButton Icon="delete" Disabled="!_selectedCharts.Any()" Text="@L("Actions.Delete")" Click="@DeleteSelectedButtonClick" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Warning"/>
                 }
             </RadzenStack>
         </RadzenColumn>
@@ -75,7 +75,7 @@
                                 TabIndex="-1"
                                 TriState="false"
                                 TValue="bool?"
-                                InputAttributes="@(new Dictionary<string, object> { { "aria-label", "Select all items" } })"
+                                InputAttributes="@(new Dictionary<string, object> { { "aria-label", L("Charts.SelectAllItems") } })"
                                 Value="@(_selectedCharts.Any() != true ? false : !_charts.All(i => _selectedCharts.Contains(i)) ? null : _charts.Any(i => _selectedCharts.Contains(i)))"
                                 Change="@(args => _selectedCharts = args == true ? _charts.ToList() : [])"/>
                         </HeaderTemplate>
@@ -84,30 +84,30 @@
                                 TabIndex="-1"
                                 TriState="false"
                                 Value="@(_selectedCharts.Contains(data))"
-                                InputAttributes="@(new Dictionary<string, object> { { "aria-label", "Select item" } })"
+                                InputAttributes="@(new Dictionary<string, object> { { "aria-label", L("Charts.SelectItem") } })"
                                 Change="@(_ => { _grid.SelectRow(data); })"
                                 TValue="bool"/>
                         </Template>
                     </RadzenDataGridColumn>
                 }
 
-                <RadzenDataGridColumn Property="@nameof(Chart.Title)" Title="Title" Width="250px">
+                <RadzenDataGridColumn Property="@nameof(Chart.Title)" Title="@L("Common.Title")" Width="250px">
                     <Template Context="data">
                         <RadzenLink Path="@($"/charts/{data.ApiKey}")" Text="@data.Title"/>
                     </Template>
                 </RadzenDataGridColumn>
 
-                <RadzenDataGridColumn Property="@nameof(Chart.SourceName)" Title="Source" Width="150px"/>
+                <RadzenDataGridColumn Property="@nameof(Chart.SourceName)" Title="@L("TableHeader.Source")" Width="150px"/>
 
-                <RadzenDataGridColumn Property="@nameof(Chart.Year)" Title="Year" Width="80px"/>
+                <RadzenDataGridColumn Property="@nameof(Chart.Year)" Title="@L("Common.Year")" Width="80px"/>
 
-                <RadzenDataGridColumn Title="Items" Width="80px" Sortable="false">
+                <RadzenDataGridColumn Title="@L("TableHeader.Items")" Width="80px" Sortable="false">
                     <Template Context="data">
                         <RadzenText>@data.Items.Count</RadzenText>
                     </Template>
                 </RadzenDataGridColumn>
 
-                <RadzenDataGridColumn Title="Completion" Width="120px" Sortable="false">
+                <RadzenDataGridColumn Title="@L("TableHeader.Completion")" Width="120px" Sortable="false">
                     <Template Context="data">
                         @{
                             var linkedCount = data.Items.Count(i => i.LinkStatusValue == ChartItemLinkStatus.Linked);
@@ -130,33 +130,33 @@
                     </Template>
                 </RadzenDataGridColumn>
 
-                <RadzenDataGridColumn Property="@nameof(Chart.IsVisible)" Title="Visible" Width="100px" Visible="@AuthService.IsAdmin">
+                <RadzenDataGridColumn Property="@nameof(Chart.IsVisible)" Title="@L("Label.Visible")" Width="100px" Visible="@AuthService.IsAdmin">
                     <Template Context="data">
                         @if (data.IsVisible)
                         {
-                            <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="Visible"/>
+                            <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="@L("Status.Visible")"/>
                         }
                         else
                         {
-                            <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="Hidden"/>
+                            <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="@L("Status.Hidden")"/>
                         }
                     </Template>
                 </RadzenDataGridColumn>
 
-                <RadzenDataGridColumn Property="@nameof(Chart.IsGeneratedPlaylistEnabled)" Title="Playlist" Width="100px">
+                <RadzenDataGridColumn Property="@nameof(Chart.IsGeneratedPlaylistEnabled)" Title="@L("TableHeader.Playlist")" Width="100px">
                     <Template Context="data">
                         @if (data.IsGeneratedPlaylistEnabled)
                         {
-                            <RadzenBadge BadgeStyle="BadgeStyle.Info" Text="Enabled"/>
+                            <RadzenBadge BadgeStyle="BadgeStyle.Info" Text="@L("Status.Enabled")"/>
                         }
                         else
                         {
-                            <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="Disabled"/>
+                            <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="@L("Status.Disabled")"/>
                         }
                     </Template>
                 </RadzenDataGridColumn>
 
-                <RadzenDataGridColumn Property="@nameof(Chart.CreatedAt)" Title="Created" Width="150px">
+                <RadzenDataGridColumn Property="@nameof(Chart.CreatedAt)" Title="@L("Common.Created")" Width="150px">
                     <Template Context="data">
                         <RadzenText Text="@CurrentUser?.FormatInstant(data.CreatedAt)"/>
                     </Template>
@@ -164,11 +164,11 @@
 
                 @if (AuthService.IsAdmin)
                 {
-                    <RadzenDataGridColumn Title="Actions" Width="120px" Sortable="false">
+                    <RadzenDataGridColumn Title="@L("Data.Actions")" Width="120px" Sortable="false">
                         <Template Context="data">
                             <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem">
-                                <RadzenButton Icon="edit" Size="ButtonSize.Small" Click="@(() => EditChart(data))" ButtonStyle="ButtonStyle.Light" MouseEnter="@(args => ShowTooltip(args, "Edit chart"))"/>
-                                <RadzenButton Icon="delete" Size="ButtonSize.Small" Click="@(() => DeleteChart(data))" ButtonStyle="ButtonStyle.Danger" MouseEnter="@(args => ShowTooltip(args, "Delete chart"))"/>
+                                <RadzenButton Icon="edit" Size="ButtonSize.Small" Click="@(() => EditChart(data))" ButtonStyle="ButtonStyle.Light" MouseEnter="@(args => ShowTooltip(args, L("Charts.EditChart")))"/>
+                                <RadzenButton Icon="delete" Size="ButtonSize.Small" Click="@(() => DeleteChart(data))" ButtonStyle="ButtonStyle.Danger" MouseEnter="@(args => ShowTooltip(args, L("Charts.DeleteChart")))"/>
                             </RadzenStack>
                         </Template>
                     </RadzenDataGridColumn>
@@ -239,7 +239,7 @@
 
     async Task ImportJsonClick()
     {
-        var result = await DialogService.OpenAsync<ChartImportDialog>("Import Chart from JSON",
+        var result = await DialogService.OpenAsync<ChartImportDialog>(L("Charts.ImportChartFromJSON"),
             new Dictionary<string, object>(),
             new DialogOptions { Width = "600px", Height = "500px", Resizable = true, Draggable = true });
 
@@ -256,11 +256,11 @@
 
     async Task DeleteChart(Chart chart)
     {
-        var confirm = await DialogService.Confirm($"Are you sure you want to delete '{chart.Title}'?", "Delete Chart", new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" });
+        var confirm = await DialogService.Confirm(string.Format(L("Charts.ConfirmDeleteChart"), chart.Title), L("Charts.DeleteChart"), new ConfirmOptions { OkButtonText = L("Actions.Yes"), CancelButtonText = L("Actions.No") });
         if (confirm ?? false)
         {
             var result = await ChartService.DeleteAsync(chart.Id);
-            NotificationService.Notify(NotificationMessageForResult(result, "Deleting Chart", ToastTime));
+            NotificationService.Notify(NotificationMessageForResult(result, L("Charts.DeletingChart"), ToastTime));
             if (result.IsSuccess)
             {
                 await _grid.RefreshDataAsync();
@@ -270,7 +270,7 @@
 
     async Task DeleteSelectedButtonClick()
     {
-        var confirm = await DialogService.Confirm($"Are you sure you want to delete {_selectedCharts.Count} selected chart(s)?", "Delete Charts", new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" });
+        var confirm = await DialogService.Confirm(string.Format(L("Charts.ConfirmDeleteCharts"), _selectedCharts.Count), L("Charts.DeleteCharts"), new ConfirmOptions { OkButtonText = L("Actions.Yes"), CancelButtonText = L("Actions.No") });
         if (confirm ?? false)
         {
             foreach (var chart in _selectedCharts.ToList())
@@ -280,7 +280,7 @@
             NotificationService.Notify(new NotificationMessage
             {
                 Severity = NotificationSeverity.Success,
-                Summary = "Charts Deleted",
+                Summary = L("Charts.ChartsDeleted"),
                 Duration = ToastTime
             });
             _selectedCharts.Clear();

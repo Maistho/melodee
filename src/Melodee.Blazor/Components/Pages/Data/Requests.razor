@@ -149,7 +149,7 @@
     RequestCategory? _selectedCategory;
     bool _mineOnly;
 
-    readonly List<object> _statusOptions =
+    List<object> _statusOptions =
     [
         new { Text = "Pending", Value = RequestStatus.Pending },
         new { Text = "In Progress", Value = RequestStatus.InProgress },
@@ -157,7 +157,7 @@
         new { Text = "Rejected", Value = RequestStatus.Rejected }
     ];
 
-    readonly List<object> _categoryOptions =
+    List<object> _categoryOptions =
     [
         new { Text = "Add Album", Value = RequestCategory.AddAlbum },
         new { Text = "Add Song", Value = RequestCategory.AddSong },

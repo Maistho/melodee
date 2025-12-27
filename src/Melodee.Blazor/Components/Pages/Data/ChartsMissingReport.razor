@@ -17,26 +17,26 @@
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JsRuntime
 
-<PageTitle>Charts Missing Albums Report</PageTitle>
+<PageTitle>@L("ChartsMissingReport.PageTitle")</PageTitle>
 
 <RadzenBreadCrumb Class="rz-pb-5">
-    <RadzenBreadCrumbItem Path="/" Text="Home"/>
-    <RadzenBreadCrumbItem Path="/charts" Icon="format_list_numbered" Text="Charts"/>
-    <RadzenBreadCrumbItem Icon="report" Text="Missing Report"/>
+    <RadzenBreadCrumbItem Path="/" Text="@L("Nav.Home")"/>
+    <RadzenBreadCrumbItem Path="/charts" Icon="format_list_numbered" Text="@L("Navigation.Charts")"/>
+    <RadzenBreadCrumbItem Icon="report" Text="@L("Charts.MissingReport")"/>
 </RadzenBreadCrumb>
 
 <RadzenStack Gap="1rem">
     <RadzenRow AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
         <RadzenColumn>
-            <RadzenText Text="Missing Albums Report" TextStyle="TextStyle.DisplayH6" TagName="TagName.H1" style="margin: 0"/>
+            <RadzenText Text="@L("ChartsMissingReport.Header")" TextStyle="TextStyle.DisplayH6" TagName="TagName.H1" style="margin: 0"/>
             <RadzenText TextStyle="TextStyle.Subtitle1" class="rz-text-secondary-color">
-                Albums that appear on charts but are not found in the database
+                @L("ChartsMissingReport.Description")
             </RadzenText>
         </RadzenColumn>
         <RadzenColumn>
             <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
-                <RadzenButton Text="Download JSON" Icon="download" ButtonStyle="ButtonStyle.Secondary" Disabled="@(_isLoading || _missingAlbums.Count == 0)" Click="@DownloadJson"/>
-                <RadzenButton Text="Back to Charts" Icon="arrow_back" ButtonStyle="ButtonStyle.Light" Click="@(() => NavigationManager.NavigateTo("/charts"))"/>
+                <RadzenButton Text="@L("Actions.DownloadJSON")" Icon="download" ButtonStyle="ButtonStyle.Secondary" Disabled="@(_isLoading || _missingAlbums.Count == 0)" Click="@DownloadJson"/>
+                <RadzenButton Text="@L("Actions.BackToCharts")" Icon="arrow_back" ButtonStyle="ButtonStyle.Light" Click="@(() => NavigationManager.NavigateTo("/charts"))"/>
             </RadzenStack>
         </RadzenColumn>
     </RadzenRow>
@@ -56,17 +56,17 @@
                 <RadzenCard>
                     <RadzenStack Orientation="Orientation.Horizontal" Gap="2rem" AlignItems="AlignItems.Center">
                         <RadzenStack Gap="0.25rem">
-                            <RadzenText TextStyle="TextStyle.Overline" class="rz-text-secondary-color">Total Missing Albums</RadzenText>
+                            <RadzenText TextStyle="TextStyle.Overline" class="rz-text-secondary-color">@L("ChartsMissingReport.TotalMissingAlbums")</RadzenText>
                             <RadzenText TextStyle="TextStyle.H4" style="margin: 0">@_missingAlbums.Count</RadzenText>
                         </RadzenStack>
                         
                         <RadzenStack Gap="0.25rem">
-                            <RadzenText TextStyle="TextStyle.Overline" class="rz-text-secondary-color">Total Charts</RadzenText>
+                            <RadzenText TextStyle="TextStyle.Overline" class="rz-text-secondary-color">@L("ChartsRankedReport.TotalCharts")</RadzenText>
                             <RadzenText TextStyle="TextStyle.H4" style="margin: 0">@_totalCharts</RadzenText>
                         </RadzenStack>
                         
                         <RadzenStack Gap="0.25rem">
-                            <RadzenText TextStyle="TextStyle.Overline" class="rz-text-secondary-color">Total Missing Items</RadzenText>
+                            <RadzenText TextStyle="TextStyle.Overline" class="rz-text-secondary-color">@L("ChartsMissingReport.TotalMissingItems")</RadzenText>
                             <RadzenText TextStyle="TextStyle.H4" style="margin: 0">@_totalMissingItems</RadzenText>
                         </RadzenStack>
                     </RadzenStack>
@@ -84,23 +84,23 @@
                                     AllowSorting="true"
                                     Density="Density.Compact">
                         <Columns>
-                            <RadzenDataGridColumn Property="@nameof(MissingAlbumInfo.ArtistName)" Title="Artist" Width="250px" Sortable="true"/>
+                            <RadzenDataGridColumn Property="@nameof(MissingAlbumInfo.ArtistName)" Title="@L("Common.Artist")" Width="250px" Sortable="true"/>
                             
-                            <RadzenDataGridColumn Property="@nameof(MissingAlbumInfo.AlbumTitle)" Title="Album" Width="300px" Sortable="true"/>
+                            <RadzenDataGridColumn Property="@nameof(MissingAlbumInfo.AlbumTitle)" Title="@L("Common.Album")" Width="300px" Sortable="true"/>
                             
-                            <RadzenDataGridColumn Property="@nameof(MissingAlbumInfo.ReleaseYear)" Title="Year" Width="100px" Sortable="true">
+                            <RadzenDataGridColumn Property="@nameof(MissingAlbumInfo.ReleaseYear)" Title="@L("Common.Year")" Width="100px" Sortable="true">
                                 <Template Context="item">
                                     @(item.ReleaseYear?.ToString() ?? "—")
                                 </Template>
                             </RadzenDataGridColumn>
                             
-                            <RadzenDataGridColumn Property="@nameof(MissingAlbumInfo.ChartCount)" Title="Chart Count" Width="120px" Sortable="true">
+                            <RadzenDataGridColumn Property="@nameof(MissingAlbumInfo.ChartCount)" Title="@L("TableHeader.ChartCount")" Width="120px" Sortable="true">
                                 <Template Context="item">
                                     <RadzenBadge BadgeStyle="BadgeStyle.Info" Text="@item.ChartCount.ToString()" />
                                 </Template>
                             </RadzenDataGridColumn>
                             
-                            <RadzenDataGridColumn Title="Charts" Width="400px" Sortable="false">
+                            <RadzenDataGridColumn Title="@L("TableHeader.Charts")" Width="400px" Sortable="false">
                                 <Template Context="item">
                                     <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="0.25rem">
                                         @foreach (var chart in item.Charts)
@@ -115,13 +115,13 @@
                                 </Template>
                             </RadzenDataGridColumn>
                             
-                            <RadzenDataGridColumn Title="Actions" Width="100px" Sortable="false" TextAlign="TextAlign.Center">
+                            <RadzenDataGridColumn Title="@L("Data.Actions")" Width="100px" Sortable="false" TextAlign="TextAlign.Center">
                                 <Template Context="item">
                                     <RadzenButton 
                                         Icon="link" 
                                         ButtonStyle="ButtonStyle.Info" 
                                         Size="ButtonSize.Small"
-                                        title="Identify this album"
+                                        title="@L("Actions.IdentifyThisAlbum")"
                                         Click="@(() => IdentifyAlbumClick(item))" />
                                 </Template>
                             </RadzenDataGridColumn>
@@ -243,7 +243,7 @@
     async Task IdentifyAlbumClick(MissingAlbumInfo item)
     {
         var result = await DialogService.OpenAsync<MissingAlbumIdentifyDialog>(
-            "Identify Missing Album",
+            L("ChartsMissingReport.IdentifyMissingAlbum"),
             new Dictionary<string, object?>
             {
                 { nameof(MissingAlbumIdentifyDialog.ArtistName), item.ArtistName },

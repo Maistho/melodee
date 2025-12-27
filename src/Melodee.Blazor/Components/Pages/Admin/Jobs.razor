@@ -16,7 +16,7 @@
 
 @attribute [Authorize(Roles = "Administrator")]
 
-<PageTitle>Background Jobs</PageTitle>
+<PageTitle>@L("AdminJobs.PageTitle")</PageTitle>
 
 <RadzenStack Gap="1rem">
     @* Header *@
@@ -24,19 +24,19 @@
         <RadzenColumn Size="12" SizeMD="6">
             <RadzenText TextStyle="TextStyle.H4">
                 <RadzenIcon Icon="schedule" class="rz-me-1"/>
-                Background Jobs
+                @L("AdminJobs.Title")
             </RadzenText>
         </RadzenColumn>
         <RadzenColumn Size="12" SizeMD="6">
             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.End" Gap="0.5rem">
-                <RadzenButton Icon="refresh" Text="Refresh" Click="@RefreshJobsClicked" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Primary" Disabled="@_isLoading"/>
+                <RadzenButton Icon="refresh" Text="@L("Actions.Refresh")" Click="@RefreshJobsClicked" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Primary" Disabled="@_isLoading"/>
                 @if (_schedulerStarted)
                 {
-                    <RadzenButton Icon="pause" Text="Pause All" Click="@PauseAllJobsClicked" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Warning" Disabled="@_isLoading"/>
+                    <RadzenButton Icon="pause" Text="@L("Actions.PauseAll")" Click="@PauseAllJobsClicked" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Warning" Disabled="@_isLoading"/>
                 }
                 else
                 {
-                    <RadzenButton Icon="play_arrow" Text="Resume All" Click="@ResumeAllJobsClicked" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Success" Disabled="@_isLoading"/>
+                    <RadzenButton Icon="play_arrow" Text="@L("Actions.ResumeAll")" Click="@ResumeAllJobsClicked" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Success" Disabled="@_isLoading"/>
                 }
             </RadzenStack>
         </RadzenColumn>
@@ -45,7 +45,7 @@
     @if (AppSettingsConfiguration.GetValue<bool>(AppSettingsKeys.QuartzDisabled))
     {
         <RadzenAlert AlertStyle="AlertStyle.Warning" Shade="Shade.Light" AllowClose="false">
-            <RadzenText>Jobs are disabled in the appsettings.json file. Set the setting "<strong>@AppSettingsKeys.QuartzDisabled</strong>" to "false" (or remove entirely) to enable.</RadzenText>
+            <RadzenText>@L("AdminJobs.JobsDisabledMessage") "<strong>@AppSettingsKeys.QuartzDisabled</strong>" @L("AdminJobs.JobsDisabledMessage2")</RadzenText>
         </RadzenAlert>
     }
     else
@@ -57,9 +57,9 @@
                     <RadzenStack Gap="0.25rem" AlignItems="AlignItems.Center">
                         <RadzenIcon Icon="@(_schedulerStarted ? "check_circle" : "pause_circle")" 
                                     Style="@($"font-size: 2rem; color: var(--rz-{(_schedulerStarted ? "success" : "warning")});")"/>
-                        <RadzenText TextStyle="TextStyle.Overline">Scheduler</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Overline">@L("AdminJobs.Scheduler")</RadzenText>
                         <RadzenText TextStyle="TextStyle.H6" Style="@($"color: var(--rz-{(_schedulerStarted ? "success" : "warning")});")">
-                            @(_schedulerStarted ? "Running" : "Paused")
+                            @(_schedulerStarted ? L("Status.Running") : L("Status.Paused"))
                         </RadzenText>
                     </RadzenStack>
                 </RadzenCard>
@@ -68,7 +68,7 @@
                 <RadzenCard Style="height: 100%;">
                     <RadzenStack Gap="0.25rem" AlignItems="AlignItems.Center">
                         <RadzenIcon Icon="list_alt" Style="font-size: 2rem; color: var(--rz-primary);"/>
-                        <RadzenText TextStyle="TextStyle.Overline">Total Jobs</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Overline">@L("AdminJobs.TotalJobs")</RadzenText>
                         <RadzenText TextStyle="TextStyle.H6">@_jobs.Count</RadzenText>
                     </RadzenStack>
                 </RadzenCard>
@@ -77,7 +77,7 @@
                 <RadzenCard Style="height: 100%;">
                     <RadzenStack Gap="0.25rem" AlignItems="AlignItems.Center">
                         <RadzenIcon Icon="play_circle" Style="font-size: 2rem; color: var(--rz-info);"/>
-                        <RadzenText TextStyle="TextStyle.Overline">Running</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Overline">@L("AdminJobs.Running")</RadzenText>
                         <RadzenText TextStyle="TextStyle.H6">@_currentlyExecutingCount</RadzenText>
                     </RadzenStack>
                 </RadzenCard>
@@ -86,7 +86,7 @@
                 <RadzenCard Style="height: 100%;">
                     <RadzenStack Gap="0.25rem" AlignItems="AlignItems.Center">
                         <RadzenIcon Icon="pause_circle" Style="font-size: 2rem; color: var(--rz-warning);"/>
-                        <RadzenText TextStyle="TextStyle.Overline">Paused</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Overline">@L("Status.Paused")</RadzenText>
                         <RadzenText TextStyle="TextStyle.H6">@_pausedJobsCount</RadzenText>
                     </RadzenStack>
                 </RadzenCard>
@@ -95,7 +95,7 @@
                 <RadzenCard Style="height: 100%;">
                     <RadzenStack Gap="0.25rem" AlignItems="AlignItems.Center">
                         <RadzenIcon Icon="history" Style="font-size: 2rem; color: var(--rz-secondary);"/>
-                        <RadzenText TextStyle="TextStyle.Overline">History Records</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Overline">@L("AdminJobs.HistoryRecords")</RadzenText>
                         <RadzenText TextStyle="TextStyle.H6">@_totalHistoryRecords.ToString("N0")</RadzenText>
                     </RadzenStack>
                 </RadzenCard>
@@ -104,7 +104,7 @@
                 <RadzenCard Style="height: 100%;">
                     <RadzenStack Gap="0.25rem" AlignItems="AlignItems.Center">
                         <RadzenIcon Icon="error" Style="@($"font-size: 2rem; color: var(--rz-{(_totalFailures24h > 0 ? "danger" : "success")});")"/>
-                        <RadzenText TextStyle="TextStyle.Overline">Failures (24h)</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Overline">@L("AdminJobs.Failures24h")</RadzenText>
                         <RadzenText TextStyle="TextStyle.H6" Style="@($"color: var(--rz-{(_totalFailures24h > 0 ? "danger" : "success")});")">@_totalFailures24h</RadzenText>
                     </RadzenStack>
                 </RadzenCard>
@@ -114,7 +114,7 @@
         @if (_jobs.Count == 0 && !_isLoading)
         {
             <RadzenAlert AlertStyle="AlertStyle.Info" Shade="Shade.Light" AllowClose="false">
-                <RadzenText>No jobs found. Check your configuration and enable the Cron Expressions for Jobs in Settings.</RadzenText>
+                <RadzenText>@L("AdminJobs.NoJobsFound")</RadzenText>
             </RadzenAlert>
         }
         else
@@ -136,28 +136,28 @@
                                 <RadzenColumn Size="12" SizeMD="4">
                                     <RadzenText TextStyle="TextStyle.Subtitle1" class="rz-mb-2">
                                         <RadzenIcon Icon="info" class="rz-me-1"/>
-                                        Job Details
+                                        @L("AdminJobs.JobDetails")
                                     </RadzenText>
                                     <RadzenStack Gap="0.25rem">
                                         @if (!string.IsNullOrEmpty(job.Description))
                                         {
                                             <RadzenRow>
-                                                <RadzenColumn Size="4"><RadzenText TextStyle="TextStyle.Caption">Description</RadzenText></RadzenColumn>
+                                                <RadzenColumn Size="4"><RadzenText TextStyle="TextStyle.Caption">@L("Label.Description")</RadzenText></RadzenColumn>
                                                 <RadzenColumn Size="8"><RadzenText>@job.Description</RadzenText></RadzenColumn>
                                             </RadzenRow>
                                         }
                                         <RadzenRow>
-                                            <RadzenColumn Size="4"><RadzenText TextStyle="TextStyle.Caption">Job Group</RadzenText></RadzenColumn>
+                                            <RadzenColumn Size="4"><RadzenText TextStyle="TextStyle.Caption">@L("AdminJobs.JobGroup")</RadzenText></RadzenColumn>
                                             <RadzenColumn Size="8"><RadzenText>@job.JobGroup</RadzenText></RadzenColumn>
                                         </RadzenRow>
                                         <RadzenRow>
-                                            <RadzenColumn Size="4"><RadzenText TextStyle="TextStyle.Caption">Trigger Type</RadzenText></RadzenColumn>
+                                            <RadzenColumn Size="4"><RadzenText TextStyle="TextStyle.Caption">@L("AdminJobs.TriggerType")</RadzenText></RadzenColumn>
                                             <RadzenColumn Size="8"><RadzenText>@job.TriggerType</RadzenText></RadzenColumn>
                                         </RadzenRow>
                                         @if (!string.IsNullOrEmpty(job.CronExpression))
                                         {
                                             <RadzenRow>
-                                                <RadzenColumn Size="4"><RadzenText TextStyle="TextStyle.Caption">Cron Expression</RadzenText></RadzenColumn>
+                                                <RadzenColumn Size="4"><RadzenText TextStyle="TextStyle.Caption">@L("AdminJobs.CronExpression")</RadzenText></RadzenColumn>
                                                 <RadzenColumn Size="8">
                                                     <RadzenText><code>@job.CronExpression</code></RadzenText>
                                                     @if (!string.IsNullOrEmpty(job.CronDescription))
@@ -174,15 +174,15 @@
                                 <RadzenColumn Size="12" SizeMD="4">
                                     <RadzenText TextStyle="TextStyle.Subtitle1" class="rz-mb-2">
                                         <RadzenIcon Icon="analytics" class="rz-me-1"/>
-                                        Execution Statistics
+                                        @L("AdminJobs.ExecutionStatistics")
                                     </RadzenText>
                                     <RadzenStack Gap="0.25rem">
                                         <RadzenRow>
-                                            <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">Total Runs</RadzenText></RadzenColumn>
+                                            <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">@L("AdminJobs.TotalRuns")</RadzenText></RadzenColumn>
                                             <RadzenColumn Size="6"><RadzenText>@job.TotalRunCount.ToString("N0")</RadzenText></RadzenColumn>
                                         </RadzenRow>
                                         <RadzenRow>
-                                            <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">Success Rate</RadzenText></RadzenColumn>
+                                            <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">@L("AdminJobs.SuccessRate")</RadzenText></RadzenColumn>
                                             <RadzenColumn Size="6">
                                                 @if (job.TotalRunCount > 0)
                                                 {
@@ -196,7 +196,7 @@
                                             </RadzenColumn>
                                         </RadzenRow>
                                         <RadzenRow>
-                                            <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">Successes / Failures</RadzenText></RadzenColumn>
+                                            <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">@L("AdminJobs.SuccessesFailures")</RadzenText></RadzenColumn>
                                             <RadzenColumn Size="6">
                                                 <RadzenText Style="color: var(--rz-success);">@job.SuccessCount</RadzenText>
                                                 <RadzenText> / </RadzenText>
@@ -204,15 +204,15 @@
                                             </RadzenColumn>
                                         </RadzenRow>
                                         <RadzenRow>
-                                            <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">Manual Triggers</RadzenText></RadzenColumn>
+                                            <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">@L("AdminJobs.ManualTriggers")</RadzenText></RadzenColumn>
                                             <RadzenColumn Size="6"><RadzenText>@job.ManualTriggerCount</RadzenText></RadzenColumn>
                                         </RadzenRow>
                                         <RadzenRow>
-                                            <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">Avg Duration</RadzenText></RadzenColumn>
+                                            <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">@L("AdminJobs.AvgDuration")</RadzenText></RadzenColumn>
                                             <RadzenColumn Size="6"><RadzenText>@job.AverageDurationDisplay</RadzenText></RadzenColumn>
                                         </RadzenRow>
                                         <RadzenRow>
-                                            <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">Min / Max Duration</RadzenText></RadzenColumn>
+                                            <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">@L("AdminJobs.MinMaxDuration")</RadzenText></RadzenColumn>
                                             <RadzenColumn Size="6"><RadzenText>@job.MinMaxDurationDisplay</RadzenText></RadzenColumn>
                                         </RadzenRow>
                                     </RadzenStack>
@@ -222,35 +222,35 @@
                                 <RadzenColumn Size="12" SizeMD="4">
                                     <RadzenText TextStyle="TextStyle.Subtitle1" class="rz-mb-2">
                                         <RadzenIcon Icon="settings" class="rz-me-1"/>
-                                        Configuration
+                                        @L("AdminJobs.Configuration")
                                     </RadzenText>
                                     <RadzenStack Gap="0.25rem">
                                         <RadzenRow>
-                                            <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">Durable</RadzenText></RadzenColumn>
+                                            <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">@L("AdminJobs.Durable")</RadzenText></RadzenColumn>
                                             <RadzenColumn Size="6">
                                                 <RadzenBadge BadgeStyle="@(job.IsDurable ? BadgeStyle.Success : BadgeStyle.Light)" 
-                                                             Text="@(job.IsDurable ? "Yes" : "No")" Shade="Shade.Light"/>
+                                                             Text="@(job.IsDurable ? L("Actions.Yes") : L("Actions.No"))" Shade="Shade.Light"/>
                                             </RadzenColumn>
                                         </RadzenRow>
                                         <RadzenRow>
-                                            <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">Disallow Concurrent</RadzenText></RadzenColumn>
+                                            <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">@L("AdminJobs.DisallowConcurrent")</RadzenText></RadzenColumn>
                                             <RadzenColumn Size="6">
                                                 <RadzenBadge BadgeStyle="@(job.DisallowConcurrentExecution ? BadgeStyle.Info : BadgeStyle.Light)" 
-                                                             Text="@(job.DisallowConcurrentExecution ? "Yes" : "No")" Shade="Shade.Light"/>
+                                                             Text="@(job.DisallowConcurrentExecution ? L("Actions.Yes") : L("Actions.No"))" Shade="Shade.Light"/>
                                             </RadzenColumn>
                                         </RadzenRow>
                                         <RadzenRow>
-                                            <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">Persist Data</RadzenText></RadzenColumn>
+                                            <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">@L("AdminJobs.PersistData")</RadzenText></RadzenColumn>
                                             <RadzenColumn Size="6">
                                                 <RadzenBadge BadgeStyle="@(job.PersistJobDataAfterExecution ? BadgeStyle.Info : BadgeStyle.Light)" 
-                                                             Text="@(job.PersistJobDataAfterExecution ? "Yes" : "No")" Shade="Shade.Light"/>
+                                                             Text="@(job.PersistJobDataAfterExecution ? L("Actions.Yes") : L("Actions.No"))" Shade="Shade.Light"/>
                                             </RadzenColumn>
                                         </RadzenRow>
                                         <RadzenRow>
-                                            <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">Requests Recovery</RadzenText></RadzenColumn>
+                                            <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">@L("AdminJobs.RequestsRecovery")</RadzenText></RadzenColumn>
                                             <RadzenColumn Size="6">
                                                 <RadzenBadge BadgeStyle="@(job.RequestsRecovery ? BadgeStyle.Warning : BadgeStyle.Light)" 
-                                                             Text="@(job.RequestsRecovery ? "Yes" : "No")" Shade="Shade.Light"/>
+                                                             Text="@(job.RequestsRecovery ? L("Actions.Yes") : L("Actions.No"))" Shade="Shade.Light"/>
                                             </RadzenColumn>
                                         </RadzenRow>
                                     </RadzenStack>
@@ -262,7 +262,7 @@
                                     <RadzenColumn Size="12">
                                         <RadzenAlert AlertStyle="AlertStyle.Danger" Shade="Shade.Lighter" AllowClose="false" Size="AlertSize.Small">
                                             <RadzenText TextStyle="TextStyle.Caption">
-                                                <strong>Last Error</strong> (@(job.LastFailureTime?.LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss") ?? "Unknown time"))
+                                                <strong>@L("AdminJobs.LastError")</strong> (@(job.LastFailureTime?.LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss") ?? L("AdminJobs.UnknownTime")))
                                             </RadzenText>
                                             <RadzenText TextStyle="TextStyle.Body2">@job.LastErrorMessage</RadzenText>
                                         </RadzenAlert>
@@ -275,15 +275,15 @@
                                     <RadzenColumn Size="12">
                                         <RadzenText TextStyle="TextStyle.Subtitle1" class="rz-mb-2">
                                             <RadzenIcon Icon="data_object" class="rz-me-1"/>
-                                            Job Data
+                                            @L("AdminJobs.JobData")
                                         </RadzenText>
                                         <RadzenDataGrid TItem="KeyValuePair<string, object>" 
                                                         Data="@job.JobData" 
                                                         AllowPaging="false" 
                                                         Density="Density.Compact">
                                             <Columns>
-                                                <RadzenDataGridColumn TItem="KeyValuePair<string, object>" Property="Key" Title="Key" Width="200px"/>
-                                                <RadzenDataGridColumn TItem="KeyValuePair<string, object>" Title="Value">
+                                                <RadzenDataGridColumn TItem="KeyValuePair<string, object>" Property="Key" Title="@L("AdminJobs.Key")" Width="200px"/>
+                                                <RadzenDataGridColumn TItem="KeyValuePair<string, object>" Title="@L("AdminJobs.Value")">
                                                     <Template Context="kvp">@kvp.Value?.ToString()</Template>
                                                 </RadzenDataGridColumn>
                                             </Columns>
@@ -294,7 +294,7 @@
                         </RadzenCard>
                     </Template>
                     <Columns>
-                        <RadzenDataGridColumn TItem="JobStatusDetail" Property="JobName" Title="Job Name" Width="200px">
+                        <RadzenDataGridColumn TItem="JobStatusDetail" Property="JobName" Title="@L("AdminJobs.JobName")" Width="200px">
                             <Template Context="job">
                                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
                                     @if (job.IsCurrentlyExecuting)
@@ -305,17 +305,17 @@
                                 </RadzenStack>
                             </Template>
                         </RadzenDataGridColumn>
-                        <RadzenDataGridColumn TItem="JobStatusDetail" Property="TriggerState" Title="Status" Width="90px">
+                        <RadzenDataGridColumn TItem="JobStatusDetail" Property="TriggerState" Title="@L("Common.Status")" Width="90px">
                             <Template Context="job">
                                 <RadzenBadge BadgeStyle="@GetBadgeStyle(job.TriggerState)" Text="@job.TriggerState" Shade="Shade.Light"/>
                             </Template>
                         </RadzenDataGridColumn>
-                        <RadzenDataGridColumn TItem="JobStatusDetail" Property="TotalRunCount" Title="Runs" Width="70px">
+                        <RadzenDataGridColumn TItem="JobStatusDetail" Property="TotalRunCount" Title="@L("AdminJobs.Runs")" Width="70px">
                             <Template Context="job">
                                 <RadzenText TextStyle="TextStyle.Caption">@job.TotalRunCount.ToString("N0")</RadzenText>
                             </Template>
                         </RadzenDataGridColumn>
-                        <RadzenDataGridColumn TItem="JobStatusDetail" Property="SuccessRate" Title="Success" Width="80px" Sortable="true">
+                        <RadzenDataGridColumn TItem="JobStatusDetail" Property="SuccessRate" Title="@L("AdminJobs.Success")" Width="80px" Sortable="true">
                             <Template Context="job">
                                 @if (job.TotalRunCount > 0)
                                 {
@@ -328,26 +328,26 @@
                                 }
                             </Template>
                         </RadzenDataGridColumn>
-                        <RadzenDataGridColumn TItem="JobStatusDetail" Property="PreviousFireTimeUtc" Title="Last Run" Width="140px">
+                        <RadzenDataGridColumn TItem="JobStatusDetail" Property="PreviousFireTimeUtc" Title="@L("AdminJobs.LastRun")" Width="140px">
                             <Template Context="job">
                                 <RadzenText TextStyle="TextStyle.Caption">@job.PreviousFireTimeDisplay</RadzenText>
                             </Template>
                         </RadzenDataGridColumn>
-                        <RadzenDataGridColumn TItem="JobStatusDetail" Property="NextFireTimeUtc" Title="Next Run" Width="140px">
+                        <RadzenDataGridColumn TItem="JobStatusDetail" Property="NextFireTimeUtc" Title="@L("AdminJobs.NextRun")" Width="140px">
                             <Template Context="job">
                                 <RadzenText TextStyle="TextStyle.Caption">@job.NextFireTimeDisplay</RadzenText>
                             </Template>
                         </RadzenDataGridColumn>
-                        <RadzenDataGridColumn TItem="JobStatusDetail" Property="AverageDurationMs" Title="Avg Time" Width="90px">
+                        <RadzenDataGridColumn TItem="JobStatusDetail" Property="AverageDurationMs" Title="@L("AdminJobs.AvgTime")" Width="90px">
                             <Template Context="job">
                                 <RadzenText TextStyle="TextStyle.Caption">@job.AverageDurationDisplay</RadzenText>
                             </Template>
                         </RadzenDataGridColumn>
-                        <RadzenDataGridColumn TItem="JobStatusDetail" Title="Actions" Width="250px" Sortable="false">
+                        <RadzenDataGridColumn TItem="JobStatusDetail" Title="@L("Data.Actions")" Width="250px" Sortable="false">
                             <Template Context="job">
                                 <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem">
                                     <RadzenButton Icon="play_arrow" 
-                                                  Text="Run" 
+                                                  Text="@L("Actions.Run")" 
                                                   Size="ButtonSize.ExtraSmall" 
                                                   ButtonStyle="ButtonStyle.Success"
                                                   Disabled="@(job.IsCurrentlyExecuting)"
@@ -355,7 +355,7 @@
                                     @if (job.TriggerState == "Paused")
                                     {
                                         <RadzenButton Icon="play_circle" 
-                                                      Text="Resume" 
+                                                      Text="@L("Actions.Resume")" 
                                                       Size="ButtonSize.ExtraSmall" 
                                                       ButtonStyle="ButtonStyle.Info"
                                                       Click="@(() => ResumeJobClicked(job))"/>
@@ -363,7 +363,7 @@
                                     else
                                     {
                                         <RadzenButton Icon="pause_circle" 
-                                                      Text="Pause" 
+                                                      Text="@L("Actions.Pause")" 
                                                       Size="ButtonSize.ExtraSmall" 
                                                       ButtonStyle="ButtonStyle.Warning"
                                                       Disabled="@(job.IsCurrentlyExecuting)"
@@ -372,7 +372,7 @@
                                     @if (job.IsCurrentlyExecuting)
                                     {
                                         <RadzenButton Icon="stop" 
-                                                      Text="Interrupt" 
+                                                      Text="@L("Actions.Interrupt")" 
                                                       Size="ButtonSize.ExtraSmall" 
                                                       ButtonStyle="ButtonStyle.Danger"
                                                       Click="@(() => InterruptJobClicked(job))"/>
@@ -389,23 +389,23 @@
         <RadzenCard>
             <RadzenText TextStyle="TextStyle.H6">
                 <RadzenIcon Icon="info" class="rz-me-1"/>
-                Scheduler Information
+                @L("AdminJobs.SchedulerInformation")
             </RadzenText>
             <RadzenRow Gap="1rem" class="rz-mt-2">
                 <RadzenColumn Size="6" SizeMD="3">
-                    <RadzenText TextStyle="TextStyle.Caption">Scheduler Name</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Caption">@L("AdminJobs.SchedulerName")</RadzenText>
                     <RadzenText>@_schedulerName</RadzenText>
                 </RadzenColumn>
                 <RadzenColumn Size="6" SizeMD="3">
-                    <RadzenText TextStyle="TextStyle.Caption">Instance ID</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Caption">@L("AdminJobs.InstanceId")</RadzenText>
                     <RadzenText>@_schedulerInstanceId</RadzenText>
                 </RadzenColumn>
                 <RadzenColumn Size="6" SizeMD="3">
-                    <RadzenText TextStyle="TextStyle.Caption">Scheduler Started</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Caption">@L("AdminJobs.SchedulerStarted")</RadzenText>
                     <RadzenText>@_schedulerStartTimeDisplay</RadzenText>
                 </RadzenColumn>
                 <RadzenColumn Size="6" SizeMD="3">
-                    <RadzenText TextStyle="TextStyle.Caption">Thread Pool Size</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Caption">@L("AdminJobs.ThreadPoolSize")</RadzenText>
                     <RadzenText>@_threadPoolSize</RadzenText>
                 </RadzenColumn>
             </RadzenRow>
@@ -605,7 +605,7 @@
             NotificationService.Notify(new NotificationMessage
             {
                 Severity = NotificationSeverity.Error,
-                Summary = "Error loading jobs",
+                Summary = L("AdminJobs.ErrorLoadingJobs"),
                 Detail = ex.Message,
                 Duration = ToastTime
             });
@@ -623,7 +623,7 @@
         NotificationService.Notify(new NotificationMessage
         {
             Severity = NotificationSeverity.Info,
-            Summary = "Jobs refreshed",
+            Summary = L("AdminJobs.JobsRefreshed"),
             Duration = ToastTime
         });
     }
@@ -642,7 +642,7 @@
             NotificationService.Notify(new NotificationMessage
             {
                 Severity = NotificationSeverity.Success,
-                Summary = $"Job '{job.JobName}' triggered",
+                Summary = L("AdminJobs.JobTriggered", job.JobName),
                 Duration = ToastTime
             });
             
@@ -656,7 +656,7 @@
             NotificationService.Notify(new NotificationMessage
             {
                 Severity = NotificationSeverity.Error,
-                Summary = "Failed to trigger job",
+                Summary = L("AdminJobs.FailedToTriggerJob"),
                 Detail = ex.Message,
                 Duration = ToastTime
             });
@@ -673,7 +673,7 @@
             NotificationService.Notify(new NotificationMessage
             {
                 Severity = NotificationSeverity.Warning,
-                Summary = $"Job '{job.JobName}' paused",
+                Summary = L("AdminJobs.JobPaused", job.JobName),
                 Duration = ToastTime
             });
             
@@ -684,7 +684,7 @@
             NotificationService.Notify(new NotificationMessage
             {
                 Severity = NotificationSeverity.Error,
-                Summary = "Failed to pause job",
+                Summary = L("AdminJobs.FailedToPauseJob"),
                 Detail = ex.Message,
                 Duration = ToastTime
             });
@@ -701,7 +701,7 @@
             NotificationService.Notify(new NotificationMessage
             {
                 Severity = NotificationSeverity.Success,
-                Summary = $"Job '{job.JobName}' resumed",
+                Summary = L("AdminJobs.JobResumed", job.JobName),
                 Duration = ToastTime
             });
             
@@ -712,7 +712,7 @@
             NotificationService.Notify(new NotificationMessage
             {
                 Severity = NotificationSeverity.Error,
-                Summary = "Failed to resume job",
+                Summary = L("AdminJobs.FailedToResumeJob"),
                 Detail = ex.Message,
                 Duration = ToastTime
             });
@@ -729,7 +729,7 @@
             NotificationService.Notify(new NotificationMessage
             {
                 Severity = NotificationSeverity.Warning,
-                Summary = $"Job '{job.JobName}' interrupted",
+                Summary = L("AdminJobs.JobInterrupted", job.JobName),
                 Duration = ToastTime
             });
             
@@ -741,7 +741,7 @@
             NotificationService.Notify(new NotificationMessage
             {
                 Severity = NotificationSeverity.Error,
-                Summary = "Failed to interrupt job",
+                Summary = L("AdminJobs.FailedToInterruptJob"),
                 Detail = ex.Message,
                 Duration = ToastTime
             });
@@ -758,7 +758,7 @@
             NotificationService.Notify(new NotificationMessage
             {
                 Severity = NotificationSeverity.Warning,
-                Summary = "All jobs paused",
+                Summary = L("AdminJobs.AllJobsPaused"),
                 Duration = ToastTime
             });
             
@@ -769,7 +769,7 @@
             NotificationService.Notify(new NotificationMessage
             {
                 Severity = NotificationSeverity.Error,
-                Summary = "Failed to pause all jobs",
+                Summary = L("AdminJobs.FailedToPauseAllJobs"),
                 Detail = ex.Message,
                 Duration = ToastTime
             });
@@ -786,7 +786,7 @@
             NotificationService.Notify(new NotificationMessage
             {
                 Severity = NotificationSeverity.Success,
-                Summary = "All jobs resumed",
+                Summary = L("AdminJobs.AllJobsResumed"),
                 Duration = ToastTime
             });
             
@@ -797,7 +797,7 @@
             NotificationService.Notify(new NotificationMessage
             {
                 Severity = NotificationSeverity.Error,
-                Summary = "Failed to resume all jobs",
+                Summary = L("AdminJobs.FailedToResumeAllJobs"),
                 Detail = ex.Message,
                 Duration = ToastTime
             });

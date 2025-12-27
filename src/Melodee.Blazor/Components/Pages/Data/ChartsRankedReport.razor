@@ -9,25 +9,25 @@
 @inject ChartService ChartService
 @inject NavigationManager NavigationManager
 
-<PageTitle>Charts Ranked Albums Report</PageTitle>
+<PageTitle>@L("ChartsRankedReport.PageTitle")</PageTitle>
 
 <RadzenBreadCrumb Class="rz-pb-5">
-    <RadzenBreadCrumbItem Path="/" Text="Home"/>
-    <RadzenBreadCrumbItem Path="/charts" Icon="format_list_numbered" Text="Charts"/>
-    <RadzenBreadCrumbItem Icon="trending_up" Text="Ranked Report"/>
+    <RadzenBreadCrumbItem Path="/" Text="@L("Nav.Home")"/>
+    <RadzenBreadCrumbItem Path="/charts" Icon="format_list_numbered" Text="@L("Navigation.Charts")"/>
+    <RadzenBreadCrumbItem Icon="trending_up" Text="@L("Charts.RankedReport")"/>
 </RadzenBreadCrumb>
 
 <RadzenStack Gap="1rem">
     <RadzenRow AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
         <RadzenColumn>
-            <RadzenText Text="Ranked Albums Report" TextStyle="TextStyle.DisplayH6" TagName="TagName.H1" style="margin: 0"/>
+            <RadzenText Text="@L("ChartsRankedReport.Header")" TextStyle="TextStyle.DisplayH6" TagName="TagName.H1" style="margin: 0"/>
             <RadzenText TextStyle="TextStyle.Subtitle1" class="rz-text-secondary-color">
-                Albums ranked by their aggregate position across multiple charts
+                @L("ChartsRankedReport.Description")
             </RadzenText>
         </RadzenColumn>
         <RadzenColumn>
             <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
-                <RadzenButton Text="Back to Charts" Icon="arrow_back" ButtonStyle="ButtonStyle.Light" Click="@(() => NavigationManager.NavigateTo("/charts"))"/>
+                <RadzenButton Text="@L("Actions.BackToCharts")" Icon="arrow_back" ButtonStyle="ButtonStyle.Light" Click="@(() => NavigationManager.NavigateTo("/charts"))"/>
             </RadzenStack>
         </RadzenColumn>
     </RadzenRow>
@@ -47,22 +47,22 @@
                 <RadzenCard>
                     <RadzenStack Orientation="Orientation.Horizontal" Gap="2rem" AlignItems="AlignItems.Center">
                         <RadzenStack Gap="0.25rem">
-                            <RadzenText TextStyle="TextStyle.Overline" class="rz-text-secondary-color">Total Albums</RadzenText>
+                            <RadzenText TextStyle="TextStyle.Overline" class="rz-text-secondary-color">@L("ChartsRankedReport.TotalAlbums")</RadzenText>
                             <RadzenText TextStyle="TextStyle.H4" style="margin: 0">@_rankedAlbums.Count</RadzenText>
                         </RadzenStack>
 
                         <RadzenStack Gap="0.25rem">
-                            <RadzenText TextStyle="TextStyle.Overline" class="rz-text-secondary-color">Multi-Chart Albums</RadzenText>
+                            <RadzenText TextStyle="TextStyle.Overline" class="rz-text-secondary-color">@L("ChartsRankedReport.MultiChartAlbums")</RadzenText>
                             <RadzenText TextStyle="TextStyle.H4" style="margin: 0">@_rankedAlbums.Count(a => a.ChartCount > 1)</RadzenText>
                         </RadzenStack>
 
                         <RadzenStack Gap="0.25rem">
-                            <RadzenText TextStyle="TextStyle.Overline" class="rz-text-secondary-color">Total Charts</RadzenText>
+                            <RadzenText TextStyle="TextStyle.Overline" class="rz-text-secondary-color">@L("ChartsRankedReport.TotalCharts")</RadzenText>
                             <RadzenText TextStyle="TextStyle.H4" style="margin: 0">@_totalCharts</RadzenText>
                         </RadzenStack>
 
                         <RadzenStack Gap="0.25rem">
-                            <RadzenText TextStyle="TextStyle.Overline" class="rz-text-secondary-color">Linked Albums</RadzenText>
+                            <RadzenText TextStyle="TextStyle.Overline" class="rz-text-secondary-color">@L("ChartsRankedReport.LinkedAlbums")</RadzenText>
                             <RadzenText TextStyle="TextStyle.H4" style="margin: 0">@_rankedAlbums.Count(a => a.IsLinked)</RadzenText>
                         </RadzenStack>
                     </RadzenStack>
@@ -80,13 +80,13 @@
                                     AllowSorting="true"
                                     Density="Density.Compact">
                         <Columns>
-                            <RadzenDataGridColumn Property="@nameof(RankedAlbumInfo.CompositeScore)" Title="Score" Width="90px" Sortable="true" SortOrder="SortOrder.Ascending">
+                            <RadzenDataGridColumn Property="@nameof(RankedAlbumInfo.CompositeScore)" Title="@L("ChartsRankedReport.Score")" Width="90px" Sortable="true" SortOrder="SortOrder.Ascending">
                                 <Template Context="item">
                                     <RadzenBadge BadgeStyle="BadgeStyle.Primary" Text="@($"{item.CompositeScore:F2}")" />
                                 </Template>
                             </RadzenDataGridColumn>
 
-                            <RadzenDataGridColumn Property="@nameof(RankedAlbumInfo.ArtistName)" Title="Artist" Width="250px" Sortable="true">
+                            <RadzenDataGridColumn Property="@nameof(RankedAlbumInfo.ArtistName)" Title="@L("Common.Artist")" Width="250px" Sortable="true">
                                 <Template Context="item">
                                     @if (item.IsLinked && item.LinkedArtistApiKey.HasValue)
                                     {
@@ -99,7 +99,7 @@
                                 </Template>
                             </RadzenDataGridColumn>
 
-                            <RadzenDataGridColumn Property="@nameof(RankedAlbumInfo.AlbumTitle)" Title="Album" Width="300px" Sortable="true">
+                            <RadzenDataGridColumn Property="@nameof(RankedAlbumInfo.AlbumTitle)" Title="@L("Common.Album")" Width="300px" Sortable="true">
                                 <Template Context="item">
                                     @if (item.IsLinked && item.LinkedAlbumApiKey.HasValue)
                                     {
@@ -112,44 +112,44 @@
                                 </Template>
                             </RadzenDataGridColumn>
 
-                            <RadzenDataGridColumn Property="@nameof(RankedAlbumInfo.ReleaseYear)" Title="Year" Width="80px" Sortable="true">
+                            <RadzenDataGridColumn Property="@nameof(RankedAlbumInfo.ReleaseYear)" Title="@L("Common.Year")" Width="80px" Sortable="true">
                                 <Template Context="item">
                                     @(item.ReleaseYear?.ToString() ?? "—")
                                 </Template>
                             </RadzenDataGridColumn>
 
-                            <RadzenDataGridColumn Property="@nameof(RankedAlbumInfo.ChartCount)" Title="Charts" Width="80px" Sortable="true">
+                            <RadzenDataGridColumn Property="@nameof(RankedAlbumInfo.ChartCount)" Title="@L("TableHeader.Charts")" Width="80px" Sortable="true">
                                 <Template Context="item">
                                     <RadzenBadge BadgeStyle="BadgeStyle.Info" Text="@item.ChartCount.ToString()" />
                                 </Template>
                             </RadzenDataGridColumn>
 
-                            <RadzenDataGridColumn Property="@nameof(RankedAlbumInfo.BestRank)" Title="Best" Width="80px" Sortable="true">
+                            <RadzenDataGridColumn Property="@nameof(RankedAlbumInfo.BestRank)" Title="@L("ChartsRankedReport.Best")" Width="80px" Sortable="true">
                                 <Template Context="item">
                                     <RadzenText TextStyle="TextStyle.Body2">#{@item.BestRank}</RadzenText>
                                 </Template>
                             </RadzenDataGridColumn>
 
-                            <RadzenDataGridColumn Property="@nameof(RankedAlbumInfo.WorstRank)" Title="Worst" Width="80px" Sortable="true">
+                            <RadzenDataGridColumn Property="@nameof(RankedAlbumInfo.WorstRank)" Title="@L("ChartsRankedReport.Worst")" Width="80px" Sortable="true">
                                 <Template Context="item">
                                     <RadzenText TextStyle="TextStyle.Body2">#{@item.WorstRank}</RadzenText>
                                 </Template>
                             </RadzenDataGridColumn>
 
-                            <RadzenDataGridColumn Title="Status" Width="100px" Sortable="false">
+                            <RadzenDataGridColumn Title="@L("Common.Status")" Width="100px" Sortable="false">
                                 <Template Context="item">
                                     @if (item.IsLinked)
                                     {
-                                        <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="Linked"/>
+                                        <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="@L("Status.Linked")"/>
                                     }
                                     else
                                     {
-                                        <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="Not Found"/>
+                                        <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="@L("ChartsRankedReport.NotFound")"/>
                                     }
                                 </Template>
                             </RadzenDataGridColumn>
 
-                            <RadzenDataGridColumn Title="Chart Details" Width="400px" Sortable="false">
+                            <RadzenDataGridColumn Title="@L("ChartsRankedReport.ChartDetails")" Width="400px" Sortable="false">
                                 <Template Context="item">
                                     <RadzenStack Orientation="Orientation.Vertical" Gap="0.25rem">
                                         @foreach (var ranking in item.Rankings)

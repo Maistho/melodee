@@ -25,7 +25,7 @@
 
 @attribute [Authorize(Roles = "Administrator")]
 
-<PageTitle>Admin Dashboard</PageTitle>
+<PageTitle>@L("AdminDashboard.PageTitle")</PageTitle>
 
 <RadzenStack Gap="1rem">
     @* Header with quick actions *@
@@ -33,14 +33,14 @@
         <RadzenColumn Size="12" SizeMD="6">
             <RadzenText TextStyle="TextStyle.H4">
                 <RadzenIcon Icon="dashboard" class="rz-me-1"/>
-                Admin Dashboard
+                @L("AdminDashboard.PageTitle")
             </RadzenText>
         </RadzenColumn>
         <RadzenColumn Size="12" SizeMD="6">
             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.End" Gap="0.5rem" Wrap="FlexWrap.Wrap">
-                <RadzenButton Icon="refresh" Text="Refresh" Click="@RefreshDashboard" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Primary"/>
-                <RadzenButton Icon="sweep" Text="Clear Cache" Click="@ClearCacheClicked" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Warning"/>
-                <RadzenButton Icon="stop_circle" Text="Clear Now Playing" Click="@ClearNowPlayingClicked" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Warning"/>
+                <RadzenButton Icon="refresh" Text="@L("Actions.Refresh")" Click="@RefreshDashboard" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Primary"/>
+                <RadzenButton Icon="sweep" Text="@L("Actions.ClearCache")" Click="@ClearCacheClicked" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Warning"/>
+                <RadzenButton Icon="stop_circle" Text="@L("Actions.ClearNowPlaying")" Click="@ClearNowPlayingClicked" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Warning"/>
             </RadzenStack>
         </RadzenColumn>
     </RadzenRow>
@@ -49,16 +49,16 @@
     <RadzenCard>
       <RadzenText TextStyle="TextStyle.H6">
         <RadzenIcon Icon="link" class="rz-me-1"/>
-        Quick Links
+        @L("AdminDashboard.QuickLinks")
       </RadzenText>
       <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap" class="rz-mt-2">
-        <RadzenButton Text="Settings" Icon="settings" Click="@(() => NavigationManager.NavigateTo("/admin/settings"))" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary"/>
-        <RadzenButton Text="Users" Icon="group" Click="@(() => NavigationManager.NavigateTo("/data/users"))" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary"/>
-        <RadzenButton Text="Libraries" Icon="library_music" Click="@(() => NavigationManager.NavigateTo("/data/libraries"))" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary"/>
-        <RadzenButton Text="Artists" Icon="person" Click="@(() => NavigationManager.NavigateTo("/data/artists"))" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary"/>
-        <RadzenButton Text="Albums" Icon="album" Click="@(() => NavigationManager.NavigateTo("/data/albums"))" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary"/>
-        <RadzenButton Text="Songs" Icon="music_note" Click="@(() => NavigationManager.NavigateTo("/data/songs"))" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary"/>
-        <RadzenButton Text="API Docs" Icon="description" Click="@(() => NavigationManager.NavigateTo("/swagger", forceLoad: true))" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Info"/>
+        <RadzenButton Text="@L("Navigation.Settings")" Icon="settings" Click="@(() => NavigationManager.NavigateTo("/admin/settings"))" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary"/>
+        <RadzenButton Text="@L("Navigation.Users")" Icon="group" Click="@(() => NavigationManager.NavigateTo("/data/users"))" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary"/>
+        <RadzenButton Text="@L("Navigation.Libraries")" Icon="library_music" Click="@(() => NavigationManager.NavigateTo("/data/libraries"))" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary"/>
+        <RadzenButton Text="@L("Navigation.Artists")" Icon="person" Click="@(() => NavigationManager.NavigateTo("/data/artists"))" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary"/>
+        <RadzenButton Text="@L("Navigation.Albums")" Icon="album" Click="@(() => NavigationManager.NavigateTo("/data/albums"))" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary"/>
+        <RadzenButton Text="@L("Navigation.Songs")" Icon="music_note" Click="@(() => NavigationManager.NavigateTo("/data/songs"))" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary"/>
+        <RadzenButton Text="@L("AdminDashboard.APIDocs")" Icon="description" Click="@(() => NavigationManager.NavigateTo("/swagger", forceLoad: true))" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Info"/>
       </RadzenStack>
     </RadzenCard>
 
@@ -68,8 +68,8 @@
             <RadzenCard class="rz-background-color-success-lighter" Style="height: 100%;">
                 <RadzenStack Gap="0.25rem" AlignItems="AlignItems.Center">
                     <RadzenIcon Icon="check_circle" Style="font-size: 2rem; color: var(--rz-success);"/>
-                    <RadzenText TextStyle="TextStyle.Overline">System Status</RadzenText>
-                    <RadzenText TextStyle="TextStyle.H5" Style="color: var(--rz-success);">Online</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Overline">@L("AdminDashboard.SystemStatus")</RadzenText>
+                    <RadzenText TextStyle="TextStyle.H5" Style="color: var(--rz-success);">@L("Status.Online")</RadzenText>
                 </RadzenStack>
             </RadzenCard>
         </RadzenColumn>
@@ -77,7 +77,7 @@
             <RadzenCard Style="height: 100%;">
                 <RadzenStack Gap="0.25rem" AlignItems="AlignItems.Center">
                     <RadzenIcon Icon="headphones" Style="font-size: 2rem; color: var(--rz-info);"/>
-                    <RadzenText TextStyle="TextStyle.Overline">Now Playing</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Overline">@L("Navigation.NowPlaying")</RadzenText>
                     <RadzenText TextStyle="TextStyle.H5">@_nowPlayingCount</RadzenText>
                 </RadzenStack>
             </RadzenCard>
@@ -86,7 +86,7 @@
             <RadzenCard Style="height: 100%;">
                 <RadzenStack Gap="0.25rem" AlignItems="AlignItems.Center">
                     <RadzenIcon Icon="group" Style="font-size: 2rem; color: var(--rz-primary);"/>
-                    <RadzenText TextStyle="TextStyle.Overline">Total Users</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Overline">@L("AdminDashboard.TotalUsers")</RadzenText>
                     <RadzenText TextStyle="TextStyle.H5">@_userCount</RadzenText>
                 </RadzenStack>
             </RadzenCard>
@@ -95,7 +95,7 @@
             <RadzenCard Style="height: 100%;">
                 <RadzenStack Gap="0.25rem" AlignItems="AlignItems.Center">
                     <RadzenIcon Icon="schedule" Style="font-size: 2rem; color: var(--rz-secondary);"/>
-                    <RadzenText TextStyle="TextStyle.Overline">Uptime</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Overline">@L("AdminDashboard.Uptime")</RadzenText>
                     <RadzenText TextStyle="TextStyle.H5">@_uptime</RadzenText>
                 </RadzenStack>
             </RadzenCard>
@@ -106,7 +106,7 @@
     <RadzenCard>
         <RadzenText TextStyle="TextStyle.H6">
             <RadzenIcon Icon="library_music" class="rz-me-1"/>
-            Library Overview
+            @L("AdminDashboard.LibraryOverview")
         </RadzenText>
         <RadzenRow Gap="1rem" class="rz-mt-2">
             @foreach (var stat in _libraryStats)
@@ -139,24 +139,24 @@
             <RadzenCard Style="height: 100%;">
                 <RadzenText TextStyle="TextStyle.H6">
                     <RadzenIcon Icon="trending_up" class="rz-me-1"/>
-                    Songs Added (Last 30 Days)
+                    @L("AdminDashboard.SongsAddedLast30Days")
                 </RadzenText>
                 @if (_songsAddedPerDay.Length > 0)
                 {
                     <RadzenChart Style="height: 280px;">
-                        <RadzenAreaSeries Data="@_songsAddedPerDay" CategoryProperty="DayAsDateTime" ValueProperty="Value" Title="Songs" Fill="var(--rz-primary-light)" Stroke="var(--rz-primary)">
+                        <RadzenAreaSeries Data="@_songsAddedPerDay" CategoryProperty="DayAsDateTime" ValueProperty="Value" Title="@L("Navigation.Songs")" Fill="var(--rz-primary-light)" Stroke="var(--rz-primary)">
                             <RadzenCategoryAxis Step="@TimeSpan.FromDays(7)" FormatString="{0:MM/dd}">
-                                <RadzenAxisTitle Text="Date"/>
+                                <RadzenAxisTitle Text="@L("AdminDashboard.Date")"/>
                             </RadzenCategoryAxis>
                             <RadzenValueAxis>
-                                <RadzenAxisTitle Text="Songs"/>
+                                <RadzenAxisTitle Text="@L("Navigation.Songs")"/>
                             </RadzenValueAxis>
                         </RadzenAreaSeries>
                     </RadzenChart>
                 }
                 else
                 {
-                    <RadzenText TextStyle="TextStyle.Body2" class="rz-mt-4">No data available</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body2" class="rz-mt-4">@L("Messages.NoData")</RadzenText>
                 }
             </RadzenCard>
         </RadzenColumn>
@@ -164,24 +164,24 @@
             <RadzenCard Style="height: 100%;">
                 <RadzenText TextStyle="TextStyle.H6">
                     <RadzenIcon Icon="search" class="rz-me-1"/>
-                    Search Activity (Last 30 Days)
+                    @L("AdminDashboard.SearchActivityLast30Days")
                 </RadzenText>
                 @if (_searchesPerDay.Length > 0)
                 {
                     <RadzenChart Style="height: 280px;">
-                        <RadzenAreaSeries Data="@_searchesPerDay" CategoryProperty="DayAsDateTime" ValueProperty="Value" Title="Searches" Fill="var(--rz-info-light)" Stroke="var(--rz-info)">
+                        <RadzenAreaSeries Data="@_searchesPerDay" CategoryProperty="DayAsDateTime" ValueProperty="Value" Title="@L("AdminDashboard.Searches")" Fill="var(--rz-info-light)" Stroke="var(--rz-info)">
                             <RadzenCategoryAxis Step="@TimeSpan.FromDays(7)" FormatString="{0:MM/dd}">
-                                <RadzenAxisTitle Text="Date"/>
+                                <RadzenAxisTitle Text="@L("AdminDashboard.Date")"/>
                             </RadzenCategoryAxis>
                             <RadzenValueAxis>
-                                <RadzenAxisTitle Text="Searches"/>
+                                <RadzenAxisTitle Text="@L("AdminDashboard.Searches")"/>
                             </RadzenValueAxis>
                         </RadzenAreaSeries>
                     </RadzenChart>
                 }
                 else
                 {
-                    <RadzenText TextStyle="TextStyle.Body2" class="rz-mt-4">No data available</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body2" class="rz-mt-4">@L("Messages.NoData")</RadzenText>
                 }
             </RadzenCard>
         </RadzenColumn>
@@ -195,15 +195,15 @@
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
                     <RadzenText TextStyle="TextStyle.H6">
                         <RadzenIcon Icon="folder" class="rz-me-1"/>
-                        Library Status
+                        @L("AdminDashboard.LibraryStatus")
                     </RadzenText>
-                    <RadzenButton Text="Manage" Icon="settings" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Click="@(() => NavigationManager.NavigateTo("/data/libraries"))"/>
+                    <RadzenButton Text="@L("Actions.Manage")" Icon="settings" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Click="@(() => NavigationManager.NavigateTo("/data/libraries"))"/>
                 </RadzenStack>
                 <RadzenDataGrid TItem="LibraryInfo" Data="@_libraries" AllowPaging="false" AllowSorting="false" Density="Density.Compact" class="rz-mt-2">
                     <Columns>
-                        <RadzenDataGridColumn TItem="LibraryInfo" Property="Name" Title="Name" Width="180px"/>
-                        <RadzenDataGridColumn TItem="LibraryInfo" Property="TypeLabel" Title="Type" Width="100px"/>
-                        <RadzenDataGridColumn TItem="LibraryInfo" Title="Last Scan">
+                        <RadzenDataGridColumn TItem="LibraryInfo" Property="Name" Title="@L("Common.Name")" Width="180px"/>
+                        <RadzenDataGridColumn TItem="LibraryInfo" Property="TypeLabel" Title="@L("Common.Type")" Width="100px"/>
+                        <RadzenDataGridColumn TItem="LibraryInfo" Title="@L("AdminDashboard.LastScan")">
                             <Template Context="lib">
                                 @if (lib.LastScanAt.HasValue)
                                 {
@@ -211,19 +211,19 @@
                                 }
                                 else
                                 {
-                                    <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-warning);">Never</RadzenText>
+                                    <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-warning);">@L("AdminDashboard.Never")</RadzenText>
                                 }
                             </Template>
                         </RadzenDataGridColumn>
-                        <RadzenDataGridColumn TItem="LibraryInfo" Title="Status" Width="100px">
+                        <RadzenDataGridColumn TItem="LibraryInfo" Title="@L("Common.Status")" Width="100px">
                             <Template Context="lib">
                                 @if (lib.NeedsScanning)
                                 {
-                                    <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="Needs Scan" Shade="Shade.Light"/>
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="@L("AdminDashboard.NeedsScan")" Shade="Shade.Light"/>
                                 }
                                 else
                                 {
-                                    <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="OK" Shade="Shade.Light"/>
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="@L("Data.OK")" Shade="Shade.Light"/>
                                 }
                             </Template>
                         </RadzenDataGridColumn>
@@ -238,19 +238,19 @@
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
                     <RadzenText TextStyle="TextStyle.H6">
                         <RadzenIcon Icon="schedule" class="rz-me-1"/>
-                        Scheduled Jobs
+                        @L("AdminDashboard.ScheduledJobs")
                     </RadzenText>
-                    <RadzenButton Text="Manage" Icon="settings" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Click="@(() => NavigationManager.NavigateTo("/admin/jobs"))"/>
+                    <RadzenButton Text="@L("Actions.Manage")" Icon="settings" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Click="@(() => NavigationManager.NavigateTo("/admin/jobs"))"/>
                 </RadzenStack>
                 <RadzenDataGrid TItem="JobInfo" Data="@_jobs" AllowPaging="false" AllowSorting="false" Density="Density.Compact" class="rz-mt-2">
                     <Columns>
-                        <RadzenDataGridColumn TItem="JobInfo" Property="Name" Title="Job" Width="200px"/>
-                        <RadzenDataGridColumn TItem="JobInfo" Title="Last Run">
+                        <RadzenDataGridColumn TItem="JobInfo" Property="Name" Title="@L("AdminDashboard.Job")" Width="200px"/>
+                        <RadzenDataGridColumn TItem="JobInfo" Title="@L("AdminDashboard.LastRun")">
                             <Template Context="job">
                                 <RadzenText TextStyle="TextStyle.Caption">@job.PreviousFireTime</RadzenText>
                             </Template>
                         </RadzenDataGridColumn>
-                        <RadzenDataGridColumn TItem="JobInfo" Title="Next Run">
+                        <RadzenDataGridColumn TItem="JobInfo" Title="@L("AdminDashboard.NextRun")">
                             <Template Context="job">
                                 <RadzenText TextStyle="TextStyle.Caption">@job.NextFireTime</RadzenText>
                             </Template>
@@ -268,25 +268,25 @@
                 <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
                     <RadzenText TextStyle="TextStyle.H6">
                         <RadzenIcon Icon="headphones" class="rz-me-1"/>
-                        Now Playing
+                        @L("Navigation.NowPlaying")
                     </RadzenText>
-                    <RadzenButton Text="View All" Icon="open_in_new" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Click="@(() => NavigationManager.NavigateTo("/activity/nowplaying"))"/>
+                    <RadzenButton Text="@L("Actions.ViewAll")" Icon="open_in_new" Size="ButtonSize.ExtraSmall" ButtonStyle="ButtonStyle.Light" Click="@(() => NavigationManager.NavigateTo("/activity/nowplaying"))"/>
                 </RadzenStack>
                 @if (_nowPlayingItems.Length == 0)
                 {
-                    <RadzenText TextStyle="TextStyle.Body2" class="rz-mt-2" Style="color: var(--rz-text-secondary-color);">No active listeners</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body2" class="rz-mt-2" Style="color: var(--rz-text-secondary-color);">@L("Message.NoActiveListeners")</RadzenText>
                 }
                 else
                 {
                     <RadzenDataGrid TItem="NowPlayingInfo" Data="@_nowPlayingItems" AllowPaging="false" AllowSorting="false" Density="Density.Compact" class="rz-mt-2">
                         <Columns>
-                            <RadzenDataGridColumn TItem="NowPlayingInfo" Title="User" Width="120px">
+                            <RadzenDataGridColumn TItem="NowPlayingInfo" Title="@L("AdminDashboard.User")" Width="120px">
                                 <Template Context="np">@np.User.UserName</Template>
                             </RadzenDataGridColumn>
-                            <RadzenDataGridColumn TItem="NowPlayingInfo" Title="Song">
+                            <RadzenDataGridColumn TItem="NowPlayingInfo" Title="@L("Common.Song")">
                                 <Template Context="np">@np.Scrobble.SongTitle</Template>
                             </RadzenDataGridColumn>
-                            <RadzenDataGridColumn TItem="NowPlayingInfo" Title="Artist">
+                            <RadzenDataGridColumn TItem="NowPlayingInfo" Title="@L("Common.Artist")">
                                 <Template Context="np">@np.Scrobble.ArtistName</Template>
                             </RadzenDataGridColumn>
                         </Columns>
@@ -300,12 +300,12 @@
             <RadzenCard Style="height: 100%;">
                 <RadzenText TextStyle="TextStyle.H6">
                     <RadzenIcon Icon="image_not_supported" class="rz-me-1"/>
-                    Content Health
+                    @L("AdminDashboard.ContentHealth")
                 </RadzenText>
                 <RadzenDataGrid TItem="Statistic" Data="@_missingImages" AllowPaging="false" AllowSorting="false" Density="Density.Compact" class="rz-mt-2">
                     <Columns>
-                        <RadzenDataGridColumn TItem="Statistic" Property="Title" Title="Item"/>
-                        <RadzenDataGridColumn TItem="Statistic" Title="Count" Width="100px">
+                        <RadzenDataGridColumn TItem="Statistic" Property="Title" Title="@L("Stats.ItemColumnTitle")"/>
+                        <RadzenDataGridColumn TItem="Statistic" Title="@L("Stats.CountColumnTitle")" Width="100px">
                             <Template Context="stat">
                                 @if (stat.DataAsInt > 0)
                                 {
@@ -330,27 +330,27 @@
             <RadzenCard Style="height: 100%;">
                 <RadzenText TextStyle="TextStyle.H6">
                     <RadzenIcon Icon="info" class="rz-me-1"/>
-                    System Information
+                    @L("AdminDashboard.SystemInformation")
                 </RadzenText>
                 <RadzenStack Gap="0.5rem" class="rz-mt-2">
                     <RadzenRow>
-                        <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">Server Time (UTC)</RadzenText></RadzenColumn>
+                        <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">@L("AdminDashboard.ServerTimeUTC")</RadzenText></RadzenColumn>
                         <RadzenColumn Size="6"><RadzenText>@_serverTimeUtc</RadzenText></RadzenColumn>
                     </RadzenRow>
                     <RadzenRow>
-                        <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">.NET Version</RadzenText></RadzenColumn>
+                        <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">@L("AdminDashboard.DotNetVersion")</RadzenText></RadzenColumn>
                         <RadzenColumn Size="6"><RadzenText>@_dotNetVersion</RadzenText></RadzenColumn>
                     </RadzenRow>
                     <RadzenRow>
-                        <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">Melodee Version</RadzenText></RadzenColumn>
+                        <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">@L("AdminDashboard.MelodeeVersion")</RadzenText></RadzenColumn>
                         <RadzenColumn Size="6"><RadzenText>@_melodeeVersion</RadzenText></RadzenColumn>
                     </RadzenRow>
                     <RadzenRow>
-                        <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">API Version</RadzenText></RadzenColumn>
+                        <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">@L("AdminDashboard.APIVersion")</RadzenText></RadzenColumn>
                         <RadzenColumn Size="6"><RadzenText>@_apiVersion</RadzenText></RadzenColumn>
                     </RadzenRow>
                     <RadzenRow>
-                        <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">OS</RadzenText></RadzenColumn>
+                        <RadzenColumn Size="6"><RadzenText TextStyle="TextStyle.Caption">@L("AdminDashboard.OS")</RadzenText></RadzenColumn>
                         <RadzenColumn Size="6"><RadzenText>@_osDescription</RadzenText></RadzenColumn>
                     </RadzenRow>
                 </RadzenStack>
@@ -362,7 +362,7 @@
             <RadzenCard Style="height: 100%;">
                 <RadzenText TextStyle="TextStyle.H6">
                     <RadzenIcon Icon="memory" class="rz-me-1"/>
-                    Cache Statistics
+                    @L("AdminDashboard.CacheStatistics")
                 </RadzenText>
                 <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" Wrap="FlexWrap.Wrap" class="rz-mt-2">
                     @if (_cacheStatistics != null)
@@ -423,7 +423,7 @@
         NotificationService.Notify(new NotificationMessage
         {
             Severity = NotificationSeverity.Info,
-            Summary = "Dashboard refreshed",
+            Summary = L("Notification.DashboardRefreshed"),
             Duration = ToastTime
         });
     }
@@ -540,7 +540,7 @@
         CacheManager.Clear();
         MelodeeConfigurationFactory.Reset();
         _cacheStatistics = CacheManager.CacheStatistics();
-        NotificationService.Notify(NotificationMessageForResult(new OperationResult<bool> { Data = true }, "cleared cache", ToastTime));
+        NotificationService.Notify(NotificationMessageForResult(new OperationResult<bool> { Data = true }, L("Message.ClearedCache"), ToastTime));
     }
 
     private async Task ClearNowPlayingClicked()
@@ -548,7 +548,7 @@
         await NowPlayingRepository.ClearNowPlayingAsync();
         _nowPlayingItems = [];
         _nowPlayingCount = 0;
-        NotificationService.Notify(NotificationMessageForResult(new OperationResult<bool> { Data = true }, "cleared now playing", ToastTime));
+        NotificationService.Notify(NotificationMessageForResult(new OperationResult<bool> { Data = true }, L("Message.ClearedNowPlaying"), ToastTime));
     }
 
     private record LibraryInfo(string Name, string TypeLabel, DateTime? LastScanAt, bool NeedsScanning);

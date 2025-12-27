@@ -11,12 +11,12 @@
 
 @attribute [Authorize(Roles = "Administrator")]
 
-<PageTitle>Settings</PageTitle>
+<PageTitle>@L("AdminSettings.PageTitle")</PageTitle>
 
 <RadzenStack Style="height: 100%">
     <RadzenBreadCrumb Class="rz-pb-5">
-        <RadzenBreadCrumbItem Path="/" Text="Dashboard"/>
-        <RadzenBreadCrumbItem Icon="settings" Text="Settings"/>
+        <RadzenBreadCrumbItem Path="/" Text="@L("Navigation.Dashboard")"/>
+        <RadzenBreadCrumbItem Icon="settings" Text="@L("AdminSettings.PageTitle")"/>
     </RadzenBreadCrumb>
     <DebounceInput class="rz-textbox rz-w-100"
                    autocomplete="off"
@@ -49,14 +49,14 @@
         EditMode="@DataGridEditMode.Single"
         RowUpdate="@OnUpdateRow">
         <Columns>
-            <RadzenDataGridColumn Property="@nameof(Setting.Key)" Title="Key" Width="150px"/>
-            <RadzenDataGridColumn Property="@nameof(Setting.Value)" Title="Value" Width="250px">
+            <RadzenDataGridColumn Property="@nameof(Setting.Key)" Title="@L("AdminSettings.Key")" Width="150px"/>
+            <RadzenDataGridColumn Property="@nameof(Setting.Value)" Title="@L("AdminSettings.Value")" Width="250px">
                 <EditTemplate Context="setting">
                     <RadzenTextBox @bind-Value="setting.Value" Style="width:250px; display: block" Name="Value"
-                                   aria-label="Edit Value"/>
+                                   aria-label="@L("AdminSettings.EditValue")"/>
                 </EditTemplate>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn Property="@nameof(Setting.Comment)" Title="Comment" Width="400px"/>
+            <RadzenDataGridColumn Property="@nameof(Setting.Comment)" Title="@L("AdminSettings.Comment")" Width="400px"/>
             <RadzenDataGridColumn
                 Context="setting"
                 Filterable="false"
@@ -78,7 +78,7 @@
                 </Template>
                 <EditTemplate Context="setting">
                     <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat"
-                                  Size="ButtonSize.Medium" Click="@(_ => SaveRow(setting))" aria-label="Save">
+                                  Size="ButtonSize.Medium" Click="@(_ => SaveRow(setting))" aria-label="@L("Actions.Save")">
                     </RadzenButton>
                     <RadzenButton
                         Icon="close"
@@ -87,7 +87,7 @@
                         Size="ButtonSize.Medium"
                         class="rz-my-1 rz-ms-1"
                         Click="@(_ => CancelEdit(setting))"
-                        aria-label="Cancel">
+                        aria-label="@L("Actions.Cancel")">
                     </RadzenButton>
                 </EditTemplate>
             </RadzenDataGridColumn>
@@ -125,8 +125,8 @@
             {
                 Severity = NotificationSeverity.Success,
                 Duration = ToastTime,
-                SummaryContent = _ => @<RadzenText TextStyle="TextStyle.H6">Successfully updated setting!</RadzenText>,
-                DetailContent = ns => @<RadzenButton Text="Ok" Click="@(_ => ns.Messages.Clear())"/>
+                SummaryContent = _ => @<RadzenText TextStyle="TextStyle.H6">@L("AdminSettings.SuccessfullyUpdated")</RadzenText>,
+                DetailContent = ns => @<RadzenButton Text="@L("Data.OK")" Click="@(_ => ns.Messages.Clear())"/>
             });
         }
     }

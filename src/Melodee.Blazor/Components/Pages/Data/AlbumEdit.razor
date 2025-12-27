@@ -17,17 +17,17 @@
 @inject NavigationManager NavigationManager
 
 
-<PageTitle>Album Add/Edit</PageTitle>
+<PageTitle>@L("AlbumEdit.PageTitle")</PageTitle>
 
 <RadzenBreadCrumb Class="rz-pb-5">
-    <RadzenBreadCrumbItem Path="/" Text="Dashboard"/>
-    <RadzenBreadCrumbItem Path="/data/albums" Text="Albums"/>
+    <RadzenBreadCrumbItem Path="/" Text="@L("Navigation.Dashboard")"/>
+    <RadzenBreadCrumbItem Path="/data/albums" Text="@L("Navigation.Albums")"/>
     @if (ApiKey != Guid.Empty)
     {
         <RadzenBreadCrumbItem Path=@($"/data/album/{_album.ApiKey}") Text="@(_album.Name)"/>
     }
     <RadzenBreadCrumbItem Icon="@(ApiKey == Guid.Empty ? "add" : "edit")"
-                          Text="@(ApiKey == Guid.Empty ? "Adding" : "Editing")"/>
+                          Text="@(ApiKey == Guid.Empty ? L("Actions.Adding") : L("Actions.Editing"))"/>
 </RadzenBreadCrumb>
 
 <RadzenStack>
@@ -55,7 +55,7 @@
                     <RadzenStack Gap="20px" class="rz-p-2 rz-p-md-1">
                         <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
                             <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
-                                <RadzenLabel Text="Locked" Component="IsLocked"/>
+                                 <RadzenLabel Text="@L("Label.Locked")" Component="IsLocked"/>
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="10">
                                 <RadzenSwitch @bind-Value="@_album.IsLocked" Name="@nameof(Album.IsLocked)"/>
@@ -79,7 +79,7 @@
                         @* </RadzenRow> *@
                         <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
                             <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
-                                <RadzenLabel Text="Name" Component="Name"/>
+                                 <RadzenLabel Text="@L("Label.Name")" Component="Name"/>
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="10">
                                 <RadzenTextBox style="display: block" Name="Name" @bind-Value="@_album.Name"
@@ -124,7 +124,7 @@
                                                                Style="position: absolute"/>
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
-                                <RadzenButton Icon="search" Text="Search"
+                                <RadzenButton Icon="search" Text="@L("Actions.Search")"
                                               Click="@(() => SearchForExternalButtonClick("AmgId"))"/>
                             </RadzenColumn>
                         </RadzenRow>
@@ -147,7 +147,7 @@
                                                                Style="position: absolute"/>
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
-                                <RadzenButton Icon="search" Text="Search"
+                                <RadzenButton Icon="search" Text="@L("Actions.Search")"
                                               Click="@(() => SearchForExternalButtonClick("DeezerId"))"/>
                             </RadzenColumn>
                         </RadzenRow>
@@ -162,7 +162,7 @@
                                                                Style="position: absolute"/>
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
-                                <RadzenButton Icon="search" Text="Search"
+                                <RadzenButton Icon="search" Text="@L("Actions.Search")"
                                               Click="@(() => SearchForExternalButtonClick("DiscogsId"))"/>
                             </RadzenColumn>
                         </RadzenRow>
@@ -185,7 +185,7 @@
                                                                Style="position: absolute"/>
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
-                                <RadzenButton Icon="search" Text="Search"
+                                <RadzenButton Icon="search" Text="@L("Actions.Search")"
                                               Click="@(() => SearchForExternalButtonClick("ItunesId"))"/>
                             </RadzenColumn>
                         </RadzenRow>
@@ -200,7 +200,7 @@
                                                                Style="position: absolute"/>
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
-                                <RadzenButton Icon="search" Text="Search"
+                                <RadzenButton Icon="search" Text="@L("Actions.Search")"
                                               Click="@(() => SearchForExternalButtonClick("LastFmId"))"/>
                             </RadzenColumn>
                         </RadzenRow>
@@ -246,7 +246,7 @@
                                                                Style="position: absolute"/>
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
-                                <RadzenButton Icon="search" Text="Search"
+                                <RadzenButton Icon="search" Text="@L("Actions.Search")"
                                               Click="@(() => SearchForExternalButtonClick("SpotifyId"))"/>
                             </RadzenColumn>
                         </RadzenRow>
@@ -269,13 +269,13 @@
                                                                Style="position: absolute"/>
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
-                                <RadzenButton Icon="search" Text="Search"
+                                <RadzenButton Icon="search" Text="@L("Actions.Search")"
                                               Click="@(() => SearchForExternalButtonClick("WikiDataId"))"/>
                             </RadzenColumn>
                         </RadzenRow>
                         <RadzenRow AlignItems="AlignItems.Center" class="rz-mt-4">
                             <RadzenColumn Size="12" Offset="0" SizeMD="8" OffsetMD="2">
-                                <RadzenButton ButtonType="ButtonType.Submit" Text="Submit"></RadzenButton>
+                                <RadzenButton ButtonType="ButtonType.Submit" Text="@L("Actions.Submit")"></RadzenButton>
                             </RadzenColumn>
                         </RadzenRow>
                     </RadzenStack>
@@ -394,9 +394,9 @@
     {
         await DialogService.OpenAsync("External Search", ds =>
             @<div>
-                <RadzenText>External search integration for album metadata retrieval.</RadzenText>
-                <RadzenText class="rz-text-secondary">This feature allows searching external providers for album information.</RadzenText>
-                <RadzenButton Text="Close" Click="@(() => ds.Close())" class="rz-mt-3"/>
+                <RadzenText>@L("AlbumEdit.ExternalSearchDescription")</RadzenText>
+                <RadzenText class="rz-text-secondary">@L("AlbumEdit.ExternalSearchDetails")</RadzenText>
+                <RadzenButton Text="@L("Actions.Close")" Click="@(() => ds.Close())" class="rz-mt-3"/>
             </div>,
             new DialogOptions { Width = "500px" });
     }

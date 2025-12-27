@@ -1,51 +1,51 @@
-<?xml version="1.0" encoding="utf-8"?>
-<root>
-  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
-    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
-    <xsd:element name="root" msdata:IsDataSet="true">
-      <xsd:complexType>
-        <xsd:choice maxOccurs="unbounded">
-          <xsd:element name="metadata">
-            <xsd:complexType>
-              <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" />
-              </xsd:sequence>
-              <xsd:attribute name="name" use="required" type="xsd:string" />
-              <xsd:attribute name="type" type="xsd:string" />
-              <xsd:attribute name="mimetype" type="xsd:string" />
-              <xsd:attribute ref="xml:space" />
-            </xsd:complexType>
-          </xsd:element>
-          <xsd:element name="assembly">
-            <xsd:complexType>
-              <xsd:attribute name="alias" type="xsd:string" />
-              <xsd:attribute name="name" type="xsd:string" />
-            </xsd:complexType>
-          </xsd:element>
-          <xsd:element name="data">
-            <xsd:complexType>
-              <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
-              </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
-              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
-              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
-              <xsd:attribute ref="xml:space" />
-            </xsd:complexType>
-          </xsd:element>
-          <xsd:element name="resheader">
-            <xsd:complexType>
-              <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-              </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" />
-            </xsd:complexType>
-          </xsd:element>
-        </xsd:choice>
-      </xsd:complexType>
-    </xsd:element>
-  </xsd:schema>
+<?xml version='1.0' encoding='utf-8'?>
+<root xmlns:ns1="urn:schemas-microsoft-com:xml-msdata" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:schema id="root">
+    <xs:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xs:element name="root" ns1:IsDataSet="true">
+      <xs:complexType>
+        <xs:choice maxOccurs="unbounded">
+          <xs:element name="metadata">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="value" type="xsd:string" minOccurs="0" />
+              </xs:sequence>
+              <xs:attribute name="name" use="required" type="xsd:string" />
+              <xs:attribute name="type" type="xsd:string" />
+              <xs:attribute name="mimetype" type="xsd:string" />
+              <xs:attribute ref="xml:space" />
+            </xs:complexType>
+          </xs:element>
+          <xs:element name="assembly">
+            <xs:complexType>
+              <xs:attribute name="alias" type="xsd:string" />
+              <xs:attribute name="name" type="xsd:string" />
+            </xs:complexType>
+          </xs:element>
+          <xs:element name="data">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="value" type="xsd:string" minOccurs="0" ns1:Ordinal="1" />
+                <xs:element name="comment" type="xsd:string" minOccurs="0" ns1:Ordinal="2" />
+              </xs:sequence>
+              <xs:attribute name="name" type="xsd:string" use="required" ns1:Ordinal="1" />
+              <xs:attribute name="type" type="xsd:string" ns1:Ordinal="3" />
+              <xs:attribute name="mimetype" type="xsd:string" ns1:Ordinal="4" />
+              <xs:attribute ref="xml:space" />
+            </xs:complexType>
+          </xs:element>
+          <xs:element name="resheader">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="value" type="xsd:string" minOccurs="0" ns1:Ordinal="1" />
+              </xs:sequence>
+              <xs:attribute name="name" type="xsd:string" use="required" />
+            </xs:complexType>
+          </xs:element>
+        </xs:choice>
+      </xs:complexType>
+    </xs:element>
+  </xs:schema>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
@@ -59,7 +59,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
 
-  <!-- Navigation Menu Items -->
+  
   <data name="Navigation.Dashboard" xml:space="preserve">
     <value>Dashboard</value>
   </data>
@@ -151,7 +151,7 @@
     <value>You are an editor!</value>
   </data>
 
-  <!-- Common Actions -->
+  
   <data name="Actions.Save" xml:space="preserve">
     <value>Save</value>
   </data>
@@ -246,7 +246,7 @@
     <value>No</value>
   </data>
 
-  <!-- Common Labels -->
+  
   <data name="Common.Name" xml:space="preserve">
     <value>Name</value>
   </data>
@@ -311,7 +311,7 @@
     <value>Bitrate</value>
   </data>
 
-  <!-- Authentication -->
+  
   <data name="Auth.Login" xml:space="preserve">
     <value>Login</value>
   </data>
@@ -445,7 +445,7 @@
     <value>Email address</value>
   </data>
 
-  <!-- Status Messages -->
+  
   <data name="Messages.Loading" xml:space="preserve">
     <value>Loading...</value>
   </data>
@@ -492,7 +492,7 @@
     <value>You have unsaved changes. Do you want to continue?</value>
   </data>
 
-  <!-- Dashboard -->
+  
   <data name="Dashboard.Welcome" xml:space="preserve">
     <value>Welcome to Melodee</value>
   </data>
@@ -560,7 +560,7 @@
     <value>When</value>
   </data>
 
-  <!-- Library -->
+  
   <data name="Library.BrowseArtists" xml:space="preserve">
     <value>Browse Artists</value>
   </data>
@@ -580,7 +580,7 @@
     <value>Sort By</value>
   </data>
 
-  <!-- Player -->
+  
   <data name="Player.NowPlaying" xml:space="preserve">
     <value>Now Playing</value>
   </data>
@@ -600,7 +600,7 @@
     <value>Clear Queue</value>
   </data>
 
-  <!-- Settings -->
+  
   <data name="Settings.General" xml:space="preserve">
     <value>General</value>
   </data>
@@ -626,7 +626,7 @@
     <value>Privacy</value>
   </data>
 
-  <!-- About Page -->
+  
   <data name="About.Title" xml:space="preserve">
     <value>About {0}</value>
   </data>
@@ -688,7 +688,7 @@
     <value>GitHub</value>
   </data>
 
-  <!-- Data Management Pages -->
+  
   <data name="Data.Statistics" xml:space="preserve">
     <value>Statistics</value>
   </data>
@@ -963,7 +963,7 @@
     <value>An error occurred while unlinking. Please try again.</value>
   </data>
 
-  <!-- RequestNew Page -->
+  
   <data name="RequestNew.PageTitle" xml:space="preserve">
     <value>New Request</value>
   </data>
@@ -989,7 +989,95 @@
     <value>Error creating request</value>
   </data>
 
-  <!-- Validation -->
+  
+  <data name="RequestDetail.PageTitle" xml:space="preserve">
+    <value>Request Detail</value>
+  </data>
+  <data name="RequestDetail.CreatedBy" xml:space="preserve">
+    <value>Created By</value>
+  </data>
+  <data name="RequestDetail.Comments" xml:space="preserve">
+    <value>Comments</value>
+  </data>
+  <data name="RequestDetail.NoCommentsYet" xml:space="preserve">
+    <value>No comments yet.</value>
+  </data>
+  <data name="RequestDetail.ReplyingTo" xml:space="preserve">
+    <value>Replying to {0}...</value>
+  </data>
+  <data name="RequestDetail.AddComment" xml:space="preserve">
+    <value>Add a comment</value>
+  </data>
+  <data name="RequestDetail.WriteComment" xml:space="preserve">
+    <value>Write your comment...</value>
+  </data>
+  <data name="RequestDetail.System" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="RequestDetail.Unknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+  <data name="RequestDetail.RequestNotFound" xml:space="preserve">
+    <value>Request not found</value>
+  </data>
+  <data name="RequestDetail.ErrorLoading" xml:space="preserve">
+    <value>Error loading request</value>
+  </data>
+  <data name="RequestDetail.ConfirmDelete" xml:space="preserve">
+    <value>Are you sure you want to delete this request?</value>
+  </data>
+  <data name="RequestDetail.DeleteRequest" xml:space="preserve">
+    <value>Delete Request</value>
+  </data>
+  <data name="RequestDetail.RequestDeleted" xml:space="preserve">
+    <value>Request deleted</value>
+  </data>
+  <data name="RequestDetail.ErrorDeleting" xml:space="preserve">
+    <value>Error deleting request</value>
+  </data>
+  <data name="RequestDetail.MarkedComplete" xml:space="preserve">
+    <value>Request marked as complete</value>
+  </data>
+  <data name="RequestDetail.ErrorCompleting" xml:space="preserve">
+    <value>Error completing request</value>
+  </data>
+  <data name="RequestDetail.ErrorPosting" xml:space="preserve">
+    <value>Error posting comment</value>
+  </data>
+
+  
+  <data name="RequestEdit.PageTitle" xml:space="preserve">
+    <value>Edit Request</value>
+  </data>
+  <data name="RequestEdit.Detail" xml:space="preserve">
+    <value>Detail</value>
+  </data>
+  <data name="RequestEdit.EditRequest" xml:space="preserve">
+    <value>Edit Request</value>
+  </data>
+  <data name="RequestEdit.CategoryCannotChange" xml:space="preserve">
+    <value>Category cannot be changed</value>
+  </data>
+  <data name="RequestEdit.DescriptionRequired" xml:space="preserve">
+    <value>Description is required</value>
+  </data>
+  <data name="RequestEdit.CanOnlyEditOwn" xml:space="preserve">
+    <value>You can only edit your own requests</value>
+  </data>
+  <data name="RequestEdit.RequestNotFound" xml:space="preserve">
+    <value>Request not found</value>
+  </data>
+  <data name="RequestEdit.ErrorLoading" xml:space="preserve">
+    <value>Error loading request</value>
+  </data>
+  <data name="RequestEdit.UpdatedSuccessfully" xml:space="preserve">
+    <value>Request updated successfully</value>
+  </data>
+  <data name="RequestEdit.ErrorUpdating" xml:space="preserve">
+    <value>Error updating request</value>
+  </data>
+
+  
   <data name="Validation.Required" xml:space="preserve">
     <value>This field is required</value>
   </data>
@@ -1003,7 +1091,7 @@
     <value>Passwords do not match</value>
   </data>
 
-  <!-- Stats Page -->
+  
   <data name="Stats.PageTitle" xml:space="preserve">
     <value>Stats</value>
   </data>
@@ -1062,7 +1150,7 @@
     <value>Library scans per day</value>
   </data>
 
-  <!-- Search Page -->
+  
   <data name="Search.PageTitle" xml:space="preserve">
     <value>Search Results</value>
   </data>
@@ -1097,7 +1185,7 @@
     <value>Play song</value>
   </data>
 
-  <!-- Now Playing Page -->
+  
   <data name="NowPlaying.PageTitle" xml:space="preserve">
     <value>Now Playing</value>
   </data>
@@ -1108,7 +1196,7 @@
     <value>No songs are currently playing.</value>
   </data>
 
-  <!-- Users Page -->
+  
   <data name="Users.PageTitle" xml:space="preserve">
     <value>Users</value>
   </data>
@@ -1122,7 +1210,7 @@
     <value>Delete</value>
   </data>
 
-  <!-- Shares Page -->
+  
   <data name="Shares.PageTitle" xml:space="preserve">
     <value>Shares</value>
   </data>
@@ -1136,7 +1224,7 @@
     <value>Delete</value>
   </data>
 
-  <!-- Radio Stations Page -->
+  
   <data name="RadioStations.PageTitle" xml:space="preserve">
     <value>Radio Stations</value>
   </data>
@@ -1150,7 +1238,7 @@
     <value>Delete</value>
   </data>
 
-  <!-- Common Navigation Keys -->
+  
   <data name="Nav.Back" xml:space="preserve">
     <value>Back</value>
   </data>
@@ -1197,31 +1285,7 @@
     <value>Libraries</value>
   </data>
 
-  <!-- Common Action Keys -->
-  <data name="Actions.Edit" xml:space="preserve">
-    <value>Edit</value>
-  </data>
-  <data name="Actions.Save" xml:space="preserve">
-    <value>Save</value>
-  </data>
-  <data name="Actions.Submit" xml:space="preserve">
-    <value>Submit</value>
-  </data>
-  <data name="Actions.Search" xml:space="preserve">
-    <value>Search</value>
-  </data>
-  <data name="Actions.Close" xml:space="preserve">
-    <value>Close</value>
-  </data>
-  <data name="Actions.Refresh" xml:space="preserve">
-    <value>Refresh</value>
-  </data>
-  <data name="Actions.Upload" xml:space="preserve">
-    <value>Upload</value>
-  </data>
-  <data name="Actions.Download" xml:space="preserve">
-    <value>Download</value>
-  </data>
+  
   <data name="Actions.SelectAll" xml:space="preserve">
     <value>Select All</value>
   </data>
@@ -1252,12 +1316,6 @@
   <data name="Actions.Scan" xml:space="preserve">
     <value>Scan</value>
   </data>
-  <data name="Actions.Play" xml:space="preserve">
-    <value>Play</value>
-  </data>
-  <data name="Actions.Pause" xml:space="preserve">
-    <value>Pause</value>
-  </data>
   <data name="Actions.Resume" xml:space="preserve">
     <value>Resume</value>
   </data>
@@ -1272,9 +1330,6 @@
   </data>
   <data name="Actions.Validate" xml:space="preserve">
     <value>Validate</value>
-  </data>
-  <data name="Actions.Import" xml:space="preserve">
-    <value>Import</value>
   </data>
   <data name="Actions.Preview" xml:space="preserve">
     <value>Preview</value>
@@ -1291,14 +1346,8 @@
   <data name="Actions.AddRelationship" xml:space="preserve">
     <value>Add Relationship</value>
   </data>
-  <data name="Actions.Remove" xml:space="preserve">
-    <value>Remove</value>
-  </data>
   <data name="Actions.SetCoverImage" xml:space="preserve">
     <value>Set Cover Image</value>
-  </data>
-  <data name="Actions.SaveChanges" xml:space="preserve">
-    <value>Save Changes</value>
   </data>
   <data name="Actions.CreateRequest" xml:space="preserve">
     <value>Create Request</value>
@@ -1373,7 +1422,7 @@
     <value>View All</value>
   </data>
 
-  <!-- Common Label Keys -->
+  
   <data name="Label.Name" xml:space="preserve">
     <value>Name</value>
   </data>
@@ -1584,11 +1633,6 @@
   <data name="Label.LastActivity" xml:space="preserve">
     <value>Last Activity</value>
   </data>
-  <data name="Label.Category" xml:space="preserve">
-    <value>Category</value>
-  </data>
-
-  <!-- Common Status Keys -->
   <data name="Status.Locked" xml:space="preserve">
     <value>Locked</value>
   </data>
@@ -1662,7 +1706,7 @@
     <value>Complete</value>
   </data>
 
-  <!-- Common Dialog Keys -->
+  
   <data name="Dialog.AreYouSure" xml:space="preserve">
     <value>Are you sure?</value>
   </data>
@@ -1688,7 +1732,7 @@
     <value>Start scan</value>
   </data>
 
-  <!-- Common Table Header Keys -->
+  
   <data name="TableHeader.Hash" xml:space="preserve">
     <value>#</value>
   </data>
@@ -1798,7 +1842,7 @@
     <value>SpotifyId</value>
   </data>
 
-  <!-- Common Message Keys -->
+  
   <data name="Message.DisplayingPage" xml:space="preserve">
     <value>Displaying page {0} of {1} (total {2} records)</value>
   </data>
@@ -1836,7 +1880,7 @@
     <value>Deleting Libraries</value>
   </data>
 
-  <!-- ArtistDetail Page -->
+  
   <data name="ArtistDetail.DeleteArtistWarning" xml:space="preserve">
     <value>Delete the artist, all artist albums, and all album files. BEWARE!</value>
   </data>
@@ -1909,8 +1953,50 @@
   <data name="ArtistDetail.RescanConfirmation" xml:space="preserve">
     <value>Rescan confirmation</value>
   </data>
+  <data name="ArtistDetail.ArtistDirectoryNotFound" xml:space="preserve">
+    <value>Artist directory [{0}] is not found.</value>
+  </data>
+  <data name="ArtistDetail.UploadArtistImage" xml:space="preserve">
+    <value>upload artist image</value>
+  </data>
+  <data name="ArtistDetail.DeleteFailed" xml:space="preserve">
+    <value>Delete failed</value>
+  </data>
+  <data name="ArtistDetail.DeletingArtistImages" xml:space="preserve">
+    <value>deleting artist images</value>
+  </data>
+  <data name="ArtistDetail.RemovingRelationship" xml:space="preserve">
+    <value>removing relationship</value>
+  </data>
+  <data name="ArtistDetail.UnlockingArtist" xml:space="preserve">
+    <value>unlocking Artist</value>
+  </data>
+  <data name="ArtistDetail.LockingArtist" xml:space="preserve">
+    <value>locking Artist</value>
+  </data>
+  <data name="ArtistDetail.DeletingArtist" xml:space="preserve">
+    <value>deleting artist</value>
+  </data>
+  <data name="ArtistDetail.SetArtistRating" xml:space="preserve">
+    <value>set artist rating</value>
+  </data>
+  <data name="ArtistDetail.TogglingArtistHatred" xml:space="preserve">
+    <value>Toggling Artist Hatred</value>
+  </data>
+  <data name="ArtistDetail.TogglingArtistFavorite" xml:space="preserve">
+    <value>Toggling Artist Favorite</value>
+  </data>
+  <data name="ArtistDetail.TogglingPin" xml:space="preserve">
+    <value>Toggling Pin</value>
+  </data>
+  <data name="ArtistDetail.SubmittingRescanJob" xml:space="preserve">
+    <value>submitting artist rescan job</value>
+  </data>
+  <data name="ArtistDetail.DeletedArtistAlbums" xml:space="preserve">
+    <value>deleted artist albums</value>
+  </data>
 
-  <!-- AlbumDetail Page -->
+  
   <data name="AlbumDetail.DeleteAlbum" xml:space="preserve">
     <value>Delete the album and all album files. BEWARE!</value>
   </data>
@@ -1962,13 +2048,64 @@
   <data name="AlbumDetail.DeleteSelectedFiles" xml:space="preserve">
     <value>Delete {0} selected files</value>
   </data>
+  <data name="AlbumDetail.AlbumDirectoryNotFound" xml:space="preserve">
+    <value>Album directory [{0}] is not found.</value>
+  </data>
+  <data name="AlbumDetail.UploadAlbumImage" xml:space="preserve">
+    <value>upload album image</value>
+  </data>
+  <data name="AlbumDetail.DeleteFailed" xml:space="preserve">
+    <value>Delete failed</value>
+  </data>
+  <data name="AlbumDetail.UploadFailed" xml:space="preserve">
+    <value>Upload failed</value>
+  </data>
+  <data name="AlbumDetail.UploadFailedInvalidPath" xml:space="preserve">
+    <value>Filename contains invalid characters or path components</value>
+  </data>
+  <data name="AlbumDetail.UnlockingAlbum" xml:space="preserve">
+    <value>unlocking Album</value>
+  </data>
+  <data name="AlbumDetail.LockingAlbum" xml:space="preserve">
+    <value>locking Album</value>
+  </data>
+  <data name="AlbumDetail.DeletingAlbum" xml:space="preserve">
+    <value>deleting album</value>
+  </data>
+  <data name="AlbumDetail.TogglingAlbumHatred" xml:space="preserve">
+    <value>Toggling Album Hatred</value>
+  </data>
+  <data name="AlbumDetail.TogglingAlbumFavorite" xml:space="preserve">
+    <value>Toggling Album Favorite</value>
+  </data>
+  <data name="AlbumDetail.TogglingSongFavorite" xml:space="preserve">
+    <value>Toggling Song Favorite</value>
+  </data>
+  <data name="AlbumDetail.TogglingSongHatred" xml:space="preserve">
+    <value>Toggling Song Hatred</value>
+  </data>
+  <data name="AlbumDetail.SavingArtistImage" xml:space="preserve">
+    <value>Saving Artist image</value>
+  </data>
+  <data name="AlbumDetail.SubmittingRescanJob" xml:space="preserve">
+    <value>submitting album rescan job</value>
+  </data>
+  <data name="AlbumDetail.TogglingPin" xml:space="preserve">
+    <value>Toggling Pin</value>
+  </data>
+  <data name="AlbumDetail.SetAlbumRating" xml:space="preserve">
+    <value>Set album rating</value>
+  </data>
+  <data name="AlbumDetail.SetSongRating" xml:space="preserve">
+    <value>Set song rating</value>
+  </data>
 
-  <!-- SongDetail Page -->
+  
   <data name="SongDetail.DetailsGoHere" xml:space="preserve">
     <value>Details go here for {0}</value>
   </data>
 
-  <!-- Libraries Page -->
+  
   <data name="Libraries.PageTitle" xml:space="preserve">
     <value>Libraries</value>
   </data>
@@ -1982,7 +2119,7 @@
     <value>Select item</value>
   </data>
 
-  <!-- LibraryDetail Page -->
+  
   <data name="LibraryDetail.CleanLibrary" xml:space="preserve">
     <value>Clean library, removing any empty folders.</value>
   </data>
@@ -2125,7 +2262,7 @@
     <value>updated library aggregates</value>
   </data>
 
-  <!-- PlaylistDetail Page -->
+  
   <data name="PlaylistDetail.UnlockPlaylist" xml:space="preserve">
     <value>Unlock playlist, will allow modifications.</value>
   </data>
@@ -2160,7 +2297,7 @@
     <value>Toggling Pin</value>
   </data>
 
-  <!-- Requests Page -->
+  
   <data name="Requests.PageTitle" xml:space="preserve">
     <value>Requests</value>
   </data>
@@ -2192,73 +2329,20 @@
     <value>Rejected</value>
   </data>
 
-  <!-- RequestNew Page -->
-  <data name="RequestNew.PageTitle" xml:space="preserve">
-    <value>New Request</value>
-  </data>
-  <data name="RequestNew.CreateNewRequest" xml:space="preserve">
-    <value>Create New Request</value>
-  </data>
-  <data name="RequestNew.CategoryRequired" xml:space="preserve">
-    <value>Category is required</value>
-  </data>
-  <data name="RequestNew.DescriptionRequired" xml:space="preserve">
-    <value>Description is required</value>
-  </data>
-  <data name="RequestNew.PleaseSelectCategory" xml:space="preserve">
-    <value>Please select a category</value>
-  </data>
+  
   <data name="RequestNew.HttpsPlaceholder" xml:space="preserve">
     <value>https://...</value>
   </data>
 
-  <!-- RequestDetail Page -->
-  <data name="RequestDetail.PageTitle" xml:space="preserve">
-    <value>Request Detail</value>
-  </data>
-  <data name="RequestDetail.Comments" xml:space="preserve">
-    <value>Comments</value>
-  </data>
-  <data name="RequestDetail.CreatedBy" xml:space="preserve">
-    <value>Created By</value>
-  </data>
-  <data name="RequestDetail.ReplyingTo" xml:space="preserve">
-    <value>Replying to {0}...</value>
-  </data>
-  <data name="RequestDetail.AddComment" xml:space="preserve">
-    <value>Add a comment</value>
-  </data>
-  <data name="RequestDetail.WriteComment" xml:space="preserve">
-    <value>Write your comment...</value>
-  </data>
-  <data name="RequestDetail.System" xml:space="preserve">
-    <value>System</value>
-  </data>
-  <data name="RequestDetail.Unknown" xml:space="preserve">
-    <value>Unknown</value>
-  </data>
+  
   <data name="RequestDetail.DeleteRequestConfirm" xml:space="preserve">
     <value>Are you sure you want to delete this request?</value>
-  </data>
-  <data name="RequestDetail.DeleteRequest" xml:space="preserve">
-    <value>Delete Request</value>
-  </data>
-
-  <!-- RequestEdit Page -->
-  <data name="RequestEdit.PageTitle" xml:space="preserve">
-    <value>Edit</value>
-  </data>
-  <data name="RequestEdit.EditRequest" xml:space="preserve">
-    <value>Edit Request</value>
-  </data>
-  <data name="RequestEdit.CategoryCannotChange" xml:space="preserve">
-    <value>Category cannot be changed</value>
   </data>
   <data name="RequestEdit.OnlyEditOwnRequests" xml:space="preserve">
     <value>You can only edit your own requests</value>
   </data>
 
-  <!-- Request Categories -->
+  
   <data name="RequestCategory.AddAlbum" xml:space="preserve">
     <value>Add Album</value>
   </data>
@@ -2275,7 +2359,7 @@
     <value>General</value>
   </data>
 
-  <!-- ArtistEdit Page -->
+  
   <data name="ArtistEdit.PageTitle" xml:space="preserve">
     <value>Artist Add/Edit</value>
   </data>
@@ -2307,7 +2391,7 @@
     <value>enter value</value>
   </data>
 
-  <!-- AlbumEdit Page -->
+  
   <data name="AlbumEdit.PageTitle" xml:space="preserve">
     <value>Album Add/Edit</value>
   </data>
@@ -2321,7 +2405,7 @@
     <value>This feature allows searching external providers for album information.</value>
   </data>
 
-  <!-- LibraryEdit Page -->
+  
   <data name="LibraryEdit.PageTitle" xml:space="preserve">
     <value>Edit Library</value>
   </data>
@@ -2349,8 +2433,44 @@
   <data name="LibraryEdit.CommaSeparatedTagsPlaceholder" xml:space="preserve">
     <value>Comma-separated tags</value>
   </data>
+  <data name="LibraryEdit.Adding" xml:space="preserve">
+    <value>Adding</value>
+  </data>
+  <data name="LibraryEdit.Editing" xml:space="preserve">
+    <value>Editing</value>
+  </data>
+  <data name="Message.LibraryCreated" xml:space="preserve">
+    <value>Library created</value>
+  </data>
+  <data name="Message.LibrarySaved" xml:space="preserve">
+    <value>Library saved</value>
+  </data>
+  <data name="Status.Created" xml:space="preserve">
+    <value>Created</value>
+  </data>
+  <data name="Status.Saved" xml:space="preserve">
+    <value>Saved</value>
+  </data>
+  <data name="LibraryType.Inbound" xml:space="preserve">
+    <value>Inbound</value>
+  </data>
+  <data name="LibraryType.Staging" xml:space="preserve">
+    <value>Staging</value>
+  </data>
+  <data name="LibraryType.Storage" xml:space="preserve">
+    <value>Storage</value>
+  </data>
+  <data name="LibraryType.UserImages" xml:space="preserve">
+    <value>User Images</value>
+  </data>
+  <data name="LibraryType.Playlist" xml:space="preserve">
+    <value>Playlist</value>
+  </data>
+  <data name="LibraryType.Chart" xml:space="preserve">
+    <value>Chart</value>
+  </data>
 
-  <!-- UserEdit Page -->
+  
   <data name="UserEdit.PageTitle" xml:space="preserve">
     <value>Edit User</value>
   </data>
@@ -2363,8 +2483,29 @@
   <data name="UserEdit.RoleAdmin" xml:space="preserve">
     <value>Admin</value>
   </data>
+  <data name="UserEdit.Adding" xml:space="preserve">
+    <value>Adding</value>
+  </data>
+  <data name="UserEdit.Editing" xml:space="preserve">
+    <value>Editing</value>
+  </data>
+  <data name="UserEdit.UsernamePlaceholder" xml:space="preserve">
+    <value>Username</value>
+  </data>
+  <data name="UserEdit.EmailPlaceholder" xml:space="preserve">
+    <value>Email</value>
+  </data>
+  <data name="UserEdit.PasswordPlaceholder" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="Message.UserSaved" xml:space="preserve">
+    <value>User saved</value>
+  </data>
+  <data name="Message.AvatarUpdated" xml:space="preserve">
+    <value>Avatar updated</value>
+  </data>
 
-  <!-- Charts Page -->
+  
   <data name="Charts.PageTitle" xml:space="preserve">
     <value>Curated Charts</value>
   </data>
@@ -2393,7 +2534,7 @@
     <value>Delete Charts</value>
   </data>
 
-  <!-- ChartsRankedReport Page -->
+  
   <data name="ChartsRankedReport.PageTitle" xml:space="preserve">
     <value>Ranked Report</value>
   </data>
@@ -2431,7 +2572,7 @@
     <value>Not Found</value>
   </data>
 
-  <!-- ChartsMissingReport Page -->
+  
   <data name="ChartsMissingReport.PageTitle" xml:space="preserve">
     <value>Missing Report</value>
   </data>
@@ -2451,7 +2592,7 @@
     <value>Identify Missing Album</value>
   </data>
 
-  <!-- Admin Dashboard Page -->
+  
   <data name="AdminDashboard.PageTitle" xml:space="preserve">
     <value>Admin Dashboard</value>
   </data>
@@ -2540,7 +2681,7 @@
     <value>API Docs</value>
   </data>
 
-  <!-- Admin Jobs Page -->
+  
   <data name="AdminJobs.PageTitle" xml:space="preserve">
     <value>Background Jobs</value>
   </data>
@@ -2649,8 +2790,74 @@
   <data name="AdminJobs.NoJobsFound" xml:space="preserve">
     <value>No jobs found. Check your configuration and enable the Cron Expressions for Jobs in Settings.</value>
   </data>
+  <data name="AdminJobs.Title" xml:space="preserve">
+    <value>Background Jobs</value>
+  </data>
+  <data name="AdminJobs.JobsDisabledMessage" xml:space="preserve">
+    <value>Jobs are disabled in the appsettings.json file. Set the setting</value>
+  </data>
+  <data name="AdminJobs.JobsDisabledMessage2" xml:space="preserve">
+    <value>to "false" (or remove entirely) to enable.</value>
+  </data>
+  <data name="AdminJobs.Running" xml:space="preserve">
+    <value>Running</value>
+  </data>
+  <data name="AdminJobs.Key" xml:space="preserve">
+    <value>Key</value>
+  </data>
+  <data name="AdminJobs.Value" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="AdminJobs.LastRun" xml:space="preserve">
+    <value>Last Run</value>
+  </data>
+  <data name="AdminJobs.NextRun" xml:space="preserve">
+    <value>Next Run</value>
+  </data>
+  <data name="AdminJobs.JobsRefreshed" xml:space="preserve">
+    <value>Jobs refreshed</value>
+  </data>
+  <data name="AdminJobs.JobTriggered" xml:space="preserve">
+    <value>Job '{0}' triggered</value>
+  </data>
+  <data name="AdminJobs.FailedToTriggerJob" xml:space="preserve">
+    <value>Failed to trigger job</value>
+  </data>
+  <data name="AdminJobs.JobPaused" xml:space="preserve">
+    <value>Job '{0}' paused</value>
+  </data>
+  <data name="AdminJobs.FailedToPauseJob" xml:space="preserve">
+    <value>Failed to pause job</value>
+  </data>
+  <data name="AdminJobs.JobResumed" xml:space="preserve">
+    <value>Job '{0}' resumed</value>
+  </data>
+  <data name="AdminJobs.FailedToResumeJob" xml:space="preserve">
+    <value>Failed to resume job</value>
+  </data>
+  <data name="AdminJobs.JobInterrupted" xml:space="preserve">
+    <value>Job '{0}' interrupted</value>
+  </data>
+  <data name="AdminJobs.FailedToInterruptJob" xml:space="preserve">
+    <value>Failed to interrupt job</value>
+  </data>
+  <data name="AdminJobs.AllJobsPaused" xml:space="preserve">
+    <value>All jobs paused</value>
+  </data>
+  <data name="AdminJobs.FailedToPauseAllJobs" xml:space="preserve">
+    <value>Failed to pause all jobs</value>
+  </data>
+  <data name="AdminJobs.AllJobsResumed" xml:space="preserve">
+    <value>All jobs resumed</value>
+  </data>
+  <data name="AdminJobs.FailedToResumeAllJobs" xml:space="preserve">
+    <value>Failed to resume all jobs</value>
+  </data>
+  <data name="AdminJobs.ErrorLoadingJobs" xml:space="preserve">
+    <value>Error loading jobs</value>
+  </data>
 
-  <!-- Admin Settings Page -->
+  
   <data name="AdminSettings.PageTitle" xml:space="preserve">
     <value>Settings</value>
   </data>
@@ -2670,7 +2877,7 @@
     <value>Successfully updated setting!</value>
   </data>
 
-  <!-- ChartEditor Page -->
+  
   <data name="ChartEditor.EditChart" xml:space="preserve">
     <value>Edit Chart: {0}</value>
   </data>
@@ -2803,8 +3010,53 @@
   <data name="ChartEditor.ImageSizeTooLarge" xml:space="preserve">
     <value>Image file size must be less than 10MB.</value>
   </data>
+  <data name="ChartEditor.ChartNotFound" xml:space="preserve">
+    <value>Chart not found</value>
+  </data>
+  <data name="ChartEditor.UpdatedChart" xml:space="preserve">
+    <value>Updated chart</value>
+  </data>
+  <data name="ChartEditor.CreatedChartWithItems" xml:space="preserve">
+    <value>Created chart with {0} items</value>
+  </data>
+  <data name="ChartEditor.ChartCreatedItemsFailed" xml:space="preserve">
+    <value>Chart created but items failed to save</value>
+  </data>
+  <data name="ChartEditor.ChartCreatedImageFailed" xml:space="preserve">
+    <value>Chart created but image upload failed</value>
+  </data>
+  <data name="ChartEditor.FailedToCreateChart" xml:space="preserve">
+    <value>Failed to create chart</value>
+  </data>
+  <data name="ChartEditor.CSVContainsNoValidItems" xml:space="preserve">
+    <value>CSV contains no valid items</value>
+  </data>
+  <data name="ChartEditor.ImportedChartItems" xml:space="preserve">
+    <value>Imported chart items</value>
+  </data>
+  <data name="ChartEditor.RelinkedItems" xml:space="preserve">
+    <value>Re-linked items</value>
+  </data>
+  <data name="ChartEditor.ResolveItem" xml:space="preserve">
+    <value>Resolve: {0} - {1}</value>
+  </data>
+  <data name="ChartEditor.MarkedAsIgnored" xml:space="preserve">
+    <value>Marked as ignored</value>
+  </data>
+  <data name="ChartEditor.UploadedImage" xml:space="preserve">
+    <value>Uploaded image</value>
+  </data>
+  <data name="ChartEditor.DeletedImage" xml:space="preserve">
+    <value>Deleted image</value>
+  </data>
+  <data name="ChartEditor.ConfirmDeleteImage" xml:space="preserve">
+    <value>Are you sure you want to delete the chart image?</value>
+  </data>
+  <data name="ChartEditor.ConfirmDeleteImageTitle" xml:space="preserve">
+    <value>Confirm Delete</value>
+  </data>
 
-  <!-- ChartDetail Page -->
+  
   <data name="ChartDetail.PageTitle" xml:space="preserve">
     <value>Chart Details</value>
   </data>
@@ -2835,8 +3087,17 @@
   <data name="ChartDetail.Link" xml:space="preserve">
     <value>(link)</value>
   </data>
+  <data name="ChartDetail.Items" xml:space="preserve">
+    <value>Items</value>
+  </data>
+  <data name="ChartDetail.Playlist" xml:space="preserve">
+    <value>Playlist</value>
+  </data>
+  <data name="ChartDetail.ChartItems" xml:space="preserve">
+    <value>Chart Items ({0})</value>
+  </data>
 
-  <!-- ChartImportDialog Page -->
+  
   <data name="ChartImportDialog.JSONImportSchema" xml:space="preserve">
     <value>JSON Import Schema:</value>
   </data>
@@ -2883,7 +3144,7 @@
     <value>N/A</value>
   </data>
 
-  <!-- ChartItemResolveDialog Page -->
+  
   <data name="ChartItemResolveDialog.CurrentEntry" xml:space="preserve">
     <value>Current Entry</value>
   </data>
@@ -2903,12 +3164,12 @@
     <value>Linked to: {0} - {1}</value>
   </data>
 
-  <!-- MissingAlbumIdentifyDialog Page -->
+  
   <data name="MissingAlbumIdentifyDialog.TypeToFilter" xml:space="preserve">
     <value>Type to filter artists...</value>
   </data>
 
-  <!-- Media Library Page -->
+  
   <data name="MediaLibrary.PageTitle" xml:space="preserve">
     <value>Media Albums</value>
   </data>
@@ -2979,7 +3240,7 @@
     <value>Select</value>
   </data>
 
-  <!-- Media Artists Page -->
+  
   <data name="MediaArtists.PageTitle" xml:space="preserve">
     <value>Media Artists</value>
   </data>
@@ -2990,7 +3251,7 @@
     <value>Refresh Albums</value>
   </data>
 
-  <!-- Media AlbumDetail Page -->
+  
   <data name="MediaAlbumDetail.AddArtist" xml:space="preserve">
     <value>Add Artist</value>
   </data>
@@ -3052,7 +3313,7 @@
     <value>No images were added to the album. Likely the image you selected was invalid.</value>
   </data>
 
-  <!-- Media AlbumEdit Page -->
+  
   <data name="MediaAlbumEdit.PageTitle" xml:space="preserve">
     <value>Media Album Add/Edit</value>
   </data>
@@ -3060,7 +3321,7 @@
     <value>Media Album Image Search</value>
   </data>
 
-  <!-- Media ArtistEdit Page -->
+  
   <data name="MediaArtistEdit.PageTitle" xml:space="preserve">
     <value>Media Artist Add/Edit</value>
   </data>
@@ -3068,7 +3329,7 @@
     <value>Media Artists</value>
   </data>
 
-  <!-- Common Notifications -->
+  
   <data name="Notification.RequestNotFound" xml:space="preserve">
     <value>Request not found</value>
   </data>
@@ -3204,4 +3465,292 @@
   <data name="Notification.ScanningLibraryWarning" xml:space="preserve">
     <value>Scanning a library updates the library with media found. This could overwrite artists, albums and songs.</value>
   </data>
-</root>
+
+  
+  <data name="Charts.SelectAllItems" xml:space="preserve">
+    <value>Select all items</value>
+  </data>
+  <data name="Charts.SelectItem" xml:space="preserve">
+    <value>Select item</value>
+  </data>
+  <data name="Charts.ImportChartFromJSON" xml:space="preserve">
+    <value>Import Chart from JSON</value>
+  </data>
+  <data name="Charts.ConfirmDeleteChart" xml:space="preserve">
+    <value>Are you sure you want to delete '{0}'?</value>
+  </data>
+  <data name="Charts.ConfirmDeleteCharts" xml:space="preserve">
+    <value>Are you sure you want to delete {0} selected chart(s)?</value>
+  </data>
+  <data name="Charts.DeletingChart" xml:space="preserve">
+    <value>Deleting Chart</value>
+  </data>
+  <data name="Charts.ChartsDeleted" xml:space="preserve">
+    <value>Charts Deleted</value>
+  </data>
+
+  
+  <data name="ChartsRankedReport.Header" xml:space="preserve">
+    <value>Ranked Albums Report</value>
+  </data>
+  <data name="ChartsMissingReport.Header" xml:space="preserve">
+    <value>Missing Albums Report</value>
+  </data>
+  <data name="AlbumEdit.Adding" xml:space="preserve">
+    <value>Adding</value>
+  </data>
+  <data name="AlbumEdit.Editing" xml:space="preserve">
+    <value>Editing</value>
+  </data>
+
+  
+  <data name="UserDetail.PageTitle" xml:space="preserve">
+    <value>User - {0}</value>
+  </data>
+  <data name="UserDetail.UserNotFound" xml:space="preserve">
+    <value>User not found</value>
+  </data>
+  <data name="UserDetail.InvalidApiKeyFormat" xml:space="preserve">
+    <value>Invalid user API key format</value>
+  </data>
+  <data name="UserDetail.ErrorLoadingUserDetail" xml:space="preserve">
+    <value>Error loading user detail</value>
+  </data>
+  <data name="UserDetail.UserInformation" xml:space="preserve">
+    <value>User Information</value>
+  </data>
+  <data name="UserDetail.Property" xml:space="preserve">
+    <value>Property</value>
+  </data>
+  <data name="UserDetail.Value" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="UserDetail.Statistics" xml:space="preserve">
+    <value>Statistics</value>
+  </data>
+  <data name="UserDetail.Activity" xml:space="preserve">
+    <value>Activity</value>
+  </data>
+  <data name="UserDetail.Ratings" xml:space="preserve">
+    <value>Ratings</value>
+  </data>
+  <data name="UserDetail.Preferences" xml:space="preserve">
+    <value>Preferences</value>
+  </data>
+  <data name="UserDetail.Permissions" xml:space="preserve">
+    <value>Permissions</value>
+  </data>
+  <data name="UserDetail.Tags" xml:space="preserve">
+    <value>Tags</value>
+  </data>
+  <data name="UserDetail.PinnedItems" xml:space="preserve">
+    <value>Pinned Items</value>
+  </data>
+  <data name="UserDetail.Email" xml:space="preserve">
+    <value>Email</value>
+  </data>
+  <data name="UserDetail.TimeZone" xml:space="preserve">
+    <value>Time Zone</value>
+  </data>
+  <data name="UserDetail.Created" xml:space="preserve">
+    <value>Created</value>
+  </data>
+  <data name="UserDetail.LastLogin" xml:space="preserve">
+    <value>Last Login</value>
+  </data>
+  <data name="UserDetail.LastActivity" xml:space="preserve">
+    <value>Last Activity</value>
+  </data>
+  <data name="UserDetail.Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+
+  
+  <data name="UserDetail.Stats.ArtistsStarred" xml:space="preserve">
+    <value>Artists Starred</value>
+  </data>
+  <data name="UserDetail.Stats.AlbumsStarred" xml:space="preserve">
+    <value>Albums Starred</value>
+  </data>
+  <data name="UserDetail.Stats.SongsStarred" xml:space="preserve">
+    <value>Songs Starred</value>
+  </data>
+  <data name="UserDetail.Stats.TotalPlays" xml:space="preserve">
+    <value>Total Plays</value>
+  </data>
+  <data name="UserDetail.Stats.Playlists" xml:space="preserve">
+    <value>Playlists</value>
+  </data>
+  <data name="UserDetail.Stats.Shares" xml:space="preserve">
+    <value>Shares</value>
+  </data>
+  <data name="UserDetail.Stats.ArtistsRated" xml:space="preserve">
+    <value>Artists Rated</value>
+  </data>
+  <data name="UserDetail.Stats.AlbumsRated" xml:space="preserve">
+    <value>Albums Rated</value>
+  </data>
+  <data name="UserDetail.Stats.SongsRated" xml:space="preserve">
+    <value>Songs Rated</value>
+  </data>
+  <data name="UserDetail.Stats.PinnedItems" xml:space="preserve">
+    <value>Pinned Items</value>
+  </data>
+  <data name="UserDetail.Stats.Bookmarks" xml:space="preserve">
+    <value>Bookmarks</value>
+  </data>
+
+  
+  <data name="UserRole.Admin" xml:space="preserve">
+    <value>admin</value>
+  </data>
+  <data name="UserRole.Editor" xml:space="preserve">
+    <value>editor</value>
+  </data>
+  <data name="UserRole.User" xml:space="preserve">
+    <value>user</value>
+  </data>
+  <data name="UserRole.Administrator" xml:space="preserve">
+    <value>Administrator</value>
+  </data>
+  <data name="UserRole.Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="UserRole.Download" xml:space="preserve">
+    <value>Download</value>
+  </data>
+  <data name="UserRole.Upload" xml:space="preserve">
+    <value>Upload</value>
+  </data>
+  <data name="UserRole.Playlist" xml:space="preserve">
+    <value>Playlist</value>
+  </data>
+  <data name="UserRole.CoverArt" xml:space="preserve">
+    <value>Cover Art</value>
+  </data>
+  <data name="UserRole.Comment" xml:space="preserve">
+    <value>Comment</value>
+  </data>
+  <data name="UserRole.Podcast" xml:space="preserve">
+    <value>Podcast</value>
+  </data>
+  <data name="UserRole.Stream" xml:space="preserve">
+    <value>Stream</value>
+  </data>
+  <data name="UserRole.Jukebox" xml:space="preserve">
+    <value>Jukebox</value>
+  </data>
+  <data name="UserRole.Share" xml:space="preserve">
+    <value>Share</value>
+  </data>
+  
+  
+  <data name="Message.ClearedCache" xml:space="preserve">
+    <value>cleared cache</value>
+  </data>
+  <data name="Message.ClearedNowPlaying" xml:space="preserve">
+    <value>cleared now playing</value>
+  </data>
+
+  
+  <data name="ChartImportDialog.ValidationErrors" xml:space="preserve">
+    <value>Validation Errors:</value>
+  </data>
+  <data name="ChartImportDialog.ImageUrl" xml:space="preserve">
+    <value>Image URL</value>
+  </data>
+  <data name="ChartImportDialog.Error.JsonRequired" xml:space="preserve">
+    <value>JSON content is required.</value>
+  </data>
+  <data name="ChartImportDialog.Error.ParseFailed" xml:space="preserve">
+    <value>Failed to parse JSON.</value>
+  </data>
+  <data name="ChartImportDialog.Error.TitleRequired" xml:space="preserve">
+    <value>'title' is required.</value>
+  </data>
+  <data name="ChartImportDialog.Error.ItemsRequired" xml:space="preserve">
+    <value>'items' array is required and must contain at least one item.</value>
+  </data>
+  <data name="ChartImportDialog.Error.RankPositive" xml:space="preserve">
+    <value>Item {0}: 'rank' must be a positive integer.</value>
+  </data>
+  <data name="ChartImportDialog.Error.DuplicateRank" xml:space="preserve">
+    <value>Item {0}: duplicate rank {1}.</value>
+  </data>
+  <data name="ChartImportDialog.Error.ArtistRequired" xml:space="preserve">
+    <value>Item {0}: 'artistName' is required.</value>
+  </data>
+  <data name="ChartImportDialog.Error.AlbumRequired" xml:space="preserve">
+    <value>Item {0}: 'albumTitle' is required.</value>
+  </data>
+  <data name="ChartImportDialog.Error.InvalidJson" xml:space="preserve">
+    <value>Invalid JSON: {0}</value>
+  </data>
+  <data name="ChartImportDialog.ImportFailed" xml:space="preserve">
+    <value>Import Failed</value>
+  </data>
+  <data name="ChartImportDialog.UnknownError" xml:space="preserve">
+    <value>Unknown error</value>
+  </data>
+  <data name="ChartImportDialog.ChartCreatedItemsFailed" xml:space="preserve">
+    <value>Chart created but items failed to parse</value>
+  </data>
+  <data name="ChartImportDialog.LinkSummary" xml:space="preserve">
+    <value>Linked: {0}, Unlinked: {1}, Ambiguous: {2}</value>
+  </data>
+  <data name="ChartImportDialog.LinkStatusUnavailable" xml:space="preserve">
+    <value>Linking status unavailable</value>
+  </data>
+  <data name="ChartImportDialog.ChartImported" xml:space="preserve">
+    <value>Chart Imported</value>
+  </data>
+  <data name="ChartImportDialog.ChartImportedDetail" xml:space="preserve">
+    <value>Created '{0}' with {1} items. {2}</value>
+  </data>
+  <data name="ChartImportDialog.ImageDownloadFailed" xml:space="preserve">
+    <value>Image Download Failed</value>
+  </data>
+  <data name="ChartImportDialog.ImageDownloadFailedDetail" xml:space="preserve">
+    <value>Could not download image: {0}</value>
+  </data>
+  <data name="ChartImportDialog.ImageUploadFailed" xml:space="preserve">
+    <value>Image Upload Failed</value>
+  </data>
+  <data name="ChartImportDialog.ImageUploadFailedDetail" xml:space="preserve">
+    <value>Could not save image</value>
+  </data>
+  <data name="ChartImportDialog.ImageDownloadError" xml:space="preserve">
+    <value>Image Download Error</value>
+  </data>
+  <data name="ChartImportDialog.ImageDownloadErrorDetail" xml:space="preserve">
+    <value>Could not download image from URL</value>
+  </data>
+
+  
+  <data name="ChartItemResolveDialog.SearchAndSelect" xml:space="preserve">
+    <value>Search &amp; Select Album</value>
+  </data>
+  <data name="ChartItemResolveDialog.FailedToLink" xml:space="preserve">
+    <value>Failed to link album</value>
+  </data>
+
+  
+  <data name="MissingAlbumIdentifyDialog.Artists" xml:space="preserve">
+    <value>Artists</value>
+  </data>
+  <data name="MissingAlbumIdentifyDialog.Albums" xml:space="preserve">
+    <value>Albums</value>
+  </data>
+  <data name="MissingAlbumIdentifyDialog.FilterArtistsPlaceholder" xml:space="preserve">
+    <value>Type to filter artists...</value>
+  </data>
+  <data name="MissingAlbumIdentifyDialog.AlbumIdentified" xml:space="preserve">
+    <value>Album Identified</value>
+  </data>
+  <data name="MissingAlbumIdentifyDialog.AlbumIdentifiedDetail" xml:space="preserve">
+    <value>Linked {0} chart items to {1} - {2}</value>
+  </data>
+  <data name="MissingAlbumIdentifyDialog.FailedToIdentify" xml:space="preserve">
+    <value>Failed to identify album</value>
+  </data>
+  </root>

@@ -630,7 +630,7 @@
                 _userSongs = await UserService.UserSongsForAlbumAsync(CurrentUsersId, _album.ApiKey) ?? [];
                 if (!_albumDirectory.Exists())
                 {
-                    _alertMessages.Add($"Album directory [{_albumDirectory.FullName()}] is not found.");
+                    _alertMessages.Add(L("AlbumDetail.AlbumDirectoryNotFound", _albumDirectory.FullName()));
                 }
 
                 if (_album.ImageCount > 1)
@@ -692,7 +692,7 @@
             var save = await AlbumService.SaveImageAsAlbumImageAsync(_album.Id, _replaceAllAlbumImages, ms.ToArray());
             if (!save.IsSuccess)
             {
-                NotificationService.Notify(NotificationMessageForResult(save, "upload album image", ToastTime));
+                NotificationService.Notify(NotificationMessageForResult(save, L("AlbumDetail.UploadAlbumImage"), ToastTime));
             }
             _replaceAllAlbumImages = false; // only first upload replaces all
         }
@@ -781,7 +781,7 @@
                 var target = Melodee.Common.Utility.SafePath.ResolveUnderRoot(dir, file.Name);
                 if (target == null)
                 {
-                    NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Upload failed", Detail = "Filename contains invalid characters or path components" });
+                    NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = L("AlbumDetail.UploadFailed"), Detail = L("AlbumDetail.UploadFailedInvalidPath") });
                     continue;
                 }
                 await using var fs = File.Create(target);
@@ -789,7 +789,7 @@
             }
             catch (Exception ex)
             {
-                NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Upload failed", Detail = ex.Message });
+                NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = L("AlbumDetail.DeleteFailed"), Detail = ex.Message });
             }
         }
         RefreshAlbumFiles();
@@ -869,14 +869,14 @@
     private async Task UnlockButtonClick()
     {
         var result = await AlbumService.LockUnlockAlbumAsync(_album.Id, false);
-        NotificationService.Notify(NotificationMessageForResult(result, "unlocking Album", ToastTime));
+        NotificationService.Notify(NotificationMessageForResult(result, L("AlbumDetail.UnlockingAlbum"), ToastTime));
         _album.IsLocked = false;
     }
 
     private async Task LockButtonClick()
     {
         var result = await AlbumService.LockUnlockAlbumAsync(_album.Id, true);
-        NotificationService.Notify(NotificationMessageForResult(result, "locking Album", ToastTime));
+        NotificationService.Notify(NotificationMessageForResult(result, L("AlbumDetail.LockingAlbum"), ToastTime));
         _album.IsLocked = true;
     }
 
@@ -891,7 +891,7 @@
                 NavigationManager.NavigateTo(FromUrl ?? "/data/albums", true);
             }
 
-            NotificationService.Notify(NotificationMessageForResult(deleteResult, "deleting album", ToastTime));
+            NotificationService.Notify(NotificationMessageForResult(deleteResult, L("AlbumDetail.DeletingAlbum"), ToastTime));
         }
     }
 
@@ -899,14 +899,14 @@
     {
         _userAlbum.IsHated = !_userAlbum.IsHated;
         var result = await UserService.ToggleAlbumHatedAsync(CurrentUsersId, _album.ApiKey, _userAlbum.IsHated);
-        NotificationService.Notify(NotificationMessageForResult(result, "Toggling Album Hatred", ToastTime));
+        NotificationService.Notify(NotificationMessageForResult(result, L("AlbumDetail.TogglingAlbumHatred"), ToastTime));
     }
 
     private async Task IsStarredClicked()
     {
         _userAlbum.IsStarred = !_userAlbum.IsStarred;
         var result = await UserService.ToggleAlbumStarAsync(CurrentUsersId, _album.ApiKey, _userAlbum.IsStarred);
-        NotificationService.Notify(NotificationMessageForResult(result, "Toggling Album Favorite", ToastTime));
+        NotificationService.Notify(NotificationMessageForResult(result, L("AlbumDetail.TogglingAlbumFavorite"), ToastTime));
     }
 
     private bool IsSongHated(Song song) => _userSongs.FirstOrDefault(x => x.SongId == song.Id)?.IsHated ?? false;
@@ -916,13 +916,13 @@
     private async Task IsSongStarredClicked(Song song)
     {
         var result = await UserService.ToggleSongStarAsync(CurrentUsersId, song.ApiKey, IsSongStarred(song));
-        NotificationService.Notify(NotificationMessageForResult(result, "Toggling Song Favorite", ToastTime));
+        NotificationService.Notify(NotificationMessageForResult(result, L("AlbumDetail.TogglingSongFavorite"), ToastTime));
     }
 
     private async Task IsSongHatedClicked(Song song)
     {
         var result = await UserService.ToggleSongHatedAsync(CurrentUsersId, song.ApiKey, IsSongHated(song));
-        NotificationService.Notify(NotificationMessageForResult(result, "Toggling Song Hatred", ToastTime));
+        NotificationService.Notify(NotificationMessageForResult(result, L("AlbumDetail.TogglingSongHatred"), ToastTime));
     }
 
     private async Task DoWebSearch(int searchType)
@@ -1010,7 +1010,7 @@
                 }
                 else
                 {
-                    NotificationService.Notify(NotificationMessageForResult(saveResult, "Saving Artist image", ToastTime));
+                    NotificationService.Notify(NotificationMessageForResult(saveResult, L("AlbumDetail.SavingArtistImage"), ToastTime));
                 }
             }
         }
@@ -1035,7 +1035,7 @@
         if (confirm ?? false)
         {
             var rescanresult = await AlbumService.RescanAsync([_album.Id]);
-            NotificationService.Notify(NotificationMessageForResult(rescanresult, "submitting album rescan job", ToastTime));
+            NotificationService.Notify(NotificationMessageForResult(rescanresult, L("AlbumDetail.SubmittingRescanJob"), ToastTime));
         }
     }
 
@@ -1043,14 +1043,14 @@
     {
         _isPinned = !_isPinned;
         var result = await UserService.TogglePinnedAsync(CurrentUsersId, UserPinType.Album, _album.Id);
-        NotificationService.Notify(NotificationMessageForResult(result, "Toggling Pin", ToastTime));
+        NotificationService.Notify(NotificationMessageForResult(result, L("AlbumDetail.TogglingPin"), ToastTime));
     }
 
     private async Task UserRatingChange(int arg)
     {
         _userAlbum.Rating = arg;
         var result = await UserService.SetAlbumRatingAsync(CurrentUsersId, _album.Id, arg);
-        NotificationService.Notify(NotificationMessageForResult(result, "Set album rating", ToastTime));
+        NotificationService.Notify(NotificationMessageForResult(result, L("AlbumDetail.SetAlbumRating"), ToastTime));
         var albumResult = await AlbumService.GetByApiKeyAsync(ApiKey);
         _album.CalculatedRating = albumResult.Data!.CalculatedRating;
     }
@@ -1058,7 +1058,7 @@
     private async Task UserSongRatingChange(Song song, int arg)
     {
         var result = await UserService.SetSongRatingAsync(CurrentUsersId, song.Id, arg);
-        NotificationService.Notify(NotificationMessageForResult(result, "Set song rating", ToastTime));
+        NotificationService.Notify(NotificationMessageForResult(result, L("AlbumDetail.SetSongRating"), ToastTime));
     }
 
     private Task PlaySong(Song song)

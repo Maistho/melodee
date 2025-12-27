@@ -173,9 +173,9 @@
 
 @code {
 
-    private const string PagingSummaryFormat = "Displaying page {0} of {1} (total {2} records)";
-
     int _totalSongCount;
+    
+    private string PagingSummaryFormat => L("Message.DisplayingPage");
 
     [Parameter] public Guid ApiKey { get; set; }
 

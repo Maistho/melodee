@@ -12,24 +12,24 @@
 @inject NotificationService NotificationService
 @inject IDbContextFactory<MelodeeDbContext> DbContextFactory
 
-<PageTitle>User - @_userName</PageTitle>
+<PageTitle>@L("UserDetail.PageTitle", _userName)</PageTitle>
 
 <RadzenStack Gap="1rem">
     <RadzenBreadCrumb Class="rz-pb-5">
-        <RadzenBreadCrumbItem Path="/" Text="Dashboard"/>
+        <RadzenBreadCrumbItem Path="/" Text="@L("Navigation.Dashboard")"/>
         <RadzenBreadCrumbItem Icon="person" Text="@_userName"/>
     </RadzenBreadCrumb>
 
     @if (_user == null && !_isLoading)
     {
         <RadzenCard>
-            <RadzenText TextStyle="TextStyle.H5">User not found</RadzenText>
+            <RadzenText TextStyle="TextStyle.H5">@L("UserDetail.UserNotFound")</RadzenText>
         </RadzenCard>
     }
     else if (_isLoading)
     {
         <RadzenCard>
-            <RadzenText TextStyle="TextStyle.Body1">Loading...</RadzenText>
+            <RadzenText TextStyle="TextStyle.Body1">@L("Messages.Loading")</RadzenText>
         </RadzenCard>
     }
     else
@@ -50,7 +50,7 @@
             <RadzenColumn Size="12" SizeMD="9">
                 <RadzenCard>
                     <RadzenStack Gap="0.5rem">
-                        <RadzenText TextStyle="TextStyle.H6" Text="User Information"/>
+                        <RadzenText TextStyle="TextStyle.H6" Text="@L("UserDetail.UserInformation")"/>
                         <RadzenDataGrid TItem="KeyValue"
                                         Data="@_userInfo"
                                         AllowPaging="false"
@@ -58,8 +58,8 @@
                                         AllowFiltering="false"
                                         Density="Density.Compact">
                             <Columns>
-                                <RadzenDataGridColumn TItem="KeyValue" Property="Key" Title="Property" Width="200px"/>
-                                <RadzenDataGridColumn TItem="KeyValue" Title="Value">
+                                <RadzenDataGridColumn TItem="KeyValue" Property="Key" Title="@L("UserDetail.Property")" Width="200px"/>
+                                <RadzenDataGridColumn TItem="KeyValue" Title="@L("UserDetail.Value")">
                                     <Template Context="kv">@((MarkupString)(kv.Value ?? string.Empty))</Template>
                                 </RadzenDataGridColumn>
                             </Columns>
@@ -73,12 +73,12 @@
             <RadzenColumn Size="12" SizeMD="3">
                 <RadzenCard Style="height:100%;">
                     <RadzenStack Gap="0.25rem">
-                        <RadzenText TextStyle="TextStyle.Overline">Statistics</RadzenText>
-                        <RadzenText TextStyle="TextStyle.Caption">Artists Starred</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Overline">@L("UserDetail.Statistics")</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption">@L("UserDetail.Stats.ArtistsStarred")</RadzenText>
                         <RadzenText TextStyle="TextStyle.H6">@_stats.StarredArtistsCount.ToString("N0")</RadzenText>
-                        <RadzenText TextStyle="TextStyle.Caption">Albums Starred</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption">@L("UserDetail.Stats.AlbumsStarred")</RadzenText>
                         <RadzenText TextStyle="TextStyle.H6">@_stats.StarredAlbumsCount.ToString("N0")</RadzenText>
-                        <RadzenText TextStyle="TextStyle.Caption">Songs Starred</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption">@L("UserDetail.Stats.SongsStarred")</RadzenText>
                         <RadzenText TextStyle="TextStyle.H6">@_stats.StarredSongsCount.ToString("N0")</RadzenText>
                     </RadzenStack>
                 </RadzenCard>
@@ -87,12 +87,12 @@
             <RadzenColumn Size="12" SizeMD="3">
                 <RadzenCard Style="height:100%;">
                     <RadzenStack Gap="0.25rem">
-                        <RadzenText TextStyle="TextStyle.Overline">Activity</RadzenText>
-                        <RadzenText TextStyle="TextStyle.Caption">Total Plays</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Overline">@L("UserDetail.Activity")</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption">@L("UserDetail.Stats.TotalPlays")</RadzenText>
                         <RadzenText TextStyle="TextStyle.H6">@_stats.TotalPlaysCount.ToString("N0")</RadzenText>
-                        <RadzenText TextStyle="TextStyle.Caption">Playlists</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption">@L("UserDetail.Stats.Playlists")</RadzenText>
                         <RadzenText TextStyle="TextStyle.H6">@_stats.PlaylistsCount.ToString("N0")</RadzenText>
-                        <RadzenText TextStyle="TextStyle.Caption">Shares</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption">@L("UserDetail.Stats.Shares")</RadzenText>
                         <RadzenText TextStyle="TextStyle.H6">@_stats.SharesCount.ToString("N0")</RadzenText>
                     </RadzenStack>
                 </RadzenCard>
@@ -101,12 +101,12 @@
             <RadzenColumn Size="12" SizeMD="3">
                 <RadzenCard Style="height:100%;">
                     <RadzenStack Gap="0.25rem">
-                        <RadzenText TextStyle="TextStyle.Overline">Ratings</RadzenText>
-                        <RadzenText TextStyle="TextStyle.Caption">Artists Rated</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Overline">@L("UserDetail.Ratings")</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption">@L("UserDetail.Stats.ArtistsRated")</RadzenText>
                         <RadzenText TextStyle="TextStyle.H6">@_stats.RatedArtistsCount.ToString("N0")</RadzenText>
-                        <RadzenText TextStyle="TextStyle.Caption">Albums Rated</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption">@L("UserDetail.Stats.AlbumsRated")</RadzenText>
                         <RadzenText TextStyle="TextStyle.H6">@_stats.RatedAlbumsCount.ToString("N0")</RadzenText>
-                        <RadzenText TextStyle="TextStyle.Caption">Songs Rated</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption">@L("UserDetail.Stats.SongsRated")</RadzenText>
                         <RadzenText TextStyle="TextStyle.H6">@_stats.RatedSongsCount.ToString("N0")</RadzenText>
                     </RadzenStack>
                 </RadzenCard>
@@ -115,10 +115,10 @@
             <RadzenColumn Size="12" SizeMD="3">
                 <RadzenCard Style="height:100%;">
                     <RadzenStack Gap="0.25rem">
-                        <RadzenText TextStyle="TextStyle.Overline">Preferences</RadzenText>
-                        <RadzenText TextStyle="TextStyle.Caption">Pinned Items</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Overline">@L("UserDetail.Preferences")</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption">@L("UserDetail.Stats.PinnedItems")</RadzenText>
                         <RadzenText TextStyle="TextStyle.H6">@((_user?.Pins?.Count ?? 0)).ToString("N0")</RadzenText>
-                        <RadzenText TextStyle="TextStyle.Caption">Bookmarks</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption">@L("UserDetail.Stats.Bookmarks")</RadzenText>
                         <RadzenText TextStyle="TextStyle.H6">@_stats.BookmarksCount.ToString("N0")</RadzenText>
                     </RadzenStack>
                 </RadzenCard>
@@ -129,7 +129,7 @@
         {
             <RadzenCard>
                 <RadzenStack Gap="0.5rem">
-                    <RadzenText TextStyle="TextStyle.H6" Text="Permissions"/>
+                    <RadzenText TextStyle="TextStyle.H6" Text="@L("UserDetail.Permissions")"/>
                     <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="5px">
                         @foreach (var role in _userRoles)
                         {
@@ -144,7 +144,7 @@
         {
             <RadzenCard>
                 <RadzenStack Gap="0.5rem">
-                    <RadzenText TextStyle="TextStyle.H6" Text="Tags"/>
+                    <RadzenText TextStyle="TextStyle.H6" Text="@L("UserDetail.Tags")"/>
                     <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="5px">
                         @foreach (var tag in _user.Tags?.ToTags() ?? [])
                         {
@@ -159,7 +159,7 @@
         {
             <RadzenCard>
                 <RadzenStack Gap="0.5rem">
-                    <RadzenText TextStyle="TextStyle.H6" Text="Pinned Items"/>
+                    <RadzenText TextStyle="TextStyle.H6" Text="@L("UserDetail.PinnedItems")"/>
                     <RadzenRow>
                         @foreach (var pin in _user.Pins.OrderBy(p => p.SortOrder))
                         {
@@ -208,7 +208,7 @@
             var apiKey = ParseUserApiKey(UserApiKey);
             if (!apiKey.HasValue)
             {
-                NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Error", Detail = "Invalid user API key format" });
+                NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = L("Status.Error"), Detail = L("UserDetail.InvalidApiKeyFormat") });
                 _isLoading = false;
                 return;
             }
@@ -216,7 +216,7 @@
             var userResult = await UserService.GetByApiKeyAsync(apiKey.Value);
             if (!userResult.IsSuccess || userResult.Data == null)
             {
-                NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Error", Detail = "User not found" });
+                NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = L("Status.Error"), Detail = L("UserDetail.UserNotFound") });
                 _isLoading = false;
                 return;
             }
@@ -226,87 +226,87 @@
 
             if (_user.IsAdmin)
             {
-                _securityLabel = "admin";
+                _securityLabel = L("UserRole.Admin");
                 _securityBadgeStyle = BadgeStyle.Danger;
             }
             else if (_user.IsEditor)
             {
-                _securityLabel = "editor";
+                _securityLabel = L("UserRole.Editor");
                 _securityBadgeStyle = BadgeStyle.Info;
             }
             else
             {
-                _securityLabel = "user";
+                _securityLabel = L("UserRole.User");
                 _securityBadgeStyle = BadgeStyle.Secondary;
             }
 
-            _userInfo.Add(new KeyValue("Email", _user.Email));
-            _userInfo.Add(new KeyValue("Time Zone", _user.TimeZoneId ?? "UTC"));
-            _userInfo.Add(new KeyValue("Created", CurrentUser?.FormatInstant(_user.CreatedAt) ?? _user.CreatedAt.ToString()));
-            _userInfo.Add(new KeyValue("Last Login", CurrentUser?.FormatInstant(_user.LastLoginAt) ?? _user.LastLoginAt?.ToString() ?? MelodeeConfiguration.DefaultNoValuePlaceHolder));
-            _userInfo.Add(new KeyValue("Last Activity", CurrentUser?.FormatInstant(_user.LastActivityAt) ?? _user.LastActivityAt?.ToString() ?? MelodeeConfiguration.DefaultNoValuePlaceHolder));
+            _userInfo.Add(new KeyValue(L("UserDetail.Email"), _user.Email));
+            _userInfo.Add(new KeyValue(L("UserDetail.TimeZone"), _user.TimeZoneId ?? "UTC"));
+            _userInfo.Add(new KeyValue(L("UserDetail.Created"), CurrentUser?.FormatInstant(_user.CreatedAt) ?? _user.CreatedAt.ToString()));
+            _userInfo.Add(new KeyValue(L("UserDetail.LastLogin"), CurrentUser?.FormatInstant(_user.LastLoginAt) ?? _user.LastLoginAt?.ToString() ?? MelodeeConfiguration.DefaultNoValuePlaceHolder));
+            _userInfo.Add(new KeyValue(L("UserDetail.LastActivity"), CurrentUser?.FormatInstant(_user.LastActivityAt) ?? _user.LastActivityAt?.ToString() ?? MelodeeConfiguration.DefaultNoValuePlaceHolder));
 
             if (!string.IsNullOrWhiteSpace(_user.Description))
             {
-                _userInfo.Add(new KeyValue("Description", _user.Description));
+                _userInfo.Add(new KeyValue(L("UserDetail.Description"), _user.Description));
             }
 
             // Build roles list from user permissions
             if (_user.IsAdmin)
             {
-                _userRoles.Add("Administrator");
+                _userRoles.Add(L("UserRole.Administrator"));
             }
             if (_user.IsEditor)
             {
-                _userRoles.Add("Editor");
+                _userRoles.Add(L("UserRole.Editor"));
             }
             if (_user.HasSettingsRole)
             {
-                _userRoles.Add("Settings");
+                _userRoles.Add(L("UserRole.Settings"));
             }
             if (_user.HasDownloadRole)
             {
-                _userRoles.Add("Download");
+                _userRoles.Add(L("UserRole.Download"));
             }
             if (_user.HasUploadRole)
             {
-                _userRoles.Add("Upload");
+                _userRoles.Add(L("UserRole.Upload"));
             }
             if (_user.HasPlaylistRole)
             {
-                _userRoles.Add("Playlist");
+                _userRoles.Add(L("UserRole.Playlist"));
             }
             if (_user.HasCoverArtRole)
             {
-                _userRoles.Add("Cover Art");
+                _userRoles.Add(L("UserRole.CoverArt"));
             }
             if (_user.HasCommentRole)
             {
-                _userRoles.Add("Comment");
+                _userRoles.Add(L("UserRole.Comment"));
             }
             if (_user.HasPodcastRole)
             {
-                _userRoles.Add("Podcast");
+                _userRoles.Add(L("UserRole.Podcast"));
             }
             if (_user.HasStreamRole)
             {
-                _userRoles.Add("Stream");
+                _userRoles.Add(L("UserRole.Stream"));
             }
             if (_user.HasJukeboxRole)
             {
-                _userRoles.Add("Jukebox");
+                _userRoles.Add(L("UserRole.Jukebox"));
             }
             if (_user.HasShareRole)
             {
-                _userRoles.Add("Share");
+                _userRoles.Add(L("UserRole.Share"));
             }
 
             await LoadUserStatsAsync();
         }
         catch (Exception e)
         {
-            Logger.Error(e, "Error loading user detail");
-            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Error", Detail = e.Message });
+            Logger.Error(e, L("UserDetail.ErrorLoadingUserDetail"));
+            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = L("Status.Error"), Detail = e.Message });
         }
         finally
         {

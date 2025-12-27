@@ -14,12 +14,12 @@
 @inject IAuthService AuthService
 @inject DefaultImages DefaultImages
 
-<PageTitle>@(_chart?.Title ?? "Chart Details")</PageTitle>
+<PageTitle>@(_chart?.Title ?? L("ChartDetail.PageTitle"))</PageTitle>
 
 <RadzenBreadCrumb Class="rz-pb-5">
-    <RadzenBreadCrumbItem Path="/" Text="Home"/>
-    <RadzenBreadCrumbItem Path="/charts" Icon="format_list_numbered" Text="Charts"/>
-    <RadzenBreadCrumbItem Text="@(_chart?.Title ?? "Loading...")"/>
+    <RadzenBreadCrumbItem Path="/" Text="@L("Nav.Home")"/>
+    <RadzenBreadCrumbItem Path="/charts" Icon="format_list_numbered" Text="@L("Nav.Charts")"/>
+    <RadzenBreadCrumbItem Text="@(_chart?.Title ?? L("ChartDetail.Loading"))"/>
 </RadzenBreadCrumb>
 
 @if (_isLoading)
@@ -33,7 +33,7 @@
 else if (_chart == null)
 {
     <RadzenAlert AlertStyle="AlertStyle.Warning" ShowIcon="true">
-        Chart not found.
+        @L("ChartDetail.ChartNotFound")
     </RadzenAlert>
 }
 else
@@ -45,10 +45,10 @@ else
                 @if (!string.IsNullOrEmpty(_chart.SourceName))
                 {
                     <RadzenText TextStyle="TextStyle.Subtitle1" class="rz-text-secondary-color">
-                        Source: @_chart.SourceName
+                        @L("ChartDetail.Source", _chart.SourceName)
                         @if (!string.IsNullOrEmpty(_chart.SourceUrl))
                         {
-                            <RadzenLink Path="@_chart.SourceUrl" Target="_blank" Text="(link)" class="rz-ml-2"/>
+                            <RadzenLink Path="@_chart.SourceUrl" Target="_blank" Text="@L("ChartDetail.Link")" class="rz-ml-2"/>
                         }
                     </RadzenText>
                 }
@@ -57,7 +57,7 @@ else
                 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
                     @if (AuthService.IsAdmin)
                     {
-                        <RadzenButton Text="Edit" Icon="edit" ButtonStyle="ButtonStyle.Primary" Click="@(() => NavigationManager.NavigateTo($"/charts/edit/{ApiKey}"))"/>
+                        <RadzenButton Text="@L("Actions.Edit")" Icon="edit" ButtonStyle="ButtonStyle.Primary" Click="@(() => NavigationManager.NavigateTo($"/charts/edit/{ApiKey}"))"/>
                     }
                 </RadzenStack>
             </RadzenColumn>
@@ -69,17 +69,17 @@ else
                     <RadzenStack Orientation="Orientation.Horizontal" Gap="2rem" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
                         <RadzenStack Orientation="Orientation.Horizontal" Gap="2rem" AlignItems="AlignItems.Center">
                             <RadzenStack Gap="0.25rem">
-                                <RadzenText TextStyle="TextStyle.Overline" class="rz-text-secondary-color">Total Albums</RadzenText>
+                                <RadzenText TextStyle="TextStyle.Overline" class="rz-text-secondary-color">@L("ChartDetail.TotalAlbums")</RadzenText>
                                 <RadzenText TextStyle="TextStyle.H4" style="margin: 0">@_chartItems.Count</RadzenText>
                             </RadzenStack>
 
                             <RadzenStack Gap="0.25rem">
-                                <RadzenText TextStyle="TextStyle.Overline" class="rz-text-secondary-color">Linked</RadzenText>
+                                <RadzenText TextStyle="TextStyle.Overline" class="rz-text-secondary-color">@L("Status.Linked")</RadzenText>
                                 <RadzenText TextStyle="TextStyle.H4" style="margin: 0">@_linkedCount</RadzenText>
                             </RadzenStack>
 
                             <RadzenStack Gap="0.25rem">
-                                <RadzenText TextStyle="TextStyle.Overline" class="rz-text-secondary-color">Completion</RadzenText>
+                                <RadzenText TextStyle="TextStyle.Overline" class="rz-text-secondary-color">@L("ChartDetail.Completion")</RadzenText>
                                 <RadzenText TextStyle="TextStyle.H4" style="margin: 0">@_completionPercentage%</RadzenText>
                             </RadzenStack>
                         </RadzenStack>
@@ -89,13 +89,13 @@ else
                                 <RadzenText TextStyle="TextStyle.Body2">
                                     @if (_isCompleted)
                                     {
-                                        <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="Completed" class="rz-mr-2"/>
-                                        <span>All albums available to play</span>
+                                        <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="@L("Status.Completed")" class="rz-mr-2"/>
+                                        <span>@L("ChartDetail.AllAlbumsAvailable")</span>
                                     }
                                     else
                                     {
-                                        <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="In Progress" class="rz-mr-2"/>
-                                        <span>@_unlinkedCount albums not found in library</span>
+                                        <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="@L("ChartDetail.InProgress")" class="rz-mr-2"/>
+                                        <span>@L("ChartDetail.AlbumsNotFound", _unlinkedCount)</span>
                                     }
                                 </RadzenText>
                             </RadzenStack>
@@ -133,35 +133,35 @@ else
                 <RadzenStack class="rz-mt-4" Gap="0.5rem">
                   <RadzenRow>
                     <RadzenColumn Size="6">
-                      <RadzenText TextStyle="TextStyle.Body2" class="rz-text-secondary-color">Year</RadzenText>
+                      <RadzenText TextStyle="TextStyle.Body2" class="rz-text-secondary-color">@L("Label.Year")</RadzenText>
                       <RadzenText TextStyle="TextStyle.Body1">@(_chart.Year?.ToString() ?? "—")</RadzenText>
                     </RadzenColumn>
                     <RadzenColumn Size="6">
-                      <RadzenText TextStyle="TextStyle.Body2" class="rz-text-secondary-color">Items</RadzenText>
+                      <RadzenText TextStyle="TextStyle.Body2" class="rz-text-secondary-color">@L("ChartDetail.Items")</RadzenText>
                       <RadzenText TextStyle="TextStyle.Body1">@_chart.Items.Count</RadzenText>
                     </RadzenColumn>
                   </RadzenRow>
                   <RadzenRow>
                     <RadzenColumn Size="6">
-                      <RadzenText TextStyle="TextStyle.Body2" class="rz-text-secondary-color">Status</RadzenText>
+                      <RadzenText TextStyle="TextStyle.Body2" class="rz-text-secondary-color">@L("Label.Status")</RadzenText>
                       @if (_chart.IsVisible)
                       {
-                        <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="Visible"/>
+                        <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="@L("Status.Visible")"/>
                       }
                       else
                       {
-                        <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="Hidden"/>
+                        <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="@L("Status.Hidden")"/>
                       }
                     </RadzenColumn>
                     <RadzenColumn Size="6">
-                      <RadzenText TextStyle="TextStyle.Body2" class="rz-text-secondary-color">Playlist</RadzenText>
+                      <RadzenText TextStyle="TextStyle.Body2" class="rz-text-secondary-color">@L("ChartDetail.Playlist")</RadzenText>
                       @if (_chart.IsGeneratedPlaylistEnabled)
                       {
-                        <RadzenBadge BadgeStyle="BadgeStyle.Info" Text="Enabled"/>
+                        <RadzenBadge BadgeStyle="BadgeStyle.Info" Text="@L("Status.Enabled")"/>
                       }
                       else
                       {
-                        <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="Disabled"/>
+                        <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="@L("Status.Disabled")"/>
                       }
                     </RadzenColumn>
                   </RadzenRow>
@@ -169,7 +169,7 @@ else
                   {
                     <RadzenRow>
                       <RadzenColumn Size="12">
-                        <RadzenText TextStyle="TextStyle.Body2" class="rz-text-secondary-color">Tags</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Body2" class="rz-text-secondary-color">@L("Label.Tags")</RadzenText>
                         <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="0.25rem">
                           @foreach (var tag in _chart.Tags.Split('|', StringSplitOptions.RemoveEmptyEntries))
                           {
@@ -185,7 +185,7 @@ else
                 @if (!string.IsNullOrWhiteSpace(_chart.Description))
                 {
                     <RadzenCard class="rz-mt-4">
-                        <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">Description</RadzenText>
+                        <RadzenText TextStyle="TextStyle.H6" class="rz-mb-2">@L("Label.Description")</RadzenText>
                         <Markdown Content="@_chart.Description"/>
                     </RadzenCard>
                 }
@@ -194,35 +194,35 @@ else
             <RadzenColumn Size="12" SizeMD="9">
                 <RadzenCard>
                     <RadzenText TextStyle="TextStyle.H6" class="rz-mb-4">
-                        <RadzenIcon Icon="list" class="rz-mr-1"/> Chart Items (@_chart.Items.Count)
+                        <RadzenIcon Icon="list" class="rz-mr-1"/> @L("ChartDetail.ChartItems", _chart.Items.Count)
                     </RadzenText>
 
                     <RadzenDataGrid Data="@_chartItems" TItem="ChartItem" AllowPaging="true" PageSize="25" Density="Density.Compact" AllowSorting="true">
                         <Columns>
-                            <RadzenDataGridColumn Property="@nameof(ChartItem.Rank)" Title="#" Width="60px"/>
-                            <RadzenDataGridColumn Property="@nameof(ChartItem.ArtistName)" Title="Artist" Width="200px"/>
-                            <RadzenDataGridColumn Property="@nameof(ChartItem.AlbumTitle)" Title="Album" Width="250px"/>
-                            <RadzenDataGridColumn Property="@nameof(ChartItem.ReleaseYear)" Title="Year" Width="80px"/>
-                            <RadzenDataGridColumn Title="Status" Width="100px">
+                            <RadzenDataGridColumn Property="@nameof(ChartItem.Rank)" Title="@L("TableHeader.Hash")" Width="60px"/>
+                            <RadzenDataGridColumn Property="@nameof(ChartItem.ArtistName)" Title="@L("TableHeader.Artist")" Width="200px"/>
+                            <RadzenDataGridColumn Property="@nameof(ChartItem.AlbumTitle)" Title="@L("TableHeader.Album")" Width="250px"/>
+                            <RadzenDataGridColumn Property="@nameof(ChartItem.ReleaseYear)" Title="@L("TableHeader.Year")" Width="80px"/>
+                            <RadzenDataGridColumn Title="@L("TableHeader.Status")" Width="100px">
                                 <Template Context="item">
                                     @switch (item.LinkStatusValue)
                                     {
                                         case ChartItemLinkStatus.Linked:
-                                            <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="Linked"/>
+                                            <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="@L("Status.Linked")"/>
                                             break;
                                         case ChartItemLinkStatus.Ambiguous:
-                                            <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="Ambiguous"/>
+                                            <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="@L("Status.Ambiguous")"/>
                                             break;
                                         case ChartItemLinkStatus.Ignored:
-                                            <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="Ignored"/>
+                                            <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="@L("Status.Ignored")"/>
                                             break;
                                         default:
-                                            <RadzenBadge BadgeStyle="BadgeStyle.Danger" Text="Unlinked"/>
+                                            <RadzenBadge BadgeStyle="BadgeStyle.Danger" Text="@L("Status.Unlinked")"/>
                                             break;
                                     }
                                 </Template>
                             </RadzenDataGridColumn>
-                            <RadzenDataGridColumn Title="Linked Album" Width="200px">
+                            <RadzenDataGridColumn Title="@L("TableHeader.LinkedAlbum")" Width="200px">
                                 <Template Context="item">
                                     @if (item.LinkedAlbum != null)
                                     {

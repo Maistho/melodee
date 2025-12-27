@@ -652,7 +652,7 @@
                 var artistDirectory = Path.Combine(_artist.Library.Path, _artist.Directory).ToFileSystemDirectoryInfo();
                 if (!artistDirectory.Exists())
                 {
-                    _alertMessages.Add($"Artist directory [{artistDirectory.FullName()}] is not found.");
+                    _alertMessages.Add(L("ArtistDetail.ArtistDirectoryNotFound", artistDirectory.FullName()));
                 }
 
                 await LoadAlbums();
@@ -744,7 +744,7 @@
             var save = await ArtistService.SaveImageAsArtistImageAsync(_artist.Id, _replaceAllImages, ms.ToArray());
             if (!save.IsSuccess)
             {
-                NotificationService.Notify(NotificationMessageForResult(save, "upload artist image", ToastTime));
+                NotificationService.Notify(NotificationMessageForResult(save, L("ArtistDetail.UploadArtistImage"), ToastTime));
             }
             _replaceAllImages = false; // only first upload replaces all
         }
@@ -768,7 +768,7 @@
         }
         catch (Exception ex)
         {
-            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Delete failed", Detail = ex.Message });
+            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = L("ArtistDetail.DeleteFailed"), Detail = ex.Message });
         }
     }
 
@@ -778,7 +778,7 @@
         if (confirm ?? false)
         {
             var result = await ArtistService.DeleteAllArtistImagesAsync(_artist.Id);
-            NotificationService.Notify(NotificationMessageForResult(result, "deleting artist images", ToastTime));
+            NotificationService.Notify(NotificationMessageForResult(result, L("ArtistDetail.DeletingArtistImages"), ToastTime));
             if (result.IsSuccess && result.Data)
             {
                 _artist.ImageCount = 0;
@@ -825,7 +825,7 @@
             }
             catch (Exception ex)
             {
-                NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Delete failed", Detail = ex.Message });
+                NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = L("ArtistDetail.DeleteFailed"), Detail = ex.Message });
             }
         }
 
@@ -942,7 +942,7 @@
             var result = await ArtistService.DeleteArtistRelationAsync(key.OwnerArtistId, key.RelatedArtistId);
             if (!result.IsSuccess || !result.Data)
             {
-                NotificationService.Notify(NotificationMessageForResult(result, $"removing relationship [{key.OwnerArtistId} -> {key.RelatedArtistId}]", ToastTime));
+                NotificationService.Notify(NotificationMessageForResult(result, L("ArtistDetail.RemovingRelationship"), ToastTime));
             }
         }
         _selectedRelationships.Clear();
@@ -955,7 +955,7 @@
         if (confirm ?? false)
         {
             var result = await ArtistService.DeleteArtistRelationAsync(ownerArtistId, relatedArtistId);
-            NotificationService.Notify(NotificationMessageForResult(result, "removing relationship", ToastTime));
+            NotificationService.Notify(NotificationMessageForResult(result, L("ArtistDetail.RemovingRelationship"), ToastTime));
             if (result.IsSuccess && result.Data)
             {
                 await RefreshRelationshipsAsync();
@@ -985,14 +985,14 @@
     private async Task UnlockButtonClick()
     {
         var result = await ArtistService.LockUnlockArtistAsync(_artist.Id, true);
-        NotificationService.Notify(NotificationMessageForResult(result, "unlocking Artist", ToastTime));
+        NotificationService.Notify(NotificationMessageForResult(result, L("ArtistDetail.UnlockingArtist"), ToastTime));
         _artist.IsLocked = false;
     }
 
     private async Task LockButtonClick()
     {
         var result = await ArtistService.LockUnlockArtistAsync(_artist.Id, true);
-        NotificationService.Notify(NotificationMessageForResult(result, "locking Artist", ToastTime));
+        NotificationService.Notify(NotificationMessageForResult(result, L("ArtistDetail.LockingArtist"), ToastTime));
         _artist.IsLocked = true;
     }
 
@@ -1007,7 +1007,7 @@
                 NavigationManager.NavigateTo(FromUrl ?? "/data/artists", true);
             }
 
-            NotificationService.Notify(NotificationMessageForResult(deleteResult, "deleting artist", ToastTime));
+            NotificationService.Notify(NotificationMessageForResult(deleteResult, L("ArtistDetail.DeletingArtist"), ToastTime));
         }
     }
 
@@ -1015,7 +1015,7 @@
     {
         _userArtist.Rating = arg;
         var result = await UserService.SetArtistRatingAsync(CurrentUsersId, _artist.ApiKey, arg);
-        NotificationService.Notify(NotificationMessageForResult(result, "set artist rating", ToastTime));
+        NotificationService.Notify(NotificationMessageForResult(result, L("ArtistDetail.SetArtistRating"), ToastTime));
         var artistResult = await ArtistService.GetByApiKeyAsync(ApiKey);
         _artist.CalculatedRating = artistResult.Data!.CalculatedRating;
     }
@@ -1024,14 +1024,14 @@
     {
         _userArtist.IsHated = !_userArtist.IsHated;
         var result = await UserService.ToggleArtistHatedAsync(CurrentUsersId, _artist.ApiKey, _userArtist.IsHated);
-        NotificationService.Notify(NotificationMessageForResult(result, "Toggling Artist Hatred", ToastTime));
+        NotificationService.Notify(NotificationMessageForResult(result, L("ArtistDetail.TogglingArtistHatred"), ToastTime));
     }
 
     private async Task IsStarredClicked()
     {
         _userArtist.IsStarred = !_userArtist.IsStarred;
         var result = await UserService.ToggleArtistStarAsync(CurrentUsersId, _artist.ApiKey, _userArtist.IsStarred);
-        NotificationService.Notify(NotificationMessageForResult(result, "Toggling Artist Favorite", ToastTime));
+        NotificationService.Notify(NotificationMessageForResult(result, L("ArtistDetail.TogglingArtistFavorite"), ToastTime));
     }
 
     private async Task OnInternetSearchClick()
@@ -1043,7 +1043,7 @@
     {
         _isPinned = !_isPinned;
         var result = await UserService.TogglePinnedAsync(CurrentUsersId, UserPinType.Artist, _artist.Id);
-        NotificationService.Notify(NotificationMessageForResult(result, "Toggling Pin", ToastTime));
+        NotificationService.Notify(NotificationMessageForResult(result, L("ArtistDetail.TogglingPin"), ToastTime));
     }
 
     private async Task RescanButtonClick()
@@ -1052,7 +1052,7 @@
         if (confirm ?? false)
         {
             var rescanresult = await ArtistService.RescanAsync([_artist.Id]);
-            NotificationService.Notify(NotificationMessageForResult(rescanresult, "submitting artist rescan job", ToastTime));
+            NotificationService.Notify(NotificationMessageForResult(rescanresult, L("ArtistDetail.SubmittingRescanJob"), ToastTime));
         }
     }
 
@@ -1083,7 +1083,7 @@
                 NavigationManager.Refresh(true);
             }
 
-            NotificationService.Notify(NotificationMessageForResult(deleteResult, "deleted artist albums", ToastTime));
+            NotificationService.Notify(NotificationMessageForResult(deleteResult, L("ArtistDetail.DeletedArtistAlbums"), ToastTime));
         }
     }
 

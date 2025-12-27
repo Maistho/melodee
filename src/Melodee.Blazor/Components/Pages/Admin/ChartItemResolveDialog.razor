@@ -1,3 +1,4 @@
+@inherits MelodeeComponentBase
 @using Melodee.Common.Data.Models
 @using Melodee.Common.Enums
 
@@ -5,40 +6,40 @@
 
 <RadzenStack Gap="1rem" Style="height: 100%;">
     <RadzenCard>
-        <RadzenText TextStyle="TextStyle.Subtitle1">Current Entry</RadzenText>
+        <RadzenText TextStyle="TextStyle.Subtitle1">@L("ChartItemResolveDialog.CurrentEntry")</RadzenText>
         <RadzenStack Gap="0.5rem" class="rz-mt-2">
             <RadzenRow>
-                <RadzenColumn Size="3"><RadzenText class="rz-text-secondary-color">Rank:</RadzenText></RadzenColumn>
+                <RadzenColumn Size="3"><RadzenText class="rz-text-secondary-color">@L("TableHeader.Rank"):</RadzenText></RadzenColumn>
                 <RadzenColumn><RadzenText>@ChartItem.Rank</RadzenText></RadzenColumn>
             </RadzenRow>
             <RadzenRow>
-                <RadzenColumn Size="3"><RadzenText class="rz-text-secondary-color">Artist:</RadzenText></RadzenColumn>
+                <RadzenColumn Size="3"><RadzenText class="rz-text-secondary-color">@L("Label.Artist"):</RadzenText></RadzenColumn>
                 <RadzenColumn><RadzenText>@ChartItem.ArtistName</RadzenText></RadzenColumn>
             </RadzenRow>
             <RadzenRow>
-                <RadzenColumn Size="3"><RadzenText class="rz-text-secondary-color">Album:</RadzenText></RadzenColumn>
+                <RadzenColumn Size="3"><RadzenText class="rz-text-secondary-color">@L("Label.Album"):</RadzenText></RadzenColumn>
                 <RadzenColumn><RadzenText>@ChartItem.AlbumTitle</RadzenText></RadzenColumn>
             </RadzenRow>
             <RadzenRow>
-                <RadzenColumn Size="3"><RadzenText class="rz-text-secondary-color">Year:</RadzenText></RadzenColumn>
+                <RadzenColumn Size="3"><RadzenText class="rz-text-secondary-color">@L("Label.Year"):</RadzenText></RadzenColumn>
                 <RadzenColumn><RadzenText>@(ChartItem.ReleaseYear?.ToString() ?? "—")</RadzenText></RadzenColumn>
             </RadzenRow>
             <RadzenRow>
-                <RadzenColumn Size="3"><RadzenText class="rz-text-secondary-color">Status:</RadzenText></RadzenColumn>
+                <RadzenColumn Size="3"><RadzenText class="rz-text-secondary-color">@L("Label.Status"):</RadzenText></RadzenColumn>
                 <RadzenColumn>
                     @switch (ChartItem.LinkStatusValue)
                     {
                         case ChartItemLinkStatus.Linked:
-                            <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="Linked"/>
+                            <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="@L("Status.Linked")"/>
                             break;
                         case ChartItemLinkStatus.Ambiguous:
-                            <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="Ambiguous"/>
+                            <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="@L("Status.Ambiguous")"/>
                             break;
                         case ChartItemLinkStatus.Ignored:
-                            <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="Ignored"/>
+                            <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="@L("Status.Ignored")"/>
                             break;
                         default:
-                            <RadzenBadge BadgeStyle="BadgeStyle.Danger" Text="Unlinked"/>
+                            <RadzenBadge BadgeStyle="BadgeStyle.Danger" Text="@L("Status.Unlinked")"/>
                             break;
                     }
                 </RadzenColumn>
@@ -46,14 +47,14 @@
             @if (ChartItem.LinkedAlbum != null)
             {
                 <RadzenRow>
-                    <RadzenColumn Size="3"><RadzenText class="rz-text-secondary-color">Current Link:</RadzenText></RadzenColumn>
+                    <RadzenColumn Size="3"><RadzenText class="rz-text-secondary-color">@L("ChartItemResolveDialog.CurrentLink"):</RadzenText></RadzenColumn>
                     <RadzenColumn><RadzenText>@ChartItem.LinkedArtist?.Name - @ChartItem.LinkedAlbum.Name</RadzenText></RadzenColumn>
                 </RadzenRow>
             }
             @if (!string.IsNullOrEmpty(ChartItem.LinkNotes))
             {
                 <RadzenRow>
-                    <RadzenColumn Size="3"><RadzenText class="rz-text-secondary-color">Notes:</RadzenText></RadzenColumn>
+                    <RadzenColumn Size="3"><RadzenText class="rz-text-secondary-color">@L("Label.Notes"):</RadzenText></RadzenColumn>
                     <RadzenColumn><RadzenText>@ChartItem.LinkNotes</RadzenText></RadzenColumn>
                 </RadzenRow>
             }
@@ -61,10 +62,10 @@
     </RadzenCard>
 
     <RadzenCard Style="flex: 1; overflow: hidden; display: flex; flex-direction: column;">
-        <RadzenText TextStyle="TextStyle.Subtitle1">Search & Select Album</RadzenText>
+        <RadzenText TextStyle="TextStyle.Subtitle1">@L("ChartItemResolveDialog.SearchAndSelect")</RadzenText>
         <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" class="rz-mt-2">
-            <RadzenTextBox @bind-Value="@_searchQuery" Placeholder="Search by artist or album name..." Style="flex: 1;"/>
-            <RadzenButton Text="Search" Icon="search" Click="@SearchAlbumsAsync" ButtonStyle="ButtonStyle.Primary"/>
+            <RadzenTextBox @bind-Value="@_searchQuery" Placeholder="@L("ChartItemResolveDialog.SearchPlaceholder")" Style="flex: 1;"/>
+            <RadzenButton Text="@L("Actions.Search")" Icon="search" Click="@SearchAlbumsAsync" ButtonStyle="ButtonStyle.Primary"/>
         </RadzenStack>
 
         <RadzenDataGrid
@@ -77,13 +78,13 @@
             @bind-Value="@_selectedAlbums"
             Style="flex: 1; overflow: auto; margin-top: 1rem;">
             <Columns>
-                <RadzenDataGridColumn Title="Artist" Width="200px">
+                <RadzenDataGridColumn Title="@L("Label.Artist")" Width="200px">
                     <Template Context="album">@album.ArtistName</Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Title="Album">
+                <RadzenDataGridColumn Title="@L("Label.Album")">
                     <Template Context="album">@album.AlbumName</Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Title="Year" Width="80px">
+                <RadzenDataGridColumn Title="@L("Label.Year")" Width="80px">
                     <Template Context="album">@album.ReleaseYear</Template>
                 </RadzenDataGridColumn>
             </Columns>
@@ -91,8 +92,8 @@
     </RadzenCard>
 
     <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
-        <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@CancelClick"/>
-        <RadzenButton Text="Link Selected Album" Icon="link" ButtonStyle="ButtonStyle.Primary" Disabled="@(!_selectedAlbums.Any())" Click="@LinkSelectedAlbumAsync"/>
+        <RadzenButton Text="@L("Actions.Cancel")" ButtonStyle="ButtonStyle.Light" Click="@CancelClick"/>
+        <RadzenButton Text="@L("Actions.LinkSelectedAlbum")" Icon="link" ButtonStyle="ButtonStyle.Primary" Disabled="@(!_selectedAlbums.Any())" Click="@LinkSelectedAlbumAsync"/>
     </RadzenStack>
 </RadzenStack>
 
@@ -143,7 +144,7 @@
             NotificationService.Notify(new NotificationMessage
             {
                 Severity = NotificationSeverity.Success,
-                Summary = $"Linked to: {selected.ArtistName} - {selected.AlbumName}",
+                Summary = string.Format(L("ChartItemResolveDialog.LinkedTo"), selected.ArtistName, selected.AlbumName),
                 Duration = 3000
             });
             DialogService.Close(true);
@@ -153,7 +154,7 @@
             NotificationService.Notify(new NotificationMessage
             {
                 Severity = NotificationSeverity.Error,
-                Summary = "Failed to link album",
+                Summary = L("ChartItemResolveDialog.FailedToLink"),
                 Detail = result.Messages?.FirstOrDefault(),
                 Duration = 5000
             });

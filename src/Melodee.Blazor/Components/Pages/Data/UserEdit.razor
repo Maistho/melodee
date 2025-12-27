@@ -13,9 +13,9 @@
 @inject DefaultImages DefaultImages
 
 <RadzenBreadCrumb Class="rz-pb-5">
-    <RadzenBreadCrumbItem Path="/" Text="Dashboard"/>
-    <RadzenBreadCrumbItem Path="/data/users" Text="Users"/>
-    <RadzenBreadCrumbItem Icon="@(IsNew ? "add" : "edit")" Text="@(IsNew ? "Adding" : "Editing")"/>
+    <RadzenBreadCrumbItem Path="/" Text="@L("Navigation.Dashboard")"/>
+    <RadzenBreadCrumbItem Path="/data/users" Text="@L("Navigation.Users")"/>
+    <RadzenBreadCrumbItem Icon="@(IsNew ? "add" : "edit")" Text="@(IsNew ? L("UserEdit.Adding") : L("UserEdit.Editing"))"/>
   </RadzenBreadCrumb>
 
 <RadzenStack>
@@ -30,18 +30,18 @@
             <RadzenTemplateForm TItem="User" Data="@_user" Submit="@OnSubmit">
                 <RadzenFieldset>
                     <RadzenStack Gap="0.75rem">
-                        <RadzenTextBox @bind-Value="_user.UserName" Placeholder="Username" style="width:100%" />
-                        <RadzenTextBox @bind-Value="_user.Email" Placeholder="Email" style="width:100%" />
+                        <RadzenTextBox @bind-Value="_user.UserName" Placeholder="@L("UserEdit.UsernamePlaceholder")" style="width:100%" />
+                        <RadzenTextBox @bind-Value="_user.Email" Placeholder="@L("UserEdit.EmailPlaceholder")" style="width:100%" />
                         @if (IsNew)
                         {
-                            <RadzenPassword @bind-Value="_plainPassword" Placeholder="Password" style="width:100%" />
+                            <RadzenPassword @bind-Value="_plainPassword" Placeholder="@L("UserEdit.PasswordPlaceholder")" style="width:100%" />
                         }
                         <RadzenSwitch @bind-Value="_user.IsLocked" Name="IsLocked" />
-                        <RadzenLabel Text="Locked" Component="IsLocked"/>
+                        <RadzenLabel Text="@L("Status.Locked")" Component="IsLocked"/>
                         <RadzenRadioButtonList TValue="int" TItem="RoleOption" @bind-Value="_roleChoice" Orientation="Orientation.Horizontal"
                                                 Data="@_roleOptions"
                                                 TextProperty="Text" ValueProperty="Value"/>
-                        <RadzenButton Icon="save" Text="Save" ButtonType="ButtonType.Submit"/>
+                        <RadzenButton Icon="save" Text="@L("Actions.Save")" ButtonType="ButtonType.Submit"/>
                     </RadzenStack>
                 </RadzenFieldset>
             </RadzenTemplateForm>
@@ -69,11 +69,17 @@
     int _roleChoice = 0;
     long _maxUploadSize;
     class RoleOption { public int Value { get; set; } public string Text { get; set; } = string.Empty; }
-    List<RoleOption> _roleOptions = new() { new RoleOption{ Value = 0, Text = "None" }, new RoleOption{ Value = 1, Text = "Editor" }, new RoleOption{ Value = 2, Text = "Admin" } };
+    List<RoleOption> _roleOptions = [];
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
+        
+        _roleOptions = [
+            new RoleOption { Value = 0, Text = L("UserEdit.RoleNone") },
+            new RoleOption { Value = 1, Text = L("UserEdit.RoleEditor") },
+            new RoleOption { Value = 2, Text = L("UserEdit.RoleAdmin") }
+        ];
         
         _maxUploadSize = (await SettingService.GetValueAsync<long?>(SettingRegistry.SystemMaxUploadSize)).Data ?? (5 * 1024 * 1024);
     }
@@ -104,7 +110,7 @@
             var reg = await UserService.RegisterAsync(_user.UserName, _user.Email, _plainPassword, null);
             if (!reg.IsSuccess || reg.Data == null)
             {
-                NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Error", Detail = string.Join(";", reg.Messages ?? []) });
+                NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = L("Status.Error"), Detail = string.Join(";", reg.Messages ?? []) });
                 return;
             }
             _user = reg.Data;
@@ -115,7 +121,7 @@
 
         var original = await UserService.GetByApiKeyAsync(_user.ApiKey);
         var save = await UserService.UpdateAsync(original.Data!, _user);
-        NotificationService.Notify(new NotificationMessage { Severity = save.IsSuccess ? NotificationSeverity.Success : NotificationSeverity.Error, Summary = save.IsSuccess ? "Saved" : "Error", Detail = save.IsSuccess ? "User saved" : string.Join(";", save.Messages ?? []) });
+        NotificationService.Notify(new NotificationMessage { Severity = save.IsSuccess ? NotificationSeverity.Success : NotificationSeverity.Error, Summary = save.IsSuccess ? L("Status.Saved") : L("Status.Error"), Detail = save.IsSuccess ? L("Message.UserSaved") : string.Join(";", save.Messages ?? []) });
         if (save.IsSuccess)
         {
             NavigationManager.NavigateTo("/data/users", true);
@@ -127,7 +133,7 @@
         await using var ms = new MemoryStream();
         await e.File.OpenReadStream(_maxUploadSize).CopyToAsync(ms);
         var save = await UserService.SaveProfileImageAsync(_user.Id, ms.ToArray());
-        NotificationService.Notify(new NotificationMessage { Severity = save.IsSuccess ? NotificationSeverity.Success : NotificationSeverity.Error, Summary = save.IsSuccess ? "Saved" : "Error", Detail = save.IsSuccess ? "Avatar updated" : string.Join(";", save.Messages ?? []) });
+        NotificationService.Notify(new NotificationMessage { Severity = save.IsSuccess ? NotificationSeverity.Success : NotificationSeverity.Error, Summary = save.IsSuccess ? L("Status.Saved") : L("Status.Error"), Detail = save.IsSuccess ? L("Message.AvatarUpdated") : string.Join(";", save.Messages ?? []) });
         await OnParametersSetAsync();
         StateHasChanged();
     }

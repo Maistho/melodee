@@ -9,7 +9,7 @@
 @inject NotificationService NotificationService
 @inject NavigationManager NavigationManager
 
-<PageTitle>Edit Request</PageTitle>
+<PageTitle>@L("RequestEdit.PageTitle")</PageTitle>
 
 @if (_request == null)
 {
@@ -21,20 +21,20 @@ else
 {
     <RadzenStack Style="height: 100%; overflow-y: auto;" Gap="1rem">
         <RadzenBreadCrumb Class="rz-pb-3">
-            <RadzenBreadCrumbItem Path="/" Text="Dashboard"/>
-            <RadzenBreadCrumbItem Path="/requests" Icon="assignment" Text="Requests"/>
-            <RadzenBreadCrumbItem Path="@($"/requests/{ApiKey}")" Text="Detail"/>
-            <RadzenBreadCrumbItem Text="Edit"/>
+            <RadzenBreadCrumbItem Path="/" Text="@L("Navigation.Dashboard")"/>
+            <RadzenBreadCrumbItem Path="/requests" Icon="assignment" Text="@L("Navigation.Requests")"/>
+            <RadzenBreadCrumbItem Path="@($"/requests/{ApiKey}")" Text="@L("RequestEdit.Detail")"/>
+            <RadzenBreadCrumbItem Text="@L("Actions.Edit")"/>
         </RadzenBreadCrumb>
 
         <RadzenCard>
-            <RadzenText TextStyle="TextStyle.H5" Text="Edit Request" Class="rz-mb-4"/>
+            <RadzenText TextStyle="TextStyle.H5" Text="@L("RequestEdit.EditRequest")" Class="rz-mb-4"/>
 
             <RadzenTemplateForm TItem="RequestModel" Data="@_model" Submit="@OnSubmit">
                 <RadzenStack Gap="1rem">
                     <RadzenRow Gap="1rem">
                         <RadzenColumn Size="12" SizeMD="6">
-                            <RadzenFormField Text="Category" Variant="Variant.Outlined" Style="width: 100%">
+                            <RadzenFormField Text="@L("Label.Category")" Variant="Variant.Outlined" Style="width: 100%">
                                 <RadzenDropDown @bind-Value="@_model.Category"
                                                 Data="@_categoryOptions"
                                                 TextProperty="Text"
@@ -42,10 +42,10 @@ else
                                                 Style="width: 100%"
                                                 Disabled="true"/>
                             </RadzenFormField>
-                            <RadzenText TextStyle="TextStyle.Caption" Text="Category cannot be changed"/>
+                            <RadzenText TextStyle="TextStyle.Caption" Text="@L("RequestEdit.CategoryCannotChange")"/>
                         </RadzenColumn>
                         <RadzenColumn Size="12" SizeMD="6">
-                            <RadzenFormField Text="Status" Variant="Variant.Outlined" Style="width: 100%">
+                            <RadzenFormField Text="@L("Common.Status")" Variant="Variant.Outlined" Style="width: 100%">
                                 <RadzenBadge IsPill="true" BadgeStyle="@GetStatusBadgeStyle(_request.StatusValue)" Text="@_request.StatusValue.ToString()"/>
                             </RadzenFormField>
                         </RadzenColumn>
@@ -53,23 +53,23 @@ else
 
                     <RadzenRow>
                         <RadzenColumn Size="12">
-                            <RadzenFormField Text="Description" Variant="Variant.Outlined" Style="width: 100%">
+                            <RadzenFormField Text="@L("Common.Description")" Variant="Variant.Outlined" Style="width: 100%">
                                 <RadzenTextArea @bind-Value="@_model.Description" Rows="4" Style="width: 100%" Name="Description"/>
                             </RadzenFormField>
-                            <RadzenRequiredValidator Component="Description" Text="Description is required"/>
+                            <RadzenRequiredValidator Component="Description" Text="@L("RequestEdit.DescriptionRequired")"/>
                         </RadzenColumn>
                     </RadzenRow>
 
-                    <RadzenText TextStyle="TextStyle.Subtitle1" Text="Optional Details" Class="rz-mt-2"/>
+                    <RadzenText TextStyle="TextStyle.Subtitle1" Text="@L("Label.OptionalDetails")" Class="rz-mt-2"/>
 
                     <RadzenRow Gap="1rem">
                         <RadzenColumn Size="12" SizeMD="6">
-                            <RadzenFormField Text="Artist Name" Variant="Variant.Outlined" Style="width: 100%">
+                            <RadzenFormField Text="@L("Label.ArtistName")" Variant="Variant.Outlined" Style="width: 100%">
                                 <RadzenTextBox @bind-Value="@_model.ArtistName" Style="width: 100%"/>
                             </RadzenFormField>
                         </RadzenColumn>
                         <RadzenColumn Size="12" SizeMD="6">
-                            <RadzenFormField Text="Album Title" Variant="Variant.Outlined" Style="width: 100%">
+                            <RadzenFormField Text="@L("Label.AlbumTitle")" Variant="Variant.Outlined" Style="width: 100%">
                                 <RadzenTextBox @bind-Value="@_model.AlbumTitle" Style="width: 100%"/>
                             </RadzenFormField>
                         </RadzenColumn>
@@ -77,12 +77,12 @@ else
 
                     <RadzenRow Gap="1rem">
                         <RadzenColumn Size="12" SizeMD="6">
-                            <RadzenFormField Text="Song Title" Variant="Variant.Outlined" Style="width: 100%">
+                            <RadzenFormField Text="@L("Label.SongTitle")" Variant="Variant.Outlined" Style="width: 100%">
                                 <RadzenTextBox @bind-Value="@_model.SongTitle" Style="width: 100%"/>
                             </RadzenFormField>
                         </RadzenColumn>
                         <RadzenColumn Size="12" SizeMD="6">
-                            <RadzenFormField Text="Release Year" Variant="Variant.Outlined" Style="width: 100%">
+                            <RadzenFormField Text="@L("Label.ReleaseYear")" Variant="Variant.Outlined" Style="width: 100%">
                                 <RadzenNumeric @bind-Value="@_model.ReleaseYear" Style="width: 100%" Min="1900" Max="2100"/>
                             </RadzenFormField>
                         </RadzenColumn>
@@ -90,7 +90,7 @@ else
 
                     <RadzenRow Gap="1rem">
                         <RadzenColumn Size="12">
-                            <RadzenFormField Text="External URL" Variant="Variant.Outlined" Style="width: 100%">
+                            <RadzenFormField Text="@L("Label.ExternalURL")" Variant="Variant.Outlined" Style="width: 100%">
                                 <RadzenTextBox @bind-Value="@_model.ExternalUrl" Style="width: 100%" Placeholder="https://..."/>
                             </RadzenFormField>
                         </RadzenColumn>
@@ -98,15 +98,15 @@ else
 
                     <RadzenRow>
                         <RadzenColumn Size="12">
-                            <RadzenFormField Text="Additional Notes" Variant="Variant.Outlined" Style="width: 100%">
+                            <RadzenFormField Text="@L("Label.AdditionalNotes")" Variant="Variant.Outlined" Style="width: 100%">
                                 <RadzenTextArea @bind-Value="@_model.Notes" Rows="3" Style="width: 100%"/>
                             </RadzenFormField>
                         </RadzenColumn>
                     </RadzenRow>
 
                     <RadzenRow JustifyContent="JustifyContent.End" Gap="0.5rem" Class="rz-mt-4">
-                        <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@Cancel"/>
-                        <RadzenButton Text="Save Changes" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary" Icon="save"/>
+                        <RadzenButton Text="@L("Actions.Cancel")" ButtonStyle="ButtonStyle.Light" Click="@Cancel"/>
+                        <RadzenButton Text="@L("Actions.SaveChanges")" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary" Icon="save"/>
                     </RadzenRow>
                 </RadzenStack>
             </RadzenTemplateForm>
@@ -151,7 +151,7 @@ else
                     NotificationService.Notify(new NotificationMessage
                     {
                         Severity = NotificationSeverity.Error,
-                        Summary = "You can only edit your own requests"
+                        Summary = L("RequestEdit.CanOnlyEditOwn")
                     });
                     NavigationManager.NavigateTo($"/requests/{ApiKey}");
                     return;
@@ -174,7 +174,7 @@ else
                 NotificationService.Notify(new NotificationMessage
                 {
                     Severity = NotificationSeverity.Error,
-                    Summary = "Request not found"
+                    Summary = L("RequestEdit.RequestNotFound")
                 });
                 NavigationManager.NavigateTo("/requests");
             }
@@ -185,7 +185,7 @@ else
             NotificationService.Notify(new NotificationMessage
             {
                 Severity = NotificationSeverity.Error,
-                Summary = "Error loading request"
+                Summary = L("RequestEdit.ErrorLoading")
             });
         }
         finally
@@ -201,7 +201,7 @@ else
             NotificationService.Notify(new NotificationMessage
             {
                 Severity = NotificationSeverity.Error,
-                Summary = "Description is required"
+                Summary = L("RequestEdit.DescriptionRequired")
             });
             return;
         }
@@ -225,7 +225,7 @@ else
                 NotificationService.Notify(new NotificationMessage
                 {
                     Severity = NotificationSeverity.Success,
-                    Summary = "Request updated successfully"
+                    Summary = L("RequestEdit.UpdatedSuccessfully")
                 });
                 NavigationManager.NavigateTo($"/requests/{ApiKey}");
             }
@@ -234,7 +234,7 @@ else
                 NotificationService.Notify(new NotificationMessage
                 {
                     Severity = NotificationSeverity.Error,
-                    Summary = "Error updating request",
+                    Summary = L("RequestEdit.ErrorUpdating"),
                     Detail = result.Messages?.FirstOrDefault()
                 });
             }
@@ -245,7 +245,7 @@ else
             NotificationService.Notify(new NotificationMessage
             {
                 Severity = NotificationSeverity.Error,
-                Summary = "Error updating request"
+                Summary = L("RequestEdit.ErrorUpdating")
             });
         }
         finally
