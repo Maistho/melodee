@@ -261,7 +261,6 @@ Melodee features comprehensive localization with support for 10 languages:
 - **Language Selector**: Easy switching via dropdown in the header
 - **Preference Persistence**: Your language choice is saved in browser storage
 - **RTL Support**: Full right-to-left layout support for Arabic
-- **1,192 Localized Strings**: Complete UI translation coverage
 
 ### 🌐 OpenSubsonic API
 
