@@ -90,7 +90,7 @@
                         </RadzenRow>
                         <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
                             <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
-                                <RadzenLabel Text="Release Date" Component="ReleaseDate"/>
+                                <RadzenLabel Text="@L("Label.ReleaseDate")" Component="ReleaseDate"/>
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="10">
                                 <RadzenDatePicker
@@ -99,7 +99,7 @@
                                     DateFormat="MM/dd/yyyy"
                                     @bind-Value="@_releaseDate"
                                     class="rz-w-100"/>
-                                <RadzenRequiredValidator Component="ReleaseDate" Text="Release Date is required"
+                                <RadzenRequiredValidator Component="ReleaseDate" Text="@L("AlbumEdit.ReleaseDateRequired")"
                                                          Popup="false" Style="position: absolute"/>
                             </RadzenColumn>
                         </RadzenRow>
@@ -107,7 +107,7 @@
                         @* Below is all optional *@
                         <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
                             <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
-                                <RadzenLabel Text="Alternate Names" Component="AlternateNames"/>
+                                <RadzenLabel Text="@L("Label.AlternateNames")" Component="AlternateNames"/>
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="10">
                                 <TagsInput Value="@_alternateNames"/>
@@ -115,7 +115,7 @@
                         </RadzenRow>
                         <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
                             <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
-                                <RadzenLabel Text="Amg Id" Component="AmgId"/>
+                                <RadzenLabel Text="@L("Label.AmgId")" Component="AmgId"/>
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="8">
                                 <RadzenTextBox style="display: block" Name="AmgId" @bind-Value="@_album.AmgId"
@@ -130,7 +130,7 @@
                         </RadzenRow>
                         <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
                             <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
-                                <RadzenLabel Text="Description" Component="Description"/>
+                                <RadzenLabel Text="@L("Label.Description")" Component="Description"/>
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="10">
                                 <MarkdownEditor UploadImage="false" Value="@_album.Description"/>
@@ -138,7 +138,7 @@
                         </RadzenRow>
                         <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
                             <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
-                                <RadzenLabel Text="Deezer Id" Component="DeezerId"/>
+                                <RadzenLabel Text="@L("Label.DeezerId")" Component="DeezerId"/>
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="8">
                                 <RadzenNumeric style="display: block" Name="DeezerId" @bind-Value="@_album.DeezerId"
@@ -153,7 +153,7 @@
                         </RadzenRow>
                         <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
                             <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
-                                <RadzenLabel Text="Discogs Id" Component="DiscogsId"/>
+                                <RadzenLabel Text="@L("Label.DiscogsId")" Component="DiscogsId"/>
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="8">
                                 <RadzenTextBox style="display: block" Name="DiscogsId" @bind-Value="@_album.DiscogsId"
@@ -168,7 +168,7 @@
                         </RadzenRow>
                         <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
                             <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
-                                <RadzenLabel Text="Genres" Component="AlternateNames"/>
+                                <RadzenLabel Text="@L("Label.Genres")" Component="AlternateNames"/>
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="10">
                                 <TagsInput Value="@_genres"/>
@@ -176,7 +176,7 @@
                         </RadzenRow>
                         <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
                             <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
-                                <RadzenLabel Text="ITunes Id" Component="ItunesId"/>
+                                <RadzenLabel Text="@L("Label.ItunesId")" Component="ItunesId"/>
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="8">
                                 <RadzenTextBox style="display: block" Name="ItunesId" @bind-Value="@_album.ItunesId"
@@ -191,7 +191,7 @@
                         </RadzenRow>
                         <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
                             <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
-                                <RadzenLabel Text="LastFm Id" Component="LastFmId"/>
+                                <RadzenLabel Text="@L("Label.LastFmId")" Component="LastFmId"/>
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="8">
                                 <RadzenTextBox style="display: block" Name="LastFmId" @bind-Value="@_album.LastFmId"
@@ -206,7 +206,7 @@
                         </RadzenRow>
                         <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
                             <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
-                                <RadzenLabel Text="Notes" Component="Notes"/>
+                                <RadzenLabel Text="@L("Label.Notes")" Component="Notes"/>
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="10">
                                 <MarkdownEditor UploadImage="false" Value="@_album.Notes"/>
@@ -214,7 +214,7 @@
                         </RadzenRow>
                         <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
                             <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
-                                <RadzenLabel Text="Sort Name" Component="SortName"/>
+                                <RadzenLabel Text="@L("Label.SortName")" Component="SortName"/>
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="10">
                                 <RadzenTextBox style="display: block" Name="SortName" @bind-Value="@_album.SortName"
@@ -225,7 +225,7 @@
                         </RadzenRow>
                         <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
                             <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
-                                <RadzenLabel Text="Sort Order" Component="SortOrder"/>
+                                <RadzenLabel Text="@L("Label.SortOrder")" Component="SortOrder"/>
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="10">
                                 <RadzenNumeric style="display: block" Name="SortOrder" @bind-Value="@_album.SortOrder"
@@ -237,7 +237,7 @@
                         </RadzenRow>
                         <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
                             <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
-                                <RadzenLabel Text="Spotify Id" Component="SpotifyId"/>
+                                <RadzenLabel Text="@L("Label.SpotifyId")" Component="SpotifyId"/>
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="8">
                                 <RadzenTextBox style="display: block" Name="SpotifyId" @bind-Value="@_album.SpotifyId"
@@ -252,7 +252,7 @@
                         </RadzenRow>
                         <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
                             <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
-                                <RadzenLabel Text="Tags" Component="AlternateNames"/>
+                                <RadzenLabel Text="@L("Label.Tags")" Component="AlternateNames"/>
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="10">
                                 <TagsInput Value="@_tags"/>
@@ -260,7 +260,7 @@
                         </RadzenRow>
                         <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
                             <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
-                                <RadzenLabel Text="WikiData Id" Component="WikiDataId"/>
+                                <RadzenLabel Text="@L("Label.WikiDataId")" Component="WikiDataId"/>
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="8">
                                 <RadzenTextBox style="display: block" Name="WikiDataId"
@@ -366,7 +366,7 @@
                     return;
                 }
 
-                NotificationService.Notify(NotificationMessageForResult(addResult, "Adding Album", ToastTime));
+                NotificationService.Notify(NotificationMessageForResult(addResult, L("AlbumEdit.AddingAlbum"), ToastTime));
             }
             else
             {
@@ -377,7 +377,7 @@
                     return;
                 }
 
-                NotificationService.Notify(NotificationMessageForResult(saveResult, "Editing Album", ToastTime));
+                NotificationService.Notify(NotificationMessageForResult(saveResult, L("AlbumEdit.EditingAlbum"), ToastTime));
             }
         }
         catch (Exception ex)

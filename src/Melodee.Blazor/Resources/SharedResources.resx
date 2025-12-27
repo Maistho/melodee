@@ -3753,4 +3753,12 @@
   <data name="MissingAlbumIdentifyDialog.FailedToIdentify" xml:space="preserve">
     <value>Failed to identify album</value>
   </data>
+
+  
+  <data name="AlbumEdit.AddingAlbum" xml:space="preserve">
+    <value>Adding Album</value>
+  </data>
+  <data name="AlbumEdit.EditingAlbum" xml:space="preserve">
+    <value>Editing Album</value>
+  </data>
   </root>

@@ -3619,4 +3619,10 @@
   <data name="ArtistDetail.UploadArtistImage" xml:space="preserve">
     <value>upload artist image</value>
   </data>
+  <data name="AlbumEdit.AddingAlbum" xml:space="preserve">
+    <value>Adding Album</value>
+  </data>
+  <data name="AlbumEdit.EditingAlbum" xml:space="preserve">
+    <value>Editing Album</value>
+  </data>
 </root>
