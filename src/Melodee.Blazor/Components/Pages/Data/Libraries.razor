@@ -13,17 +13,17 @@
 @inject TooltipService TooltipService
 @inject NavigationManager NavigationManager
 
-<PageTitle>Libraries</PageTitle>
+<PageTitle>@L("Navigation.Libraries")</PageTitle>
 
 <RadzenStack Style="height: 100%">
     <RadzenBreadCrumb Class="rz-pb-5">
-        <RadzenBreadCrumbItem Path="/" Text="Dashboard"/>
-        <RadzenBreadCrumbItem Icon="library_music" Text="Libraries"/>
+        <RadzenBreadCrumbItem Path="/" Text="@L("Navigation.Dashboard")"/>
+        <RadzenBreadCrumbItem Icon="library_music" Text="@L("Navigation.Libraries")"/>
     </RadzenBreadCrumb>
     <RadzenRow AlignItems="AlignItems.Center">
         <RadzenColumn Size="12" SizeMD="6">
             <RadzenText
-                Text="Libraries"
+                Text="@L("Navigation.Libraries")"
                 TextStyle="TextStyle.DisplayH6"
                 TagName="TagName.H1"
                 style="margin: 0"/>
@@ -38,12 +38,12 @@
                 JustifyContent="JustifyContent.End"
                 Gap="0.5rem">
                 <RadzenButton Icon="add_circle_outline"
-                              Text="Add"
+                              Text="@L("Actions.Add")"
                               Size="ButtonSize.Small"
                               Click="@AddButtonClick"/>
                 <RadzenButton Icon="delete"
                               Disabled="!_selectedLibraries.Any()"
-                              Text="Delete"
+                              Text="@L("Actions.Delete")"
                               Click="@DeleteSelectedButtonClick"
                               Size="ButtonSize.Small"
                               ButtonStyle="ButtonStyle.Warning"/>
@@ -87,24 +87,24 @@
                             TabIndex="-1"
                             TriState="false"
                             TValue="bool?"
-                            InputAttributes="@(new Dictionary<string, object> { { "aria-label", "Select all items" } })"
+                            InputAttributes="@(new Dictionary<string, object> { { "aria-label", L("Libraries.SelectAllItems") } })"
                             Value="@(_selectedLibraries.Any() != true ? false : !_libraries.All(i => _selectedLibraries.Contains(i)) ? null : _libraries.Any(i => _selectedLibraries.Contains(i)))"
                             Change="@(args => _selectedLibraries = args == true ? _libraries.ToList() : [])"/>
                     </HeaderTemplate>
                     <Template Context="data">
                         <RadzenIcon Icon="lock" IconColor="@Colors.Warning" Visible="@(data.IsLocked)"
-                                    MouseEnter="@(args => ShowTooltip(args, "Library is locked. Locked libraries cannot be deleted."))"/>
+                                    MouseEnter="@(args => ShowTooltip(args, L("Libraries.LibraryIsLocked")))"/>
                         <RadzenCheckBox
                             TabIndex="-1"
                             TriState="false"
                             Value="@(_selectedLibraries.Contains(data))"
-                            InputAttributes="@(new Dictionary<string, object> { { "aria-label", "Select item" } })"
+                            InputAttributes="@(new Dictionary<string, object> { { "aria-label", L("Libraries.SelectItem") } })"
                             Change="@(_ => { _grid.SelectRow(data); })"
                             Visible="@(!data.IsLocked)"
                             TValue="bool"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(Library.Name)" Title="Name">
+                <RadzenDataGridColumn Property="@nameof(Library.Name)" Title="@L("Label.Name")">
                     <Template Context="data">
                         <RadzenButton Style="float:right;margin-top: 7px;" Size="ButtonSize.ExtraSmall"
                                       Visible="@(CurrentUser?.IsAdmin() ?? false)"
@@ -113,8 +113,8 @@
                         <RadzenLink Path="@($"/data/library/{data.ApiKey}")">@data.Name</RadzenLink>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(Library.Path)" Title="Path"/>
-                <RadzenDataGridColumn Property="@nameof(Library.TypeValue)" Title="Type" Width="120px">
+                <RadzenDataGridColumn Property="@nameof(Library.Path)" Title="@L("Label.Path")"/>
+                <RadzenDataGridColumn Property="@nameof(Library.TypeValue)" Title="@L("Label.Type")" Width="120px">
                     <Template Context="data">
                         <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="5px">
                             <RadzenIcon Icon="@data.LibraryTypeIconAndTitle().Item1"
@@ -123,12 +123,12 @@
                         </RadzenStack>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(Library.ArtistCount)" Title="Artists" Width="90px"/>
-                <RadzenDataGridColumn Property="@nameof(Library.AlbumCount)" Title="Albums" Width="90px"/>
-                <RadzenDataGridColumn Property="@nameof(Library.SongCount)" Title="Songs" Width="90px"/>
-                <RadzenDataGridColumn Property="@nameof(Library.CreatedAt)" Title="Created" Filterable="false"
+                <RadzenDataGridColumn Property="@nameof(Library.ArtistCount)" Title="@L("Navigation.Artists")" Width="90px"/>
+                <RadzenDataGridColumn Property="@nameof(Library.AlbumCount)" Title="@L("Navigation.Albums")" Width="90px"/>
+                <RadzenDataGridColumn Property="@nameof(Library.SongCount)" Title="@L("Navigation.Songs")" Width="90px"/>
+                <RadzenDataGridColumn Property="@nameof(Library.CreatedAt)" Title="@L("Label.Created")" Filterable="false"
                                       Width="120px"/>
-                <RadzenDataGridColumn Property="@nameof(Library.Tags)" Title="Tags" Width="100px">
+                <RadzenDataGridColumn Property="@nameof(Library.Tags)" Title="@L("Label.Tags")" Width="100px">
                     <Template Context="data">
                         <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="5px">
                             @foreach (var name in data.Tags?.ToTags() ?? [])
@@ -215,13 +215,13 @@
 
     private async Task DeleteSelectedButtonClick()
     {
-        var confirm = await DialogService.Confirm("Are you sure?", "Delete confirmation", new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" });
+        var confirm = await DialogService.Confirm(L("Dialog.AreYouSure"), L("Dialog.DeleteConfirmation"), new ConfirmOptions { OkButtonText = L("Actions.Yes"), CancelButtonText = L("Actions.No") });
         if (confirm ?? false)
         {
             var deleteResult = await LibraryService.DeleteAsync(_selectedLibraries.Select(x => x.Id).ToArray());
             if (deleteResult.IsSuccess)
             {
-                NotificationService.Notify(NotificationMessageForResult(deleteResult, "Deleting Libraries", ToastTime));
+                NotificationService.Notify(NotificationMessageForResult(deleteResult, L("Message.DeletingLibraries"), ToastTime));
                 await _grid.RefreshDataAsync();
                 return;
             }

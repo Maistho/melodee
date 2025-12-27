@@ -20,8 +20,8 @@
             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
                 <RadzenBreadCrumb>
 
-                    <RadzenBreadCrumbItem Path="/" Text="Dashboard"/>
-                    <RadzenBreadCrumbItem Path="/data/playlists" Icon="playlist_play" Text="Playlists"/>
+                    <RadzenBreadCrumbItem Path="/" Text="@L("Navigation.Dashboard")"/>
+                    <RadzenBreadCrumbItem Path="/data/playlists" Icon="playlist_play" Text="@L("Navigation.Playlists")"/>
                     <RadzenBreadCrumbItem Icon="featured_play_list" Text="@_playlist.Name"/>
                 </RadzenBreadCrumb>
             </RadzenStack>
@@ -39,7 +39,7 @@
                     Icon="play_arrow"
                     class="filled-icon"
                     IconColor="@Colors.Info"
-                    title="Play"
+                    title="@L("Actions.Play")"
                     @onclick="@(PlayPlaylist)"
                     Style="cursor:pointer;font-size:14px;"/>
             </RadzenStack>
@@ -51,18 +51,18 @@
     <RadzenMenu>
         @if (_playlist.IsLocked)
         {
-            <RadzenMenuItem Text="Unlock" Visible="CurrentUser?.IsEditor() ?? false" Click="UnlockButtonClick"
-                            title="Unlock playlist, will allow modifications." IconColor="@Colors.Warning"
+            <RadzenMenuItem Text="@L("Actions.Unlock")" Visible="CurrentUser?.IsEditor() ?? false" Click="UnlockButtonClick"
+                            title="@L("PlaylistDetail.UnlockPlaylist")" IconColor="@Colors.Warning"
                             Icon="lock_open"></RadzenMenuItem>
         }
         else
         {
-            <RadzenMenuItem Text="Lock" Visible="CurrentUser?.IsEditor() ?? false" Disabled="_playlist.IsLocked"
-                            Click="LockButtonClick" title="Lock playlist, will prevent modifications."
+            <RadzenMenuItem Text="@L("Actions.Lock")" Visible="CurrentUser?.IsEditor() ?? false" Disabled="_playlist.IsLocked"
+                            Click="LockButtonClick" title="@L("PlaylistDetail.LockPlaylist")"
                             IconColor="@Colors.Warning" Icon="lock"></RadzenMenuItem>
         }
-        <RadzenMenuItem Text="Set Cover Image" Visible="CurrentUser?.IsEditor() ?? false" Disabled="_playlist.IsLocked"
-                        Click="SetPlaylistImageButtonClick" title="Set the playlist image."
+        <RadzenMenuItem Text="@L("PlaylistDetail.SetCoverImage")" Visible="CurrentUser?.IsEditor() ?? false" Disabled="_playlist.IsLocked"
+                        Click="SetPlaylistImageButtonClick" title="@L("PlaylistDetail.SetPlaylistImage")"
                         Icon="image"></RadzenMenuItem>
     </RadzenMenu>
     <RadzenText Text="@($" {_playlist.Name}")" TextStyle="TextStyle.DisplayH6"
@@ -77,7 +77,7 @@
                         <RadzenText TextStyle="TextStyle.H6"
                                     class="rz-display-flex rz-align-items-center rz-m-0">
                             <RadzenIcon Icon="info" class="rz-me-1"/>
-                            Details
+                            @L("Label.Details")
                         </RadzenText>
                     </HeaderTemplate>
                     <ChildContent>
@@ -86,9 +86,9 @@
                             JustifyContent="JustifyContent.Left"
                             class="rz-pt-1"
                             Gap="5px">
-                            <CondensedStatistic Label="Owner" Statistic="@(_playlist.User.UserName)"/>
-                            <CondensedStatistic Label="Public" Statistic="@(_playlist.IsPublic ? "Yes" : "No")"/>
-                            <CondensedStatistic Label="Type" Statistic="@(_playlist.IsDynamic ? "Dynamic" : "User")"/>
+                            <CondensedStatistic Label="@L("Label.Owner")" Statistic="@(_playlist.User.UserName)"/>
+                            <CondensedStatistic Label="@L("Label.Public")" Statistic="@(_playlist.IsPublic ? L("Actions.Yes") : L("Actions.No"))"/>
+                            <CondensedStatistic Label="@L("Label.Type")" Statistic="@(_playlist.IsDynamic ? L("PlaylistDetail.Dynamic") : L("PlaylistDetail.User"))"/>
                         </RadzenStack>
                     </ChildContent>
                 </RadzenPanel>
@@ -98,7 +98,7 @@
                         <RadzenText TextStyle="TextStyle.H6"
                                     class="rz-display-flex rz-align-items-center rz-m-0">
                             <RadzenIcon Icon="monitoring" class="rz-me-1"/>
-                            Statistics
+                            @L("Label.Statistics")
                         </RadzenText>
                     </HeaderTemplate>
                     <ChildContent>
@@ -107,13 +107,13 @@
                             JustifyContent="JustifyContent.Left"
                             class="rz-pt-1"
                             Gap="5px">
-                            <CondensedStatistic Label="Duration"
+                            <CondensedStatistic Label="@L("Label.Duration")"
                                                 Statistic="@(CurrentUser!.FormatDuration(_playlist.Duration.ToDuration()))"/>
-                            <CondensedStatistic Label="Song Count"
+                            <CondensedStatistic Label="@L("Label.SongCount")"
                                                 Statistic="@(_playlist.SongCount.ToStringPadLeft(4))"/>
-                            <CondensedStatistic Label="Created"
+                            <CondensedStatistic Label="@L("Label.Created")"
                                                 Statistic="@(CurrentUser?.FormatInstant(_playlist.CreatedAt))"/>
-                            <CondensedStatistic Label="Last Updated"
+                            <CondensedStatistic Label="@L("Label.LastUpdated")"
                                                 Statistic="@(CurrentUser?.FormatInstant(_playlist.LastUpdatedAt))"/>
                         </RadzenStack>
                     </ChildContent>
@@ -130,7 +130,7 @@
                                 <RadzenText TextStyle="TextStyle.H6"
                                             class="rz-display-flex rz-align-items-center rz-m-0">
                                     <RadzenIcon Icon="music_note" class="rz-me-1"/>
-                                    Songs
+                                    @L("Navigation.Songs")
                                 </RadzenText>
                             </HeaderTemplate>
                             <ChildContent>
@@ -241,7 +241,7 @@
     {
         _isPinned = !_isPinned;
         var result = await UserService.TogglePinnedAsync(CurrentUsersId, UserPinType.Playlist, _playlist.Id);
-        NotificationService.Notify(NotificationMessageForResult(result, "Toggling Pin", ToastTime));
+        NotificationService.Notify(NotificationMessageForResult(result, L("Message.TogglingPin"), ToastTime));
     }
 
     private async Task PlayPlaylist()
@@ -256,11 +256,11 @@
 
     private async Task SetPlaylistImageButtonClick()
     {
-        await DialogService.OpenAsync("Set Playlist Image", ds =>
+        await DialogService.OpenAsync(L("PlaylistDetail.SetPlaylistImageTitle"), ds =>
             @<div>
-                <RadzenText>Playlist image management.</RadzenText>
-                <RadzenText class="rz-text-secondary">This feature allows setting custom images for playlists.</RadzenText>
-                <RadzenButton Text="Close" Click="@(() => ds.Close())" class="rz-mt-3"/>
+                <RadzenText>@L("PlaylistDetail.PlaylistImageManagement")</RadzenText>
+                <RadzenText class="rz-text-secondary">@L("PlaylistDetail.ImageFeatureDescription")</RadzenText>
+                <RadzenButton Text="@L("Actions.Close")" Click="@(() => ds.Close())" class="rz-mt-3"/>
             </div>,
             new DialogOptions { Width = "500px" });
     }
@@ -270,8 +270,8 @@
         NotificationService.Notify(new NotificationMessage 
         { 
             Severity = NotificationSeverity.Info, 
-            Summary = "Unlock", 
-            Detail = "Playlist lock/unlock functionality is not yet fully implemented." 
+            Summary = L("Actions.Unlock"), 
+            Detail = L("PlaylistDetail.LockFeatureNotImplemented") 
         });
         await Task.CompletedTask;
     }
@@ -281,8 +281,8 @@
         NotificationService.Notify(new NotificationMessage 
         { 
             Severity = NotificationSeverity.Info, 
-            Summary = "Lock", 
-            Detail = "Playlist lock/unlock functionality is not yet fully implemented." 
+            Summary = L("Actions.Lock"), 
+            Detail = L("PlaylistDetail.LockFeatureNotImplemented") 
         });
         await Task.CompletedTask;
     }

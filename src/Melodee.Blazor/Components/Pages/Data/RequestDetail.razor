@@ -13,7 +13,7 @@
 @inject DialogService DialogService
 @inject NavigationManager NavigationManager
 
-<PageTitle>Request Detail</PageTitle>
+<PageTitle>@L("RequestDetail.PageTitle")</PageTitle>
 
 @if (_request == null)
 {
@@ -25,8 +25,8 @@ else
 {
     <RadzenStack Style="height: 100%; overflow-y: auto;" Gap="1rem">
         <RadzenBreadCrumb Class="rz-pb-3">
-            <RadzenBreadCrumbItem Path="/" Text="Dashboard"/>
-            <RadzenBreadCrumbItem Path="/requests" Icon="assignment" Text="Requests"/>
+            <RadzenBreadCrumbItem Path="/" Text="@L("Navigation.Dashboard")"/>
+            <RadzenBreadCrumbItem Path="/requests" Icon="assignment" Text="@L("Navigation.Requests")"/>
             <RadzenBreadCrumbItem Text="@(_request.Description.Length > 30 ? _request.Description[..30] + "..." : _request.Description)"/>
         </RadzenBreadCrumb>
 
@@ -45,14 +45,14 @@ else
                     <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
                         @if (IsCreator)
                         {
-                            <RadzenButton Icon="edit" Text="Edit" Size="ButtonSize.Small" Click="@EditClick"/>
+                            <RadzenButton Icon="edit" Text="@L("Actions.Edit")" Size="ButtonSize.Small" Click="@EditClick"/>
                             @if (_request.StatusValue == RequestStatus.Pending)
                             {
-                                <RadzenButton Icon="delete" Text="Delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Click="@DeleteClick"/>
+                                <RadzenButton Icon="delete" Text="@L("Actions.Delete")" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Click="@DeleteClick"/>
                             }
                             @if (_request.StatusValue != RequestStatus.Completed)
                             {
-                                <RadzenButton Icon="check_circle" Text="Mark Complete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Success" Click="@CompleteClick"/>
+                                <RadzenButton Icon="check_circle" Text="@L("Actions.MarkComplete")" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Success" Click="@CompleteClick"/>
                             }
                         }
                     </RadzenStack>

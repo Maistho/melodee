@@ -24,8 +24,8 @@
 <PageTitle>@_library.Name</PageTitle>
 
 <RadzenBreadCrumb Class="rz-pb-5">
-    <RadzenBreadCrumbItem Path="/" Text="Dashboard"/>
-    <RadzenBreadCrumbItem Path="/data/libraries" Text="Libraries"/>
+    <RadzenBreadCrumbItem Path="/" Text="@L("Navigation.Dashboard")"/>
+    <RadzenBreadCrumbItem Path="/data/libraries" Text="@L("Navigation.Libraries")"/>
     <RadzenBreadCrumbItem Icon="@_library.LibraryTypeIconAndTitle().Item1" Text="@_library.Name"/>
 </RadzenBreadCrumb>
 
@@ -33,38 +33,38 @@
 {
     <RadzenStack>
         <RadzenMenu>
-            <RadzenMenuItem Text="Clean" Disabled="_library.IsLocked" Click="CleanButtonClick"
-                            title="Clean library, removing any empty folders." Icon="mop"></RadzenMenuItem>
-            <RadzenMenuItem Text="Edit" Disabled="_library.IsLocked" Click="EditButtonClick" title="Edit library."
+            <RadzenMenuItem Text="@L("LibraryDetail.Clean")" Disabled="_library.IsLocked" Click="CleanButtonClick"
+                            title="@L("LibraryDetail.CleanTooltip")" Icon="mop"></RadzenMenuItem>
+            <RadzenMenuItem Text="@L("Actions.Edit")" Disabled="_library.IsLocked" Click="EditButtonClick" title="@L("LibraryDetail.EditTooltip")"
                             Icon="edit"></RadzenMenuItem>
             @if (_library.IsLocked)
             {
-                <RadzenMenuItem Text="Unlock" Click="UnlockButtonClick"
-                                title="Unlock library, will allow modifications." IconColor="@Colors.Warning"
+                <RadzenMenuItem Text="@L("Actions.Unlock")" Click="UnlockButtonClick"
+                                title="@L("LibraryDetail.UnlockTooltip")" IconColor="@Colors.Warning"
                                 Icon="lock_open"></RadzenMenuItem>
             }
             else
             {
-                <RadzenMenuItem Text="Lock" Click="LockButtonClick" title="Lock library, will prevent modifications."
+                <RadzenMenuItem Text="@L("Actions.Lock")" Click="LockButtonClick" title="@L("LibraryDetail.LockTooltip")"
                                 IconColor="@Colors.Warning" Icon="lock"></RadzenMenuItem>
             }
-            <RadzenMenuItem Text="Purge" Disabled="_library.IsLocked" Click="PurgeButtonClick"
-                            title="Delete everything in the library" IconColor="@Colors.Danger"
+            <RadzenMenuItem Text="@L("LibraryDetail.Purge")" Disabled="_library.IsLocked" Click="PurgeButtonClick"
+                            title="@L("LibraryDetail.PurgeTooltip")" IconColor="@Colors.Danger"
                             Icon="delete_sweep"></RadzenMenuItem>
             @if (_areJobsEnabled && _library.TypeValue != LibraryType.Storage)
             {
-                <RadzenMenuItem Text="Process" Click="ProcessButtonClick"
-                                title="Process media files into Melodee media json file." IconColor="@Colors.Secondary"
+                <RadzenMenuItem Text="@L("LibraryDetail.Process")" Click="ProcessButtonClick"
+                                title="@L("LibraryDetail.ProcessTooltip")" IconColor="@Colors.Secondary"
                                 Icon="memory"></RadzenMenuItem>
             }
             else if (_areJobsEnabled)
             {
-                <RadzenMenuItem Text="Scan" Disabled="_library.IsLocked" Click="ScanButtonClick"
-                                title="Scan for Melodee media json files and update database data."
+                <RadzenMenuItem Text="@L("LibraryDetail.Scan")" Disabled="_library.IsLocked" Click="ScanButtonClick"
+                                title="@L("LibraryDetail.ScanTooltip")"
                                 IconColor="@Colors.Secondary" Icon="database"></RadzenMenuItem>
             }
-            <RadzenMenuItem Text="Update Aggregates" Disabled="_library.IsLocked" Click="UpdateAggregatesButtonClick"
-                            title="Update all aggregate counts for library, including; artists, contributors and albums in library."
+            <RadzenMenuItem Text="@L("LibraryDetail.UpdateAggregates")" Disabled="_library.IsLocked" Click="UpdateAggregatesButtonClick"
+                            title="@L("LibraryDetail.UpdateAggregatesTooltip")"
                             IconColor="@Colors.Secondary" Icon="sync"></RadzenMenuItem>
         </RadzenMenu>
         <RadzenText TextStyle="TextStyle.DisplayH6" TagName="TagName.H1" style="margin: 0">
@@ -81,14 +81,14 @@
             <RadzenStack>
                 <RadzenCard>
                     <RadzenTree Change="@OnShowItemChange">
-                        <RadzenTreeItem Text="Overview" Selected="true">
+                        <RadzenTreeItem Text="@L("Nav.Overview")" Selected="true">
                             <Template>
                                 <RadzenIcon Icon="overview"/>
                                 @context.Text
                             </Template>
                         </RadzenTreeItem>
                         <RadzenTreeItem
-                            Text="@($"{(_library.TypeValue == LibraryType.Storage ? "Scan" : "Process")} History")">
+                            Text="@($"{(_library.TypeValue == LibraryType.Storage ? L("LibraryDetail.Scan") : L("LibraryDetail.Process"))} {L("LibraryDetail.History")}")">
                             <Template>
                                 <RadzenIcon Icon="history"/>
                                 @context.Text
@@ -101,7 +101,7 @@
                         <RadzenText TextStyle="TextStyle.H6"
                                     class="rz-display-flex rz-align-items-center rz-m-0">
                             <RadzenIcon Icon="info" class="rz-me-1"/>
-                            Details
+                            @L("Label.Details")
                         </RadzenText>
                     </HeaderTemplate>
                     <ChildContent>
@@ -110,8 +110,8 @@
                             JustifyContent="JustifyContent.Left"
                             class="rz-pt-1"
                             Gap="5px">
-                            <CondensedStatistic Label="Path" Statistic="@_library.Path"/>
-                            <CondensedStatistic Label="Type" Statistic="@_library.TypeValue.ToString()"/>
+                            <CondensedStatistic Label="@L("Label.Path")" Statistic="@_library.Path"/>
+                            <CondensedStatistic Label="@L("Label.Type")" Statistic="@_library.TypeValue.ToString()"/>
                         </RadzenStack>
                     </ChildContent>
                 </RadzenPanel>
@@ -120,7 +120,7 @@
                         <RadzenText TextStyle="TextStyle.H6"
                                     class="rz-display-flex rz-align-items-center rz-m-0">
                             <RadzenIcon Icon="monitoring" class="rz-me-1"/>
-                            Statistics
+                            @L("Label.Statistics")
                         </RadzenText>
                     </HeaderTemplate>
                     <ChildContent>
@@ -129,9 +129,9 @@
                             JustifyContent="JustifyContent.Left"
                             class="rz-pt-1"
                             Gap="5px">
-                            <CondensedStatistic Label="Created"
+                            <CondensedStatistic Label="@L("Label.Created")"
                                                 Statistic="@(CurrentUser?.FormatInstant(_library.CreatedAt))"/>
-                            <CondensedStatistic Label="Last Updated"
+                            <CondensedStatistic Label="@L("Label.LastUpdated")"
                                                 Statistic="@(CurrentUser?.FormatInstant(_library.LastUpdatedAt))"/>
                         </RadzenStack>
                     </ChildContent>
@@ -145,7 +145,7 @@
                     <HeaderTemplate>
                         <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-align-items-center rz-m-0">
                             <RadzenIcon Icon="monitoring" class="rz-me-1"/>
-                            Data Counts
+                            @L("LibraryDetail.DataCounts")
                         </RadzenText>
                     </HeaderTemplate>
                     <ChildContent>
@@ -158,7 +158,7 @@
                             <RadzenBadge BadgeStyle="BadgeStyle.Info" Shade="Shade.Dark" Style="min-width: 200px;">
                                 <RadzenIcon Icon="artist"/>
                                 <div style="width:120px;display:inline-block;text-transform:none;text-align:left;">
-                                    Artist Count
+                                    @L("Label.ArtistCount")
                                 </div>
                                 <div style="width:65px;display:inline-block;text-align:right;">
                                     @(_library.ArtistCount.ToStringPadLeft(PadLeftValue))
@@ -167,7 +167,7 @@
                             <RadzenBadge BadgeStyle="BadgeStyle.Info" Shade="Shade.Dark" Style="min-width: 200px;">
                                 <RadzenIcon Icon="album"/>
                                 <div style="width:120px;display:inline-block;text-transform:none;text-align:left;">
-                                    Album Count
+                                    @L("Label.AlbumCount")
                                 </div>
                                 <div style="width:65px;display:inline-block;text-align:right;">
                                     @(_library.AlbumCount.ToStringPadLeft(PadLeftValue))
@@ -176,7 +176,7 @@
                             <RadzenBadge BadgeStyle="BadgeStyle.Info" Shade="Shade.Dark" Style="min-width: 200px;">
                                 <RadzenIcon Icon="music_note"/>
                                 <div style="width:120px;display:inline-block;text-transform:none;text-align:left;">
-                                    Song Count
+                                    @L("Label.SongCount")
                                 </div>
                                 <div style="width:65px;display:inline-block;text-align:right;">
                                     @(_library.SongCount.ToStringPadLeft(PadLeftValue))
@@ -210,13 +210,13 @@
                     @bind-Value=@_selectedData>
                     <Columns>
                         <RadzenDataGridColumn SortOrder="SortOrder.Descending"
-                                              Property="@nameof(LibraryScanHistoryDataInfo.CreatedAt)" Title="Scan Date"
+                                              Property="@nameof(LibraryScanHistoryDataInfo.CreatedAt)" Title="@L("LibraryDetail.ScanDate")"
                                               Filterable="false" Width="120px">
                             <Template Context="data">
                                 <RadzenText Text="@CurrentUser?.FormatInstant(data.CreatedAt)"/>
                             </Template>
                         </RadzenDataGridColumn>
-                        <RadzenDataGridColumn Property="@nameof(LibraryScanHistoryDataInfo.Duration)" Title="Duration"
+                        <RadzenDataGridColumn Property="@nameof(LibraryScanHistoryDataInfo.Duration)" Title="@L("Label.Duration")"
                                               Filterable="false" Width="100px">
                             <Template Context="data">
                                 <RadzenText Text="@CurrentUser?.FormatDuration(data.Duration)"/>
@@ -224,35 +224,35 @@
                         </RadzenDataGridColumn>
 
                         <RadzenDataGridColumn Property="@nameof(LibraryScanHistoryDataInfo.ForArtistName)"
-                                              Title="For Artist"
+                                              Title="@L("LibraryDetail.ForArtist")"
                                               Filterable="true" Width="120px">
                             <Template Context="data">
                                 <RadzenText Text="@data.ForArtistName"/>
                             </Template>
                         </RadzenDataGridColumn>
                         <RadzenDataGridColumn Property="@nameof(LibraryScanHistoryDataInfo.ForAlbumName)"
-                                              Title="For Album"
+                                              Title="@L("LibraryDetail.ForAlbum")"
                                               Filterable="true" Width="120px">
                             <Template Context="data">
                                 <RadzenText Text="@data.ForAlbumName"/>
                             </Template>
                         </RadzenDataGridColumn>
                         <RadzenDataGridColumn Property="@nameof(LibraryScanHistoryDataInfo.FoundArtistsCount)"
-                                              Title="Found Artist #"
+                                              Title="@L("LibraryDetail.FoundArtistCount")"
                                               Filterable="false" Width="100px">
                             <Template Context="data">
                                 <RadzenText Text="@data.FoundArtistsCount.ToStringPadLeft(PadLeftValue)"/>
                             </Template>
                         </RadzenDataGridColumn>
                         <RadzenDataGridColumn Property="@nameof(LibraryScanHistoryDataInfo.FoundAlbumsCount)"
-                                              Title="Found Album #"
+                                              Title="@L("LibraryDetail.FoundAlbumCount")"
                                               Filterable="false" Width="100px">
                             <Template Context="data">
                                 <RadzenText Text="@data.FoundAlbumsCount.ToStringPadLeft(PadLeftValue)"/>
                             </Template>
                         </RadzenDataGridColumn>
                         <RadzenDataGridColumn Property="@nameof(LibraryScanHistoryDataInfo.FoundSongsCount)"
-                                              Title="Found Song #"
+                                              Title="@L("LibraryDetail.FoundSongCount")"
                                               Filterable="false" Width="100px">
                             <Template Context="data">
                                 <RadzenText Text="@data.FoundSongsCount.ToStringPadLeft(PadLeftValue)"/>
@@ -267,7 +267,7 @@
                 <HeaderTemplate>
                     <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-align-items-center rz-m-0">
                         <RadzenIcon Icon="description" class="rz-me-1"/>
-                        Description
+                        @L("Label.Description")
                     </RadzenText>
                 </HeaderTemplate>
                 <ChildContent>
@@ -380,14 +380,14 @@
 
     private async Task PurgeButtonClick()
     {
-        var confirm = await DialogService.Confirm("<p>Purging a library deletes all artists, albums and songs.</p><p>There is no undo</p>", "Purge confirmation", new ConfirmOptions { OkButtonText = "Proceed to purge", CancelButtonText = "Cancel" });
+        var confirm = await DialogService.ConfirmHtml(L("LibraryDetail.PurgeMessage"), L("LibraryDetail.PurgeConfirmation"), new ConfirmOptions { OkButtonText = L("LibraryDetail.ProceedToPurge"), CancelButtonText = L("Actions.Cancel") });
         if (confirm ?? false)
         {
             MainLayoutProxyService.ToggleSpinnerVisible();
             try
             {
                 var result = await LibraryService.PurgeLibraryAsync(_library.Id);
-                NotificationService.Notify(NotificationMessageForResult(result, "purged library", ToastTime));
+                NotificationService.Notify(NotificationMessageForResult(result, L("Message.PurgedLibrary"), ToastTime));
             }
             finally
             {
@@ -403,7 +403,7 @@
         {
             _library.IsLocked = true;
             var result = await LibraryService.UpdateAsync(_library);
-            NotificationService.Notify(NotificationMessageForResult(result, "locked library", ToastTime));
+            NotificationService.Notify(NotificationMessageForResult(result, L("Message.LockedLibrary"), ToastTime));
         }
         finally
         {
@@ -417,7 +417,7 @@
         try
         {
             var result = await LibraryService.CleanLibraryAsync(_library.Name);
-            NotificationService.Notify(NotificationMessageForResult(result, "cleaned library", ToastTime));
+            NotificationService.Notify(NotificationMessageForResult(result, L("Message.CleanedLibrary"), ToastTime));
         }
         finally
         {
@@ -432,7 +432,7 @@
         {
             _library.IsLocked = false;
             var result = await LibraryService.UpdateAsync(_library);
-            NotificationService.Notify(NotificationMessageForResult(result, "unlocked library", ToastTime));
+            NotificationService.Notify(NotificationMessageForResult(result, L("Message.UnlockedLibrary"), ToastTime));
         }
         finally
         {
@@ -449,12 +449,12 @@
 
     private void OnShowItemChange(TreeEventArgs arg)
     {
-        _showItem = arg.Text is null or "Overview" ? ShowItem.Overview : ShowItem.ScanHistory;
+        _showItem = arg.Text is null || arg.Text == L("Nav.Overview") ? ShowItem.Overview : ShowItem.ScanHistory;
     }
 
     private async Task ScanButtonClick()
     {
-        var confirm = await DialogService.Confirm("<p>Scanning a library updates database information from Melodee data files.</p><p>This action starts a background job.</p><p>There is no undo</p>", "Scan confirmation", new ConfirmOptions { OkButtonText = "Start scan", CancelButtonText = "Cancel" });
+        var confirm = await DialogService.ConfirmHtml(L("LibraryDetail.ScanMessage"), L("LibraryDetail.ScanConfirmation"), new ConfirmOptions { OkButtonText = L("LibraryDetail.StartScan"), CancelButtonText = L("Actions.Cancel") });
         if (confirm ?? false)
         {
             MainLayoutProxyService.ToggleSpinnerVisible();
@@ -462,7 +462,7 @@
             {
                 var scheduler = await SchedulerFactory.GetScheduler();
                 await scheduler.TriggerJob(JobKeyRegistry.LibraryProcessJobJobKey);
-                NotificationService.Notify(NotificationMessageForResult(new OperationResult<bool> { Data = true }, "started library scan job", ToastTime));
+                NotificationService.Notify(NotificationMessageForResult(new OperationResult<bool> { Data = true }, L("Message.StartedLibraryScanJob"), ToastTime));
             }
             finally
             {
@@ -473,13 +473,8 @@
 
     private async Task ProcessButtonClick()
     {
-        var confirm = await DialogService.ConfirmHtml(
-            @"
-            <p>Processing a library creates Melodee data files with media found. This could overwrite Melodee data files, images and songs.</p>
-            <p>This action starts a background job.</p>
-            <p>⚠️ There is no undo</p>
-            ", "Scan confirmation",
-            new ConfirmOptions { OkButtonText = "Start scan", CancelButtonText = "Cancel" });
+        var confirm = await DialogService.ConfirmHtml(L("LibraryDetail.ProcessMessage"), L("LibraryDetail.ScanConfirmation"),
+            new ConfirmOptions { OkButtonText = L("LibraryDetail.StartScan"), CancelButtonText = L("Actions.Cancel") });
         if (confirm ?? false)
         {
             MainLayoutProxyService.ToggleSpinnerVisible();
@@ -488,7 +483,7 @@
                 var force = true;
                 await DirectoryProcessorToStagingService.InitializeAsync();
                 var result = await DirectoryProcessorToStagingService.ProcessDirectoryAsync(_library.ToFileSystemDirectoryInfo(), force ? null : _library.LastScanAt, null);
-                NotificationService.Notify(NotificationMessageForResult(result, "started library scan job", ToastTime));
+                NotificationService.Notify(NotificationMessageForResult(result, L("Message.StartedLibraryScanJob"), ToastTime));
             }
             finally
             {
@@ -503,7 +498,7 @@
         try
         {
             var result = await LibraryService.UpdateAggregatesAsync(_library.Id);
-            NotificationService.Notify(NotificationMessageForResult(result, "updated library aggregates", ToastTime));
+            NotificationService.Notify(NotificationMessageForResult(result, L("Message.UpdatedLibraryAggregates"), ToastTime));
         }
         finally
         {

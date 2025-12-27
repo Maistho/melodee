@@ -14,16 +14,16 @@
 @inject TooltipService TooltipService
 @inject NavigationManager NavigationManager
 
-<PageTitle>Requests</PageTitle>
+<PageTitle>@L("Requests.PageTitle")</PageTitle>
 
 <RadzenStack Style="height: 100%">
     <RadzenBreadCrumb Class="rz-pb-5">
-        <RadzenBreadCrumbItem Path="/" Text="Dashboard"/>
-        <RadzenBreadCrumbItem Icon="assignment" Text="Requests"/>
+        <RadzenBreadCrumbItem Path="/" Text="@L("Navigation.Dashboard")"/>
+        <RadzenBreadCrumbItem Icon="assignment" Text="@L("Navigation.Requests")"/>
     </RadzenBreadCrumb>
     <RadzenRow AlignItems="AlignItems.Center">
         <RadzenColumn Size="12" SizeMD="6">
-            <RadzenText Text="Requests" TextStyle="TextStyle.DisplayH6" TagName="TagName.H1" style="margin: 0"/>
+            <RadzenText Text="@L("Navigation.Requests")" TextStyle="TextStyle.DisplayH6" TagName="TagName.H1" style="margin: 0"/>
         </RadzenColumn>
         <RadzenColumn Size="12" SizeMD="6">
             <RadzenStack
@@ -31,7 +31,7 @@
                 AlignItems="AlignItems.Center"
                 JustifyContent="JustifyContent.End"
                 Gap="0.5rem">
-                <RadzenButton Icon="add" Text="New Request"
+                <RadzenButton Icon="add" Text="@L("Requests.NewRequest")"
                               Click="@NewRequestClick"
                               Size="ButtonSize.Small"
                               ButtonStyle="ButtonStyle.Primary"/>
@@ -42,7 +42,7 @@
         <RadzenColumn Size="12" SizeMD="4">
             <DebounceInput class="rz-textbox rz-w-100"
                            autocomplete="off"
-                           placeholder="Search requests..."
+                           placeholder="@L("Requests.SearchRequests")"
                            @bind-Value="@_searchQuery"
                            @bind-Value:event="OnInput"
                            DebounceTime="800"
@@ -56,7 +56,7 @@
                             Data="@_statusOptions"
                             TextProperty="Text"
                             ValueProperty="Value"
-                            Placeholder="Filter by status"
+                            Placeholder="@L("Requests.FilterByStatus")"
                             AllowClear="true"
                             @bind-Value="@_selectedStatus"
                             Change="@OnFilterChanged"
@@ -67,7 +67,7 @@
                             Data="@_categoryOptions"
                             TextProperty="Text"
                             ValueProperty="Value"
-                            Placeholder="Filter by category"
+                            Placeholder="@L("Requests.FilterByCategory")"
                             AllowClear="true"
                             @bind-Value="@_selectedCategory"
                             Change="@OnFilterChanged"
@@ -75,7 +75,7 @@
         </RadzenColumn>
         <RadzenColumn Size="12" SizeMD="2">
             <RadzenCheckBox TValue="bool" Value="@_mineOnly" Name="mineOnly" Change="@(args => OnMineOnlyChanged(args))"/>
-            <RadzenLabel Text="My Requests" Component="mineOnly" Style="margin-left: 8px"/>
+            <RadzenLabel Text="@L("Requests.MyRequests")" Component="mineOnly" Style="margin-left: 8px"/>
         </RadzenColumn>
     </RadzenRow>
     <RadzenRow Style="flex: 1; overflow: hidden;">
@@ -99,29 +99,29 @@
             RowSelect="@OnRowSelect"
             TItem="Request">
             <Columns>
-                <RadzenDataGridColumn Property="@nameof(Request.CategoryValue)" Title="Category" Width="120px">
+                <RadzenDataGridColumn Property="@nameof(Request.CategoryValue)" Title="@L("Label.Category")" Width="120px">
                     <Template Context="data">
                         <RadzenBadge IsPill="true" BadgeStyle="@GetCategoryBadgeStyle(data.CategoryValue)" Text="@data.CategoryValue.ToString()"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(Request.StatusValue)" Title="Status" Width="100px">
+                <RadzenDataGridColumn Property="@nameof(Request.StatusValue)" Title="@L("Label.Status")" Width="100px">
                     <Template Context="data">
                         <RadzenBadge IsPill="true" BadgeStyle="@GetStatusBadgeStyle(data.StatusValue)" Text="@data.StatusValue.ToString()"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(Request.Description)" Title="Description">
+                <RadzenDataGridColumn Property="@nameof(Request.Description)" Title="@L("Label.Description")">
                     <Template Context="data">
                         <RadzenText Text="@(data.Description.Length > 100 ? data.Description[..100] + "..." : data.Description)"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(Request.ArtistName)" Title="Artist" Width="150px"/>
-                <RadzenDataGridColumn Property="@nameof(Request.AlbumTitle)" Title="Album" Width="150px"/>
-                <RadzenDataGridColumn Property="@nameof(Request.CreatedAt)" Title="Created" Width="150px">
+                <RadzenDataGridColumn Property="@nameof(Request.ArtistName)" Title="@L("Label.Artist")" Width="150px"/>
+                <RadzenDataGridColumn Property="@nameof(Request.AlbumTitle)" Title="@L("Label.Album")" Width="150px"/>
+                <RadzenDataGridColumn Property="@nameof(Request.CreatedAt)" Title="@L("Label.Created")" Width="150px">
                     <Template Context="data">
                         <RadzenText Text="@CurrentUser?.FormatInstant(data.CreatedAt)"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(Request.LastActivityAt)" Title="Last Activity" Width="150px">
+                <RadzenDataGridColumn Property="@nameof(Request.LastActivityAt)" Title="@L("Label.LastActivity")" Width="150px">
                     <Template Context="data">
                         <RadzenText Text="@CurrentUser?.FormatInstant(data.LastActivityAt)"/>
                     </Template>
@@ -165,6 +165,26 @@
         new { Text = "Album Correction", Value = RequestCategory.AlbumCorrection },
         new { Text = "General", Value = RequestCategory.General }
     ];
+
+    protected override void OnInitialized()
+    {
+        _statusOptions =
+        [
+            new { Text = L("RequestStatus.Pending"), Value = RequestStatus.Pending },
+            new { Text = L("RequestStatus.InProgress"), Value = RequestStatus.InProgress },
+            new { Text = L("RequestStatus.Completed"), Value = RequestStatus.Completed },
+            new { Text = L("RequestStatus.Rejected"), Value = RequestStatus.Rejected }
+        ];
+
+        _categoryOptions =
+        [
+            new { Text = L("RequestCategory.AddAlbum"), Value = RequestCategory.AddAlbum },
+            new { Text = L("RequestCategory.AddSong"), Value = RequestCategory.AddSong },
+            new { Text = L("RequestCategory.ArtistCorrection"), Value = RequestCategory.ArtistCorrection },
+            new { Text = L("RequestCategory.AlbumCorrection"), Value = RequestCategory.AlbumCorrection },
+            new { Text = L("RequestCategory.General"), Value = RequestCategory.General }
+        ];
+    }
 
     void OnPage(PagerEventArgs args)
     {

@@ -9,23 +9,23 @@
 @inject NotificationService NotificationService
 @inject NavigationManager NavigationManager
 
-<PageTitle>New Request</PageTitle>
+<PageTitle>@L("RequestNew.PageTitle")</PageTitle>
 
 <RadzenStack Style="height: 100%; overflow-y: auto;" Gap="1rem">
     <RadzenBreadCrumb Class="rz-pb-3">
-        <RadzenBreadCrumbItem Path="/" Text="Dashboard"/>
-        <RadzenBreadCrumbItem Path="/requests" Icon="assignment" Text="Requests"/>
-        <RadzenBreadCrumbItem Text="New Request"/>
+        <RadzenBreadCrumbItem Path="/" Text="@L("Navigation.Dashboard")"/>
+        <RadzenBreadCrumbItem Path="/requests" Icon="assignment" Text="@L("Navigation.Requests")"/>
+        <RadzenBreadCrumbItem Text="@L("RequestNew.NewRequest")"/>
     </RadzenBreadCrumb>
 
     <RadzenCard>
-        <RadzenText TextStyle="TextStyle.H5" Text="Create New Request" Class="rz-mb-4"/>
+        <RadzenText TextStyle="TextStyle.H5" Text="@L("RequestNew.CreateNewRequest")" Class="rz-mb-4"/>
 
         <RadzenTemplateForm TItem="RequestModel" Data="@_model" Submit="@OnSubmit">
             <RadzenStack Gap="1rem">
                 <RadzenRow Gap="1rem">
                     <RadzenColumn Size="12" SizeMD="6">
-                        <RadzenFormField Text="Category" Variant="Variant.Outlined" Style="width: 100%">
+                        <RadzenFormField Text="@L("Label.Category")" Variant="Variant.Outlined" Style="width: 100%">
                             <RadzenDropDown @bind-Value="@_model.Category"
                                             Data="@_categoryOptions"
                                             TextProperty="Text"
@@ -33,29 +33,29 @@
                                             Style="width: 100%"
                                             Name="Category"/>
                         </RadzenFormField>
-                        <RadzenRequiredValidator Component="Category" Text="Category is required"/>
+                        <RadzenRequiredValidator Component="Category" Text="@L("RequestNew.CategoryRequired")"/>
                     </RadzenColumn>
                 </RadzenRow>
 
                 <RadzenRow>
                     <RadzenColumn Size="12">
-                        <RadzenFormField Text="Description" Variant="Variant.Outlined" Style="width: 100%">
+                        <RadzenFormField Text="@L("Common.Description")" Variant="Variant.Outlined" Style="width: 100%">
                             <RadzenTextArea @bind-Value="@_model.Description" Rows="4" Style="width: 100%" Name="Description"/>
                         </RadzenFormField>
-                        <RadzenRequiredValidator Component="Description" Text="Description is required"/>
+                        <RadzenRequiredValidator Component="Description" Text="@L("RequestNew.DescriptionRequired")"/>
                     </RadzenColumn>
                 </RadzenRow>
 
-                <RadzenText TextStyle="TextStyle.Subtitle1" Text="Optional Details" Class="rz-mt-2"/>
+                <RadzenText TextStyle="TextStyle.Subtitle1" Text="@L("Label.OptionalDetails")" Class="rz-mt-2"/>
 
                 <RadzenRow Gap="1rem">
                     <RadzenColumn Size="12" SizeMD="6">
-                        <RadzenFormField Text="Artist Name" Variant="Variant.Outlined" Style="width: 100%">
+                        <RadzenFormField Text="@L("Label.ArtistName")" Variant="Variant.Outlined" Style="width: 100%">
                             <RadzenTextBox @bind-Value="@_model.ArtistName" Style="width: 100%"/>
                         </RadzenFormField>
                     </RadzenColumn>
                     <RadzenColumn Size="12" SizeMD="6">
-                        <RadzenFormField Text="Album Title" Variant="Variant.Outlined" Style="width: 100%">
+                        <RadzenFormField Text="@L("Label.AlbumTitle")" Variant="Variant.Outlined" Style="width: 100%">
                             <RadzenTextBox @bind-Value="@_model.AlbumTitle" Style="width: 100%"/>
                         </RadzenFormField>
                     </RadzenColumn>
@@ -63,12 +63,12 @@
 
                 <RadzenRow Gap="1rem">
                     <RadzenColumn Size="12" SizeMD="6">
-                        <RadzenFormField Text="Song Title" Variant="Variant.Outlined" Style="width: 100%">
+                        <RadzenFormField Text="@L("Label.SongTitle")" Variant="Variant.Outlined" Style="width: 100%">
                             <RadzenTextBox @bind-Value="@_model.SongTitle" Style="width: 100%"/>
                         </RadzenFormField>
                     </RadzenColumn>
                     <RadzenColumn Size="12" SizeMD="6">
-                        <RadzenFormField Text="Release Year" Variant="Variant.Outlined" Style="width: 100%">
+                        <RadzenFormField Text="@L("Label.ReleaseYear")" Variant="Variant.Outlined" Style="width: 100%">
                             <RadzenNumeric @bind-Value="@_model.ReleaseYear" Style="width: 100%" Min="1900" Max="2100"/>
                         </RadzenFormField>
                     </RadzenColumn>
@@ -76,7 +76,7 @@
 
                 <RadzenRow Gap="1rem">
                     <RadzenColumn Size="12">
-                        <RadzenFormField Text="External URL" Variant="Variant.Outlined" Style="width: 100%">
+                        <RadzenFormField Text="@L("Label.ExternalURL")" Variant="Variant.Outlined" Style="width: 100%">
                             <RadzenTextBox @bind-Value="@_model.ExternalUrl" Style="width: 100%" Placeholder="https://..."/>
                         </RadzenFormField>
                     </RadzenColumn>
@@ -84,15 +84,15 @@
 
                 <RadzenRow>
                     <RadzenColumn Size="12">
-                        <RadzenFormField Text="Additional Notes" Variant="Variant.Outlined" Style="width: 100%">
+                        <RadzenFormField Text="@L("Label.AdditionalNotes")" Variant="Variant.Outlined" Style="width: 100%">
                             <RadzenTextArea @bind-Value="@_model.Notes" Rows="3" Style="width: 100%"/>
                         </RadzenFormField>
                     </RadzenColumn>
                 </RadzenRow>
 
                 <RadzenRow JustifyContent="JustifyContent.End" Gap="0.5rem" Class="rz-mt-4">
-                    <RadzenButton Text="Cancel" ButtonStyle="ButtonStyle.Light" Click="@Cancel"/>
-                    <RadzenButton Text="Create Request" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary" Icon="add"/>
+                    <RadzenButton Text="@L("Actions.Cancel")" ButtonStyle="ButtonStyle.Light" Click="@Cancel"/>
+                    <RadzenButton Text="@L("Actions.CreateRequest")" ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Primary" Icon="add"/>
                 </RadzenRow>
             </RadzenStack>
         </RadzenTemplateForm>
@@ -169,7 +169,7 @@
             NotificationService.Notify(new NotificationMessage
             {
                 Severity = NotificationSeverity.Error,
-                Summary = "Please select a category"
+                Summary = L("RequestNew.PleaseSelectCategory")
             });
             return;
         }
@@ -179,7 +179,7 @@
             NotificationService.Notify(new NotificationMessage
             {
                 Severity = NotificationSeverity.Error,
-                Summary = "Description is required"
+                Summary = L("RequestNew.DescriptionRequired")
             });
             return;
         }
@@ -207,7 +207,7 @@
                 NotificationService.Notify(new NotificationMessage
                 {
                     Severity = NotificationSeverity.Success,
-                    Summary = "Request created successfully"
+                    Summary = L("RequestNew.RequestCreated")
                 });
                 NavigationManager.NavigateTo($"/requests/{result.Data.ApiKey}");
             }
@@ -216,7 +216,7 @@
                 NotificationService.Notify(new NotificationMessage
                 {
                     Severity = NotificationSeverity.Error,
-                    Summary = "Error creating request",
+                    Summary = L("RequestNew.ErrorCreatingRequest"),
                     Detail = result.Messages?.FirstOrDefault()
                 });
             }
@@ -227,7 +227,7 @@
             NotificationService.Notify(new NotificationMessage
             {
                 Severity = NotificationSeverity.Error,
-                Summary = "Error creating request"
+                Summary = L("RequestNew.ErrorCreatingRequest")
             });
         }
         finally

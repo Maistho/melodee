@@ -33,14 +33,14 @@
                     <RadzenButton
                         Icon="arrow_back"
                         ButtonStyle="ButtonStyle.Info"
-                        Text="Back"
-                        title="Go back"
+                        Text="@L("Nav.Back")"
+                        title="@L("Nav.GoBack")"
                         Size="ButtonSize.Small"
                         Click="@(() => NavigationManager.NavigateTo(FromUrl, true))"/>
                 }
                 <RadzenBreadCrumb>
-                    <RadzenBreadCrumbItem Path="/" Text="Dashboard"/>
-                    <RadzenBreadCrumbItem Path="/data/artists" Text="Artists"/>
+                    <RadzenBreadCrumbItem Path="/" Text="@L("Navigation.Dashboard")"/>
+                    <RadzenBreadCrumbItem Path="/data/artists" Text="@L("Navigation.Artists")"/>
                     <RadzenBreadCrumbItem Icon="artist" Text="@_artist.Name"/>
                 </RadzenBreadCrumb>
             </RadzenStack>
@@ -75,34 +75,34 @@
 }
 <RadzenStack>
     <RadzenMenu>
-        <RadzenMenuItem Text="Delete" Visible="CurrentUser?.IsEditor() ?? false" Disabled="_artist.IsLocked"
+        <RadzenMenuItem Text="@L("Actions.Delete")" Visible="CurrentUser?.IsEditor() ?? false" Disabled="_artist.IsLocked"
                         Click="DeleteButtonClick"
-                        title="Delete the artist, all artist albums, and all album files. BEWARE!"
+                        title="@L("ArtistDetail.DeleteArtistWarning")"
                         IconColor="@Colors.Danger" Icon="delete"></RadzenMenuItem>
-        <RadzenMenuItem Text="@($"Delete Albums ({_selectedAlbums.Count})")" Visible="CurrentUser?.IsEditor() ?? false"
+        <RadzenMenuItem Text="@L("ArtistDetail.DeleteAlbumsCount", _selectedAlbums.Count)" Visible="CurrentUser?.IsEditor() ?? false"
                         Disabled="_selectedAlbums.Count == 0" Click="DeleteAlbumsButtonClick"
-                        title="Delete the selected albums. BEWARE!" IconColor="@Colors.Danger"
+                        title="@L("ArtistDetail.DeleteAlbumsWarning")" IconColor="@Colors.Danger"
                         Icon="remove"></RadzenMenuItem>
-        <RadzenMenuItem Text="Edit" Visible="CurrentUser?.IsEditor() ?? false" Disabled="_artist.IsLocked"
-                        Click="EditButtonClick" title="Edit artist." Icon="edit"></RadzenMenuItem>
+        <RadzenMenuItem Text="@L("Actions.Edit")" Visible="CurrentUser?.IsEditor() ?? false" Disabled="_artist.IsLocked"
+                        Click="EditButtonClick" title="@L("ArtistDetail.EditArtist")" Icon="edit"></RadzenMenuItem>
         @if (_artist.IsLocked)
         {
-            <RadzenMenuItem Text="Unlock" Visible="CurrentUser?.IsEditor() ?? false" Click="UnlockButtonClick"
-                            title="Unlock artist, will allow modifications." IconColor="@Colors.Warning"
+            <RadzenMenuItem Text="@L("Actions.Unlock")" Visible="CurrentUser?.IsEditor() ?? false" Click="UnlockButtonClick"
+                            title="@L("ArtistDetail.UnlockArtist")" IconColor="@Colors.Warning"
                             Icon="lock_open"></RadzenMenuItem>
         }
         else
         {
-            <RadzenMenuItem Text="Lock" Visible="CurrentUser?.IsEditor() ?? false" Disabled="_artist.IsLocked"
-                            Click="LockButtonClick" title="Lock artist, will prevent modifications."
+            <RadzenMenuItem Text="@L("Actions.Lock")" Visible="CurrentUser?.IsEditor() ?? false" Disabled="_artist.IsLocked"
+                            Click="LockButtonClick" title="@L("ArtistDetail.LockArtist")"
                             IconColor="@Colors.Warning" Icon="lock"></RadzenMenuItem>
         }
-        <RadzenMenuItem Text="Rescan" Visible="CurrentUser?.IsEditor() ?? false" Disabled="_artist.IsLocked"
-                        Click="RescanButtonClick" title="Rebuild metadata and rescan artists albums."
+        <RadzenMenuItem Text="@L("Actions.Rescan")" Visible="CurrentUser?.IsEditor() ?? false" Disabled="_artist.IsLocked"
+                        Click="RescanButtonClick" title="@L("ArtistDetail.RescanArtist")"
                         Icon="refresh"></RadzenMenuItem>
-        <RadzenMenuItem Text="Json" Visible="CurrentUser?.IsEditor() ?? false" Click="GenerateJsonClick"
-                        title="Generate JSON for for artist." Icon="text_snippet"></RadzenMenuItem>
-        <RadzenMenuItem Text="Web Search" Click="OnInternetSearchClick" title="Search the web for artist."
+        <RadzenMenuItem Text="@L("Actions.Json")" Visible="CurrentUser?.IsEditor() ?? false" Click="GenerateJsonClick"
+                        title="@L("ArtistDetail.GenerateJson")" Icon="text_snippet"></RadzenMenuItem>
+        <RadzenMenuItem Text="@L("Actions.WebSearch")" Click="OnInternetSearchClick" title="@L("ArtistDetail.WebSearch")"
                         Icon="public"></RadzenMenuItem>
     </RadzenMenu>
     <RadzenText Text="@_artist.Name" TextStyle="TextStyle.DisplayH6" TagName="TagName.H1" style="margin: 0"/>
@@ -113,19 +113,19 @@
             <RadzenStack>
                 <RadzenCard>
                     <RadzenTree Change="@OnShowItemChange">
-                        <RadzenTreeItem Text="Overview" Selected="true">
+                        <RadzenTreeItem Text="@L("Nav.Overview")" Selected="true">
                             <Template>
                                 <RadzenIcon Icon="overview"/>
                                 @context.Text
                             </Template>
                         </RadzenTreeItem>
-                        <RadzenTreeItem Text="Images">
+                        <RadzenTreeItem Text="@L("Nav.Images")">
                             <Template>
                                 <RadzenIcon Icon="image"/>
                                 @($"{context.Text} ({_artistImageFiles?.Length ?? 0})")
                             </Template>
                         </RadzenTreeItem>
-                        <RadzenTreeItem Text="Relationships">
+                        <RadzenTreeItem Text="@L("Nav.Relationships")">
                             <Template>
                                 <RadzenIcon Icon="partner_exchange"/>
                                 @($"{context.Text} ({_relationshipCount})")
@@ -140,7 +140,7 @@
                             <RadzenText TextStyle="TextStyle.H6"
                                         class="rz-display-flex rz-align-items-center rz-m-0">
                                 <RadzenIcon Icon="description" class="rz-me-1"/>
-                                Description
+                                @L("Label.Description")
                             </RadzenText>
                         </HeaderTemplate>
                         <ChildContent>
@@ -153,7 +153,7 @@
                         <RadzenText TextStyle="TextStyle.H6"
                                     class="rz-display-flex rz-align-items-center rz-m-0">
                             <RadzenIcon Icon="info" class="rz-me-1"/>
-                            Details
+                            @L("Label.Details")
                         </RadzenText>
                     </HeaderTemplate>
                     <ChildContent>
@@ -162,22 +162,22 @@
                             JustifyContent="JustifyContent.Left"
                             class="rz-pt-1"
                             Gap="5px">
-                            <CondensedStatistic Label="Library" Statistic="@_artist.Library.Name"/>
+                            <CondensedStatistic Label="@L("Label.Library")" Statistic="@_artist.Library.Name"/>
                             @if (_artist.RealName.Nullify() != null)
                             {
-                                <CondensedStatistic Label="Real Name" Statistic="@_artist.RealName"/>
+                                <CondensedStatistic Label="@L("Label.RealName")" Statistic="@_artist.RealName"/>
                             }
                             @if (CurrentUser?.IsAdmin() ?? false)
                             {
-                                <CondensedStatistic Label="Directory" Statistic="@_artist.Directory"/>
+                                <CondensedStatistic Label="@L("Label.Directory")" Statistic="@_artist.Directory"/>
                             }
                             @if (_artist.SortName.Nullify() != null)
                             {
-                                <CondensedStatistic Label="Sort Name" Statistic="@_artist.SortName"/>
+                                <CondensedStatistic Label="@L("Label.SortName")" Statistic="@_artist.SortName"/>
                             }
                             @if (_artist.AlternateNames.Nullify() != null)
                             {
-                                <CondensedStatistic Label="Alternate Names" Statistic="@_artist.AlternateNames"/>
+                                <CondensedStatistic Label="@L("Label.AlternateNames")" Statistic="@_artist.AlternateNames"/>
                             }
                         </RadzenStack>
                     </ChildContent>
@@ -187,7 +187,7 @@
                         <RadzenText TextStyle="TextStyle.H6"
                                     class="rz-display-flex rz-align-items-center rz-m-0">
                             <RadzenIcon Icon="link" class="rz-me-1"/>
-                            External Links
+                            @L("Label.ExternalLinks")
                         </RadzenText>
                     </HeaderTemplate>
                     <ChildContent>
@@ -228,7 +228,7 @@
                         <RadzenText TextStyle="TextStyle.H6"
                                     class="rz-display-flex rz-align-items-center rz-m-0">
                             <RadzenIcon Icon="monitoring" class="rz-me-1"/>
-                            Statistics
+                            @L("Label.Statistics")
                         </RadzenText>
                     </HeaderTemplate>
                     <ChildContent>
@@ -237,18 +237,18 @@
                             JustifyContent="JustifyContent.Left"
                             class="rz-pt-1"
                             Gap="5px">
-                            <CondensedStatistic Label="Rating"
+                            <CondensedStatistic Label="@L("Label.Rating")"
                                                 Rating="@(_artist.CalculatedRating)"/>
-                            <CondensedStatistic Label="Album Count"
+                            <CondensedStatistic Label="@L("Label.AlbumCount")"
                                                 Statistic="@(_artist.AlbumCount.ToStringPadLeft(3))"/>
-                            <CondensedStatistic Label="Song Count" Statistic="@(_artist.SongCount.ToStringPadLeft(4))"/>
-                            <CondensedStatistic Label="Played Total"
+                            <CondensedStatistic Label="@L("Label.SongCount")" Statistic="@(_artist.SongCount.ToStringPadLeft(4))"/>
+                            <CondensedStatistic Label="@L("Label.PlayedTotal")"
                                                 Statistic="@(_artist.PlayedCount.ToStringPadLeft(6))"/>
-                            <CondensedStatistic Label="Last Played"
+                            <CondensedStatistic Label="@L("Label.LastPlayed")"
                                                 Statistic="@(CurrentUser?.FormatInstant(_artist.LastPlayedAt))"/>
-                            <CondensedStatistic Label="Created"
+                            <CondensedStatistic Label="@L("Label.Created")"
                                                 Statistic="@(CurrentUser?.FormatInstant(_artist.CreatedAt))"/>
-                            <CondensedStatistic Label="Last Updated"
+                            <CondensedStatistic Label="@L("Label.LastUpdated")"
                                                 Statistic="@(CurrentUser?.FormatInstant(_artist.LastUpdatedAt))"/>
                         </RadzenStack>
                     </ChildContent>
@@ -266,7 +266,7 @@
                                 <RadzenText TextStyle="TextStyle.H6"
                                             class="rz-display-flex rz-align-items-center rz-m-0">
                                     <RadzenIcon Icon="album" class="rz-me-1"/>
-                                    Albums
+                                    @L("Navigation.Albums")
                                 </RadzenText>
                                 <RadzenStack orientation="Orientation.Horizontal" class="rz-ml-auto">
                                     <DebounceInput class="rz-textbox"
@@ -279,23 +279,23 @@
                                                    OnValueChanged="@FilterAlbumsAsync"
                                                    ForceNotifyByEnter="true"
                                                    ForceNotifyOnBlur="true"/>
-                                    <RadzenSplitButton Icon="sort" Text="Sort" Click="@(async args =>
+                                    <RadzenSplitButton Icon="sort" Text="@L("Actions.Sort")" Click="@(async args =>
                                                                                       {
                                                                                           _albumSort = SafeParser.ToEnum<AlbumSort>(args.Value);
                                                                                           await LoadAlbums();
                                                                                       })">
                                         <ChildContent>
-                                            <RadzenSplitButtonItem Icon="date_range" Text="Release Date ⬆️"
+                                            <RadzenSplitButtonItem Icon="date_range" Text="@L("ArtistDetail.ReleaseDateAsc")"
                                                                    Value="@AlbumSort.ReleaseDate.ToString()"/>
-                                            <RadzenSplitButtonItem Icon="date_range" Text="Release Date ⬇️"
+                                            <RadzenSplitButtonItem Icon="date_range" Text="@L("ArtistDetail.ReleaseDateDesc")"
                                                                    Value="@AlbumSort.ReleaseDateDesc.ToString()"/>
-                                            <RadzenSplitButtonItem Icon="timelapse" Text="Duration ⬆️"
+                                            <RadzenSplitButtonItem Icon="timelapse" Text="@L("ArtistDetail.DurationAsc")"
                                                                    Value="@AlbumSort.Duration.ToString()"/>
-                                            <RadzenSplitButtonItem Icon="timelapse" Text="Duration ⬇️"
+                                            <RadzenSplitButtonItem Icon="timelapse" Text="@L("ArtistDetail.DurationDesc")"
                                                                    Value="@AlbumSort.DurationDesc.ToString()"/>
-                                            <RadzenSplitButtonItem Icon="music_note" Text="Song Count ⬆️"
+                                            <RadzenSplitButtonItem Icon="music_note" Text="@L("ArtistDetail.SongCountAsc")"
                                                                    Value="@AlbumSort.SongCount.ToString()"/>
-                                            <RadzenSplitButtonItem Icon="music_note" Text="Song Count ⬇️"
+                                            <RadzenSplitButtonItem Icon="music_note" Text="@L("ArtistDetail.SongCountDesc")"
                                                                    Value="@AlbumSort.SongCountDesc.ToString()"/>
                                         </ChildContent>
                                     </RadzenSplitButton>
@@ -321,7 +321,7 @@
                                 }
                                 <RadzenPager
                                     ShowPagingSummary="true"
-                                    PagingSummaryFormat="@PagingSummaryFormat"
+                                    PagingSummaryFormat="@L("Message.DisplayingPage")"
                                     HorizontalAlign="HorizontalAlign.Right"
                                     Count="_totalAlbumCount"
                                     PageSize="@((int)_pageSize)"
@@ -377,23 +377,23 @@
                     <HeaderTemplate>
                         <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-align-items-center rz-m-0">
                             <RadzenIcon Icon="image" class="rz-me-1"/>
-                            Images
+                            @L("Nav.Images")
                         </RadzenText>
                     </HeaderTemplate>
                     <ChildContent>
                         <div @ref="_dropZoneElement" class="file-drop-zone">
                             <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
                                 <RadzenSwitch @bind-Value="@_replaceAllImages" Name="ReplaceAll"/>
-                                <RadzenLabel Text="Replace all images on upload" Component="ReplaceAll"/>
+                                <RadzenLabel Text="@L("ArtistDetail.ReplaceAllImages")" Component="ReplaceAll"/>
                                 <InputFile @ref="_inputFileElement" multiple OnChange="@OnArtistImageUpload" />
-                                <RadzenButton Icon="checklist" Size="ButtonSize.Small" Text="Select All" Click="@SelectAllImages"/>
-                                <RadzenButton Icon="check_box_outline_blank" Size="ButtonSize.Small" Text="Select None" Click="@SelectNoneImages"/>
-                                <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Text="Delete Selected"
+                                <RadzenButton Icon="checklist" Size="ButtonSize.Small" Text="@L("Actions.SelectAll")" Click="@SelectAllImages"/>
+                                <RadzenButton Icon="check_box_outline_blank" Size="ButtonSize.Small" Text="@L("Actions.SelectNone")" Click="@SelectNoneImages"/>
+                                <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Text="@L("Actions.DeleteSelected")"
                                               Disabled="@(!_selectedImagePaths.Any())"
                                               Visible="CurrentUser?.IsEditor() ?? false"
                                               Click="@DeleteSelectedArtistImagesButtonClick" />
                             </RadzenStack>
-                            <RadzenText TextStyle="TextStyle.Caption" class="rz-text-secondary">Drag and drop or paste images here</RadzenText>
+                            <RadzenText TextStyle="TextStyle.Caption" class="rz-text-secondary">@L("Message.DragAndDropImages")</RadzenText>
                         </div>
                         <RadzenDataList Data="@_artistImageList" TItem="ArtistImageListItem" class="rz-mt-3">
                             <Template Context="item">
@@ -416,12 +416,12 @@
                         <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
                             <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-align-items-center rz-m-0">
                                 <RadzenIcon Icon="partner_exchange" class="rz-me-1"/>
-                                Relationships
+                                @L("Nav.Relationships")
                             </RadzenText>
-                            <RadzenButton Icon="add" Text="Add Relationship" Size="ButtonSize.Small" Click="@AddRelationshipClick" Visible="CurrentUser?.IsEditor() ?? false"/>
-                            <RadzenButton Icon="checklist" Size="ButtonSize.Small" Text="Select All" Click="@SelectAllRelationships"/>
-                            <RadzenButton Icon="check_box_outline_blank" Size="ButtonSize.Small" Text="Select None" Click="@SelectNoneRelationships"/>
-                            <RadzenButton Icon="delete" Text="Delete Selected" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
+                            <RadzenButton Icon="add" Text="@L("Actions.AddRelationship")" Size="ButtonSize.Small" Click="@AddRelationshipClick" Visible="CurrentUser?.IsEditor() ?? false"/>
+                            <RadzenButton Icon="checklist" Size="ButtonSize.Small" Text="@L("Actions.SelectAll")" Click="@SelectAllRelationships"/>
+                            <RadzenButton Icon="check_box_outline_blank" Size="ButtonSize.Small" Text="@L("Actions.SelectNone")" Click="@SelectNoneRelationships"/>
+                            <RadzenButton Icon="delete" Text="@L("Actions.DeleteSelected")" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small"
                                           Visible="CurrentUser?.IsEditor() ?? false" Disabled="@(!_selectedRelationships.Any())"
                                           Click="@DeleteSelectedRelationshipsButtonClick"/>
                         </RadzenStack>
@@ -437,7 +437,7 @@
                                                         Change="@(args => ToggleRelationshipSelected((item.OwnerArtistId, item.RelatedArtistId), args))"/>
                                         <ArtistDataInfoCardComponent Artist="@item.Artist.ToArtistDataInfo()"/>
                                         <RadzenBadge Text="@($"{item.RelationType} {(item.IsInbound ? "←" : "→")}")" Style="min-width: 120px; text-align:center;"/>
-                                        <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Text="Remove"
+                                        <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Text="@L("Actions.Remove")"
                                                       Visible="CurrentUser?.IsEditor() ?? false"
                                                       Click="@(() => RemoveRelationshipAsync(item.OwnerArtistId, item.RelatedArtistId))" />
                                     </RadzenStack>
@@ -453,8 +453,6 @@
 
 
 @code {
-
-    private const string PagingSummaryFormat = "Displaying page {0} of {1} (total {2} records)";
 
     int _totalAlbumCount;
 
@@ -727,10 +725,10 @@
             default:
                 _showItem = ShowItem.Overview;
                 break;
-            case "Images":
+            case var text when text == L("Nav.Images"):
                 _showItem = ShowItem.Images;
                 break;
-            case "Relationships":
+            case var text when text == L("Nav.Relationships"):
                 _showItem = ShowItem.Relationships;
                 await RefreshRelationshipsAsync();
                 break;
@@ -776,7 +774,7 @@
 
     private async Task DeleteAllArtistImagesButtonClick()
     {
-        var confirm = await DialogService.Confirm("Are you sure?", "Delete all images", new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" });
+        var confirm = await DialogService.Confirm(L("Dialog.AreYouSure"), L("ArtistDetail.DeleteAllImages"), new ConfirmOptions { OkButtonText = L("Actions.Yes"), CancelButtonText = L("Actions.No") });
         if (confirm ?? false)
         {
             var result = await ArtistService.DeleteAllArtistImagesAsync(_artist.Id);
@@ -811,7 +809,7 @@
     private async Task DeleteSelectedArtistImagesButtonClick()
     {
         if (!_selectedImagePaths.Any()) return;
-        var confirm = await DialogService.Confirm("Are you sure?", $"Delete {_selectedImagePaths.Count} selected images", new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" });
+        var confirm = await DialogService.Confirm(L("Dialog.AreYouSure"), L("ArtistDetail.DeleteSelectedImages", _selectedImagePaths.Count), new ConfirmOptions { OkButtonText = L("Actions.Yes"), CancelButtonText = L("Actions.No") });
         if (!(confirm ?? false)) return;
 
         var deleteCount = 0;
@@ -866,7 +864,7 @@
 
     private async Task AddRelationshipClick()
     {
-        await DialogService.OpenAsync("Add Relationship", ds => @<AddArtistRelationshipDialog ArtistId="@_artist.Id"/>);
+        await DialogService.OpenAsync(L("Actions.AddRelationship"), ds => @<AddArtistRelationshipDialog ArtistId="@_artist.Id"/>);
         await RefreshRelationshipsAsync();
     }
 
@@ -936,7 +934,7 @@
     private async Task DeleteSelectedRelationshipsButtonClick()
     {
         if (!_selectedRelationships.Any()) return;
-        var confirm = await DialogService.Confirm("Are you sure?", $"Delete {_selectedRelationships.Count} selected relationships", new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" });
+        var confirm = await DialogService.Confirm(L("Dialog.AreYouSure"), L("ArtistDetail.DeleteSelectedRelationships", _selectedRelationships.Count), new ConfirmOptions { OkButtonText = L("Actions.Yes"), CancelButtonText = L("Actions.No") });
         if (!(confirm ?? false)) return;
 
         foreach (var key in _selectedRelationships.ToArray())
@@ -953,7 +951,7 @@
 
     private async Task RemoveRelationshipAsync(int ownerArtistId, int relatedArtistId)
     {
-        var confirm = await DialogService.Confirm("Are you sure?", "Remove relationship", new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" });
+        var confirm = await DialogService.Confirm(L("Dialog.AreYouSure"), L("ArtistDetail.RemoveRelationship"), new ConfirmOptions { OkButtonText = L("Actions.Yes"), CancelButtonText = L("Actions.No") });
         if (confirm ?? false)
         {
             var result = await ArtistService.DeleteArtistRelationAsync(ownerArtistId, relatedArtistId);
@@ -967,7 +965,7 @@
 
     private async Task DeleteAllRelationshipsButtonClick()
     {
-        var confirm = await DialogService.Confirm("Are you sure?", "Delete all relationships", new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" });
+        var confirm = await DialogService.Confirm(L("Dialog.AreYouSure"), L("ArtistDetail.DeleteAllRelationships"), new ConfirmOptions { OkButtonText = L("Actions.Yes"), CancelButtonText = L("Actions.No") });
         if (confirm ?? false)
         {
             var result = await ArtistService.DeleteAllArtistRelationsAsync(_artist.Id);
@@ -1000,7 +998,7 @@
 
     private async Task DeleteButtonClick()
     {
-        var confirm = await DialogService.Confirm("Are you sure?", "Delete confirmation", new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" });
+        var confirm = await DialogService.Confirm(L("Dialog.AreYouSure"), L("Dialog.DeleteConfirmation"), new ConfirmOptions { OkButtonText = L("Actions.Yes"), CancelButtonText = L("Actions.No") });
         if (confirm ?? false)
         {
             var deleteResult = await ArtistService.DeleteAsync([_artist.Id]);
@@ -1050,7 +1048,7 @@
 
     private async Task RescanButtonClick()
     {
-        var confirm = await DialogService.Confirm("Are you sure?", "Rescan confirmation", new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" });
+        var confirm = await DialogService.Confirm(L("Dialog.AreYouSure"), L("ArtistDetail.RescanConfirmation"), new ConfirmOptions { OkButtonText = L("Actions.Yes"), CancelButtonText = L("Actions.No") });
         if (confirm ?? false)
         {
             var rescanresult = await ArtistService.RescanAsync([_artist.Id]);
@@ -1076,7 +1074,7 @@
 
     private async Task DeleteAlbumsButtonClick()
     {
-        var confirm = await DialogService.Confirm("Are you sure?", $"Delete {_selectedAlbums.Count} albums", new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" });
+        var confirm = await DialogService.Confirm(L("Dialog.AreYouSure"), L("ArtistDetail.DeleteAlbumsConfirm", _selectedAlbums.Count), new ConfirmOptions { OkButtonText = L("Actions.Yes"), CancelButtonText = L("Actions.No") });
         if (confirm ?? false)
         {
             var deleteResult = await ArtistService.DeleteAlbumsForArtist(_artist.Id, _selectedAlbums.Select(x => x.Id).ToArray());
@@ -1098,7 +1096,7 @@
     private async Task GenerateJsonClick()
     {
         var json = Serializer.Serialize(_artist.ToMelodeeArtistModel());
-        var result = await DialogService.OpenAsync("Artists Melodee Json", ds =>
+        var result = await DialogService.OpenAsync(L("ArtistDetail.ArtistMelodeeJson"), ds =>
             @<RadzenTextArea Disabled="true" Style="width: 100%" @bind-Value="@json" Rows="10"/>);
     }
 
