@@ -1,4 +1,4 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 @using System.Drawing
 @using Melodee.Common.Enums
 @using Microsoft.AspNetCore.Components.Authorization
@@ -11,6 +11,7 @@
 @inject NavigationManager NavigationManager
 @inject IMelodeeConfigurationFactory MelodeeConfigurationFactory
 @inject RequestActivityService RequestActivityService
+@inject ILocalizationService LocalizationService
 
 @* Without this Radzen doesn't restore the theme from cookie <shrug /> *@
 @* ReSharper disable once UnusedMember.Local *@
@@ -52,7 +53,7 @@
                                            autocomplete="off"
                                            @bind-Value="@_debounceInputValue"
                                            @bind-Value:event="OnInput"
-                                           placeholder="Search"
+                                           placeholder="@LocalizationService.Localize("Common.Search")"
                                            DebounceTime="2000"
                                            MinLength="2"
                                            OnValueChanged="@DoSearchAsync"
@@ -62,14 +63,15 @@
                                          Gap="0.5rem"
                                          class="rz-p-sm-2">
                             </RadzenStack>
+                            <LanguageSelector />
                             <RadzenAppearanceToggle/>
-                            <RadzenIcon Visible="@context.User.IsAdmin()" IconColor="@Colors.Warning" title="You are an admin!" Icon="server_person" />
-                            <RadzenIcon Visible="@(!context.User.IsAdmin() && context.User.IsEditor())" IconColor="@Colors.Warning" title="You are a editor!" Icon="box_edit" />
+                            <RadzenIcon Visible="@context.User.IsAdmin()" IconColor="@Colors.Warning" title="@LocalizationService.Localize("Admin.YouAreAdmin")" Icon="server_person" />
+                            <RadzenIcon Visible="@(!context.User.IsAdmin() && context.User.IsEditor())" IconColor="@Colors.Warning" title="@LocalizationService.Localize("Admin.YouAreEditor")" Icon="box_edit" />
                             <RadzenProfileMenu>
                                 <ChildContent>
-                                    <RadzenProfileMenuItem Path="@($"/user/{context.User.ToApiKey()}")" Icon="person" Text="About Me"/>
-                                    <RadzenProfileMenuItem Path="/account/profile" Icon="settings" Text="Profile"/>
-                                    <RadzenProfileMenuItem Path="/account/logout" Text="Logout" Value="Logout"
+                                    <RadzenProfileMenuItem Path="@($"/user/{context.User.ToApiKey()}")" Icon="person" Text="@LocalizationService.Localize("Auth.AboutMe")"/>
+                                    <RadzenProfileMenuItem Path="/account/profile" Icon="settings" Text="@LocalizationService.Localize("Navigation.Profile")"/>
+                                    <RadzenProfileMenuItem Path="/account/logout" Text="@LocalizationService.Localize("Navigation.Logout")" Value="Logout"
                                                            Icon="power_settings_new"/>
                                 </ChildContent>
                                 <Template>
@@ -84,20 +86,20 @@
             </RadzenHeader>
             <RadzenSidebar Style="width:160px;" @bind-Expanded="@_sidebarExpanded">
                 <RadzenPanelMenu>
-                    <RadzenPanelMenuItem Text="Dashboard" Path="/" Icon="dashboard"/>
-                    <RadzenPanelMenuItem Text="Stats" Path="/stats" Icon="bar_chart"/>
-                    <RadzenPanelMenuItem Text="Artists" Path="/data/artists" Icon="artist"/>
-                    <RadzenPanelMenuItem Text="Albums" Path="/data/albums" Icon="album"/>
-                    <RadzenPanelMenuItem Text="Charts" Path="/charts" Icon="format_list_numbered"/>
-                    <RadzenPanelMenuItem Text="Libraries" Path="/data/libraries" Icon="library_music"
+                    <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Dashboard")" Path="/" Icon="dashboard"/>
+                    <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Stats")" Path="/stats" Icon="bar_chart"/>
+                    <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Artists")" Path="/data/artists" Icon="artist"/>
+                    <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Albums")" Path="/data/albums" Icon="album"/>
+                    <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Charts")" Path="/charts" Icon="format_list_numbered"/>
+                    <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Libraries")" Path="/data/libraries" Icon="library_music"
                                          Visible="@AuthService.IsAdmin"/>
-                    <RadzenPanelMenuItem Text="Now Playing" Path="/activity/nowplaying" Icon="sound_sampler"/>
-                    <RadzenPanelMenuItem Text="Playlists" Path="/data/playlists" Icon="playlist_play"/>
-                    <RadzenPanelMenuItem Text="Radio Stations" Path="/data/radiostations" Icon="radio"/>
+                    <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.NowPlaying")" Path="/activity/nowplaying" Icon="sound_sampler"/>
+                    <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Playlists")" Path="/data/playlists" Icon="playlist_play"/>
+                    <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.RadioStations")" Path="/data/radiostations" Icon="radio"/>
                     <RadzenPanelMenuItem Path="/requests" Icon="assignment">
                       <Template>
                         <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem">
-                          <span>Requests</span>
+                          <span>@LocalizationService.Localize("Navigation.Requests")</span>
                           @if (_hasUnreadRequests)
                           {
                             <RadzenBadge BadgeStyle="BadgeStyle.Danger" IsPill="true" Text=" " Style="width: 8px; height: 8px; min-width: 8px; padding: 0;"/>
@@ -105,24 +107,24 @@
                         </RadzenStack>
                       </Template>
                     </RadzenPanelMenuItem>
-                    <RadzenPanelMenuItem Text="Songs" Path="/data/songs" Icon="music_note"/>
-                    <RadzenPanelMenuItem Text="Shares" Path="/data/shares" Icon="share"/>
-                    <RadzenPanelMenuItem Text="Users" Path="/data/users" Icon="group"/>
-                    <RadzenPanelMenuItem Text="Admin" Icon="admin_panel_settings" IconColor="@Colors.Danger"
+                    <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Songs")" Path="/data/songs" Icon="music_note"/>
+                    <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Shares")" Path="/data/shares" Icon="share"/>
+                    <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Users")" Path="/data/users" Icon="group"/>
+                    <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Admin")" Icon="admin_panel_settings" IconColor="@Colors.Danger"
                                          Visible="@AuthService.IsAdmin">
-                        <RadzenPanelMenuItem Text="Dashboard" Path="/admin/dashboard" Icon="dashboard"/>
-                        <RadzenPanelMenuItem Text="Media" Icon="perm_media">
+                        <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Dashboard")" Path="/admin/dashboard" Icon="dashboard"/>
+                        <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Media")" Icon="perm_media">
                             @foreach (var mediaLibraryInfo in _mediaLibraryInfos)
                             {
                                 <RadzenPanelMenuItem Text="@mediaLibraryInfo.Text" Path="@mediaLibraryInfo.Path"
                                                      Icon="folder"/>
                             }
                         </RadzenPanelMenuItem>
-                        <RadzenPanelMenuItem Text="Media Artists" Path="/admin/mediaartists" Icon="artist"/>
-                        <RadzenPanelMenuItem Text="Jobs" Path="/admin/jobs" Icon="checklist"/>
-                        <RadzenPanelMenuItem Text="Settings" Path="/admin/settings" Icon="settings"/>
+                        <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.MediaArtists")" Path="/admin/mediaartists" Icon="artist"/>
+                        <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Jobs")" Path="/admin/jobs" Icon="checklist"/>
+                        <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Settings")" Path="/admin/settings" Icon="settings"/>
                     </RadzenPanelMenuItem>
-                    <RadzenPanelMenuItem Text="About" Path="/about" Icon="info" IconColor="@Colors.Secondary"/>
+                    <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.About")" Path="/about" Icon="info" IconColor="@Colors.Secondary"/>
                 </RadzenPanelMenu>
             </RadzenSidebar>
             <RadzenBody Style="margin: 10px; padding:3px;">

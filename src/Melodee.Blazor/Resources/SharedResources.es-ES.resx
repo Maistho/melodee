@@ -84,6 +84,109 @@
   <data name="Navigation.Logout" xml:space="preserve">
     <value>Cerrar Sesión</value>
   </data>
+  <data name="Navigation.Libraries" xml:space="preserve">
+    <value>Bibliotecas</value>
+  </data>
+  <data name="Navigation.Shares" xml:space="preserve">
+    <value>Compartidos</value>
+  </data>
+  <data name="Navigation.About" xml:space="preserve">
+    <value>Acerca de</value>
+  </data>
+  <data name="Navigation.Media" xml:space="preserve">
+    <value>Medios</value>
+  </data>
+  <data name="Navigation.MediaArtists" xml:space="preserve">
+    <value>Artistas de Medios</value>
+  </data>
+  <data name="Navigation.Stats" xml:space="preserve">
+    <value>Estadísticas</value>
+  </data>
+  <data name="Navigation.RadioStations" xml:space="preserve">
+    <value>Estaciones de Radio</value>
+  </data>
+  <data name="Navigation.Charts" xml:space="preserve">
+    <value>Listas</value>
+  </data>
+  <data name="Navigation.Requests" xml:space="preserve">
+    <value>Solicitudes</value>
+  </data>
+  <data name="Navigation.NowPlaying" xml:space="preserve">
+    <value>Reproduciendo Ahora</value>
+  </data>
+  <data name="Navigation.Admin" xml:space="preserve">
+    <value>Administrador</value>
+  </data>
+  <data name="Navigation.Jobs" xml:space="preserve">
+    <value>Trabajos</value>
+  </data>
+  <data name="Navigation.Users" xml:space="preserve">
+    <value>Usuarios</value>
+  </data>
+  <data name="Navigation.Profile" xml:space="preserve">
+    <value>Perfil</value>
+  </data>
+  <data name="Auth.AboutMe" xml:space="preserve">
+    <value>Acerca de Mí</value>
+  </data>
+  <data name="Common.Search" xml:space="preserve">
+    <value>Buscar</value>
+  </data>
+  <data name="Admin.YouAreAdmin" xml:space="preserve">
+    <value>¡Eres administrador!</value>
+  </data>
+  <data name="Admin.YouAreEditor" xml:space="preserve">
+    <value>¡Eres editor!</value>
+  </data>
+  
+  <!-- Common -->
+  <data name="Common.Song" xml:space="preserve">
+    <value>Canción</value>
+  </data>
+  
+  <!-- Dashboard -->
+  <data name="Dashboard.YourPins" xml:space="preserve">
+    <value>Tus anclados</value>
+  </data>
+  <data name="Dashboard.YourPlaysLast30Days" xml:space="preserve">
+    <value>Tus reproducciones (últimos 30 días)</value>
+  </data>
+  <data name="Dashboard.Date" xml:space="preserve">
+    <value>Fecha</value>
+  </data>
+  <data name="Dashboard.Plays" xml:space="preserve">
+    <value>Reproducciones</value>
+  </data>
+  <data name="Dashboard.TopPlayedSongsLast30Days" xml:space="preserve">
+    <value>Canciones más reproducidas (últimos 30 días)</value>
+  </data>
+  <data name="Dashboard.NoPlayHistoryYet" xml:space="preserve">
+    <value>Aún no hay historial de reproducción. ¡Comienza a escuchar para ver tus canciones principales!</value>
+  </data>
+  <data name="Dashboard.RecentlyPlayed" xml:space="preserve">
+    <value>Reproducido recientemente</value>
+  </data>
+  <data name="Dashboard.RecentlyAddedArtists" xml:space="preserve">
+    <value>Artistas agregados recientemente</value>
+  </data>
+  <data name="Dashboard.RecentlyAddedAlbums" xml:space="preserve">
+    <value>Álbumes agregados recientemente</value>
+  </data>
+  <data name="Dashboard.RequestActivity" xml:space="preserve">
+    <value>Actividad de Solicitudes</value>
+  </data>
+  <data name="Dashboard.Category" xml:space="preserve">
+    <value>Categoría</value>
+  </data>
+  <data name="Dashboard.Description" xml:space="preserve">
+    <value>Descripción</value>
+  </data>
+  <data name="Dashboard.Activity" xml:space="preserve">
+    <value>Actividad</value>
+  </data>
+  <data name="Dashboard.When" xml:space="preserve">
+    <value>Cuándo</value>
+  </data>
 
   <!-- Common Actions -->
   <data name="Actions.Save" xml:space="preserve">
@@ -115,6 +218,104 @@
   <data name="Auth.Password" xml:space="preserve">
     <value>Contraseña</value>
   </data>
+  <data name="Auth.Email" xml:space="preserve">
+    <value>Correo electrónico</value>
+  </data>
+  <data name="Auth.EmailAddress" xml:space="preserve">
+    <value>Dirección de correo electrónico</value>
+  </data>
+  <data name="Auth.Register" xml:space="preserve">
+    <value>Registrarse</value>
+  </data>
+  <data name="Auth.Welcome" xml:space="preserve">
+    <value>¡Bienvenido!</value>
+  </data>
+  <data name="Auth.Or" xml:space="preserve">
+    <value>o</value>
+  </data>
+  <data name="Auth.ContinueWithGoogle" xml:space="preserve">
+    <value>Continuar con Google</value>
+  </data>
+  <data name="Auth.SigningIn" xml:space="preserve">
+    <value>Iniciando sesión...</value>
+  </data>
+  <data name="Auth.InvalidEmailOrPassword" xml:space="preserve">
+    <value>Correo electrónico o contraseña no válidos.</value>
+  </data>
+  <data name="Auth.UnableToLogin" xml:space="preserve">
+    <value>Melodee no puede iniciar sesión. ¿quizás estás baneado?</value>
+  </data>
+  <data name="Auth.GoogleSignInUnavailable" xml:space="preserve">
+    <value>Inicio de sesión con Google temporalmente no disponible</value>
+  </data>
+  <data name="Auth.FailedToOpenGoogleSignIn" xml:space="preserve">
+    <value>No se pudo abrir el inicio de sesión con Google</value>
+  </data>
+  <data name="Auth.FailedToCompleteSignIn" xml:space="preserve">
+    <value>No se pudo completar el inicio de sesión</value>
+  </data>
+  <data name="Auth.SignedInAs" xml:space="preserve">
+    <value>Sesión iniciada como {0}</value>
+  </data>
+  <data name="Auth.InvalidGoogleCredentials" xml:space="preserve">
+    <value>Credenciales de Google no válidas. Inténtalo de nuevo.</value>
+  </data>
+  <data name="Auth.GoogleSessionExpired" xml:space="preserve">
+    <value>Tu sesión de Google ha caducado. Inicia sesión nuevamente.</value>
+  </data>
+  <data name="Auth.GoogleAccountNotLinked" xml:space="preserve">
+    <value>Esta cuenta de Google no está vinculada a ninguna cuenta de Melodee. Inicia sesión con tu contraseña y vincula tu cuenta de Google desde tu perfil.</value>
+  </data>
+  <data name="Auth.SignupDisabled" xml:space="preserve">
+    <value>El registro de nuevas cuentas está actualmente deshabilitado. Contacta a un administrador.</value>
+  </data>
+  <data name="Auth.ForbiddenTenant" xml:space="preserve">
+    <value>El dominio de tu cuenta de Google no está permitido. Usa una cuenta diferente.</value>
+  </data>
+  <data name="Auth.AccountDisabled" xml:space="preserve">
+    <value>Tu cuenta ha sido deshabilitada. Contacta a soporte.</value>
+  </data>
+  <data name="Auth.GoogleSignInError" xml:space="preserve">
+    <value>Ocurrió un error durante el inicio de sesión con Google. Inténtalo de nuevo.</value>
+  </data>
+  <data name="Auth.SignInErrorTryAgain" xml:space="preserve">
+    <value>Ocurrió un error durante el inicio de sesión. Inténtalo de nuevo.</value>
+  </data>
+  <data name="Auth.RegistrationClosed" xml:space="preserve">
+    <value>El registro está actualmente cerrado.</value>
+  </data>
+  <data name="Auth.FillOutForm" xml:space="preserve">
+    <value>Completa este formulario y haz clic en Registrarse para crear una nueva cuenta de usuario.</value>
+  </data>
+  <data name="Auth.AccessCode" xml:space="preserve">
+    <value>Código de Acceso</value>
+  </data>
+  <data name="Auth.AccessCodeRequired" xml:space="preserve">
+    <value>Registrar una nueva cuenta requiere que se ingrese un código de acceso. Quien te invitó puede proporcionarte este código.</value>
+  </data>
+  <data name="Auth.AccessCodeWarning" xml:space="preserve">
+    <value>Si no tienes el código, por favor vete 👉.</value>
+  </data>
+  <data name="Auth.UnableToRegister" xml:space="preserve">
+    <value>No se puede registrar.</value>
+  </data>
+  <data name="Auth.UnableToCreateAccount" xml:space="preserve">
+    <value>Melodee no puede crear una nueva cuenta de usuario para ti.</value>
+  </data>
+  <data name="Auth.PerhapsEmailBanned" xml:space="preserve">
+    <value>¿Quizás tu correo electrónico está baneado?</value>
+  </data>
+  <data name="Auth.SuccessfullyRegistered" xml:space="preserve">
+    <value>¡Registrado exitosamente!</value>
+  </data>
+  <data name="Auth.RegistrationSuccess" xml:space="preserve">
+    <value>Cuenta nueva registrada, deberías recibir un correo electrónico, asegúrate de hacer clic en el botón de validación.</value>
+  </data>
+
+  <!-- Common Actions -->
+  <data name="Actions.Close" xml:space="preserve">
+    <value>Cerrar</value>
+  </data>
 
   <!-- Messages -->
   <data name="Messages.Loading" xml:space="preserve">
@@ -125,5 +326,348 @@
   </data>
   <data name="Messages.Error" xml:space="preserve">
     <value>Error</value>
+  </data>
+
+  <!-- About Page -->
+  <data name="About.Title" xml:space="preserve">
+    <value>Acerca de {0}</value>
+  </data>
+  <data name="About.ApiDocs" xml:space="preserve">
+    <value>Documentación API (Swagger OpenAPI)</value>
+  </data>
+  <data name="About.ServerTime" xml:space="preserve">
+    <value>Hora del Servidor</value>
+  </data>
+  <data name="About.UTC" xml:space="preserve">
+    <value>UTC</value>
+  </data>
+  <data name="About.YourTime" xml:space="preserve">
+    <value>Tu Hora ({0})</value>
+  </data>
+  <data name="About.SystemInformation" xml:space="preserve">
+    <value>Información del Sistema</value>
+  </data>
+  <data name="About.Platform" xml:space="preserve">
+    <value>Plataforma</value>
+  </data>
+  <data name="About.Version" xml:space="preserve">
+    <value>Versión</value>
+  </data>
+  <data name="About.ServerDetails" xml:space="preserve">
+    <value>Detalles del Servidor</value>
+  </data>
+  <data name="About.Property" xml:space="preserve">
+    <value>Propiedad</value>
+  </data>
+  <data name="About.Value" xml:space="preserve">
+    <value>Valor</value>
+  </data>
+  <data name="About.AboutMelodee" xml:space="preserve">
+    <value>Acerca de Melodee</value>
+  </data>
+  <data name="About.Description" xml:space="preserve">
+    <value>Melodee es un sistema moderno de servidor de música que proporciona una solución integral para administrar y transmitir tu colección de música.</value>
+  </data>
+  <data name="About.ForMoreInfo" xml:space="preserve">
+    <value>Para más información, visita el</value>
+  </data>
+  <data name="About.GitHubProject" xml:space="preserve">
+    <value>Proyecto GitHub de Melodee</value>
+  </data>
+  <data name="About.Architecture" xml:space="preserve">
+    <value>Arquitectura</value>
+  </data>
+  <data name="About.DotNetRuntime" xml:space="preserve">
+    <value>Runtime .NET</value>
+  </data>
+  <data name="About.Application" xml:space="preserve">
+    <value>Aplicación</value>
+  </data>
+  <data name="About.ApplicationName" xml:space="preserve">
+    <value>Sistema de Música Melodee</value>
+  </data>
+  <data name="About.GitHub" xml:space="preserve">
+    <value>GitHub</value>
+  </data>
+
+  <!-- Data Management Pages -->
+  <data name="Data.Statistics" xml:space="preserve">
+    <value>Estadísticas</value>
+  </data>
+  <data name="Data.Merge" xml:space="preserve">
+    <value>Fusionar</value>
+  </data>
+  <data name="Data.ShowingAlbumsForArtist" xml:space="preserve">
+    <value>Mostrando álbumes del artista:</value>
+  </data>
+  <data name="Data.ShowingAlbumsForPlaylist" xml:space="preserve">
+    <value>Mostrando álbumes de la lista:</value>
+  </data>
+  <data name="Data.ShowingSongsForAlbum" xml:space="preserve">
+    <value>Mostrando canciones del álbum:</value>
+  </data>
+  <data name="Data.ShowingSongsForArtist" xml:space="preserve">
+    <value>Mostrando canciones del artista:</value>
+  </data>
+  <data name="Data.Name" xml:space="preserve">
+    <value>Nombre</value>
+  </data>
+  <data name="Data.AltNames" xml:space="preserve">
+    <value>Nombres Alt</value>
+  </data>
+  <data name="Data.Artist" xml:space="preserve">
+    <value>Artista</value>
+  </data>
+  <data name="Data.Songs" xml:space="preserve">
+    <value>Canciones</value>
+  </data>
+  <data name="Data.Duration" xml:space="preserve">
+    <value>Duración</value>
+  </data>
+  <data name="Data.Created" xml:space="preserve">
+    <value>Creado</value>
+  </data>
+  <data name="Data.Tags" xml:space="preserve">
+    <value>Etiquetas</value>
+  </data>
+  <data name="Data.AlbumCount" xml:space="preserve">
+    <value>Conteo de Álbumes</value>
+  </data>
+  <data name="Data.SongCount" xml:space="preserve">
+    <value>Conteo de Canciones</value>
+  </data>
+  <data name="Data.PlayCount" xml:space="preserve">
+    <value>Conteo de Reproducciones</value>
+  </data>
+  <data name="Data.LastPlayed" xml:space="preserve">
+    <value>Última Reproducción</value>
+  </data>
+  <data name="Data.Rating" xml:space="preserve">
+    <value>Calificación</value>
+  </data>
+  <data name="Data.ReleaseDate" xml:space="preserve">
+    <value>Fecha de Lanzamiento</value>
+  </data>
+  <data name="Data.Year" xml:space="preserve">
+    <value>Año</value>
+  </data>
+  <data name="Data.Genre" xml:space="preserve">
+    <value>Género</value>
+  </data>
+  <data name="Data.TrackNumber" xml:space="preserve">
+    <value>Pista #</value>
+  </data>
+  <data name="Data.Album" xml:space="preserve">
+    <value>Álbum</value>
+  </data>
+  <data name="Data.Title" xml:space="preserve">
+    <value>Título</value>
+  </data>
+  <data name="Data.Locked" xml:space="preserve">
+    <value>Bloqueado</value>
+  </data>
+  <data name="Data.Status" xml:space="preserve">
+    <value>Estado</value>
+  </data>
+  <data name="Data.Actions" xml:space="preserve">
+    <value>Acciones</value>
+  </data>
+  <data name="Data.OK" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Data.MergeConfirmation" xml:space="preserve">
+    <value>¿Estás seguro de que quieres fusionar los elementos seleccionados?</value>
+  </data>
+  <data name="Data.DeleteConfirmation" xml:space="preserve">
+    <value>¿Estás seguro de que quieres eliminar los elementos seleccionados?</value>
+  </data>
+  <data name="Data.SelectItemsToMerge" xml:space="preserve">
+    <value>Selecciona al menos 2 elementos para fusionar</value>
+  </data>
+  <data name="Data.SelectItemsToDelete" xml:space="preserve">
+    <value>Selecciona elementos para eliminar</value>
+  </data>
+  <data name="Data.ConfirmMerge" xml:space="preserve">
+    <value>Confirmar Fusión</value>
+  </data>
+  <data name="Data.ConfirmDelete" xml:space="preserve">
+    <value>Confirmar Eliminación</value>
+  </data>
+  <data name="Data.Directory" xml:space="preserve">
+    <value>Directorio</value>
+  </data>
+  <data name="Data.Albums" xml:space="preserve">
+    <value>Álbumes</value>
+  </data>
+  <data name="Data.MergeTheseArtists" xml:space="preserve">
+    <value>Fusionar estos artistas</value>
+  </data>
+  <data name="Data.IntoThisArtist" xml:space="preserve">
+    <value>En este artista</value>
+  </data>
+  <data name="Data.ArtistLockedMessage" xml:space="preserve">
+    <value>El artista está bloqueado. Los artistas bloqueados no se pueden eliminar.</value>
+  </data>
+  <data name="Data.MergedArtists" xml:space="preserve">
+    <value>Artistas Fusionados</value>
+  </data>
+  <data name="Data.DeletingArtists" xml:space="preserve">
+    <value>Eliminando Artistas</value>
+  </data>
+  <data name="Data.MergeArtists" xml:space="preserve">
+    <value>Fusionar Artistas</value>
+  </data>
+  <data name="Actions.Yes" xml:space="preserve">
+    <value>Sí</value>
+  </data>
+  <data name="Actions.No" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="Data.SongNumber" xml:space="preserve">
+    <value>Canción #</value>
+  </data>
+  <data name="Data.FileSize" xml:space="preserve">
+    <value>Tamaño del archivo</value>
+  </data>
+  <data name="Data.Loved" xml:space="preserve">
+    <value>Favorito</value>
+  </data>
+  <data name="Data.SongLockedMessage" xml:space="preserve">
+    <value>La canción está bloqueada. Las canciones bloqueadas no se pueden eliminar.</value>
+  </data>
+  <data name="Data.DeletingSongs" xml:space="preserve">
+    <value>Eliminando Canciones</value>
+  </data>
+  <data name="Data.MergeSongs" xml:space="preserve">
+    <value>Fusionar Canciones</value>
+  </data>
+  <data name="Data.ClickToFilterSongs" xml:space="preserve">
+    <value>Haz clic para filtrar canciones.</value>
+  </data>
+  <data name="Data.DisplayingPage" xml:space="preserve">
+    <value>Mostrando página {0} de {1} (total {2} registros)</value>
+  </data>
+  <data name="Data.YourFavoriteSongs" xml:space="preserve">
+    <value>Tus Canciones Favoritas</value>
+  </data>
+  <data name="Data.YourRatedSongs" xml:space="preserve">
+    <value>Tus Canciones Calificadas</value>
+  </data>
+  <data name="Data.SongMergingInfo" xml:space="preserve">
+    <value>La fusión de canciones permite combinar múltiples entradas de canciones. Esta función requiere una selección cuidadosa de las canciones a fusionar.</value>
+  </data>
+  <data name="Data.PlaylistLockedMessage" xml:space="preserve">
+    <value>La lista de reproducción está bloqueada. Las listas de reproducción bloqueadas no se pueden eliminar.</value>
+  </data>
+  <data name="Data.DeletingPlaylists" xml:space="preserve">
+    <value>Eliminando Listas de Reproducción</value>
+  </data>
+  <data name="Profile.YourProfile" xml:space="preserve">
+    <value>Tu Perfil</value>
+  </data>
+  <data name="Profile.ChangeProfilePicture" xml:space="preserve">
+    <value>Cambiar Foto de Perfil</value>
+  </data>
+  <data name="Profile.ProfileInformation" xml:space="preserve">
+    <value>Información del Perfil</value>
+  </data>
+  <data name="Profile.Username" xml:space="preserve">
+    <value>Nombre de usuario</value>
+  </data>
+  <data name="Profile.UsernameRequired" xml:space="preserve">
+    <value>El nombre de usuario es obligatorio</value>
+  </data>
+  <data name="Profile.Email" xml:space="preserve">
+    <value>Correo electrónico</value>
+  </data>
+  <data name="Profile.EmailRequired" xml:space="preserve">
+    <value>El correo electrónico es obligatorio</value>
+  </data>
+  <data name="Profile.EmailInvalid" xml:space="preserve">
+    <value>Por favor, introduce un correo electrónico válido</value>
+  </data>
+  <data name="Profile.Bio" xml:space="preserve">
+    <value>Biografía</value>
+  </data>
+  <data name="Profile.TimeZone" xml:space="preserve">
+    <value>Zona Horaria</value>
+  </data>
+  <data name="Profile.DefaultsToUTC" xml:space="preserve">
+    <value>Por defecto es UTC.</value>
+  </data>
+  <data name="Profile.SaveChanges" xml:space="preserve">
+    <value>Guardar Cambios</value>
+  </data>
+  <data name="Profile.Saving" xml:space="preserve">
+    <value>Guardando...</value>
+  </data>
+  <data name="Profile.LinkedAccounts" xml:space="preserve">
+    <value>Cuentas Vinculadas</value>
+  </data>
+  <data name="Profile.Google" xml:space="preserve">
+    <value>Google</value>
+  </data>
+  <data name="Profile.Linked" xml:space="preserve">
+    <value>Vinculado</value>
+  </data>
+  <data name="Profile.Unlink" xml:space="preserve">
+    <value>Desvincular</value>
+  </data>
+  <data name="Profile.Unlinking" xml:space="preserve">
+    <value>Desvinculando...</value>
+  </data>
+  <data name="Profile.LinkGoogleAccount" xml:space="preserve">
+    <value>Vincular Cuenta de Google</value>
+  </data>
+  <data name="Profile.Linking" xml:space="preserve">
+    <value>Vinculando...</value>
+  </data>
+  <data name="Profile.UnlinkConfirmation" xml:space="preserve">
+    <value>¿Estás seguro de que quieres desvincular tu cuenta de Google? Ya no podrás iniciar sesión con Google.</value>
+  </data>
+  <data name="Profile.UnlinkGoogleAccount" xml:space="preserve">
+    <value>Desvincular Cuenta de Google</value>
+  </data>
+  <data name="Profile.ProfileImage" xml:space="preserve">
+    <value>Imagen de Perfil</value>
+  </data>
+  <data name="Profile.InvalidTimeZone" xml:space="preserve">
+    <value>Zona Horaria Inválida</value>
+  </data>
+  <data name="Profile.InvalidTimeZoneDetail" xml:space="preserve">
+    <value>'{0}' no es un ID de zona horaria IANA válido.</value>
+  </data>
+  <data name="Profile.UpdateFailed" xml:space="preserve">
+    <value>Actualización Fallida</value>
+  </data>
+  <data name="Profile.ProfileUpdated" xml:space="preserve">
+    <value>Perfil Actualizado</value>
+  </data>
+  <data name="Profile.ProfileUpdatedDetail" xml:space="preserve">
+    <value>Tu perfil se ha actualizado correctamente.</value>
+  </data>
+  <data name="Profile.GoogleLinkedSuccess" xml:space="preserve">
+    <value>¡Cuenta de Google vinculada con éxito!</value>
+  </data>
+  <data name="Profile.GoogleUnlinkedSuccess" xml:space="preserve">
+    <value>Cuenta de Google desvinculada con éxito.</value>
+  </data>
+  <data name="Profile.GoogleLinkFailed" xml:space="preserve">
+    <value>Error al vincular la cuenta de Google</value>
+  </data>
+  <data name="Profile.GoogleUnlinkFailed" xml:space="preserve">
+    <value>Error al desvincular la cuenta de Google</value>
+  </data>
+  <data name="Profile.GoogleSignInUnavailable" xml:space="preserve">
+    <value>El inicio de sesión de Google no está disponible temporalmente</value>
+  </data>
+  <data name="Profile.GoogleSignInOpenFailed" xml:space="preserve">
+    <value>Error al abrir el inicio de sesión de Google</value>
+  </data>
+  <data name="Profile.LinkingError" xml:space="preserve">
+    <value>Se produjo un error al vincular. Por favor, inténtalo de nuevo.</value>
+  </data>
+  <data name="Profile.UnlinkingError" xml:space="preserve">
+    <value>Se produjo un error al desvincular. Por favor, inténtalo de nuevo.</value>
   </data>
 </root>

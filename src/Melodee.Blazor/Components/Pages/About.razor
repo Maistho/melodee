@@ -8,14 +8,14 @@
 @inject NavigationManager NavigationManager
 @inject IAppVersionProvider AppVersionProvider
 
-<PageTitle>About</PageTitle>
+<PageTitle>@L("Navigation.About")</PageTitle>
 
 <RadzenStack Gap="1rem">
-    <RadzenText TextStyle="TextStyle.H4">About @_siteTitle</RadzenText>
+    <RadzenText TextStyle="TextStyle.H4">@L("About.Title", _siteTitle)</RadzenText>
 
     <RadzenRow>
       <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-        <RadzenButton Text="API Docs (Swagger OpenAPI)" Icon="description" ButtonStyle="ButtonStyle.Info" Size="ButtonSize.Small" Style="margin-top: 0.5rem;" Click="@(() => NavigationManager.NavigateTo("/swagger", forceLoad: true))" />
+        <RadzenButton Text="@L("About.ApiDocs")" Icon="description" ButtonStyle="ButtonStyle.Info" Size="ButtonSize.Small" Style="margin-top: 0.5rem;" Click="@(() => NavigationManager.NavigateTo("/swagger", forceLoad: true))" />
       </RadzenStack>
     </RadzenRow>
 
@@ -23,10 +23,10 @@
         <RadzenColumn Size="12" SizeMD="6">
             <RadzenCard>
                 <RadzenStack Gap="0.25rem">
-                    <RadzenText TextStyle="TextStyle.Overline">Server Time</RadzenText>
-                    <RadzenText TextStyle="TextStyle.Caption">UTC</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Overline">@L("About.ServerTime")</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Caption">@L("About.UTC")</RadzenText>
                     <RadzenText TextStyle="TextStyle.H6">@_serverNowUtc.InUtc().LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)</RadzenText>
-                    <RadzenText TextStyle="TextStyle.Caption">Your Time (@CurrentUser?.TimeZoneId())</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Caption">@L("About.YourTime", CurrentUser?.TimeZoneId() ?? "")</RadzenText>
                     <RadzenText TextStyle="TextStyle.H6">@(CurrentUser?.FormatInstant(_serverNowUtc) ?? MelodeeConfiguration.DefaultNoValuePlaceHolder)</RadzenText>
                 </RadzenStack>
             </RadzenCard>
@@ -35,10 +35,10 @@
         <RadzenColumn Size="12" SizeMD="6">
             <RadzenCard>
                 <RadzenStack Gap="0.25rem">
-                    <RadzenText TextStyle="TextStyle.Overline">System Information</RadzenText>
-                    <RadzenText TextStyle="TextStyle.Caption">Platform</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Overline">@L("About.SystemInformation")</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Caption">@L("About.Platform")</RadzenText>
                     <RadzenText TextStyle="TextStyle.H6">@RuntimeInformation.FrameworkDescription</RadzenText>
-                    <RadzenText TextStyle="TextStyle.Caption">Version</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Caption">@L("About.Version")</RadzenText>
                     <RadzenText TextStyle="TextStyle.H6">@AppVersionProvider.GetSemVerForDisplay()</RadzenText>
                 </RadzenStack>
             </RadzenCard>
@@ -47,7 +47,7 @@
 
     <RadzenCard>
         <RadzenStack Gap="0.5rem">
-            <RadzenText TextStyle="TextStyle.H6" Text="Server Details"/>
+            <RadzenText TextStyle="TextStyle.H6" Text="@L("About.ServerDetails")"/>
             <RadzenDataGrid TItem="KeyValue"
                             Data="@_serverStats.OrderBy(x => x.Key)"
                             AllowPaging="false"
@@ -56,8 +56,8 @@
                             FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
                             Density="Density.Compact">
                 <Columns>
-                    <RadzenDataGridColumn TItem="KeyValue" Property="Key" Title="Property" Width="320px" />
-                    <RadzenDataGridColumn TItem="KeyValue" Title="Value">
+                    <RadzenDataGridColumn TItem="KeyValue" Property="Key" Title="@L("About.Property")" Width="320px" />
+                    <RadzenDataGridColumn TItem="KeyValue" Title="@L("About.Value")">
                         <Template Context="kv">@((MarkupString)(kv.Value ?? string.Empty))</Template>
                     </RadzenDataGridColumn>
                 </Columns>
@@ -67,12 +67,12 @@
 
     <RadzenCard>
         <RadzenStack Gap="0.5rem">
-            <RadzenText TextStyle="TextStyle.H6" Text="About Melodee"/>
+            <RadzenText TextStyle="TextStyle.H6" Text="@L("About.AboutMelodee")"/>
             <RadzenText TextStyle="TextStyle.Body1">
-                Melodee is a modern music server system that provides a comprehensive solution for managing and streaming your music collection.
+                @L("About.Description")
             </RadzenText>
             <RadzenText TextStyle="TextStyle.Body2">
-                For more information, visit the <RadzenLink Path="https://github.com/melodee-project" Text="Melodee GitHub Project" Target="_blank" />.
+                @L("About.ForMoreInfo") <RadzenLink Path="https://github.com/melodee-project" Text="@L("About.GitHubProject")" Target="_blank" />.
             </RadzenText>
         </RadzenStack>
     </RadzenCard>
@@ -93,12 +93,12 @@
         var configuration = await MelodeeConfigurationFactory.GetConfigurationAsync();
         _siteTitle = configuration.GetValue<string>(SettingRegistry.OpenSubsonicServerType) ?? string.Empty;
 
-        _serverStats.Add(new KeyValue("Platform", RuntimeInformation.OSDescription));
-        _serverStats.Add(new KeyValue("Architecture", RuntimeInformation.OSArchitecture.ToString()));
-        _serverStats.Add(new KeyValue(".NET Runtime", RuntimeInformation.FrameworkDescription));
-        _serverStats.Add(new KeyValue("Application", "Melodee Music System"));
-        _serverStats.Add(new KeyValue("Version", AppVersionProvider.GetSemVerForDisplay()));
-        _serverStats.Add(new KeyValue("GitHub", "<a target=\"_blank\" href=\"https://github.com/melodee-project\">melodee-project</a>"));
+        _serverStats.Add(new KeyValue(L("About.Platform"), RuntimeInformation.OSDescription));
+        _serverStats.Add(new KeyValue(L("About.Architecture"), RuntimeInformation.OSArchitecture.ToString()));
+        _serverStats.Add(new KeyValue(L("About.DotNetRuntime"), RuntimeInformation.FrameworkDescription));
+        _serverStats.Add(new KeyValue(L("About.Application"), L("About.ApplicationName")));
+        _serverStats.Add(new KeyValue(L("About.Version"), AppVersionProvider.GetSemVerForDisplay()));
+        _serverStats.Add(new KeyValue(L("About.GitHub"), "<a target=\"_blank\" href=\"https://github.com/melodee-project\">melodee-project</a>"));
     }
 
 }

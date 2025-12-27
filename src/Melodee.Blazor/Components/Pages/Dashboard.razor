@@ -1,4 +1,4 @@
-﻿@page "/"
+@page "/"
 
 @using Melodee.Common.Data.Models
 @using Melodee.Common.Enums
@@ -18,7 +18,7 @@
 @inject IMelodeeConfigurationFactory ConfigurationFactory
 @inject NavigationManager NavigationManager
 
-<PageTitle>Dashboard</PageTitle>
+<PageTitle>@L("Navigation.Dashboard")</PageTitle>
 
 
 <RadzenStack Gap="1rem">
@@ -30,7 +30,7 @@
       <HeaderTemplate>
         <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-align-items-center rz-m-0">
           <RadzenIcon Icon="push_pin" class="rz-me-1"/>
-          Your pins
+          @L("Dashboard.YourPins")
         </RadzenText>
       </HeaderTemplate>
       <ChildContent>
@@ -70,14 +70,14 @@
   <RadzenRow>
     <RadzenColumn Size="12" SizeMD="6">
       <RadzenCard>
-        <RadzenText TextStyle="TextStyle.H6">Your plays (last 30 days)</RadzenText>
+        <RadzenText TextStyle="TextStyle.H6">@L("Dashboard.YourPlaysLast30Days")</RadzenText>
         <RadzenChart Style="height: 200px;">
-          <RadzenLineSeries Data="@_playsPerDay" CategoryProperty="DayAsDateTime" ValueProperty="Value" Title="Plays" Smooth="true">
+          <RadzenLineSeries Data="@_playsPerDay" CategoryProperty="DayAsDateTime" ValueProperty="Value" Title="@L("Dashboard.Plays")" Smooth="true">
             <RadzenCategoryAxis Step="@TimeSpan.FromDays(7)" FormatString="{0:MM/dd}">
-              <RadzenAxisTitle Text="Date"/>
+              <RadzenAxisTitle Text="@L("Dashboard.Date")"/>
             </RadzenCategoryAxis>
             <RadzenValueAxis>
-              <RadzenAxisTitle Text="Plays"/>
+              <RadzenAxisTitle Text="@L("Dashboard.Plays")"/>
             </RadzenValueAxis>
           </RadzenLineSeries>
         </RadzenChart>
@@ -85,7 +85,7 @@
     </RadzenColumn>
     <RadzenColumn Size="12" SizeMD="6">
       <RadzenCard>
-        <RadzenText TextStyle="TextStyle.H6">Top played songs (last 30 days)</RadzenText>
+        <RadzenText TextStyle="TextStyle.H6">@L("Dashboard.TopPlayedSongsLast30Days")</RadzenText>
         @if (_topSongs.Length > 0)
         {
           <RadzenDataGrid TItem="TopItemStat"
@@ -97,18 +97,18 @@
                           Style="max-height: 200px; overflow-y: auto;"
                           RowClick="@OnTopSongRowClick">
             <Columns>
-              <RadzenDataGridColumn TItem="TopItemStat" Property="Label" Title="Song" Width="70%">
+              <RadzenDataGridColumn TItem="TopItemStat" Property="Label" Title="@L("Common.Song")" Width="70%">
                 <Template Context="song">
                   <span style="cursor: pointer;">@song.Label</span>
                 </Template>
               </RadzenDataGridColumn>
-              <RadzenDataGridColumn TItem="TopItemStat" Property="Value" Title="Plays" Width="30%" TextAlign="TextAlign.Right"/>
+              <RadzenDataGridColumn TItem="TopItemStat" Property="Value" Title="@L("Dashboard.Plays")" Width="30%" TextAlign="TextAlign.Right"/>
             </Columns>
           </RadzenDataGrid>
         }
         else
         {
-          <RadzenText TextStyle="TextStyle.Body2" Style="opacity: 0.7; padding: 1rem;">No play history yet. Start listening to see your top songs!</RadzenText>
+          <RadzenText TextStyle="TextStyle.Body2" Style="opacity: 0.7; padding: 1rem;">@L("Dashboard.NoPlayHistoryYet")</RadzenText>
         }
       </RadzenCard>
     </RadzenColumn>
@@ -120,7 +120,7 @@
       <HeaderTemplate>
         <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-align-items-center rz-m-0">
           <RadzenIcon Icon="history" class="rz-me-1"/>
-          Recently played
+          @L("Dashboard.RecentlyPlayed")
         </RadzenText>
       </HeaderTemplate>
       <ChildContent>
@@ -145,7 +145,7 @@
       <HeaderTemplate>
         <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-align-items-center rz-m-0">
           <RadzenIcon Icon="assignment" class="rz-me-1"/>
-          Request Activity
+          @L("Dashboard.RequestActivity")
           <RadzenBadge BadgeStyle="BadgeStyle.Danger" IsPill="true" Text="@_unreadRequests.Length.ToString()" Class="rz-ms-2"/>
         </RadzenText>
       </HeaderTemplate>
@@ -159,22 +159,22 @@
                         Style="max-height: 300px; overflow-y: auto;"
                         RowClick="@OnRequestRowClick">
           <Columns>
-            <RadzenDataGridColumn TItem="Request" Property="CategoryValue" Title="Category" Width="120px">
+            <RadzenDataGridColumn TItem="Request" Property="CategoryValue" Title="@L("Dashboard.Category")" Width="120px">
               <Template Context="req">
                 <RadzenBadge IsPill="true" BadgeStyle="@GetCategoryBadgeStyle(req.CategoryValue)" Text="@req.CategoryValue.ToString()"/>
               </Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="Request" Property="Description" Title="Description">
+            <RadzenDataGridColumn TItem="Request" Property="Description" Title="@L("Dashboard.Description")">
               <Template Context="req">
                 <span style="cursor: pointer;">@(req.Description.Length > 80 ? req.Description[..80] + "..." : req.Description)</span>
               </Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="Request" Property="LastActivityTypeValue" Title="Activity" Width="120px">
+            <RadzenDataGridColumn TItem="Request" Property="LastActivityTypeValue" Title="@L("Dashboard.Activity")" Width="120px">
               <Template Context="req">
                 <RadzenText Text="@req.LastActivityTypeValue.ToString()"/>
               </Template>
             </RadzenDataGridColumn>
-            <RadzenDataGridColumn TItem="Request" Property="LastActivityAt" Title="When" Width="150px">
+            <RadzenDataGridColumn TItem="Request" Property="LastActivityAt" Title="@L("Dashboard.When")" Width="150px">
               <Template Context="req">
                 <RadzenText Text="@CurrentUser?.FormatInstant(req.LastActivityAt)"/>
               </Template>
@@ -189,7 +189,7 @@
     <HeaderTemplate>
       <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-m-0">
         <RadzenIcon Icon="person" class="rz-me-1"/>
-        Recently added artists
+        @L("Dashboard.RecentlyAddedArtists")
       </RadzenText>
     </HeaderTemplate>
     <ChildContent>
@@ -210,7 +210,7 @@
     <HeaderTemplate>
       <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-m-0">
         <RadzenIcon Icon="album" class="rz-me-1"/>
-        Recently added albums
+        @L("Dashboard.RecentlyAddedAlbums")
       </RadzenText>
     </HeaderTemplate>
     <ChildContent>

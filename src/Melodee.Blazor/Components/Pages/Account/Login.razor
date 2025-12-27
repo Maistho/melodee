@@ -16,6 +16,7 @@
 @inject IJSRuntime JsRuntime
 @inject IOptions<GoogleAuthOptions> GoogleAuthOptions
 @inject IHttpClientFactory HttpClientFactory
+@inject ILocalizationService LocalizationService
 
 @implements IAsyncDisposable
 
@@ -34,7 +35,7 @@ else
             <RadzenCard class="rz-shadow-0 rz-border-radius-0 rz-text-align-center rz-p-12"
                         Style="height: 100%; background: var(--rz-primary-light) no-repeat 100% 70% fixed url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwNCIgaGVpZ2h0PSIxNDU4IiB2aWV3Qm94PSIwIDAgMTIwNCAxNDU4IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8ZyBvcGFjaXR5PSIwLjUiIGZpbHRlcj0idXJsKCNmaWx0ZXIwX2ZfNDkzXzEwMTM0KSI+CjxjaXJjbGUgY3g9IjcyMi4xMjgiIGN5PSI4MzkuMDIiIHI9IjQ4MS40MTkiIGZpbGw9InVybCgjcGFpbnQwX3JhZGlhbF80OTNfMTAxMzQpIi8+CjwvZz4KPGcgb3BhY2l0eT0iMC41IiBmaWx0ZXI9InVybCgjZmlsdGVyMV9mXzQ5M18xMDEzNCkiPgo8Y2lyY2xlIGN4PSI0NzAuMzMzIiBjeT0iNTcwLjMzMyIgcj0iNDcwLjMzMyIgZmlsbD0idXJsKCNwYWludDFfcmFkaWFsXzQ5M18xMDEzNCkiLz4KPC9nPgo8ZyBvcGFjaXR5PSIwLjUiIGZpbHRlcj0idXJsKCNmaWx0ZXIyX2ZfNDkzXzEwMTM0KSI+CjxjaXJjbGUgY3g9IjY5MS41MTEiIGN5PSI1MjIuMjk3IiByPSIzMzEuNTAzIiBmaWxsPSJ1cmwoI3BhaW50Ml9yYWRpYWxfNDkzXzEwMTM0KSIvPgo8L2c+CjxnIG9wYWNpdHk9IjAuNSIgZmlsdGVyPSJ1cmwoI2ZpbHRlcjNfZl80OTNfMTAxMzQpIj4KPGNpcmNsZSBjeD0iNjA4LjI0NCIgY3k9IjEwNzkuOTciIHI9IjMzMS41MDMiIHRyYW5zZm9ybT0icm90YXRlKC04MS4yMjQ0IDYwOC4yNDQgMTA3OS45NykiIGZpbGw9InVybCgjcGFpbnQzX3JhZGlhbF80OTNfMTAxMzQpIi8+CjwvZz4KPGRlZnM+CjxmaWx0ZXIgaWQ9ImZpbHRlcjBfZl80OTNfMTAxMzQiIHg9IjE0MC43MDkiIHk9IjI1Ny42MDEiIHdpZHRoPSIxMTYyLjg0IiBoZWlnaHQ9IjExNjIuODQiIGZpbHRlclVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzPSJzUkdCIj4KPGZlRmxvb2QgZmxvb2Qtb3BhY2l0eT0iMCIgcmVzdWx0PSJCYWNrZ3JvdW5kSW1hZ2VGaXgiLz4KPGZlQmxlbmQgbW9kZT0ibm9ybWFsIiBpbj0iU291cmNlR3JhcGhpYyIgaW4yPSJCYWNrZ3JvdW5kSW1hZ2VGaXgiIHJlc3VsdD0ic2hhcGUiLz4KPGZlR2F1c3NpYW5CbHVyIHN0ZERldmlhdGlvbj0iNTAiIHJlc3VsdD0iZWZmZWN0MV9mb3JlZ3JvdW5kQmx1cl80OTNfMTAxMzQiLz4KPC9maWx0ZXI+CjxmaWx0ZXIgaWQ9ImZpbHRlcjFfZl80OTNfMTAxMzQiIHg9Ii0xMDAiIHk9IjAiIHdpZHRoPSIxMTQwLjY3IiBoZWlnaHQ9IjExNDAuNjciIGZpbHRlclVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzPSJzUkdCIj4KPGZlRmxvb2QgZmxvb2Qtb3BhY2l0eT0iMCIgcmVzdWx0PSJCYWNrZ3JvdW5kSW1hZ2VGaXgiLz4KPGZlQmxlbmQgbW9kZT0ibm9ybWFsIiBpbj0iU291cmNlR3JhcGhpYyIgaW4yPSJCYWNrZ3JvdW5kSW1hZ2VGaXgiIHJlc3VsdD0ic2hhcGUiLz4KPGZlR2F1c3NpYW5CbHVyIHN0ZERldmlhdGlvbj0iNTAiIHJlc3VsdD0iZWZmZWN0MV9mb3JlZ3JvdW5kQmx1cl80OTNfMTAxMzQiLz4KPC9maWx0ZXI+CjxmaWx0ZXIgaWQ9ImZpbHRlcjJfZl80OTNfMTAxMzQiIHg9IjI2MC4wMDgiIHk9IjkwLjc5MzkiIHdpZHRoPSI4NjMuMDA2IiBoZWlnaHQ9Ijg2My4wMDYiIGZpbHRlclVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzPSJzUkdCIj4KPGZlRmxvb2QgZmxvb2Qtb3BhY2l0eT0iMCIgcmVzdWx0PSJCYWNrZ3JvdW5kSW1hZ2VGaXgiLz4KPGZlQmxlbmQgbW9kZT0ibm9ybWFsIiBpbj0iU291cmNlR3JhcGhpYyIgaW4yPSJCYWNrZ3JvdW5kSW1hZ2VGaXgiIHJlc3VsdD0ic2hhcGUiLz4KPGZlR2F1c3NpYW5CbHVyIHN0ZERldmlhdGlvbj0iNTAiIHJlc3VsdD0iZWZmZWN0MV9mb3JlZ3JvdW5kQmx1cl80OTNfMTAxMzQiLz4KPC9maWx0ZXI+CjxmaWx0ZXIgaWQ9ImZpbHRlcjNfZl80OTNfMTAxMzQiIHg9IjE3Ni42OTQiIHk9IjY0OC40MjMiIHdpZHRoPSI4NjMuMSIgaGVpZ2h0PSI4NjMuMSIgZmlsdGVyVW5pdHM9InVzZXJTcGFjZU9uVXNlIiBjb2xvci1pbnRlcnBvbGF0aW9uLWZpbHRlcnM9InNSR0IiPgo8ZmVGbG9vZCBmbG9vZC1vcGFjaXR5PSIwIiByZXN1bHQ9IkJhY2tncm91bmRJbWFnZUZpeCIvPgo8ZmVCbGVuZCBtb2RlPSJub3JtYWwiIGluPSJTb3VyY2VHcmFwaGljIiBpbjI9IkJhY2tncm91bmRJbWFnZUZpeCIgcmVzdWx0PSJzaGFwZSIvPgo8ZmVHYXVzc2lhbkJsdXIgc3RkRGV2aWF0aW9uPSI1MCIgcmVzdWx0PSJlZmZlY3QxX2ZvcmVncm91bmRCbHVyXzQ5M18xMDEzNCIvPgo8L2ZpbHRlcj4KPHJhZGlhbEdyYWRpZW50IGlkPSJwYWludDBfcmFkaWFsXzQ5M18xMDEzNCIgY3g9IjAiIGN5PSIwIiByPSIxIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgZ3JhZGllbnRUcmFuc2Zvcm09InRyYW5zbGF0ZSg3MjIuMTI4IDgzOS4wMikgcm90YXRlKDkwKSBzY2FsZSg0ODEuNDE5KSI+CjxzdG9wIHN0b3AtY29sb3I9IiNGRjFBNkMiLz4KPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjRkYxQTZDIiBzdG9wLW9wYWNpdHk9IjAiLz4KPC9yYWRpYWxHcmFkaWVudD4KPHJhZGlhbEdyYWRpZW50IGlkPSJwYWludDFfcmFkaWFsXzQ5M18xMDEzNCIgY3g9IjAiIGN5PSIwIiByPSIxIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgZ3JhZGllbnRUcmFuc2Zvcm09InRyYW5zbGF0ZSg0NzAuMzMzIDU3MC4zMzMpIHJvdGF0ZSg5MCkgc2NhbGUoNDcwLjMzMykiPgo8c3RvcCBzdG9wLWNvbG9yPSIjM0FBQ0ZGIi8+CjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzNBOTVGRiIgc3RvcC1vcGFjaXR5PSIwIi8+CjwvcmFkaWFsR3JhZGllbnQ+CjxyYWRpYWxHcmFkaWVudCBpZD0icGFpbnQyX3JhZGlhbF80OTNfMTAxMzQiIGN4PSIwIiBjeT0iMCIgcj0iMSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiIGdyYWRpZW50VHJhbnNmb3JtPSJ0cmFuc2xhdGUoNjkxLjUxMSA1MjIuMjk3KSByb3RhdGUoOTApIHNjYWxlKDMzMS41MDMpIj4KPHN0b3Agc3RvcC1jb2xvcj0iIzQ4M0FGRiIvPgo8c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM0ODNBRkYiIHN0b3Atb3BhY2l0eT0iMCIvPgo8L3JhZGlhbEdyYWRpZW50Pgo8cmFkaWFsR3JhZGllbnQgaWQ9InBhaW50M19yYWRpYWxfNDkzXzEwMTM0IiBjeD0iMCIgY3k9IjAiIHI9IjEiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIiBncmFkaWVudFRyYW5zZm9ybT0idHJhbnNsYXRlKDYwOC4yNDQgMTA3OS45Nykgcm90YXRlKDkwKSBzY2FsZSgzMzEuNTAzKSI+CjxzdG9wIHN0b3AtY29sb3I9IiNGRkM4M0EiLz4KPHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjRkZDODNBIiBzdG9wLW9wYWNpdHk9IjAiLz4KPC9yYWRpYWxHcmFkaWVudD4KPC9kZWZzPgo8L3N2Zz4K')">
                 <RadzenText TextStyle="TextStyle.DisplayH3" TagName="TagName.H4" class="rz-color-white rz-mb-6">
-                    Welcome!
+                    @LocalizationService.Localize("Auth.Welcome")
                 </RadzenText>
                 <RadzenImage Path="images/melodee-logo-small.png" Style="width:100px;" AlternateText="melodee"/>
             </RadzenCard>
@@ -58,7 +59,7 @@ else
                         <RadzenRow AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Gap="0.5rem">
                             <RadzenColumn Size="5"><hr style="border-top: 1px solid var(--rz-text-disabled-color);"/></RadzenColumn>
                             <RadzenColumn Size="2" class="rz-text-align-center">
-                                <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-disabled-color);">or</RadzenText>
+                                <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-disabled-color);">@LocalizationService.Localize("Auth.Or")</RadzenText>
                             </RadzenColumn>
                             <RadzenColumn Size="5"><hr style="border-top: 1px solid var(--rz-text-disabled-color);"/></RadzenColumn>
                         </RadzenRow>
@@ -68,7 +69,7 @@ else
                                       Variant="Variant.Outlined"
                                       Style="width: 100%; justify-content: center;"
                                       Disabled="@_isGoogleSigningIn"
-                                      aria-label="Continue with Google">
+                                       aria-label="@LocalizationService.Localize("Auth.ContinueWithGoogle")">
                             @if (_isGoogleSigningIn)
                             {
                                 <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Primary" 
@@ -77,7 +78,7 @@ else
                                                            Mode="ProgressBarMode.Indeterminate" 
                                                            Size="ProgressBarCircularSize.Small"
                                                            Style="margin-right: 8px;"/>
-                                <span>Signing in...</span>
+                                <span>@LocalizationService.Localize("Auth.SigningIn")</span>
                             }
                             else
                             {
@@ -87,7 +88,7 @@ else
                                     <path fill="#FBBC05" d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/>
                                     <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
                                 </svg>
-                                <span>Continue with Google</span>
+                                <span>@LocalizationService.Localize("Auth.ContinueWithGoogle")</span>
                             }
                         </RadzenButton>
                         
@@ -127,10 +128,12 @@ else
             SummaryContent = ns => @<RadzenText TextStyle="TextStyle.H6">@title</RadzenText>,
             DetailContent = ns => @<RadzenStack>
                                       <RadzenText TextStyle="TextStyle.Subtitle1">@message</RadzenText>
-                                      <RadzenButton Text="Close" Click="@(args => ns.Messages.Clear())"></RadzenButton>
-                                  </RadzenStack>
+                                      <RadzenButton Text="@L("Actions.Close")" Click="@(args => ns.Messages.Clear())"></RadzenButton>
+                                   </RadzenStack>
         });
     }
+    
+    string L(string key, params object[] args) => LocalizationService.Localize(key, args);
     
     void ShowSuccessNotification(string title, string message)
     {
@@ -187,7 +190,7 @@ else
         catch (Exception ex)
         {
             Trace.WriteLine($"Failed to initialize Google Sign-In: {ex.Message}");
-            _googleAuthError = "Google Sign-In is temporarily unavailable";
+            _googleAuthError = L("Auth.GoogleSignInUnavailable");
         }
     }
 
@@ -206,7 +209,7 @@ else
         catch (Exception ex)
         {
             Trace.WriteLine($"Error prompting Google Sign-In: {ex.Message}");
-            _googleAuthError = "Failed to open Google Sign-In";
+            _googleAuthError = L("Auth.FailedToOpenGoogleSignIn");
             _isGoogleSigningIn = false;
             StateHasChanged();
         }
@@ -237,13 +240,13 @@ else
                     if (user.IsSuccess && user.Data != null)
                     {
                         await AuthService.Login(user.Data.ToUserInfo().ToClaimsPrincipal(config, userImageLibrary.Data?.Path ?? string.Empty));
-                        ShowSuccessNotification("Welcome!", $"Signed in as {authResponse.User.UserName}");
+                        ShowSuccessNotification(L("Auth.Welcome"), L("Auth.SignedInAs", authResponse.User.UserName ?? string.Empty));
                         NavigationManager.NavigateTo(ReturnUrl ?? "/");
                         return;
                     }
                 }
                 
-                _googleAuthError = "Failed to complete sign-in";
+                _googleAuthError = L("Auth.FailedToCompleteSignIn");
             }
             else
             {
@@ -254,7 +257,7 @@ else
         catch (Exception ex)
         {
             Trace.WriteLine($"Error during Google Sign-In: {ex.Message}");
-            _googleAuthError = "An error occurred during sign-in. Please try again.";
+            _googleAuthError = L("Auth.SignInErrorTryAgain");
         }
         finally
         {
@@ -280,17 +283,17 @@ else
         return Task.CompletedTask;
     }
 
-    private static string MapGoogleAuthError(string? errorCode, string? message)
+    private string MapGoogleAuthError(string? errorCode, string? message)
     {
         return errorCode switch
         {
-            "invalid_google_token" => "Invalid Google credentials. Please try again.",
-            "expired_google_token" => "Your Google session has expired. Please sign in again.",
-            "google_account_not_linked" => "This Google account is not linked to any Melodee account. Please sign in with your password and link your Google account from your profile.",
-            "signup_disabled" => "New account registration is currently disabled. Please contact an administrator.",
-            "forbidden_tenant" => "Your Google account domain is not allowed. Please use a different account.",
-            "account_disabled" => "Your account has been disabled. Please contact support.",
-            _ => message ?? "An error occurred during Google Sign-In. Please try again."
+            "invalid_google_token" => L("Auth.InvalidGoogleCredentials"),
+            "expired_google_token" => L("Auth.GoogleSessionExpired"),
+            "google_account_not_linked" => L("Auth.GoogleAccountNotLinked"),
+            "signup_disabled" => L("Auth.SignupDisabled"),
+            "forbidden_tenant" => L("Auth.ForbiddenTenant"),
+            "account_disabled" => L("Auth.AccountDisabled"),
+            _ => message ?? L("Auth.GoogleSignInError")
         };
     }
 
@@ -303,7 +306,7 @@ else
             var user = await UserService.LoginUserByUsernameAsync(args.Username, args.Password);
             if (user.Data == null || !user.IsSuccess)
             {
-                ShowNotification("Invalid email or password.", "Melodee is unable to log you in. perhaps you are banned?");
+                ShowNotification(L("Auth.InvalidEmailOrPassword"), L("Auth.UnableToLogin"));
                 return;
             }
 

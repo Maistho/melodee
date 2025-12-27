@@ -15,19 +15,19 @@
 @inject DialogService DialogService
 @inject NavigationManager NavigationManager
 
-<PageTitle>Songs</PageTitle>
+<PageTitle>@L("Navigation.Songs")</PageTitle>
 
 <RadzenStack Style="height: 100%">
     <RadzenBreadCrumb Class="rz-pb-5">
-        <RadzenBreadCrumbItem Path="/" Text="Dashboard"/>
-        <RadzenBreadCrumbItem Icon="music_note" Text="Songs"/>
+        <RadzenBreadCrumbItem Path="/" Text="@L("Navigation.Dashboard")"/>
+        <RadzenBreadCrumbItem Icon="music_note" Text="@L("Navigation.Songs")"/>
     </RadzenBreadCrumb>
     <RadzenRow>
         <RadzenPanel class="rz-w-100" AllowCollapse="true">
             <HeaderTemplate>
                 <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-align-items-center rz-m-0">
                     <RadzenIcon Icon="monitoring" class="rz-me-1"/>
-                    Statistics
+                    @L("Data.Statistics")
                 </RadzenText>
             </HeaderTemplate>
             <ChildContent>
@@ -42,7 +42,7 @@
                         <RadzenBadge @onclick="@(() => StatClickAsync(statistic))"
                                      BadgeStyle="DetermineBadgeStyle(statistic)"
                                      Shade="Shade.Dark"
-                                     title="Click to filter songs."
+                                     title="@L("Data.ClickToFilterSongs")"
                                      Style="min-width: 200px;cursor:pointer;">
                             <RadzenIcon Icon="@statistic.Icon"/>
                             <RadzenIcon Icon="filter_alt"/>
@@ -67,7 +67,7 @@
     </RadzenRow>
     <RadzenRow AlignItems="AlignItems.Center">
         <RadzenColumn Size="12" SizeMD="6">
-            <RadzenText Text="Songs" TextStyle="TextStyle.DisplayH6" TagName="TagName.H1" style="margin: 0"/>
+            <RadzenText Text="@L("Navigation.Songs")" TextStyle="TextStyle.DisplayH6" TagName="TagName.H1" style="margin: 0"/>
         </RadzenColumn>
         <RadzenColumn Size="12" SizeMD="6" Visible="CurrentUser?.IsEditor() ?? false">
             <RadzenStack
@@ -75,7 +75,7 @@
                 AlignItems="AlignItems.Center"
                 JustifyContent="JustifyContent.End"
                 Gap="0.5rem">
-                <RadzenButton Icon="delete" Disabled="!_selectedSongs.Any()" Text="Delete"
+                <RadzenButton Icon="delete" Disabled="!_selectedSongs.Any()" Text="@L("Actions.Delete")"
                               Click="@DeleteSelectedButtonClick"
                               Size="ButtonSize.Small"
                               ButtonStyle="ButtonStyle.Warning"/>
@@ -130,7 +130,7 @@
                     </HeaderTemplate>
                     <Template Context="data">
                         <RadzenIcon Icon="lock" IconColor="@Colors.Warning" Visible="@(data.IsLocked)"
-                                    title="Album is locked. Locked albums cannot be deleted."/>
+                                    title="@L("Data.SongLockedMessage")"/>
                         <RadzenCheckBox
                             TabIndex="-1"
                             TriState="false"
@@ -141,7 +141,7 @@
                             TValue="bool"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(SongDataInfo.Title)" Title="Title" Width="300px">
+                <RadzenDataGridColumn Property="@nameof(SongDataInfo.Title)" Title="@L("Data.Title")" Width="300px">
                     <Template Context="data">
                         <RadzenButton Style="float:right;margin-top: 7px;" Visible="@(CurrentUser?.IsEditor() ?? false)"
                                       Size="ButtonSize.ExtraSmall"
@@ -150,52 +150,52 @@
                         <RadzenLink text="@data.Title" class="rz-text-wrap" Path="@($"/data/song/{data.ApiKey}")"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(SongDataInfo.AlbumName)" Title="Album" Width="150px">
+                <RadzenDataGridColumn Property="@nameof(SongDataInfo.AlbumName)" Title="@L("Data.Album")" Width="150px">
                     <Template Context="data">
                         <RadzenLink text="@data.AlbumName" class="rz-text-wrap"
                                     Path="@($"/data/album/{data.AlbumApiKey}")"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(SongDataInfo.ArtistName)" Title="Artist" Width="150px">
+                <RadzenDataGridColumn Property="@nameof(SongDataInfo.ArtistName)" Title="@L("Data.Artist")" Width="150px">
                     <Template Context="data">
                         <RadzenLink text="@data.ArtistName" class="rz-text-wrap"
                                     Path="@($"/data/artist/{data.ArtistApiKey}")"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(SongDataInfo.SongNumber)" Title="Song #" Width="90px">
+                <RadzenDataGridColumn Property="@nameof(SongDataInfo.SongNumber)" Title="@L("Data.SongNumber")" Width="90px">
                     <Template Context="data">
                         <RadzenText Text="@CurrentUser?.FormatNumber(data.SongNumber)"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(SongDataInfo.FileSize)" Title="File size" Width="120px">
+                <RadzenDataGridColumn Property="@nameof(SongDataInfo.FileSize)" Title="@L("Data.FileSize")" Width="120px">
                     <Template Context="data">
                         <RadzenText Text="@data.FileSize.FormatFileSize()"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(SongDataInfo.Duration)" Title="Duration" Width="120px">
+                <RadzenDataGridColumn Property="@nameof(SongDataInfo.Duration)" Title="@L("Data.Duration")" Width="120px">
                     <Template Context="data">
                         <RadzenText Text="@data.Duration.ToFormattedDateTimeOffset()"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(SongDataInfo.CreatedAt)" Title="Created" Filterable="false"
+                <RadzenDataGridColumn Property="@nameof(SongDataInfo.CreatedAt)" Title="@L("Data.Created")" Filterable="false"
                                       Width="100px">
                     <Template Context="data">
                         <RadzenText Text="@CurrentUser?.FormatInstant(data.CreatedAt)"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(SongDataInfo.UserStarred)" Title="Loved" Filterable="true"
+                <RadzenDataGridColumn Property="@nameof(SongDataInfo.UserStarred)" Title="@L("Data.Loved")" Filterable="true"
                                       Width="70px">
                     <Template Context="data">
                         <RadzenCheckBox Value="@data.UserStarred"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(SongDataInfo.UserRating)" Title="Rating" Filterable="true"
+                <RadzenDataGridColumn Property="@nameof(SongDataInfo.UserRating)" Title="@L("Data.Rating")" Filterable="true"
                                       Width="70px">
                     <Template Context="data">
                         <RadzenText Text="@(data.UserRating.ToString())"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(SongDataInfo.Tags)" Title="Tags" Width="100px">
+                <RadzenDataGridColumn Property="@nameof(SongDataInfo.Tags)" Title="@L("Data.Tags")" Width="100px">
                     <Template Context="data">
                         <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="5px">
                             @foreach (var name in data.Tags?.ToTags() ?? [])
@@ -309,18 +309,18 @@
 
     private async Task DeleteSelectedButtonClick()
     {
-        var confirm = await DialogService.Confirm("Are you sure?", "Delete confirmation", new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" });
+        var confirm = await DialogService.Confirm(L("Messages.ConfirmDelete"), L("Data.ConfirmDelete"), new ConfirmOptions { OkButtonText = L("Actions.Yes"), CancelButtonText = L("Actions.No") });
         if (confirm ?? false)
         {
             var deleteResult = await SongService.DeleteAsync(_selectedSongs.Select(x => x.Id).ToArray());
             if (deleteResult.IsSuccess)
             {
-                NotificationService.Notify(NotificationMessageForResult(deleteResult, "Deleting Songs", ToastTime));
+                NotificationService.Notify(NotificationMessageForResult(deleteResult, L("Data.DeletingSongs"), ToastTime));
                 await _grid.RefreshDataAsync();
                 return;
             }
 
-            NotificationService.Notify(NotificationMessageForResult(deleteResult, "Deleting Songs", ToastTime));
+            NotificationService.Notify(NotificationMessageForResult(deleteResult, L("Data.DeletingSongs"), ToastTime));
         }
     }
 
@@ -331,10 +331,10 @@
 
     private async void MergeSelectedButtonClick()
     {
-        await DialogService.OpenAsync("Merge Songs", ds =>
+        await DialogService.OpenAsync(L("Data.MergeSongs"), ds =>
             @<div>
-                <RadzenText>Song merging allows combining multiple song entries. This feature requires careful selection of songs to merge.</RadzenText>
-                <RadzenButton Text="OK" Click="@(() => ds.Close())" class="rz-mt-3"/>
+                <RadzenText>@L("Data.SongMergingInfo")</RadzenText>
+                <RadzenButton Text="@L("Data.OK")" Click="@(() => ds.Close())" class="rz-mt-3"/>
             </div>,
             new DialogOptions { Width = "500px" });
     }
@@ -342,7 +342,7 @@
 
     private async Task StatClickAsync(Statistic statistic)
     {
-        if (statistic.Title.ToNormalizedString() == "Your Favorite Songs".ToNormalizedString())
+        if (statistic.Title.ToNormalizedString() == L("Data.YourFavoriteSongs").ToNormalizedString())
         {
             _yourFavoriteSongsFilterSet = !_yourFavoriteSongsFilterSet;
             var column = _grid.ColumnsCollection.FirstOrDefault(x => x.Property == "UserStarred");
@@ -362,7 +362,7 @@
             }
         }
 
-        if (statistic.Title.ToNormalizedString() == "Your Rated Songs".ToNormalizedString())
+        if (statistic.Title.ToNormalizedString() == L("Data.YourRatedSongs").ToNormalizedString())
         {
             _yourRatedSongsFilterSet = !_yourRatedSongsFilterSet;
             var column = _grid.ColumnsCollection.FirstOrDefault(x => x.Property == "UserRating");
@@ -385,12 +385,12 @@
 
     private BadgeStyle DetermineBadgeStyle(Statistic statistic)
     {
-        if (_yourFavoriteSongsFilterSet && statistic.Title.ToNormalizedString() == "Your Favorite Songs".ToNormalizedString())
+        if (_yourFavoriteSongsFilterSet && statistic.Title.ToNormalizedString() == L("Data.YourFavoriteSongs").ToNormalizedString())
         {
             return BadgeStyle.Warning;
         }
 
-        if (_yourRatedSongsFilterSet && statistic.Title.ToNormalizedString() == "Your Rated Songs".ToNormalizedString())
+        if (_yourRatedSongsFilterSet && statistic.Title.ToNormalizedString() == L("Data.YourRatedSongs").ToNormalizedString())
         {
             return BadgeStyle.Warning;
         }

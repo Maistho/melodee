@@ -15,16 +15,16 @@
 @inject NavigationManager NavigationManager
 @inject DefaultImages DefaultImages
 
-<PageTitle>Playlists</PageTitle>
+<PageTitle>@L("Navigation.Playlists")</PageTitle>
 
 <RadzenStack Style="height: 100%">
     <RadzenBreadCrumb Class="rz-pb-5">
-        <RadzenBreadCrumbItem Path="/" Text="Dashboard"/>
-        <RadzenBreadCrumbItem Icon="playlist_play" Text="Playlists"/>
+        <RadzenBreadCrumbItem Path="/" Text="@L("Navigation.Dashboard")"/>
+        <RadzenBreadCrumbItem Icon="playlist_play" Text="@L("Navigation.Playlists")"/>
     </RadzenBreadCrumb>
     <RadzenRow AlignItems="AlignItems.Center">
         <RadzenColumn Size="12" SizeMD="6">
-            <RadzenText Text="Playlists" TextStyle="TextStyle.DisplayH6" TagName="TagName.H1" style="margin: 0"/>
+            <RadzenText Text="@L("Navigation.Playlists")" TextStyle="TextStyle.DisplayH6" TagName="TagName.H1" style="margin: 0"/>
         </RadzenColumn>
         <RadzenColumn Size="12" SizeMD="6" Visible="CurrentUser?.IsEditor() ?? false">
             <RadzenStack
@@ -32,7 +32,7 @@
                 AlignItems="AlignItems.Center"
                 JustifyContent="JustifyContent.End"
                 Gap="0.5rem">
-                <RadzenButton Icon="delete" Disabled="!_selectedPlaylists.Any()" Text="Delete"
+                <RadzenButton Icon="delete" Disabled="!_selectedPlaylists.Any()" Text="@L("Actions.Delete")"
                               Click="@DeleteSelectedButtonClick"
                               Size="ButtonSize.Small"
                               ButtonStyle="ButtonStyle.Warning"/>
@@ -82,7 +82,7 @@
                     </HeaderTemplate>
                     <Template Context="data">
                         <RadzenIcon Icon="lock" IconColor="@Colors.Warning" Visible="@(data.IsLocked)"
-                                    MouseEnter="@(args => ShowTooltip(args, "Playlist is locked. Locked playlists cannot be deleted."))"/>
+                                    MouseEnter="@(args => ShowTooltip(args, L("Data.PlaylistLockedMessage")))"/>
                         <RadzenCheckBox
                             TabIndex="-1"
                             TriState="false"
@@ -93,7 +93,7 @@
                             TValue="bool"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(Playlist.Name)" Title="Name">
+                <RadzenDataGridColumn Property="@nameof(Playlist.Name)" Title="@L("Data.Name")">
                     <Template Context="data">
                         <RadzenButton Style="float:right;margin-top: 7px;" Visible="@(CurrentUser?.IsEditor() ?? false)"
                                       Size="ButtonSize.ExtraSmall"
@@ -103,13 +103,13 @@
                     </Template>
                 </RadzenDataGridColumn>
 
-                <RadzenDataGridColumn Property="@nameof(Playlist.CreatedAt)" Title="Created" Filterable="false"
+                <RadzenDataGridColumn Property="@nameof(Playlist.CreatedAt)" Title="@L("Data.Created")" Filterable="false"
                                       Width="120px">
                     <Template Context="data">
                         <RadzenText Text="@CurrentUser?.FormatInstant(data.CreatedAt)"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(Playlist.Tags)" Title="Tags" Width="100px">
+                <RadzenDataGridColumn Property="@nameof(Playlist.Tags)" Title="@L("Data.Tags")" Width="100px">
                     <Template Context="data">
                         <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="5px">
                             @foreach (var name in data.Tags?.ToTags() ?? [])
@@ -196,18 +196,18 @@
 
     private async Task DeleteSelectedButtonClick()
     {
-        var confirm = await DialogService.Confirm("Are you sure?", "Delete confirmation", new ConfirmOptions { OkButtonText = "Yes", CancelButtonText = "No" });
+        var confirm = await DialogService.Confirm(L("Messages.ConfirmDelete"), L("Data.ConfirmDelete"), new ConfirmOptions { OkButtonText = L("Actions.Yes"), CancelButtonText = L("Actions.No") });
         if (confirm ?? false)
         {
             var deleteResult = await PlaylistService.DeleteAsync(CurrentUser!.UserId(), _selectedPlaylists.Select(x => x.Id).ToArray());
             if (deleteResult.IsSuccess)
             {
-                NotificationService.Notify(NotificationMessageForResult(deleteResult, "Deleting Shares", ToastTime));
+                NotificationService.Notify(NotificationMessageForResult(deleteResult, L("Data.DeletingPlaylists"), ToastTime));
                 await _grid.RefreshDataAsync();
                 return;
             }
 
-            NotificationService.Notify(NotificationMessageForResult(deleteResult, "Deleting Shares", ToastTime));
+            NotificationService.Notify(NotificationMessageForResult(deleteResult, L("Data.DeletingPlaylists"), ToastTime));
         }
     }
 
