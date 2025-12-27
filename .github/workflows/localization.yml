@@ -44,7 +44,7 @@ jobs:
         BASE_COUNT=$(grep -o '<data name="[^"]*"' src/Melodee.Blazor/Resources/SharedResources.resx | wc -l)
         echo "| en-US (Base) | $BASE_COUNT |" >> $GITHUB_STEP_SUMMARY
         
-        for lang in es-ES ru-RU zh-CN fr-FR ar-SA; do
+        for lang in de-DE es-ES fr-FR it-IT ja-JP pt-BR ru-RU zh-CN ar-SA; do
           COUNT=$(grep -o '<data name="[^"]*"' src/Melodee.Blazor/Resources/SharedResources.$lang.resx | wc -l)
           echo "| $lang | $COUNT |" >> $GITHUB_STEP_SUMMARY
         done

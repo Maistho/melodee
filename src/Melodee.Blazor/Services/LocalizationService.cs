@@ -19,10 +19,14 @@ public class LocalizationService : ILocalizationService
     private static readonly CultureInfo[] _supportedCultures =
     [
         new("en-US"), // English (United States)
+        new("de-DE"), // German (Germany)
         new("es-ES"), // Spanish (Spain)
+        new("fr-FR"), // French (France)
+        new("it-IT"), // Italian (Italy)
+        new("ja-JP"), // Japanese (Japan)
+        new("pt-BR"), // Portuguese (Brazil)
         new("ru-RU"), // Russian (Russia)
         new("zh-CN"), // Chinese (Simplified, China)
-        new("fr-FR"), // French (France)
         new("ar-SA")  // Arabic (Saudi Arabia)
     ];
 

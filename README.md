@@ -241,6 +241,28 @@ Jobs can be manually triggered, paused, or monitored from the admin UI at `/admi
 - **Metadata Sources**: iTunes, Last.FM, MusicBrainz, Spotify, Brave Search
 - **File Parsers**: NFO, M3U, SFV, CUE sheet metadata files
 
+### 🌍 Multi-Language Support
+
+Melodee features comprehensive localization with support for 10 languages:
+
+| Language | Code | RTL Support |
+|----------|------|-------------|
+| English (US) | en-US | - |
+| Arabic | ar-SA | ✅ |
+| Chinese (Simplified) | zh-CN | - |
+| French | fr-FR | - |
+| German | de-DE | - |
+| Italian | it-IT | - |
+| Japanese | ja-JP | - |
+| Portuguese (Brazil) | pt-BR | - |
+| Russian | ru-RU | - |
+| Spanish | es-ES | - |
+
+- **Language Selector**: Easy switching via dropdown in the header
+- **Preference Persistence**: Your language choice is saved in browser storage
+- **RTL Support**: Full right-to-left layout support for Arabic
+- **1,192 Localized Strings**: Complete UI translation coverage
+
 ### 🌐 OpenSubsonic API
 
 Full compatibility with Subsonic 1.16.1 and OpenSubsonic specifications:

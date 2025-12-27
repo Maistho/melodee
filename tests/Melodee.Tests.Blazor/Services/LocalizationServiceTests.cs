@@ -34,20 +34,20 @@ public class LocalizationServiceTests
         // Act & Assert
         _service.Should().NotBeNull();
         _service.CurrentCulture.Should().NotBeNull();
-        _service.SupportedCultures.Should().HaveCount(6);
+        _service.SupportedCultures.Should().HaveCount(10);
     }
 
     [Fact]
     public void SupportedCultures_ContainsExpectedCultures()
     {
         // Arrange
-        var expectedCultures = new[] { "en-US", "es-ES", "ru-RU", "zh-CN", "fr-FR", "ar-SA" };
+        var expectedCultures = new[] { "en-US", "de-DE", "es-ES", "fr-FR", "it-IT", "ja-JP", "pt-BR", "ru-RU", "zh-CN", "ar-SA" };
 
         // Act
         var cultures = _service.SupportedCultures;
 
         // Assert
-        cultures.Should().HaveCount(6);
+        cultures.Should().HaveCount(10);
         cultures.Select(c => c.Name).Should().BeEquivalentTo(expectedCultures);
     }
 
@@ -277,7 +277,7 @@ public class LocalizationServiceTests
     public async Task SetCultureAsync_WithUnsupportedCulture_FallsBackToEnglish()
     {
         // Arrange
-        var unsupportedCulture = new CultureInfo("de-DE"); // German not supported
+        var unsupportedCulture = new CultureInfo("ko-KR"); // Korean not supported
         _mockLocalStorage.Setup(x => x.SetItemAsStringAsync(It.IsAny<string>(), It.IsAny<string>()))
             .Returns(Task.CompletedTask);
 
@@ -411,7 +411,7 @@ public class LocalizationServiceTests
     {
         // Arrange
         _mockLocalStorage.Setup(x => x.GetItemAsStringAsync("user_preferred_culture"))
-            .ReturnsAsync("de-DE"); // German not in supported list
+            .ReturnsAsync("ko-KR"); // Korean not in supported list
 
         // Act
         var result = await _service.GetUserCultureAsync();
