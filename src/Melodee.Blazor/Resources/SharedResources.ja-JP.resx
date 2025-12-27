@@ -236,7 +236,7 @@
     <value>プレイリストに追加</value>
   </data>
   <data name="Actions.ViewDetails" xml:space="preserve">
-    <value>View Details</value>
+    <value>詳細を見る</value>
   </data>
   <data name="Actions.Yes" xml:space="preserve">
     <value>はい</value>
@@ -262,7 +262,7 @@
     <value>アルバム</value>
   </data>
   <data name="Common.Song" xml:space="preserve">
-    <value>Song</value>
+    <value>曲</value>
   </data>
   <data name="Common.Genre" xml:space="preserve">
     <value>ジャンル</value>
@@ -307,7 +307,7 @@
     <value>形式</value>
   </data>
   <data name="Common.Bitrate" xml:space="preserve">
-    <value>Bitrate</value>
+    <value>ビットレート</value>
   </data>
 
   
@@ -330,10 +330,10 @@
     <value>パスワードの確認</value>
   </data>
   <data name="Auth.RememberMe" xml:space="preserve">
-    <value>Remember Me</value>
+    <value>ログイン状態を保持</value>
   </data>
   <data name="Auth.ForgotPassword" xml:space="preserve">
-    <value>Forgot Password?</value>
+    <value>パスワードをお忘れですか？</value>
   </data>
   <data name="Auth.Register" xml:space="preserve">
     <value>登録</value>
@@ -345,103 +345,103 @@
     <value>サインアップ</value>
   </data>
   <data name="Auth.CreateAccount" xml:space="preserve">
-    <value>Create Account</value>
+    <value>アカウントを作成</value>
   </data>
   <data name="Auth.InvalidCredentials" xml:space="preserve">
-    <value>Invalid email or password</value>
+    <value>メールアドレスまたはパスワードが無効です</value>
   </data>
   <data name="Auth.LoginSuccess" xml:space="preserve">
-    <value>Successfully logged in!</value>
+    <value>ログインしました！</value>
   </data>
   <data name="Auth.LogoutSuccess" xml:space="preserve">
-    <value>Successfully logged out</value>
+    <value>ログアウトしました</value>
   </data>
   <data name="Auth.Welcome" xml:space="preserve">
-    <value>Welcome!</value>
+    <value>ようこそ！</value>
   </data>
   <data name="Auth.Or" xml:space="preserve">
-    <value>or</value>
+    <value>または</value>
   </data>
   <data name="Auth.ContinueWithGoogle" xml:space="preserve">
-    <value>Continue with Google</value>
+    <value>Google で続行</value>
   </data>
   <data name="Auth.SigningIn" xml:space="preserve">
-    <value>Signing in...</value>
+    <value>サインイン中...</value>
   </data>
   <data name="Auth.InvalidEmailOrPassword" xml:space="preserve">
-    <value>Invalid email or password.</value>
+    <value>メールアドレスまたはパスワードが無効です。</value>
   </data>
   <data name="Auth.UnableToLogin" xml:space="preserve">
-    <value>Melodee is unable to log you in. perhaps you are banned?</value>
+    <value>未翻訳</value>
   </data>
   <data name="Auth.GoogleSignInUnavailable" xml:space="preserve">
-    <value>Google Sign-In is temporarily unavailable</value>
+    <value>未翻訳</value>
   </data>
   <data name="Auth.FailedToOpenGoogleSignIn" xml:space="preserve">
-    <value>Failed to open Google Sign-In</value>
+    <value>未翻訳</value>
   </data>
   <data name="Auth.FailedToCompleteSignIn" xml:space="preserve">
-    <value>Failed to complete sign-in</value>
+    <value>未翻訳</value>
   </data>
   <data name="Auth.SignedInAs" xml:space="preserve">
-    <value>Signed in as {0}</value>
+    <value>未翻訳</value>
   </data>
   <data name="Auth.InvalidGoogleCredentials" xml:space="preserve">
-    <value>Invalid Google credentials. Please try again.</value>
+    <value>未翻訳</value>
   </data>
   <data name="Auth.GoogleSessionExpired" xml:space="preserve">
-    <value>Your Google session has expired. Please sign in again.</value>
+    <value>未翻訳</value>
   </data>
   <data name="Auth.GoogleAccountNotLinked" xml:space="preserve">
-    <value>This Google account is not linked to any Melodee account. Please sign in with your password and link your Google account from your profile.</value>
+    <value>未翻訳</value>
   </data>
   <data name="Auth.SignupDisabled" xml:space="preserve">
-    <value>New account registration is currently disabled. Please contact an administrator.</value>
+    <value>未翻訳</value>
   </data>
   <data name="Auth.ForbiddenTenant" xml:space="preserve">
-    <value>Your Google account domain is not allowed. Please use a different account.</value>
+    <value>未翻訳</value>
   </data>
   <data name="Auth.AccountDisabled" xml:space="preserve">
-    <value>Your account has been disabled. Please contact support.</value>
+    <value>未翻訳</value>
   </data>
   <data name="Auth.GoogleSignInError" xml:space="preserve">
-    <value>An error occurred during Google Sign-In. Please try again.</value>
+    <value>未翻訳</value>
   </data>
   <data name="Auth.SignInErrorTryAgain" xml:space="preserve">
-    <value>An error occurred during sign-in. Please try again.</value>
+    <value>未翻訳</value>
   </data>
   <data name="Auth.RegistrationClosed" xml:space="preserve">
-    <value>Registration is currently closed.</value>
+    <value>未翻訳</value>
   </data>
   <data name="Auth.FillOutForm" xml:space="preserve">
-    <value>Fill out this form and click Register to create a new user account.</value>
+    <value>未翻訳</value>
   </data>
   <data name="Auth.AccessCode" xml:space="preserve">
-    <value>Access Code</value>
+    <value>未翻訳</value>
   </data>
   <data name="Auth.AccessCodeRequired" xml:space="preserve">
-    <value>Registering a new account requires an access code to be entered. Whoever invited you can provide this code to you.</value>
+    <value>未翻訳</value>
   </data>
   <data name="Auth.AccessCodeWarning" xml:space="preserve">
-    <value>If you do not have the code, kindly go away 👉.</value>
+    <value>未翻訳</value>
   </data>
   <data name="Auth.UnableToRegister" xml:space="preserve">
-    <value>Unable to register.</value>
+    <value>未翻訳</value>
   </data>
   <data name="Auth.UnableToCreateAccount" xml:space="preserve">
-    <value>Melodee is unable to create a new user account for you.</value>
+    <value>未翻訳</value>
   </data>
   <data name="Auth.PerhapsEmailBanned" xml:space="preserve">
-    <value>Perhaps your email is banned?</value>
+    <value>未翻訳</value>
   </data>
   <data name="Auth.SuccessfullyRegistered" xml:space="preserve">
-    <value>Successfully registered!</value>
+    <value>未翻訳</value>
   </data>
   <data name="Auth.RegistrationSuccess" xml:space="preserve">
-    <value>Registered new account, you should get an email, be sure and click the validate button.</value>
+    <value>未翻訳</value>
   </data>
   <data name="Auth.EmailAddress" xml:space="preserve">
-    <value>Email address</value>
+    <value>未翻訳</value>
   </data>
 
   
@@ -449,7 +449,7 @@
     <value>読み込み中...</value>
   </data>
   <data name="Messages.Saving" xml:space="preserve">
-    <value>Saving...</value>
+    <value>保存中...</value>
   </data>
   <data name="Messages.Processing" xml:space="preserve">
     <value>処理中...</value>
@@ -467,10 +467,10 @@
     <value>情報</value>
   </data>
   <data name="Messages.SaveSuccess" xml:space="preserve">
-    <value>Changes saved successfully</value>
+    <value>変更が保存されました</value>
   </data>
   <data name="Messages.SaveError" xml:space="preserve">
-    <value>Failed to save changes</value>
+    <value>未翻訳</value>
   </data>
   <data name="Messages.DeleteSuccess" xml:space="preserve">
     <value>削除しました</value>
@@ -485,27 +485,27 @@
     <value>データがありません</value>
   </data>
   <data name="Messages.ConfirmDelete" xml:space="preserve">
-    <value>Are you sure you want to delete this item?</value>
+    <value>未翻訳</value>
   </data>
   <data name="Messages.UnsavedChanges" xml:space="preserve">
-    <value>You have unsaved changes. Do you want to continue?</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="Dashboard.Welcome" xml:space="preserve">
-    <value>Welcome to Melodee</value>
+    <value>未翻訳</value>
   </data>
   <data name="Dashboard.RecentlyPlayed" xml:space="preserve">
     <value>最近再生した曲</value>
   </data>
   <data name="Dashboard.TopArtists" xml:space="preserve">
-    <value>Top Artists</value>
+    <value>未翻訳</value>
   </data>
   <data name="Dashboard.TopAlbums" xml:space="preserve">
-    <value>Top Albums</value>
+    <value>未翻訳</value>
   </data>
   <data name="Dashboard.TopSongs" xml:space="preserve">
-    <value>Top Songs</value>
+    <value>未翻訳</value>
   </data>
   <data name="Dashboard.Statistics" xml:space="preserve">
     <value>統計</value>
@@ -520,7 +520,7 @@
     <value>曲の総数</value>
   </data>
   <data name="Dashboard.YourPins" xml:space="preserve">
-    <value>Your pins</value>
+    <value>未翻訳</value>
   </data>
   <data name="Dashboard.YourPlaysLast30Days" xml:space="preserve">
     <value>あなたの再生回数（過去30日）</value>
@@ -529,22 +529,22 @@
     <value>日付</value>
   </data>
   <data name="Dashboard.Plays" xml:space="preserve">
-    <value>Plays</value>
+    <value>未翻訳</value>
   </data>
   <data name="Dashboard.TopPlayedSongsLast30Days" xml:space="preserve">
-    <value>Top played songs (last 30 days)</value>
+    <value>未翻訳</value>
   </data>
   <data name="Dashboard.NoPlayHistoryYet" xml:space="preserve">
-    <value>No play history yet. Start listening to see your top songs!</value>
+    <value>未翻訳</value>
   </data>
   <data name="Dashboard.RecentlyAddedArtists" xml:space="preserve">
-    <value>Recently added artists</value>
+    <value>未翻訳</value>
   </data>
   <data name="Dashboard.RecentlyAddedAlbums" xml:space="preserve">
-    <value>Recently added albums</value>
+    <value>未翻訳</value>
   </data>
   <data name="Dashboard.RequestActivity" xml:space="preserve">
-    <value>Request Activity</value>
+    <value>未翻訳</value>
   </data>
   <data name="Dashboard.Category" xml:space="preserve">
     <value>カテゴリ</value>
@@ -556,24 +556,24 @@
     <value>アクティビティ</value>
   </data>
   <data name="Dashboard.When" xml:space="preserve">
-    <value>When</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="Library.BrowseArtists" xml:space="preserve">
-    <value>Browse Artists</value>
+    <value>未翻訳</value>
   </data>
   <data name="Library.BrowseAlbums" xml:space="preserve">
-    <value>Browse Albums</value>
+    <value>未翻訳</value>
   </data>
   <data name="Library.BrowseSongs" xml:space="preserve">
-    <value>Browse Songs</value>
+    <value>未翻訳</value>
   </data>
   <data name="Library.FilterByGenre" xml:space="preserve">
-    <value>Filter by Genre</value>
+    <value>未翻訳</value>
   </data>
   <data name="Library.FilterByYear" xml:space="preserve">
-    <value>Filter by Year</value>
+    <value>未翻訳</value>
   </data>
   <data name="Library.SortBy" xml:space="preserve">
     <value>並べ替え</value>
@@ -596,7 +596,7 @@
     <value>シャッフル</value>
   </data>
   <data name="Player.ClearQueue" xml:space="preserve">
-    <value>Clear Queue</value>
+    <value>未翻訳</value>
   </data>
 
   
@@ -604,13 +604,13 @@
     <value>一般</value>
   </data>
   <data name="Settings.Appearance" xml:space="preserve">
-    <value>Appearance</value>
+    <value>未翻訳</value>
   </data>
   <data name="Settings.Language" xml:space="preserve">
-    <value>Language</value>
+    <value>未翻訳</value>
   </data>
   <data name="Settings.Theme" xml:space="preserve">
-    <value>Theme</value>
+    <value>未翻訳</value>
   </data>
   <data name="Settings.Preferences" xml:space="preserve">
     <value>設定</value>
@@ -619,69 +619,69 @@
     <value>アカウント</value>
   </data>
   <data name="Settings.Security" xml:space="preserve">
-    <value>Security</value>
+    <value>未翻訳</value>
   </data>
   <data name="Settings.Privacy" xml:space="preserve">
-    <value>Privacy</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="About.Title" xml:space="preserve">
-    <value>About {0}</value>
+    <value>未翻訳</value>
   </data>
   <data name="About.ApiDocs" xml:space="preserve">
-    <value>API Docs (Swagger OpenAPI)</value>
+    <value>未翻訳</value>
   </data>
   <data name="About.ServerTime" xml:space="preserve">
-    <value>Server Time</value>
+    <value>未翻訳</value>
   </data>
   <data name="About.UTC" xml:space="preserve">
     <value>UTC</value>
   </data>
   <data name="About.YourTime" xml:space="preserve">
-    <value>Your Time ({0})</value>
+    <value>未翻訳</value>
   </data>
   <data name="About.SystemInformation" xml:space="preserve">
-    <value>System Information</value>
+    <value>未翻訳</value>
   </data>
   <data name="About.Platform" xml:space="preserve">
-    <value>Platform</value>
+    <value>未翻訳</value>
   </data>
   <data name="About.Version" xml:space="preserve">
     <value>バージョン</value>
   </data>
   <data name="About.ServerDetails" xml:space="preserve">
-    <value>Server Details</value>
+    <value>未翻訳</value>
   </data>
   <data name="About.Property" xml:space="preserve">
-    <value>Property</value>
+    <value>未翻訳</value>
   </data>
   <data name="About.Value" xml:space="preserve">
     <value>値</value>
   </data>
   <data name="About.AboutMelodee" xml:space="preserve">
-    <value>About Melodee</value>
+    <value>未翻訳</value>
   </data>
   <data name="About.Description" xml:space="preserve">
-    <value>Melodee is a modern music server system that provides a comprehensive solution for managing and streaming your music collection.</value>
+    <value>未翻訳</value>
   </data>
   <data name="About.ForMoreInfo" xml:space="preserve">
-    <value>For more information, visit the</value>
+    <value>未翻訳</value>
   </data>
   <data name="About.GitHubProject" xml:space="preserve">
-    <value>Melodee GitHub Project</value>
+    <value>未翻訳</value>
   </data>
   <data name="About.Architecture" xml:space="preserve">
-    <value>Architecture</value>
+    <value>未翻訳</value>
   </data>
   <data name="About.DotNetRuntime" xml:space="preserve">
-    <value>.NET Runtime</value>
+    <value>未翻訳</value>
   </data>
   <data name="About.Application" xml:space="preserve">
-    <value>Application</value>
+    <value>未翻訳</value>
   </data>
   <data name="About.ApplicationName" xml:space="preserve">
-    <value>Melodee Music System</value>
+    <value>未翻訳</value>
   </data>
   <data name="About.GitHub" xml:space="preserve">
     <value>GitHub</value>
@@ -692,25 +692,25 @@
     <value>統計</value>
   </data>
   <data name="Data.Merge" xml:space="preserve">
-    <value>Merge</value>
+    <value>未翻訳</value>
   </data>
   <data name="Data.ShowingAlbumsForArtist" xml:space="preserve">
-    <value>Showing albums for artist:</value>
+    <value>未翻訳</value>
   </data>
   <data name="Data.ShowingAlbumsForPlaylist" xml:space="preserve">
-    <value>Showing albums for playlist:</value>
+    <value>未翻訳</value>
   </data>
   <data name="Data.ShowingSongsForAlbum" xml:space="preserve">
-    <value>Showing songs for album:</value>
+    <value>未翻訳</value>
   </data>
   <data name="Data.ShowingSongsForArtist" xml:space="preserve">
-    <value>Showing songs for artist:</value>
+    <value>未翻訳</value>
   </data>
   <data name="Data.Name" xml:space="preserve">
     <value>名前</value>
   </data>
   <data name="Data.AltNames" xml:space="preserve">
-    <value>Alt Names</value>
+    <value>未翻訳</value>
   </data>
   <data name="Data.Artist" xml:space="preserve">
     <value>アーティスト</value>
@@ -728,10 +728,10 @@
     <value>タグ</value>
   </data>
   <data name="Data.AlbumCount" xml:space="preserve">
-    <value>Album Count</value>
+    <value>未翻訳</value>
   </data>
   <data name="Data.SongCount" xml:space="preserve">
-    <value>Song Count</value>
+    <value>未翻訳</value>
   </data>
   <data name="Data.PlayCount" xml:space="preserve">
     <value>再生回数</value>
@@ -752,7 +752,7 @@
     <value>ジャンル</value>
   </data>
   <data name="Data.TrackNumber" xml:space="preserve">
-    <value>Track #</value>
+    <value>未翻訳</value>
   </data>
   <data name="Data.Album" xml:space="preserve">
     <value>アルバム</value>
@@ -761,7 +761,7 @@
     <value>タイトル</value>
   </data>
   <data name="Data.Locked" xml:space="preserve">
-    <value>Locked</value>
+    <value>未翻訳</value>
   </data>
   <data name="Data.Status" xml:space="preserve">
     <value>ステータス</value>
@@ -773,242 +773,242 @@
     <value>OK</value>
   </data>
   <data name="Data.MergeConfirmation" xml:space="preserve">
-    <value>Are you sure you want to merge the selected items?</value>
+    <value>未翻訳</value>
   </data>
   <data name="Data.DeleteConfirmation" xml:space="preserve">
-    <value>Are you sure you want to delete the selected items?</value>
+    <value>未翻訳</value>
   </data>
   <data name="Data.SelectItemsToMerge" xml:space="preserve">
-    <value>Select at least 2 items to merge</value>
+    <value>未翻訳</value>
   </data>
   <data name="Data.SelectItemsToDelete" xml:space="preserve">
-    <value>Select items to delete</value>
+    <value>未翻訳</value>
   </data>
   <data name="Data.ConfirmMerge" xml:space="preserve">
-    <value>Confirm Merge</value>
+    <value>未翻訳</value>
   </data>
   <data name="Data.ConfirmDelete" xml:space="preserve">
     <value>削除の確認</value>
   </data>
   <data name="Data.Directory" xml:space="preserve">
-    <value>Directory</value>
+    <value>未翻訳</value>
   </data>
   <data name="Data.Albums" xml:space="preserve">
     <value>アルバム</value>
   </data>
   <data name="Data.MergeTheseArtists" xml:space="preserve">
-    <value>Merge these artists</value>
+    <value>未翻訳</value>
   </data>
   <data name="Data.IntoThisArtist" xml:space="preserve">
-    <value>Into this artist</value>
+    <value>未翻訳</value>
   </data>
   <data name="Data.ArtistLockedMessage" xml:space="preserve">
-    <value>Artist is locked. Locked artists cannot be deleted.</value>
+    <value>未翻訳</value>
   </data>
   <data name="Data.MergedArtists" xml:space="preserve">
-    <value>Merged Artists</value>
+    <value>未翻訳</value>
   </data>
   <data name="Data.DeletingArtists" xml:space="preserve">
-    <value>Deleting Artists</value>
+    <value>未翻訳</value>
   </data>
   <data name="Data.MergeArtists" xml:space="preserve">
-    <value>Merge Artists</value>
+    <value>未翻訳</value>
   </data>
   <data name="Data.SongNumber" xml:space="preserve">
-    <value>Song #</value>
+    <value>未翻訳</value>
   </data>
   <data name="Data.FileSize" xml:space="preserve">
-    <value>File size</value>
+    <value>未翻訳</value>
   </data>
   <data name="Data.Loved" xml:space="preserve">
-    <value>Loved</value>
+    <value>未翻訳</value>
   </data>
   <data name="Data.SongLockedMessage" xml:space="preserve">
-    <value>Song is locked. Locked songs cannot be deleted.</value>
+    <value>未翻訳</value>
   </data>
   <data name="Data.DeletingSongs" xml:space="preserve">
-    <value>Deleting Songs</value>
+    <value>未翻訳</value>
   </data>
   <data name="Data.MergeSongs" xml:space="preserve">
-    <value>Merge Songs</value>
+    <value>未翻訳</value>
   </data>
   <data name="Data.ClickToFilterSongs" xml:space="preserve">
-    <value>Click to filter songs.</value>
+    <value>未翻訳</value>
   </data>
   <data name="Data.DisplayingPage" xml:space="preserve">
-    <value>Displaying page {0} of {1} (total {2} records)</value>
+    <value>未翻訳</value>
   </data>
   <data name="Data.YourFavoriteSongs" xml:space="preserve">
-    <value>Your Favorite Songs</value>
+    <value>未翻訳</value>
   </data>
   <data name="Data.YourRatedSongs" xml:space="preserve">
-    <value>Your Rated Songs</value>
+    <value>未翻訳</value>
   </data>
   <data name="Data.SongMergingInfo" xml:space="preserve">
-    <value>Song merging allows combining multiple song entries. This feature requires careful selection of songs to merge.</value>
+    <value>未翻訳</value>
   </data>
   <data name="Data.PlaylistLockedMessage" xml:space="preserve">
-    <value>Playlist is locked. Locked playlists cannot be deleted.</value>
+    <value>未翻訳</value>
   </data>
   <data name="Data.DeletingPlaylists" xml:space="preserve">
-    <value>Deleting Playlists</value>
+    <value>未翻訳</value>
   </data>
   <data name="Profile.YourProfile" xml:space="preserve">
-    <value>Your Profile</value>
+    <value>未翻訳</value>
   </data>
   <data name="Profile.ChangeProfilePicture" xml:space="preserve">
-    <value>Change Profile Picture</value>
+    <value>未翻訳</value>
   </data>
   <data name="Profile.ProfileInformation" xml:space="preserve">
-    <value>Profile Information</value>
+    <value>未翻訳</value>
   </data>
   <data name="Profile.Username" xml:space="preserve">
     <value>ユーザー名</value>
   </data>
   <data name="Profile.UsernameRequired" xml:space="preserve">
-    <value>Username is required</value>
+    <value>未翻訳</value>
   </data>
   <data name="Profile.Email" xml:space="preserve">
     <value>メール</value>
   </data>
   <data name="Profile.EmailRequired" xml:space="preserve">
-    <value>Email is required</value>
+    <value>未翻訳</value>
   </data>
   <data name="Profile.EmailInvalid" xml:space="preserve">
-    <value>Please enter a valid email</value>
+    <value>未翻訳</value>
   </data>
   <data name="Profile.Bio" xml:space="preserve">
-    <value>Bio</value>
+    <value>未翻訳</value>
   </data>
   <data name="Profile.TimeZone" xml:space="preserve">
-    <value>Time Zone</value>
+    <value>未翻訳</value>
   </data>
   <data name="Profile.DefaultsToUTC" xml:space="preserve">
-    <value>Defaults to UTC.</value>
+    <value>未翻訳</value>
   </data>
   <data name="Profile.SaveChanges" xml:space="preserve">
     <value>変更を保存</value>
   </data>
   <data name="Profile.Saving" xml:space="preserve">
-    <value>Saving...</value>
+    <value>未翻訳</value>
   </data>
   <data name="Profile.LinkedAccounts" xml:space="preserve">
-    <value>Linked Accounts</value>
+    <value>未翻訳</value>
   </data>
   <data name="Profile.Google" xml:space="preserve">
     <value>Google</value>
   </data>
   <data name="Profile.Linked" xml:space="preserve">
-    <value>Linked</value>
+    <value>未翻訳</value>
   </data>
   <data name="Profile.Unlink" xml:space="preserve">
-    <value>Unlink</value>
+    <value>未翻訳</value>
   </data>
   <data name="Profile.Unlinking" xml:space="preserve">
-    <value>Unlinking...</value>
+    <value>未翻訳</value>
   </data>
   <data name="Profile.LinkGoogleAccount" xml:space="preserve">
-    <value>Link Google Account</value>
+    <value>未翻訳</value>
   </data>
   <data name="Profile.Linking" xml:space="preserve">
-    <value>Linking...</value>
+    <value>未翻訳</value>
   </data>
   <data name="Profile.UnlinkConfirmation" xml:space="preserve">
-    <value>Are you sure you want to unlink your Google account? You will no longer be able to sign in with Google.</value>
+    <value>未翻訳</value>
   </data>
   <data name="Profile.UnlinkGoogleAccount" xml:space="preserve">
-    <value>Unlink Google Account</value>
+    <value>未翻訳</value>
   </data>
   <data name="Profile.ProfileImage" xml:space="preserve">
-    <value>Profile Image</value>
+    <value>未翻訳</value>
   </data>
   <data name="Profile.InvalidTimeZone" xml:space="preserve">
-    <value>Invalid Time Zone</value>
+    <value>未翻訳</value>
   </data>
   <data name="Profile.InvalidTimeZoneDetail" xml:space="preserve">
-    <value>'{0}' is not a valid IANA timezone id.</value>
+    <value>未翻訳</value>
   </data>
   <data name="Profile.UpdateFailed" xml:space="preserve">
-    <value>Update Failed</value>
+    <value>未翻訳</value>
   </data>
   <data name="Profile.ProfileUpdated" xml:space="preserve">
-    <value>Profile Updated</value>
+    <value>未翻訳</value>
   </data>
   <data name="Profile.ProfileUpdatedDetail" xml:space="preserve">
-    <value>Your profile has been successfully updated.</value>
+    <value>未翻訳</value>
   </data>
   <data name="Profile.GoogleLinkedSuccess" xml:space="preserve">
-    <value>Google account successfully linked!</value>
+    <value>未翻訳</value>
   </data>
   <data name="Profile.GoogleUnlinkedSuccess" xml:space="preserve">
-    <value>Google account successfully unlinked.</value>
+    <value>未翻訳</value>
   </data>
   <data name="Profile.GoogleLinkFailed" xml:space="preserve">
-    <value>Failed to link Google account</value>
+    <value>未翻訳</value>
   </data>
   <data name="Profile.GoogleUnlinkFailed" xml:space="preserve">
-    <value>Failed to unlink Google account</value>
+    <value>未翻訳</value>
   </data>
   <data name="Profile.GoogleSignInUnavailable" xml:space="preserve">
-    <value>Google Sign-In is temporarily unavailable</value>
+    <value>未翻訳</value>
   </data>
   <data name="Profile.GoogleSignInOpenFailed" xml:space="preserve">
-    <value>Failed to open Google Sign-In</value>
+    <value>未翻訳</value>
   </data>
   <data name="Profile.LinkingError" xml:space="preserve">
-    <value>An error occurred while linking. Please try again.</value>
+    <value>未翻訳</value>
   </data>
   <data name="Profile.UnlinkingError" xml:space="preserve">
-    <value>An error occurred while unlinking. Please try again.</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="RequestNew.PageTitle" xml:space="preserve">
-    <value>New Request</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestNew.NewRequest" xml:space="preserve">
-    <value>New Request</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestNew.CreateNewRequest" xml:space="preserve">
-    <value>Create New Request</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestNew.CategoryRequired" xml:space="preserve">
-    <value>Category is required</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestNew.DescriptionRequired" xml:space="preserve">
-    <value>Description is required</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestNew.PleaseSelectCategory" xml:space="preserve">
-    <value>Please select a category</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestNew.RequestCreated" xml:space="preserve">
-    <value>Request created successfully</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestNew.ErrorCreatingRequest" xml:space="preserve">
-    <value>Error creating request</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="RequestDetail.PageTitle" xml:space="preserve">
-    <value>Request Detail</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestDetail.CreatedBy" xml:space="preserve">
-    <value>Created By</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestDetail.Comments" xml:space="preserve">
     <value>コメント</value>
   </data>
   <data name="RequestDetail.NoCommentsYet" xml:space="preserve">
-    <value>No comments yet.</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestDetail.ReplyingTo" xml:space="preserve">
-    <value>Replying to {0}...</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestDetail.AddComment" xml:space="preserve">
-    <value>Add a comment</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestDetail.WriteComment" xml:space="preserve">
-    <value>Write your comment...</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestDetail.System" xml:space="preserve">
     <value>システム</value>
@@ -1017,77 +1017,77 @@
     <value>不明</value>
   </data>
   <data name="RequestDetail.RequestNotFound" xml:space="preserve">
-    <value>Request not found</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestDetail.ErrorLoading" xml:space="preserve">
-    <value>Error loading request</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestDetail.ConfirmDelete" xml:space="preserve">
-    <value>Are you sure you want to delete this request?</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestDetail.DeleteRequest" xml:space="preserve">
-    <value>Delete Request</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestDetail.RequestDeleted" xml:space="preserve">
-    <value>Request deleted</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestDetail.ErrorDeleting" xml:space="preserve">
-    <value>Error deleting request</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestDetail.MarkedComplete" xml:space="preserve">
-    <value>Request marked as complete</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestDetail.ErrorCompleting" xml:space="preserve">
-    <value>Error completing request</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestDetail.ErrorPosting" xml:space="preserve">
-    <value>Error posting comment</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="RequestEdit.PageTitle" xml:space="preserve">
-    <value>Edit Request</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestEdit.Detail" xml:space="preserve">
-    <value>Detail</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestEdit.EditRequest" xml:space="preserve">
-    <value>Edit Request</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestEdit.CategoryCannotChange" xml:space="preserve">
-    <value>Category cannot be changed</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestEdit.DescriptionRequired" xml:space="preserve">
-    <value>Description is required</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestEdit.CanOnlyEditOwn" xml:space="preserve">
-    <value>You can only edit your own requests</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestEdit.RequestNotFound" xml:space="preserve">
-    <value>Request not found</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestEdit.ErrorLoading" xml:space="preserve">
-    <value>Error loading request</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestEdit.UpdatedSuccessfully" xml:space="preserve">
-    <value>Request updated successfully</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestEdit.ErrorUpdating" xml:space="preserve">
-    <value>Error updating request</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="Validation.Required" xml:space="preserve">
-    <value>This field is required</value>
+    <value>未翻訳</value>
   </data>
   <data name="Validation.EmailInvalid" xml:space="preserve">
-    <value>Please enter a valid email address</value>
+    <value>未翻訳</value>
   </data>
   <data name="Validation.PasswordTooShort" xml:space="preserve">
-    <value>Password must be at least {0} characters</value>
+    <value>未翻訳</value>
   </data>
   <data name="Validation.PasswordsDoNotMatch" xml:space="preserve">
-    <value>Passwords do not match</value>
+    <value>未翻訳</value>
   </data>
 
   
@@ -1104,69 +1104,69 @@
     <value>1日あたりの再生回数（過去30日）</value>
   </data>
   <data name="Stats.PlaysChartTitle" xml:space="preserve">
-    <value>Plays</value>
+    <value>未翻訳</value>
   </data>
   <data name="Stats.DateAxisTitle" xml:space="preserve">
     <value>日付</value>
   </data>
   <data name="Stats.SongsAddedPerDayLast30d" xml:space="preserve">
-    <value>Songs added per day (last 30d)</value>
+    <value>未翻訳</value>
   </data>
   <data name="Stats.AddedChartTitle" xml:space="preserve">
-    <value>Added</value>
+    <value>未翻訳</value>
   </data>
   <data name="Stats.SongsAxisTitle" xml:space="preserve">
     <value>曲</value>
   </data>
   <data name="Stats.TopPlayedSongsYou" xml:space="preserve">
-    <value>Top played songs (you)</value>
+    <value>未翻訳</value>
   </data>
   <data name="Stats.SongColumnTitle" xml:space="preserve">
-    <value>Song</value>
+    <value>未翻訳</value>
   </data>
   <data name="Stats.PlaysColumnTitle" xml:space="preserve">
-    <value>Plays</value>
+    <value>未翻訳</value>
   </data>
   <data name="Stats.EditorMissingImages" xml:space="preserve">
-    <value>Editor — Missing Images</value>
+    <value>未翻訳</value>
   </data>
   <data name="Stats.ItemColumnTitle" xml:space="preserve">
-    <value>Item</value>
+    <value>未翻訳</value>
   </data>
   <data name="Stats.CountColumnTitle" xml:space="preserve">
     <value>件数</value>
   </data>
   <data name="Stats.AdminActivity" xml:space="preserve">
-    <value>Admin — Activity</value>
+    <value>未翻訳</value>
   </data>
   <data name="Stats.SearchesPerDay" xml:space="preserve">
-    <value>Searches per day</value>
+    <value>未翻訳</value>
   </data>
   <data name="Stats.ShareViewsPerDay" xml:space="preserve">
-    <value>Share views per day</value>
+    <value>未翻訳</value>
   </data>
   <data name="Stats.LibraryScansPerDay" xml:space="preserve">
-    <value>Library scans per day</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="Search.PageTitle" xml:space="preserve">
-    <value>Search Results</value>
+    <value>未翻訳</value>
   </data>
   <data name="Search.ResultsFor" xml:space="preserve">
-    <value>Results for: {0}</value>
+    <value>未翻訳</value>
   </data>
   <data name="Search.RequestMusic" xml:space="preserve">
-    <value>Request Music</value>
+    <value>未翻訳</value>
   </data>
   <data name="Search.ArtistsCount" xml:space="preserve">
-    <value>Artists ({0})</value>
+    <value>未翻訳</value>
   </data>
   <data name="Search.AlbumsCount" xml:space="preserve">
-    <value>Albums ({0})</value>
+    <value>未翻訳</value>
   </data>
   <data name="Search.SongsCount" xml:space="preserve">
-    <value>Songs ({0})</value>
+    <value>未翻訳</value>
   </data>
   <data name="Search.ArtistColumnTitle" xml:space="preserve">
     <value>アーティスト</value>
@@ -1181,7 +1181,7 @@
     <value>タイトル</value>
   </data>
   <data name="Search.PlaySong" xml:space="preserve">
-    <value>Play song</value>
+    <value>未翻訳</value>
   </data>
 
   
@@ -1192,7 +1192,7 @@
     <value>再生中</value>
   </data>
   <data name="NowPlaying.NoSongsPlaying" xml:space="preserve">
-    <value>No songs are currently playing.</value>
+    <value>未翻訳</value>
   </data>
 
   
@@ -1242,7 +1242,7 @@
     <value>戻る</value>
   </data>
   <data name="Nav.GoBack" xml:space="preserve">
-    <value>Go back</value>
+    <value>未翻訳</value>
   </data>
   <data name="Nav.Overview" xml:space="preserve">
     <value>概要</value>
@@ -1254,19 +1254,19 @@
     <value>ファイル</value>
   </data>
   <data name="Nav.Relationships" xml:space="preserve">
-    <value>Relationships</value>
+    <value>未翻訳</value>
   </data>
   <data name="Nav.Contributors" xml:space="preserve">
-    <value>Contributors</value>
+    <value>未翻訳</value>
   </data>
   <data name="Nav.ScanHistory" xml:space="preserve">
-    <value>Scan History</value>
+    <value>未翻訳</value>
   </data>
   <data name="Nav.ProcessHistory" xml:space="preserve">
-    <value>Process History</value>
+    <value>未翻訳</value>
   </data>
   <data name="Nav.Home" xml:space="preserve">
-    <value>Home</value>
+    <value>未翻訳</value>
   </data>
   <data name="Nav.Charts" xml:space="preserve">
     <value>チャート</value>
@@ -1286,139 +1286,139 @@
 
   
   <data name="Actions.SelectAll" xml:space="preserve">
-    <value>Select All</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.SelectNone" xml:space="preserve">
-    <value>Select None</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.DeleteSelected" xml:space="preserve">
-    <value>Delete Selected</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.Lock" xml:space="preserve">
-    <value>Lock</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.Unlock" xml:space="preserve">
-    <value>Unlock</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.Rescan" xml:space="preserve">
-    <value>Rescan</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.Process" xml:space="preserve">
-    <value>Process</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.Clean" xml:space="preserve">
-    <value>Clean</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.Purge" xml:space="preserve">
-    <value>Purge</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.Scan" xml:space="preserve">
-    <value>Scan</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.Resume" xml:space="preserve">
-    <value>Resume</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.Run" xml:space="preserve">
-    <value>Run</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.Interrupt" xml:space="preserve">
-    <value>Interrupt</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.Manage" xml:space="preserve">
-    <value>Manage</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.Validate" xml:space="preserve">
-    <value>Validate</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.Preview" xml:space="preserve">
-    <value>Preview</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.Json" xml:space="preserve">
-    <value>Json</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.WebSearch" xml:space="preserve">
-    <value>Web Search</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.Sort" xml:space="preserve">
     <value>並べ替え</value>
   </data>
   <data name="Actions.AddRelationship" xml:space="preserve">
-    <value>Add Relationship</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.SetCoverImage" xml:space="preserve">
-    <value>Set Cover Image</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.CreateRequest" xml:space="preserve">
-    <value>Create Request</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.NewRequest" xml:space="preserve">
-    <value>New Request</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.Reply" xml:space="preserve">
-    <value>Reply</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.CancelReply" xml:space="preserve">
-    <value>Cancel Reply</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.PostComment" xml:space="preserve">
-    <value>Post Comment</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.MarkComplete" xml:space="preserve">
-    <value>Mark Complete</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.UpdateAggregates" xml:space="preserve">
-    <value>Update Aggregates</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.Image" xml:space="preserve">
     <value>画像</value>
   </data>
   <data name="Actions.CreateChart" xml:space="preserve">
-    <value>Create Chart</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.ImportJSON" xml:space="preserve">
-    <value>Import JSON</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.BackToCharts" xml:space="preserve">
-    <value>Back to Charts</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.BackToList" xml:space="preserve">
-    <value>Back to List</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.DownloadJSON" xml:space="preserve">
-    <value>Download JSON</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.IdentifyThisAlbum" xml:space="preserve">
-    <value>Identify this album</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.RelinkAll" xml:space="preserve">
-    <value>Re-link All</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.ResolveRelink" xml:space="preserve">
-    <value>Resolve/Re-link</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.MarkAsIgnored" xml:space="preserve">
-    <value>Mark as ignored</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.LinkSelectedAlbum" xml:space="preserve">
-    <value>Link Selected Album</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.Identify" xml:space="preserve">
-    <value>Identify</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.PauseAll" xml:space="preserve">
-    <value>Pause All</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.ResumeAll" xml:space="preserve">
-    <value>Resume All</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.ClearCache" xml:space="preserve">
-    <value>Clear Cache</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.ClearNowPlaying" xml:space="preserve">
-    <value>Clear Now Playing</value>
+    <value>未翻訳</value>
   </data>
   <data name="Actions.ViewAll" xml:space="preserve">
-    <value>View All</value>
+    <value>未翻訳</value>
   </data>
 
   
@@ -1453,7 +1453,7 @@
     <value>アルバム</value>
   </data>
   <data name="Label.Song" xml:space="preserve">
-    <value>Song</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.Year" xml:space="preserve">
     <value>年</value>
@@ -1471,82 +1471,82 @@
     <value>ライブラリ</value>
   </data>
   <data name="Label.RealName" xml:space="preserve">
-    <value>Real Name</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.Directory" xml:space="preserve">
-    <value>Directory</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.SortName" xml:space="preserve">
-    <value>Sort Name</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.SortOrder" xml:space="preserve">
-    <value>Sort Order</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.AlternateNames" xml:space="preserve">
-    <value>Alternate Names</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.Rating" xml:space="preserve">
     <value>評価</value>
   </data>
   <data name="Label.AlbumCount" xml:space="preserve">
-    <value>Album Count</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.SongCount" xml:space="preserve">
-    <value>Song Count</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.PlayedTotal" xml:space="preserve">
-    <value>Played Total</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.LastPlayed" xml:space="preserve">
     <value>最終再生日</value>
   </data>
   <data name="Label.Genres" xml:space="preserve">
-    <value>Genres</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.ReleaseDate" xml:space="preserve">
     <value>リリース日</value>
   </data>
   <data name="Label.ExternalLinks" xml:space="preserve">
-    <value>External Links</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.Notes" xml:space="preserve">
-    <value>Notes</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.Biography" xml:space="preserve">
     <value>バイオグラフィ</value>
   </data>
   <data name="Label.Locked" xml:space="preserve">
-    <value>Locked</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.Public" xml:space="preserve">
     <value>公開</value>
   </data>
   <data name="Label.Owner" xml:space="preserve">
-    <value>Owner</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.Category" xml:space="preserve">
     <value>カテゴリ</value>
   </data>
   <data name="Label.ArtistName" xml:space="preserve">
-    <value>Artist Name</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.AlbumTitle" xml:space="preserve">
-    <value>Album Title</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.SongTitle" xml:space="preserve">
-    <value>Song Title</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.ReleaseYear" xml:space="preserve">
-    <value>Release Year</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.ExternalURL" xml:space="preserve">
-    <value>External URL</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.AdditionalNotes" xml:space="preserve">
-    <value>Additional Notes</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.OptionalDetails" xml:space="preserve">
-    <value>Optional Details</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.Username" xml:space="preserve">
     <value>ユーザー名</value>
@@ -1558,46 +1558,46 @@
     <value>パスワード</value>
   </data>
   <data name="Label.AlbumType" xml:space="preserve">
-    <value>Album Type</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.TotalDuration" xml:space="preserve">
     <value>合計時間</value>
   </data>
   <data name="Label.TotalFileSize" xml:space="preserve">
-    <value>Total File Size</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.ArtistCount" xml:space="preserve">
-    <value>Artist Count</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.DataCounts" xml:space="preserve">
-    <value>Data Counts</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.Issues" xml:space="preserve">
-    <value>Issues</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.MusicBrainzId" xml:space="preserve">
-    <value>MusicBrainz Id</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.AmgId" xml:space="preserve">
-    <value>Amg Id</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.DeezerId" xml:space="preserve">
-    <value>Deezer Id</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.DiscogsId" xml:space="preserve">
-    <value>Discogs Id</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.ItunesId" xml:space="preserve">
-    <value>ITunes Id</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.LastFmId" xml:space="preserve">
-    <value>LastFm Id</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.SpotifyId" xml:space="preserve">
-    <value>Spotify Id</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.WikiDataId" xml:space="preserve">
-    <value>WikiData Id</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.Roles" xml:space="preserve">
     <value>ロール</value>
@@ -1609,40 +1609,40 @@
     <value>ジャンル</value>
   </data>
   <data name="Label.Slug" xml:space="preserve">
-    <value>Slug</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.SourceName" xml:space="preserve">
-    <value>Source Name</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.SourceURL" xml:space="preserve">
-    <value>Source URL</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.Visible" xml:space="preserve">
-    <value>Visible</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.GeneratePlaylist" xml:space="preserve">
-    <value>Generate Playlist</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.ChartImage" xml:space="preserve">
-    <value>Chart Image</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.CSVData" xml:space="preserve">
-    <value>CSV Data</value>
+    <value>未翻訳</value>
   </data>
   <data name="Label.LastActivity" xml:space="preserve">
-    <value>Last Activity</value>
+    <value>未翻訳</value>
   </data>
   <data name="Status.Locked" xml:space="preserve">
-    <value>Locked</value>
+    <value>未翻訳</value>
   </data>
   <data name="Status.Unlocked" xml:space="preserve">
-    <value>Unlocked</value>
+    <value>未翻訳</value>
   </data>
   <data name="Status.Visible" xml:space="preserve">
-    <value>Visible</value>
+    <value>未翻訳</value>
   </data>
   <data name="Status.Hidden" xml:space="preserve">
-    <value>Hidden</value>
+    <value>未翻訳</value>
   </data>
   <data name="Status.Enabled" xml:space="preserve">
     <value>有効</value>
@@ -1651,28 +1651,28 @@
     <value>無効</value>
   </data>
   <data name="Status.Linked" xml:space="preserve">
-    <value>Linked</value>
+    <value>未翻訳</value>
   </data>
   <data name="Status.Unlinked" xml:space="preserve">
-    <value>Unlinked</value>
+    <value>未翻訳</value>
   </data>
   <data name="Status.Ambiguous" xml:space="preserve">
-    <value>Ambiguous</value>
+    <value>未翻訳</value>
   </data>
   <data name="Status.Ignored" xml:space="preserve">
-    <value>Ignored</value>
+    <value>未翻訳</value>
   </data>
   <data name="Status.Pending" xml:space="preserve">
     <value>保留中</value>
   </data>
   <data name="Status.InProgress" xml:space="preserve">
-    <value>In Progress</value>
+    <value>未翻訳</value>
   </data>
   <data name="Status.Completed" xml:space="preserve">
     <value>完了</value>
   </data>
   <data name="Status.Rejected" xml:space="preserve">
-    <value>Rejected</value>
+    <value>未翻訳</value>
   </data>
   <data name="Status.Ok" xml:space="preserve">
     <value>OK</value>
@@ -1681,28 +1681,28 @@
     <value>新着</value>
   </data>
   <data name="Status.Invalid" xml:space="preserve">
-    <value>Invalid</value>
+    <value>未翻訳</value>
   </data>
   <data name="Status.Running" xml:space="preserve">
     <value>実行中</value>
   </data>
   <data name="Status.Paused" xml:space="preserve">
-    <value>Paused</value>
+    <value>未翻訳</value>
   </data>
   <data name="Status.Online" xml:space="preserve">
     <value>オンライン</value>
   </data>
   <data name="Status.Normal" xml:space="preserve">
-    <value>Normal</value>
+    <value>未翻訳</value>
   </data>
   <data name="Status.Blocked" xml:space="preserve">
-    <value>Blocked</value>
+    <value>未翻訳</value>
   </data>
   <data name="Status.Error" xml:space="preserve">
     <value>エラー</value>
   </data>
   <data name="Status.Complete" xml:space="preserve">
-    <value>Complete</value>
+    <value>未翻訳</value>
   </data>
 
   
@@ -1710,25 +1710,25 @@
     <value>よろしいですか？</value>
   </data>
   <data name="Dialog.DeleteConfirmation" xml:space="preserve">
-    <value>Delete confirmation</value>
+    <value>未翻訳</value>
   </data>
   <data name="Dialog.Confirm" xml:space="preserve">
     <value>確認</value>
   </data>
   <data name="Dialog.PurgeConfirmation" xml:space="preserve">
-    <value>Purge confirmation</value>
+    <value>未翻訳</value>
   </data>
   <data name="Dialog.ScanConfirmation" xml:space="preserve">
-    <value>Scan confirmation</value>
+    <value>未翻訳</value>
   </data>
   <data name="Dialog.RescanConfirmation" xml:space="preserve">
-    <value>Rescan confirmation</value>
+    <value>未翻訳</value>
   </data>
   <data name="Dialog.ProceedToPurge" xml:space="preserve">
-    <value>Proceed to purge</value>
+    <value>未翻訳</value>
   </data>
   <data name="Dialog.StartScan" xml:space="preserve">
-    <value>Start scan</value>
+    <value>未翻訳</value>
   </data>
 
   
@@ -1781,13 +1781,13 @@
     <value>年</value>
   </data>
   <data name="TableHeader.Rank" xml:space="preserve">
-    <value>Rank</value>
+    <value>未翻訳</value>
   </data>
   <data name="TableHeader.Chart" xml:space="preserve">
-    <value>Chart</value>
+    <value>未翻訳</value>
   </data>
   <data name="TableHeader.Source" xml:space="preserve">
-    <value>Source</value>
+    <value>未翻訳</value>
   </data>
   <data name="TableHeader.Category" xml:space="preserve">
     <value>カテゴリ</value>
@@ -1796,312 +1796,312 @@
     <value>説明</value>
   </data>
   <data name="TableHeader.LastActivity" xml:space="preserve">
-    <value>Last Activity</value>
+    <value>未翻訳</value>
   </data>
   <data name="TableHeader.Items" xml:space="preserve">
-    <value>Items</value>
+    <value>未翻訳</value>
   </data>
   <data name="TableHeader.Completion" xml:space="preserve">
-    <value>Completion</value>
+    <value>未翻訳</value>
   </data>
   <data name="TableHeader.Playlist" xml:space="preserve">
     <value>プレイリスト</value>
   </data>
   <data name="TableHeader.LinkedAlbum" xml:space="preserve">
-    <value>Linked Album</value>
+    <value>未翻訳</value>
   </data>
   <data name="TableHeader.Confidence" xml:space="preserve">
-    <value>Confidence</value>
+    <value>未翻訳</value>
   </data>
   <data name="TableHeader.Charts" xml:space="preserve">
     <value>チャート</value>
   </data>
   <data name="TableHeader.ChartCount" xml:space="preserve">
-    <value>Chart Count</value>
+    <value>未翻訳</value>
   </data>
   <data name="TableHeader.Size" xml:space="preserve">
     <value>サイズ</value>
   </data>
   <data name="TableHeader.Action" xml:space="preserve">
-    <value>Action</value>
+    <value>未翻訳</value>
   </data>
   <data name="TableHeader.StatusReasons" xml:space="preserve">
-    <value>Status Reasons</value>
+    <value>未翻訳</value>
   </data>
   <data name="TableHeader.Normalized" xml:space="preserve">
-    <value>Normalized</value>
+    <value>未翻訳</value>
   </data>
   <data name="TableHeader.AlbumCount" xml:space="preserve">
-    <value>AlbumCount</value>
+    <value>未翻訳</value>
   </data>
   <data name="TableHeader.MusicBrainzId" xml:space="preserve">
-    <value>MusicBrainzId</value>
+    <value>未翻訳</value>
   </data>
   <data name="TableHeader.SpotifyId" xml:space="preserve">
-    <value>SpotifyId</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="Message.DisplayingPage" xml:space="preserve">
-    <value>Displaying page {0} of {1} (total {2} records)</value>
+    <value>未翻訳</value>
   </data>
   <data name="Message.DragAndDropImages" xml:space="preserve">
-    <value>Drag and drop or paste images here</value>
+    <value>未翻訳</value>
   </data>
   <data name="Message.ReplaceAllImagesOnUpload" xml:space="preserve">
-    <value>Replace all images on upload</value>
+    <value>未翻訳</value>
   </data>
   <data name="Message.NoDataAvailable" xml:space="preserve">
     <value>データがありません</value>
   </data>
   <data name="Message.NoCommentsYet" xml:space="preserve">
-    <value>No comments yet.</value>
+    <value>未翻訳</value>
   </data>
   <data name="Message.NoImagesFound" xml:space="preserve">
-    <value>No images found for this album.</value>
+    <value>未翻訳</value>
   </data>
   <data name="Message.ImageNotAvailable" xml:space="preserve">
-    <value>Image not available</value>
+    <value>未翻訳</value>
   </data>
   <data name="Message.SelectAnArtist" xml:space="preserve">
-    <value>Select an artist</value>
+    <value>未翻訳</value>
   </data>
   <data name="Message.NoAlbumsFound" xml:space="preserve">
-    <value>No albums found</value>
+    <value>未翻訳</value>
   </data>
   <data name="Message.DirectoryNotFound" xml:space="preserve">
-    <value>{0} directory [{1}] is not found.</value>
+    <value>未翻訳</value>
   </data>
   <data name="Message.NoActiveListeners" xml:space="preserve">
-    <value>No active listeners</value>
+    <value>未翻訳</value>
   </data>
   <data name="Message.DeletingLibraries" xml:space="preserve">
-    <value>Deleting Libraries</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="ArtistDetail.DeleteArtistWarning" xml:space="preserve">
-    <value>Delete the artist, all artist albums, and all album files. BEWARE!</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.DeleteAlbumsCount" xml:space="preserve">
-    <value>Delete Albums ({0})</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.DeleteAlbumsWarning" xml:space="preserve">
-    <value>Delete the selected albums. BEWARE!</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.EditArtist" xml:space="preserve">
-    <value>Edit artist.</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.UnlockArtist" xml:space="preserve">
-    <value>Unlock artist, will allow modifications.</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.LockArtist" xml:space="preserve">
-    <value>Lock artist, will prevent modifications.</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.RescanArtist" xml:space="preserve">
-    <value>Rebuild metadata and rescan artists albums.</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.GenerateJson" xml:space="preserve">
-    <value>Generate JSON for for artist.</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.WebSearch" xml:space="preserve">
-    <value>Search the web for artist.</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.ReleaseDateAsc" xml:space="preserve">
-    <value>Release Date ⬆️</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.ReleaseDateDesc" xml:space="preserve">
-    <value>Release Date ⬇️</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.DurationAsc" xml:space="preserve">
-    <value>Duration ⬆️</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.DurationDesc" xml:space="preserve">
-    <value>Duration ⬇️</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.SongCountAsc" xml:space="preserve">
-    <value>Song Count ⬆️</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.SongCountDesc" xml:space="preserve">
-    <value>Song Count ⬇️</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.ReplaceAllImages" xml:space="preserve">
-    <value>Replace all images on upload</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.DeleteAllImages" xml:space="preserve">
-    <value>Delete all images</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.DeleteSelectedImages" xml:space="preserve">
-    <value>Delete {0} selected images</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.DeleteSelectedRelationships" xml:space="preserve">
-    <value>Delete {0} selected relationships</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.RemoveRelationship" xml:space="preserve">
-    <value>Remove relationship</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.DeleteAllRelationships" xml:space="preserve">
-    <value>Delete all relationships</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.ArtistMelodeeJson" xml:space="preserve">
-    <value>Artists Melodee Json</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.DeleteAlbumsConfirm" xml:space="preserve">
-    <value>Delete {0} albums</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.RescanConfirmation" xml:space="preserve">
-    <value>Rescan confirmation</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.ArtistDirectoryNotFound" xml:space="preserve">
-    <value>Artist directory [{0}] is not found.</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.UploadArtistImage" xml:space="preserve">
-    <value>upload artist image</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.DeleteFailed" xml:space="preserve">
-    <value>Delete failed</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.DeletingArtistImages" xml:space="preserve">
-    <value>deleting artist images</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.RemovingRelationship" xml:space="preserve">
-    <value>removing relationship</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.UnlockingArtist" xml:space="preserve">
-    <value>unlocking Artist</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.LockingArtist" xml:space="preserve">
-    <value>locking Artist</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.DeletingArtist" xml:space="preserve">
-    <value>deleting artist</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.SetArtistRating" xml:space="preserve">
-    <value>set artist rating</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.TogglingArtistHatred" xml:space="preserve">
-    <value>Toggling Artist Hatred</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.TogglingArtistFavorite" xml:space="preserve">
-    <value>Toggling Artist Favorite</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.TogglingPin" xml:space="preserve">
-    <value>Toggling Pin</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.SubmittingRescanJob" xml:space="preserve">
-    <value>submitting artist rescan job</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistDetail.DeletedArtistAlbums" xml:space="preserve">
-    <value>deleted artist albums</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="AlbumDetail.DeleteAlbum" xml:space="preserve">
-    <value>Delete the album and all album files. BEWARE!</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumDetail.EditAlbum" xml:space="preserve">
-    <value>Edit album.</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumDetail.UnlockAlbum" xml:space="preserve">
-    <value>Unlock album, will allow modifications.</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumDetail.LockAlbum" xml:space="preserve">
-    <value>Lock album, will prevent modifications.</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumDetail.RescanAlbum" xml:space="preserve">
-    <value>Rebuild metadata and rescan album folder.</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumDetail.SetCoverImage" xml:space="preserve">
-    <value>Set Cover Image</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumDetail.SetAlbumCoverImage" xml:space="preserve">
-    <value>Set the album cover image.</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumDetail.PlaySong" xml:space="preserve">
-    <value>Play song</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumDetail.IHateThis" xml:space="preserve">
-    <value>I hate this</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumDetail.ILikeThis" xml:space="preserve">
-    <value>I like this</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumDetail.NotFeaturedOnCharts" xml:space="preserve">
-    <value>This album is not featured on any charts.</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumDetail.ChartsFeaturing" xml:space="preserve">
-    <value>Charts featuring this album</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumDetail.ImageSearch" xml:space="preserve">
-    <value>Image Search</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumDetail.AlbumPlusYear" xml:space="preserve">
-    <value>Album + Year</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumDetail.AlbumPlusArtist" xml:space="preserve">
-    <value>Album + Artist</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumDetail.AlbumPlusYearPlusArtist" xml:space="preserve">
-    <value>Album + Year + Artist</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumDetail.DeleteSelectedFiles" xml:space="preserve">
-    <value>Delete {0} selected files</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumDetail.AlbumDirectoryNotFound" xml:space="preserve">
-    <value>Album directory [{0}] is not found.</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumDetail.UploadAlbumImage" xml:space="preserve">
-    <value>upload album image</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumDetail.DeleteFailed" xml:space="preserve">
-    <value>Delete failed</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumDetail.UploadFailed" xml:space="preserve">
-    <value>Upload failed</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumDetail.UploadFailedInvalidPath" xml:space="preserve">
-    <value>Filename contains invalid characters or path components</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumDetail.UnlockingAlbum" xml:space="preserve">
-    <value>unlocking Album</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumDetail.LockingAlbum" xml:space="preserve">
-    <value>locking Album</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumDetail.DeletingAlbum" xml:space="preserve">
-    <value>deleting album</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumDetail.TogglingAlbumHatred" xml:space="preserve">
-    <value>Toggling Album Hatred</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumDetail.TogglingAlbumFavorite" xml:space="preserve">
-    <value>Toggling Album Favorite</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumDetail.TogglingSongFavorite" xml:space="preserve">
-    <value>Toggling Song Favorite</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumDetail.TogglingSongHatred" xml:space="preserve">
-    <value>Toggling Song Hatred</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumDetail.SavingArtistImage" xml:space="preserve">
-    <value>Saving Artist image</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumDetail.SubmittingRescanJob" xml:space="preserve">
-    <value>submitting album rescan job</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumDetail.TogglingPin" xml:space="preserve">
-    <value>Toggling Pin</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumDetail.SetAlbumRating" xml:space="preserve">
-    <value>Set album rating</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumDetail.SetSongRating" xml:space="preserve">
-    <value>Set song rating</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="SongDetail.DetailsGoHere" xml:space="preserve">
-    <value>Details go here for {0}</value>
+    <value>未翻訳</value>
   </data>
 
   
@@ -2109,191 +2109,191 @@
     <value>ライブラリ</value>
   </data>
   <data name="Libraries.LockedLibraryMessage" xml:space="preserve">
-    <value>Library is locked. Locked libraries cannot be deleted.</value>
+    <value>未翻訳</value>
   </data>
   <data name="Libraries.SelectAllItems" xml:space="preserve">
-    <value>Select all items</value>
+    <value>未翻訳</value>
   </data>
   <data name="Libraries.SelectItem" xml:space="preserve">
-    <value>Select item</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="LibraryDetail.CleanLibrary" xml:space="preserve">
-    <value>Clean library, removing any empty folders.</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.EditLibrary" xml:space="preserve">
-    <value>Edit library.</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.UnlockLibrary" xml:space="preserve">
-    <value>Unlock library, will allow modifications.</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.LockLibrary" xml:space="preserve">
-    <value>Lock library, will prevent modifications.</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.PurgeLibrary" xml:space="preserve">
-    <value>Delete everything in the library</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.ProcessLibrary" xml:space="preserve">
-    <value>Process media files into Melodee media json file.</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.ScanLibrary" xml:space="preserve">
-    <value>Scan for Melodee media json files and update database data.</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.UpdateAggregates" xml:space="preserve">
-    <value>Update all aggregate counts for library, including; artists, contributors and albums in library.</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.PurgeWarning" xml:space="preserve">
-    <value>Purging a library deletes all artists, albums and songs.</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.ThereIsNoUndo" xml:space="preserve">
-    <value>There is no undo</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.ProceedToPurge" xml:space="preserve">
-    <value>Proceed to purge</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.ScanWarning" xml:space="preserve">
-    <value>Scanning a library updates database information from Melodee data files.</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.BackgroundJobNotice" xml:space="preserve">
-    <value>This action starts a background job.</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.ProcessWarning" xml:space="preserve">
-    <value>Processing a library creates Melodee data files with media found. This could overwrite Melodee data files, images and songs.</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.WarningNoUndo" xml:space="preserve">
-    <value>⚠️ There is no undo</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.ScanDate" xml:space="preserve">
-    <value>Scan Date</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.ForArtist" xml:space="preserve">
-    <value>For Artist</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.ForAlbum" xml:space="preserve">
-    <value>For Album</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.FoundArtistCount" xml:space="preserve">
-    <value>Found Artist #</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.FoundAlbumCount" xml:space="preserve">
-    <value>Found Album #</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.FoundSongCount" xml:space="preserve">
-    <value>Found Song #</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.Clean" xml:space="preserve">
-    <value>Clean</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.CleanTooltip" xml:space="preserve">
-    <value>Clean library, removing any empty folders.</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.EditTooltip" xml:space="preserve">
-    <value>Edit library.</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.UnlockTooltip" xml:space="preserve">
-    <value>Unlock library, will allow modifications.</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.LockTooltip" xml:space="preserve">
-    <value>Lock library, will prevent modifications.</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.Purge" xml:space="preserve">
-    <value>Purge</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.PurgeTooltip" xml:space="preserve">
-    <value>Delete everything in the library</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.Process" xml:space="preserve">
-    <value>Process</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.ProcessTooltip" xml:space="preserve">
-    <value>Process media files into Melodee media json file.</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.Scan" xml:space="preserve">
-    <value>Scan</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.ScanTooltip" xml:space="preserve">
-    <value>Scan for Melodee media json files and update database data.</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.UpdateAggregatesTooltip" xml:space="preserve">
-    <value>Update all aggregate counts for library, including; artists, contributors and albums in library.</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.History" xml:space="preserve">
     <value>履歴</value>
   </data>
   <data name="LibraryDetail.DataCounts" xml:space="preserve">
-    <value>Data Counts</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.PurgeMessage" xml:space="preserve">
-    <value>&lt;p&gt;Purging a library deletes all artists, albums and songs.&lt;/p&gt;&lt;p&gt;There is no undo&lt;/p&gt;</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.PurgeConfirmation" xml:space="preserve">
-    <value>Purge confirmation</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.ScanMessage" xml:space="preserve">
-    <value>&lt;p&gt;Scanning a library updates database information from Melodee data files.&lt;/p&gt;&lt;p&gt;This action starts a background job.&lt;/p&gt;&lt;p&gt;There is no undo&lt;/p&gt;</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.ScanConfirmation" xml:space="preserve">
-    <value>Scan confirmation</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.ProcessMessage" xml:space="preserve">
-    <value>&lt;p&gt;Processing a library creates Melodee data files with media found. This could overwrite Melodee data files, images and songs.&lt;/p&gt;&lt;p&gt;This action starts a background job.&lt;/p&gt;&lt;p&gt;⚠️ There is no undo&lt;/p&gt;</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryDetail.StartScan" xml:space="preserve">
-    <value>Start scan</value>
+    <value>未翻訳</value>
   </data>
   <data name="Message.PurgedLibrary" xml:space="preserve">
-    <value>purged library</value>
+    <value>未翻訳</value>
   </data>
   <data name="Message.LockedLibrary" xml:space="preserve">
-    <value>locked library</value>
+    <value>未翻訳</value>
   </data>
   <data name="Message.CleanedLibrary" xml:space="preserve">
-    <value>cleaned library</value>
+    <value>未翻訳</value>
   </data>
   <data name="Message.UnlockedLibrary" xml:space="preserve">
-    <value>unlocked library</value>
+    <value>未翻訳</value>
   </data>
   <data name="Message.StartedLibraryScanJob" xml:space="preserve">
-    <value>started library scan job</value>
+    <value>未翻訳</value>
   </data>
   <data name="Message.UpdatedLibraryAggregates" xml:space="preserve">
-    <value>updated library aggregates</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="PlaylistDetail.UnlockPlaylist" xml:space="preserve">
-    <value>Unlock playlist, will allow modifications.</value>
+    <value>未翻訳</value>
   </data>
   <data name="PlaylistDetail.LockPlaylist" xml:space="preserve">
-    <value>Lock playlist, will prevent modifications.</value>
+    <value>未翻訳</value>
   </data>
   <data name="PlaylistDetail.SetPlaylistImage" xml:space="preserve">
-    <value>Set the playlist image.</value>
+    <value>未翻訳</value>
   </data>
   <data name="PlaylistDetail.PlaylistImageManagement" xml:space="preserve">
-    <value>Playlist image management.</value>
+    <value>未翻訳</value>
   </data>
   <data name="PlaylistDetail.ImageFeatureDescription" xml:space="preserve">
-    <value>This feature allows setting custom images for playlists.</value>
+    <value>未翻訳</value>
   </data>
   <data name="PlaylistDetail.LockFeatureNotImplemented" xml:space="preserve">
-    <value>Playlist lock/unlock functionality is not yet fully implemented.</value>
+    <value>未翻訳</value>
   </data>
   <data name="PlaylistDetail.Dynamic" xml:space="preserve">
-    <value>Dynamic</value>
+    <value>未翻訳</value>
   </data>
   <data name="PlaylistDetail.User" xml:space="preserve">
     <value>ユーザー</value>
   </data>
   <data name="PlaylistDetail.SetCoverImage" xml:space="preserve">
-    <value>Set Cover Image</value>
+    <value>未翻訳</value>
   </data>
   <data name="PlaylistDetail.SetPlaylistImageTitle" xml:space="preserve">
-    <value>Set Playlist Image</value>
+    <value>未翻訳</value>
   </data>
   <data name="Message.TogglingPin" xml:space="preserve">
-    <value>Toggling Pin</value>
+    <value>未翻訳</value>
   </data>
 
   
@@ -2301,58 +2301,58 @@
     <value>リクエスト</value>
   </data>
   <data name="Requests.SearchRequests" xml:space="preserve">
-    <value>Search requests...</value>
+    <value>未翻訳</value>
   </data>
   <data name="Requests.FilterByStatus" xml:space="preserve">
-    <value>Filter by status</value>
+    <value>未翻訳</value>
   </data>
   <data name="Requests.FilterByCategory" xml:space="preserve">
-    <value>Filter by category</value>
+    <value>未翻訳</value>
   </data>
   <data name="Requests.MyRequests" xml:space="preserve">
-    <value>My Requests</value>
+    <value>未翻訳</value>
   </data>
   <data name="Requests.NewRequest" xml:space="preserve">
-    <value>New Request</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestStatus.Pending" xml:space="preserve">
     <value>保留中</value>
   </data>
   <data name="RequestStatus.InProgress" xml:space="preserve">
-    <value>In Progress</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestStatus.Completed" xml:space="preserve">
     <value>完了</value>
   </data>
   <data name="RequestStatus.Rejected" xml:space="preserve">
-    <value>Rejected</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="RequestNew.HttpsPlaceholder" xml:space="preserve">
-    <value>https://...</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="RequestDetail.DeleteRequestConfirm" xml:space="preserve">
-    <value>Are you sure you want to delete this request?</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestEdit.OnlyEditOwnRequests" xml:space="preserve">
-    <value>You can only edit your own requests</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="RequestCategory.AddAlbum" xml:space="preserve">
-    <value>Add Album</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestCategory.AddSong" xml:space="preserve">
-    <value>Add Song</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestCategory.ArtistCorrection" xml:space="preserve">
-    <value>Artist Correction</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestCategory.AlbumCorrection" xml:space="preserve">
-    <value>Album Correction</value>
+    <value>未翻訳</value>
   </data>
   <data name="RequestCategory.General" xml:space="preserve">
     <value>一般</value>
@@ -2360,48 +2360,48 @@
 
   
   <data name="ArtistEdit.PageTitle" xml:space="preserve">
-    <value>Artist Add/Edit</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistEdit.Adding" xml:space="preserve">
-    <value>Adding</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistEdit.Editing" xml:space="preserve">
-    <value>Editing</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistEdit.ImageSearch" xml:space="preserve">
-    <value>Artist Image Search</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistEdit.ExternalSearch" xml:space="preserve">
-    <value>External Search</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistEdit.ExternalSearchDescription" xml:space="preserve">
-    <value>External search integration for artist metadata retrieval.</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistEdit.ExternalSearchDetails" xml:space="preserve">
-    <value>This feature allows searching external providers (iTunes, Last.fm, Spotify) for artist information.</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistEdit.LibraryNameAria" xml:space="preserve">
     <value>ライブラリ名</value>
   </data>
   <data name="ArtistEdit.ArtistNameAria" xml:space="preserve">
-    <value>Artist Name</value>
+    <value>未翻訳</value>
   </data>
   <data name="ArtistEdit.EnterValue" xml:space="preserve">
-    <value>enter value</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="AlbumEdit.PageTitle" xml:space="preserve">
-    <value>Album Add/Edit</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumEdit.ReleaseDateRequired" xml:space="preserve">
-    <value>Release Date is required</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumEdit.ExternalSearchDescription" xml:space="preserve">
-    <value>External search integration for album metadata retrieval.</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumEdit.ExternalSearchDetails" xml:space="preserve">
-    <value>This feature allows searching external providers for album information.</value>
+    <value>未翻訳</value>
   </data>
 
   
@@ -2412,66 +2412,66 @@
     <value>ライブラリを追加</value>
   </data>
   <data name="LibraryEdit.NewLibrary" xml:space="preserve">
-    <value>New Library</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryEdit.EditLibraryTitle" xml:space="preserve">
-    <value>Edit {0}</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryEdit.LibraryNamePlaceholder" xml:space="preserve">
     <value>ライブラリ名</value>
   </data>
   <data name="LibraryEdit.FilesystemPathPlaceholder" xml:space="preserve">
-    <value>Filesystem path</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryEdit.OptionalDescriptionPlaceholder" xml:space="preserve">
-    <value>Optional description</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryEdit.OptionalNotesPlaceholder" xml:space="preserve">
-    <value>Optional notes</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryEdit.CommaSeparatedTagsPlaceholder" xml:space="preserve">
-    <value>Comma-separated tags</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryEdit.Adding" xml:space="preserve">
-    <value>Adding</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryEdit.Editing" xml:space="preserve">
-    <value>Editing</value>
+    <value>未翻訳</value>
   </data>
   <data name="Message.LibraryCreated" xml:space="preserve">
-    <value>Library created</value>
+    <value>未翻訳</value>
   </data>
   <data name="Message.LibrarySaved" xml:space="preserve">
-    <value>Library saved</value>
+    <value>未翻訳</value>
   </data>
   <data name="Status.Created" xml:space="preserve">
     <value>作成日</value>
   </data>
   <data name="Status.Saved" xml:space="preserve">
-    <value>Saved</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryType.Inbound" xml:space="preserve">
-    <value>Inbound</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryType.Staging" xml:space="preserve">
-    <value>Staging</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryType.Storage" xml:space="preserve">
-    <value>Storage</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryType.UserImages" xml:space="preserve">
-    <value>User Images</value>
+    <value>未翻訳</value>
   </data>
   <data name="LibraryType.Playlist" xml:space="preserve">
     <value>プレイリスト</value>
   </data>
   <data name="LibraryType.Chart" xml:space="preserve">
-    <value>Chart</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="UserEdit.PageTitle" xml:space="preserve">
-    <value>Edit User</value>
+    <value>未翻訳</value>
   </data>
   <data name="UserEdit.RoleNone" xml:space="preserve">
     <value>なし</value>
@@ -2483,10 +2483,10 @@
     <value>管理</value>
   </data>
   <data name="UserEdit.Adding" xml:space="preserve">
-    <value>Adding</value>
+    <value>未翻訳</value>
   </data>
   <data name="UserEdit.Editing" xml:space="preserve">
-    <value>Editing</value>
+    <value>未翻訳</value>
   </data>
   <data name="UserEdit.UsernamePlaceholder" xml:space="preserve">
     <value>ユーザー名</value>
@@ -2498,74 +2498,74 @@
     <value>パスワード</value>
   </data>
   <data name="Message.UserSaved" xml:space="preserve">
-    <value>User saved</value>
+    <value>未翻訳</value>
   </data>
   <data name="Message.AvatarUpdated" xml:space="preserve">
-    <value>Avatar updated</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="Charts.PageTitle" xml:space="preserve">
-    <value>Curated Charts</value>
+    <value>未翻訳</value>
   </data>
   <data name="Charts.CuratedAlbumCharts" xml:space="preserve">
-    <value>Curated Album Charts</value>
+    <value>未翻訳</value>
   </data>
   <data name="Charts.RankedReport" xml:space="preserve">
-    <value>Ranked Report</value>
+    <value>未翻訳</value>
   </data>
   <data name="Charts.MissingReport" xml:space="preserve">
-    <value>Missing Report</value>
+    <value>未翻訳</value>
   </data>
   <data name="Charts.EditChart" xml:space="preserve">
-    <value>Edit chart</value>
+    <value>未翻訳</value>
   </data>
   <data name="Charts.DeleteChart" xml:space="preserve">
-    <value>Delete chart</value>
+    <value>未翻訳</value>
   </data>
   <data name="Charts.DeleteChartConfirm" xml:space="preserve">
-    <value>Are you sure you want to delete '{0}'?</value>
+    <value>未翻訳</value>
   </data>
   <data name="Charts.DeleteChartsConfirm" xml:space="preserve">
-    <value>Are you sure you want to delete {0} selected chart(s)?</value>
+    <value>未翻訳</value>
   </data>
   <data name="Charts.DeleteCharts" xml:space="preserve">
-    <value>Delete Charts</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="ChartsRankedReport.PageTitle" xml:space="preserve">
-    <value>Ranked Report</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartsRankedReport.ChartsRankedAlbumsReport" xml:space="preserve">
-    <value>Charts Ranked Albums Report</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartsRankedReport.Description" xml:space="preserve">
-    <value>Albums ranked by their aggregate position across multiple charts</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartsRankedReport.TotalAlbums" xml:space="preserve">
     <value>アルバム総数</value>
   </data>
   <data name="ChartsRankedReport.MultiChartAlbums" xml:space="preserve">
-    <value>Multi-Chart Albums</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartsRankedReport.TotalCharts" xml:space="preserve">
-    <value>Total Charts</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartsRankedReport.LinkedAlbums" xml:space="preserve">
-    <value>Linked Albums</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartsRankedReport.Score" xml:space="preserve">
-    <value>Score</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartsRankedReport.Best" xml:space="preserve">
-    <value>Best</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartsRankedReport.Worst" xml:space="preserve">
-    <value>Worst</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartsRankedReport.ChartDetails" xml:space="preserve">
-    <value>Chart Details</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartsRankedReport.NotFound" xml:space="preserve">
     <value>見つかりません</value>
@@ -2573,81 +2573,81 @@
 
   
   <data name="ChartsMissingReport.PageTitle" xml:space="preserve">
-    <value>Missing Report</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartsMissingReport.ChartsMissingAlbumsReport" xml:space="preserve">
-    <value>Charts Missing Albums Report</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartsMissingReport.Description" xml:space="preserve">
-    <value>Albums that appear on charts but are not found in the database</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartsMissingReport.TotalMissingAlbums" xml:space="preserve">
-    <value>Total Missing Albums</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartsMissingReport.TotalMissingItems" xml:space="preserve">
-    <value>Total Missing Items</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartsMissingReport.IdentifyMissingAlbum" xml:space="preserve">
-    <value>Identify Missing Album</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="AdminDashboard.PageTitle" xml:space="preserve">
-    <value>Admin Dashboard</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminDashboard.QuickLinks" xml:space="preserve">
-    <value>Quick Links</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminDashboard.SystemHealthOverview" xml:space="preserve">
-    <value>System Health Overview</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminDashboard.LibraryOverview" xml:space="preserve">
-    <value>Library Overview</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminDashboard.SongsAddedLast30Days" xml:space="preserve">
-    <value>Songs Added (Last 30 Days)</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminDashboard.SearchActivityLast30Days" xml:space="preserve">
-    <value>Search Activity (Last 30 Days)</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminDashboard.LibraryStatus" xml:space="preserve">
-    <value>Library Status</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminDashboard.ScheduledJobs" xml:space="preserve">
-    <value>Scheduled Jobs</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminDashboard.ContentHealth" xml:space="preserve">
-    <value>Content Health</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminDashboard.SystemInformation" xml:space="preserve">
-    <value>System Information</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminDashboard.CacheStatistics" xml:space="preserve">
-    <value>Cache Statistics</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminDashboard.SystemStatus" xml:space="preserve">
-    <value>System Status</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminDashboard.TotalUsers" xml:space="preserve">
-    <value>Total Users</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminDashboard.Uptime" xml:space="preserve">
-    <value>Uptime</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminDashboard.Date" xml:space="preserve">
     <value>日付</value>
   </data>
   <data name="AdminDashboard.Searches" xml:space="preserve">
-    <value>Searches</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminDashboard.LastScan" xml:space="preserve">
     <value>最終スキャン</value>
   </data>
   <data name="AdminDashboard.Never" xml:space="preserve">
-    <value>Never</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminDashboard.NeedsScan" xml:space="preserve">
-    <value>Needs Scan</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminDashboard.Job" xml:space="preserve">
     <value>ジョブ</value>
@@ -2662,141 +2662,141 @@
     <value>ユーザー</value>
   </data>
   <data name="AdminDashboard.ServerTimeUTC" xml:space="preserve">
-    <value>Server Time (UTC)</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminDashboard.DotNetVersion" xml:space="preserve">
-    <value>.NET Version</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminDashboard.MelodeeVersion" xml:space="preserve">
-    <value>Melodee Version</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminDashboard.APIVersion" xml:space="preserve">
-    <value>API Version</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminDashboard.OS" xml:space="preserve">
-    <value>OS</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminDashboard.APIDocs" xml:space="preserve">
-    <value>API Docs</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="AdminJobs.PageTitle" xml:space="preserve">
-    <value>Background Jobs</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.Scheduler" xml:space="preserve">
-    <value>Scheduler</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.TotalJobs" xml:space="preserve">
-    <value>Total Jobs</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.HistoryRecords" xml:space="preserve">
-    <value>History Records</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.Failures24h" xml:space="preserve">
-    <value>Failures (24h)</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.JobDetails" xml:space="preserve">
-    <value>Job Details</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.ExecutionStatistics" xml:space="preserve">
-    <value>Execution Statistics</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.Configuration" xml:space="preserve">
     <value>設定</value>
   </data>
   <data name="AdminJobs.JobData" xml:space="preserve">
-    <value>Job Data</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.JobGroup" xml:space="preserve">
-    <value>Job Group</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.TriggerType" xml:space="preserve">
-    <value>Trigger Type</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.CronExpression" xml:space="preserve">
-    <value>Cron Expression</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.TotalRuns" xml:space="preserve">
-    <value>Total Runs</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.SuccessRate" xml:space="preserve">
-    <value>Success Rate</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.SuccessesFailures" xml:space="preserve">
-    <value>Successes / Failures</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.ManualTriggers" xml:space="preserve">
-    <value>Manual Triggers</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.AvgDuration" xml:space="preserve">
-    <value>Avg Duration</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.MinMaxDuration" xml:space="preserve">
-    <value>Min / Max Duration</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.Durable" xml:space="preserve">
-    <value>Durable</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.DisallowConcurrent" xml:space="preserve">
-    <value>Disallow Concurrent</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.PersistData" xml:space="preserve">
-    <value>Persist Data</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.RequestsRecovery" xml:space="preserve">
-    <value>Requests Recovery</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.LastError" xml:space="preserve">
-    <value>Last Error</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.UnknownTime" xml:space="preserve">
-    <value>Unknown time</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.JobName" xml:space="preserve">
     <value>ジョブ名</value>
   </data>
   <data name="AdminJobs.Runs" xml:space="preserve">
-    <value>Runs</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.Success" xml:space="preserve">
     <value>成功</value>
   </data>
   <data name="AdminJobs.AvgTime" xml:space="preserve">
-    <value>Avg Time</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.SchedulerInformation" xml:space="preserve">
-    <value>Scheduler Information</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.SchedulerName" xml:space="preserve">
-    <value>Scheduler Name</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.InstanceID" xml:space="preserve">
-    <value>Instance ID</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.SchedulerStarted" xml:space="preserve">
-    <value>Scheduler Started</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.ThreadPoolSize" xml:space="preserve">
-    <value>Thread Pool Size</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.NotStarted" xml:space="preserve">
-    <value>Not started</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.JobsDisabled" xml:space="preserve">
-    <value>Jobs are disabled in the appsettings.json file. Set the setting "{0}" to "false" (or remove entirely) to enable.</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.NoJobsFound" xml:space="preserve">
-    <value>No jobs found. Check your configuration and enable the Cron Expressions for Jobs in Settings.</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.Title" xml:space="preserve">
-    <value>Background Jobs</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.JobsDisabledMessage" xml:space="preserve">
-    <value>Jobs are disabled in the appsettings.json file. Set the setting</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.JobsDisabledMessage2" xml:space="preserve">
-    <value>to "false" (or remove entirely) to enable.</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.Running" xml:space="preserve">
     <value>実行中</value>
@@ -2814,46 +2814,46 @@
     <value>次回実行</value>
   </data>
   <data name="AdminJobs.JobsRefreshed" xml:space="preserve">
-    <value>Jobs refreshed</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.JobTriggered" xml:space="preserve">
-    <value>Job '{0}' triggered</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.FailedToTriggerJob" xml:space="preserve">
-    <value>Failed to trigger job</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.JobPaused" xml:space="preserve">
-    <value>Job '{0}' paused</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.FailedToPauseJob" xml:space="preserve">
-    <value>Failed to pause job</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.JobResumed" xml:space="preserve">
-    <value>Job '{0}' resumed</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.FailedToResumeJob" xml:space="preserve">
-    <value>Failed to resume job</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.JobInterrupted" xml:space="preserve">
-    <value>Job '{0}' interrupted</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.FailedToInterruptJob" xml:space="preserve">
-    <value>Failed to interrupt job</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.AllJobsPaused" xml:space="preserve">
-    <value>All jobs paused</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.FailedToPauseAllJobs" xml:space="preserve">
-    <value>Failed to pause all jobs</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.AllJobsResumed" xml:space="preserve">
-    <value>All jobs resumed</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.FailedToResumeAllJobs" xml:space="preserve">
-    <value>Failed to resume all jobs</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminJobs.ErrorLoadingJobs" xml:space="preserve">
-    <value>Error loading jobs</value>
+    <value>未翻訳</value>
   </data>
 
   
@@ -2870,186 +2870,186 @@
     <value>コメント</value>
   </data>
   <data name="AdminSettings.EditValue" xml:space="preserve">
-    <value>Edit Value</value>
+    <value>未翻訳</value>
   </data>
   <data name="AdminSettings.SuccessfullyUpdated" xml:space="preserve">
-    <value>Successfully updated setting!</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="ChartEditor.EditChart" xml:space="preserve">
-    <value>Edit Chart: {0}</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.CreateChart" xml:space="preserve">
-    <value>Create Chart</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.CreateNewChart" xml:space="preserve">
-    <value>Create New Chart</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.ChartDetails" xml:space="preserve">
-    <value>Chart Details</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.ChartImage" xml:space="preserve">
-    <value>Chart Image</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.ImportChartItemsCSV" xml:space="preserve">
-    <value>Import Chart Items (CSV)</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.ChartItems" xml:space="preserve">
-    <value>Chart Items ({0})</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.ChartItemsCSV" xml:space="preserve">
-    <value>Chart Items (CSV)</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.ChartTitlePlaceholder" xml:space="preserve">
-    <value>Chart title (required)</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.AutoGeneratedSlug" xml:space="preserve">
-    <value>Auto-generated from title</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.SourceNameExample" xml:space="preserve">
-    <value>e.g., Rolling Stone</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.YearExample" xml:space="preserve">
-    <value>e.g., 2025</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.DescriptionSupportsMarkdown" xml:space="preserve">
-    <value>Optional description (supports markdown)</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.TagsExample" xml:space="preserve">
-    <value>Comma-separated, e.g., rock, progressive, 2025</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.CSVFormatExample" xml:space="preserve">
-    <value>1,The Beatles,Abbey Road,1969\n2,Pink Floyd,The Dark Side of the Moon,1973...</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.ValidateCSV" xml:space="preserve">
-    <value>Validate CSV</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.DeleteImage" xml:space="preserve">
-    <value>Delete Image</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.ImportAndSave" xml:space="preserve">
-    <value>Import &amp; Save</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.LinkStatus" xml:space="preserve">
-    <value>Link Status</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.Required" xml:space="preserve">
-    <value>(Required)</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.Optional" xml:space="preserve">
-    <value>(Optional)</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.CSVFormatDescription" xml:space="preserve">
-    <value>Format: Rank,Artist,Album,Year (optional) — one entry per line</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.ValidationErrors" xml:space="preserve">
-    <value>Validation Errors:</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.RowError" xml:space="preserve">
-    <value>Row {0}: {1}</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.MoreErrors" xml:space="preserve">
-    <value>...and {0} more errors</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.ValidItemsReady" xml:space="preserve">
-    <value>✓ {0} valid items ready to import</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.UploadImageDescription" xml:space="preserve">
-    <value>Upload an image for this chart. Supported formats: JPG, PNG, GIF, WebP (max 10MB)</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.ImageSelectedWillUpload" xml:space="preserve">
-    <value>Image selected - will be uploaded when chart is created</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.PasteCSVData" xml:space="preserve">
-    <value>Paste CSV data below. Format: Rank,ArtistName,AlbumTitle,Year (optional)</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.PreviewItems" xml:space="preserve">
-    <value>Preview ({0} items)</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.LinkingComplete" xml:space="preserve">
-    <value>Linking complete: {0} linked, {1} ambiguous, {2} unlinked, {3} skipped</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.OverwriteManualLinks" xml:space="preserve">
-    <value>Do you want to overwrite manually resolved links?</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.RelinkOptions" xml:space="preserve">
-    <value>Re-link Options</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.YesOverwrite" xml:space="preserve">
-    <value>Yes, overwrite</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.NoKeepManualLinks" xml:space="preserve">
-    <value>No, keep manual links</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.ConfirmIgnore" xml:space="preserve">
-    <value>Mark '{0} - {1}' as ignored?</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.ConfirmIgnoreTitle" xml:space="preserve">
-    <value>Confirm Ignore</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.TitleRequired" xml:space="preserve">
-    <value>Title is required</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.ChartItemsRequired" xml:space="preserve">
-    <value>Chart items (CSV) are required</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.FixCSVErrors" xml:space="preserve">
-    <value>Please fix CSV errors before creating</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.CSVInputEmpty" xml:space="preserve">
-    <value>CSV input is empty</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.PreviewCSVFirst" xml:space="preserve">
-    <value>Please preview the CSV first</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.InvalidImageType" xml:space="preserve">
-    <value>Invalid image type. Allowed: JPEG, PNG, GIF, WebP.</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.ImageSizeTooLarge" xml:space="preserve">
-    <value>Image file size must be less than 10MB.</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.ChartNotFound" xml:space="preserve">
-    <value>Chart not found</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.UpdatedChart" xml:space="preserve">
-    <value>Updated chart</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.CreatedChartWithItems" xml:space="preserve">
-    <value>Created chart with {0} items</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.ChartCreatedItemsFailed" xml:space="preserve">
-    <value>Chart created but items failed to save</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.ChartCreatedImageFailed" xml:space="preserve">
-    <value>Chart created but image upload failed</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.FailedToCreateChart" xml:space="preserve">
-    <value>Failed to create chart</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.CSVContainsNoValidItems" xml:space="preserve">
-    <value>CSV contains no valid items</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.ImportedChartItems" xml:space="preserve">
-    <value>Imported chart items</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.RelinkedItems" xml:space="preserve">
-    <value>Re-linked items</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.ResolveItem" xml:space="preserve">
-    <value>Resolve: {0} - {1}</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.MarkedAsIgnored" xml:space="preserve">
-    <value>Marked as ignored</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.UploadedImage" xml:space="preserve">
-    <value>Uploaded image</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.DeletedImage" xml:space="preserve">
-    <value>Deleted image</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.ConfirmDeleteImage" xml:space="preserve">
-    <value>Are you sure you want to delete the chart image?</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartEditor.ConfirmDeleteImageTitle" xml:space="preserve">
     <value>削除の確認</value>
@@ -3057,7 +3057,7 @@
 
   
   <data name="ChartDetail.PageTitle" xml:space="preserve">
-    <value>Chart Details</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartDetail.Loading" xml:space="preserve">
     <value>読み込み中...</value>
@@ -3066,174 +3066,174 @@
     <value>アルバム総数</value>
   </data>
   <data name="ChartDetail.Completion" xml:space="preserve">
-    <value>Completion</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartDetail.InProgress" xml:space="preserve">
-    <value>In Progress</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartDetail.AllAlbumsAvailable" xml:space="preserve">
-    <value>All albums available to play</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartDetail.AlbumsNotFound" xml:space="preserve">
-    <value>{0} albums not found in library</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartDetail.ChartNotFound" xml:space="preserve">
-    <value>Chart not found.</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartDetail.Source" xml:space="preserve">
-    <value>Source: {0}</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartDetail.Link" xml:space="preserve">
-    <value>(link)</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartDetail.Items" xml:space="preserve">
-    <value>Items</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartDetail.Playlist" xml:space="preserve">
     <value>プレイリスト</value>
   </data>
   <data name="ChartDetail.ChartItems" xml:space="preserve">
-    <value>Chart Items ({0})</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="ChartImportDialog.JSONImportSchema" xml:space="preserve">
-    <value>JSON Import Schema:</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.Preview" xml:space="preserve">
-    <value>Preview:</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.JSONContent" xml:space="preserve">
-    <value>JSON Content</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.UploadFile" xml:space="preserve">
-    <value>Upload File</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.PasteJSON" xml:space="preserve">
-    <value>Paste JSON here or upload a file...</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.JSONRequired" xml:space="preserve">
-    <value>JSON content is required.</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.FailedToParse" xml:space="preserve">
-    <value>Failed to parse JSON.</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.TitleRequired" xml:space="preserve">
-    <value>'title' is required.</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.ItemsRequired" xml:space="preserve">
-    <value>'items' array is required and must contain at least one item.</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.PreviewTitle" xml:space="preserve">
-    <value>Title:</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.PreviewSource" xml:space="preserve">
-    <value>Source:</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.PreviewYear" xml:space="preserve">
-    <value>Year:</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.PreviewItems" xml:space="preserve">
-    <value>Items:</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.PreviewImageURL" xml:space="preserve">
-    <value>Image URL:</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.NA" xml:space="preserve">
-    <value>N/A</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="ChartItemResolveDialog.CurrentEntry" xml:space="preserve">
-    <value>Current Entry</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartItemResolveDialog.SearchAndSelectAlbum" xml:space="preserve">
-    <value>Search &amp; Select Album</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartItemResolveDialog.Rank" xml:space="preserve">
-    <value>Rank:</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartItemResolveDialog.CurrentLink" xml:space="preserve">
-    <value>Current Link:</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartItemResolveDialog.SearchPlaceholder" xml:space="preserve">
-    <value>Search by artist or album name...</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartItemResolveDialog.LinkedTo" xml:space="preserve">
-    <value>Linked to: {0} - {1}</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="MissingAlbumIdentifyDialog.TypeToFilter" xml:space="preserve">
-    <value>Type to filter artists...</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="MediaLibrary.PageTitle" xml:space="preserve">
-    <value>Media Albums</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaLibrary.CleanLibrary" xml:space="preserve">
-    <value>Clean this media library directory.</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaLibrary.DeleteAlbums" xml:space="preserve">
-    <value>Delete Albums</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaLibrary.DeleteSelectedAlbums" xml:space="preserve">
-    <value>Delete selected media albums, including album files. BEWARE!</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaLibrary.DeleteNotOk" xml:space="preserve">
-    <value>Delete not Ok</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaLibrary.DeleteAllNotOk" xml:space="preserve">
-    <value>Delete all not Ok status albums in library. BEWARE!</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaLibrary.DeleteLessThan4Songs" xml:space="preserve">
-    <value>Delete with less than 4 songs</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaLibrary.DeleteLessThan10Minutes" xml:space="preserve">
-    <value>Delete less than 10 minutes</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaLibrary.DeleteAllStatus" xml:space="preserve">
-    <value>Delete all albums with status [{0}]</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaLibrary.FindMissingImages" xml:space="preserve">
-    <value>Find Missing Images</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaLibrary.MoveOk" xml:space="preserve">
-    <value>Move Ok [{0}]</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaLibrary.FilterByStatus" xml:space="preserve">
-    <value>Filter by status...</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaLibrary.DeletingNotOkWarning" xml:space="preserve">
-    <value>Deleting all not Ok albums can potentially delete many albums</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaLibrary.DeletingNotOk" xml:space="preserve">
-    <value>Deleting not Ok</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaLibrary.FindMissingImagesDescription" xml:space="preserve">
-    <value>This will search for images for all albums that currently have no images. This may take a while.</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaLibrary.StartSearch" xml:space="preserve">
-    <value>Start Search</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaLibrary.DryRunPrompt" xml:space="preserve">
-    <value>Do you want to perform a dry-run first to see what would change?</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaLibrary.LibraryClean" xml:space="preserve">
-    <value>Library Clean</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaLibrary.DryRun" xml:space="preserve">
-    <value>Dry Run</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaLibrary.SkipToRealClean" xml:space="preserve">
-    <value>Skip to Real Clean</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaLibrary.SelectDestinationLibrary" xml:space="preserve">
-    <value>Select Destination Library</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaLibrary.SelectLibraryFor" xml:space="preserve">
-    <value>Select the destination library for OK albums:</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaLibrary.Select" xml:space="preserve">
     <value>選択</value>
@@ -3244,85 +3244,85 @@
     <value>メディアアーティスト</value>
   </data>
   <data name="MediaArtists.SearchEngineArtists" xml:space="preserve">
-    <value>Search Engine Artists</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaArtists.RefreshAlbums" xml:space="preserve">
-    <value>Refresh Albums</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="MediaAlbumDetail.AddArtist" xml:space="preserve">
-    <value>Add Artist</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaAlbumDetail.AddArtistTooltip" xml:space="preserve">
-    <value>Add a new artist to metadata database using this artists details.</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaAlbumDetail.ManuallyValidate" xml:space="preserve">
-    <value>Manually validate album</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaAlbumDetail.RenumberSongs" xml:space="preserve">
-    <value>Renumber all songs</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaAlbumDetail.SetArtistOnSongs" xml:space="preserve">
-    <value>Set artist on all songs</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaAlbumDetail.DeleteSong" xml:space="preserve">
-    <value>Delete Song</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaAlbumDetail.DeleteSongConfirm" xml:space="preserve">
-    <value>Delete {0}?</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaAlbumDetail.IdentifyAlbum" xml:space="preserve">
-    <value>Identify the album from search providers.</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaAlbumDetail.IdentifyAlbumTitle" xml:space="preserve">
-    <value>Identify Album</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaAlbumDetail.MoveToStorage" xml:space="preserve">
-    <value>Move to Storage library.</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaAlbumDetail.ReprocessAlbum" xml:space="preserve">
-    <value>Reprocess the album.</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaAlbumDetail.ImageSearchTitle" xml:space="preserve">
-    <value>Image Search</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaAlbumDetail.ImageFile" xml:space="preserve">
-    <value>File:</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaAlbumDetail.ImageSize" xml:space="preserve">
-    <value>Size:</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaAlbumDetail.ImageResolution" xml:space="preserve">
-    <value>Resolution:</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaAlbumDetail.ImageType" xml:space="preserve">
-    <value>Type:</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaAlbumDetail.ImageCRC" xml:space="preserve">
-    <value>CRC:</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaAlbumDetail.Embedded" xml:space="preserve">
-    <value>Embedded</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaAlbumDetail.Original" xml:space="preserve">
-    <value>Original:</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaAlbumDetail.NoImagesAdded" xml:space="preserve">
-    <value>No images were added to the album. Likely the image you selected was invalid.</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="MediaAlbumEdit.PageTitle" xml:space="preserve">
-    <value>Media Album Add/Edit</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaAlbumEdit.ImageSearch" xml:space="preserve">
-    <value>Media Album Image Search</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="MediaArtistEdit.PageTitle" xml:space="preserve">
-    <value>Media Artist Add/Edit</value>
+    <value>未翻訳</value>
   </data>
   <data name="MediaArtistEdit.MediaArtists" xml:space="preserve">
     <value>メディアアーティスト</value>
@@ -3330,196 +3330,196 @@
 
   
   <data name="Notification.RequestNotFound" xml:space="preserve">
-    <value>Request not found</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.ErrorLoadingRequest" xml:space="preserve">
-    <value>Error loading request</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.RequestDeleted" xml:space="preserve">
-    <value>Request deleted</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.ErrorDeletingRequest" xml:space="preserve">
-    <value>Error deleting request</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.RequestMarkedComplete" xml:space="preserve">
-    <value>Request marked as complete</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.ErrorCompletingRequest" xml:space="preserve">
-    <value>Error completing request</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.ErrorPostingComment" xml:space="preserve">
-    <value>Error posting comment</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.RequestCreated" xml:space="preserve">
-    <value>Request created successfully</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.ErrorCreatingRequest" xml:space="preserve">
-    <value>Error creating request</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.RequestUpdated" xml:space="preserve">
-    <value>Request updated successfully</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.ErrorUpdatingRequest" xml:space="preserve">
-    <value>Error updating request</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.LibraryCreated" xml:space="preserve">
-    <value>Library created</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.LibrarySaved" xml:space="preserve">
-    <value>Library saved</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.UserSaved" xml:space="preserve">
-    <value>User saved</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.AvatarUpdated" xml:space="preserve">
-    <value>Avatar updated</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.ChartNotFound" xml:space="preserve">
-    <value>Chart not found</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.UpdatedChart" xml:space="preserve">
-    <value>Updated chart</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.CreatedChartWithItems" xml:space="preserve">
-    <value>Created chart with {0} items</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.ChartCreatedItemsFailed" xml:space="preserve">
-    <value>Chart created but items failed to save</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.ChartCreatedImageFailed" xml:space="preserve">
-    <value>Chart created but image upload failed</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.FailedToCreateChart" xml:space="preserve">
-    <value>Failed to create chart</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.ImportedChartItems" xml:space="preserve">
-    <value>Imported chart items</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.RelinkedItems" xml:space="preserve">
-    <value>Re-linked items</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.MarkedAsIgnored" xml:space="preserve">
-    <value>Marked as ignored</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.AlbumIdentified" xml:space="preserve">
-    <value>Album Identified</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.LinkedChartItems" xml:space="preserve">
-    <value>Linked {0} chart items to {1} - {2}</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.FailedToIdentifyAlbum" xml:space="preserve">
-    <value>Failed to identify album</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.FailedToLinkAlbum" xml:space="preserve">
-    <value>Failed to link album</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.JobTriggered" xml:space="preserve">
-    <value>Job '{0}' triggered</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.FailedToTriggerJob" xml:space="preserve">
-    <value>Failed to trigger job</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.JobPaused" xml:space="preserve">
-    <value>Job '{0}' paused</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.FailedToPauseJob" xml:space="preserve">
-    <value>Failed to pause job</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.JobResumed" xml:space="preserve">
-    <value>Job '{0}' resumed</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.FailedToResumeJob" xml:space="preserve">
-    <value>Failed to resume job</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.JobInterrupted" xml:space="preserve">
-    <value>Job '{0}' interrupted</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.FailedToInterruptJob" xml:space="preserve">
-    <value>Failed to interrupt job</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.AllJobsPaused" xml:space="preserve">
-    <value>All jobs paused</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.FailedToPauseAllJobs" xml:space="preserve">
-    <value>Failed to pause all jobs</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.AllJobsResumed" xml:space="preserve">
-    <value>All jobs resumed</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.FailedToResumeAllJobs" xml:space="preserve">
-    <value>Failed to resume all jobs</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.JobsRefreshed" xml:space="preserve">
-    <value>Jobs refreshed</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.DashboardRefreshed" xml:space="preserve">
-    <value>Dashboard refreshed</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.FindMissingImagesResult" xml:space="preserve">
-    <value>Found and set images for {0} out of {1} albums.</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.MovingOkAlbums" xml:space="preserve">
-    <value>Moving Ok Albums</value>
+    <value>未翻訳</value>
   </data>
   <data name="Notification.ScanningLibraryWarning" xml:space="preserve">
-    <value>Scanning a library updates the library with media found. This could overwrite artists, albums and songs.</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="Charts.SelectAllItems" xml:space="preserve">
-    <value>Select all items</value>
+    <value>未翻訳</value>
   </data>
   <data name="Charts.SelectItem" xml:space="preserve">
-    <value>Select item</value>
+    <value>未翻訳</value>
   </data>
   <data name="Charts.ImportChartFromJSON" xml:space="preserve">
-    <value>Import Chart from JSON</value>
+    <value>未翻訳</value>
   </data>
   <data name="Charts.ConfirmDeleteChart" xml:space="preserve">
-    <value>Are you sure you want to delete '{0}'?</value>
+    <value>未翻訳</value>
   </data>
   <data name="Charts.ConfirmDeleteCharts" xml:space="preserve">
-    <value>Are you sure you want to delete {0} selected chart(s)?</value>
+    <value>未翻訳</value>
   </data>
   <data name="Charts.DeletingChart" xml:space="preserve">
-    <value>Deleting Chart</value>
+    <value>未翻訳</value>
   </data>
   <data name="Charts.ChartsDeleted" xml:space="preserve">
-    <value>Charts Deleted</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="ChartsRankedReport.Header" xml:space="preserve">
-    <value>Ranked Albums Report</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartsMissingReport.Header" xml:space="preserve">
-    <value>Missing Albums Report</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumEdit.Adding" xml:space="preserve">
-    <value>Adding</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumEdit.Editing" xml:space="preserve">
-    <value>Editing</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="UserDetail.PageTitle" xml:space="preserve">
-    <value>User - {0}</value>
+    <value>未翻訳</value>
   </data>
   <data name="UserDetail.UserNotFound" xml:space="preserve">
-    <value>User not found</value>
+    <value>未翻訳</value>
   </data>
   <data name="UserDetail.InvalidApiKeyFormat" xml:space="preserve">
-    <value>Invalid user API key format</value>
+    <value>未翻訳</value>
   </data>
   <data name="UserDetail.ErrorLoadingUserDetail" xml:space="preserve">
-    <value>Error loading user detail</value>
+    <value>未翻訳</value>
   </data>
   <data name="UserDetail.UserInformation" xml:space="preserve">
-    <value>User Information</value>
+    <value>未翻訳</value>
   </data>
   <data name="UserDetail.Property" xml:space="preserve">
-    <value>Property</value>
+    <value>未翻訳</value>
   </data>
   <data name="UserDetail.Value" xml:space="preserve">
     <value>値</value>
@@ -3531,7 +3531,7 @@
     <value>アクティビティ</value>
   </data>
   <data name="UserDetail.Ratings" xml:space="preserve">
-    <value>Ratings</value>
+    <value>未翻訳</value>
   </data>
   <data name="UserDetail.Preferences" xml:space="preserve">
     <value>設定</value>
@@ -3543,22 +3543,22 @@
     <value>タグ</value>
   </data>
   <data name="UserDetail.PinnedItems" xml:space="preserve">
-    <value>Pinned Items</value>
+    <value>未翻訳</value>
   </data>
   <data name="UserDetail.Email" xml:space="preserve">
     <value>メール</value>
   </data>
   <data name="UserDetail.TimeZone" xml:space="preserve">
-    <value>Time Zone</value>
+    <value>未翻訳</value>
   </data>
   <data name="UserDetail.Created" xml:space="preserve">
     <value>作成日</value>
   </data>
   <data name="UserDetail.LastLogin" xml:space="preserve">
-    <value>Last Login</value>
+    <value>未翻訳</value>
   </data>
   <data name="UserDetail.LastActivity" xml:space="preserve">
-    <value>Last Activity</value>
+    <value>未翻訳</value>
   </data>
   <data name="UserDetail.Description" xml:space="preserve">
     <value>説明</value>
@@ -3566,13 +3566,13 @@
 
   
   <data name="UserDetail.Stats.ArtistsStarred" xml:space="preserve">
-    <value>Artists Starred</value>
+    <value>未翻訳</value>
   </data>
   <data name="UserDetail.Stats.AlbumsStarred" xml:space="preserve">
-    <value>Albums Starred</value>
+    <value>未翻訳</value>
   </data>
   <data name="UserDetail.Stats.SongsStarred" xml:space="preserve">
-    <value>Songs Starred</value>
+    <value>未翻訳</value>
   </data>
   <data name="UserDetail.Stats.TotalPlays" xml:space="preserve">
     <value>総再生回数</value>
@@ -3584,19 +3584,19 @@
     <value>共有</value>
   </data>
   <data name="UserDetail.Stats.ArtistsRated" xml:space="preserve">
-    <value>Artists Rated</value>
+    <value>未翻訳</value>
   </data>
   <data name="UserDetail.Stats.AlbumsRated" xml:space="preserve">
-    <value>Albums Rated</value>
+    <value>未翻訳</value>
   </data>
   <data name="UserDetail.Stats.SongsRated" xml:space="preserve">
-    <value>Songs Rated</value>
+    <value>未翻訳</value>
   </data>
   <data name="UserDetail.Stats.PinnedItems" xml:space="preserve">
-    <value>Pinned Items</value>
+    <value>未翻訳</value>
   </data>
   <data name="UserDetail.Stats.Bookmarks" xml:space="preserve">
-    <value>Bookmarks</value>
+    <value>未翻訳</value>
   </data>
 
   
@@ -3625,112 +3625,112 @@
     <value>プレイリスト</value>
   </data>
   <data name="UserRole.CoverArt" xml:space="preserve">
-    <value>Cover Art</value>
+    <value>未翻訳</value>
   </data>
   <data name="UserRole.Comment" xml:space="preserve">
     <value>コメント</value>
   </data>
   <data name="UserRole.Podcast" xml:space="preserve">
-    <value>Podcast</value>
+    <value>未翻訳</value>
   </data>
   <data name="UserRole.Stream" xml:space="preserve">
-    <value>Stream</value>
+    <value>未翻訳</value>
   </data>
   <data name="UserRole.Jukebox" xml:space="preserve">
-    <value>Jukebox</value>
+    <value>未翻訳</value>
   </data>
   <data name="UserRole.Share" xml:space="preserve">
-    <value>Share</value>
+    <value>未翻訳</value>
   </data>
   
   
   <data name="Message.ClearedCache" xml:space="preserve">
-    <value>cleared cache</value>
+    <value>未翻訳</value>
   </data>
   <data name="Message.ClearedNowPlaying" xml:space="preserve">
-    <value>cleared now playing</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="ChartImportDialog.ValidationErrors" xml:space="preserve">
-    <value>Validation Errors:</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.ImageUrl" xml:space="preserve">
-    <value>Image URL</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.Error.JsonRequired" xml:space="preserve">
-    <value>JSON content is required.</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.Error.ParseFailed" xml:space="preserve">
-    <value>Failed to parse JSON.</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.Error.TitleRequired" xml:space="preserve">
-    <value>'title' is required.</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.Error.ItemsRequired" xml:space="preserve">
-    <value>'items' array is required and must contain at least one item.</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.Error.RankPositive" xml:space="preserve">
-    <value>Item {0}: 'rank' must be a positive integer.</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.Error.DuplicateRank" xml:space="preserve">
-    <value>Item {0}: duplicate rank {1}.</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.Error.ArtistRequired" xml:space="preserve">
-    <value>Item {0}: 'artistName' is required.</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.Error.AlbumRequired" xml:space="preserve">
-    <value>Item {0}: 'albumTitle' is required.</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.Error.InvalidJson" xml:space="preserve">
-    <value>Invalid JSON: {0}</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.ImportFailed" xml:space="preserve">
-    <value>Import Failed</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.UnknownError" xml:space="preserve">
-    <value>Unknown error</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.ChartCreatedItemsFailed" xml:space="preserve">
-    <value>Chart created but items failed to parse</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.LinkSummary" xml:space="preserve">
-    <value>Linked: {0}, Unlinked: {1}, Ambiguous: {2}</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.LinkStatusUnavailable" xml:space="preserve">
-    <value>Linking status unavailable</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.ChartImported" xml:space="preserve">
-    <value>Chart Imported</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.ChartImportedDetail" xml:space="preserve">
-    <value>Created '{0}' with {1} items. {2}</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.ImageDownloadFailed" xml:space="preserve">
-    <value>Image Download Failed</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.ImageDownloadFailedDetail" xml:space="preserve">
-    <value>Could not download image: {0}</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.ImageUploadFailed" xml:space="preserve">
-    <value>Image Upload Failed</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.ImageUploadFailedDetail" xml:space="preserve">
-    <value>Could not save image</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.ImageDownloadError" xml:space="preserve">
-    <value>Image Download Error</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartImportDialog.ImageDownloadErrorDetail" xml:space="preserve">
-    <value>Could not download image from URL</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="ChartItemResolveDialog.SearchAndSelect" xml:space="preserve">
-    <value>Search &amp; Select Album</value>
+    <value>未翻訳</value>
   </data>
   <data name="ChartItemResolveDialog.FailedToLink" xml:space="preserve">
-    <value>Failed to link album</value>
+    <value>未翻訳</value>
   </data>
 
   
@@ -3741,32 +3741,32 @@
     <value>アルバム</value>
   </data>
   <data name="MissingAlbumIdentifyDialog.FilterArtistsPlaceholder" xml:space="preserve">
-    <value>Type to filter artists...</value>
+    <value>未翻訳</value>
   </data>
   <data name="MissingAlbumIdentifyDialog.AlbumIdentified" xml:space="preserve">
-    <value>Album Identified</value>
+    <value>未翻訳</value>
   </data>
   <data name="MissingAlbumIdentifyDialog.AlbumIdentifiedDetail" xml:space="preserve">
-    <value>Linked {0} chart items to {1} - {2}</value>
+    <value>未翻訳</value>
   </data>
   <data name="MissingAlbumIdentifyDialog.FailedToIdentify" xml:space="preserve">
-    <value>Failed to identify album</value>
+    <value>未翻訳</value>
   </data>
 
   
   <data name="AlbumEdit.AddingAlbum" xml:space="preserve">
-    <value>Adding Album</value>
+    <value>未翻訳</value>
   </data>
   <data name="AlbumEdit.EditingAlbum" xml:space="preserve">
-    <value>Editing Album</value>
+    <value>未翻訳</value>
   </data>
   <data name="Message.SuccessfullyAction" xml:space="preserve">
-    <value>Successfully {0}</value>
+    <value>未翻訳</value>
   </data>
   <data name="Message.ErrorAction" xml:space="preserve">
-    <value>Error {0}</value>
+    <value>未翻訳</value>
   </data>
   <data name="Message.Huzzah" xml:space="preserve">
-    <value>HUZZAH!</value>
+    <value>未翻訳</value>
   </data>
   </root>
