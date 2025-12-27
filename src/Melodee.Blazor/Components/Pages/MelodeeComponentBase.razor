@@ -4,6 +4,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IMelodeeConfigurationFactory ConfigurationFactory
 @inject DialogService DialogService
+@inject ILocalizationService LocalizationService
 
 @code {
 
@@ -30,7 +31,45 @@
 
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         CurrentUser = authState.User;
+        
+        // Initialize culture from user preference
+        var userCulture = await LocalizationService.GetUserCultureAsync();
+        await LocalizationService.SetCultureAsync(userCulture);
     }
+
+    /// <summary>
+    /// Localize a string by resource key.
+    /// </summary>
+    /// <param name="key">Resource key (e.g., "Navigation.Dashboard")</param>
+    /// <returns>Localized string</returns>
+    protected string L(string key) => LocalizationService.Localize(key);
+
+    /// <summary>
+    /// Localize a string by resource key with fallback.
+    /// </summary>
+    /// <param name="key">Resource key</param>
+    /// <param name="fallback">Fallback value if key not found</param>
+    /// <returns>Localized string or fallback</returns>
+    protected string L(string key, string fallback) => LocalizationService.Localize(key, fallback);
+
+    /// <summary>
+    /// Localize a string with format arguments.
+    /// </summary>
+    /// <param name="key">Resource key</param>
+    /// <param name="args">Format arguments</param>
+    /// <returns>Formatted localized string</returns>
+    protected string L(string key, params object[] args) => LocalizationService.Localize(key, args);
+
+    /// <summary>
+    /// Format a date according to current culture.
+    /// </summary>
+    protected string FormatDate(DateTime date, string? format = null) => LocalizationService.FormatDate(date, format);
+
+    /// <summary>
+    /// Format a number according to current culture.
+    /// </summary>
+    protected string FormatNumber(decimal number, string? format = null) => LocalizationService.FormatNumber(number, format);
+
 
     protected async Task PlayAction(string dialogTitle, List<SongDataInfo> songs)
     {

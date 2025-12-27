@@ -161,7 +161,7 @@ public class RequestServiceTests : ServiceTestBase
     {
         var service = GetRequestService();
         var user = await CreateTestUserAsync();
-        
+
         var request1 = CreateValidRequest();
         request1.Description = "First request";
         await service.CreateAsync(request1, user.Id);

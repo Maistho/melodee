@@ -1,0 +1,65 @@
+@inject ILocalizationService LocalizationService
+@inject IJSRuntime JSRuntime
+@implements IDisposable
+
+<RadzenDropDown @bind-Value="@_selectedCulture"
+                Data="@LocalizationService.SupportedCultures"
+                TextProperty="DisplayName"
+                ValueProperty="Name"
+                Change="@OnCultureChanged"
+                Style="@Style"
+                Class="@Class"
+                Placeholder="@Placeholder" />
+
+@code {
+    [Parameter] public string? Style { get; set; }
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public string Placeholder { get; set; } = "Select Language";
+    
+    private string _selectedCulture = "en-US";
+    private bool _isInitialized = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Get current culture from service
+        _selectedCulture = LocalizationService.CurrentCulture.Name;
+        
+        // Subscribe to culture changes
+        LocalizationService.CultureChanged += OnCultureChangedExternally;
+        
+        _isInitialized = true;
+        await base.OnInitializedAsync();
+    }
+
+    private async Task OnCultureChanged(object value)
+    {
+        if (!_isInitialized || value is not string cultureCode)
+        {
+            return;
+        }
+
+        try
+        {
+            await LocalizationService.SetCultureAsync(cultureCode);
+            
+            // Reload the page to apply culture changes throughout the app
+            await JSRuntime.InvokeVoidAsync("location.reload");
+        }
+        catch (Exception ex)
+        {
+            // Log error but don't crash
+            Console.Error.WriteLine($"Error changing culture: {ex.Message}");
+        }
+    }
+
+    private void OnCultureChangedExternally(System.Globalization.CultureInfo culture)
+    {
+        _selectedCulture = culture.Name;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        LocalizationService.CultureChanged -= OnCultureChangedExternally;
+    }
+}

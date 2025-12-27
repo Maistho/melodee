@@ -70,6 +70,12 @@ builder.Host.UseSerilog((hostingContext, loggerConfiguration)
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+// Configure localization
+builder.Services.AddLocalization(options =>
+{
+    options.ResourcesPath = "Resources";
+});
+
 builder.Services.Configure<Microsoft.AspNetCore.Components.Server.CircuitOptions>(options =>
 {
     options.DisconnectedCircuitMaxRetained = 100;
@@ -290,6 +296,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
+builder.Services.AddScoped<ILocalizationService, LocalizationService>();
 
 builder.Services.AddRateLimiter(options =>
 {
@@ -691,6 +698,14 @@ app.UseCors(bb => bb
     .AllowAnyMethod()
     .AllowAnyHeader()
     .WithExposedHeaders("Accept-Ranges", "Content-Range", "Content-Length", "Content-Type"));
+
+// Configure request localization with supported cultures
+var supportedCultures = new[] { "en-US", "es-ES", "ru-RU", "zh-CN", "fr-FR", "ar-SA" };
+var localizationOptions = new RequestLocalizationOptions()
+    .SetDefaultCulture("en-US")
+    .AddSupportedCultures(supportedCultures)
+    .AddSupportedUICultures(supportedCultures);
+app.UseRequestLocalization(localizationOptions);
 
 app.UseAntiforgery();
 app.UseAuthentication();

@@ -201,10 +201,10 @@ public class RequestCommentServiceTests : ServiceTestBase
         var result = await service.ListAsync(request.Id, new PagedRequest { PageSize = 10 });
 
         Assert.Equal(4, result.TotalCount);
-        
+
         var topLevelComments = result.Data.Where(c => c.ParentCommentId == null).ToList();
         Assert.Equal(2, topLevelComments.Count);
-        
+
         var repliestoParent1 = result.Data.Where(c => c.ParentCommentId == parent1Result.Data.Id).ToList();
         Assert.Equal(2, repliestoParent1.Count);
         Assert.Equal("Reply to parent 1", repliestoParent1[0].Body);
