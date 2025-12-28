@@ -335,6 +335,12 @@
   <data name="Auth.ForgotPassword" xml:space="preserve">
     <value>Esqueceu a senha?</value>
   </data>
+  <data name="Auth.ForgotPasswordDisabled" xml:space="preserve">
+    <value>A redefinição de senha por e-mail está atualmente desativada</value>
+  </data>
+  <data name="Auth.ContactAdminToResetPassword" xml:space="preserve">
+    <value>Entre em contato com o administrador do sistema para redefinir sua senha.</value>
+  </data>
   <data name="Auth.DontHaveAccount" xml:space="preserve">
     <value>Ainda não tem uma conta?</value>
   </data>

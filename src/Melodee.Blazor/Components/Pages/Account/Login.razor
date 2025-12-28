@@ -200,9 +200,12 @@ else
                         <RadzenRequiredValidator Component="Password" Text="@L("Auth.PasswordRequired")" Popup="false"/>
                     </div>
                     
-                    <div class="login-links">
-                        <RadzenLink Path="/account/forgot-password" Text="@L("Auth.ForgotPassword")"/>
-                    </div>
+                    @if (_isEmailEnabled)
+                    {
+                        <div class="login-links">
+                            <RadzenLink Path="/account/forgot-password" Text="@L("Auth.ForgotPassword")"/>
+                        </div>
+                    }
                     
                     <RadzenButton ButtonType="ButtonType.Submit" 
                                   Text="@L("Auth.Login")" 
@@ -280,6 +283,7 @@ else
     private string? _googleAuthError;
     private DotNetObjectReference<Login>? _dotNetRef;
     private bool _googleInitialized;
+    private bool _isEmailEnabled;
 
     [SupplyParameterFromQuery] [Parameter] public string? ReturnUrl { get; set; }
 
@@ -323,6 +327,12 @@ else
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (firstRender)
+        {
+            var config = await ConfigurationFactory.GetConfigurationAsync();
+            _isEmailEnabled = config.GetValue<bool>(SettingRegistry.EmailEnabled);
+        }
+        
         if (string.IsNullOrEmpty(ReturnUrl))
         {
             var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);

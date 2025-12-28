@@ -3945,6 +3945,12 @@
   <data name="Auth.PasswordResetSuccess" xml:space="preserve">
     <value>Password reset successfully!</value>
   </data>
+  <data name="Auth.ForgotPasswordDisabled" xml:space="preserve">
+    <value>Password reset via email is currently disabled</value>
+  </data>
+  <data name="Auth.ContactAdminToResetPassword" xml:space="preserve">
+    <value>Please contact your system administrator to reset your password.</value>
+  </data>
   <data name="Auth.RedirectingToLogin" xml:space="preserve">
     <value>Redirecting to login page...</value>
   </data>

@@ -767,6 +767,12 @@
   <data name="Auth.ForgotPassword" xml:space="preserve">
     <value>Mot de passe oublié ?</value>
   </data>
+  <data name="Auth.ForgotPasswordDisabled" xml:space="preserve">
+    <value>La réinitialisation du mot de passe par e-mail est actuellement désactivée</value>
+  </data>
+  <data name="Auth.ContactAdminToResetPassword" xml:space="preserve">
+    <value>Veuillez contacter votre administrateur système pour réinitialiser votre mot de passe.</value>
+  </data>
   <data name="Auth.DontHaveAccount" xml:space="preserve">
     <value>Vous n'avez pas encore de compte ?</value>
   </data>

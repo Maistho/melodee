@@ -335,6 +335,12 @@
   <data name="Auth.ForgotPassword" xml:space="preserve">
     <value>パスワードをお忘れですか？</value>
   </data>
+  <data name="Auth.ForgotPasswordDisabled" xml:space="preserve">
+    <value>メールによるパスワードリセットは現在無効になっています</value>
+  </data>
+  <data name="Auth.ContactAdminToResetPassword" xml:space="preserve">
+    <value>パスワードをリセットするには、システム管理者にお問い合わせください。</value>
+  </data>
   <data name="Auth.DontHaveAccount" xml:space="preserve">
     <value>アカウントをお持ちでないですか？</value>
   </data>

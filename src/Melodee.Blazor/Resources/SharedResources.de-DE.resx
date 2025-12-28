@@ -335,6 +335,12 @@
   <data name="Auth.ForgotPassword" xml:space="preserve">
     <value>Passwort vergessen?</value>
   </data>
+  <data name="Auth.ForgotPasswordDisabled" xml:space="preserve">
+    <value>Passwort-Zurücksetzung per E-Mail ist derzeit deaktiviert</value>
+  </data>
+  <data name="Auth.ContactAdminToResetPassword" xml:space="preserve">
+    <value>Bitte wenden Sie sich an Ihren Systemadministrator, um Ihr Passwort zurückzusetzen.</value>
+  </data>
   <data name="Auth.DontHaveAccount" xml:space="preserve">
     <value>Noch kein Konto?</value>
   </data>

@@ -767,6 +767,12 @@
   <data name="Auth.ForgotPassword" xml:space="preserve">
     <value>Забыли пароль?</value>
   </data>
+  <data name="Auth.ForgotPasswordDisabled" xml:space="preserve">
+    <value>Сброс пароля по электронной почте в настоящее время отключен</value>
+  </data>
+  <data name="Auth.ContactAdminToResetPassword" xml:space="preserve">
+    <value>Пожалуйста, свяжитесь с системным администратором для сброса пароля.</value>
+  </data>
   <data name="Auth.DontHaveAccount" xml:space="preserve">
     <value>Ещё нет аккаунта?</value>
   </data>

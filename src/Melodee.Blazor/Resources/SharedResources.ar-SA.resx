@@ -767,6 +767,12 @@
   <data name="Auth.ForgotPassword" xml:space="preserve">
     <value>هل نسيت كلمة المرور؟</value>
   </data>
+  <data name="Auth.ForgotPasswordDisabled" xml:space="preserve">
+    <value>إعادة تعيين كلمة المرور عبر البريد الإلكتروني معطلة حاليًا</value>
+  </data>
+  <data name="Auth.ContactAdminToResetPassword" xml:space="preserve">
+    <value>يرجى الاتصال بمسؤول النظام لإعادة تعيين كلمة المرور الخاصة بك.</value>
+  </data>
   <data name="Auth.DontHaveAccount" xml:space="preserve">
     <value>ليس لديك حساب بعد؟</value>
   </data>

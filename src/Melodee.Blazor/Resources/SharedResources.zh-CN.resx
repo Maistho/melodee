@@ -767,6 +767,12 @@
   <data name="Auth.ForgotPassword" xml:space="preserve">
     <value>忘记密码？</value>
   </data>
+  <data name="Auth.ForgotPasswordDisabled" xml:space="preserve">
+    <value>通过电子邮件重置密码当前已禁用</value>
+  </data>
+  <data name="Auth.ContactAdminToResetPassword" xml:space="preserve">
+    <value>请联系系统管理员重置您的密码。</value>
+  </data>
   <data name="Auth.DontHaveAccount" xml:space="preserve">
     <value>还没有账户？</value>
   </data>

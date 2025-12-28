@@ -335,6 +335,12 @@
   <data name="Auth.ForgotPassword" xml:space="preserve">
     <value>Password dimenticata?</value>
   </data>
+  <data name="Auth.ForgotPasswordDisabled" xml:space="preserve">
+    <value>Il ripristino della password tramite e-mail è attualmente disabilitato</value>
+  </data>
+  <data name="Auth.ContactAdminToResetPassword" xml:space="preserve">
+    <value>Si prega di contattare l'amministratore di sistema per reimpostare la password.</value>
+  </data>
   <data name="Auth.DontHaveAccount" xml:space="preserve">
     <value>Non hai ancora un account?</value>
   </data>
