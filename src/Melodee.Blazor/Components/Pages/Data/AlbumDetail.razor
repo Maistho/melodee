@@ -567,14 +567,14 @@
     System.IO.FileInfo[] _albumImageFiles = [];
     class AlbumImageListItem { public required System.IO.FileInfo File { get; init; } public required string ImageBase64 { get; init; } }
     List<AlbumImageListItem> _albumImageList = [];
-    HashSet<string> _selectedAlbumImagePaths = new();
+    HashSet<string> _selectedAlbumImagePaths = [];
     bool _replaceAllAlbumImages = false;
 
     // Album Files (non-image files)
     System.IO.FileInfo[] _albumFiles = [];
     class AlbumFileListItem { public required System.IO.FileInfo File { get; init; } }
     List<AlbumFileListItem> _albumFileList = [];
-    HashSet<string> _selectedAlbumFilePaths = new();
+    HashSet<string> _selectedAlbumFilePaths = [];
 
     private long _albumDirectoryFileCount;
     private long _maxUploadSize;
@@ -705,7 +705,7 @@
             .AllFileImageTypeFileInfos()
             .OrderBy(f => f.Name, StringComparer.OrdinalIgnoreCase)
             .ToArray();
-        _albumImageList = new List<AlbumImageListItem>();
+        _albumImageList = [];
         var valid = _albumImageFiles.Select(f => f.FullName).ToHashSet();
         _selectedAlbumImagePaths.RemoveWhere(p => !valid.Contains(p));
         foreach (var fi in _albumImageFiles)

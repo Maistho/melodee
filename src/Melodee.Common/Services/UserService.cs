@@ -479,7 +479,7 @@ IBus bus)
 
         if (!playlistSongIds.Any())
         {
-            return Array.Empty<UserSong>();
+            return [];
         }
 
         // Get user songs for songs in the playlist

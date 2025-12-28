@@ -111,7 +111,7 @@ public sealed class M3UPlaylist(
                             new() { Identifier = MetaTagIdentifier.SongTotal, Value = songTotal, SortOrder = 101 }
                         };
                         var genres = songs
-                            .SelectMany(x => x.Tags ?? Array.Empty<MetaTag<object?>>())
+                            .SelectMany(x => x.Tags ?? [])
                             .Where(x => x.Identifier == MetaTagIdentifier.Genre)
                             .ToArray();
                         if (genres.Length != 0)
@@ -150,15 +150,15 @@ public sealed class M3UPlaylist(
                                 artistName.ToNormalizedString() ?? artistName,
                                 null),
                             Directory = fileSystemDirectoryInfo,
-                            Files = new[]
-                            {
+                            Files =
+                            [
                                 new AlbumFile
                                 {
                                     AlbumFileType = AlbumFileType.MetaData,
                                     ProcessedByPlugin = DisplayName,
                                     FileSystemFileInfo = m3UFile.ToFileSystemInfo()
                                 }
-                            },
+                            ],
                             OriginalDirectory = new FileSystemDirectoryInfo
                             {
                                 ParentId = parentDirectory?.UniqueId ?? 0,
@@ -172,7 +172,7 @@ public sealed class M3UPlaylist(
                                 .DistinctBy(x => x.CrcHash).ToArray(),
                             Tags = newAlbumTags,
                             Songs = songs.OrderBy(x => x.SortOrder).ToArray(),
-                            ViaPlugins = new[] { songPlugin.DisplayName, DisplayName }
+                            ViaPlugins = [songPlugin.DisplayName, DisplayName]
                         };
 
                         var stagingAlbumDataName = Path.Combine(fileSystemDirectoryInfo.Path,

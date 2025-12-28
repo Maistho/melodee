@@ -17,10 +17,9 @@ public class SimpleFileVerificationTests : TestsBase
         if (fileInfo.Exists)
         {
             var sfv = new SimpleFileVerification(Serializer,
-                new[]
-                {
+                [
                     new AtlMetaTag(new MetaTagsProcessor(NewPluginsConfiguration(), Serializer), GetImageConvertor(), GetImageValidator(), NewPluginsConfiguration())
-                }, new AlbumValidator(NewPluginsConfiguration()),
+                ], new AlbumValidator(NewPluginsConfiguration()),
                 NewPluginsConfiguration());
             var sfvResult = await sfv.ProcessDirectoryAsync(new FileSystemDirectoryInfo
             {
@@ -40,10 +39,9 @@ public class SimpleFileVerificationTests : TestsBase
         if (fileInfo.Exists)
         {
             var sfv = new SimpleFileVerification(Serializer,
-                new[]
-                {
-                    new AtlMetaTag(new MetaTagsProcessor(NewPluginsConfiguration(), Serializer), GetImageConvertor(), GetImageValidator(), NewPluginsConfiguration())
-                }, new AlbumValidator(NewPluginsConfiguration()), NewPluginsConfiguration());
+            [
+                new AtlMetaTag(new MetaTagsProcessor(NewPluginsConfiguration(), Serializer), GetImageConvertor(), GetImageValidator(), NewPluginsConfiguration())
+            ], new AlbumValidator(NewPluginsConfiguration()), NewPluginsConfiguration());
             var sfvResult = await sfv.ProcessDirectoryAsync(new FileSystemDirectoryInfo
             {
                 Path = @"/melodee_test/inbound/Swartz",
@@ -63,10 +61,9 @@ public class SimpleFileVerificationTests : TestsBase
         if (fileInfo.Exists)
         {
             var sfv = new SimpleFileVerification(Serializer,
-                new[]
-                {
+                [
                     new AtlMetaTag(new MetaTagsProcessor(NewPluginsConfiguration(), Serializer), GetImageConvertor(), GetImageValidator(), NewPluginsConfiguration())
-                }, new AlbumValidator(NewPluginsConfiguration()),
+                ], new AlbumValidator(NewPluginsConfiguration()),
                 NewPluginsConfiguration());
             var sfvResult = await sfv.ProcessDirectoryAsync(new FileSystemDirectoryInfo
             {

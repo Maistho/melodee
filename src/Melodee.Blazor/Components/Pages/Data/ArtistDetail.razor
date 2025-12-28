@@ -485,7 +485,7 @@
     System.IO.FileInfo[] _artistImageFiles = [];
     class ArtistImageListItem { public required System.IO.FileInfo File { get; init; } public required string ImageBase64 { get; init; } }
     List<ArtistImageListItem> _artistImageList = [];
-    HashSet<string> _selectedImagePaths = new();
+    HashSet<string> _selectedImagePaths = [];
 
     string? _biographyNoAvailablePlaceholder = string.Empty;
 
@@ -501,7 +501,7 @@
         public required bool IsInbound { get; init; } // True if points to current artist
     }
     List<RelationshipItem> _relationshipItems = [];
-    HashSet<(int OwnerArtistId, int RelatedArtistId)> _selectedRelationships = new();
+    HashSet<(int OwnerArtistId, int RelatedArtistId)> _selectedRelationships = [];
     int _relationshipCount = 0;
 
     bool _isPinned;
@@ -587,10 +587,10 @@
         FilterOperatorInfo[]? filters = null;
         if (_debounceAlbumFilterValue.Nullify() != null)
         {
-            filters = new[]
-            {
-                new FilterOperatorInfo(nameof(AlbumDataInfo.Name), FilterOperator.Contains, _debounceAlbumFilterValue)
-            };
+            filters =
+            [
+              new FilterOperatorInfo(nameof(AlbumDataInfo.Name), FilterOperator.Contains, _debounceAlbumFilterValue)
+            ];
         }
 
         var albumListResult = await AlbumService.ListForArtistApiKeyAsync(new PagedRequest
@@ -683,7 +683,7 @@
                 }
 
                 // Build image list items safely
-                _artistImageList = new List<ArtistImageListItem>();
+                _artistImageList = [];
                 for (var i = 0; i < _artistImageFiles.Length; i++)
                 {
                     var fi = _artistImageFiles[i];
@@ -840,7 +840,7 @@
         var artistDirectory = Path.Combine(_artist.Library.Path, _artist.Directory).ToFileSystemDirectoryInfo();
         _artistImageFiles = artistDirectory.FileInfosForExtension("jpg", false).ToArray();
         var list = new List<string>();
-        _artistImageList = new List<ArtistImageListItem>();
+        _artistImageList = [];
         var validPaths = new HashSet<string>(_artistImageFiles.Select(f => f.FullName));
         _selectedImagePaths.RemoveWhere(p => !validPaths.Contains(p));
         foreach (var fi in _artistImageFiles)

@@ -143,11 +143,11 @@ public class OpenSubsonicXmlSerializationTests(ITestOutputHelper testOutputHelpe
                         Artist = "Da Artist",
                         Year = 1980,
                         Starred = null,
-                        Genres = new[]
-                        {
+                        Genres =
+                        [
                             "Genre1",
                             "Genre2"
-                        }
+                        ]
                     },
                     new AlbumID3
                     {
@@ -162,11 +162,11 @@ public class OpenSubsonicXmlSerializationTests(ITestOutputHelper testOutputHelpe
                         Artist = "Da Artist 2",
                         Year = 1981,
                         Starred = Instant.FromDateTimeUtc(DateTime.UtcNow).ToString(),
-                        Genres = new[]
-                        {
+                        Genres =
+                        [
                             "Genre2",
                             "Genre3"
-                        }
+                        ]
                     }
                 }
             }

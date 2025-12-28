@@ -29,8 +29,8 @@ public class AlbumExtensionTests : TestsBase
                 Path = @"/melodee_test/inbound/00-k 2024",
                 Name = "00-k 2024"
             },
-            Tags = new[]
-            {
+            Tags =
+            [
                 new MetaTag<object?>
                 {
                     Identifier = MetaTagIdentifier.AlbumArtist,
@@ -51,9 +51,9 @@ public class AlbumExtensionTests : TestsBase
                     Identifier = MetaTagIdentifier.Album,
                     Value = "Fire Proof"
                 }
-            },
-            Songs = new[]
-            {
+            ],
+            Songs =
+            [
                 new Song
                 {
                     CrcHash = Crc32.Calculate(new FileInfo(@"/melodee_test/inbound/00-k 2024/03-holy_truth-flako_el_dark_cowboy.mp3")),
@@ -62,8 +62,8 @@ public class AlbumExtensionTests : TestsBase
                         Name = "03-holy_truth-flako_el_dark_cowboy.mp3",
                         Size = 12343
                     },
-                    Tags = new[]
-                    {
+                    Tags =
+                    [
                         new MetaTag<object?>
                         {
                             Identifier = MetaTagIdentifier.Artist,
@@ -84,9 +84,9 @@ public class AlbumExtensionTests : TestsBase
                             Identifier = MetaTagIdentifier.Title,
                             Value = "Flako El Dark Cowboy"
                         }
-                    }
+                    ]
                 }
-            }
+            ]
         };
     }
 

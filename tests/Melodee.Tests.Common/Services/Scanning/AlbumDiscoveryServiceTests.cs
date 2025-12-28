@@ -68,12 +68,12 @@ public class AlbumDiscoveryServiceTests : ServiceTestBase
             Directory = new FileSystemDirectoryInfo { Path = "/test/path", Name = "test" },
             OriginalDirectory = new FileSystemDirectoryInfo { Path = "/test/path", Name = "test" },
             ViaPlugins = [],
-            Tags = new[]
-            {
+            Tags =
+            [
                 new MetaTag<object?> { Identifier = MetaTagIdentifier.Album, Value = title },
                 new MetaTag<object?> { Identifier = MetaTagIdentifier.AlbumDate, Value = year },
                 new MetaTag<object?> { Identifier = MetaTagIdentifier.SongTotal, Value = songCount }
-            },
+            ],
             Created = DateTimeOffset.UtcNow
         };
     }
@@ -756,7 +756,7 @@ public class AlbumDiscoveryServiceTests : ServiceTestBase
         var pagedRequest = new PagedRequest
         {
             PageSize = 10,
-            FilterBy = new[] { new FilterOperatorInfo(propertyName, FilterOperator.Equals, filterValue) }
+            FilterBy = [new FilterOperatorInfo(propertyName, FilterOperator.Equals, filterValue)]
         };
 
         // Act
@@ -853,11 +853,11 @@ public class AlbumDiscoveryServiceTests : ServiceTestBase
         var pagedRequest = new PagedRequest
         {
             PageSize = 10,
-            FilterBy = new[]
-            {
+            FilterBy =
+            [
                 new FilterOperatorInfo("ArtistName", FilterOperator.Equals, "Artist A"),
                 new FilterOperatorInfo("ReleaseDate", FilterOperator.Equals, 2020)
-            }
+            ]
         };
 
         // Act

@@ -36,16 +36,16 @@ public class AlbumModelTest
                 Name = string.Empty,
                 Size = 234567
             },
-            MediaAudios = new[]
-            {
+            MediaAudios =
+            [
                 new MediaAudio<object?>
                 {
                     Identifier = MediaAudioIdentifier.BitRate,
                     Value = AlbumValidatorTests.ShouldBeBitRate
                 }
-            },
-            Tags = new[]
-            {
+            ],
+            Tags =
+            [
                 new MetaTag<object?>
                 {
                     Identifier = MetaTagIdentifier.AlbumArtist,
@@ -71,7 +71,7 @@ public class AlbumModelTest
                     Identifier = MetaTagIdentifier.Title,
                     Value = "Everybody Loves You Now"
                 }
-            }
+            ]
         });
 
         var album2 = album1 with

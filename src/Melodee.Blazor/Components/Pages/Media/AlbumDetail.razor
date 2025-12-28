@@ -555,7 +555,7 @@
     private async Task LoadAlbumFilesAsync()
     {
         var dir = new DirectoryInfo(_album.Directory.FullName());
-        _albumFiles = dir.Exists ? dir.GetFiles().OrderBy(f => f.Name).ToArray() : Array.Empty<FileInfo>();
+        _albumFiles = dir.Exists ? dir.GetFiles().OrderBy(f => f.Name).ToArray() : [];
         await InvokeAsync(StateHasChanged);
     }
 

@@ -214,11 +214,11 @@ public class SongExtensionsTitleHasUnwantedTextTests
     {
         var song = new Song
         {
-            Tags = new[]
-            {
+            Tags =
+            [
                 new MetaTag<object?> { Identifier = MetaTagIdentifier.Title, Value = "Test" },
                 new MetaTag<object?> { Identifier = MetaTagIdentifier.Album, Value = "Album[" }
-            },
+            ],
             File = new FileSystemFileInfo { Name = "test.mp3", Size = 1000 },
             CrcHash = string.Empty
         };

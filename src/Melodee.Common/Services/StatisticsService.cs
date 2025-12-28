@@ -509,7 +509,7 @@ public sealed class StatisticsService(
             .ConfigureAwait(false);
 
         var flattened = songGenres
-            .SelectMany(g => g ?? Array.Empty<string>())
+            .SelectMany(g => g ?? [])
             .Where(g => !string.IsNullOrWhiteSpace(g))
             .Select(g => g.Trim())
             .GroupBy(g => g, StringComparer.OrdinalIgnoreCase)

@@ -853,7 +853,7 @@ public sealed class LibraryServiceTests : ServiceTestBase
         }
 
         // Act
-        var result = await libraryService.DeleteAsync(new[] { 60 });
+        var result = await libraryService.DeleteAsync([60]);
 
         // Assert
         Assert.NotNull(result);
@@ -883,7 +883,7 @@ public sealed class LibraryServiceTests : ServiceTestBase
         }
 
         // Act
-        var result = await libraryService.DeleteAsync(new[] { 70 });
+        var result = await libraryService.DeleteAsync([70]);
 
         // Assert
         Assert.NotNull(result);

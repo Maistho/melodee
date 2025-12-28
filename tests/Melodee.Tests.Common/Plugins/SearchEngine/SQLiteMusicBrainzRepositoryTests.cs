@@ -166,7 +166,7 @@ public class SQLiteMusicBrainzRepositoryTests : ServiceTestBase
         var query = new ArtistQuery
         {
             Name = "Artist With Albums",
-            AlbumKeyValues = new[] { new KeyValue("2023", "Test Album") }
+            AlbumKeyValues = [new KeyValue("2023", "Test Album")]
         };
 
         var result = await _repository.SearchArtist(query, 10);

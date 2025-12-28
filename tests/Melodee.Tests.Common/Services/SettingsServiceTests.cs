@@ -35,10 +35,10 @@ public sealed class SettingsServiceTests : ServiceTestBase
 
         var listResult = await service.ListAsync(new PagedRequest
         {
-            FilterBy = new[]
-            {
+            FilterBy =
+            [
                 new FilterOperatorInfo(nameof(Setting.Id), FilterOperator.Equals, idValue)
-            },
+            ],
             PageSize = 1
         });
         AssertResultIsSuccessful(listResult);
@@ -53,10 +53,10 @@ public sealed class SettingsServiceTests : ServiceTestBase
         var service = new SettingService(Logger, CacheManager, MockConfigurationFactory(), MockFactory());
         var listResult = await service.ListAsync(new PagedRequest
         {
-            FilterBy = new[]
-            {
+            FilterBy =
+            [
                 new FilterOperatorInfo(nameof(Setting.Key), FilterOperator.Equals, SettingRegistry.ValidationMaximumSongNumber)
-            },
+            ],
             PageSize = 1
         });
         AssertResultIsSuccessful(listResult);
@@ -71,10 +71,10 @@ public sealed class SettingsServiceTests : ServiceTestBase
         var service = new SettingService(Logger, CacheManager, MockConfigurationFactory(), MockFactory());
         var listResult = await service.ListAsync(new PagedRequest
         {
-            FilterBy = new[]
-            {
+            FilterBy =
+            [
                 new FilterOperatorInfo(nameof(Setting.Key), FilterOperator.Contains, "bit")
-            },
+            ],
             PageSize = 1
         });
         AssertResultIsSuccessful(listResult);

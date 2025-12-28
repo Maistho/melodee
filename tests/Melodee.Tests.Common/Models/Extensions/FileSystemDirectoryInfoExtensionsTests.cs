@@ -7,7 +7,7 @@ namespace Melodee.Tests.Common.Models.Extensions;
 public class FileSystemDirectoryInfoExtensionsTests : IDisposable
 {
     private readonly string _testRootPath;
-    private readonly List<string> _tempDirectories = new();
+    private readonly List<string> _tempDirectories = [];
 
     public FileSystemDirectoryInfoExtensionsTests()
     {

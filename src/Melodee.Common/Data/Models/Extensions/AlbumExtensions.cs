@@ -208,7 +208,7 @@ public static class AlbumExtensions
             album.Genres?.Select(g => new Genre { Value = g, SongCount = 0, AlbumCount = 0 }).ToArray(),
             album.ContributingArtists(),
             album.Artist.Name,
-            new[] { album.Artist.ToApiArtistID3() },
+            [album.Artist.ToApiArtistID3()],
             album.Artist.Name,
             album.Contributors.Select(c =>
                 new Common.Models.OpenSubsonic.Contributor(

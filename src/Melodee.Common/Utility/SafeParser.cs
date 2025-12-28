@@ -99,7 +99,7 @@ public static class SafeParser
             {
                 var ie = typeof(Enumerable).GetMethod("Cast")?
                     .MakeGenericMethod(typeof(object))
-                    .Invoke(null, new[] { value });
+                    .Invoke(null, [value]);
                 return (ie as IEnumerable<object>)?.Any() ?? false;
             }
 

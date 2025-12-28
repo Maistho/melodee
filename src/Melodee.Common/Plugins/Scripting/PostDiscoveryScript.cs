@@ -33,10 +33,10 @@ public sealed class PostDiscoveryScript(IMelodeeConfiguration configuration) : I
             {
                 return new OperationResult<bool>
                 {
-                    Errors = new[]
-                    {
+                    Errors =
+                    [
                         new Exception($"Unable to locate PostDiscoveryScript [{script}]")
-                    },
+                    ],
                     Data = false
                 };
             }

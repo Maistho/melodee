@@ -37,8 +37,8 @@ public class AlbumValidatorTests : TestsBase
                 Name = string.Empty
             },
             Status = AlbumStatus.Ok,
-            Images = new[]
-            {
+            Images =
+            [
                 new ImageInfo
                 {
                     CrcHash = "12345",
@@ -49,9 +49,9 @@ public class AlbumValidatorTests : TestsBase
                     },
                     PictureIdentifier = PictureIdentifier.Front
                 }
-            },
-            Tags = new[]
-            {
+            ],
+            Tags =
+            [
                 new MetaTag<object?>
                 {
                     Identifier = MetaTagIdentifier.AlbumArtist,
@@ -67,10 +67,10 @@ public class AlbumValidatorTests : TestsBase
                     Identifier = MetaTagIdentifier.RecordingYear,
                     Value = "1971"
                 }
-            },
+            ],
             Id = Guid.Parse("78F60545-4C64-4CD3-A810-89BAD2F5EAB4"),
-            Songs = new[]
-            {
+            Songs =
+            [
                 new Song
                 {
                     CrcHash = "TestValue",
@@ -79,16 +79,16 @@ public class AlbumValidatorTests : TestsBase
                         Name = string.Empty,
                         Size = 12345
                     },
-                    MediaAudios = new[]
-                    {
+                    MediaAudios =
+                    [
                         new MediaAudio<object?>
                         {
                             Identifier = MediaAudioIdentifier.BitRate,
                             Value = ShouldBeBitRate
                         }
-                    },
-                    Tags = new[]
-                    {
+                    ],
+                    Tags =
+                    [
                         new MetaTag<object?>
                         {
                             Identifier = MetaTagIdentifier.AlbumArtist,
@@ -129,7 +129,7 @@ public class AlbumValidatorTests : TestsBase
                             Identifier = MetaTagIdentifier.Title,
                             Value = "She's Got a Way"
                         }
-                    }
+                    ]
                 },
                 new Song
                 {
@@ -139,16 +139,16 @@ public class AlbumValidatorTests : TestsBase
                         Name = string.Empty,
                         Size = 123456
                     },
-                    MediaAudios = new[]
-                    {
+                    MediaAudios =
+                    [
                         new MediaAudio<object?>
                         {
                             Identifier = MediaAudioIdentifier.BitRate,
                             Value = ShouldBeBitRate
                         }
-                    },
-                    Tags = new[]
-                    {
+                    ],
+                    Tags =
+                    [
                         new MetaTag<object?>
                         {
                             Identifier = MetaTagIdentifier.AlbumArtist,
@@ -174,9 +174,9 @@ public class AlbumValidatorTests : TestsBase
                             Identifier = MetaTagIdentifier.Title,
                             Value = "You Can Make Me Free"
                         }
-                    }
+                    ]
                 }
-            }
+            ]
         };
 
     [Theory]
@@ -344,7 +344,7 @@ public class AlbumValidatorTests : TestsBase
     public void ValidateAlbumWithMissingArtist()
     {
         var testAlbum = NewTestAlbum();
-        var albumTags = (testAlbum.Tags ?? Array.Empty<MetaTag<object?>>()).ToList();
+        var albumTags = (testAlbum.Tags ?? []).ToList();
         albumTags.Remove(new MetaTag<object?>
         {
             Identifier = MetaTagIdentifier.AlbumArtist,
@@ -367,7 +367,7 @@ public class AlbumValidatorTests : TestsBase
     public void ValidateAlbumWithInvalidYear()
     {
         var testAlbum = NewTestAlbum();
-        var albumTags = (testAlbum.Tags ?? Array.Empty<MetaTag<object?>>()).ToList();
+        var albumTags = (testAlbum.Tags ?? []).ToList();
         var yearTag = albumTags.First(x => x.Identifier == MetaTagIdentifier.RecordingYear);
         albumTags.Remove(yearTag);
         var album = testAlbum with
@@ -398,7 +398,7 @@ public class AlbumValidatorTests : TestsBase
     public void ValidateAlbumWithMissingTitle()
     {
         var testAlbum = NewTestAlbum();
-        var albumTags = (testAlbum.Tags ?? Array.Empty<MetaTag<object?>>()).ToList();
+        var albumTags = (testAlbum.Tags ?? []).ToList();
         albumTags.Remove(new MetaTag<object?>
         {
             Identifier = MetaTagIdentifier.Album,

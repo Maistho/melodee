@@ -259,7 +259,7 @@ public class WmaTagReader : ITagReader
                             Debug.WriteLine($"Found track field: {name} with value: {sValue}");
 
                             // Track can be in formats: "1", "1/10", or even "01"
-                            var trackParts = sValue.Split(new[] { '/', '\\' }, StringSplitOptions.RemoveEmptyEntries);
+                            var trackParts = sValue.Split(['/', '\\'], StringSplitOptions.RemoveEmptyEntries);
                             if (trackParts.Length > 0 && int.TryParse(trackParts[0].Trim(), out var trackNum))
                             {
                                 tags[MetaTagIdentifier.TrackNumber] = trackNum;

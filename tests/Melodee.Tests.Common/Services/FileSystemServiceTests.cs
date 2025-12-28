@@ -177,14 +177,14 @@ public class FileSystemServiceTests
                 "Test Artist",
                 [
                 ]),
-            Tags = new[]
-            {
+            Tags =
+            [
                 new MetaTag<object?>
                 {
                     Identifier = MetaTagIdentifier.Album,
                     Value = "Test Album"
-                },
-            },
+                }
+            ],
             Directory = new FileSystemDirectoryInfo
             {
                 Path = tempDir,

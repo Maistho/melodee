@@ -18,7 +18,7 @@ public class Mp4TagReaderExtractStringValueTests
 
     private string InvokeExtractStringValue(byte[] data)
     {
-        return (string)_extractStringValueMethod.Invoke(_reader, new object[] { data })!;
+        return (string)_extractStringValueMethod.Invoke(_reader, [data])!;
     }
 
     private byte[] CreateMp4DataAtom(string value, int typeIndicator = 1)
@@ -186,7 +186,7 @@ public class Mp4TagReaderExtractNumberPairValueTests
 
     private Tuple<int, int> InvokeExtractNumberPairValue(byte[] data)
     {
-        return (Tuple<int, int>)_extractNumberPairValueMethod.Invoke(_reader, new object[] { data })!;
+        return (Tuple<int, int>)_extractNumberPairValueMethod.Invoke(_reader, [data])!;
     }
 
     private byte[] CreateMp4NumberPairAtom(int firstNumber, int secondNumber)

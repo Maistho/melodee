@@ -93,7 +93,7 @@ public class VorbisTagReader : ITagReader
                 {
                     // Extract the track number value
                     var valueStart = trackPos + "TRACKNUMBER=".Length;
-                    var valueEnd = headerText.IndexOfAny(new[] { '\r', '\n', ' ' }, valueStart);
+                    var valueEnd = headerText.IndexOfAny(['\r', '\n', ' '], valueStart);
                     if (valueEnd > valueStart)
                     {
                         var trackValue = headerText.Substring(valueStart, valueEnd - valueStart).Trim();
@@ -130,7 +130,7 @@ public class VorbisTagReader : ITagReader
         if (tagPos >= 0)
         {
             var valueStart = tagPos + tagName.Length;
-            var valueEnd = headerText.IndexOfAny(new[] { '\r', '\n', ' ' }, valueStart);
+            var valueEnd = headerText.IndexOfAny(['\r', '\n', ' '], valueStart);
             if (valueEnd > valueStart)
             {
                 var value = headerText.Substring(valueStart, valueEnd - valueStart).Trim();

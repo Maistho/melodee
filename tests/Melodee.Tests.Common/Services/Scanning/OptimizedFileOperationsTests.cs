@@ -11,8 +11,8 @@ public class OptimizedFileOperationsTests : IDisposable
     public OptimizedFileOperationsTests()
     {
         _testDirectory = Path.Combine(Path.GetTempPath(), "OptimizedFileOperationsTests", Guid.NewGuid().ToString());
-        _createdFiles = new List<string>();
-        _createdDirectories = new List<string>();
+        _createdFiles = [];
+        _createdDirectories = [];
         Directory.CreateDirectory(_testDirectory);
         _createdDirectories.Add(_testDirectory);
     }
@@ -77,7 +77,7 @@ public class OptimizedFileOperationsTests : IDisposable
         Assert.Equal("content1", File.ReadAllText(destFile1));
         Assert.Equal("content2", File.ReadAllText(destFile2));
 
-        _createdFiles.AddRange(new[] { destFile1, destFile2 });
+        _createdFiles.AddRange([destFile1, destFile2]);
     }
 
     [Fact]

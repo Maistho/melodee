@@ -452,10 +452,10 @@ public class ArtistServiceTests : ServiceTestBase
         {
             PageSize = 10,
             Page = 1,
-            FilterBy = new[]
-            {
+            FilterBy =
+            [
                 new FilterOperatorInfo("name", FilterOperator.Contains, "Test Artist 1")
-            }
+            ]
         };
 
         // Act
@@ -671,7 +671,7 @@ public class ArtistServiceTests : ServiceTestBase
         var service = GetArtistService();
 
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentException>(() => service.DeleteAsync(Array.Empty<int>()));
+        await Assert.ThrowsAsync<ArgumentException>(() => service.DeleteAsync([]));
     }
 
     #endregion
@@ -803,7 +803,7 @@ public class ArtistServiceTests : ServiceTestBase
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(() =>
-            service.SaveImageAsArtistImageAsync(artist.Id, false, Array.Empty<byte>()));
+            service.SaveImageAsArtistImageAsync(artist.Id, false, []));
     }
 
     [Fact]
@@ -975,7 +975,7 @@ public class ArtistServiceTests : ServiceTestBase
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(() =>
-            service.MergeArtistsAsync(targetArtist.Id, Array.Empty<int>()));
+            service.MergeArtistsAsync(targetArtist.Id, []));
     }
 
     #endregion
@@ -1144,10 +1144,10 @@ public class ArtistServiceTests : ServiceTestBase
         {
             PageSize = 10,
             Page = 1,
-            FilterBy = new[]
-            {
+            FilterBy =
+            [
                 new FilterOperatorInfo("islocked", FilterOperator.Equals, "false")
-            }
+            ]
         };
 
         // Act
@@ -1167,10 +1167,10 @@ public class ArtistServiceTests : ServiceTestBase
         {
             PageSize = 10,
             Page = 1,
-            FilterBy = new[]
-            {
+            FilterBy =
+            [
                 new FilterOperatorInfo("alternatenames", FilterOperator.Contains, "Alternative")
-            }
+            ]
         };
 
         // Act
@@ -1190,10 +1190,10 @@ public class ArtistServiceTests : ServiceTestBase
         {
             PageSize = 10,
             Page = 1,
-            FilterBy = new[]
-            {
+            FilterBy =
+            [
                 new FilterOperatorInfo("name", FilterOperator.StartsWith, "Test")
-            }
+            ]
         };
 
         // Act

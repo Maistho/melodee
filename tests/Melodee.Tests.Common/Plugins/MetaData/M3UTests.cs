@@ -15,10 +15,9 @@ public class M3UTests : TestsBase
         var fileInfo = new FileInfo(testFile);
         if (fileInfo.Exists)
         {
-            var m3U = new M3UPlaylist(Serializer, new[]
-                {
+            var m3U = new M3UPlaylist(Serializer, [
                     new AtlMetaTag(new MetaTagsProcessor(NewPluginsConfiguration(), Serializer), GetImageConvertor(), GetImageValidator(), NewPluginsConfiguration())
-                },
+                ],
                 GetAlbumValidator(),
                 NewPluginsConfiguration());
             var m3UResult = await m3U.ProcessDirectoryAsync(new FileSystemDirectoryInfo

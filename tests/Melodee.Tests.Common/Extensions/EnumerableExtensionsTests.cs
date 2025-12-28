@@ -131,11 +131,11 @@ public class EnumerableExtensionsTests
     {
         var root = new TestNode("root")
         {
-            Children = new[]
-            {
-                new TestNode("child1") { Children = new[] { new TestNode("grandchild1") } },
+            Children =
+            [
+                new TestNode("child1") { Children = [new TestNode("grandchild1")] },
                 new TestNode("child2")
-            }
+            ]
         };
 
         var result = new[] { root }.SelectManyRecursive(n => n.Children).ToList();
@@ -165,7 +165,7 @@ public class EnumerableExtensionsTests
     private class TestNode
     {
         public string Name { get; }
-        public IEnumerable<TestNode> Children { get; set; } = Array.Empty<TestNode>();
+        public IEnumerable<TestNode> Children { get; set; } = [];
 
         public TestNode(string name) => Name = name;
     }

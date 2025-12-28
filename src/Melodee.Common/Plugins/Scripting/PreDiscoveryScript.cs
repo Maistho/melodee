@@ -33,10 +33,10 @@ public sealed class PreDiscoveryScript(IMelodeeConfiguration configuration) : IS
             {
                 return new OperationResult<bool>
                 {
-                    Errors = new[]
-                    {
+                    Errors =
+                    [
                         new Exception($"Unable to locate PreDiscoveryScript [{script}]")
-                    },
+                    ],
                     Data = false
                 };
             }

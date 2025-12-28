@@ -41,7 +41,7 @@
         {
             Page = 1,
             PageSize = 20,
-            FilterBy = query.Length > 1 ? new[] { new Melodee.Common.Filtering.FilterOperatorInfo(nameof(ArtistDataInfo.Name), Melodee.Common.Filtering.FilterOperator.Contains, query) } : null
+            FilterBy = query.Length > 1 ? [new Melodee.Common.Filtering.FilterOperatorInfo(nameof(ArtistDataInfo.Name), Melodee.Common.Filtering.FilterOperator.Contains, query)] : null
         });
         _artistChoices = result.Data.ToArray();
         StateHasChanged();

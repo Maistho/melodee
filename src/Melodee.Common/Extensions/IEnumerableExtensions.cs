@@ -50,6 +50,6 @@ public static class EnumerableExtensions
             return result;
         }
 
-        return (result ?? Array.Empty<T>()).Concat(result.SelectManyRecursive(selector));
+        return (result ?? []).Concat(result.SelectManyRecursive(selector));
     }
 }

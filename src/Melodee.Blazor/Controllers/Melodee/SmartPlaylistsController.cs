@@ -118,7 +118,7 @@ public class SmartPlaylistsController(
             user.Id,
             comment,
             false,
-            Array.Empty<Guid>(),
+            [],
             returnPrefixedApiKey: false,
             cancellationToken).ConfigureAwait(false);
 

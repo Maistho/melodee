@@ -414,8 +414,8 @@ public class MediaEditServiceTests : ServiceTestBase
                 new() { Identifier = MetaTagIdentifier.Album, Value = "Test Album" },
                 new() { Identifier = MetaTagIdentifier.OrigAlbumYear, Value = 2023 }
             },
-            Songs = new[]
-            {
+            Songs =
+            [
                 new Song
                 {
                     Id = songId,
@@ -428,7 +428,7 @@ public class MediaEditServiceTests : ServiceTestBase
                     },
                     SortOrder = 1
                 }
-            },
+            ],
             Status = AlbumStatus.Ok,
             StatusReasons = AlbumNeedsAttentionReasons.NotSet
         };

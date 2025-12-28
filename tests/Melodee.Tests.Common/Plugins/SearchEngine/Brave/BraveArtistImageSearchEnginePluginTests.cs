@@ -97,11 +97,11 @@ public class BraveArtistImageSearchEnginePluginTests
 
         var responseData = new BraveImageSearchResponse
         {
-            Results = new List<BraveImageResult>
-            {
+            Results =
+            [
                 new() { Title = "Beatles Image 1", Url = "https://example.com/beatles1.jpg" },
                 new() { Title = "Beatles Image 2", Url = "https://example.com/beatles2.jpg" }
-            }
+            ]
         };
 
         var handlerStub = new HttpHandlerStubDelegate((request, _) =>
@@ -147,7 +147,7 @@ public class BraveArtistImageSearchEnginePluginTests
         mockConfig.Setup(c => c.GetValue<string>(SettingRegistry.SearchEngineBraveBaseUrl)).Returns(string.Empty);
         mockConfig.Setup(c => c.GetValue<string>(SettingRegistry.SearchEngineBraveImageSearchPath)).Returns(string.Empty);
 
-        var responseData = new BraveImageSearchResponse { Results = new List<BraveImageResult>() };
+        var responseData = new BraveImageSearchResponse { Results = [] };
 
         var handlerStub = new HttpHandlerStubDelegate((request, _) =>
         {

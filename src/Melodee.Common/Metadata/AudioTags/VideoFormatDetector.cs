@@ -53,7 +53,7 @@ public static class VideoFormatDetector
                     // Common video brands in ftyp box
                     // mp42: MP4 v2, avc1: H.264, isom: base MP4, qt: QuickTime
                     string brand = System.Text.Encoding.ASCII.GetString(brandBuffer);
-                    string[] videoTypes = { "mp42", "avc1", "iso2", "iso6", "qt  ", "mmp4", "M4V " };
+                    string[] videoTypes = ["mp42", "avc1", "iso2", "iso6", "qt  ", "mmp4", "M4V "];
 
                     foreach (var videoType in videoTypes)
                     {

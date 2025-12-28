@@ -169,11 +169,11 @@ public class MelodeeArtistSearchEnginePluginTests : ServiceTestBase
         var query = new ArtistQuery
         {
             Name = artist.Name,
-            AlbumKeyValues = new[]
-            {
+            AlbumKeyValues =
+            [
                 new KeyValue("1967", album1.NameNormalized),
                 new KeyValue("1969", album2.NameNormalized)
-            }
+            ]
         };
 
         var result = await plugin.DoArtistSearchAsync(query, 10);
@@ -527,7 +527,7 @@ public class MelodeeArtistSearchEnginePluginTests : ServiceTestBase
         var query = new ArtistQuery
         {
             Name = "Test Artist",
-            AlbumKeyValues = Array.Empty<KeyValue>()
+            AlbumKeyValues = []
         };
 
         var result = await plugin.DoArtistSearchAsync(query, 10);

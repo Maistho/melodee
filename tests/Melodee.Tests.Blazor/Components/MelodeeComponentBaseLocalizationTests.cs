@@ -37,7 +37,7 @@ public class MelodeeComponentBaseLocalizationTests : BunitContext
         _mockConfiguration.Setup(x => x.GetValue<int>(It.Is<string>(s => s.Contains("DefaultPageSize"))))
             .Returns(25);
         _mockConfiguration.Setup(x => x.GetValue<int[]>(It.Is<string>(s => s.Contains("DefaultPageSizeOptions"))))
-            .Returns(new[] { 10, 20, 30 });
+            .Returns([10, 20, 30]);
 
         // Setup authentication
         var claims = new[] { new Claim(ClaimTypes.NameIdentifier, "1") };

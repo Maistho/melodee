@@ -46,11 +46,11 @@ public sealed class SearchService(
         var totalPlaylists = 0;
         var totalMusicBrainzArtists = 0;
 
-        List<ArtistDataInfo> artists = new();
-        List<AlbumDataInfo> albums = new();
-        List<SongDataInfo> songs = new();
-        List<PlaylistDataInfo> playlists = new();
-        List<ArtistDataInfo> musicBrainzArtists = new();
+        List<ArtistDataInfo> artists = [];
+        List<AlbumDataInfo> albums = [];
+        List<SongDataInfo> songs = [];
+        List<PlaylistDataInfo> playlists = [];
+        List<ArtistDataInfo> musicBrainzArtists = [];
 
         if (searchTerm.Nullify() == null)
         {

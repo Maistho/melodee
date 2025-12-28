@@ -97,11 +97,11 @@ public class BraveAlbumImageSearchEnginePluginTests
 
         var responseData = new BraveImageSearchResponse
         {
-            Results = new List<BraveImageResult>
-            {
+            Results =
+            [
                 new() { Title = "Abbey Road Cover 1", Url = "https://example.com/abbey1.jpg" },
                 new() { Title = "Abbey Road Cover 2", Url = "https://example.com/abbey2.jpg" }
-            }
+            ]
         };
 
         var handlerStub = new HttpHandlerStubDelegate((request, _) =>
@@ -151,7 +151,7 @@ public class BraveAlbumImageSearchEnginePluginTests
         var handlerStub = new HttpHandlerStubDelegate((request, _) =>
         {
             capturedQuery = request.RequestUri?.Query;
-            var responseData = new BraveImageSearchResponse { Results = new List<BraveImageResult>() };
+            var responseData = new BraveImageSearchResponse { Results = [] };
             var response = new HttpResponseMessage
             {
                 StatusCode = HttpStatusCode.OK,
@@ -191,10 +191,7 @@ public class BraveAlbumImageSearchEnginePluginTests
 
         var responseData = new BraveImageSearchResponse
         {
-            Results = new List<BraveImageResult>
-            {
-                new() { Title = "Album Cover", Url = "https://example.com/cover.jpg" }
-            }
+            Results = [new() { Title = "Album Cover", Url = "https://example.com/cover.jpg" }]
         };
 
         var handlerStub = new HttpHandlerStubDelegate((request, _) =>
@@ -238,7 +235,7 @@ public class BraveAlbumImageSearchEnginePluginTests
         mockConfig.Setup(c => c.GetValue<string>(SettingRegistry.SearchEngineBraveBaseUrl)).Returns(string.Empty);
         mockConfig.Setup(c => c.GetValue<string>(SettingRegistry.SearchEngineBraveImageSearchPath)).Returns(string.Empty);
 
-        var responseData = new BraveImageSearchResponse { Results = new List<BraveImageResult>() };
+        var responseData = new BraveImageSearchResponse { Results = [] };
 
         var handlerStub = new HttpHandlerStubDelegate((request, _) =>
         {

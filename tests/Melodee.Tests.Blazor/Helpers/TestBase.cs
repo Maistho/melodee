@@ -79,11 +79,10 @@ public abstract class TestBase : BunitContext, IDisposable
     /// </summary>
     protected void SetupAuthenticatedUser(bool isAdmin = false)
     {
-        var identity = new ClaimsIdentity(new[]
-        {
+        var identity = new ClaimsIdentity([
             new Claim(ClaimTypes.Name, "testuser"),
-            new Claim(ClaimTypes.NameIdentifier, "123"),
-        }, "test");
+            new Claim(ClaimTypes.NameIdentifier, "123")
+        ], "test");
 
         if (isAdmin)
         {

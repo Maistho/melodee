@@ -56,9 +56,9 @@ public class DirectoryProcessorToStagingServiceTests : ServiceTestBase
         var mockFileSystem = new Mock<IFileSystemService>();
         mockFileSystem.Setup(f => f.DirectoryExists(It.IsAny<string>())).Returns(directoryExists);
         mockFileSystem.Setup(f => f.EnumerateDirectories(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<SearchOption>()))
-            .Returns(directories ?? Array.Empty<DirectoryInfo>());
+            .Returns(directories ?? []);
         mockFileSystem.Setup(f => f.EnumerateFiles(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<SearchOption>()))
-            .Returns(Array.Empty<string>());
+            .Returns([]);
         return mockFileSystem;
     }
 

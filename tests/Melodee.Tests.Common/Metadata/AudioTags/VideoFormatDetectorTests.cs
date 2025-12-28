@@ -79,7 +79,7 @@ public class VideoFormatDetectorTests
                     case ".mov":
                     case ".m4v":
                         // Write MP4/MOV signature with video ftyp
-                        fs.Write(new byte[] { 0, 0, 0, 0x20 }, 0, 4); // Box size
+                        fs.Write([0, 0, 0, 0x20], 0, 4); // Box size
                         fs.Write(Encoding.ASCII.GetBytes("ftyp"), 0, 4);
                         fs.Write(Encoding.ASCII.GetBytes("mp42"), 0, 4); // Video brand
                         fs.Write(new byte[16], 0, 16); // Padding
@@ -88,13 +88,13 @@ public class VideoFormatDetectorTests
                     case ".avi":
                         // Write AVI signature
                         fs.Write(Encoding.ASCII.GetBytes("RIFF"), 0, 4);
-                        fs.Write(new byte[] { 0xFF, 0xFF, 0xFF, 0xFF }, 0, 4); // File size
+                        fs.Write([0xFF, 0xFF, 0xFF, 0xFF], 0, 4); // File size
                         fs.Write(Encoding.ASCII.GetBytes("AVI "), 0, 4);
                         break;
                     case ".mkv":
                     case ".webm":
                         // Write EBML/Matroska signature
-                        fs.Write(new byte[] { 0x1A, 0x45, 0xDF, 0xA3 }, 0, 4);
+                        fs.Write([0x1A, 0x45, 0xDF, 0xA3], 0, 4);
                         break;
                     case ".flv":
                         // Write FLV signature
@@ -103,7 +103,7 @@ public class VideoFormatDetectorTests
                         break;
                     case ".wmv":
                         // Write ASF header (same as WMA but with .wmv extension)
-                        fs.Write(new byte[] { 0x30, 0x26, 0xB2, 0x75 }, 0, 4);
+                        fs.Write([0x30, 0x26, 0xB2, 0x75], 0, 4);
                         break;
                     default:
                         // For other formats, just write some data to make file non-empty
@@ -142,7 +142,7 @@ public class VideoFormatDetectorTests
             // Create M4A audio file signature
             using (var fs = File.OpenWrite(audioFile))
             {
-                fs.Write(new byte[] { 0, 0, 0, 0x20 }, 0, 4); // Box size
+                fs.Write([0, 0, 0, 0x20], 0, 4); // Box size
                 fs.Write(Encoding.ASCII.GetBytes("ftyp"), 0, 4);
                 fs.Write(Encoding.ASCII.GetBytes("M4A "), 0, 4); // Audio brand
             }
@@ -185,12 +185,12 @@ public class VideoFormatDetectorTests
                 {
                     case ".mp3":
                         // Write MP3 sync word
-                        fs.Write(new byte[] { 0xFF, 0xFB }, 0, 2);
+                        fs.Write([0xFF, 0xFB], 0, 2);
                         break;
                     case ".wav":
                         // Write WAV signature
                         fs.Write(Encoding.ASCII.GetBytes("RIFF"), 0, 4);
-                        fs.Write(new byte[] { 0x24, 0, 0, 0 }, 0, 4);
+                        fs.Write([0x24, 0, 0, 0], 0, 4);
                         fs.Write(Encoding.ASCII.GetBytes("WAVE"), 0, 4);
                         break;
                     case ".flac":
@@ -203,11 +203,11 @@ public class VideoFormatDetectorTests
                         break;
                     case ".wma":
                         // Write ASF header
-                        fs.Write(new byte[] { 0x30, 0x26, 0xB2, 0x75 }, 0, 4);
+                        fs.Write([0x30, 0x26, 0xB2, 0x75], 0, 4);
                         break;
                     case ".m4a":
                         // Write M4A audio signature
-                        fs.Write(new byte[] { 0, 0, 0, 0x20 }, 0, 4);
+                        fs.Write([0, 0, 0, 0x20], 0, 4);
                         fs.Write(Encoding.ASCII.GetBytes("ftyp"), 0, 4);
                         fs.Write(Encoding.ASCII.GetBytes("M4A "), 0, 4);
                         break;
@@ -243,7 +243,7 @@ public class VideoFormatDetectorTests
             using (var fs = File.OpenWrite(corruptedFile))
             {
                 // Write only partial header
-                fs.Write(new byte[] { 0, 0 }, 0, 2);
+                fs.Write([0, 0], 0, 2);
             }
 
             // Act
@@ -276,7 +276,7 @@ public class VideoFormatDetectorTests
             {
                 // Write AVI signature
                 fs.Write(Encoding.ASCII.GetBytes("RIFF"), 0, 4);
-                fs.Write(new byte[] { 0xFF, 0xFF, 0xFF, 0xFF }, 0, 4);
+                fs.Write([0xFF, 0xFF, 0xFF, 0xFF], 0, 4);
                 fs.Write(Encoding.ASCII.GetBytes("AVI "), 0, 4);
             }
 

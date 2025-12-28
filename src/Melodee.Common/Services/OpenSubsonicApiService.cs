@@ -715,7 +715,7 @@ public class OpenSubsonicApiService(
                 .Select(ApiKeyFromId)
                 .Where(x => x.HasValue)
                 .Select(x => x!.Value)
-                .ToArray() ?? Array.Empty<Guid>();
+                .ToArray() ?? [];
 
             var createResult = await playlistService.CreatePlaylistAsync(name!, authResponse.UserInfo.Id, null, false, songApiKeysForPlaylist, returnPrefixedApiKey: true, cancellationToken);
             if (createResult.IsSuccess && createResult.Data != null)
@@ -764,7 +764,7 @@ public class OpenSubsonicApiService(
                 .Select(ApiKeyFromId)
                 .Where(x => x.HasValue)
                 .Select(x => x!.Value)
-                .ToArray() ?? Array.Empty<Guid>();
+                .ToArray() ?? [];
 
             if (songApiKeysForPlaylist.Any())
             {

@@ -16,7 +16,7 @@ public class DictionaryExtensionsTests
     public void Merge_SingleDictionary_ReturnsCopy()
     {
         var dict = new Dictionary<string, int> { { "a", 1 }, { "b", 2 } };
-        var result = DictionaryExtensions.Merge(new[] { dict });
+        var result = DictionaryExtensions.Merge([dict]);
 
         Assert.Equal(2, result.Count);
         Assert.Equal(1, result["a"]);
@@ -30,7 +30,7 @@ public class DictionaryExtensionsTests
         var dict2 = new Dictionary<string, int> { { "b", 2 } };
         var dict3 = new Dictionary<string, int> { { "c", 3 } };
 
-        var result = DictionaryExtensions.Merge(new[] { dict1, dict2, dict3 });
+        var result = DictionaryExtensions.Merge([dict1, dict2, dict3]);
 
         Assert.Equal(3, result.Count);
         Assert.Equal(1, result["a"]);
@@ -44,7 +44,7 @@ public class DictionaryExtensionsTests
         var dict1 = new Dictionary<string, int> { { "a", 1 } };
         var dict2 = new Dictionary<string, int> { { "a", 2 } };
 
-        var result = DictionaryExtensions.Merge(new[] { dict1, dict2 });
+        var result = DictionaryExtensions.Merge([dict1, dict2]);
 
         Assert.Single(result);
         Assert.Equal(2, result["a"]);
@@ -57,7 +57,7 @@ public class DictionaryExtensionsTests
         var dict2 = new Dictionary<string, int>();
         var dict3 = new Dictionary<string, int> { { "b", 2 } };
 
-        var result = DictionaryExtensions.Merge(new[] { dict1, dict2, dict3 });
+        var result = DictionaryExtensions.Merge([dict1, dict2, dict3]);
 
         Assert.Equal(2, result.Count);
     }

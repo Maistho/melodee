@@ -465,7 +465,7 @@ public class SharesControllerTests
             "test@example.com",
             false,
             false,
-            Array.Empty<string>(),
+            [],
             0, 0, 0, 0, 0, 0, 0,
             "2025-01-01T00:00:00Z",
             "2025-01-01T00:00:00Z"
@@ -669,7 +669,7 @@ public class SharesControllerTests
             "test@example.com",
             false,
             false,
-            Array.Empty<string>(),
+            [],
             0, 0, 0, 0, 0, 0, 0,
             "2025-01-01T00:00:00Z",
             "2025-01-01T00:00:00Z"

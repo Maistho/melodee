@@ -226,7 +226,7 @@ public class MelodeeConfigurationTests
         var jsonArray = "[\"item1\",\"item2\",\"item3\"]";
         var mockSerializer = new Mock<ISerializer>();
         mockSerializer.Setup(s => s.Deserialize<string[]>(It.IsAny<string>()))
-            .Returns(new[] { "item1", "item2", "item3" });
+            .Returns(["item1", "item2", "item3"]);
 
         // Act
         var result = MelodeeConfiguration.FromSerializedJsonArray(jsonArray, mockSerializer.Object);
@@ -260,8 +260,8 @@ public class MelodeeConfigurationTests
         mockSerializer.Setup(s => s.Deserialize<Dictionary<string, string[]>>(It.IsAny<string>()))
             .Returns(new Dictionary<string, string[]>
             {
-                { "key1", new[] { "value1", "value2" } },
-                { "key2", new[] { "value3" } }
+                { "key1", ["value1", "value2"] },
+                { "key2", ["value3"] }
             });
 
         // Act

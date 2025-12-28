@@ -8,10 +8,10 @@ public class BlacklistConfiguration
     /// <summary>
     ///     List of blacklisted email addresses
     /// </summary>
-    public List<string> BlacklistedEmails { get; set; } = new();
+    public List<string> BlacklistedEmails { get; set; } = [];
 
     /// <summary>
     ///     List of blacklisted IP addresses
     /// </summary>
-    public List<string> BlacklistedIPs { get; set; } = new();
+    public List<string> BlacklistedIPs { get; set; } = [];
 }

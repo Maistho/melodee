@@ -44,14 +44,14 @@ public sealed class Album(Dictionary<string, object?> configuration, ISerializer
         {
             return new OperationResult<IEnumerable<MetaTag<object?>>>
             {
-                Data = new[]
-                {
+                Data =
+                [
                     new MetaTag<object?>
                     {
                         Identifier = metaTag.Identifier,
                         Value = null
                     }
-                }
+                ]
             };
         }
 

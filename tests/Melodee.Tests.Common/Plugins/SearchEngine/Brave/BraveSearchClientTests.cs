@@ -59,10 +59,7 @@ public class BraveSearchClientTests
 
         var responseData = new BraveImageSearchResponse
         {
-            Results = new List<BraveImageResult>
-            {
-                new() { Title = "Test Image", Url = "https://example.com/image.jpg" }
-            }
+            Results = [new() { Title = "Test Image", Url = "https://example.com/image.jpg" }]
         };
         var jsonResponse = JsonSerializer.Serialize(responseData);
 

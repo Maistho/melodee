@@ -168,7 +168,7 @@ public class QueueControllerTests
     public void SaveQueueRequest_WithEmptyArray_CanBeCreated()
     {
         // Arrange & Act
-        var request = new SaveQueueRequest(Array.Empty<Guid>(), null, null, null);
+        var request = new SaveQueueRequest([], null, null, null);
 
         // Assert
         request.SongIds.Should().BeEmpty();

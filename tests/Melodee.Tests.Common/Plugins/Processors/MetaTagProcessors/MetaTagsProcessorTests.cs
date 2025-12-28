@@ -24,11 +24,10 @@ public class MetaTagsProcessorTests : TestsBase
         {
             Name = string.Empty,
             Size = 0
-        }, new[]
-        {
+        }, [
             new MetaTag<object?> { Identifier = MetaTagIdentifier.TrackNumber, Value = SongNumber },
             new MetaTag<object?> { Identifier = MetaTagIdentifier.Title, Value = originalSongTitle }
-        });
+        ]);
         Assert.NotNull(processorResult);
         Assert.True(processorResult.IsSuccess);
         var groupedByIdentifier = processorResult.Data.GroupBy(x => x.Identifier);
@@ -78,12 +77,11 @@ public class MetaTagsProcessorTests : TestsBase
         {
             Name = string.Empty,
             Size = 0
-        }, new[]
-        {
+        }, [
             new MetaTag<object?> { Identifier = MetaTagIdentifier.AlbumArtist, Value = albumArtistShouldBe },
             new MetaTag<object?> { Identifier = MetaTagIdentifier.TrackNumber, Value = 27 },
             new MetaTag<object?> { Identifier = MetaTagIdentifier.Title, Value = originalSongTitle }
-        });
+        ]);
         Assert.NotNull(processorResult);
         Assert.True(processorResult.IsSuccess);
         var groupedByIdentifier = processorResult.Data.GroupBy(x => x.Identifier);
@@ -159,11 +157,10 @@ public class MetaTagsProcessorTests : TestsBase
         {
             Name = string.Empty,
             Size = 0
-        }, new[]
-        {
+        }, [
             new MetaTag<object?> { Identifier = MetaTagIdentifier.AlbumArtist, Value = albumArtistShouldBe },
             new MetaTag<object?> { Identifier = MetaTagIdentifier.Album, Value = originalAlbum }
-        });
+        ]);
         Assert.NotNull(processorResult);
         Assert.True(processorResult.IsSuccess);
         var groupedByIdentifier = processorResult.Data.GroupBy(x => x.Identifier);
@@ -207,11 +204,10 @@ public class MetaTagsProcessorTests : TestsBase
         {
             Name = string.Empty,
             Size = 0
-        }, new[]
-        {
+        }, [
             new MetaTag<object?> { Identifier = MetaTagIdentifier.AlbumArtist, Value = albumArtistShouldBe },
             new MetaTag<object?> { Identifier = MetaTagIdentifier.Artist, Value = originalArtist }
-        });
+        ]);
         Assert.NotNull(processorResult);
         Assert.True(processorResult.IsSuccess);
         var groupedByIdentifier = processorResult.Data.GroupBy(x => x.Identifier);
@@ -264,11 +260,10 @@ public class MetaTagsProcessorTests : TestsBase
         {
             Name = string.Empty,
             Size = 0
-        }, new[]
-        {
+        }, [
             new MetaTag<object?> { Identifier = MetaTagIdentifier.AlbumArtist, Value = albumArtist },
             new MetaTag<object?> { Identifier = MetaTagIdentifier.Album, Value = albumTitle }
-        });
+        ]);
         Assert.NotNull(processorResult);
         Assert.True(processorResult.IsSuccess);
         var groupedByIdentifier = processorResult.Data.GroupBy(x => x.Identifier);
@@ -296,12 +291,11 @@ public class MetaTagsProcessorTests : TestsBase
         {
             Name = string.Empty,
             Size = 0
-        }, new[]
-        {
+        }, [
             new MetaTag<object?> { Identifier = MetaTagIdentifier.AlbumArtist, Value = albumArtist },
             new MetaTag<object?> { Identifier = MetaTagIdentifier.Artist, Value = SongArtist },
             new MetaTag<object?> { Identifier = MetaTagIdentifier.Album, Value = albumTitle }
-        });
+        ]);
         Assert.NotNull(processorResult);
         Assert.True(processorResult.IsSuccess);
         var groupedByIdentifier = processorResult.Data.GroupBy(x => x.Identifier);

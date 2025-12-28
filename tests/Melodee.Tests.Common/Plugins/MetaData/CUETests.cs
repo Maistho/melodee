@@ -36,10 +36,9 @@ public class CUETests : TestsBase
 
             var cueSheet = new CueSheet(
                 Serializer,
-                new[]
-                {
+                [
                     new AtlMetaTag(new MetaTagsProcessor(NewPluginsConfiguration(), Serializer), GetImageConvertor(), GetImageValidator(), NewPluginsConfiguration())
-                }, GetAlbumValidator(), NewPluginsConfiguration());
+                ], GetAlbumValidator(), NewPluginsConfiguration());
 
             var sfvResult = await cueSheet.ProcessDirectoryAsync(new FileSystemDirectoryInfo
             {

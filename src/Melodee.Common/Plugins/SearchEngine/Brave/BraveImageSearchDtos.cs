@@ -5,7 +5,7 @@ namespace Melodee.Common.Plugins.SearchEngine.Brave;
 public sealed class BraveImageSearchResponse
 {
     [JsonPropertyName("results")]
-    public List<BraveImageResult> Results { get; set; } = new();
+    public List<BraveImageResult> Results { get; set; } = [];
 }
 
 public sealed class BraveImageResult

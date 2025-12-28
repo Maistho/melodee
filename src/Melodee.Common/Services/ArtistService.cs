@@ -1215,8 +1215,8 @@ public class ArtistService(
     private void DetectMetadataConflicts(Album targetAlbum, Album[] sourceAlbums, List<MelodeeModels.AlbumMerge.AlbumMergeConflict> conflicts)
     {
         // Check for genre conflicts
-        var allSourceGenres = sourceAlbums.SelectMany(a => a.Genres ?? Array.Empty<string>()).Distinct().ToArray();
-        var targetGenres = targetAlbum.Genres ?? Array.Empty<string>();
+        var allSourceGenres = sourceAlbums.SelectMany(a => a.Genres ?? []).Distinct().ToArray();
+        var targetGenres = targetAlbum.Genres ?? [];
 
         var newGenres = allSourceGenres.Except(targetGenres, StringComparer.OrdinalIgnoreCase).ToArray();
         if (newGenres.Any())
@@ -1238,8 +1238,8 @@ public class ArtistService(
         }
 
         // Check for mood conflicts
-        var allSourceMoods = sourceAlbums.SelectMany(a => a.Moods ?? Array.Empty<string>()).Distinct().ToArray();
-        var targetMoods = targetAlbum.Moods ?? Array.Empty<string>();
+        var allSourceMoods = sourceAlbums.SelectMany(a => a.Moods ?? []).Distinct().ToArray();
+        var targetMoods = targetAlbum.Moods ?? [];
 
         var newMoods = allSourceMoods.Except(targetMoods, StringComparer.OrdinalIgnoreCase).ToArray();
         if (newMoods.Any())
@@ -1328,7 +1328,7 @@ public class ArtistService(
             var requiredConflicts = conflictDetection.Data.Conflicts!.Where(c => c.IsRequired).ToArray();
             if (requiredConflicts.Any())
             {
-                var resolutionIds = request.Resolutions?.Select(r => r.ConflictId).ToHashSet() ?? new HashSet<string>();
+                var resolutionIds = request.Resolutions?.Select(r => r.ConflictId).ToHashSet() ?? [];
                 var unresolvedConflicts = requiredConflicts.Where(c => !resolutionIds.Contains(c.ConflictId)).ToArray();
 
                 if (unresolvedConflicts.Any())
@@ -1657,8 +1657,8 @@ public class ArtistService(
         var genreResolution = resolutions?.FirstOrDefault(r => r.ConflictId.StartsWith("metadata_genres_"));
         if (genreResolution == null || genreResolution.Action == MelodeeModels.AlbumMerge.AlbumMergeResolutionAction.KeepBoth)
         {
-            var allGenres = (targetAlbum.Genres ?? Array.Empty<string>())
-                .Union(sourceAlbums.SelectMany(a => a.Genres ?? Array.Empty<string>()))
+            var allGenres = (targetAlbum.Genres ?? [])
+                .Union(sourceAlbums.SelectMany(a => a.Genres ?? []))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToArray();
 
@@ -1673,8 +1673,8 @@ public class ArtistService(
         var moodResolution = resolutions?.FirstOrDefault(r => r.ConflictId.StartsWith("metadata_moods_"));
         if (moodResolution == null || moodResolution.Action == MelodeeModels.AlbumMerge.AlbumMergeResolutionAction.KeepBoth)
         {
-            var allMoods = (targetAlbum.Moods ?? Array.Empty<string>())
-                .Union(sourceAlbums.SelectMany(a => a.Moods ?? Array.Empty<string>()))
+            var allMoods = (targetAlbum.Moods ?? [])
+                .Union(sourceAlbums.SelectMany(a => a.Moods ?? []))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToArray();
 
@@ -1806,7 +1806,7 @@ public class ArtistService(
         {
             return new MelodeeModels.OperationResult<(Artist, Artist[])>("Artist not found.")
             {
-                Data = (null!, Array.Empty<Artist>()),
+                Data = (null!, []),
                 Type = MelodeeModels.OperationResponseType.NotFound
             };
         }

@@ -130,7 +130,7 @@ public class AudioTagManagerTests
                     case ".wav":
                         // Write basic WAV header signature
                         fs.Write(Encoding.ASCII.GetBytes("RIFF"), 0, 4);
-                        fs.Write(new byte[] { 0x24, 0, 0, 0 }, 0, 4); // File size
+                        fs.Write([0x24, 0, 0, 0], 0, 4); // File size
                         fs.Write(Encoding.ASCII.GetBytes("WAVE"), 0, 4);
                         fs.Write(Encoding.ASCII.GetBytes("fmt "), 0, 4);
                         break;
@@ -145,7 +145,7 @@ public class AudioTagManagerTests
                     case ".m4a":
                     case ".mp4":
                         // Write basic ISO base media file format signature
-                        fs.Write(new byte[] { 0, 0, 0, 0x20 }, 0, 4); // Box size
+                        fs.Write([0, 0, 0, 0x20], 0, 4); // Box size
                         fs.Write(Encoding.ASCII.GetBytes("ftyp"), 0, 4);
                         fs.Write(Encoding.ASCII.GetBytes("M4A "), 0, 4);
                         break;
@@ -217,7 +217,7 @@ public class AudioTagManagerTests
                     case ".mov":
                     case ".m4v":
                         // Write MP4/MOV signature with video ftyp
-                        fs.Write(new byte[] { 0, 0, 0, 0x20 }, 0, 4); // Box size
+                        fs.Write([0, 0, 0, 0x20], 0, 4); // Box size
                         fs.Write(Encoding.ASCII.GetBytes("ftyp"), 0, 4);
                         fs.Write(Encoding.ASCII.GetBytes("mp42"), 0, 4); // Video brand
                         fs.Write(new byte[16], 0, 16); // Padding
@@ -226,13 +226,13 @@ public class AudioTagManagerTests
                     case ".avi":
                         // Write AVI signature
                         fs.Write(Encoding.ASCII.GetBytes("RIFF"), 0, 4);
-                        fs.Write(new byte[] { 0xFF, 0xFF, 0xFF, 0xFF }, 0, 4);
+                        fs.Write([0xFF, 0xFF, 0xFF, 0xFF], 0, 4);
                         fs.Write(Encoding.ASCII.GetBytes("AVI "), 0, 4);
                         break;
                     case ".mkv":
                     case ".webm":
                         // Write EBML/Matroska signature
-                        fs.Write(new byte[] { 0x1A, 0x45, 0xDF, 0xA3 }, 0, 4);
+                        fs.Write([0x1A, 0x45, 0xDF, 0xA3], 0, 4);
                         break;
                     case ".flv":
                         // Write FLV signature
@@ -272,7 +272,7 @@ public class AudioTagManagerTests
             // Create MP4 video file with video codec signature
             using (var fs = File.OpenWrite(mp4VideoFile))
             {
-                fs.Write(new byte[] { 0, 0, 0, 0x20 }, 0, 4); // Box size
+                fs.Write([0, 0, 0, 0x20], 0, 4); // Box size
                 fs.Write(Encoding.ASCII.GetBytes("ftyp"), 0, 4);
                 fs.Write(Encoding.ASCII.GetBytes("avc1"), 0, 4); // H.264 video codec brand
                 fs.Write(new byte[16], 0, 16); // Padding
@@ -309,7 +309,7 @@ public class AudioTagManagerTests
             // Create M4A audio file signature (should be converted to MP3)
             using (var fs = File.OpenWrite(m4aAudioFile))
             {
-                fs.Write(new byte[] { 0, 0, 0, 0x20 }, 0, 4); // Box size
+                fs.Write([0, 0, 0, 0x20], 0, 4); // Box size
                 fs.Write(Encoding.ASCII.GetBytes("ftyp"), 0, 4);
                 fs.Write(Encoding.ASCII.GetBytes("M4A "), 0, 4); // Audio-only brand
             }
@@ -345,7 +345,7 @@ public class AudioTagManagerTests
             using (var fs = File.OpenWrite(misleadingFile))
             {
                 fs.Write(Encoding.ASCII.GetBytes("RIFF"), 0, 4);
-                fs.Write(new byte[] { 0xFF, 0xFF, 0xFF, 0xFF }, 0, 4);
+                fs.Write([0xFF, 0xFF, 0xFF, 0xFF], 0, 4);
                 fs.Write(Encoding.ASCII.GetBytes("AVI "), 0, 4);
             }
 

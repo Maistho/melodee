@@ -128,7 +128,7 @@ public static class SongExtensions
                         null,
                         null)).ToArray(),
             album.Artist.Name,
-            new[] { album.Artist.ToApiArtistID3() },
+            [album.Artist.ToApiArtistID3()],
             album.Artist.Name,
             song.Contributors.Select(c => new Common.Models.OpenSubsonic.Contributor(
                 c.Role,

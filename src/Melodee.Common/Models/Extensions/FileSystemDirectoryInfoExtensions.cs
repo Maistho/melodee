@@ -48,7 +48,7 @@ public static class FileSystemDirectoryInfoExtensions
                     var hash = await CalculateFileHashAsync(filePath, token);
                     sizeGroup.AddOrUpdate(
                         hash,
-                        key => new List<FileInfo> { fileInfo },
+                        key => [fileInfo],
                         (key, existingList) =>
                         {
                             lock (existingList)
@@ -62,7 +62,7 @@ public static class FileSystemDirectoryInfoExtensions
                 else
                 {
                     // This is the file from the duplicates we want to keep
-                    sizeGroup.TryAdd("pending", new List<FileInfo> { fileInfo });
+                    sizeGroup.TryAdd("pending", [fileInfo]);
                 }
             }
             catch (Exception ex) when (ex is not OperationCanceledException)

@@ -1253,7 +1253,7 @@ public class PlaylistService(
         await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
 
         var now = Instant.FromDateTimeUtc(DateTime.UtcNow);
-        var songApiKeyArray = songApiKeys?.ToArray() ?? Array.Empty<Guid>();
+        var songApiKeyArray = songApiKeys?.ToArray() ?? [];
 
         // Get songs for the playlist if provided
         var songsForPlaylist = Array.Empty<Data.Models.Song>();

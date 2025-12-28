@@ -131,8 +131,8 @@ public class SearchControllerTests
             new RangeFilter<int>(2000, 2023),
             new RangeFilter<double>(80, 120),
             new RangeFilter<double>(180, 300),
-            new[] { "Rock", "Metal" },
-            new[] { "Energetic" },
+            ["Rock", "Metal"],
+            ["Energetic"],
             "C Major",
             "Artist Name",
             "Album Name");
@@ -158,7 +158,7 @@ public class SearchControllerTests
         var request = new AdvancedSearchRequest(
             "search query",
             new AdvancedSearchFilters(null, null, null, null, null, null, null, null),
-            new[] { "song", "album" },
+            ["song", "album"],
             "relevance",
             "desc",
             1,
@@ -204,7 +204,7 @@ public class SearchControllerTests
         var request = new AdvancedSearchRequest(
             "test",
             null,
-            new[] { type },
+            [type],
             null,
             null,
             null,

@@ -70,7 +70,7 @@ public class AuthServiceSimpleTests
     public async Task Login_SetsValidatedFlagToTrue()
     {
         // Arrange
-        var identity = new ClaimsIdentity(new[] { new Claim(ClaimTypes.Name, "test") }, "jwt");
+        var identity = new ClaimsIdentity([new Claim(ClaimTypes.Name, "test")], "jwt");
         var user = new ClaimsPrincipal(identity);
 
         // Act
@@ -89,7 +89,7 @@ public class AuthServiceSimpleTests
     public async Task LogoutAsync_ResetsValidatedFlag()
     {
         // Arrange - First login
-        var identity = new ClaimsIdentity(new[] { new Claim(ClaimTypes.Name, "test") }, "jwt");
+        var identity = new ClaimsIdentity([new Claim(ClaimTypes.Name, "test")], "jwt");
         var user = new ClaimsPrincipal(identity);
         await _authService.Login(user);
 
@@ -114,7 +114,7 @@ public class AuthServiceSimpleTests
     public void IsLoggedIn_WithAuthenticatedUser_ReturnsTrue()
     {
         // Arrange
-        var identity = new ClaimsIdentity(new[] { new Claim(ClaimTypes.Name, "test") }, "jwt");
+        var identity = new ClaimsIdentity([new Claim(ClaimTypes.Name, "test")], "jwt");
         var user = new ClaimsPrincipal(identity);
 
         // Act
@@ -144,7 +144,7 @@ public class AuthServiceSimpleTests
         ClaimsPrincipal? changedUser = null;
         _authService.UserChanged += user => changedUser = user;
 
-        var identity = new ClaimsIdentity(new[] { new Claim(ClaimTypes.Name, "test") }, "jwt");
+        var identity = new ClaimsIdentity([new Claim(ClaimTypes.Name, "test")], "jwt");
         var user = new ClaimsPrincipal(identity);
 
         // Act

@@ -29,14 +29,14 @@ public static class CueSheetExtensions
                 cueSheet.Artist().ToNormalizedString() ?? cueSheet.Artist()!,
                 cueSheet.Artist().CleanString(true)),
             Directory = directoryInfo,
-            Files = new[]
-            {
+            Files =
+            [
                 cueSheet.ToAlbumFile()
-            },
-            ViaPlugins = new string[1]
-            {
+            ],
+            ViaPlugins =
+            [
                 nameof(Directory.CueSheet)
-            },
+            ],
             Tags = cueSheet.Tags,
             Songs = cueSheet.Songs,
             Status = cueSheet.IsValid ? AlbumStatus.Ok : AlbumStatus.Invalid,

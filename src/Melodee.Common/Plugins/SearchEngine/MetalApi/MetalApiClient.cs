@@ -82,7 +82,7 @@ public sealed class MetalApiClient : IMetalApiClient
                 var singleResult = JsonSerializer.Deserialize<MetalBandSearchResult>(content, _jsonOptions);
                 if (singleResult != null)
                 {
-                    return new[] { singleResult };
+                    return [singleResult];
                 }
             }
             catch (Exception ex)
@@ -157,7 +157,7 @@ public sealed class MetalApiClient : IMetalApiClient
                 var singleResult = JsonSerializer.Deserialize<MetalAlbumSearchResult>(content, _jsonOptions);
                 if (singleResult != null)
                 {
-                    return new[] { singleResult };
+                    return [singleResult];
                 }
             }
             catch (Exception ex)

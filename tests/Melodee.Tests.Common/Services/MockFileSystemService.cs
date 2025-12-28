@@ -10,7 +10,7 @@ namespace Melodee.Tests.Common.Common.Services;
 public class MockFileSystemService : IFileSystemService
 {
     private readonly Dictionary<string, byte[]> _files = new();
-    private readonly HashSet<string> _directories = new();
+    private readonly HashSet<string> _directories = [];
     private readonly Dictionary<string, Album> _albumsByFile = new();
     private readonly Dictionary<string, DateTime> _fileCreationTimes = new();
 
@@ -61,7 +61,7 @@ public class MockFileSystemService : IFileSystemService
     public Task<byte[]> ReadAllBytesAsync(string filePath, CancellationToken cancellationToken = default)
     {
         _files.TryGetValue(filePath, out var bytes);
-        return Task.FromResult(bytes ?? Array.Empty<byte>());
+        return Task.FromResult(bytes ?? []);
     }
 
     public Task WriteAllBytesAsync(string filePath, byte[] bytes, CancellationToken cancellationToken = default)
@@ -110,7 +110,7 @@ public class MockFileSystemService : IFileSystemService
         _directories.Add(directoryPath);
         foreach (var filePath in filePaths)
         {
-            _files[filePath] = Array.Empty<byte>();
+            _files[filePath] = [];
             var directory = GetDirectoryName(filePath);
             if (!string.IsNullOrEmpty(directory))
             {
@@ -123,7 +123,7 @@ public class MockFileSystemService : IFileSystemService
     public MockFileSystemService SetAlbumForFile(string filePath, Album album)
     {
         _albumsByFile[filePath] = album;
-        _files[filePath] = Array.Empty<byte>(); // Ensure file exists
+        _files[filePath] = []; // Ensure file exists
         var directory = GetDirectoryName(filePath);
         if (!string.IsNullOrEmpty(directory))
         {
@@ -134,7 +134,7 @@ public class MockFileSystemService : IFileSystemService
 
     public MockFileSystemService AddFile(string filePath, byte[]? content = null)
     {
-        _files[filePath] = content ?? Array.Empty<byte>();
+        _files[filePath] = content ?? [];
         var directory = GetDirectoryName(filePath);
         if (!string.IsNullOrEmpty(directory))
         {

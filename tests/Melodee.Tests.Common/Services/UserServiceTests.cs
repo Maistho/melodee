@@ -342,7 +342,7 @@ public class UserServiceTests : ServiceTestBase
         var userService = GetUserService();
 
         // Act
-        var result = await userService.DeleteAsync(new[] { 999 });
+        var result = await userService.DeleteAsync([999]);
 
         // Assert
         Assert.False(result.Data);

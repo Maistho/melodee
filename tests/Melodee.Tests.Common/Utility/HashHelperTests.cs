@@ -59,7 +59,7 @@ public class HashHelperTests
     [Fact]
     public void CreateMd5_EmptyBytes_ReturnsNull()
     {
-        Assert.Null(HashHelper.CreateMd5(Array.Empty<byte>()));
+        Assert.Null(HashHelper.CreateMd5([]));
     }
 
     [Fact]

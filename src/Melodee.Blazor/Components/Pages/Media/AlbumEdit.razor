@@ -401,19 +401,19 @@
                     await File.WriteAllBytesAsync(albumImageFromSearchFileName, selectedImageSearchResult.ImageBytes);
                     var newImageInfo = new FileInfo(albumImageFromSearchFileName);
                     var imageInfo = await Image.IdentifyAsync(albumImageFromSearchFileName).ConfigureAwait(false);
-                    _images = new List<ImageInfo>
-                    {
-                        new()
-                        {
-                            FileInfo = newImageInfo.ToFileSystemInfo(),
-                            PictureIdentifier = PictureIdentifier.Front,
-                            CrcHash = Crc32.Calculate(newImageInfo),
-                            Width = imageInfo.Width,
-                            Height = imageInfo.Height,
-                            SortOrder = 1,
-                            WasEmbeddedInSong = false
-                        }
-                    };
+                    _images =
+                    [
+                      new()
+                      {
+                        FileInfo = newImageInfo.ToFileSystemInfo(),
+                        PictureIdentifier = PictureIdentifier.Front,
+                        CrcHash = Crc32.Calculate(newImageInfo),
+                        Width = imageInfo.Width,
+                        Height = imageInfo.Height,
+                        SortOrder = 1,
+                        WasEmbeddedInSong = false
+                      }
+                    ];
                 }
                 else
                 {
@@ -424,19 +424,19 @@
                     {
                         var newImageInfo = new FileInfo(albumImageFromSearchFileName);
                         var imageInfo = await Image.IdentifyAsync(albumImageFromSearchFileName).ConfigureAwait(false);
-                        _images = new List<ImageInfo>
-                        {
-                            new()
-                            {
-                                FileInfo = newImageInfo.ToFileSystemInfo(),
-                                PictureIdentifier = PictureIdentifier.Front,
-                                CrcHash = Crc32.Calculate(newImageInfo),
-                                Width = imageInfo.Width,
-                                Height = imageInfo.Height,
-                                SortOrder = 1,
-                                WasEmbeddedInSong = false
-                            }
-                        };
+                        _images =
+                        [
+                          new()
+                          {
+                            FileInfo = newImageInfo.ToFileSystemInfo(),
+                            PictureIdentifier = PictureIdentifier.Front,
+                            CrcHash = Crc32.Calculate(newImageInfo),
+                            Width = imageInfo.Width,
+                            Height = imageInfo.Height,
+                            SortOrder = 1,
+                            WasEmbeddedInSong = false
+                          }
+                        ];
                     }
                 }
 
