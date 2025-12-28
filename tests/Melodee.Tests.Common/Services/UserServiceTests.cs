@@ -14,7 +14,7 @@ using Moq;
 using NodaTime;
 using Rebus.Bus;
 
-namespace Melodee.Tests.Common.Common.Services;
+namespace Melodee.Tests.Common.Services;
 
 public class UserServiceTests : ServiceTestBase
 {

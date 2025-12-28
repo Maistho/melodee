@@ -1,6 +1,6 @@
 using Melodee.Common.Data.Models;
 using Melodee.Common.Jobs;
-using Melodee.Tests.Common.Common.Services;
+using Melodee.Tests.Common.Services;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using NodaTime;

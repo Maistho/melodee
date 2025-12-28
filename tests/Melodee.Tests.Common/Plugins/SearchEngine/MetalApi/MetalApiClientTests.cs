@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text;
 using Melodee.Common.Plugins.SearchEngine.MetalApi;
-using Melodee.Tests.Common.Common.Services;
+using Melodee.Tests.Common.Services;
 using Moq;
 using Moq.Protected;
 

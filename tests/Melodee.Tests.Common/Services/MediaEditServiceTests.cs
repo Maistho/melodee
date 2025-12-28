@@ -7,7 +7,7 @@ using Melodee.Common.Services.Scanning;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 
-namespace Melodee.Tests.Common.Common.Services;
+namespace Melodee.Tests.Common.Services;
 
 public class MediaEditServiceTests : ServiceTestBase
 {

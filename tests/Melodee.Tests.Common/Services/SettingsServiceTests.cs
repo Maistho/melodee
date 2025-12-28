@@ -6,7 +6,7 @@ using Melodee.Common.Filtering;
 using Melodee.Common.Models;
 using Melodee.Common.Services;
 
-namespace Melodee.Tests.Common.Common.Services;
+namespace Melodee.Tests.Common.Services;
 
 public sealed class SettingsServiceTests : ServiceTestBase
 {
@@ -248,7 +248,7 @@ public sealed class SettingsServiceTests : ServiceTestBase
 
         var result = await service.GetAsync("");
 
-        // GetAsync catches exceptions and may return successful result with null data  
+        // GetAsync catches exceptions and may return successful result with null data
         Assert.Null(result.Data);
     }
 

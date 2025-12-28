@@ -4,7 +4,7 @@ using Melodee.Common.Extensions;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 
-namespace Melodee.Tests.Common.Common.Services;
+namespace Melodee.Tests.Common.Services;
 
 /// <summary>
 /// Tests for UserService social login functionality (Phase 2).

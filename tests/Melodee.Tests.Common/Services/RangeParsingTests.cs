@@ -1,4 +1,4 @@
-namespace Melodee.Tests.Common.Common.Services;
+namespace Melodee.Tests.Common.Services;
 
 public class RangeParsingTests
 {
@@ -27,7 +27,7 @@ public class RangeParsingTests
     [Fact]
     public void CurrentRangeBehavior_WithPartialRange_CalculatesBytesToRead()
     {
-        // Arrange - Simulate current SongService behavior  
+        // Arrange - Simulate current SongService behavior
         const long fileSize = 1000000;
         const long rangeBegin = 100;
         const long rangeEnd = 500;
@@ -49,7 +49,7 @@ public class RangeParsingTests
         const long rangeBegin = 0;
         const long rangeEnd = 2000; // Exceeds file size
 
-        // Act - Current logic  
+        // Act - Current logic
         var adjustedRangeEnd = rangeEnd == 0 ? fileSize : rangeEnd;
         var bytesToRead = (int)(adjustedRangeEnd - rangeBegin) + 1;
 
@@ -79,7 +79,7 @@ public class RangeParsingTests
         var bytesToReadLong = adjustedRangeEnd - rangeBegin + 1;
         var bytesToRead = (int)(adjustedRangeEnd - rangeBegin) + 1; // Problematic cast
 
-        // Assert - Demonstrate the overflow issue  
+        // Assert - Demonstrate the overflow issue
         Assert.True(bytesToReadLong > int.MaxValue);
         Assert.NotEqual(bytesToReadLong, bytesToRead); // Cast causes overflow
     }

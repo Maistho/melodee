@@ -1,4 +1,4 @@
-namespace Melodee.Tests.Common.Common.NPlusOne;
+namespace Melodee.Tests.Common.NPlusOne;
 
 public class NPlusOneQueryDetectionTests
 {

@@ -1,6 +1,6 @@
 using Melodee.Common.Models;
 
-namespace Melodee.Tests.Common.Common.Services;
+namespace Melodee.Tests.Common.Services;
 
 /// <summary>
 /// Test helper class that provides pre-configured file system scenarios for testing AlbumDiscoveryService.

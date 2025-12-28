@@ -5,7 +5,7 @@ using Melodee.Common.Extensions;
 using Melodee.Common.Models;
 using Melodee.Common.Models.OpenSubsonic;
 using Melodee.Common.Models.OpenSubsonic.Responses;
-using Melodee.Tests.Common.Common.Services;
+using Melodee.Tests.Common.Services;
 using NodaTime;
 using Xunit.Abstractions;
 
@@ -277,7 +277,7 @@ public class OpenSubsonicXmlSerializationTests(ITestOutputHelper testOutputHelpe
             testOutputHelper.WriteLine("Validation error: {0}", e.Message);
             isValid = false;
         });
-        // Should be good        
+        // Should be good
         Assert.True(isValid);
     }
 

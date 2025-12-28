@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace Melodee.Tests.Common.Common.Concurrency;
+namespace Melodee.Tests.Common.Concurrency;
 
 public class ParallelProcessingTests
 {

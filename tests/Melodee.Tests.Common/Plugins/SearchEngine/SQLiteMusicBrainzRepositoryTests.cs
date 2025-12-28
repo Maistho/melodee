@@ -2,13 +2,13 @@ using Melodee.Common.Extensions;
 using Melodee.Common.Models;
 using Melodee.Common.Models.SearchEngines;
 using Melodee.Common.Plugins.SearchEngine.MusicBrainz.Data;
-using Melodee.Tests.Common.Common.Services;
+using Melodee.Tests.Common.Services;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Album = Melodee.Common.Plugins.SearchEngine.MusicBrainz.Data.Models.Materialized.Album;
 using Artist = Melodee.Common.Plugins.SearchEngine.MusicBrainz.Data.Models.Materialized.Artist;
 
-namespace Melodee.Tests.Common.Common.Plugins.SearchEngine;
+namespace Melodee.Tests.Common.Plugins.SearchEngine;
 
 public class SQLiteMusicBrainzRepositoryTests : ServiceTestBase
 {

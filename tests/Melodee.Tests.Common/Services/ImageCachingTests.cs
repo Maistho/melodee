@@ -7,7 +7,7 @@ using Melodee.Common.Services.Caching;
 using NodaTime;
 using Serilog;
 
-namespace Melodee.Tests.Common.Common.Services;
+namespace Melodee.Tests.Common.Services;
 
 /// <summary>
 /// Tests to verify that image caching properly avoids database lookups on cache hits.
@@ -19,7 +19,7 @@ public class ImageCachingTests : ServiceTestBase
     /// <summary>
     /// Verifies that the cache key is based on apiKey (not database ID), so that
     /// the database lookup happens INSIDE the cache factory, not before it.
-    /// 
+    ///
     /// This test uses MemoryCacheManager to verify actual caching behavior.
     /// </summary>
     [Fact]
@@ -61,7 +61,7 @@ public class ImageCachingTests : ServiceTestBase
     /// <summary>
     /// Verifies that concurrent requests for the same album image result in only ONE
     /// factory call (database lookup), with all other requests waiting for the result.
-    /// 
+    ///
     /// This is the key test that proves the fix works for the thundering herd problem.
     /// </summary>
     [Fact]

@@ -3,7 +3,7 @@ using Melodee.Common.Filtering;
 using Melodee.Common.Models;
 using NodaTime;
 
-namespace Melodee.Tests.Common.Common.Services;
+namespace Melodee.Tests.Common.Services;
 
 public class RadioStationServiceFilteringTests : ServiceTestBase
 {

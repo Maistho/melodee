@@ -9,7 +9,7 @@ using Moq;
 using NodaTime;
 using LibraryArtist = Melodee.Common.Data.Models.Artist;
 
-namespace Melodee.Tests.Common.Common.Services;
+namespace Melodee.Tests.Common.Services;
 
 public sealed class LibraryServiceTests : ServiceTestBase
 {

@@ -1,10 +1,10 @@
 using Melodee.Common.Enums;
 using Melodee.Common.Models;
 using Melodee.Common.Models.Extensions;
-using Melodee.Tests.Common.Common.Services;
+using Melodee.Tests.Common.Services;
 using Melodee.Tests.Common.Validation;
 
-namespace Melodee.Tests.Common.Common;
+namespace Melodee.Tests.Common;
 
 public class SerializerTests : ServiceTestBase
 {

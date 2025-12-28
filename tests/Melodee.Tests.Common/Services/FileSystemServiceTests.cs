@@ -5,7 +5,7 @@ using Melodee.Common.Serialization;
 using Melodee.Common.Services;
 using Serilog;
 
-namespace Melodee.Tests.Common.Common.Services;
+namespace Melodee.Tests.Common.Services;
 
 public class FileSystemServiceTests
 {

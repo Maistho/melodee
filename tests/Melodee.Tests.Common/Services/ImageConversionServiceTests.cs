@@ -2,7 +2,7 @@ using Melodee.Common.Configuration;
 using Melodee.Common.Services;
 using Moq;
 
-namespace Melodee.Tests.Common.Common.Services;
+namespace Melodee.Tests.Common.Services;
 
 public class ImageConversionServiceTests : ServiceTestBase
 {

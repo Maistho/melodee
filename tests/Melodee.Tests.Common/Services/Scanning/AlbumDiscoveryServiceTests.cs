@@ -4,7 +4,7 @@ using Melodee.Common.Filtering;
 using Melodee.Common.Models;
 using Melodee.Common.Services.Scanning;
 
-namespace Melodee.Tests.Common.Common.Services.Scanning;
+namespace Melodee.Tests.Common.Services.Scanning;
 
 public class AlbumDiscoveryServiceTests : ServiceTestBase
 {

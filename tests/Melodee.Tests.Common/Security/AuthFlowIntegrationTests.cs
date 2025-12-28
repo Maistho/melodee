@@ -3,7 +3,7 @@ using Melodee.Common.Configuration;
 using Melodee.Common.Data;
 using Melodee.Common.Data.Models;
 using Melodee.Common.Services.Security;
-using Melodee.Tests.Common.Common.Services;
+using Melodee.Tests.Common.Services;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using NodaTime;

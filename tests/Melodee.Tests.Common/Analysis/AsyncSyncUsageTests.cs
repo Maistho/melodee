@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace Melodee.Tests.Common.Common.Analysis;
+namespace Melodee.Tests.Common.Analysis;
 
 public class AsyncSyncUsageTests
 {

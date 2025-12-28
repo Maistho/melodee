@@ -1,7 +1,7 @@
 using Melodee.Common.Models;
 using Melodee.Common.Services;
 
-namespace Melodee.Tests.Common.Common.Services;
+namespace Melodee.Tests.Common.Services;
 
 /// <summary>
 /// Mock implementation of IFileSystemService for testing purposes.

@@ -1,7 +1,7 @@
 using Melodee.Common.Models;
 using Melodee.Common.Models.SearchEngines;
 using Melodee.Common.Plugins.SearchEngine.MetalApi;
-using Melodee.Tests.Common.Common.Services;
+using Melodee.Tests.Common.Services;
 using Moq;
 
 namespace Melodee.Tests.Common.Plugins.SearchEngine.MetalApi;

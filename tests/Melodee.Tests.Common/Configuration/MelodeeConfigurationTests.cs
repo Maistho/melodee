@@ -5,7 +5,7 @@ using Melodee.Common.Extensions;
 using Melodee.Common.Serialization;
 using Moq;
 
-namespace Melodee.Tests.Common.Common.Configuration;
+namespace Melodee.Tests.Common.Configuration;
 
 public class MelodeeConfigurationTests
 {

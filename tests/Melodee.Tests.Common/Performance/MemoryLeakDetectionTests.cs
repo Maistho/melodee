@@ -1,10 +1,10 @@
 using Melodee.Common.Models;
-using Melodee.Tests.Common.Common.Services;
+using Melodee.Tests.Common.Services;
 using NodaTime;
 using DataPlaylist = Melodee.Common.Data.Models.Playlist;
 using DataUser = Melodee.Common.Data.Models.User;
 
-namespace Melodee.Tests.Common.Common.Performance;
+namespace Melodee.Tests.Common.Performance;
 
 public class MemoryLeakDetectionTests : ServiceTestBase
 {

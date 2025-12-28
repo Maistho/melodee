@@ -1,7 +1,7 @@
-using Melodee.Tests.Common.Common.Services;
+using Melodee.Tests.Common.Services;
 using Microsoft.EntityFrameworkCore;
 
-namespace Melodee.Tests.Common.Common.Performance;
+namespace Melodee.Tests.Common.Performance;
 
 public class QuerySplittingTests : ServiceTestBase
 {

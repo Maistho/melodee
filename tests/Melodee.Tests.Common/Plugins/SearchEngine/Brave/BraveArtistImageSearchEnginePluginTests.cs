@@ -7,7 +7,7 @@ using Melodee.Common.Plugins.SearchEngine.Brave;
 using Moq;
 using Serilog;
 
-namespace Melodee.Tests.Common.Common.Plugins.SearchEngine.Brave;
+namespace Melodee.Tests.Common.Plugins.SearchEngine.Brave;
 
 public class BraveArtistImageSearchEnginePluginTests
 {

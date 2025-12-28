@@ -4,13 +4,13 @@ using Melodee.Common.Models;
 using Melodee.Common.Models.SearchEngines;
 using Melodee.Common.Plugins.SearchEngine;
 using Melodee.Common.Utility;
-using Melodee.Tests.Common.Common.Services;
+using Melodee.Tests.Common.Services;
 using NodaTime;
 using Album = Melodee.Common.Data.Models.Album;
 using Artist = Melodee.Common.Data.Models.Artist;
 using Song = Melodee.Common.Data.Models.Song;
 
-namespace Melodee.Tests.Common.Common.Plugins;
+namespace Melodee.Tests.Common.Plugins;
 
 public class MelodeeArtistSearchEnginePluginTests : ServiceTestBase
 {

@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using DataModels = Melodee.Common.Data.Models;
 
-namespace Melodee.Tests.Common.Common.Services;
+namespace Melodee.Tests.Common.Services;
 
 public class SearchServiceTests : ServiceTestBase
 {

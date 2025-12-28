@@ -3,7 +3,7 @@ using Melodee.Common.Enums;
 using Melodee.Common.Extensions;
 using NodaTime;
 
-namespace Melodee.Tests.Common.Common.Services;
+namespace Melodee.Tests.Common.Services;
 
 public class StatisticsServiceTests : ServiceTestBase
 {

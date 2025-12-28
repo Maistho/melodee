@@ -1,7 +1,7 @@
 using Melodee.Common.Services.Extensions;
 using Moq;
 
-namespace Melodee.Tests.Common.Common.Services.Extensions;
+namespace Melodee.Tests.Common.Services.Extensions;
 
 public class HttpClientFactoryExtensionsTests
 {

@@ -1,6 +1,6 @@
 using Melodee.Common.Services.Scanning;
 
-namespace Melodee.Tests.Common.Common.Services.Scanning;
+namespace Melodee.Tests.Common.Services.Scanning;
 
 public class OptimizedFileOperationsTests : IDisposable
 {

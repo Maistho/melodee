@@ -6,7 +6,7 @@ using Melodee.Common.Models;
 using Melodee.Common.Services;
 using NodaTime;
 
-namespace Melodee.Tests.Common.Common.Services;
+namespace Melodee.Tests.Common.Services;
 
 public class SongServiceTests : ServiceTestBase
 {
@@ -411,7 +411,7 @@ public class SongServiceTests : ServiceTestBase
         var result = await _songService.GetStreamForSongAsync(user, song.ApiKey, CancellationToken.None);
 #pragma warning restore CS0618 // Type or member is obsolete
 
-        // Assert - Capture baseline behavior  
+        // Assert - Capture baseline behavior
         Assert.NotNull(result);
         Assert.NotNull(result.Data);
         Assert.NotNull(result.Data.ResponseHeaders);

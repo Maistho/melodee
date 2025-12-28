@@ -1,6 +1,6 @@
 using Melodee.Common.Models.SearchEngines;
 
-namespace Melodee.Tests.Common.Common.Services.SearchEngines;
+namespace Melodee.Tests.Common.Services.SearchEngines;
 
 public class ArtistSearchEngineServiceTests : ServiceTestBase
 {

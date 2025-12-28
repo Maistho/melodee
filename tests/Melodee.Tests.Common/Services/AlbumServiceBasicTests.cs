@@ -4,7 +4,7 @@ using Melodee.Common.Models;
 using NodaTime;
 using dbModels = Melodee.Common.Data.Models;
 
-namespace Melodee.Tests.Common.Common.Services;
+namespace Melodee.Tests.Common.Services;
 
 /// <summary>
 /// Basic tests for AlbumService focusing on core functionality without complex data models

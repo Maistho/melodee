@@ -1,6 +1,6 @@
 using Melodee.Common.Plugins.SearchEngine.Brave;
 
-namespace Melodee.Tests.Common.Common.Plugins.SearchEngine.Brave;
+namespace Melodee.Tests.Common.Plugins.SearchEngine.Brave;
 
 public class BraveImageMapperTests
 {

@@ -5,7 +5,7 @@ using Melodee.Common.Models.Collection;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 
-namespace Melodee.Tests.Common.Common.Services;
+namespace Melodee.Tests.Common.Services;
 
 public class PlaylistServiceTests : ServiceTestBase
 {
@@ -582,7 +582,7 @@ public class PlaylistServiceTests : ServiceTestBase
         Assert.NotNull(firstPageResult.Data);
         Assert.Equal(5, firstPageResult.Data.Count());
 
-        // Test second page (page 1) 
+        // Test second page (page 1)
         var secondPageResult = await service.SongsForPlaylistAsync(testApiKey, userInfo, new PagedRequest
         {
             PageSize = 5,

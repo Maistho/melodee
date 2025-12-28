@@ -4,7 +4,7 @@ using Melodee.Common.Models;
 using Melodee.Common.Services;
 using NodaTime;
 
-namespace Melodee.Tests.Common.Common.Services;
+namespace Melodee.Tests.Common.Services;
 
 public class RequestActivityServiceTests : ServiceTestBase
 {

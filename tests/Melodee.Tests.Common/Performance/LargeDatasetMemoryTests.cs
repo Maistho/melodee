@@ -1,5 +1,5 @@
 using Melodee.Common.Models;
-using Melodee.Tests.Common.Common.Services;
+using Melodee.Tests.Common.Services;
 using NodaTime;
 using DataAlbum = Melodee.Common.Data.Models.Album;
 using DataArtist = Melodee.Common.Data.Models.Artist;
@@ -8,7 +8,7 @@ using DataPlaylistSong = Melodee.Common.Data.Models.PlaylistSong;
 using DataSong = Melodee.Common.Data.Models.Song;
 using DataUser = Melodee.Common.Data.Models.User;
 
-namespace Melodee.Tests.Common.Common.Performance;
+namespace Melodee.Tests.Common.Performance;
 
 public class LargeDatasetMemoryTests : ServiceTestBase
 {

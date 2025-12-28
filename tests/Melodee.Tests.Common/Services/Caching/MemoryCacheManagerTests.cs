@@ -3,7 +3,7 @@ using Melodee.Common.Services.Caching;
 using Moq;
 using Serilog;
 
-namespace Melodee.Tests.Common.Common.Services.Caching;
+namespace Melodee.Tests.Common.Services.Caching;
 
 public class MemoryCacheManagerTests
 {

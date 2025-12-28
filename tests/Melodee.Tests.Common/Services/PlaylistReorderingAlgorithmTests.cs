@@ -1,4 +1,4 @@
-namespace Melodee.Tests.Common.Common.Services;
+namespace Melodee.Tests.Common.Services;
 
 public class PlaylistReorderingAlgorithmTests
 {

@@ -2,7 +2,7 @@ using System.Diagnostics;
 using Melodee.Common.Data.Models;
 using NodaTime;
 
-namespace Melodee.Tests.Common.Common.Services;
+namespace Melodee.Tests.Common.Services;
 
 public class PlaylistServicePerformanceTests : ServiceTestBase
 {

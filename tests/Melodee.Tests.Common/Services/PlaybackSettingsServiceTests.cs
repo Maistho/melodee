@@ -1,6 +1,6 @@
 using Melodee.Common.Services;
 
-namespace Melodee.Tests.Common.Common.Services;
+namespace Melodee.Tests.Common.Services;
 
 /// <summary>
 /// Tests for PlaybackSettingsService focusing on validation logic and static methods.

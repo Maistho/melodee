@@ -1,7 +1,7 @@
 using Melodee.Common.Models.Streaming;
 using Microsoft.Extensions.Primitives;
 
-namespace Melodee.Tests.Common.Common.Services;
+namespace Melodee.Tests.Common.Services;
 
 public class RangeHeaderLargeFileTests
 {

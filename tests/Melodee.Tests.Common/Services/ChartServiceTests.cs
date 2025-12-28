@@ -8,7 +8,7 @@ using Artist = Melodee.Common.Data.Models.Artist;
 using Library = Melodee.Common.Data.Models.Library;
 using Song = Melodee.Common.Data.Models.Song;
 
-namespace Melodee.Tests.Common.Common.Services;
+namespace Melodee.Tests.Common.Services;
 
 public class ChartServiceTests : ServiceTestBase
 {

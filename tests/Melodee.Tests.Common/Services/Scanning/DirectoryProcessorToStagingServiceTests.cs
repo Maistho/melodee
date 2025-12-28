@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Moq;
 using NodaTime;
 
-namespace Melodee.Tests.Common.Common.Services.Scanning;
+namespace Melodee.Tests.Common.Services.Scanning;
 
 public class DirectoryProcessorToStagingServiceTests : ServiceTestBase
 {
