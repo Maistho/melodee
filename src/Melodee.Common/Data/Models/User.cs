@@ -86,6 +86,12 @@ public class User : DataModelBase
     public string TimeZoneId { get; set; } = "UTC";
 
     /// <summary>
+    ///     User's preferred language/culture code (e.g. "en-US", "es-ES"). Null defaults to English.
+    /// </summary>
+    [MaxLength(10)]
+    public string? PreferredLanguage { get; set; }
+
+    /// <summary>
     ///     Pipe seperated list. Don't randomize songs in these genres. e.g. 'HOLIDAY|CHRISTMAS'
     /// </summary>
     [MaxLength(MaxLengthDefinitions.MaxIndexableLength)]

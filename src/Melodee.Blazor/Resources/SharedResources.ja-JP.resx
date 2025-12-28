@@ -335,6 +335,12 @@
   <data name="Auth.ForgotPassword" xml:space="preserve">
     <value>パスワードをお忘れですか？</value>
   </data>
+  <data name="Auth.DontHaveAccount" xml:space="preserve">
+    <value>アカウントをお持ちでないですか？</value>
+  </data>
+  <data name="Auth.ResetPassword" xml:space="preserve">
+    <value>パスワードをリセット</value>
+  </data>
   <data name="Auth.Register" xml:space="preserve">
     <value>登録</value>
   </data>
@@ -347,6 +353,21 @@
   <data name="Auth.CreateAccount" xml:space="preserve">
     <value>アカウントを作成</value>
   </data>
+  <data name="Auth.JoinMelodee" xml:space="preserve">
+    <value>Melodee コミュニティに参加</value>
+  </data>
+  <data name="Auth.EnterEmail" xml:space="preserve">
+    <value>メールアドレスを入力</value>
+  </data>
+  <data name="Auth.CreatingAccount" xml:space="preserve">
+    <value>アカウントを作成中...</value>
+  </data>
+  <data name="Auth.AlreadyHaveAccount" xml:space="preserve">
+    <value>すでにアカウントをお持ちですか？</value>
+  </data>
+  <data name="Auth.RegistrationClosedMessage" xml:space="preserve">
+    <value>現在、登録は受け付けておりません。管理者にお問い合わせください。</value>
+  </data>
   <data name="Auth.InvalidCredentials" xml:space="preserve">
     <value>メールアドレスまたはパスワードが無効です</value>
   </data>
@@ -358,6 +379,21 @@
   </data>
   <data name="Auth.Welcome" xml:space="preserve">
     <value>ようこそ！</value>
+  </data>
+  <data name="Auth.SignInToContinue" xml:space="preserve">
+    <value>Melodee を続けるにはサインインしてください</value>
+  </data>
+  <data name="Auth.EnterUsername" xml:space="preserve">
+    <value>ユーザー名を入力</value>
+  </data>
+  <data name="Auth.EnterPassword" xml:space="preserve">
+    <value>パスワードを入力</value>
+  </data>
+  <data name="Auth.UsernameRequired" xml:space="preserve">
+    <value>ユーザー名は必須です</value>
+  </data>
+  <data name="Auth.PasswordRequired" xml:space="preserve">
+    <value>パスワードは必須です</value>
   </data>
   <data name="Auth.Or" xml:space="preserve">
     <value>または</value>
@@ -885,6 +921,15 @@
   </data>
   <data name="Profile.DefaultsToUTC" xml:space="preserve">
     <value>未翻訳</value>
+  </data>
+  <data name="Profile.Language" xml:space="preserve">
+    <value>言語</value>
+  </data>
+  <data name="Profile.LanguageDefault" xml:space="preserve">
+    <value>デフォルト (英語)</value>
+  </data>
+  <data name="Profile.LanguageHelp" xml:space="preserve">
+    <value>お好みの言語を選択してください。英語を使用する場合は空のままにしてください。</value>
   </data>
   <data name="Profile.SaveChanges" xml:space="preserve">
     <value>変更を保存</value>

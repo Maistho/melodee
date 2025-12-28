@@ -15,6 +15,8 @@
 @inject IOptions<GoogleAuthOptions> GoogleAuthOptions
 @inject IJSRuntime JsRuntime
 @inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager NavigationManager
+@inject ILocalizationService ProfileLocalizationService
 
 @implements IAsyncDisposable
 
@@ -77,6 +79,18 @@
                                                     FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
                                                     Style="width: 100%"/>
                                     <RadzenText TextStyle="TextStyle.Caption">@L("Profile.DefaultsToUTC")</RadzenText>
+                                </RadzenFormField>
+
+                                <RadzenFormField Text="@L("Profile.Language")" Variant="Variant.Outlined">
+                                    <RadzenDropDown @bind-Value="@UserProfile.PreferredLanguage"
+                                                    Name="PreferredLanguage"
+                                                    Data="@ProfileLocalizationService.SupportedCultures"
+                                                    TextProperty="DisplayName"
+                                                    ValueProperty="Name"
+                                                    AllowClear="true"
+                                                    Placeholder="@L("Profile.LanguageDefault")"
+                                                    Style="width: 100%"/>
+                                    <RadzenText TextStyle="TextStyle.Caption">@L("Profile.LanguageHelp")</RadzenText>
                                 </RadzenFormField>
                             </RadzenStack>
                         </RadzenFieldset>
@@ -192,6 +206,7 @@
             Email = user.Data!.Email,
             Bio = user.Data!.Description ?? string.Empty,
             TimeZoneId = string.IsNullOrWhiteSpace(user.Data!.TimeZoneId) ? "UTC" : user.Data.TimeZoneId,
+            PreferredLanguage = user.Data!.PreferredLanguage,
             ProfilePicturePath = $"/images/{user.Data.ToApiKey()}/{MelodeeConfiguration.DefaultThumbNailSize}"
         };
         
@@ -398,10 +413,15 @@
                 return;
             }
 
+            var originalLanguage = user.Data!.PreferredLanguage;
+            var newLanguage = string.IsNullOrWhiteSpace(UserProfile.PreferredLanguage) ? null : UserProfile.PreferredLanguage;
+            var languageChanged = originalLanguage != newLanguage;
+
             user.Data!.UserName = UserProfile.Username;
             user.Data!.Email = UserProfile.Email;
             user.Data!.Description = UserProfile.Bio;
             user.Data!.TimeZoneId = tz;
+            user.Data!.PreferredLanguage = newLanguage;
 
             var saveResult = await UserService.UpdateAsync(user.Data, user.Data);
             if (!saveResult.IsSuccess || !saveResult.Data)
@@ -435,6 +455,24 @@
                 Detail = L("Profile.ProfileUpdatedDetail"),
                 Duration = 5000
             });
+
+            if (languageChanged && !string.IsNullOrWhiteSpace(UserProfile.PreferredLanguage))
+            {
+                var cultureCode = UserProfile.PreferredLanguage;
+                var cookieValue = $"c={cultureCode}|uic={cultureCode}";
+                await JsRuntime.InvokeVoidAsync("eval", 
+                    $"document.cookie = '.AspNetCore.Culture={Uri.EscapeDataString(cookieValue)}; path=/; max-age=31536000; samesite=lax'");
+                await ProfileLocalizationService.SetCultureAsync(cultureCode);
+                NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+            }
+            else if (languageChanged && string.IsNullOrWhiteSpace(UserProfile.PreferredLanguage))
+            {
+                var cookieValue = "c=en-US|uic=en-US";
+                await JsRuntime.InvokeVoidAsync("eval", 
+                    $"document.cookie = '.AspNetCore.Culture={Uri.EscapeDataString(cookieValue)}; path=/; max-age=31536000; samesite=lax'");
+                await ProfileLocalizationService.SetCultureAsync("en-US");
+                NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+            }
         }
         catch (Exception ex)
         {
@@ -486,6 +524,9 @@
 
         [Required(ErrorMessage = "Time zone is required")]
         public string TimeZoneId { get; set; } = "UTC";
+
+        [StringLength(10, ErrorMessage = "Language code cannot exceed 10 characters")]
+        public string? PreferredLanguage { get; set; }
 
         public string? ProfilePicturePath { get; init; }
     }

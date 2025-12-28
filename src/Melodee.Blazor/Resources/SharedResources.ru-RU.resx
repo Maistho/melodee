@@ -152,6 +152,21 @@
   <data name="Auth.Welcome" xml:space="preserve">
     <value>Добро пожаловать!</value>
   </data>
+  <data name="Auth.SignInToContinue" xml:space="preserve">
+    <value>Войдите, чтобы продолжить в Melodee</value>
+  </data>
+  <data name="Auth.EnterUsername" xml:space="preserve">
+    <value>Введите имя пользователя</value>
+  </data>
+  <data name="Auth.EnterPassword" xml:space="preserve">
+    <value>Введите пароль</value>
+  </data>
+  <data name="Auth.UsernameRequired" xml:space="preserve">
+    <value>Имя пользователя обязательно</value>
+  </data>
+  <data name="Auth.PasswordRequired" xml:space="preserve">
+    <value>Пароль обязателен</value>
+  </data>
   <data name="Auth.Or" xml:space="preserve">
     <value>или</value>
   </data>
@@ -560,6 +575,15 @@
   <data name="Profile.DefaultsToUTC" xml:space="preserve">
     <value>По умолчанию UTC.</value>
   </data>
+  <data name="Profile.Language" xml:space="preserve">
+    <value>Язык</value>
+  </data>
+  <data name="Profile.LanguageDefault" xml:space="preserve">
+    <value>По умолчанию (английский)</value>
+  </data>
+  <data name="Profile.LanguageHelp" xml:space="preserve">
+    <value>Выберите предпочитаемый язык. Оставьте пустым для использования английского.</value>
+  </data>
   <data name="Profile.SaveChanges" xml:space="preserve">
     <value>Сохранить Изменения</value>
   </data>
@@ -716,8 +740,29 @@
   <data name="Auth.CreateAccount" xml:space="preserve">
     <value>Создать аккаунт</value>
   </data>
+  <data name="Auth.JoinMelodee" xml:space="preserve">
+    <value>Присоединяйтесь к сообществу Melodee</value>
+  </data>
+  <data name="Auth.EnterEmail" xml:space="preserve">
+    <value>Введите email</value>
+  </data>
+  <data name="Auth.CreatingAccount" xml:space="preserve">
+    <value>Создание аккаунта...</value>
+  </data>
+  <data name="Auth.AlreadyHaveAccount" xml:space="preserve">
+    <value>Уже есть аккаунт?</value>
+  </data>
+  <data name="Auth.RegistrationClosedMessage" xml:space="preserve">
+    <value>Регистрация временно закрыта. Обратитесь к администратору.</value>
+  </data>
   <data name="Auth.ForgotPassword" xml:space="preserve">
     <value>Забыли пароль?</value>
+  </data>
+  <data name="Auth.DontHaveAccount" xml:space="preserve">
+    <value>Ещё нет аккаунта?</value>
+  </data>
+  <data name="Auth.ResetPassword" xml:space="preserve">
+    <value>Сбросить пароль</value>
   </data>
   <data name="Auth.InvalidCredentials" xml:space="preserve">
     <value>Неверный адрес электронной почты или пароль</value>

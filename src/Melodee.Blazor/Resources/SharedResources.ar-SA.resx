@@ -152,6 +152,21 @@
   <data name="Auth.Welcome" xml:space="preserve">
     <value>مرحبًا!</value>
   </data>
+  <data name="Auth.SignInToContinue" xml:space="preserve">
+    <value>قم بتسجيل الدخول للمتابعة إلى Melodee</value>
+  </data>
+  <data name="Auth.EnterUsername" xml:space="preserve">
+    <value>أدخل اسم المستخدم</value>
+  </data>
+  <data name="Auth.EnterPassword" xml:space="preserve">
+    <value>أدخل كلمة المرور</value>
+  </data>
+  <data name="Auth.UsernameRequired" xml:space="preserve">
+    <value>اسم المستخدم مطلوب</value>
+  </data>
+  <data name="Auth.PasswordRequired" xml:space="preserve">
+    <value>كلمة المرور مطلوبة</value>
+  </data>
   <data name="Auth.Or" xml:space="preserve">
     <value>أو</value>
   </data>
@@ -560,6 +575,15 @@
   <data name="Profile.DefaultsToUTC" xml:space="preserve">
     <value>الافتراضي هو UTC.</value>
   </data>
+  <data name="Profile.Language" xml:space="preserve">
+    <value>اللغة</value>
+  </data>
+  <data name="Profile.LanguageDefault" xml:space="preserve">
+    <value>الافتراضي (الإنجليزية)</value>
+  </data>
+  <data name="Profile.LanguageHelp" xml:space="preserve">
+    <value>اختر لغتك المفضلة. اتركها فارغة لاستخدام الإنجليزية.</value>
+  </data>
   <data name="Profile.SaveChanges" xml:space="preserve">
     <value>حفظ التغييرات</value>
   </data>
@@ -716,8 +740,29 @@
   <data name="Auth.CreateAccount" xml:space="preserve">
     <value>إنشاء حساب</value>
   </data>
+  <data name="Auth.JoinMelodee" xml:space="preserve">
+    <value>انضم إلى مجتمع Melodee</value>
+  </data>
+  <data name="Auth.EnterEmail" xml:space="preserve">
+    <value>أدخل بريدك الإلكتروني</value>
+  </data>
+  <data name="Auth.CreatingAccount" xml:space="preserve">
+    <value>جارٍ إنشاء الحساب...</value>
+  </data>
+  <data name="Auth.AlreadyHaveAccount" xml:space="preserve">
+    <value>لديك حساب بالفعل؟</value>
+  </data>
+  <data name="Auth.RegistrationClosedMessage" xml:space="preserve">
+    <value>التسجيل مغلق حالياً. يرجى الاتصال بالمسؤول.</value>
+  </data>
   <data name="Auth.ForgotPassword" xml:space="preserve">
     <value>هل نسيت كلمة المرور؟</value>
+  </data>
+  <data name="Auth.DontHaveAccount" xml:space="preserve">
+    <value>ليس لديك حساب بعد؟</value>
+  </data>
+  <data name="Auth.ResetPassword" xml:space="preserve">
+    <value>إعادة تعيين كلمة المرور</value>
   </data>
   <data name="Auth.InvalidCredentials" xml:space="preserve">
     <value>البريد الإلكتروني أو كلمة المرور غير صحيحة</value>

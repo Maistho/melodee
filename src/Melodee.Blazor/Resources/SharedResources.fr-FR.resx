@@ -152,6 +152,21 @@
   <data name="Auth.Welcome" xml:space="preserve">
     <value>Bienvenue !</value>
   </data>
+  <data name="Auth.SignInToContinue" xml:space="preserve">
+    <value>Connectez-vous pour continuer sur Melodee</value>
+  </data>
+  <data name="Auth.EnterUsername" xml:space="preserve">
+    <value>Entrez votre nom d'utilisateur</value>
+  </data>
+  <data name="Auth.EnterPassword" xml:space="preserve">
+    <value>Entrez votre mot de passe</value>
+  </data>
+  <data name="Auth.UsernameRequired" xml:space="preserve">
+    <value>Le nom d'utilisateur est requis</value>
+  </data>
+  <data name="Auth.PasswordRequired" xml:space="preserve">
+    <value>Le mot de passe est requis</value>
+  </data>
   <data name="Auth.Or" xml:space="preserve">
     <value>ou</value>
   </data>
@@ -560,6 +575,15 @@
   <data name="Profile.DefaultsToUTC" xml:space="preserve">
     <value>Par défaut UTC.</value>
   </data>
+  <data name="Profile.Language" xml:space="preserve">
+    <value>Langue</value>
+  </data>
+  <data name="Profile.LanguageDefault" xml:space="preserve">
+    <value>Par défaut (Anglais)</value>
+  </data>
+  <data name="Profile.LanguageHelp" xml:space="preserve">
+    <value>Sélectionnez votre langue préférée. Laissez vide pour utiliser l'anglais.</value>
+  </data>
   <data name="Profile.SaveChanges" xml:space="preserve">
     <value>Enregistrer les Modifications</value>
   </data>
@@ -716,8 +740,29 @@
   <data name="Auth.CreateAccount" xml:space="preserve">
     <value>Créer un compte</value>
   </data>
+  <data name="Auth.JoinMelodee" xml:space="preserve">
+    <value>Rejoignez la communauté Melodee</value>
+  </data>
+  <data name="Auth.EnterEmail" xml:space="preserve">
+    <value>Entrez votre e-mail</value>
+  </data>
+  <data name="Auth.CreatingAccount" xml:space="preserve">
+    <value>Création du compte...</value>
+  </data>
+  <data name="Auth.AlreadyHaveAccount" xml:space="preserve">
+    <value>Vous avez déjà un compte ?</value>
+  </data>
+  <data name="Auth.RegistrationClosedMessage" xml:space="preserve">
+    <value>L'inscription est actuellement fermée. Veuillez contacter l'administrateur.</value>
+  </data>
   <data name="Auth.ForgotPassword" xml:space="preserve">
     <value>Mot de passe oublié ?</value>
+  </data>
+  <data name="Auth.DontHaveAccount" xml:space="preserve">
+    <value>Vous n'avez pas encore de compte ?</value>
+  </data>
+  <data name="Auth.ResetPassword" xml:space="preserve">
+    <value>Réinitialiser le mot de passe</value>
   </data>
   <data name="Auth.InvalidCredentials" xml:space="preserve">
     <value>E-mail ou mot de passe invalide</value>

@@ -152,6 +152,21 @@
   <data name="Auth.Welcome" xml:space="preserve">
     <value>欢迎！</value>
   </data>
+  <data name="Auth.SignInToContinue" xml:space="preserve">
+    <value>登录以继续使用 Melodee</value>
+  </data>
+  <data name="Auth.EnterUsername" xml:space="preserve">
+    <value>输入用户名</value>
+  </data>
+  <data name="Auth.EnterPassword" xml:space="preserve">
+    <value>输入密码</value>
+  </data>
+  <data name="Auth.UsernameRequired" xml:space="preserve">
+    <value>用户名为必填项</value>
+  </data>
+  <data name="Auth.PasswordRequired" xml:space="preserve">
+    <value>密码为必填项</value>
+  </data>
   <data name="Auth.Or" xml:space="preserve">
     <value>或</value>
   </data>
@@ -560,6 +575,15 @@
   <data name="Profile.DefaultsToUTC" xml:space="preserve">
     <value>默认为 UTC。</value>
   </data>
+  <data name="Profile.Language" xml:space="preserve">
+    <value>语言</value>
+  </data>
+  <data name="Profile.LanguageDefault" xml:space="preserve">
+    <value>默认 (英语)</value>
+  </data>
+  <data name="Profile.LanguageHelp" xml:space="preserve">
+    <value>选择您的首选语言。留空使用英语。</value>
+  </data>
   <data name="Profile.SaveChanges" xml:space="preserve">
     <value>保存更改</value>
   </data>
@@ -716,8 +740,29 @@
   <data name="Auth.CreateAccount" xml:space="preserve">
     <value>创建账户</value>
   </data>
+  <data name="Auth.JoinMelodee" xml:space="preserve">
+    <value>加入 Melodee 社区</value>
+  </data>
+  <data name="Auth.EnterEmail" xml:space="preserve">
+    <value>输入邮箱</value>
+  </data>
+  <data name="Auth.CreatingAccount" xml:space="preserve">
+    <value>正在创建账户...</value>
+  </data>
+  <data name="Auth.AlreadyHaveAccount" xml:space="preserve">
+    <value>已有账户？</value>
+  </data>
+  <data name="Auth.RegistrationClosedMessage" xml:space="preserve">
+    <value>注册目前已关闭。请联系管理员。</value>
+  </data>
   <data name="Auth.ForgotPassword" xml:space="preserve">
     <value>忘记密码？</value>
+  </data>
+  <data name="Auth.DontHaveAccount" xml:space="preserve">
+    <value>还没有账户？</value>
+  </data>
+  <data name="Auth.ResetPassword" xml:space="preserve">
+    <value>重置密码</value>
   </data>
   <data name="Auth.InvalidCredentials" xml:space="preserve">
     <value>邮箱或密码无效</value>

@@ -10,103 +10,226 @@
 
 <PageTitle>@L("Auth.Register")</PageTitle>
 
-@if (_isRegistrationDisabled)
-{
-    <div class="warning-banner rz-mt-3">
-        <p>❌ @L("Auth.RegistrationClosed")</p>
-    </div>
-}
-else
-{
-    <RadzenRow
-        Gap="0"
-        class="rz-my-12 rz-mx-auto rz-border-radius-6 rz-shadow-10"
-        Style="width: 100%; max-width: 800px; overflow: hidden;">
-        <RadzenColumn>
-            <RadzenStack>
-                <RadzenCard class="rz-shadow-0 rz-border-radius-0">
-                    <RadzenText Style="margin-bottom:5px;">@L("Auth.FillOutForm")
-                    </RadzenText>
-                    <RadzenTemplateForm TItem="ViewModels.Register" Data="@_model" Submit="@OnSubmit"
-                                        InvalidSubmit="@OnInvalidSubmit">
-                        <RadzenFieldset>
-                            <RadzenStack Gap="20px" class="rz-p-2 rz-p-md-1">
+<style>
+    .register-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+    }
+    
+    .register-card {
+        width: 100%;
+        max-width: 420px;
+        background: var(--rz-base-background-color);
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+    }
+    
+    .register-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2.5rem 2rem;
+        text-align: center;
+    }
+    
+    .register-logo {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 1rem;
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+    }
+    
+    .register-title {
+        color: white;
+        font-size: 1.75rem;
+        font-weight: 600;
+        margin: 0;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .register-subtitle {
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+    
+    .register-body {
+        padding: 2rem;
+    }
+    
+    .register-form-field {
+        margin-bottom: 1.25rem;
+    }
+    
+    .register-form-field label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        color: var(--rz-text-color);
+    }
+    
+    .register-form-field .rz-textbox,
+    .register-form-field .rz-password {
+        width: 100%;
+        border-radius: 8px;
+    }
+    
+    .register-btn-primary {
+        width: 100%;
+        height: 48px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 1rem;
+        margin-top: 0.5rem;
+    }
+    
+    .register-footer {
+        text-align: center;
+        padding: 1.5rem 2rem;
+        background: var(--rz-base-200);
+        border-top: 1px solid var(--rz-border-color);
+    }
+    
+    .register-footer-text {
+        color: var(--rz-text-secondary-color);
+        font-size: 0.9rem;
+    }
+    
+    .register-footer-link {
+        font-weight: 600;
+        margin-left: 0.25rem;
+    }
+    
+    .language-selector-wrapper {
+        margin-top: 1rem;
+    }
+    
+    .access-code-banner {
+        background: var(--rz-warning-lighter);
+        border: 1px solid var(--rz-warning);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1.25rem;
+    }
+    
+    .access-code-banner p {
+        margin: 0;
+        font-size: 0.875rem;
+        color: var(--rz-text-color);
+    }
+    
+    .access-code-banner p:first-child {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+    
+    .registration-disabled {
+        text-align: center;
+        padding: 3rem 2rem;
+    }
+    
+    .registration-disabled-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    
+    .registration-disabled-text {
+        color: var(--rz-text-secondary-color);
+        font-size: 1rem;
+    }
+</style>
 
-                                <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
-                                    <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
-                                        <RadzenLabel Text="@L("Auth.Username")" Component="Username"/>
-                                    </RadzenColumn>
-                                    <RadzenColumn Size="12" SizeMD="10">
-                                        <RadzenTextBox style="display: block" Name="Username"
-                                                       @bind-Value="@_model.Username"
-                                                       Placeholder="@L("Auth.Username")"
-                                                       class="rz-w-100"/>
-                                        <RadzenDataAnnotationValidator Component="Username" Popup="false"
-                                                                       Style="position: absolute"/>
-                                    </RadzenColumn>
-                                </RadzenRow>
-                                <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
-                                    <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
-                                        <RadzenLabel Text="@L("Auth.Email")" Component="EmailAddress"/>
-                                    </RadzenColumn>
-                                    <RadzenColumn Size="12" SizeMD="10">
-                                        <RadzenTextBox style="display: block" Name="EmailAddress"
-                                                       @bind-Value="@_model.EmailAddress" Placeholder="@L("Auth.EmailAddress")"
-                                                       class="rz-w-100"/>
-                                        <RadzenDataAnnotationValidator Component="EmailAddress" Popup="false"
-                                                                       Style="position: absolute"/>
-                                    </RadzenColumn>
-                                </RadzenRow>
-                                <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
-                                    <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
-                                        <RadzenLabel Text="@L("Auth.Password")" Component="Password"/>
-                                    </RadzenColumn>
-                                    <RadzenColumn Size="12" SizeMD="10">
-                                        <RadzenPassword style="display: block" Name="Password"
-                                                        @bind-Value="@_model.Password"
-                                                        Placeholder="@L("Auth.Password")"
-                                                        class="rz-w-100"/>
-                                        <RadzenDataAnnotationValidator Component="Password" Popup="false"
-                                                                       Style="position: absolute"/>
-                                    </RadzenColumn>
-                                </RadzenRow>
-                                @if (_registerPrivateCodeLength > 0)
-                                {
-                                    <div class="warning-banner">
-                                        <p>🔒 @L("Auth.AccessCodeRequired")</p>
-                                        <p>@L("Auth.AccessCodeWarning")</p>
-                                    </div>
-                                    <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
-                                        <RadzenColumn Size="12" SizeMD="2"
-                                                      class="rz-text-align-start rz-text-align-md-end">
-                                            <RadzenLabel Text="@L("Auth.AccessCode")" Component="RegisterCode"/>
-                                        </RadzenColumn>
-                                        <RadzenColumn Size="12" SizeMD="10">
-                                            <RadzenSecurityCode required Name="RegisterCode"
-                                                                @bind-Value=@_registerPrivateCode
-                                                                Count="@_registerPrivateCodeLength" Gap="5px"/>
-                                        </RadzenColumn>
-                                    </RadzenRow>
-                                }
-                                <RadzenRow>
-                                    <RadzenProgressBar Visible="@_isLoading" Style="width:100px;"
-                                                       ProgressBarStyle="ProgressBarStyle.Info" Value="100"
-                                                       ShowValue="false" Mode="ProgressBarMode.Indeterminate"/>
-                                    <RadzenButton Disabled="@(_isLoading)" ButtonType="ButtonType.Submit"
-                                                  Text="@L("Auth.Register")"
-                                                  Style="width: 100%"/>
-                                </RadzenRow>
-                            </RadzenStack>
-                        </RadzenFieldset>
-                    </RadzenTemplateForm>
-                </RadzenCard>
-            </RadzenStack>
-        </RadzenColumn>
-    </RadzenRow>
-}
+<div class="register-container">
+    <div class="register-card">
+        <div class="register-header">
+            <RadzenImage Path="images/melodee-logo-small.png" class="register-logo" AlternateText="melodee"/>
+            <h1 class="register-title">@L("Auth.CreateAccount")</h1>
+            <p class="register-subtitle">@L("Auth.JoinMelodee")</p>
+        </div>
+        
+        @if (_isRegistrationDisabled)
+        {
+            <div class="register-body">
+                <div class="registration-disabled">
+                    <div class="registration-disabled-icon">🔒</div>
+                    <RadzenText TextStyle="TextStyle.H5">@L("Auth.RegistrationClosed")</RadzenText>
+                    <p class="registration-disabled-text">@L("Auth.RegistrationClosedMessage")</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="register-body">
+                <RadzenTemplateForm TItem="ViewModels.Register" Data="@_model" Submit="@OnSubmit" InvalidSubmit="@OnInvalidSubmit">
+                    <div class="register-form-field">
+                        <label for="username">@L("Auth.Username")</label>
+                        <RadzenTextBox @bind-Value="@_model.Username" 
+                                       Name="Username" 
+                                       Placeholder="@L("Auth.EnterUsername")"
+                                       Style="width: 100%"/>
+                        <RadzenDataAnnotationValidator Component="Username" Popup="false"/>
+                    </div>
+                    
+                    <div class="register-form-field">
+                        <label for="email">@L("Auth.Email")</label>
+                        <RadzenTextBox @bind-Value="@_model.EmailAddress" 
+                                       Name="EmailAddress" 
+                                       Placeholder="@L("Auth.EnterEmail")"
+                                       Style="width: 100%"/>
+                        <RadzenDataAnnotationValidator Component="EmailAddress" Popup="false"/>
+                    </div>
+                    
+                    <div class="register-form-field">
+                        <label for="password">@L("Auth.Password")</label>
+                        <RadzenPassword @bind-Value="@_model.Password" 
+                                        Name="Password"
+                                        Placeholder="@L("Auth.EnterPassword")"
+                                        Style="width: 100%"/>
+                        <RadzenDataAnnotationValidator Component="Password" Popup="false"/>
+                    </div>
+                    
+                    @if (_registerPrivateCodeLength > 0)
+                    {
+                        <div class="access-code-banner">
+                            <p>🔒 @L("Auth.AccessCodeRequired")</p>
+                            <p>@L("Auth.AccessCodeWarning")</p>
+                        </div>
+                        
+                        <div class="register-form-field">
+                            <label for="accesscode">@L("Auth.AccessCode")</label>
+                            <RadzenSecurityCode required 
+                                                Name="RegisterCode"
+                                                @bind-Value=@_registerPrivateCode
+                                                Count="@_registerPrivateCodeLength" 
+                                                Gap="8px"/>
+                        </div>
+                    }
+                    
+                    <RadzenButton ButtonType="ButtonType.Submit" 
+                                  Text="@L("Auth.CreateAccount")" 
+                                  ButtonStyle="ButtonStyle.Primary"
+                                  class="register-btn-primary"
+                                  IsBusy="@_isLoading"
+                                  BusyText="@L("Auth.CreatingAccount")"/>
+                </RadzenTemplateForm>
+                
+                <div class="language-selector-wrapper">
+                    <LanguageSelector Style="width: 100%;" />
+                </div>
+            </div>
+        }
+        
+        <div class="register-footer">
+            <span class="register-footer-text">@L("Auth.AlreadyHaveAccount")</span>
+            <RadzenLink Path="/account/login" Text="@L("Auth.Login")" class="register-footer-link"/>
+        </div>
+    </div>
+</div>
 
 @code {
-
     bool _isLoading;
     bool _isRegistrationDisabled;
     readonly ViewModels.Register _model = new();
@@ -162,7 +285,7 @@ else
                             <RadzenButton Text="@L("Actions.Close")" Click="@(args => ns.Messages.Clear())"></RadzenButton>
                         </RadzenStack>
                 });
-                NavigationManager.NavigateTo("/");
+                NavigationManager.NavigateTo("/account/login");
             }
 
             errorMessage = result.Messages?.FirstOrDefault();
@@ -178,5 +301,4 @@ else
     void OnInvalidSubmit(FormInvalidSubmitEventArgs args)
     {
     }
-
 }

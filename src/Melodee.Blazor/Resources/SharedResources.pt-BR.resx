@@ -335,6 +335,12 @@
   <data name="Auth.ForgotPassword" xml:space="preserve">
     <value>Esqueceu a senha?</value>
   </data>
+  <data name="Auth.DontHaveAccount" xml:space="preserve">
+    <value>Ainda não tem uma conta?</value>
+  </data>
+  <data name="Auth.ResetPassword" xml:space="preserve">
+    <value>Redefinir senha</value>
+  </data>
   <data name="Auth.Register" xml:space="preserve">
     <value>Registrar</value>
   </data>
@@ -347,6 +353,21 @@
   <data name="Auth.CreateAccount" xml:space="preserve">
     <value>Criar conta</value>
   </data>
+  <data name="Auth.JoinMelodee" xml:space="preserve">
+    <value>Junte-se à comunidade Melodee</value>
+  </data>
+  <data name="Auth.EnterEmail" xml:space="preserve">
+    <value>Digite seu e-mail</value>
+  </data>
+  <data name="Auth.CreatingAccount" xml:space="preserve">
+    <value>Criando conta...</value>
+  </data>
+  <data name="Auth.AlreadyHaveAccount" xml:space="preserve">
+    <value>Já tem uma conta?</value>
+  </data>
+  <data name="Auth.RegistrationClosedMessage" xml:space="preserve">
+    <value>O registro está fechado no momento. Entre em contato com o administrador.</value>
+  </data>
   <data name="Auth.InvalidCredentials" xml:space="preserve">
     <value>Email ou senha inválidos</value>
   </data>
@@ -358,6 +379,21 @@
   </data>
   <data name="Auth.Welcome" xml:space="preserve">
     <value>Bem-vindo!</value>
+  </data>
+  <data name="Auth.SignInToContinue" xml:space="preserve">
+    <value>Entre para continuar no Melodee</value>
+  </data>
+  <data name="Auth.EnterUsername" xml:space="preserve">
+    <value>Digite seu nome de usuário</value>
+  </data>
+  <data name="Auth.EnterPassword" xml:space="preserve">
+    <value>Digite sua senha</value>
+  </data>
+  <data name="Auth.UsernameRequired" xml:space="preserve">
+    <value>Nome de usuário é obrigatório</value>
+  </data>
+  <data name="Auth.PasswordRequired" xml:space="preserve">
+    <value>Senha é obrigatória</value>
   </data>
   <data name="Auth.Or" xml:space="preserve">
     <value>ou</value>
@@ -885,6 +921,15 @@
   </data>
   <data name="Profile.DefaultsToUTC" xml:space="preserve">
     <value>Tradução ausente</value>
+  </data>
+  <data name="Profile.Language" xml:space="preserve">
+    <value>Idioma</value>
+  </data>
+  <data name="Profile.LanguageDefault" xml:space="preserve">
+    <value>Padrão (Inglês)</value>
+  </data>
+  <data name="Profile.LanguageHelp" xml:space="preserve">
+    <value>Selecione seu idioma preferido. Deixe vazio para usar inglês.</value>
   </data>
   <data name="Profile.SaveChanges" xml:space="preserve">
     <value>Salvar Alterações</value>

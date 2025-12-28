@@ -335,6 +335,12 @@
   <data name="Auth.ForgotPassword" xml:space="preserve">
     <value>Password dimenticata?</value>
   </data>
+  <data name="Auth.DontHaveAccount" xml:space="preserve">
+    <value>Non hai ancora un account?</value>
+  </data>
+  <data name="Auth.ResetPassword" xml:space="preserve">
+    <value>Reimposta password</value>
+  </data>
   <data name="Auth.Register" xml:space="preserve">
     <value>Registrati</value>
   </data>
@@ -347,6 +353,21 @@
   <data name="Auth.CreateAccount" xml:space="preserve">
     <value>Crea account</value>
   </data>
+  <data name="Auth.JoinMelodee" xml:space="preserve">
+    <value>Unisciti alla community di Melodee</value>
+  </data>
+  <data name="Auth.EnterEmail" xml:space="preserve">
+    <value>Inserisci la tua email</value>
+  </data>
+  <data name="Auth.CreatingAccount" xml:space="preserve">
+    <value>Creazione account...</value>
+  </data>
+  <data name="Auth.AlreadyHaveAccount" xml:space="preserve">
+    <value>Hai già un account?</value>
+  </data>
+  <data name="Auth.RegistrationClosedMessage" xml:space="preserve">
+    <value>La registrazione è attualmente chiusa. Contatta l'amministratore.</value>
+  </data>
   <data name="Auth.InvalidCredentials" xml:space="preserve">
     <value>Email o password non validi</value>
   </data>
@@ -358,6 +379,21 @@
   </data>
   <data name="Auth.Welcome" xml:space="preserve">
     <value>Benvenuto!</value>
+  </data>
+  <data name="Auth.SignInToContinue" xml:space="preserve">
+    <value>Accedi per continuare su Melodee</value>
+  </data>
+  <data name="Auth.EnterUsername" xml:space="preserve">
+    <value>Inserisci il tuo nome utente</value>
+  </data>
+  <data name="Auth.EnterPassword" xml:space="preserve">
+    <value>Inserisci la tua password</value>
+  </data>
+  <data name="Auth.UsernameRequired" xml:space="preserve">
+    <value>Il nome utente è obbligatorio</value>
+  </data>
+  <data name="Auth.PasswordRequired" xml:space="preserve">
+    <value>La password è obbligatoria</value>
   </data>
   <data name="Auth.Or" xml:space="preserve">
     <value>o</value>
@@ -885,6 +921,15 @@
   </data>
   <data name="Profile.DefaultsToUTC" xml:space="preserve">
     <value>Traduzione mancante</value>
+  </data>
+  <data name="Profile.Language" xml:space="preserve">
+    <value>Lingua</value>
+  </data>
+  <data name="Profile.LanguageDefault" xml:space="preserve">
+    <value>Predefinito (Inglese)</value>
+  </data>
+  <data name="Profile.LanguageHelp" xml:space="preserve">
+    <value>Seleziona la tua lingua preferita. Lascia vuoto per usare l'inglese.</value>
   </data>
   <data name="Profile.SaveChanges" xml:space="preserve">
     <value>Salva modifiche</value>

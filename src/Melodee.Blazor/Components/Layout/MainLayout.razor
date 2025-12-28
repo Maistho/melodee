@@ -64,7 +64,6 @@
                                          Gap="0.5rem"
                                          class="rz-p-sm-2">
                             </RadzenStack>
-                            <LanguageSelector />
                             <RadzenAppearanceToggle/>
                             <RadzenIcon Visible="@context.User.IsAdmin()" IconColor="@Colors.Warning" title="@LocalizationService.Localize("Admin.YouAreAdmin")" Icon="server_person" />
                             <RadzenIcon Visible="@(!context.User.IsAdmin() && context.User.IsEditor())" IconColor="@Colors.Warning" title="@LocalizationService.Localize("Admin.YouAreEditor")" Icon="box_edit" />
