@@ -212,7 +212,7 @@
             Bio = user.Data!.Description ?? string.Empty,
             TimeZoneId = string.IsNullOrWhiteSpace(user.Data!.TimeZoneId) ? "UTC" : user.Data.TimeZoneId,
             PreferredLanguage = user.Data!.PreferredLanguage,
-            PreferredTheme = user.Data!.PreferredTheme ?? "standard",
+            PreferredTheme = user.Data!.PreferredTheme ?? "default",
             ProfilePicturePath = $"/images/{user.Data.ToApiKey()}/{MelodeeConfiguration.DefaultThumbNailSize}"
         };
         
@@ -483,7 +483,7 @@
             user.Data!.Description = UserProfile.Bio;
             user.Data!.TimeZoneId = tz;
             user.Data!.PreferredLanguage = newLanguage;
-            user.Data!.PreferredTheme = UserProfile.PreferredTheme ?? "standard";
+            user.Data!.PreferredTheme = UserProfile.PreferredTheme ?? "default";
 
             var saveResult = await UserService.UpdateAsync(user.Data, user.Data);
             if (!saveResult.IsSuccess || !saveResult.Data)

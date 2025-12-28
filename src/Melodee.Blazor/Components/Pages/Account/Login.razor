@@ -406,9 +406,14 @@ else
                     var user = await UserService.GetByApiKeyAsync(Guid.Parse(authResponse.User.ApiKey!));
                     if (user.IsSuccess && user.Data != null)
                     {
+                        // Apply user's preferred theme by setting cookie directly
+                        var theme = user.Data.PreferredTheme ?? "default";
+                        await JsRuntime.InvokeVoidAsync("eval", 
+                            $"document.cookie = 'melodee_ui_theme={Uri.EscapeDataString(theme)}; path=/; max-age=31536000; samesite=lax'");
+
                         await AuthService.Login(user.Data.ToUserInfo().ToClaimsPrincipal(config, userImageLibrary.Data?.Path ?? string.Empty));
                         ShowSuccessNotification(L("Auth.Welcome"), L("Auth.SignedInAs", authResponse.User.UserName ?? string.Empty));
-                        NavigationManager.NavigateTo(ReturnUrl ?? "/");
+                        NavigationManager.NavigateTo(ReturnUrl ?? "/", forceLoad: true);
                         return;
                     }
                 }
@@ -477,9 +482,14 @@ else
                 return;
             }
 
+            // Apply user's preferred theme by setting cookie directly
+            var theme = user.Data.PreferredTheme ?? "default";
+            await JsRuntime.InvokeVoidAsync("eval", 
+                $"document.cookie = 'melodee_ui_theme={Uri.EscapeDataString(theme)}; path=/; max-age=31536000; samesite=lax'");
+
             var userImageLibrary = await LibraryService.GetUserImagesLibraryAsync();
             await AuthService.Login(user.Data.ToUserInfo().ToClaimsPrincipal(await ConfigurationFactory.GetConfigurationAsync(), userImageLibrary.Data.Path));
-            NavigationManager.NavigateTo(ReturnUrl ?? "/");
+            NavigationManager.NavigateTo(ReturnUrl ?? "/", forceLoad: true);
         }
         catch (Exception e)
         {

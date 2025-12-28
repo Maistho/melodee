@@ -12,15 +12,22 @@
     [Parameter] public string? Value { get; set; }
     [Parameter] public EventCallback<string?> ValueChanged { get; set; }
 
-    private string _selectedTheme = "standard";
+    private string _selectedTheme = "default";
 
     private static readonly List<ThemeOption> _availableThemes =
     [
-        new("standard", "Standard Light"),
-        new("dark", "Dark"),
-        new("software", "Software"),
+        // Light themes
+        new("default", "Default"),
+        new("standard", "Standard"),
         new("humanistic", "Humanistic"),
-        new("material", "Material")
+        new("software", "Software"),
+        new("material", "Material"),
+        // Dark themes
+        new("default-dark", "Default Dark"),
+        new("standard-dark", "Standard Dark"),
+        new("humanistic-dark", "Humanistic Dark"),
+        new("software-dark", "Software Dark"),
+        new("material-dark", "Material Dark")
     ];
 
     protected override void OnInitialized()

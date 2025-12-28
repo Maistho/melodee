@@ -1464,6 +1464,8 @@ IBus bus)
                 ? dbDetail.LastLoginAt
                 : detailToUpdate.LastLoginAt;
             dbDetail.Notes = detailToUpdate.Notes;
+            dbDetail.PreferredLanguage = detailToUpdate.PreferredLanguage;
+            dbDetail.PreferredTheme = detailToUpdate.PreferredTheme;
             dbDetail.SortOrder = detailToUpdate.SortOrder;
             dbDetail.Tags = detailToUpdate.Tags;
             dbDetail.TimeZoneId = string.IsNullOrWhiteSpace(detailToUpdate.TimeZoneId)

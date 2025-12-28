@@ -65,9 +65,13 @@
 
 @code {
     private const string ThemeCookieName = "melodee_ui_theme";
-    private static readonly string[] ValidThemes = ["standard", "dark", "software", "humanistic", "material"];
+    private static readonly string[] ValidThemes = 
+    [
+        "default", "standard", "humanistic", "software", "material",
+        "default-dark", "standard-dark", "humanistic-dark", "software-dark", "material-dark"
+    ];
     
-    private string _currentTheme = "standard";
+    private string _currentTheme = "default";
 
     protected override void OnInitialized()
     {
@@ -86,7 +90,7 @@
 
     private void OnThemeChanged()
     {
-        _currentTheme = RadzenThemeService.Theme ?? "standard";
+        _currentTheme = RadzenThemeService.Theme ?? "default";
         StateHasChanged();
     }
 
