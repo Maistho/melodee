@@ -89,6 +89,92 @@
     background: linear-gradient(180deg, #FFF5FB 0%, #FFECF8 100%);
 }
 
+/* Sidebar navigation - ensure readable text */
+.rz-sidebar .rz-navigation-item,
+.rz-sidebar .rz-navigation-item a,
+.rz-sidebar .rz-panelmenu-header,
+.rz-sidebar .rz-panelmenu-header a,
+.rz-sidebar .rz-panelmenu-header-text,
+.rz-panel-menu .rz-navigation-item,
+.rz-panel-menu .rz-navigation-item a,
+.rz-panel-menu .rz-panelmenu-header,
+.rz-panel-menu .rz-panelmenu-header a {
+    color: #3D2945 !important;
+}
+
+.rz-sidebar .rz-navigation-item:hover,
+.rz-sidebar .rz-navigation-item a:hover,
+.rz-panel-menu .rz-navigation-item:hover,
+.rz-panel-menu .rz-navigation-item a:hover {
+    color: #E040FB !important;
+    background-color: rgba(224, 64, 251, 0.1);
+}
+
+.rz-sidebar .rz-navigation-item.rz-navigation-item-active,
+.rz-sidebar .rz-navigation-item.rz-navigation-item-active a,
+.rz-panel-menu .rz-navigation-item-active,
+.rz-panel-menu .rz-navigation-item-active a {
+    color: #E040FB !important;
+    background-color: rgba(224, 64, 251, 0.15);
+}
+
+/* Sidebar icons */
+.rz-sidebar .rzi,
+.rz-sidebar .material-symbols-outlined,
+.rz-panel-menu .rzi,
+.rz-panel-menu .material-symbols-outlined {
+    color: #6B4C7A !important;
+}
+
+/* Header */
+.rz-header,
+.rz-layout-header,
+header {
+    background: linear-gradient(135deg, #FFF5FB 0%, #FFECF8 100%) !important;
+    color: #3D2945 !important;
+    border-bottom: 1px solid #FFCCE8;
+}
+
+.rz-header *,
+.rz-layout-header * {
+    color: #3D2945 !important;
+}
+
+/* Main content */
+.rz-body,
+.rz-layout-body,
+main,
+.page,
+.content {
+    background-color: #FFFBFE !important;
+}
+
+/* Panel menu */
+.rz-panelmenu,
+.rz-panelmenu-panel {
+    background-color: #FFF5FB !important;
+}
+
+.rz-panelmenu-header {
+    background-color: #FFECF8 !important;
+    color: #3D2945 !important;
+}
+
+.rz-panelmenu-content {
+    background-color: #FFF5FB !important;
+}
+
+.rz-panelmenu-content .rz-menuitem,
+.rz-panelmenu-content .rz-menuitem a {
+    color: #3D2945 !important;
+}
+
+.rz-panelmenu-content .rz-menuitem:hover,
+.rz-panelmenu-content .rz-menuitem a:hover {
+    background-color: rgba(224, 64, 251, 0.1) !important;
+    color: #E040FB !important;
+}
+
 /* Button gradients for primary actions */
 .rz-button.rz-primary {
     background: var(--rz-gradient-primary);

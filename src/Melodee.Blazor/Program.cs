@@ -477,6 +477,37 @@ app.UseSwaggerUI(c =>
     c.SwaggerEndpoint("/swagger/opensubsonic/swagger.json", $"OpenSubsonic API v{openSubsonicVersion}");
 });
 
+// Configure static files with efficient caching - MUST be before UseStatusCodePages
+// (addresses Lighthouse: Use efficient cache lifetimes)
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        // Cache static files for 1 year
+        const int durationInSeconds = 60 * 60 * 24 * 365; // 1 year
+        ctx.Context.Response.Headers.CacheControl = $"public,max-age={durationInSeconds}";
+
+        // Add ETag for better cache validation
+        ctx.Context.Response.Headers.ETag = $"\"{ctx.File.LastModified:yyyyMMddHHmmss}\"";
+
+        // Add security headers
+        ctx.Context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+        ctx.Context.Response.Headers["X-Frame-Options"] = "SAMEORIGIN";
+
+        // Add Content Security Policy (addresses Lighthouse: CSP XSS protection)
+        ctx.Context.Response.Headers["Content-Security-Policy"] =
+            "default-src 'self'; " +
+            "script-src 'self' 'unsafe-eval' 'unsafe-inline'; " +
+            "style-src 'self' 'unsafe-inline'; " +
+            "img-src 'self' data: blob:; " +
+            "font-src 'self'; " +
+            "connect-src 'self' wss: ws:; " +
+            "media-src 'self'; " +
+            "object-src 'none'; " +
+            "frame-ancestors 'self';";
+    }
+});
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", true);
@@ -657,36 +688,6 @@ app.UseSerilogRequestLogging(options =>
         diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value ?? string.Empty);
         diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
     };
-});
-
-// Configure static files with efficient caching (addresses Lighthouse: Use efficient cache lifetimes)
-app.UseStaticFiles(new StaticFileOptions
-{
-    OnPrepareResponse = ctx =>
-    {
-        // Cache static files for 1 year
-        const int durationInSeconds = 60 * 60 * 24 * 365; // 1 year
-        ctx.Context.Response.Headers.CacheControl = $"public,max-age={durationInSeconds}";
-
-        // Add ETag for better cache validation
-        ctx.Context.Response.Headers.ETag = $"\"{ctx.File.LastModified:yyyyMMddHHmmss}\"";
-
-        // Add security headers
-        ctx.Context.Response.Headers["X-Content-Type-Options"] = "nosniff";
-        ctx.Context.Response.Headers["X-Frame-Options"] = "SAMEORIGIN";
-
-        // Add Content Security Policy (addresses Lighthouse: CSP XSS protection)
-        ctx.Context.Response.Headers["Content-Security-Policy"] =
-            "default-src 'self'; " +
-            "script-src 'self' 'unsafe-eval' 'unsafe-inline'; " +
-            "style-src 'self' 'unsafe-inline'; " +
-            "img-src 'self' data: blob:; " +
-            "font-src 'self'; " +
-            "connect-src 'self' wss: ws:; " +
-            "media-src 'self'; " +
-            "object-src 'none'; " +
-            "frame-ancestors 'self';";
-    }
 });
 
 app.UseCors(bb => bb

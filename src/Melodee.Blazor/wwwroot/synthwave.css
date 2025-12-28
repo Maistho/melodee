@@ -122,6 +122,112 @@ body {
     background-size: 20px 20px, 20px 20px, 100% 100%;
 }
 
+/* Sidebar navigation text */
+.rz-sidebar .rz-navigation-item,
+.rz-sidebar .rz-navigation-item a,
+.rz-sidebar .rz-panelmenu-header,
+.rz-sidebar .rz-panelmenu-header a,
+.rz-sidebar .rz-panelmenu-header-text,
+.rz-panel-menu .rz-navigation-item,
+.rz-panel-menu .rz-navigation-item a {
+    color: #FFFFFF !important;
+    background-color: transparent !important;
+    text-shadow: 0 0 5px rgba(255, 0, 255, 0.3);
+}
+
+.rz-sidebar .rz-navigation-item:hover,
+.rz-sidebar .rz-navigation-item a:hover,
+.rz-panel-menu .rz-navigation-item:hover a {
+    color: #00FFFF !important;
+    background-color: rgba(255, 0, 255, 0.15) !important;
+    text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+}
+
+.rz-sidebar .rz-navigation-item.rz-navigation-item-active,
+.rz-sidebar .rz-navigation-item.rz-navigation-item-active a,
+.rz-sidebar .rz-state-active,
+.rz-sidebar .rz-state-active a {
+    color: #FF00FF !important;
+    background-color: rgba(255, 0, 255, 0.2) !important;
+    text-shadow: 0 0 10px rgba(255, 0, 255, 0.8);
+}
+
+.rz-sidebar .rzi,
+.rz-sidebar .material-symbols-outlined {
+    color: #00FFFF !important;
+}
+
+/* Header */
+.rz-header,
+.rz-layout-header,
+header {
+    background: linear-gradient(90deg, #150535 0%, #1A0A40 100%) !important;
+    color: #FFFFFF !important;
+    border-bottom: 1px solid #FF00FF;
+    box-shadow: 0 0 20px rgba(255, 0, 255, 0.3);
+}
+
+.rz-header *,
+.rz-layout-header * {
+    color: #FFFFFF !important;
+}
+
+/* Main content */
+.rz-body,
+.rz-layout-body,
+main,
+.page,
+.content {
+    background: linear-gradient(135deg, #0D0221 0%, #1A0A40 50%, #150535 100%) !important;
+    color: #FFFFFF !important;
+}
+
+/* Panel menu */
+.rz-panelmenu,
+.rz-panelmenu-panel {
+    background-color: #150535 !important;
+}
+
+.rz-panelmenu-header {
+    background-color: #1A0A40 !important;
+    color: #FFFFFF !important;
+}
+
+.rz-panelmenu-content {
+    background-color: #150535 !important;
+}
+
+.rz-panelmenu-content .rz-menuitem,
+.rz-panelmenu-content .rz-menuitem a {
+    color: #FFFFFF !important;
+}
+
+.rz-panelmenu-content .rz-menuitem:hover,
+.rz-panelmenu-content .rz-menuitem a:hover {
+    background-color: rgba(255, 0, 255, 0.15) !important;
+    color: #00FFFF !important;
+}
+
+/* Cards */
+.rz-card {
+    background: rgba(26, 10, 64, 0.8) !important;
+    color: #FFFFFF !important;
+}
+
+/* DataGrid */
+.rz-datatable {
+    background: #150535 !important;
+}
+
+.rz-datatable .rz-datatable-tbody > tr {
+    background: #150535 !important;
+    color: #FFFFFF !important;
+}
+
+.rz-datatable .rz-datatable-tbody > tr:hover {
+    background: rgba(255, 0, 255, 0.1) !important;
+}
+
 .rz-progressbar-value {
     background: var(--rz-gradient-primary);
     box-shadow: 0 0 10px rgba(255, 0, 255, 0.8);

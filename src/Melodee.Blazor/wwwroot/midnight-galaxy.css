@@ -95,6 +95,102 @@ body {
     background-size: 200px 200px, 200px 200px, 200px 200px, 200px 200px, 200px 200px, 200px 200px, 100% 100%;
 }
 
+/* Sidebar navigation text */
+.rz-sidebar .rz-navigation-item,
+.rz-sidebar .rz-navigation-item a,
+.rz-sidebar .rz-panelmenu-header,
+.rz-sidebar .rz-panelmenu-header a,
+.rz-sidebar .rz-panelmenu-header-text,
+.rz-panel-menu .rz-navigation-item,
+.rz-panel-menu .rz-navigation-item a {
+    color: #E0AAFF !important;
+    background-color: transparent !important;
+}
+
+.rz-sidebar .rz-navigation-item:hover,
+.rz-sidebar .rz-navigation-item a:hover,
+.rz-panel-menu .rz-navigation-item:hover a {
+    color: #C77DFF !important;
+    background-color: rgba(157, 78, 221, 0.15) !important;
+}
+
+.rz-sidebar .rz-navigation-item.rz-navigation-item-active,
+.rz-sidebar .rz-navigation-item.rz-navigation-item-active a,
+.rz-sidebar .rz-state-active,
+.rz-sidebar .rz-state-active a {
+    color: #9D4EDD !important;
+    background-color: rgba(157, 78, 221, 0.2) !important;
+}
+
+.rz-sidebar .rzi,
+.rz-sidebar .material-symbols-outlined {
+    color: #C77DFF !important;
+}
+
+/* Header */
+.rz-header,
+.rz-layout-header,
+header {
+    background: linear-gradient(135deg, #10101B 0%, #1A1A2E 100%) !important;
+    color: #F8ECFF !important;
+    border-bottom: 1px solid #3C096C;
+}
+
+.rz-header *,
+.rz-layout-header * {
+    color: #F8ECFF !important;
+}
+
+/* Main content */
+.rz-body,
+.rz-layout-body,
+main,
+.page,
+.content {
+    background: radial-gradient(ellipse at top, #1A1A2E 0%, #0A0A12 100%) !important;
+    color: #F8ECFF !important;
+}
+
+/* Panel menu */
+.rz-panelmenu,
+.rz-panelmenu-panel {
+    background-color: #10101B !important;
+}
+
+.rz-panelmenu-header {
+    background-color: #1A1A2E !important;
+    color: #E0AAFF !important;
+}
+
+.rz-panelmenu-content {
+    background-color: #10101B !important;
+}
+
+.rz-panelmenu-content .rz-menuitem,
+.rz-panelmenu-content .rz-menuitem a {
+    color: #E0AAFF !important;
+}
+
+.rz-panelmenu-content .rz-menuitem:hover,
+.rz-panelmenu-content .rz-menuitem a:hover {
+    background-color: rgba(157, 78, 221, 0.15) !important;
+    color: #C77DFF !important;
+}
+
+/* DataGrid */
+.rz-datatable {
+    background: #10101B !important;
+}
+
+.rz-datatable .rz-datatable-tbody > tr {
+    background: #10101B !important;
+    color: #F8ECFF !important;
+}
+
+.rz-datatable .rz-datatable-tbody > tr:hover {
+    background: rgba(157, 78, 221, 0.1) !important;
+}
+
 .rz-button.rz-primary {
     background: var(--rz-gradient-primary);
     border: none;

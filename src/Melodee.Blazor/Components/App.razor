@@ -22,10 +22,16 @@
     <link href="/_content/PSC.Blazor.Components.MarkdownEditor/css/easymde.min.css" rel="stylesheet"/>
     <link rel="icon" type="image/ico" href="favicon.ico"/>
     <title>Melodee - Music Library Management System</title>
-    <RadzenTheme Theme="@_baseTheme" @rendermode="InteractiveServer"/>
     @if (IsCustomTheme(_currentTheme))
     {
+        <!-- For custom themes: load Radzen base CSS + our custom overrides -->
+        <link rel="stylesheet" href="@($"_content/Radzen.Blazor/css/{GetBaseTheme(_currentTheme)}.css")" />
         <link rel="stylesheet" href="@($"{_currentTheme}.css")" />
+    }
+    else
+    {
+        <!-- For standard Radzen themes: use RadzenTheme component -->
+        <RadzenTheme Theme="@_currentTheme" @rendermode="InteractiveServer"/>
     }
     <HeadOutlet @rendermode="InteractiveServer"/>
 </head>
@@ -77,31 +83,28 @@
         "default-dark", "standard-dark", "humanistic-dark", "software-dark", "material-dark"
     ];
     
-    // Custom Melodee themes (use dark base for dark themes, default for light)
+    // Custom themes map to their Radzen base CSS file name (without .css extension)
     private static readonly Dictionary<string, string> CustomThemes = new()
     {
-        { "melodee", "default" },
-        { "melodee-dark", "default-dark" },
-        { "synthwave", "default-dark" },
-        { "ocean-breeze", "default" },
-        { "forest", "default" },
-        { "midnight-galaxy", "default-dark" },
-        { "sunset-vibes", "default" }
+        { "melodee", "default-base" },
+        { "melodee-dark", "dark-base" },
+        { "synthwave", "dark-base" },
+        { "ocean-breeze", "default-base" },
+        { "forest", "default-base" },
+        { "midnight-galaxy", "dark-base" },
+        { "sunset-vibes", "default-base" }
     };
     
     private string _currentTheme = "default";
-    private string _baseTheme = "default";
 
     protected override void OnInitialized()
     {
-        // Read theme from cookie server-side for correct initial render
         var httpContext = HttpContextAccessor.HttpContext;
         if (httpContext?.Request.Cookies.TryGetValue(ThemeCookieName, out var cookieTheme) == true 
             && !string.IsNullOrEmpty(cookieTheme)
             && IsValidTheme(cookieTheme))
         {
             _currentTheme = cookieTheme;
-            _baseTheme = GetBaseTheme(cookieTheme);
         }
         
         RadzenThemeService.ThemeChanged += OnThemeChanged;
@@ -111,7 +114,6 @@
     private void OnThemeChanged()
     {
         _currentTheme = RadzenThemeService.Theme ?? "default";
-        _baseTheme = GetBaseTheme(_currentTheme);
         StateHasChanged();
     }
     
@@ -122,7 +124,7 @@
         CustomThemes.ContainsKey(theme);
     
     private static string GetBaseTheme(string theme) => 
-        CustomThemes.TryGetValue(theme, out var baseTheme) ? baseTheme : theme;
+        CustomThemes.TryGetValue(theme, out var baseTheme) ? baseTheme : "default-base";
 
     public void Dispose()
     {

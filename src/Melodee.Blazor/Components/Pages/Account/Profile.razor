@@ -17,7 +17,6 @@
 @inject IHttpClientFactory HttpClientFactory
 @inject NavigationManager NavigationManager
 @inject ILocalizationService ProfileLocalizationService
-@inject Radzen.ThemeService RadzenThemeService
 
 @implements IAsyncDisposable
 
@@ -432,8 +431,9 @@
                 return;
             }
 
-            // Apply theme using Radzen's ThemeService (handles cookie and UI update)
-            RadzenThemeService.SetTheme(newTheme);
+            // Set theme cookie directly and reload page to apply
+            await JsRuntime.InvokeVoidAsync("eval", 
+                $"document.cookie = 'melodee_ui_theme={newTheme}; path=/; max-age=31536000; samesite=lax'; location.reload();");
         }
         catch (Exception ex)
         {

@@ -409,7 +409,7 @@ else
                         // Apply user's preferred theme by setting cookie directly
                         var theme = user.Data.PreferredTheme ?? "default";
                         await JsRuntime.InvokeVoidAsync("eval", 
-                            $"document.cookie = 'melodee_ui_theme={Uri.EscapeDataString(theme)}; path=/; max-age=31536000; samesite=lax'");
+                            $"document.cookie = 'melodee_ui_theme={theme}; path=/; max-age=31536000; samesite=lax'");
 
                         await AuthService.Login(user.Data.ToUserInfo().ToClaimsPrincipal(config, userImageLibrary.Data?.Path ?? string.Empty));
                         ShowSuccessNotification(L("Auth.Welcome"), L("Auth.SignedInAs", authResponse.User.UserName ?? string.Empty));
@@ -485,7 +485,7 @@ else
             // Apply user's preferred theme by setting cookie directly
             var theme = user.Data.PreferredTheme ?? "default";
             await JsRuntime.InvokeVoidAsync("eval", 
-                $"document.cookie = 'melodee_ui_theme={Uri.EscapeDataString(theme)}; path=/; max-age=31536000; samesite=lax'");
+                $"document.cookie = 'melodee_ui_theme={theme}; path=/; max-age=31536000; samesite=lax'");
 
             var userImageLibrary = await LibraryService.GetUserImagesLibraryAsync();
             await AuthService.Login(user.Data.ToUserInfo().ToClaimsPrincipal(await ConfigurationFactory.GetConfigurationAsync(), userImageLibrary.Data.Path));
