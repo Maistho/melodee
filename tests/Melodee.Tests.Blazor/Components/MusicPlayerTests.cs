@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Claims;
 using Bunit;
 using Melodee.Blazor.Components.Pages;
@@ -23,6 +24,7 @@ public class MusicPlayerTests : BunitContext
     private readonly Mock<ScrobbleService> _mockScrobbleService;
     private readonly Mock<IJSRuntime> _mockJSRuntime;
     private readonly Mock<IMelodeeConfiguration> _mockConfiguration;
+    private readonly Mock<ILocalizationService> _mockLocalizationService;
 
     public MusicPlayerTests()
     {
@@ -41,6 +43,15 @@ public class MusicPlayerTests : BunitContext
 
         _mockScrobbleService = new Mock<ScrobbleService>(logger, cacheManager, albumService, dbFactory, configFactory.Object, nowPlayingRepo.Object);
         _mockJSRuntime = new Mock<IJSRuntime>();
+        
+        // Create and configure ILocalizationService mock
+        _mockLocalizationService = new Mock<ILocalizationService>();
+        _mockLocalizationService.Setup(x => x.CurrentCulture).Returns(new CultureInfo("en-US"));
+        _mockLocalizationService.Setup(x => x.SupportedCultures).Returns(new List<CultureInfo> { new("en-US") });
+        _mockLocalizationService.Setup(x => x.Localize(It.IsAny<string>())).Returns<string>(key => key);
+        _mockLocalizationService.Setup(x => x.Localize(It.IsAny<string>(), It.IsAny<string>())).Returns<string, string>((key, fallback) => fallback);
+        _mockLocalizationService.Setup(x => x.Localize(It.IsAny<string>(), It.IsAny<object[]>()))
+            .Returns<string, object[]>((key, args) => string.Format(key, args));
 
         // Register mocks and required services in DI container
         Services.AddSingleton(_mockBaseUrlService.Object);
@@ -54,6 +65,7 @@ public class MusicPlayerTests : BunitContext
         Services.AddSingleton<Radzen.NotificationService>();
         Services.AddSingleton<Radzen.TooltipService>();
         Services.AddSingleton(configFactory.Object);
+        Services.AddSingleton(_mockLocalizationService.Object);
 
         // Set up JSInterop for Blazor component testing
         JSInterop.Mode = JSRuntimeMode.Loose;

@@ -1,7 +1,7 @@
 using FluentAssertions;
 using Melodee.Common.Utility;
 
-namespace Melodee.Tests.Unit.Common.Utility;
+namespace Melodee.Tests.Common.Common.Utility;
 
 public class ShellHelperTests
 {

@@ -1,7 +1,7 @@
 using Melodee.Common.Enums;
 using Melodee.Common.Metadata.AudioTags.Writers;
 
-namespace Melodee.Tests.Common.MetaData.AudioTags;
+namespace Melodee.Tests.Common.Metadata.AudioTags;
 
 public class Id3v2TagWriterTests
 {

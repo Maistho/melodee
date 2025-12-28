@@ -4,7 +4,7 @@ using Melodee.Common.Utility;
 using Melodee.Tests.Common.Utility;
 using Xunit.Abstractions;
 
-namespace Melodee.Tests.Common.MetaData.AudioTags;
+namespace Melodee.Tests.Common.Metadata.AudioTags;
 
 public class Id3v2TagReaderTests
 {
@@ -390,7 +390,7 @@ public class Id3v2TagReaderTests
             var exception = await Record.ExceptionAsync(async () =>
                 await AudioTagManager.ReadAllTagsAsync(filePath, CancellationToken.None));
 
-            // The test passes regardless of whether an exception is thrown, as we're testing 
+            // The test passes regardless of whether an exception is thrown, as we're testing
             // that the system can handle corrupted tags without crashing unexpectedly
             if (exception == null)
             {

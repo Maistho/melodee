@@ -2,7 +2,7 @@ using FluentAssertions;
 using Melodee.Common.Models;
 using Melodee.Common.Models.Extensions;
 
-namespace Melodee.Tests.Unit.Common.Models.Extensions;
+namespace Melodee.Tests.Common.Models.Extensions;
 
 public class FileSystemDirectoryInfoExtensionsTests : IDisposable
 {

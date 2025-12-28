@@ -18,7 +18,6 @@ using Melodee.Common.Jobs;
 using Melodee.Common.MessageBus.EventHandlers;
 using Melodee.Common.Metadata;
 using Melodee.Common.Models;
-using Microsoft.Extensions.Localization;
 using Melodee.Common.Models.SearchEngines.ArtistSearchEngineServiceData;
 using Melodee.Common.Plugins.MetaData.Song;
 using Melodee.Common.Plugins.Scrobbling;
@@ -705,7 +704,7 @@ var localizationOptions = new RequestLocalizationOptions()
     .AddSupportedUICultures(supportedCultures);
 
 // Ensure cookie provider is checked first for culture determination
-localizationOptions.RequestCultureProviders.Insert(0, 
+localizationOptions.RequestCultureProviders.Insert(0,
     new Microsoft.AspNetCore.Localization.CookieRequestCultureProvider());
 
 app.UseRequestLocalization(localizationOptions);

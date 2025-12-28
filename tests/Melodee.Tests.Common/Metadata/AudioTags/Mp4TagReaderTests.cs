@@ -1,6 +1,6 @@
 using Melodee.Common.Metadata.AudioTags.Readers;
 
-namespace Melodee.Tests.Common.MetaData.AudioTags;
+namespace Melodee.Tests.Common.Metadata.AudioTags;
 
 public class Mp4TagReaderTests
 {

@@ -4,7 +4,7 @@ using Melodee.Common.Metadata.AudioTags;
 using Melodee.Common.Utility;
 using Melodee.Tests.Common.Utility;
 
-namespace Melodee.Tests.Common.MetaData.AudioTags;
+namespace Melodee.Tests.Common.Metadata.AudioTags;
 
 /// <summary>
 ///     Tests for verifying that different ID3 tag versions are read correctly.
@@ -46,7 +46,7 @@ public class Id3VersionCompatibilityTests
             // Read tags using the AudioTagManager
             var tags = await AudioTagManager.ReadAllTagsAsync(filePath, CancellationToken.None);
 
-            // Assert - Basic file properties 
+            // Assert - Basic file properties
             Assert.Equal(AudioFormat.MP3, tags.Format);
             Assert.False(string.IsNullOrEmpty(tags.FileMetadata.FilePath));
             Assert.True(tags.FileMetadata.FileSize > 0);

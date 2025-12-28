@@ -3,7 +3,7 @@ using Melodee.Common.Metadata.AudioTags;
 using Melodee.Common.Utility;
 using Melodee.Tests.Common.Utility;
 
-namespace Melodee.Tests.Common.MetaData.AudioTags;
+namespace Melodee.Tests.Common.Metadata.AudioTags;
 
 public class Id3v1TagReaderTests
 {

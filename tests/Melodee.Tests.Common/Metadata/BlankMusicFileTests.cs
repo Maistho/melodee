@@ -3,7 +3,7 @@ using Melodee.Common.Metadata.AudioTags;
 using Melodee.Common.Utility;
 using Melodee.Tests.Common.Utility;
 
-namespace Melodee.Tests.Common.MetaData;
+namespace Melodee.Tests.Common.Metadata;
 
 /// <summary>
 ///     Tests that demonstrate using blank music files for testing tag readers

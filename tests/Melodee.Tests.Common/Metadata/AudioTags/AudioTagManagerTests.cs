@@ -2,7 +2,7 @@ using System.Text;
 using Melodee.Common.Metadata.AudioTags;
 using Xunit.Abstractions;
 
-namespace Melodee.Tests.Common.MetaData.AudioTags;
+namespace Melodee.Tests.Common.Metadata.AudioTags;
 
 public class AudioTagManagerTests
 {

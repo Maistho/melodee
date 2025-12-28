@@ -22,7 +22,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _selectedCulture = LocalizationService.CurrentCulture.Name;
+        _selectedCulture = LocalizationService.CurrentCulture?.Name ?? "en-US";
         LocalizationService.CultureChanged += OnCultureChangedExternally;
         _isInitialized = true;
         await base.OnInitializedAsync();
