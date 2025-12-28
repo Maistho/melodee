@@ -584,6 +584,15 @@
   <data name="Profile.LanguageHelp" xml:space="preserve">
     <value>اختر لغتك المفضلة. اتركها فارغة لاستخدام الإنجليزية.</value>
   </data>
+  <data name="Profile.Theme" xml:space="preserve">
+    <value>السمة</value>
+  </data>
+  <data name="Profile.ThemeHelp" xml:space="preserve">
+    <value>اختر سمة واجهة المستخدم المفضلة لديك. يتم تطبيق المعاينة فوراً؛ انقر على حفظ للاحتفاظ.</value>
+  </data>
+  <data name="Profile.ThemePreviewFailed" xml:space="preserve">
+    <value>فشل معاينة السمة</value>
+  </data>
   <data name="Profile.SaveChanges" xml:space="preserve">
     <value>حفظ التغييرات</value>
   </data>

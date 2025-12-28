@@ -584,6 +584,15 @@
   <data name="Profile.LanguageHelp" xml:space="preserve">
     <value>Sélectionnez votre langue préférée. Laissez vide pour utiliser l'anglais.</value>
   </data>
+  <data name="Profile.Theme" xml:space="preserve">
+    <value>Thème</value>
+  </data>
+  <data name="Profile.ThemeHelp" xml:space="preserve">
+    <value>Sélectionnez votre thème d'interface préféré. L'aperçu est appliqué immédiatement; cliquez sur Enregistrer pour persister.</value>
+  </data>
+  <data name="Profile.ThemePreviewFailed" xml:space="preserve">
+    <value>Échec de l'aperçu du thème</value>
+  </data>
   <data name="Profile.SaveChanges" xml:space="preserve">
     <value>Enregistrer les Modifications</value>
   </data>

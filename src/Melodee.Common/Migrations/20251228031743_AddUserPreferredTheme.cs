@@ -5,16 +5,16 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Melodee.Common.Migrations
 {
     /// <inheritdoc />
-    public partial class AddUserPreferredLanguage : Migration
+    public partial class AddUserPreferredTheme : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
-                name: "PreferredLanguage",
+                name: "PreferredTheme",
                 table: "Users",
-                type: "character varying(10)",
-                maxLength: 10,
+                type: "character varying(20)",
+                maxLength: 20,
                 nullable: true);
         }
 
@@ -22,7 +22,7 @@ namespace Melodee.Common.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "PreferredLanguage",
+                name: "PreferredTheme",
                 table: "Users");
         }
     }

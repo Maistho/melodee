@@ -14,10 +14,6 @@
 @inject RequestActivityService RequestActivityService
 @inject ILocalizationService LocalizationService
 
-@* Without this Radzen doesn't restore the theme from cookie <shrug /> *@
-@* ReSharper disable once UnusedMember.Local *@
-@inject CookieThemeService CookieThemeService
-
 <RadzenComponents @rendermode="InteractiveServer"/>
 
 <RadzenNotification/>
@@ -60,12 +56,12 @@
                                            OnValueChanged="@DoSearchAsync"
                                            ForceNotifyByEnter="true"
                                            ForceNotifyOnBlur="true"/>
-                            <RadzenStack Orientation="Orientation.Vertical"
-                                         Gap="0.5rem"
-                                         class="rz-p-sm-2">
-                            </RadzenStack>
-                            <RadzenAppearanceToggle/>
-                            <RadzenIcon Visible="@context.User.IsAdmin()" IconColor="@Colors.Warning" title="@LocalizationService.Localize("Admin.YouAreAdmin")" Icon="server_person" />
+                             <RadzenStack Orientation="Orientation.Vertical"
+                                          Gap="0.5rem"
+                                          class="rz-p-sm-2">
+                             </RadzenStack>
+                             <!-- Removed RadzenAppearanceToggle to prevent theme conflicts with our ThemeService -->
+                             <RadzenIcon Visible="@context.User.IsAdmin()" IconColor="@Colors.Warning" title="@LocalizationService.Localize("Admin.YouAreAdmin")" Icon="server_person" />
                             <RadzenIcon Visible="@(!context.User.IsAdmin() && context.User.IsEditor())" IconColor="@Colors.Warning" title="@LocalizationService.Localize("Admin.YouAreEditor")" Icon="box_edit" />
                             <RadzenProfileMenu>
                                 <ChildContent>
@@ -149,21 +145,9 @@
 
     [CascadingParameter] private HttpContext? HttpContext { get; set; }
 
-    [Inject] private ThemeService ThemeService { get; set; } = null!;
-
     protected override void OnInitialized()
     {
         base.OnInitialized();
-
-        if (HttpContext != null)
-        {
-            var theme = HttpContext.Request.Cookies["melodee_ui_theme"];
-
-            if (!string.IsNullOrEmpty(theme))
-            {
-                ThemeService.SetTheme(theme, false);
-            }
-        }
 
         // Initialize RTL state
         _isRtl = LocalizationService.IsRightToLeft();

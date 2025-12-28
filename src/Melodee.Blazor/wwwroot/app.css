@@ -5,6 +5,103 @@ html, body {
   min-height: 100vh;
 }
 
+/* Theme-specific styles for sidebar and header */
+body.theme-standard .rz-sidebar,
+body.theme-standard .rz-header {
+  background-color: #f5f7fa;
+  color: #333333;
+}
+
+body.theme-standard .rz-panel-menu {
+  background-color: #f5f7fa;
+}
+
+body.theme-standard .rz-panel-menu-item {
+  color: #333333;
+}
+
+body.theme-standard .rz-panel-menu-item:hover {
+  background-color: #4a90e2;
+  color: #ffffff;
+}
+
+body.theme-dark .rz-sidebar,
+body.theme-dark .rz-header {
+  background-color: #1e293b;
+  color: #f5f7fa;
+}
+
+body.theme-dark .rz-panel-menu {
+  background-color: #1e293b;
+}
+
+body.theme-dark .rz-panel-menu-item {
+  color: #f5f7fa;
+}
+
+body.theme-dark .rz-panel-menu-item:hover {
+  background-color: #3b82f6;
+  color: #ffffff;
+}
+
+body.theme-software .rz-sidebar,
+body.theme-software .rz-header {
+  background-color: #2d3748;
+  color: #f5f7fa;
+}
+
+body.theme-software .rz-panel-menu {
+  background-color: #2d3748;
+}
+
+body.theme-software .rz-panel-menu-item {
+  color: #f5f7fa;
+}
+
+body.theme-software .rz-panel-menu-item:hover {
+  background-color: #6366f1;
+  color: #ffffff;
+}
+
+body.theme-humanistic .rz-sidebar,
+body.theme-humanistic .rz-header {
+  background-color: #faf5f5;
+  color: #333333;
+}
+
+body.theme-humanistic .rz-panel-menu {
+  background-color: #faf5f5;
+}
+
+body.theme-humanistic .rz-panel-menu-item {
+  color: #333333;
+}
+
+body.theme-humanistic .rz-panel-menu-item:hover {
+  background-color: #ec4899;
+  color: #ffffff;
+}
+
+body.theme-material .rz-sidebar,
+body.theme-material .rz-header {
+  background-color: #e8eaed;
+  color: #333333;
+}
+
+body.theme-material .rz-panel-menu {
+  background-color: #e8eaed;
+}
+
+body.theme-material .rz-panel-menu-item {
+  color: #333333;
+}
+
+body.theme-material .rz-panel-menu-item:hover {
+  background-color: #009688;
+  color: #ffffff;
+}
+
+
 /* Prevent layout shifts by reserving space for images */
 img {
   display: block;

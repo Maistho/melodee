@@ -1,0 +1,68 @@
+@inject Radzen.ThemeService RadzenThemeService
+@implements IDisposable
+
+<RadzenDropDown @bind-Value="@_selectedTheme"
+                Data="@_availableThemes"
+                TextProperty="Text"
+                ValueProperty="Value"
+                Change="@OnThemeChangedAsync"
+                Style="width: 100%"/>
+
+@code {
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public EventCallback<string?> ValueChanged { get; set; }
+
+    private string _selectedTheme = "standard";
+
+    private static readonly List<ThemeOption> _availableThemes =
+    [
+        new("standard", "Standard Light"),
+        new("dark", "Dark"),
+        new("software", "Software"),
+        new("humanistic", "Humanistic"),
+        new("material", "Material")
+    ];
+
+    protected override void OnInitialized()
+    {
+        RadzenThemeService.ThemeChanged += OnRadzenThemeChanged;
+        base.OnInitialized();
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (!string.IsNullOrEmpty(Value) && _selectedTheme != Value)
+        {
+            _selectedTheme = Value;
+        }
+        base.OnParametersSet();
+    }
+
+    private async Task OnThemeChangedAsync(object value)
+    {
+        if (value is not string newTheme || string.IsNullOrEmpty(newTheme))
+        {
+            return;
+        }
+
+        _selectedTheme = newTheme;
+        await ValueChanged.InvokeAsync(newTheme);
+    }
+
+    private void OnRadzenThemeChanged()
+    {
+        var theme = RadzenThemeService.Theme;
+        if (!string.IsNullOrEmpty(theme) && _selectedTheme != theme)
+        {
+            _selectedTheme = theme;
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public void Dispose()
+    {
+        RadzenThemeService.ThemeChanged -= OnRadzenThemeChanged;
+    }
+
+    private record ThemeOption(string Value, string Text);
+}

@@ -584,6 +584,15 @@
   <data name="Profile.LanguageHelp" xml:space="preserve">
     <value>选择您的首选语言。留空使用英语。</value>
   </data>
+  <data name="Profile.Theme" xml:space="preserve">
+    <value>主题</value>
+  </data>
+  <data name="Profile.ThemeHelp" xml:space="preserve">
+    <value>选择您喜欢的界面主题。预览会立即应用；点击保存以持久化。</value>
+  </data>
+  <data name="Profile.ThemePreviewFailed" xml:space="preserve">
+    <value>主题预览失败</value>
+  </data>
   <data name="Profile.SaveChanges" xml:space="preserve">
     <value>保存更改</value>
   </data>

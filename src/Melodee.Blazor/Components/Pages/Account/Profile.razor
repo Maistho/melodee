@@ -17,6 +17,7 @@
 @inject IHttpClientFactory HttpClientFactory
 @inject NavigationManager NavigationManager
 @inject ILocalizationService ProfileLocalizationService
+@inject Radzen.ThemeService RadzenThemeService
 
 @implements IAsyncDisposable
 
@@ -91,6 +92,10 @@
                                                     Placeholder="@L("Profile.LanguageDefault")"
                                                     Style="width: 100%"/>
                                     <RadzenText TextStyle="TextStyle.Caption">@L("Profile.LanguageHelp")</RadzenText>
+                                </RadzenFormField>
+
+                                <RadzenFormField Text="@L("Profile.Theme")" Variant="Variant.Outlined">
+                                    <ThemeSelector Value="@UserProfile.PreferredTheme" ValueChanged="OnThemeValueChangedAsync"/>
                                 </RadzenFormField>
                             </RadzenStack>
                         </RadzenFieldset>
@@ -207,6 +212,7 @@
             Bio = user.Data!.Description ?? string.Empty,
             TimeZoneId = string.IsNullOrWhiteSpace(user.Data!.TimeZoneId) ? "UTC" : user.Data.TimeZoneId,
             PreferredLanguage = user.Data!.PreferredLanguage,
+            PreferredTheme = user.Data!.PreferredTheme ?? "standard",
             ProfilePicturePath = $"/images/{user.Data.ToApiKey()}/{MelodeeConfiguration.DefaultThumbNailSize}"
         };
         
@@ -386,6 +392,61 @@
                 SearchValues="[]"/>);
     }
 
+    private async Task OnThemeValueChangedAsync(string? newTheme)
+    {
+        if (string.IsNullOrWhiteSpace(newTheme))
+        {
+            return;
+        }
+
+        try
+        {
+            // Update local model
+            UserProfile.PreferredTheme = newTheme;
+
+            // Save theme to database immediately
+            var user = await UserService.GetAsync(CurrentUser!.UserId());
+            if (!user.IsSuccess || user.Data == null)
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = L("Profile.UpdateFailed"),
+                    Detail = "Unable to load user data",
+                    Duration = 5000
+                });
+                return;
+            }
+
+            user.Data.PreferredTheme = newTheme;
+            var saveResult = await UserService.UpdateAsync(user.Data, user.Data);
+            if (!saveResult.IsSuccess || !saveResult.Data)
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = L("Profile.UpdateFailed"),
+                    Detail = string.Join("; ", saveResult.Messages ?? []),
+                    Duration = 5000
+                });
+                return;
+            }
+
+            // Apply theme using Radzen's ThemeService (handles cookie and UI update)
+            RadzenThemeService.SetTheme(newTheme);
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = L("Profile.UpdateFailed"),
+                Detail = ex.Message,
+                Duration = 5000
+            });
+        }
+    }
+
     private void ProfileImageSelected(ImageSearchResult? selectedImageSearchResult)
     {
         DialogService.Close();
@@ -422,6 +483,7 @@
             user.Data!.Description = UserProfile.Bio;
             user.Data!.TimeZoneId = tz;
             user.Data!.PreferredLanguage = newLanguage;
+            user.Data!.PreferredTheme = UserProfile.PreferredTheme ?? "standard";
 
             var saveResult = await UserService.UpdateAsync(user.Data, user.Data);
             if (!saveResult.IsSuccess || !saveResult.Data)
@@ -460,7 +522,7 @@
             {
                 var cultureCode = UserProfile.PreferredLanguage;
                 var cookieValue = $"c={cultureCode}|uic={cultureCode}";
-                await JsRuntime.InvokeVoidAsync("eval", 
+                await JsRuntime.InvokeVoidAsync("eval",
                     $"document.cookie = '.AspNetCore.Culture={Uri.EscapeDataString(cookieValue)}; path=/; max-age=31536000; samesite=lax'");
                 await ProfileLocalizationService.SetCultureAsync(cultureCode);
                 NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
@@ -468,7 +530,7 @@
             else if (languageChanged && string.IsNullOrWhiteSpace(UserProfile.PreferredLanguage))
             {
                 var cookieValue = "c=en-US|uic=en-US";
-                await JsRuntime.InvokeVoidAsync("eval", 
+                await JsRuntime.InvokeVoidAsync("eval",
                     $"document.cookie = '.AspNetCore.Culture={Uri.EscapeDataString(cookieValue)}; path=/; max-age=31536000; samesite=lax'");
                 await ProfileLocalizationService.SetCultureAsync("en-US");
                 NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
@@ -527,6 +589,9 @@
 
         [StringLength(10, ErrorMessage = "Language code cannot exceed 10 characters")]
         public string? PreferredLanguage { get; set; }
+
+        [StringLength(20, ErrorMessage = "Theme name cannot exceed 20 characters")]
+        public string? PreferredTheme { get; set; }
 
         public string? ProfilePicturePath { get; init; }
     }

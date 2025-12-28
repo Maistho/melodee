@@ -92,6 +92,12 @@ public class User : DataModelBase
     public string? PreferredLanguage { get; set; }
 
     /// <summary>
+    ///     User's preferred UI theme (e.g. "standard", "dark", "material"). Null defaults to "standard".
+    /// </summary>
+    [MaxLength(20)]
+    public string? PreferredTheme { get; set; }
+
+    /// <summary>
     ///     Pipe seperated list. Don't randomize songs in these genres. e.g. 'HOLIDAY|CHRISTMAS'
     /// </summary>
     [MaxLength(MaxLengthDefinitions.MaxIndexableLength)]

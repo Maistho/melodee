@@ -931,6 +931,15 @@
   <data name="Profile.LanguageHelp" xml:space="preserve">
     <value>お好みの言語を選択してください。英語を使用する場合は空のままにしてください。</value>
   </data>
+  <data name="Profile.Theme" xml:space="preserve">
+    <value>テーマ</value>
+  </data>
+  <data name="Profile.ThemeHelp" xml:space="preserve">
+    <value>お好みのUIテーマを選択してください。プレビューは即座に適用されます。保存をクリックして保持してください。</value>
+  </data>
+  <data name="Profile.ThemePreviewFailed" xml:space="preserve">
+    <value>テーマプレビュー失敗</value>
+  </data>
   <data name="Profile.SaveChanges" xml:space="preserve">
     <value>変更を保存</value>
   </data>

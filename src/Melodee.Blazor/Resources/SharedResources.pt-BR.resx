@@ -931,6 +931,15 @@
   <data name="Profile.LanguageHelp" xml:space="preserve">
     <value>Selecione seu idioma preferido. Deixe vazio para usar inglês.</value>
   </data>
+  <data name="Profile.Theme" xml:space="preserve">
+    <value>Tema</value>
+  </data>
+  <data name="Profile.ThemeHelp" xml:space="preserve">
+    <value>Selecione seu tema de interface preferido. A visualização é aplicada imediatamente; clique em Salvar para persistir.</value>
+  </data>
+  <data name="Profile.ThemePreviewFailed" xml:space="preserve">
+    <value>Falha na visualização do tema</value>
+  </data>
   <data name="Profile.SaveChanges" xml:space="preserve">
     <value>Salvar Alterações</value>
   </data>

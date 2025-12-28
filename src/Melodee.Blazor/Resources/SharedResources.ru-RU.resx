@@ -584,6 +584,15 @@
   <data name="Profile.LanguageHelp" xml:space="preserve">
     <value>Выберите предпочитаемый язык. Оставьте пустым для использования английского.</value>
   </data>
+  <data name="Profile.Theme" xml:space="preserve">
+    <value>Тема</value>
+  </data>
+  <data name="Profile.ThemeHelp" xml:space="preserve">
+    <value>Выберите предпочитаемую тему интерфейса. Предварительный просмотр применяется сразу; нажмите Сохранить для сохранения.</value>
+  </data>
+  <data name="Profile.ThemePreviewFailed" xml:space="preserve">
+    <value>Ошибка предварительного просмотра темы</value>
+  </data>
   <data name="Profile.SaveChanges" xml:space="preserve">
     <value>Сохранить Изменения</value>
   </data>

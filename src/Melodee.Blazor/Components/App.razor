@@ -1,4 +1,9 @@
-﻿<!DOCTYPE html>
+@* @rendermode must be InteractiveServer for RadzenTheme to work properly *@
+@implements IDisposable
+@inject IHttpContextAccessor HttpContextAccessor
+@inject Radzen.ThemeService RadzenThemeService
+
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -17,7 +22,7 @@
     <link href="/_content/PSC.Blazor.Components.MarkdownEditor/css/easymde.min.css" rel="stylesheet"/>
     <link rel="icon" type="image/ico" href="favicon.ico"/>
     <title>Melodee - Music Library Management System</title>
-    <RadzenTheme Theme="standard" @rendermode="InteractiveServer"/>
+    <RadzenTheme Theme="@_currentTheme" @rendermode="InteractiveServer"/>
     <HeadOutlet @rendermode="InteractiveServer"/>
 </head>
 
@@ -52,7 +57,42 @@
 <script src="_content/Radzen.Blazor/Radzen.Blazor.js?v=@(typeof(Colors).Assembly.GetName().Version)" defer></script>
 <script src="/_content/PSC.Blazor.Components.MarkdownEditor/js/easymde.min.js" defer></script>
 <script src="/_content/PSC.Blazor.Components.MarkdownEditor/js/markdownEditor.js" defer></script>
+<script src="/_content/PSC.Blazor.Components.MarkdownEditor/js/easymde.min.js" defer></script>
 <script src="js/googleAuth.js" defer></script>
 </body>
 
 </html>
+
+@code {
+    private const string ThemeCookieName = "melodee_ui_theme";
+    private static readonly string[] ValidThemes = ["standard", "dark", "software", "humanistic", "material"];
+    
+    private string _currentTheme = "standard";
+
+    protected override void OnInitialized()
+    {
+        // Read theme from cookie server-side for correct initial render
+        var httpContext = HttpContextAccessor.HttpContext;
+        if (httpContext?.Request.Cookies.TryGetValue(ThemeCookieName, out var cookieTheme) == true 
+            && !string.IsNullOrEmpty(cookieTheme)
+            && ValidThemes.Contains(cookieTheme))
+        {
+            _currentTheme = cookieTheme;
+        }
+        
+        RadzenThemeService.ThemeChanged += OnThemeChanged;
+        base.OnInitialized();
+    }
+
+    private void OnThemeChanged()
+    {
+        _currentTheme = RadzenThemeService.Theme ?? "standard";
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        RadzenThemeService.ThemeChanged -= OnThemeChanged;
+    }
+}
+

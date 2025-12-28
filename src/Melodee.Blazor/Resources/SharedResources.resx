@@ -931,6 +931,15 @@
   <data name="Profile.LanguageHelp" xml:space="preserve">
     <value>Select your preferred language. Leave empty to use English.</value>
   </data>
+  <data name="Profile.Theme" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="Profile.ThemeHelp" xml:space="preserve">
+    <value>Select your preferred UI theme. Changes are saved and applied immediately.</value>
+  </data>
+  <data name="Profile.ThemePreviewFailed" xml:space="preserve">
+    <value>Theme Preview Failed</value>
+  </data>
   <data name="Profile.SaveChanges" xml:space="preserve">
     <value>Save Changes</value>
   </data>

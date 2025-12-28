@@ -931,6 +931,15 @@
   <data name="Profile.LanguageHelp" xml:space="preserve">
     <value>Wählen Sie Ihre bevorzugte Sprache. Leer lassen für Englisch.</value>
   </data>
+  <data name="Profile.Theme" xml:space="preserve">
+    <value>Design</value>
+  </data>
+  <data name="Profile.ThemeHelp" xml:space="preserve">
+    <value>Wählen Sie Ihr bevorzugtes UI-Design. Die Vorschau wird sofort angewendet; klicken Sie auf Speichern, um zu übernehmen.</value>
+  </data>
+  <data name="Profile.ThemePreviewFailed" xml:space="preserve">
+    <value>Design-Vorschau fehlgeschlagen</value>
+  </data>
   <data name="Profile.SaveChanges" xml:space="preserve">
     <value>Änderungen speichern</value>
   </data>
