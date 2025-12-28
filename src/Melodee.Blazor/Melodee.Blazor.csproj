@@ -49,6 +49,7 @@
     <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" />
     <PackageReference Include="AuralizeBlazor" />
     <PackageReference Include="HtmlSanitizer" />
+    <PackageReference Include="MailKit" />
     <PackageReference Include="Markdig" />
     <PackageReference Include="Microsoft.OpenApi" />
     <PackageReference Include="PSC.Blazor.Components.MarkdownEditor" />

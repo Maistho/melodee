@@ -294,6 +294,14 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
 builder.Services.AddScoped<ILocalizationService, LocalizationService>();
 
+// Email services
+builder.Services.AddScoped<Melodee.Blazor.Services.Email.IEmailSender, Melodee.Blazor.Services.Email.SmtpEmailSender>();
+builder.Services.AddScoped<Melodee.Blazor.Services.Email.IEmailTemplateService, Melodee.Blazor.Services.Email.EmailTemplateService>();
+
+// Rate limiting service for Blazor UI
+builder.Services.AddSingleton<IRateLimiterService, RateLimiterService>();
+builder.Services.AddMemoryCache();
+
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;

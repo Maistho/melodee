@@ -2202,9 +2202,13 @@ IBus bus)
         }
         var token = Convert.ToBase64String(tokenBytes).Replace("+", "-").Replace("/", "_").TrimEnd('=');
 
-        // Set token expiration to 1 hour from now
+        // Get token expiry from settings (default 60 minutes)
+        var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
+        var expiryMinutes = configuration.GetValue<int?>(SettingRegistry.SecurityPasswordResetTokenExpiryMinutes) ?? 60;
+
+        // Set token expiration
         user.PasswordResetToken = token;
-        user.PasswordResetTokenExpiresAt = SystemClock.Instance.GetCurrentInstant().Plus(Duration.FromHours(1));
+        user.PasswordResetTokenExpiresAt = SystemClock.Instance.GetCurrentInstant().Plus(Duration.FromMinutes(expiryMinutes));
         user.LastUpdatedAt = SystemClock.Instance.GetCurrentInstant();
 
         await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

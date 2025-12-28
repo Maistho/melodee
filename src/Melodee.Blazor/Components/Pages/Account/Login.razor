@@ -201,7 +201,7 @@ else
                     </div>
                     
                     <div class="login-links">
-                        <RadzenLink Path="javascript:void(0)" Text="@L("Auth.ForgotPassword")" Click="@(() => OnForgotPassword())"/>
+                        <RadzenLink Path="/account/forgot-password" Text="@L("Auth.ForgotPassword")"/>
                     </div>
                     
                     <RadzenButton ButtonType="ButtonType.Submit" 
@@ -499,11 +499,6 @@ else
         {
             _isSubmitting = false;
         }
-    }
-
-    private void OnForgotPassword()
-    {
-        // TODO: Implement forgot password flow
     }
     
     public async ValueTask DisposeAsync()

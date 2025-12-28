@@ -121,4 +121,21 @@ public static class SettingRegistry
     public const string ValidationMinimumAlbumYear = "validation.minimumAlbumYear";
     public const string ValidationMinimumSongCount = "validation.minimumSongCount";
     public const string ValidationMinimumAlbumDuration = "validation.minimumAlbumDuration";
+
+    // Email settings
+    public const string EmailEnabled = "email.enabled";
+    public const string EmailFromName = "email.fromName";
+    public const string EmailFromEmail = "email.fromEmail";
+    public const string EmailSmtpHost = "email.smtpHost";
+    public const string EmailSmtpPort = "email.smtpPort";
+    public const string EmailSmtpUsername = "email.smtpUsername";
+    public const string EmailSmtpPassword = "email.smtpPassword";
+    public const string EmailSmtpUseSsl = "email.smtpUseSsl";
+    public const string EmailSmtpUseStartTls = "email.smtpUseStartTls";
+    public const string EmailResetPasswordSubject = "email.resetPassword.subject";
+    public const string EmailResetPasswordTextBodyTemplate = "email.resetPassword.textBodyTemplate";
+    public const string EmailResetPasswordHtmlBodyTemplate = "email.resetPassword.htmlBodyTemplate";
+
+    // Security settings
+    public const string SecurityPasswordResetTokenExpiryMinutes = "security.passwordResetTokenExpiryMinutes";
 }

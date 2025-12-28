@@ -1128,6 +1128,107 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
                         "Cron expression for staging auto-move job. Moves 'Ok' albums to storage. Default '0 */15 * * * ?' runs every 15 min. Also triggered after inbound processing.",
                     Value = "0 */15 * * * ?",
                     CreatedAt = seedDataTimestamp
+                },
+                // Email settings
+                new Setting
+                {
+                    Id = 1500,
+                    ApiKey = SeedGuid("Setting", 1500),
+                    Key = SettingRegistry.EmailEnabled,
+                    Comment = "Enable or disable email sending functionality",
+                    Description = "When true, enables SMTP email sending for password resets and notifications",
+                    Value = "false",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1501,
+                    ApiKey = SeedGuid("Setting", 1501),
+                    Key = SettingRegistry.EmailFromName,
+                    Comment = "Display name in From field of outgoing emails",
+                    Value = "Melodee",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1502,
+                    ApiKey = SeedGuid("Setting", 1502),
+                    Key = SettingRegistry.EmailFromEmail,
+                    Comment = "Email address in From field (REQUIRED for email sending)",
+                    Description = "Example: noreply@yourdomain.com",
+                    Value = "",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1503,
+                    ApiKey = SeedGuid("Setting", 1503),
+                    Key = SettingRegistry.EmailSmtpHost,
+                    Comment = "SMTP server hostname (REQUIRED for email sending)",
+                    Description = "Example: smtp.gmail.com or smtp.sendgrid.net",
+                    Value = "",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1504,
+                    ApiKey = SeedGuid("Setting", 1504),
+                    Key = SettingRegistry.EmailSmtpPort,
+                    Comment = "SMTP server port",
+                    Description = "Common values: 587 (StartTLS), 465 (SSL), 25 (unencrypted)",
+                    Value = "587",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1505,
+                    ApiKey = SeedGuid("Setting", 1505),
+                    Key = SettingRegistry.EmailSmtpUsername,
+                    Comment = "SMTP authentication username (optional)",
+                    Description = "Leave empty if SMTP server does not require authentication",
+                    Value = "",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1506,
+                    ApiKey = SeedGuid("Setting", 1506),
+                    Key = SettingRegistry.EmailSmtpPassword,
+                    Comment = "SMTP authentication password (optional, use env var email_smtpPassword)",
+                    Description = "For security, set via environment variable: email_smtpPassword",
+                    Value = "",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1507,
+                    ApiKey = SeedGuid("Setting", 1507),
+                    Key = SettingRegistry.EmailSmtpUseSsl,
+                    Comment = "Use SSL connection for SMTP",
+                    Description = "Set to true for port 465 (SSL), false for port 587 (StartTLS)",
+                    Value = "false",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1508,
+                    ApiKey = SeedGuid("Setting", 1508),
+                    Key = SettingRegistry.EmailSmtpUseStartTls,
+                    Comment = "Use StartTLS for SMTP",
+                    Description = "Recommended: true for port 587",
+                    Value = "true",
+                    CreatedAt = seedDataTimestamp
+                },
+                // Security settings
+                new Setting
+                {
+                    Id = 1600,
+                    ApiKey = SeedGuid("Setting", 1600),
+                    Key = SettingRegistry.SecurityPasswordResetTokenExpiryMinutes,
+                    Comment = "Password reset token expiry time in minutes",
+                    Description = "How long password reset links remain valid (default: 60 minutes)",
+                    Value = "60",
+                    CreatedAt = seedDataTimestamp
                 }
             );
         });

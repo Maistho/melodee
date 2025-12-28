@@ -1,51 +1,51 @@
-<?xml version="1.0" encoding="utf-8"?>
-<root>
-  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
-    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
-    <xsd:element name="root" msdata:IsDataSet="true">
-      <xsd:complexType>
-        <xsd:choice maxOccurs="unbounded">
-          <xsd:element name="metadata">
-            <xsd:complexType>
-              <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" />
-              </xsd:sequence>
-              <xsd:attribute name="name" use="required" type="xsd:string" />
-              <xsd:attribute name="type" type="xsd:string" />
-              <xsd:attribute name="mimetype" type="xsd:string" />
-              <xsd:attribute ref="xml:space" />
-            </xsd:complexType>
-          </xsd:element>
-          <xsd:element name="assembly">
-            <xsd:complexType>
-              <xsd:attribute name="alias" type="xsd:string" />
-              <xsd:attribute name="name" type="xsd:string" />
-            </xsd:complexType>
-          </xsd:element>
-          <xsd:element name="data">
-            <xsd:complexType>
-              <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
-              </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
-              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
-              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
-              <xsd:attribute ref="xml:space" />
-            </xsd:complexType>
-          </xsd:element>
-          <xsd:element name="resheader">
-            <xsd:complexType>
-              <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-              </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" />
-            </xsd:complexType>
-          </xsd:element>
-        </xsd:choice>
-      </xsd:complexType>
-    </xsd:element>
-  </xsd:schema>
+<?xml version='1.0' encoding='utf-8'?>
+<root xmlns:ns1="urn:schemas-microsoft-com:xml-msdata" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:schema id="root">
+    <xs:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xs:element name="root" ns1:IsDataSet="true">
+      <xs:complexType>
+        <xs:choice maxOccurs="unbounded">
+          <xs:element name="metadata">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="value" type="xsd:string" minOccurs="0" />
+              </xs:sequence>
+              <xs:attribute name="name" use="required" type="xsd:string" />
+              <xs:attribute name="type" type="xsd:string" />
+              <xs:attribute name="mimetype" type="xsd:string" />
+              <xs:attribute ref="xml:space" />
+            </xs:complexType>
+          </xs:element>
+          <xs:element name="assembly">
+            <xs:complexType>
+              <xs:attribute name="alias" type="xsd:string" />
+              <xs:attribute name="name" type="xsd:string" />
+            </xs:complexType>
+          </xs:element>
+          <xs:element name="data">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="value" type="xsd:string" minOccurs="0" ns1:Ordinal="1" />
+                <xs:element name="comment" type="xsd:string" minOccurs="0" ns1:Ordinal="2" />
+              </xs:sequence>
+              <xs:attribute name="name" type="xsd:string" use="required" ns1:Ordinal="1" />
+              <xs:attribute name="type" type="xsd:string" ns1:Ordinal="3" />
+              <xs:attribute name="mimetype" type="xsd:string" ns1:Ordinal="4" />
+              <xs:attribute ref="xml:space" />
+            </xs:complexType>
+          </xs:element>
+          <xs:element name="resheader">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="value" type="xsd:string" minOccurs="0" ns1:Ordinal="1" />
+              </xs:sequence>
+              <xs:attribute name="name" type="xsd:string" use="required" />
+            </xs:complexType>
+          </xs:element>
+        </xs:choice>
+      </xs:complexType>
+    </xs:element>
+  </xs:schema>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
   </resheader>
@@ -3885,4 +3885,85 @@
   <data name="UploadAlbum.InvalidZip" xml:space="preserve">
     <value>The uploaded file is not a valid ZIP archive.</value>
   </data>
-  </root>
+  <data name="Auth.ForgotPasswordTitle" xml:space="preserve">
+    <value>Forgot Password</value>
+  </data>
+  <data name="Auth.ForgotPasswordSubtitle" xml:space="preserve">
+    <value>Enter your email to receive a password reset link</value>
+  </data>
+  <data name="Auth.SendResetLink" xml:space="preserve">
+    <value>Send Reset Link</value>
+  </data>
+  <data name="Auth.Sending" xml:space="preserve">
+    <value>Sending...</value>
+  </data>
+  <data name="Auth.PasswordResetEmailSent" xml:space="preserve">
+    <value>Password reset link sent!</value>
+  </data>
+  <data name="Auth.CheckEmailForResetLink" xml:space="preserve">
+    <value>If an account with that email exists, you will receive a password reset link shortly.</value>
+  </data>
+  <data name="Auth.BackToLogin" xml:space="preserve">
+    <value>Back to Login</value>
+  </data>
+  <data name="Auth.TooManyAttempts" xml:space="preserve">
+    <value>Too many attempts. Please try again later.</value>
+  </data>
+  <data name="Auth.EmailRequired" xml:space="preserve">
+    <value>Email is required</value>
+  </data>
+  <data name="Auth.EmailInvalid" xml:space="preserve">
+    <value>Please enter a valid email address</value>
+  </data>
+  <data name="Auth.ResetPasswordTitle" xml:space="preserve">
+    <value>Reset Password</value>
+  </data>
+  <data name="Auth.ResetPasswordSubtitle" xml:space="preserve">
+    <value>Enter your new password</value>
+  </data>
+  <data name="Auth.NewPassword" xml:space="preserve">
+    <value>New Password</value>
+  </data>
+  <data name="Auth.EnterNewPassword" xml:space="preserve">
+    <value>Enter new password</value>
+  </data>
+  <data name="Auth.ConfirmNewPassword" xml:space="preserve">
+    <value>Confirm new password</value>
+  </data>
+  <data name="Auth.Resetting" xml:space="preserve">
+    <value>Resetting...</value>
+  </data>
+  <data name="Auth.ValidatingToken" xml:space="preserve">
+    <value>Validating reset link...</value>
+  </data>
+  <data name="Auth.InvalidOrExpiredToken" xml:space="preserve">
+    <value>Invalid or expired reset link</value>
+  </data>
+  <data name="Auth.TokenExpiredMessage" xml:space="preserve">
+    <value>This password reset link has expired or is invalid. Please request a new one.</value>
+  </data>
+  <data name="Auth.PasswordResetSuccess" xml:space="preserve">
+    <value>Password reset successfully!</value>
+  </data>
+  <data name="Auth.RedirectingToLogin" xml:space="preserve">
+    <value>Redirecting to login page...</value>
+  </data>
+  <data name="Auth.PasswordMinLength" xml:space="preserve">
+    <value>Password must be at least 8 characters</value>
+  </data>
+  <data name="Auth.ConfirmPasswordRequired" xml:space="preserve">
+    <value>Please confirm your password</value>
+  </data>
+  <data name="Auth.PasswordsMustMatch" xml:space="preserve">
+    <value>Passwords must match</value>
+  </data>
+  <data name="Auth.InvalidToken" xml:space="preserve">
+    <value>Invalid reset token</value>
+  </data>
+  <data name="Auth.ResetPasswordFailed" xml:space="preserve">
+    <value>Failed to reset password</value>
+  </data>
+  <data name="Auth.ResetPasswordError" xml:space="preserve">
+    <value>An error occurred while resetting your password</value>
+  </data>
+</root>
