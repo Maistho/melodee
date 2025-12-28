@@ -1102,11 +1102,11 @@
 
     sealed class AlbumChartInfo
     {
-        public int Rank { get; set; }
-        public Guid ChartApiKey { get; set; }
-        public string ChartTitle { get; set; } = string.Empty;
-        public string? SourceName { get; set; }
-        public int? Year { get; set; }
+        public int Rank { get; init; }
+        public Guid ChartApiKey { get; init; }
+        public string ChartTitle { get; init; } = string.Empty;
+        public string? SourceName { get; init; }
+        public int? Year { get; init; }
     }
 
 }

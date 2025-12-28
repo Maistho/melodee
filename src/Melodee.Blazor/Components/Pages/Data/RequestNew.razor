@@ -246,9 +246,9 @@
         public RequestCategory Category { get; set; } = RequestCategory.AddAlbum;
         public string Description { get; set; } = "";
         public string? ArtistName { get; set; }
-        public Guid? TargetArtistApiKey { get; set; }
+        public Guid? TargetArtistApiKey { get; init; }
         public string? AlbumTitle { get; set; }
-        public Guid? TargetAlbumApiKey { get; set; }
+        public Guid? TargetAlbumApiKey { get; init; }
         public string? SongTitle { get; set; }
         public int? ReleaseYear { get; set; }
         public string? ExternalUrl { get; set; }

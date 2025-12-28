@@ -43,7 +43,7 @@ public class MusicPlayerTests : BunitContext
 
         _mockScrobbleService = new Mock<ScrobbleService>(logger, cacheManager, albumService, dbFactory, configFactory.Object, nowPlayingRepo.Object);
         _mockJSRuntime = new Mock<IJSRuntime>();
-        
+
         // Create and configure ILocalizationService mock
         _mockLocalizationService = new Mock<ILocalizationService>();
         _mockLocalizationService.Setup(x => x.CurrentCulture).Returns(new CultureInfo("en-US"));

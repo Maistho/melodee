@@ -272,9 +272,9 @@ public class ChartsRankedReportTests
     // Helper classes matching the ChartsRankedReport.razor structure
     private sealed class RankedAlbumInfo
     {
-        public string ArtistName { get; set; } = string.Empty;
+        public string ArtistName { get; init; } = string.Empty;
         public string AlbumTitle { get; set; } = string.Empty;
-        public List<ChartRanking> Rankings { get; set; } = [];
+        public List<ChartRanking> Rankings { get; init; } = [];
 
         public int ChartCount => Rankings.Count;
         public double AverageRank { get; private set; }
@@ -299,6 +299,6 @@ public class ChartsRankedReportTests
 
     private sealed class ChartRanking
     {
-        public int Rank { get; set; }
+        public int Rank { get; init; }
     }
 }

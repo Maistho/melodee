@@ -261,10 +261,10 @@
 
     sealed class RankedAlbumInfo
     {
-        public string ArtistName { get; set; } = string.Empty;
-        public string AlbumTitle { get; set; } = string.Empty;
-        public int? ReleaseYear { get; set; }
-        public List<ChartRanking> Rankings { get; set; } = [];
+        public string ArtistName { get; init; } = string.Empty;
+        public string AlbumTitle { get; init; } = string.Empty;
+        public int? ReleaseYear { get; init; }
+        public List<ChartRanking> Rankings { get; init; } = [];
         public bool IsLinked { get; set; }
         public Guid? LinkedAlbumApiKey { get; set; }
         public Guid? LinkedArtistApiKey { get; set; }
@@ -303,8 +303,8 @@
     sealed class ChartRanking
     {
         public int ChartId { get; set; }
-        public Guid ChartApiKey { get; set; }
-        public string ChartTitle { get; set; } = string.Empty;
-        public int Rank { get; set; }
+        public Guid ChartApiKey { get; init; }
+        public string ChartTitle { get; init; } = string.Empty;
+        public int Rank { get; init; }
     }
 }

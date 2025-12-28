@@ -297,9 +297,9 @@ public class CollectionOperationBenchmarks
     private class PlaylistSongData
     {
         public int Id { get; set; }
-        public int SongId { get; set; }
+        public int SongId { get; init; }
         public int PlaylistOrder { get; set; }
-        public string Title { get; set; } = string.Empty;
-        public long Duration { get; set; }
+        public string Title { get; init; } = string.Empty;
+        public long Duration { get; init; }
     }
 }

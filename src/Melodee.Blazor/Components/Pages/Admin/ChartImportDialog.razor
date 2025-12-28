@@ -352,16 +352,16 @@
 
     sealed class ChartImportModel
     {
-        public string Title { get; set; } = string.Empty;
-        public string? SourceName { get; set; }
-        public string? SourceUrl { get; set; }
-        public int? Year { get; set; }
-        public string? Description { get; set; }
-        public List<string>? Tags { get; set; }
-        public string? ImageUrl { get; set; }
-        public bool IsVisible { get; set; }
-        public bool IsGeneratedPlaylistEnabled { get; set; }
-        public List<ChartItemImportModel> Items { get; set; } = [];
+        public string Title { get; init; } = string.Empty;
+        public string? SourceName { get; init; }
+        public string? SourceUrl { get; init; }
+        public int? Year { get; init; }
+        public string? Description { get; init; }
+        public List<string>? Tags { get; init; }
+        public string? ImageUrl { get; init; }
+        public bool IsVisible { get; init; }
+        public bool IsGeneratedPlaylistEnabled { get; init; }
+        public List<ChartItemImportModel> Items { get; init; } = [];
     }
 
     sealed class ChartItemImportModel

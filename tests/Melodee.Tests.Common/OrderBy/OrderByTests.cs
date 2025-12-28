@@ -7,8 +7,8 @@ public class OrderByTests
 {
     private class TestEntity
     {
-        public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
+        public int Id { get; init; }
+        public string Name { get; init; } = string.Empty;
         public DateTime CreatedAt { get; set; }
     }
 

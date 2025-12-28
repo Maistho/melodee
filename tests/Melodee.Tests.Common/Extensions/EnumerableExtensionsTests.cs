@@ -165,7 +165,7 @@ public class EnumerableExtensionsTests
     private class TestNode
     {
         public string Name { get; }
-        public IEnumerable<TestNode> Children { get; set; } = [];
+        public IEnumerable<TestNode> Children { get; init; } = [];
 
         public TestNode(string name) => Name = name;
     }

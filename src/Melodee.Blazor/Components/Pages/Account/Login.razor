@@ -352,9 +352,9 @@ else
     // Response models for API calls
     private class GoogleAuthResponse
     {
-        public UserModel? User { get; set; }
-        public string? Token { get; set; }
-        public string? RefreshToken { get; set; }
+        public UserModel? User { get; init; }
+        public string? Token { get; init; }
+        public string? RefreshToken { get; init; }
     }
 
     private class UserModel
@@ -366,8 +366,8 @@ else
 
     private class ApiErrorResponse
     {
-        public string? Code { get; set; }
-        public string? Message { get; set; }
+        public string? Code { get; init; }
+        public string? Message { get; init; }
     }
 }
 

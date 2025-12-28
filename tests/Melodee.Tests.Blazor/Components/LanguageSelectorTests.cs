@@ -163,7 +163,7 @@ public class LanguageSelectorTests : BunitContext
             .Returns(Task.CompletedTask);
 
         var jsInvoked = false;
-        
+
         var cut = Render<LanguageSelector>();
 
         // Act - use the bUnit JSInterop to track the JS call
@@ -280,10 +280,10 @@ public class LanguageSelectorTests : BunitContext
         using var ctx = new BunitContext();
         var mockService = new Mock<ILocalizationService>();
         var mockJsRuntime = new Mock<IJSRuntime>();
-        
+
         mockService.Setup(x => x.CurrentCulture).Returns((CultureInfo)null!);
         mockService.Setup(x => x.SupportedCultures).Returns(new List<CultureInfo> { new("en-US") });
-        
+
         ctx.Services.AddSingleton(mockService.Object);
         ctx.Services.AddSingleton(mockJsRuntime.Object);
         ctx.JSInterop.Mode = JSRuntimeMode.Loose;
@@ -319,7 +319,7 @@ public class LanguageSelectorTests : BunitContext
     {
         // Arrange
         var cut = Render<LanguageSelector>();
-        
+
         // The component instance should implement IDisposable
         cut.Instance.Should().BeAssignableTo<IDisposable>();
 
