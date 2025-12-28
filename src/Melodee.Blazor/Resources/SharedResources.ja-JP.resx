@@ -3823,4 +3823,66 @@
   <data name="Message.Huzzah" xml:space="preserve">
     <value>未翻訳</value>
   </data>
+
+  
+  <data name="UploadAlbum.Title" xml:space="preserve">
+    <value>アルバムをアップロード</value>
+  </data>
+  <data name="UploadAlbum.Instructions" xml:space="preserve">
+    <value>アルバムファイル（オーディオファイル、画像など）を含むZIPファイルを選択してください。ファイルは受信ライブラリの新しいフォルダに展開されます。</value>
+  </data>
+  <data name="UploadAlbum.SelectFile" xml:space="preserve">
+    <value>ZIPファイル</value>
+  </data>
+  <data name="UploadAlbum.Browse" xml:space="preserve">
+    <value>参照...</value>
+  </data>
+  <data name="UploadAlbum.NoFileSelected" xml:space="preserve">
+    <value>ファイルが選択されていません</value>
+  </data>
+  <data name="UploadAlbum.Uploading" xml:space="preserve">
+    <value>アップロード中...</value>
+  </data>
+  <data name="UploadAlbum.PreparingUpload" xml:space="preserve">
+    <value>アップロードを準備中...</value>
+  </data>
+  <data name="UploadAlbum.ProcessingResponse" xml:space="preserve">
+    <value>応答を処理中...</value>
+  </data>
+  <data name="UploadAlbum.Complete" xml:space="preserve">
+    <value>アップロード完了!</value>
+  </data>
+  <data name="UploadAlbum.Success" xml:space="preserve">
+    <value>アップロード成功</value>
+  </data>
+  <data name="UploadAlbum.Failed" xml:space="preserve">
+    <value>アップロード失敗</value>
+  </data>
+  <data name="UploadAlbum.Folder" xml:space="preserve">
+    <value>フォルダ</value>
+  </data>
+  <data name="UploadAlbum.FilesExtracted" xml:space="preserve">
+    <value>展開されたファイル</value>
+  </data>
+  <data name="UploadAlbum.DirectoriesCreated" xml:space="preserve">
+    <value>作成されたディレクトリ</value>
+  </data>
+  <data name="UploadAlbum.AuthError" xml:space="preserve">
+    <value>認証エラー。再度ログインしてください。</value>
+  </data>
+  <data name="UploadAlbum.MenuTooltip" xml:space="preserve">
+    <value>このライブラリにアルバムを含むZIPファイルをアップロードします。</value>
+  </data>
+  <data name="UploadAlbum.UploadComplete" xml:space="preserve">
+    <value>アップロード完了</value>
+  </data>
+  <data name="UploadAlbum.UploadCompleteDetail" xml:space="preserve">
+    <value>アルバムファイルが正常にアップロードされ、展開されました。</value>
+  </data>
+  <data name="UploadAlbum.Extracting" xml:space="preserve">
+    <value>ファイルを展開中...</value>
+  </data>
+  <data name="UploadAlbum.InvalidZip" xml:space="preserve">
+    <value>アップロードされたファイルは有効なZIPアーカイブではありません。</value>
+  </data>
   </root>

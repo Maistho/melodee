@@ -72,6 +72,9 @@
                         title="Find missing images for albums with no images." Icon="image_search"></RadzenMenuItem>
         <RadzenMenuItem Text="@($"Move Ok [{ _numberOfAlbumsWithStatusOk }]")" Disabled="_library.IsLocked" Click="MoveOkButtonClick"
                         title="Move Ok media albums to Library." Icon="move_group"></RadzenMenuItem>
+        <RadzenMenuItem Text="@L("Actions.Upload")" Disabled="_library.IsLocked" Click="UploadButtonClick"
+                        Visible="@(_library.TypeValue == LibraryType.Inbound)"
+                        title="@L("UploadAlbum.MenuTooltip")" Icon="cloud_upload"></RadzenMenuItem>
     </RadzenMenu>
 
     <RadzenText
@@ -722,6 +725,36 @@
         return selectedOption != null && libraryDict.ContainsKey(selectedOption)
             ? libraryDict[selectedOption]
             : null;
+    }
+
+    private async Task UploadButtonClick()
+    {
+        var result = await DialogService.OpenAsync<UploadAlbumDialog>(
+            L("UploadAlbum.Title"),
+            new Dictionary<string, object> { { "LibraryApiKey", _library.ApiKey } },
+            new DialogOptions
+            {
+                Width = "600px",
+                Height = "auto",
+                ShowClose = true,
+                CloseDialogOnOverlayClick = false
+            });
+
+        if (result is true)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = L("UploadAlbum.UploadComplete"),
+                Detail = L("UploadAlbum.UploadCompleteDetail"),
+                Duration = ToastTime
+            });
+
+            if (_grid != null)
+            {
+                await _grid.RefreshDataAsync();
+            }
+        }
     }
 
 }

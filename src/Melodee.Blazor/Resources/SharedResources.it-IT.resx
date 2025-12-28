@@ -3823,4 +3823,66 @@
   <data name="Message.Huzzah" xml:space="preserve">
     <value>Traduzione mancante</value>
   </data>
+
+  
+  <data name="UploadAlbum.Title" xml:space="preserve">
+    <value>Carica album</value>
+  </data>
+  <data name="UploadAlbum.Instructions" xml:space="preserve">
+    <value>Seleziona un file ZIP contenente i file dell'album (file audio, immagini, ecc.). I file verranno estratti in una nuova cartella nella libreria in entrata.</value>
+  </data>
+  <data name="UploadAlbum.SelectFile" xml:space="preserve">
+    <value>File ZIP</value>
+  </data>
+  <data name="UploadAlbum.Browse" xml:space="preserve">
+    <value>Sfoglia...</value>
+  </data>
+  <data name="UploadAlbum.NoFileSelected" xml:space="preserve">
+    <value>Nessun file selezionato</value>
+  </data>
+  <data name="UploadAlbum.Uploading" xml:space="preserve">
+    <value>Caricamento...</value>
+  </data>
+  <data name="UploadAlbum.PreparingUpload" xml:space="preserve">
+    <value>Preparazione caricamento...</value>
+  </data>
+  <data name="UploadAlbum.ProcessingResponse" xml:space="preserve">
+    <value>Elaborazione risposta...</value>
+  </data>
+  <data name="UploadAlbum.Complete" xml:space="preserve">
+    <value>Caricamento completato!</value>
+  </data>
+  <data name="UploadAlbum.Success" xml:space="preserve">
+    <value>Caricamento riuscito</value>
+  </data>
+  <data name="UploadAlbum.Failed" xml:space="preserve">
+    <value>Caricamento fallito</value>
+  </data>
+  <data name="UploadAlbum.Folder" xml:space="preserve">
+    <value>Cartella</value>
+  </data>
+  <data name="UploadAlbum.FilesExtracted" xml:space="preserve">
+    <value>File estratti</value>
+  </data>
+  <data name="UploadAlbum.DirectoriesCreated" xml:space="preserve">
+    <value>Directory create</value>
+  </data>
+  <data name="UploadAlbum.AuthError" xml:space="preserve">
+    <value>Errore di autenticazione. Effettua nuovamente l'accesso.</value>
+  </data>
+  <data name="UploadAlbum.MenuTooltip" xml:space="preserve">
+    <value>Carica un file ZIP contenente un album in questa libreria.</value>
+  </data>
+  <data name="UploadAlbum.UploadComplete" xml:space="preserve">
+    <value>Caricamento completato</value>
+  </data>
+  <data name="UploadAlbum.UploadCompleteDetail" xml:space="preserve">
+    <value>I file dell'album sono stati caricati ed estratti con successo.</value>
+  </data>
+  <data name="UploadAlbum.Extracting" xml:space="preserve">
+    <value>Estrazione file...</value>
+  </data>
+  <data name="UploadAlbum.InvalidZip" xml:space="preserve">
+    <value>Il file caricato non è un archivio ZIP valido.</value>
+  </data>
   </root>

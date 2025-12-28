@@ -1,0 +1,206 @@
+@inherits MelodeeComponentBase
+@using System.IO.Compression
+@using Melodee.Common.Extensions
+@using Melodee.Common.Enums
+
+@inject DialogService DialogService
+@inject NotificationService NotificationService
+@inject LibraryService LibraryService
+@inject ILogger Logger
+@inject IJSRuntime JS
+
+<RadzenStack Gap="1rem">
+    <RadzenAlert AlertStyle="AlertStyle.Info" Shade="Shade.Lighter" AllowClose="false">
+        <RadzenText TextStyle="TextStyle.Body2">@L("UploadAlbum.Instructions")</RadzenText>
+    </RadzenAlert>
+
+    <RadzenFormField Text="@L("UploadAlbum.SelectFile")" Variant="Variant.Outlined" Style="width: 100%;">
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+            <InputFile OnChange="@OnFileSelected" accept=".zip" style="display: none;" id="zipFileInput" />
+            <RadzenButton Text="@L("UploadAlbum.Browse")" Icon="folder_open" ButtonStyle="ButtonStyle.Secondary" Click="@TriggerFileInput" Disabled="@_isProcessing" />
+            <RadzenText TextStyle="TextStyle.Body2" Style="flex: 1;">@(_selectedFile?.Name ?? L("UploadAlbum.NoFileSelected"))</RadzenText>
+            @if (_selectedFile != null)
+            {
+                <RadzenBadge Text="@_selectedFile.Size.FormatFileSize()" BadgeStyle="BadgeStyle.Info" />
+            }
+        </RadzenStack>
+    </RadzenFormField>
+
+    @if (_isProcessing)
+    {
+        <RadzenCard Variant="Variant.Outlined">
+            <RadzenStack Gap="0.5rem">
+                <RadzenText TextStyle="TextStyle.Subtitle2">@_statusMessage</RadzenText>
+                <RadzenProgressBar Value="@_progress" ShowValue="true" Style="height: 24px;" />
+            </RadzenStack>
+        </RadzenCard>
+    }
+
+    @if (_isComplete && _result != null)
+    {
+        <RadzenAlert AlertStyle="@(_result.Success ? AlertStyle.Success : AlertStyle.Danger)" Shade="Shade.Lighter" AllowClose="false">
+            @if (_result.Success)
+            {
+                <RadzenText TextStyle="TextStyle.Subtitle2">@L("UploadAlbum.Success")</RadzenText>
+                <RadzenText TextStyle="TextStyle.Body2">
+                    <strong>@L("UploadAlbum.Folder"):</strong> @_result.FolderName<br />
+                    <strong>@L("UploadAlbum.FilesExtracted"):</strong> @_result.FileCount<br />
+                    <strong>@L("UploadAlbum.DirectoriesCreated"):</strong> @_result.DirectoryCount
+                </RadzenText>
+            }
+            else
+            {
+                <RadzenText TextStyle="TextStyle.Subtitle2">@L("UploadAlbum.Failed")</RadzenText>
+                <RadzenText TextStyle="TextStyle.Body2">@_result.ErrorMessage</RadzenText>
+            }
+        </RadzenAlert>
+    }
+
+    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End">
+        <RadzenButton Text="@L("Actions.Cancel")" ButtonStyle="ButtonStyle.Light" Click="@Cancel" Disabled="@_isProcessing" />
+        <RadzenButton Text="@L("Actions.Upload")" Icon="cloud_upload" ButtonStyle="ButtonStyle.Primary" Click="@ProcessUpload" Disabled="@(_selectedFile == null || _isProcessing)" />
+    </RadzenStack>
+</RadzenStack>
+
+@code {
+    [Parameter] public Guid LibraryApiKey { get; set; }
+
+    IBrowserFile? _selectedFile;
+    bool _isProcessing;
+    bool _isComplete;
+    double _progress;
+    string _statusMessage = string.Empty;
+    UploadResultInfo? _result;
+
+    async Task TriggerFileInput()
+    {
+        await JS.InvokeVoidAsync("eval", "document.getElementById('zipFileInput').click()");
+    }
+
+    void OnFileSelected(InputFileChangeEventArgs e)
+    {
+        _selectedFile = e.File;
+        _isComplete = false;
+        _result = null;
+        StateHasChanged();
+    }
+
+    async Task ProcessUpload()
+    {
+        if (_selectedFile == null) return;
+
+        _isProcessing = true;
+        _isComplete = false;
+        _progress = 0;
+        _statusMessage = L("UploadAlbum.PreparingUpload");
+        StateHasChanged();
+
+        try
+        {
+            var libraryResult = await LibraryService.GetByApiKeyAsync(LibraryApiKey);
+            if (!libraryResult.IsSuccess || libraryResult.Data == null)
+            {
+                _result = new UploadResultInfo(false, null, 0, 0, "Library not found.");
+                return;
+            }
+
+            var library = libraryResult.Data;
+            if (library.TypeValue != LibraryType.Inbound)
+            {
+                _result = new UploadResultInfo(false, null, 0, 0, "Uploads are only allowed to Inbound libraries.");
+                return;
+            }
+
+            if (library.IsLocked)
+            {
+                _result = new UploadResultInfo(false, null, 0, 0, "Library is locked.");
+                return;
+            }
+
+            _progress = 10;
+            _statusMessage = L("UploadAlbum.Uploading");
+            StateHasChanged();
+
+            var folderName = Path.GetFileNameWithoutExtension(_selectedFile.Name).ToDirectoryNameFriendly();
+            if (string.IsNullOrWhiteSpace(folderName))
+            {
+                folderName = $"upload_{DateTime.UtcNow:yyyyMMdd_HHmmss}";
+            }
+
+            var extractPath = Path.Combine(library.Path, folderName);
+            var counter = 1;
+            var originalExtractPath = extractPath;
+            while (Directory.Exists(extractPath))
+            {
+                extractPath = $"{originalExtractPath}_{counter++}";
+                folderName = Path.GetFileName(extractPath);
+            }
+
+            Directory.CreateDirectory(extractPath);
+
+            _progress = 30;
+            StateHasChanged();
+
+            var tempZipPath = Path.GetTempFileName();
+            try
+            {
+                var maxAllowedSize = 500L * 1024 * 1024;
+                await using (var fileStream = new FileStream(tempZipPath, FileMode.Create))
+                {
+                    await _selectedFile.OpenReadStream(maxAllowedSize).CopyToAsync(fileStream);
+                }
+
+                _progress = 60;
+                _statusMessage = L("UploadAlbum.Extracting");
+                await InvokeAsync(StateHasChanged);
+
+                ZipFile.ExtractToDirectory(tempZipPath, extractPath, overwriteFiles: true);
+
+                var extractedFiles = Directory.GetFiles(extractPath, "*", SearchOption.AllDirectories);
+                var extractedDirs = Directory.GetDirectories(extractPath, "*", SearchOption.AllDirectories);
+
+                _progress = 100;
+                _statusMessage = L("UploadAlbum.Complete");
+
+                Logger.Information(
+                    "Uploaded and extracted [{FileName}] to [{Path}]. Files: {FileCount}, Directories: {DirCount}",
+                    _selectedFile.Name,
+                    extractPath,
+                    extractedFiles.Length,
+                    extractedDirs.Length);
+
+                _result = new UploadResultInfo(true, folderName, extractedFiles.Length, extractedDirs.Length, null);
+            }
+            finally
+            {
+                if (File.Exists(tempZipPath))
+                {
+                    File.Delete(tempZipPath);
+                }
+            }
+        }
+        catch (InvalidDataException ex)
+        {
+            Logger.Warning(ex, "Invalid ZIP file uploaded: {FileName}", _selectedFile?.Name);
+            _result = new UploadResultInfo(false, null, 0, 0, L("UploadAlbum.InvalidZip"));
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Error processing upload: {FileName}", _selectedFile?.Name);
+            _result = new UploadResultInfo(false, null, 0, 0, ex.Message);
+        }
+        finally
+        {
+            _isProcessing = false;
+            _isComplete = true;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    void Cancel()
+    {
+        DialogService.Close(_result?.Success ?? false);
+    }
+
+    sealed record UploadResultInfo(bool Success, string? FolderName, int FileCount, int DirectoryCount, string? ErrorMessage);
+}

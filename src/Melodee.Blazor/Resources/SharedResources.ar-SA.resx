@@ -3689,4 +3689,66 @@
   <data name="Message.Huzzah" xml:space="preserve">
     <value>رائع!</value>
   </data>
+
+  
+  <data name="UploadAlbum.Title" xml:space="preserve">
+    <value>رفع ألبوم</value>
+  </data>
+  <data name="UploadAlbum.Instructions" xml:space="preserve">
+    <value>اختر ملف ZIP يحتوي على ملفات الألبوم (ملفات صوتية، صور، إلخ). سيتم استخراج الملفات إلى مجلد جديد في مكتبة الوارد.</value>
+  </data>
+  <data name="UploadAlbum.SelectFile" xml:space="preserve">
+    <value>ملف ZIP</value>
+  </data>
+  <data name="UploadAlbum.Browse" xml:space="preserve">
+    <value>استعراض...</value>
+  </data>
+  <data name="UploadAlbum.NoFileSelected" xml:space="preserve">
+    <value>لم يتم اختيار ملف</value>
+  </data>
+  <data name="UploadAlbum.Uploading" xml:space="preserve">
+    <value>جارٍ الرفع...</value>
+  </data>
+  <data name="UploadAlbum.PreparingUpload" xml:space="preserve">
+    <value>جارٍ تحضير الرفع...</value>
+  </data>
+  <data name="UploadAlbum.ProcessingResponse" xml:space="preserve">
+    <value>جارٍ معالجة الاستجابة...</value>
+  </data>
+  <data name="UploadAlbum.Complete" xml:space="preserve">
+    <value>اكتمل الرفع!</value>
+  </data>
+  <data name="UploadAlbum.Success" xml:space="preserve">
+    <value>نجح الرفع</value>
+  </data>
+  <data name="UploadAlbum.Failed" xml:space="preserve">
+    <value>فشل الرفع</value>
+  </data>
+  <data name="UploadAlbum.Folder" xml:space="preserve">
+    <value>المجلد</value>
+  </data>
+  <data name="UploadAlbum.FilesExtracted" xml:space="preserve">
+    <value>الملفات المستخرجة</value>
+  </data>
+  <data name="UploadAlbum.DirectoriesCreated" xml:space="preserve">
+    <value>المجلدات المنشأة</value>
+  </data>
+  <data name="UploadAlbum.AuthError" xml:space="preserve">
+    <value>خطأ في المصادقة. يرجى تسجيل الدخول مرة أخرى.</value>
+  </data>
+  <data name="UploadAlbum.MenuTooltip" xml:space="preserve">
+    <value>رفع ملف ZIP يحتوي على ألبوم إلى هذه المكتبة.</value>
+  </data>
+  <data name="UploadAlbum.UploadComplete" xml:space="preserve">
+    <value>اكتمل الرفع</value>
+  </data>
+  <data name="UploadAlbum.UploadCompleteDetail" xml:space="preserve">
+    <value>تم رفع واستخراج ملفات الألبوم بنجاح.</value>
+  </data>
+  <data name="UploadAlbum.Extracting" xml:space="preserve">
+    <value>جارٍ استخراج الملفات...</value>
+  </data>
+  <data name="UploadAlbum.InvalidZip" xml:space="preserve">
+    <value>الملف المرفوع ليس أرشيف ZIP صالحًا.</value>
+  </data>
 </root>

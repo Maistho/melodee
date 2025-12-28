@@ -3689,4 +3689,66 @@
   <data name="Message.Huzzah" xml:space="preserve">
     <value>¡HURRA!</value>
   </data>
+
+  
+  <data name="UploadAlbum.Title" xml:space="preserve">
+    <value>Subir álbum</value>
+  </data>
+  <data name="UploadAlbum.Instructions" xml:space="preserve">
+    <value>Seleccione un archivo ZIP con archivos del álbum (archivos de audio, imágenes, etc.). Los archivos se extraerán a una nueva carpeta en la biblioteca de entrada.</value>
+  </data>
+  <data name="UploadAlbum.SelectFile" xml:space="preserve">
+    <value>Archivo ZIP</value>
+  </data>
+  <data name="UploadAlbum.Browse" xml:space="preserve">
+    <value>Examinar...</value>
+  </data>
+  <data name="UploadAlbum.NoFileSelected" xml:space="preserve">
+    <value>Ningún archivo seleccionado</value>
+  </data>
+  <data name="UploadAlbum.Uploading" xml:space="preserve">
+    <value>Subiendo...</value>
+  </data>
+  <data name="UploadAlbum.PreparingUpload" xml:space="preserve">
+    <value>Preparando subida...</value>
+  </data>
+  <data name="UploadAlbum.ProcessingResponse" xml:space="preserve">
+    <value>Procesando respuesta...</value>
+  </data>
+  <data name="UploadAlbum.Complete" xml:space="preserve">
+    <value>¡Subida completada!</value>
+  </data>
+  <data name="UploadAlbum.Success" xml:space="preserve">
+    <value>Subida exitosa</value>
+  </data>
+  <data name="UploadAlbum.Failed" xml:space="preserve">
+    <value>Subida fallida</value>
+  </data>
+  <data name="UploadAlbum.Folder" xml:space="preserve">
+    <value>Carpeta</value>
+  </data>
+  <data name="UploadAlbum.FilesExtracted" xml:space="preserve">
+    <value>Archivos extraídos</value>
+  </data>
+  <data name="UploadAlbum.DirectoriesCreated" xml:space="preserve">
+    <value>Directorios creados</value>
+  </data>
+  <data name="UploadAlbum.AuthError" xml:space="preserve">
+    <value>Error de autenticación. Por favor, inicie sesión de nuevo.</value>
+  </data>
+  <data name="UploadAlbum.MenuTooltip" xml:space="preserve">
+    <value>Subir un archivo ZIP con un álbum a esta biblioteca.</value>
+  </data>
+  <data name="UploadAlbum.UploadComplete" xml:space="preserve">
+    <value>Subida completada</value>
+  </data>
+  <data name="UploadAlbum.UploadCompleteDetail" xml:space="preserve">
+    <value>Los archivos del álbum se han subido y extraído correctamente.</value>
+  </data>
+  <data name="UploadAlbum.Extracting" xml:space="preserve">
+    <value>Extrayendo archivos...</value>
+  </data>
+  <data name="UploadAlbum.InvalidZip" xml:space="preserve">
+    <value>El archivo subido no es un archivo ZIP válido.</value>
+  </data>
 </root>
