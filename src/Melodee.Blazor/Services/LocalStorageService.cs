@@ -30,7 +30,14 @@ public class LocalStorageService(ProtectedLocalStorage protectedLocalStorage) : 
 
     public async Task SetItemAsStringAsync(string key, string value)
     {
-        await protectedLocalStorage.SetAsync(key, value);
+        try
+        {
+            await protectedLocalStorage.SetAsync(key, value);
+        }
+        catch (InvalidOperationException)
+        {
+            // Silently ignore during prerendering - localStorage isn't available
+        }
     }
 
     public async Task<T?> GetItem<T>(string key)
@@ -46,6 +53,13 @@ public class LocalStorageService(ProtectedLocalStorage protectedLocalStorage) : 
 
     public async Task SetItem<T>(string key, T value)
     {
-        await protectedLocalStorage.SetAsync(key, JsonSerializer.Serialize(value));
+        try
+        {
+            await protectedLocalStorage.SetAsync(key, JsonSerializer.Serialize(value));
+        }
+        catch (InvalidOperationException)
+        {
+            // Silently ignore during prerendering - localStorage isn't available
+        }
     }
 }

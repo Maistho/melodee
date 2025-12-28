@@ -1,11 +1,13 @@
 using Melodee.Common.Configuration;
 using Melodee.Common.Constants;
+using Melodee.Common.Enums;
+using Melodee.Common.Services;
 
 namespace Melodee.Blazor.Services.Email;
 
 /// <summary>
 /// Email template rendering service.
-/// Supports variable substitution and future localization.
+/// Supports variable substitution and localization from Templates library.
 /// </summary>
 public interface IEmailTemplateService
 {
@@ -26,14 +28,19 @@ public interface IEmailTemplateService
 
 /// <summary>
 /// Default implementation of email template service.
+/// Loads templates from Templates library organized by language.
 /// </summary>
 public sealed class EmailTemplateService : IEmailTemplateService
 {
     private readonly IMelodeeConfigurationFactory _configurationFactory;
+    private readonly LibraryService _libraryService;
 
-    public EmailTemplateService(IMelodeeConfigurationFactory configurationFactory)
+    public EmailTemplateService(
+        IMelodeeConfigurationFactory configurationFactory,
+        LibraryService libraryService)
     {
         _configurationFactory = configurationFactory;
+        _libraryService = libraryService;
     }
 
     public async Task<(string subject, string textBody, string htmlBody)> RenderPasswordResetEmailAsync(
@@ -45,22 +52,63 @@ public sealed class EmailTemplateService : IEmailTemplateService
         var config = await _configurationFactory.GetConfigurationAsync(cancellationToken);
         var baseUrl = config.GetValue<string>(SettingRegistry.SystemBaseUrl) ?? "https://melodee.app";
         var appName = "Melodee";
+        
+        // Normalize language code (e.g., "en-US" or default to "en-US")
+        var normalizedLanguage = NormalizeLanguageCode(languageCode);
 
-        // Get templates from settings with fallback to defaults
+        // Get subject from settings with fallback to default
         var subject = config.GetValue<string>(SettingRegistry.EmailResetPasswordSubject)
-            ?? GetDefaultSubject(languageCode);
+            ?? GetDefaultSubject(normalizedLanguage);
 
-        var textTemplate = config.GetValue<string>(SettingRegistry.EmailResetPasswordTextBodyTemplate)
-            ?? GetDefaultTextTemplate(languageCode);
+        // Load templates from Templates library by language
+        var textTemplate = await LoadTemplateFromLibraryAsync($"{normalizedLanguage}/PasswordReset.txt", cancellationToken)
+            ?? GetDefaultTextTemplate(normalizedLanguage);
 
-        var htmlTemplate = config.GetValue<string>(SettingRegistry.EmailResetPasswordHtmlBodyTemplate)
-            ?? GetDefaultHtmlTemplate(languageCode);
+        var htmlTemplate = await LoadTemplateFromLibraryAsync($"{normalizedLanguage}/PasswordReset.html", cancellationToken)
+            ?? GetDefaultHtmlTemplate(normalizedLanguage);
 
         // Replace template variables
         var textBody = ReplaceVariables(textTemplate, resetUrl, expiryMinutes, appName, baseUrl);
         var htmlBody = ReplaceVariables(htmlTemplate, resetUrl, expiryMinutes, appName, baseUrl);
 
         return (subject, textBody, htmlBody);
+    }
+
+    private async Task<string?> LoadTemplateFromLibraryAsync(string relativeTemplatePath, CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Get Templates library
+            var libraryResult = await _libraryService.GetTemplatesLibraryAsync(cancellationToken);
+            if (!libraryResult.IsSuccess || libraryResult.Data == null)
+            {
+                return null; // Library not configured, use defaults
+            }
+
+            var templatePath = Path.Combine(libraryResult.Data.Path, relativeTemplatePath);
+            if (!File.Exists(templatePath))
+            {
+                return null; // Template file doesn't exist, use default
+            }
+
+            return await File.ReadAllTextAsync(templatePath, cancellationToken);
+        }
+        catch
+        {
+            // If any error reading template, fall back to defaults
+            return null;
+        }
+    }
+
+    private static string NormalizeLanguageCode(string? languageCode)
+    {
+        if (string.IsNullOrWhiteSpace(languageCode))
+        {
+            return "en-US";
+        }
+
+        // Convert to lowercase for directory names (en-us, fr-fr, etc.)
+        return languageCode.ToLowerInvariant();
     }
 
     private static string ReplaceVariables(string template, string resetUrl, int expiryMinutes, string appName, string baseUrl)

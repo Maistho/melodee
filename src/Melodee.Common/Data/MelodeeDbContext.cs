@@ -151,6 +151,16 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
                     Path = "/storage/playlists/",
                     Type = (int)LibraryType.Playlist,
                     CreatedAt = seedDataTimestamp
+                },
+                new Library
+                {
+                    Id = 6,
+                    ApiKey = SeedGuid("Library", 6),
+                    Name = "Email Templates",
+                    Description = "Library where email templates are stored, organized by language code.",
+                    Path = "/storage/templates/",
+                    Type = (int)LibraryType.Templates,
+                    CreatedAt = seedDataTimestamp
                 });
         });
 
@@ -1217,6 +1227,16 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
                     Comment = "Use StartTLS for SMTP",
                     Description = "Recommended: true for port 587",
                     Value = "true",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1509,
+                    ApiKey = SeedGuid("Setting", 1509),
+                    Key = SettingRegistry.EmailResetPasswordSubject,
+                    Comment = "Password reset email subject line",
+                    Description = "Subject for password reset emails",
+                    Value = "Reset your Melodee password",
                     CreatedAt = seedDataTimestamp
                 },
                 // Security settings

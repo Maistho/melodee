@@ -32,5 +32,10 @@ public enum LibraryType
     /// <summary>
     ///     Holds images for Charts
     /// </summary>
-    Chart
+    Chart,
+
+    /// <summary>
+    ///     Holds email templates organized by language (e.g., en-US, fr-FR), should be 1
+    /// </summary>
+    Templates
 }

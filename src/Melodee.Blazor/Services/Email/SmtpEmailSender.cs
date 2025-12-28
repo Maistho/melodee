@@ -108,9 +108,16 @@ public sealed class SmtpEmailSender : IEmailSender
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "SMTP error sending email to: {MaskedEmail}. Exception: {ExceptionType}",
+                _logger.Error(ex, 
+                    "SMTP error sending email. To: {MaskedEmail}, From: {MaskedFrom}, Host: {Host}, Port: {Port}, SSL: {SSL}, StartTLS: {StartTLS}, Exception: {ExceptionType}, Message: {Message}",
                     LogSanitizer.MaskEmail(toEmail),
-                    ex.GetType().Name);
+                    LogSanitizer.MaskEmail(fromEmail),
+                    smtpHost,
+                    smtpPort,
+                    smtpUseSsl,
+                    smtpUseStartTls,
+                    ex.GetType().Name,
+                    ex.Message);
                 return false;
             }
         }

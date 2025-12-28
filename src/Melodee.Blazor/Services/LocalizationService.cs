@@ -115,6 +115,10 @@ public class LocalizationService : ILocalizationService
         {
             await _localStorage.SetItemAsStringAsync(CultureStorageKey, culture.Name);
         }
+        catch (InvalidOperationException)
+        {
+            // Expected during prerendering - localStorage not available yet
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error saving culture to local storage");

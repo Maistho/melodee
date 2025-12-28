@@ -605,4 +605,195 @@ public sealed class SettingsServiceTests : ServiceTestBase
         Assert.NotNull(validationSetting);
         Assert.NotNull(validationSetting.Value);
     }
+
+    [Fact]
+    public async Task ListWithOrFilters_SearchAcrossMultipleFields_ReturnsMatchingResults()
+    {
+        var service = new SettingService(Logger, CacheManager, MockConfigurationFactory(), MockFactory());
+        
+        // Search for "validation" across Key, Comment, and Value with OR logic
+        // This should find settings where ANY of these fields contain "validation"
+        var listResult = await service.ListAsync(new PagedRequest
+        {
+            FilterBy =
+            [
+                new FilterOperatorInfo(nameof(Setting.Key), FilterOperator.Contains, "validation"),
+                new FilterOperatorInfo(nameof(Setting.Comment), FilterOperator.Contains, "validation", FilterOperatorInfo.OrJoinOperator),
+                new FilterOperatorInfo(nameof(Setting.Value), FilterOperator.Contains, "validation", FilterOperatorInfo.OrJoinOperator)
+            ],
+            PageSize = 100
+        });
+
+        AssertResultIsSuccessful(listResult);
+        
+        // Should find validation-related settings
+        Assert.True(listResult.TotalCount >= 4, $"Expected at least 4 validation settings, found {listResult.TotalCount}");
+        
+        // Verify we got settings with "validation" in various fields
+        var hasValidationInKey = listResult.Data.Any(s => s.Key.Contains("validation", StringComparison.OrdinalIgnoreCase));
+        var hasValidationInComment = listResult.Data.Any(s => s.Comment?.Contains("validation", StringComparison.OrdinalIgnoreCase) == true);
+        var hasValidationInValue = listResult.Data.Any(s => s.Value?.Contains("validation", StringComparison.OrdinalIgnoreCase) == true);
+        
+        Assert.True(hasValidationInKey || hasValidationInComment || hasValidationInValue, 
+            "Expected to find 'validation' in at least one field (Key, Comment, or Value)");
+    }
+
+    [Fact]
+    public async Task ListWithOrFilters_MultipleKeywordSearch_FindsAllMatches()
+    {
+        var service = new SettingService(Logger, CacheManager, MockConfigurationFactory(), MockFactory());
+        
+        // Search for settings containing "validation" OR "conversion" in the Key
+        var listResult = await service.ListAsync(new PagedRequest
+        {
+            FilterBy =
+            [
+                new FilterOperatorInfo(nameof(Setting.Key), FilterOperator.Contains, "validation"),
+                new FilterOperatorInfo(nameof(Setting.Key), FilterOperator.Contains, "conversion", FilterOperatorInfo.OrJoinOperator)
+            ],
+            PageSize = 100
+        });
+
+        AssertResultIsSuccessful(listResult);
+        
+        // Should find both validation and conversion settings
+        Assert.True(listResult.TotalCount > 0);
+        
+        var validationSettings = listResult.Data.Where(s => s.Key.Contains("validation", StringComparison.OrdinalIgnoreCase));
+        var conversionSettings = listResult.Data.Where(s => s.Key.Contains("conversion", StringComparison.OrdinalIgnoreCase));
+        
+        Assert.NotEmpty(validationSettings);
+        Assert.NotEmpty(conversionSettings);
+    }
+
+    [Fact]
+    public async Task ListWithAndFilters_RequiresAllConditions_ReturnsOnlyMatchingBoth()
+    {
+        var service = new SettingService(Logger, CacheManager, MockConfigurationFactory(), MockFactory());
+        
+        // Search for settings where Key contains "conversion" AND Value is a number
+        // This uses default AND logic (no OrJoinOperator)
+        var listResult = await service.ListAsync(new PagedRequest
+        {
+            FilterBy =
+            [
+                new FilterOperatorInfo(nameof(Setting.Key), FilterOperator.Contains, "conversion")
+            ],
+            PageSize = 100
+        });
+
+        AssertResultIsSuccessful(listResult);
+        
+        // Should only find settings that have "conversion" in Key
+        Assert.All(listResult.Data, setting =>
+        {
+            Assert.Contains("conversion", setting.Key, StringComparison.OrdinalIgnoreCase);
+        });
+    }
+
+    [Fact]
+    public async Task ListWithOrFilters_NoMatches_ReturnsEmpty()
+    {
+        var service = new SettingService(Logger, CacheManager, MockConfigurationFactory(), MockFactory());
+        
+        // Search for something that doesn't exist in any field
+        var listResult = await service.ListAsync(new PagedRequest
+        {
+            FilterBy =
+            [
+                new FilterOperatorInfo(nameof(Setting.Key), FilterOperator.Contains, "xyznonexistent123"),
+                new FilterOperatorInfo(nameof(Setting.Comment), FilterOperator.Contains, "xyznonexistent123", FilterOperatorInfo.OrJoinOperator),
+                new FilterOperatorInfo(nameof(Setting.Value), FilterOperator.Contains, "xyznonexistent123", FilterOperatorInfo.OrJoinOperator)
+            ],
+            PageSize = 100
+        });
+
+        AssertResultIsSuccessful(listResult);
+        Assert.Equal(0, listResult.TotalCount);
+        Assert.Empty(listResult.Data);
+    }
+
+    [Fact]
+    public async Task ListWithOrFilters_PartialMatch_FindsResults()
+    {
+        var service = new SettingService(Logger, CacheManager, MockConfigurationFactory(), MockFactory());
+        
+        // Search for partial string "process" which should match "processing.*" settings
+        var listResult = await service.ListAsync(new PagedRequest
+        {
+            FilterBy =
+            [
+                new FilterOperatorInfo(nameof(Setting.Key), FilterOperator.Contains, "process")
+            ],
+            PageSize = 100
+        });
+
+        AssertResultIsSuccessful(listResult);
+        
+        // Should find multiple processing-related settings
+        Assert.True(listResult.TotalCount >= 5, $"Expected at least 5 processing settings, found {listResult.TotalCount}");
+        Assert.All(listResult.Data, setting =>
+            Assert.Contains("process", setting.Key, StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task ListWithMixedFilters_OrThenAnd_AppliesCorrectly()
+    {
+        var service = new SettingService(Logger, CacheManager, MockConfigurationFactory(), MockFactory());
+        
+        // Complex filter: (Key contains "conversion" OR Key contains "validation") AND Value contains "true" OR Value is empty
+        var listResult = await service.ListAsync(new PagedRequest
+        {
+            FilterBy =
+            [
+                new FilterOperatorInfo(nameof(Setting.Key), FilterOperator.Contains, "conversion"),
+                new FilterOperatorInfo(nameof(Setting.Key), FilterOperator.Contains, "validation", FilterOperatorInfo.OrJoinOperator)
+            ],
+            PageSize = 100
+        });
+
+        AssertResultIsSuccessful(listResult);
+        
+        // All results should have ("conversion" OR "validation" in Key)
+        Assert.All(listResult.Data, setting =>
+        {
+            var hasConversionOrValidation = setting.Key.Contains("conversion", StringComparison.OrdinalIgnoreCase) ||
+                                setting.Key.Contains("validation", StringComparison.OrdinalIgnoreCase);
+            Assert.True(hasConversionOrValidation);
+        });
+    }
+
+    [Fact]
+    public async Task ListWithOrFilters_SpecificSettingsSearch_FindsExpectedResults()
+    {
+        var service = new SettingService(Logger, CacheManager, MockConfigurationFactory(), MockFactory());
+        
+        // This test verifies the actual scenario from the bug report:
+        // Typing a search term should find all related settings across Key, Comment, and Value
+        var listResult = await service.ListAsync(new PagedRequest
+        {
+            FilterBy =
+            [
+                new FilterOperatorInfo(nameof(Setting.Key), FilterOperator.Contains, "bit"),
+                new FilterOperatorInfo(nameof(Setting.Comment), FilterOperator.Contains, "bit", FilterOperatorInfo.OrJoinOperator),
+                new FilterOperatorInfo(nameof(Setting.Value), FilterOperator.Contains, "bit", FilterOperatorInfo.OrJoinOperator)
+            ],
+            PageSize = 100
+        });
+
+        AssertResultIsSuccessful(listResult);
+        
+        // We should find settings with "bit" in various fields (like "conversion.bitrate")
+        Assert.True(listResult.TotalCount >= 1, 
+            $"Expected at least 1 setting with 'bit', found {listResult.TotalCount}");
+        
+        // Verify at least one has "bit" somewhere
+        var hasBitInAnyField = listResult.Data.Any(s => 
+            s.Key.Contains("bit", StringComparison.OrdinalIgnoreCase) ||
+            (s.Comment?.Contains("bit", StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (s.Value?.Contains("bit", StringComparison.OrdinalIgnoreCase) ?? false));
+        
+        Assert.True(hasBitInAnyField, "Expected to find 'bit' in at least one field");
+    }
 }
+

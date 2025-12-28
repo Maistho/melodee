@@ -170,6 +170,25 @@ public class LibraryService : ServiceBase
         };
     }
 
+    public async Task<MelodeeModels.OperationResult<Library>> GetTemplatesLibraryAsync(CancellationToken cancellationToken = default)
+    {
+        const int libraryType = (int)LibraryType.Templates;
+        var result = await CacheManager.GetAsync(CacheKeyDetailLibraryByType.FormatSmart(libraryType), async () =>
+        {
+            var library = await LibraryByType(libraryType, cancellationToken);
+            if (library == null)
+            {
+                throw new Exception("Templates library not found. A Library record must be setup with a type of '7' (Templates).");
+            }
+
+            return library;
+        }, cancellationToken).ConfigureAwait(false);
+        return new MelodeeModels.OperationResult<Library>
+        {
+            Data = result
+        };
+    }
+
     public async Task<MelodeeModels.OperationResult<Library?>> GetByApiKeyAsync(Guid apiKey, CancellationToken cancellationToken = default)
     {
         Guard.Against.Expression(_ => apiKey == Guid.Empty, apiKey, nameof(apiKey));

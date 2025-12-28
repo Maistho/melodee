@@ -107,33 +107,120 @@ public class SettingService : ServiceBase
             return query;
         }
 
-        foreach (var filter in pagedRequest.FilterBy)
+        // Group filters by join operator
+        var orGroups = new List<List<FilterOperatorInfo>>();
+        var andFilters = new List<FilterOperatorInfo>();
+        var currentOrGroup = new List<FilterOperatorInfo>();
+        
+        for (int i = 0; i < pagedRequest.FilterBy.Length; i++)
         {
-            query = filter.Operator switch
+            var filter = pagedRequest.FilterBy[i];
+            
+            if (i == 0)
             {
-                FilterOperator.Equals => query.Where(s => EF.Property<string>(s, filter.PropertyName) == filter.Value.ToString()),
-                FilterOperator.NotEquals => query.Where(s => EF.Property<string>(s, filter.PropertyName) != filter.Value.ToString()),
-                FilterOperator.Contains => query.Where(s => EF.Property<string>(s, filter.PropertyName).Contains(filter.Value.ToString()!)),
-                FilterOperator.DoesNotContain => query.Where(s => !EF.Property<string>(s, filter.PropertyName).Contains(filter.Value.ToString()!)),
-                FilterOperator.StartsWith => query.Where(s => EF.Property<string>(s, filter.PropertyName).StartsWith(filter.Value.ToString()!)),
-                FilterOperator.EndsWith => query.Where(s => EF.Property<string>(s, filter.PropertyName).EndsWith(filter.Value.ToString()!)),
-                FilterOperator.IsNull => query.Where(s => EF.Property<string>(s, filter.PropertyName) == null),
-                FilterOperator.IsNotNull => query.Where(s => EF.Property<string>(s, filter.PropertyName) != null),
-                FilterOperator.IsEmpty => query.Where(s => EF.Property<string>(s, filter.PropertyName) == string.Empty),
-                FilterOperator.IsNotEmpty => query.Where(s => EF.Property<string>(s, filter.PropertyName) != string.Empty),
-                FilterOperator.GreaterThan when filter.Value.IsNumericType() =>
-                    query.Where(s => EF.Property<int>(s, filter.PropertyName) > Convert.ToInt32(filter.Value)),
-                FilterOperator.GreaterThanOrEquals when filter.Value.IsNumericType() =>
-                    query.Where(s => EF.Property<int>(s, filter.PropertyName) >= Convert.ToInt32(filter.Value)),
-                FilterOperator.LessThan when filter.Value.IsNumericType() =>
-                    query.Where(s => EF.Property<int>(s, filter.PropertyName) < Convert.ToInt32(filter.Value)),
-                FilterOperator.LessThanOrEquals when filter.Value.IsNumericType() =>
-                    query.Where(s => EF.Property<int>(s, filter.PropertyName) <= Convert.ToInt32(filter.Value)),
-                _ => query
-            };
+                // First filter starts a group
+                currentOrGroup.Add(filter);
+            }
+            else if (filter.JoinOperator == FilterOperatorInfo.OrJoinOperator)
+            {
+                // Continue current OR group
+                currentOrGroup.Add(filter);
+            }
+            else // AND operator
+            {
+                // Save current OR group if it has items
+                if (currentOrGroup.Count > 0)
+                {
+                    if (currentOrGroup.Count == 1)
+                    {
+                        andFilters.Add(currentOrGroup[0]);
+                    }
+                    else
+                    {
+                        orGroups.Add(new List<FilterOperatorInfo>(currentOrGroup));
+                    }
+                    currentOrGroup.Clear();
+                }
+                // Start new group with this AND filter
+                currentOrGroup.Add(filter);
+            }
+        }
+        
+        // Save final group
+        if (currentOrGroup.Count > 0)
+        {
+            if (currentOrGroup.Count == 1)
+            {
+                andFilters.Add(currentOrGroup[0]);
+            }
+            else
+            {
+                orGroups.Add(currentOrGroup);
+            }
+        }
+
+        // Apply AND filters first
+        foreach (var filter in andFilters)
+        {
+            query = ApplySingleFilter(query, filter);
+        }
+
+        // Apply OR groups
+        foreach (var orGroup in orGroups)
+        {
+            query = ApplyOrGroup(query, orGroup);
         }
 
         return query;
+    }
+
+    /// <summary>
+    /// Applies a group of filters with OR logic
+    /// </summary>
+    private static IQueryable<Setting> ApplyOrGroup(IQueryable<Setting> query, List<FilterOperatorInfo> filters)
+    {
+        if (filters.Count == 0) return query;
+        if (filters.Count == 1) return ApplySingleFilter(query, filters[0]);
+
+        // Build OR expression by combining individual filter results
+        IQueryable<Setting>? result = null;
+        
+        foreach (var filter in filters)
+        {
+            var filteredQuery = ApplySingleFilter(query, filter);
+            result = result == null ? filteredQuery : result.Union(filteredQuery);
+        }
+
+        return result ?? query;
+    }
+
+    /// <summary>
+    /// Applies a single filter to the query
+    /// </summary>
+    private static IQueryable<Setting> ApplySingleFilter(IQueryable<Setting> query, FilterOperatorInfo filter)
+    {
+        return filter.Operator switch
+        {
+            FilterOperator.Equals => query.Where(s => EF.Property<string>(s, filter.PropertyName) == filter.Value.ToString()),
+            FilterOperator.NotEquals => query.Where(s => EF.Property<string>(s, filter.PropertyName) != filter.Value.ToString()),
+            FilterOperator.Contains => query.Where(s => EF.Property<string>(s, filter.PropertyName).Contains(filter.Value.ToString()!)),
+            FilterOperator.DoesNotContain => query.Where(s => !EF.Property<string>(s, filter.PropertyName).Contains(filter.Value.ToString()!)),
+            FilterOperator.StartsWith => query.Where(s => EF.Property<string>(s, filter.PropertyName).StartsWith(filter.Value.ToString()!)),
+            FilterOperator.EndsWith => query.Where(s => EF.Property<string>(s, filter.PropertyName).EndsWith(filter.Value.ToString()!)),
+            FilterOperator.IsNull => query.Where(s => EF.Property<string>(s, filter.PropertyName) == null),
+            FilterOperator.IsNotNull => query.Where(s => EF.Property<string>(s, filter.PropertyName) != null),
+            FilterOperator.IsEmpty => query.Where(s => EF.Property<string>(s, filter.PropertyName) == string.Empty),
+            FilterOperator.IsNotEmpty => query.Where(s => EF.Property<string>(s, filter.PropertyName) != string.Empty),
+            FilterOperator.GreaterThan when filter.Value.IsNumericType() =>
+                query.Where(s => EF.Property<int>(s, filter.PropertyName) > Convert.ToInt32(filter.Value)),
+            FilterOperator.GreaterThanOrEquals when filter.Value.IsNumericType() =>
+                query.Where(s => EF.Property<int>(s, filter.PropertyName) >= Convert.ToInt32(filter.Value)),
+            FilterOperator.LessThan when filter.Value.IsNumericType() =>
+                query.Where(s => EF.Property<int>(s, filter.PropertyName) < Convert.ToInt32(filter.Value)),
+            FilterOperator.LessThanOrEquals when filter.Value.IsNumericType() =>
+                query.Where(s => EF.Property<int>(s, filter.PropertyName) <= Convert.ToInt32(filter.Value)),
+            _ => query
+        };
     }
 
     /// <summary>
