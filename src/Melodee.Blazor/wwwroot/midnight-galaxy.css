@@ -1,0 +1,164 @@
+/*
+ * Midnight Galaxy Theme - Deep space purples with starry accents
+ * Dark, mysterious, cosmic
+ */
+
+:root {
+    /* Primary - Nebula Purple */
+    --rz-primary: #7B2CBF;
+    --rz-primary-light: #9D4EDD;
+    --rz-primary-lighter: #C77DFF;
+    --rz-primary-dark: #5A189A;
+    --rz-primary-darker: #3C096C;
+    
+    /* Secondary - Cosmic Pink */
+    --rz-secondary: #E0AAFF;
+    --rz-secondary-light: #F0D6FF;
+    --rz-secondary-lighter: #F8ECFF;
+    --rz-secondary-dark: #C77DFF;
+    --rz-secondary-darker: #9D4EDD;
+    
+    /* Info - Starlight Blue */
+    --rz-info: #4895EF;
+    --rz-info-light: #7EB3F4;
+    --rz-info-lighter: #B4D1F9;
+    --rz-info-dark: #3F7DD8;
+    --rz-info-darker: #2A5DB0;
+    
+    /* Success - Aurora Green */
+    --rz-success: #06D6A0;
+    --rz-success-light: #4DE8C2;
+    --rz-success-lighter: #99F2DD;
+    --rz-success-dark: #05B386;
+    --rz-success-darker: #04906C;
+    
+    /* Warning - Comet Gold */
+    --rz-warning: #FFD166;
+    --rz-warning-light: #FFE099;
+    --rz-warning-lighter: #FFF0CC;
+    --rz-warning-dark: #EFB82A;
+    --rz-warning-darker: #D9A000;
+    
+    /* Danger - Mars Red */
+    --rz-danger: #EF476F;
+    --rz-danger-light: #F47D98;
+    --rz-danger-lighter: #F9B3C1;
+    --rz-danger-dark: #D63358;
+    --rz-danger-darker: #B82548;
+    
+    /* Base - Deep space */
+    --rz-base-50: #0A0A12;
+    --rz-base-100: #10101B;
+    --rz-base-200: #1A1A2E;
+    --rz-base-300: #240046;
+    --rz-base-400: #3C096C;
+    --rz-base-500: #5A189A;
+    --rz-base-600: #7B2CBF;
+    --rz-base-700: #9D4EDD;
+    --rz-base-800: #C77DFF;
+    --rz-base-900: #E0AAFF;
+    
+    --rz-base-background-color: #0A0A12;
+    --rz-base-background-color-secondary: #10101B;
+    
+    /* Text */
+    --rz-text-color: #F8ECFF;
+    --rz-text-secondary-color: #C77DFF;
+    --rz-text-disabled-color: #5A189A;
+    --rz-text-contrast-color: #0A0A12;
+    
+    /* Border */
+    --rz-border-color: #3C096C;
+    --rz-border-color-hover: #9D4EDD;
+    
+    --rz-shadow-1: 0 2px 8px rgba(157, 78, 221, 0.2);
+    --rz-shadow-2: 0 4px 16px rgba(157, 78, 221, 0.25);
+    --rz-shadow-3: 0 8px 24px rgba(157, 78, 221, 0.3);
+    
+    --rz-gradient-primary: linear-gradient(135deg, #3C096C 0%, #7B2CBF 50%, #9D4EDD 100%);
+}
+
+body {
+    background: radial-gradient(ellipse at top, #1A1A2E 0%, #0A0A12 100%);
+}
+
+/* Starfield effect for sidebar */
+.rz-sidebar {
+    background: 
+        radial-gradient(1px 1px at 20px 30px, #E0AAFF, transparent),
+        radial-gradient(1px 1px at 40px 70px, #C77DFF, transparent),
+        radial-gradient(1px 1px at 50px 160px, #9D4EDD, transparent),
+        radial-gradient(1px 1px at 90px 40px, #F8ECFF, transparent),
+        radial-gradient(1px 1px at 130px 80px, #E0AAFF, transparent),
+        radial-gradient(1px 1px at 160px 120px, #C77DFF, transparent),
+        linear-gradient(180deg, #10101B 0%, #1A1A2E 100%);
+    background-size: 200px 200px, 200px 200px, 200px 200px, 200px 200px, 200px 200px, 200px 200px, 100% 100%;
+}
+
+.rz-button.rz-primary {
+    background: var(--rz-gradient-primary);
+    border: none;
+    box-shadow: 0 0 20px rgba(157, 78, 221, 0.4);
+}
+
+.rz-button.rz-primary:hover {
+    background: linear-gradient(135deg, #5A189A 0%, #9D4EDD 50%, #C77DFF 100%);
+    box-shadow: 0 0 30px rgba(157, 78, 221, 0.6);
+}
+
+.rz-card {
+    background: rgba(26, 26, 46, 0.9);
+    border: 1px solid #3C096C;
+    box-shadow: 0 4px 20px rgba(157, 78, 221, 0.15);
+}
+
+.rz-card:hover {
+    border-color: #7B2CBF;
+    box-shadow: 0 0 25px rgba(157, 78, 221, 0.25);
+}
+
+.rz-datatable .rz-datatable-thead > tr > th {
+    background: linear-gradient(135deg, #1A1A2E 0%, #240046 100%);
+    border-bottom: 2px solid #7B2CBF;
+}
+
+.rz-textbox,
+.rz-dropdown,
+.rz-textarea {
+    background: #1A1A2E;
+    border-color: #3C096C;
+    color: #F8ECFF;
+}
+
+.rz-textbox:focus,
+.rz-dropdown:focus {
+    border-color: #9D4EDD;
+    box-shadow: 0 0 15px rgba(157, 78, 221, 0.4);
+}
+
+.rz-progressbar {
+    background: #1A1A2E;
+}
+
+.rz-progressbar-value {
+    background: var(--rz-gradient-primary);
+    box-shadow: 0 0 10px rgba(157, 78, 221, 0.6);
+}
+
+a, .rz-link {
+    color: #C77DFF;
+}
+
+a:hover, .rz-link:hover {
+    color: #E0AAFF;
+    text-shadow: 0 0 10px rgba(224, 170, 255, 0.5);
+}
+
+::selection {
+    background: rgba(157, 78, 221, 0.5);
+    color: #F8ECFF;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--rz-gradient-primary);
+}

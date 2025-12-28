@@ -1,0 +1,132 @@
+/*
+ * Forest Theme - Deep greens and earthy tones
+ * Natural, calming, organic feel
+ */
+
+:root {
+    /* Primary - Forest Green */
+    --rz-primary: #2D6A4F;
+    --rz-primary-light: #40916C;
+    --rz-primary-lighter: #74C69D;
+    --rz-primary-dark: #1B4332;
+    --rz-primary-darker: #081C15;
+    
+    /* Secondary - Moss/Sage */
+    --rz-secondary: #52B788;
+    --rz-secondary-light: #74C69D;
+    --rz-secondary-lighter: #B7E4C7;
+    --rz-secondary-dark: #40916C;
+    --rz-secondary-darker: #2D6A4F;
+    
+    /* Info - Teal */
+    --rz-info: #40916C;
+    --rz-info-light: #52B788;
+    --rz-info-lighter: #95D5B2;
+    --rz-info-dark: #2D6A4F;
+    --rz-info-darker: #1B4332;
+    
+    /* Success - Bright Green */
+    --rz-success: #74C69D;
+    --rz-success-light: #95D5B2;
+    --rz-success-lighter: #B7E4C7;
+    --rz-success-dark: #52B788;
+    --rz-success-darker: #40916C;
+    
+    /* Warning - Autumn Gold */
+    --rz-warning: #D4A373;
+    --rz-warning-light: #E6C9A8;
+    --rz-warning-lighter: #FAEDCD;
+    --rz-warning-dark: #BC8A5F;
+    --rz-warning-darker: #A47148;
+    
+    /* Danger - Berry Red */
+    --rz-danger: #BC4749;
+    --rz-danger-light: #D4787A;
+    --rz-danger-lighter: #E8A9AB;
+    --rz-danger-dark: #9A3A3C;
+    --rz-danger-darker: #782D2F;
+    
+    /* Base - Cream and light greens */
+    --rz-base-50: #FEFEF8;
+    --rz-base-100: #FDFDF5;
+    --rz-base-200: #F5F5EB;
+    --rz-base-300: #E8E8D5;
+    --rz-base-400: #D8F3DC;
+    --rz-base-500: #B7E4C7;
+    --rz-base-600: #95D5B2;
+    --rz-base-700: #74C69D;
+    --rz-base-800: #52B788;
+    --rz-base-900: #40916C;
+    
+    --rz-base-background-color: #FEFEF8;
+    --rz-base-background-color-secondary: #FDFDF5;
+    
+    /* Text */
+    --rz-text-color: #1B4332;
+    --rz-text-secondary-color: #2D6A4F;
+    --rz-text-disabled-color: #95D5B2;
+    --rz-text-contrast-color: #FEFEF8;
+    
+    /* Border */
+    --rz-border-color: #D8F3DC;
+    --rz-border-color-hover: #40916C;
+    
+    --rz-shadow-1: 0 2px 8px rgba(27, 67, 50, 0.1);
+    --rz-shadow-2: 0 4px 16px rgba(27, 67, 50, 0.12);
+    --rz-shadow-3: 0 8px 24px rgba(27, 67, 50, 0.15);
+    
+    --rz-gradient-primary: linear-gradient(135deg, #1B4332 0%, #2D6A4F 50%, #40916C 100%);
+}
+
+body {
+    background: linear-gradient(180deg, #FEFEF8 0%, #F5F5EB 100%);
+}
+
+.rz-button.rz-primary {
+    background: var(--rz-gradient-primary);
+    border: none;
+}
+
+.rz-button.rz-primary:hover {
+    background: linear-gradient(135deg, #2D6A4F 0%, #40916C 50%, #52B788 100%);
+    box-shadow: 0 4px 20px rgba(45, 106, 79, 0.4);
+}
+
+.rz-card {
+    background: #FEFEF8;
+    border: 1px solid #D8F3DC;
+    box-shadow: 0 2px 12px rgba(27, 67, 50, 0.06);
+}
+
+.rz-sidebar {
+    background: linear-gradient(180deg, #F5F5EB 0%, #E8E8D5 100%);
+    border-right: 1px solid #D8F3DC;
+}
+
+.rz-datatable .rz-datatable-thead > tr > th {
+    background: linear-gradient(135deg, #E8E8D5 0%, #D8F3DC 100%);
+    border-bottom: 2px solid #2D6A4F;
+}
+
+.rz-textbox:focus,
+.rz-dropdown:focus {
+    border-color: #40916C;
+    box-shadow: 0 0 0 3px rgba(64, 145, 108, 0.2);
+}
+
+.rz-progressbar-value {
+    background: var(--rz-gradient-primary);
+}
+
+a, .rz-link {
+    color: #2D6A4F;
+}
+
+a:hover, .rz-link:hover {
+    color: #1B4332;
+}
+
+::selection {
+    background: rgba(82, 183, 136, 0.3);
+    color: #1B4332;
+}

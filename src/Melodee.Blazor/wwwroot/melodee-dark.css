@@ -1,0 +1,276 @@
+/*
+ * Melodee Dark Theme
+ * Based on the Melodee logo gradient: Magenta → Coral → Gold
+ * On dark charcoal background (#3C3C3C) like the logo
+ * Primary: #E040FB (Magenta/Pink)
+ * Secondary: #FF7043 (Coral)
+ * Accent: #FFA726 (Gold/Orange)
+ */
+
+:root {
+    /* Primary Colors - Magenta/Pink - more vibrant for dark mode */
+    --rz-primary: #E040FB;
+    --rz-primary-light: #F06EFF;
+    --rz-primary-lighter: #F8A8FF;
+    --rz-primary-dark: #C020DB;
+    --rz-primary-darker: #9C00B7;
+    
+    /* Secondary Colors - Coral */
+    --rz-secondary: #FF7043;
+    --rz-secondary-light: #FF9A76;
+    --rz-secondary-lighter: #FFCCB8;
+    --rz-secondary-dark: #F4511E;
+    --rz-secondary-darker: #E64A19;
+    
+    /* Info - Gold/Orange from logo */
+    --rz-info: #FFA726;
+    --rz-info-light: #FFCC80;
+    --rz-info-lighter: #FFE4B8;
+    --rz-info-dark: #FB8C00;
+    --rz-info-darker: #EF6C00;
+    
+    /* Success - Bright teal for dark mode visibility */
+    --rz-success: #4DB6AC;
+    --rz-success-light: #80CBC4;
+    --rz-success-lighter: #B2DFDB;
+    --rz-success-dark: #26A69A;
+    --rz-success-darker: #00897B;
+    
+    /* Warning - Bright amber */
+    --rz-warning: #FFCA28;
+    --rz-warning-light: #FFD54F;
+    --rz-warning-lighter: #FFECB3;
+    --rz-warning-dark: #FFB300;
+    --rz-warning-darker: #FFA000;
+    
+    /* Danger - Bright coral red */
+    --rz-danger: #FF5252;
+    --rz-danger-light: #FF8A80;
+    --rz-danger-lighter: #FFCDD2;
+    --rz-danger-dark: #FF1744;
+    --rz-danger-darker: #D50000;
+    
+    /* Base/Background Colors - Dark charcoal like logo background */
+    --rz-base-50: #2A2A2A;
+    --rz-base-100: #323232;
+    --rz-base-200: #3C3C3C;
+    --rz-base-300: #484848;
+    --rz-base-400: #5C5C5C;
+    --rz-base-500: #757575;
+    --rz-base-600: #9E9E9E;
+    --rz-base-700: #BDBDBD;
+    --rz-base-800: #E0E0E0;
+    --rz-base-900: #F5F5F5;
+    
+    --rz-base-background-color: #2A2A2A;
+    --rz-base-background-color-secondary: #323232;
+    
+    /* Text Colors - Light for dark backgrounds */
+    --rz-text-color: #F5F5F5;
+    --rz-text-secondary-color: #BDBDBD;
+    --rz-text-disabled-color: #757575;
+    --rz-text-contrast-color: #2A2A2A;
+    
+    /* Border Colors */
+    --rz-border-color: #484848;
+    --rz-border-color-hover: #E040FB;
+    
+    /* Shadows with magenta glow */
+    --rz-shadow-1: 0 2px 4px rgba(0, 0, 0, 0.3);
+    --rz-shadow-2: 0 4px 8px rgba(0, 0, 0, 0.35);
+    --rz-shadow-3: 0 8px 16px rgba(0, 0, 0, 0.4);
+    
+    /* Gradients using logo colors */
+    --rz-gradient-primary: linear-gradient(135deg, #E040FB 0%, #FF7043 50%, #FFA726 100%);
+}
+
+/* Body/Base background */
+body {
+    background-color: #2A2A2A;
+    color: #F5F5F5;
+}
+
+/* Header/Navigation styling */
+.rz-sidebar,
+.rz-panel-menu {
+    background: linear-gradient(180deg, #323232 0%, #2A2A2A 100%);
+    border-right: 1px solid #484848;
+}
+
+/* Button gradients for primary actions */
+.rz-button.rz-primary {
+    background: var(--rz-gradient-primary);
+    border: none;
+    transition: all 0.3s ease;
+    color: #FFFFFF;
+}
+
+.rz-button.rz-primary:hover {
+    background: linear-gradient(135deg, #F06EFF 0%, #FF9A76 50%, #FFCC80 100%);
+    box-shadow: 0 4px 20px rgba(224, 64, 251, 0.5);
+}
+
+/* Card styling with subtle glow */
+.rz-card {
+    background: #323232;
+    border: 1px solid #484848;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.rz-card:hover {
+    border-color: rgba(224, 64, 251, 0.3);
+    box-shadow: 0 4px 16px rgba(224, 64, 251, 0.15);
+}
+
+/* Input styling */
+.rz-textbox,
+.rz-dropdown,
+.rz-textarea {
+    background: #3C3C3C;
+    border-color: #5C5C5C;
+    color: #F5F5F5;
+}
+
+/* Input focus states with gradient glow */
+.rz-textbox:focus,
+.rz-dropdown:focus,
+.rz-textarea:focus {
+    border-color: #E040FB;
+    box-shadow: 0 0 0 3px rgba(224, 64, 251, 0.25);
+}
+
+/* DataGrid styling */
+.rz-datatable {
+    background: #323232;
+}
+
+.rz-datatable .rz-datatable-thead > tr > th {
+    background: linear-gradient(135deg, #3C3C3C 0%, #323232 100%);
+    border-bottom: 2px solid #E040FB;
+    color: #F5F5F5;
+}
+
+.rz-datatable .rz-datatable-tbody > tr {
+    background: #323232;
+    border-bottom: 1px solid #484848;
+}
+
+.rz-datatable .rz-datatable-tbody > tr:hover {
+    background: #3C3C3C;
+}
+
+.rz-datatable .rz-datatable-tbody > tr.rz-state-highlight {
+    background: rgba(224, 64, 251, 0.15);
+}
+
+/* Progress bar gradient */
+.rz-progressbar {
+    background: #3C3C3C;
+}
+
+.rz-progressbar-value {
+    background: var(--rz-gradient-primary);
+}
+
+/* Tab styling */
+.rz-tabview {
+    background: #323232;
+}
+
+.rz-tabview-nav {
+    background: #3C3C3C;
+    border-bottom: 1px solid #484848;
+}
+
+.rz-tabview-nav li a {
+    color: #BDBDBD;
+}
+
+.rz-tabview-nav li.rz-tabview-selected a {
+    border-bottom-color: #E040FB;
+    color: #E040FB;
+}
+
+/* Panel/Accordion styling */
+.rz-panel {
+    background: #323232;
+    border-color: #484848;
+}
+
+.rz-panel-header {
+    background: #3C3C3C;
+    border-bottom-color: #484848;
+}
+
+/* Link colors */
+a, .rz-link {
+    color: #F06EFF;
+}
+
+a:hover, .rz-link:hover {
+    color: #E040FB;
+}
+
+/* Menu styling */
+.rz-menu {
+    background: #323232;
+}
+
+.rz-menuitem:hover {
+    background: rgba(224, 64, 251, 0.1);
+}
+
+/* Dialog/Modal styling */
+.rz-dialog {
+    background: #323232;
+    border: 1px solid #484848;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.rz-dialog-titlebar {
+    background: linear-gradient(135deg, #3C3C3C 0%, #323232 100%);
+    border-bottom: 1px solid #E040FB;
+}
+
+/* Notification styling */
+.rz-notification {
+    background: #3C3C3C;
+    border-left: 4px solid #E040FB;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #2A2A2A;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #E040FB 0%, #FF7043 100%);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #F06EFF 0%, #FF9A76 100%);
+}
+
+/* Selection highlight */
+::selection {
+    background: rgba(224, 64, 251, 0.4);
+    color: #FFFFFF;
+}
+
+/* Tooltip */
+.rz-tooltip {
+    background: #3C3C3C;
+    border: 1px solid #E040FB;
+    color: #F5F5F5;
+}
+
+/* Badge with gradient */
+.rz-badge.rz-primary {
+    background: var(--rz-gradient-primary);
+}

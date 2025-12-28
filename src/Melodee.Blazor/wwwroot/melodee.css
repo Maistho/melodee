@@ -1,0 +1,148 @@
+/*
+ * Melodee Light Theme
+ * Based on the Melodee logo gradient: Magenta → Coral → Gold
+ * Primary: #E040FB (Magenta/Pink)
+ * Secondary: #FF7043 (Coral)
+ * Accent: #FFA726 (Gold/Orange)
+ */
+
+:root {
+    /* Primary Colors - Magenta/Pink gradient start */
+    --rz-primary: #E040FB;
+    --rz-primary-light: #F06EFF;
+    --rz-primary-lighter: #F8A8FF;
+    --rz-primary-dark: #AA00C7;
+    --rz-primary-darker: #7B0091;
+    
+    /* Secondary Colors - Coral */
+    --rz-secondary: #FF7043;
+    --rz-secondary-light: #FF9A76;
+    --rz-secondary-lighter: #FFCCB8;
+    --rz-secondary-dark: #E64A19;
+    --rz-secondary-darker: #BF360C;
+    
+    /* Info - Gold/Orange from logo */
+    --rz-info: #FFA726;
+    --rz-info-light: #FFCC80;
+    --rz-info-lighter: #FFE4B8;
+    --rz-info-dark: #FB8C00;
+    --rz-info-darker: #E65100;
+    
+    /* Success - Teal to complement the warm palette */
+    --rz-success: #26A69A;
+    --rz-success-light: #64D8CB;
+    --rz-success-lighter: #B2DFDB;
+    --rz-success-dark: #00897B;
+    --rz-success-darker: #00695C;
+    
+    /* Warning - Amber */
+    --rz-warning: #FFB300;
+    --rz-warning-light: #FFD54F;
+    --rz-warning-lighter: #FFECB3;
+    --rz-warning-dark: #FF8F00;
+    --rz-warning-darker: #FF6F00;
+    
+    /* Danger - Deep coral red */
+    --rz-danger: #EF5350;
+    --rz-danger-light: #FF8A80;
+    --rz-danger-lighter: #FFCDD2;
+    --rz-danger-dark: #E53935;
+    --rz-danger-darker: #C62828;
+    
+    /* Base/Background Colors */
+    --rz-base-50: #FFFBFE;
+    --rz-base-100: #FFF5FB;
+    --rz-base-200: #FFECF8;
+    --rz-base-300: #FFE0F2;
+    --rz-base-400: #FFCCE8;
+    --rz-base-500: #FFB3DC;
+    --rz-base-600: #E091C0;
+    --rz-base-700: #B06A96;
+    --rz-base-800: #804870;
+    --rz-base-900: #502A48;
+    
+    --rz-base-background-color: #FFFBFE;
+    --rz-base-background-color-secondary: #FFF5FB;
+    
+    /* Text Colors */
+    --rz-text-color: #3D2945;
+    --rz-text-secondary-color: #6B4C7A;
+    --rz-text-disabled-color: #A88BB4;
+    --rz-text-contrast-color: #FFFFFF;
+    
+    /* Border Colors */
+    --rz-border-color: #FFCCE8;
+    --rz-border-color-hover: #E040FB;
+    
+    /* Shadows with pink tint */
+    --rz-shadow-1: 0 2px 4px rgba(224, 64, 251, 0.1);
+    --rz-shadow-2: 0 4px 8px rgba(224, 64, 251, 0.12);
+    --rz-shadow-3: 0 8px 16px rgba(224, 64, 251, 0.14);
+    
+    /* Gradients using logo colors */
+    --rz-gradient-primary: linear-gradient(135deg, #E040FB 0%, #FF7043 50%, #FFA726 100%);
+}
+
+/* Header/Navigation styling */
+.rz-sidebar,
+.rz-panel-menu {
+    background: linear-gradient(180deg, #FFF5FB 0%, #FFECF8 100%);
+}
+
+/* Button gradients for primary actions */
+.rz-button.rz-primary {
+    background: var(--rz-gradient-primary);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.rz-button.rz-primary:hover {
+    background: linear-gradient(135deg, #F06EFF 0%, #FF9A76 50%, #FFCC80 100%);
+    box-shadow: 0 4px 12px rgba(224, 64, 251, 0.4);
+}
+
+/* Card styling */
+.rz-card {
+    border: 1px solid #FFCCE8;
+    box-shadow: 0 2px 8px rgba(224, 64, 251, 0.08);
+}
+
+/* Input focus states */
+.rz-textbox:focus,
+.rz-dropdown:focus,
+.rz-textarea:focus {
+    border-color: #E040FB;
+    box-shadow: 0 0 0 3px rgba(224, 64, 251, 0.2);
+}
+
+/* DataGrid header */
+.rz-datatable .rz-datatable-thead > tr > th {
+    background: linear-gradient(135deg, #FFF5FB 0%, #FFECF8 100%);
+    border-bottom: 2px solid #E040FB;
+}
+
+/* Progress bar gradient */
+.rz-progressbar-value {
+    background: var(--rz-gradient-primary);
+}
+
+/* Tab styling */
+.rz-tabview-nav li.rz-tabview-selected a {
+    border-bottom-color: #E040FB;
+    color: #E040FB;
+}
+
+/* Link colors */
+a, .rz-link {
+    color: #E040FB;
+}
+
+a:hover, .rz-link:hover {
+    color: #AA00C7;
+}
+
+/* Selection highlight */
+::selection {
+    background: rgba(224, 64, 251, 0.3);
+    color: #3D2945;
+}

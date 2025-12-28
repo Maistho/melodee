@@ -1,0 +1,139 @@
+/*
+ * Sunset Vibes Theme - Warm sunset gradient colors
+ * Orange, pink, purple transition like a beautiful sunset
+ */
+
+:root {
+    /* Primary - Sunset Orange */
+    --rz-primary: #F77F00;
+    --rz-primary-light: #FCBF49;
+    --rz-primary-lighter: #FEE4A6;
+    --rz-primary-dark: #D66D00;
+    --rz-primary-darker: #B35900;
+    
+    /* Secondary - Sunset Pink */
+    --rz-secondary: #EF476F;
+    --rz-secondary-light: #F47D98;
+    --rz-secondary-lighter: #F9B3C1;
+    --rz-secondary-dark: #D63358;
+    --rz-secondary-darker: #B82548;
+    
+    /* Info - Twilight Purple */
+    --rz-info: #7209B7;
+    --rz-info-light: #9B4DCA;
+    --rz-info-lighter: #C490DD;
+    --rz-info-dark: #560BAD;
+    --rz-info-darker: #3A0CA3;
+    
+    /* Success - Palm Green */
+    --rz-success: #06D6A0;
+    --rz-success-light: #4DE8C2;
+    --rz-success-lighter: #99F2DD;
+    --rz-success-dark: #05B386;
+    --rz-success-darker: #04906C;
+    
+    /* Warning - Golden Hour */
+    --rz-warning: #FCBF49;
+    --rz-warning-light: #FDD380;
+    --rz-warning-lighter: #FEE8B6;
+    --rz-warning-dark: #EAA617;
+    --rz-warning-darker: #D18F00;
+    
+    /* Danger - Deep Coral */
+    --rz-danger: #D62828;
+    --rz-danger-light: #E25858;
+    --rz-danger-lighter: #EE8888;
+    --rz-danger-dark: #B82020;
+    --rz-danger-darker: #9A1818;
+    
+    /* Base - Warm cream */
+    --rz-base-50: #FFFCF7;
+    --rz-base-100: #FFF8EE;
+    --rz-base-200: #FFF3E0;
+    --rz-base-300: #FFECCC;
+    --rz-base-400: #FFE0B2;
+    --rz-base-500: #FFCC80;
+    --rz-base-600: #FFB74D;
+    --rz-base-700: #FFA726;
+    --rz-base-800: #FF9800;
+    --rz-base-900: #F57C00;
+    
+    --rz-base-background-color: #FFFCF7;
+    --rz-base-background-color-secondary: #FFF8EE;
+    
+    /* Text */
+    --rz-text-color: #3D0C02;
+    --rz-text-secondary-color: #7B1113;
+    --rz-text-disabled-color: #FFCC80;
+    --rz-text-contrast-color: #FFFCF7;
+    
+    /* Border */
+    --rz-border-color: #FFE0B2;
+    --rz-border-color-hover: #F77F00;
+    
+    --rz-shadow-1: 0 2px 8px rgba(247, 127, 0, 0.15);
+    --rz-shadow-2: 0 4px 16px rgba(247, 127, 0, 0.18);
+    --rz-shadow-3: 0 8px 24px rgba(247, 127, 0, 0.22);
+    
+    --rz-gradient-primary: linear-gradient(135deg, #F77F00 0%, #EF476F 50%, #7209B7 100%);
+}
+
+body {
+    background: linear-gradient(135deg, #FFFCF7 0%, #FFF3E0 50%, #FFECCC 100%);
+}
+
+.rz-button.rz-primary {
+    background: var(--rz-gradient-primary);
+    border: none;
+}
+
+.rz-button.rz-primary:hover {
+    background: linear-gradient(135deg, #FCBF49 0%, #F47D98 50%, #9B4DCA 100%);
+    box-shadow: 0 4px 25px rgba(247, 127, 0, 0.5);
+}
+
+.rz-card {
+    background: #FFFCF7;
+    border: 1px solid #FFE0B2;
+    box-shadow: 0 2px 12px rgba(247, 127, 0, 0.1);
+}
+
+.rz-sidebar {
+    background: linear-gradient(180deg, #FFF8EE 0%, #FFF3E0 100%);
+    border-right: 1px solid #FFE0B2;
+}
+
+.rz-datatable .rz-datatable-thead > tr > th {
+    background: linear-gradient(90deg, rgba(247, 127, 0, 0.1) 0%, rgba(239, 71, 111, 0.1) 50%, rgba(114, 9, 183, 0.1) 100%);
+    border-bottom: 2px solid;
+    border-image: linear-gradient(90deg, #F77F00, #EF476F, #7209B7) 1;
+}
+
+.rz-textbox:focus,
+.rz-dropdown:focus {
+    border-color: #F77F00;
+    box-shadow: 0 0 0 3px rgba(247, 127, 0, 0.2);
+}
+
+.rz-progressbar-value {
+    background: var(--rz-gradient-primary);
+}
+
+a, .rz-link {
+    color: #F77F00;
+}
+
+a:hover, .rz-link:hover {
+    color: #D66D00;
+}
+
+::selection {
+    background: rgba(247, 127, 0, 0.3);
+    color: #3D0C02;
+}
+
+/* Sunset gradient header effect */
+.rz-panel-header,
+.rz-dialog-titlebar {
+    background: linear-gradient(90deg, rgba(247, 127, 0, 0.15) 0%, rgba(239, 71, 111, 0.15) 50%, rgba(114, 9, 183, 0.15) 100%);
+}
