@@ -13,6 +13,7 @@ public static class LibraryExtensions
             LibraryType.Chart => ("format_list_numbered", "Chart type library"),
             LibraryType.UserImages => ("photo_library", "Images type library"),
             LibraryType.Playlist => ("queue_music", "Playlist data library"),
+            LibraryType.Templates => ("folder_code", "Templates library"),
             _ => ("inventory_2", "Storage type library")
         };
     }
