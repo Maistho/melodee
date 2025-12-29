@@ -325,6 +325,39 @@ public sealed class LibraryServiceTests : ServiceTestBase
         await Assert.ThrowsAsync<Exception>(() => libraryService.GetStagingLibraryAsync());
     }
 
+    [Fact]
+    public async Task GetTemplatesLibraryAsync_WhenExists_ReturnsTemplatesLibrary()
+    {
+        // Arrange
+        await CleanupTestLibraries();
+        var libraryService = GetLibraryService();
+        await CreateLibraryInDb(1, "Email Templates", LibraryType.Templates);
+
+        // Act
+        var result = await libraryService.GetTemplatesLibraryAsync();
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+        Assert.Equal(1, result.Data.Id);
+        Assert.Equal("Email Templates", result.Data.Name);
+        Assert.Equal((int)LibraryType.Templates, result.Data.Type);
+    }
+
+    [Fact]
+    public async Task GetTemplatesLibraryAsync_WhenNotExists_ThrowsException()
+    {
+        // Arrange
+        await CleanupTestLibraries();
+        var libraryService = GetLibraryService();
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<Exception>(() => libraryService.GetTemplatesLibraryAsync());
+        Assert.Contains("Templates library not found", exception.Message);
+        Assert.Contains("type of '7'", exception.Message);
+    }
+
     #endregion
 
     #region PurgeLibraryAsync Tests
