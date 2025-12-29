@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Spectre.Console.Cli;
+using ValidationResult = Spectre.Console.ValidationResult;
 
 namespace Melodee.Cli.CommandSettings;
 
@@ -11,6 +12,16 @@ public class LibraryRebuildSettings : LibrarySettings
     public bool CreateOnlyMissing { get; init; }
 
     [Description("Rebuild only this library path.")]
-    [CommandArgument(1, "[only-path]")]
+    [CommandArgument(0, "[only-path]")]
     public string? OnlyPath { get; init; }
+
+    public override ValidationResult Validate()
+    {
+        if (string.IsNullOrEmpty(LibraryName))
+        {
+            return ValidationResult.Error("Library name is required. Use --library or -l to specify the library.");
+        }
+
+        return ValidationResult.Success();
+    }
 }

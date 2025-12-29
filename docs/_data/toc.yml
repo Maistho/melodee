@@ -1,27 +1,39 @@
-- title: Documentation
+- title: Getting Started
   url: docs
   links:
-    - title: Quick Start for Homelabs
+    - title: Quick Start
       url: "quickstart"
     - title: Installation
       url: "installing"
     - title: Configuration
       url: "configuration"
+    - title: Configuration Reference
+      url: "configuration-reference"
+
+- title: Deployment
+  links:
     - title: "Homelab Deployment"
       url: "homelab"
     - title: "Hardware & Performance"
       url: "hardware"
     - title: "Backup & Recovery"
       url: "backup"
-    - title: "Background Jobs"
-      url: "jobs"
+
+- title: Core Concepts
+  links:
     - title: Libraries
       url: "libraries"
+    - title: "Background Jobs"
+      url: "jobs"
+
+- title: Tools & Interfaces
+  links:
+    - title: "Command Line Interface (CLI)"
+      url: "cli"
     - title: API Overview
       url: "apis"
-    - title: API
+    - title: API Reference
       url: "api"
-    - title: Configuration Reference
-      url: "configuration-reference"
-    - title: "About"
-      url: "about"
+
+- title: About
+  url: "about"

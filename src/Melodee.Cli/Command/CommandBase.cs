@@ -25,8 +25,18 @@ public abstract class CommandBase<T> : AsyncCommand<T> where T : Spectre.Console
 {
     protected IConfigurationRoot Configuration()
     {
+        var basePath = Directory.GetCurrentDirectory();
+        var appSettingsPath = Environment.GetEnvironmentVariable("MELODEE_APPSETTINGS_PATH");
+        if (!string.IsNullOrWhiteSpace(appSettingsPath) && File.Exists(appSettingsPath))
+        {
+            return new ConfigurationBuilder()
+                .AddJsonFile(appSettingsPath)
+                .AddEnvironmentVariables()
+                .Build();
+        }
+
         return new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
+            .SetBasePath(basePath)
             .AddJsonFile("appsettings.json")
             .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}.json", true)
             .AddEnvironmentVariables()

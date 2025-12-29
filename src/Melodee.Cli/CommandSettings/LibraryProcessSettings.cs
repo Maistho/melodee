@@ -17,12 +17,12 @@ public class LibraryProcessSettings : LibrarySettings
     public bool ForceMode { get; init; }
 
     [Description("Maximum number of albums to process and then quit, null is unlimited.")]
-    [CommandArgument(1, "[LIMIT]")]
+    [CommandOption("--limit")]
     [DefaultValue(null)]
     public int? ProcessLimit { get; init; }
 
     [Description("Script to run before Processing.")]
-    [CommandArgument(2, "[PRESCRIPT]")]
+    [CommandOption("--pre-script")]
     [DefaultValue(null)]
     public string? PreDiscoveryScript { get; set; }
 
@@ -62,7 +62,7 @@ public class LibraryProcessSettings : LibrarySettings
 
         if (string.IsNullOrEmpty(LibraryName))
         {
-            return ValidationResult.Error("Library name is required (or use --inbound and --staging for path-based mode)");
+            return ValidationResult.Error("Library name is required. Use --library or -l to specify the library (or use --inbound and --staging for path-based mode)");
         }
 
         return ValidationResult.Success();

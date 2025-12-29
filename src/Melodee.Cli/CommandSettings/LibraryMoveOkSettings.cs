@@ -7,8 +7,8 @@ namespace Melodee.Cli.CommandSettings;
 public class LibraryMoveOkSettings : LibrarySettings
 {
     [Description("Name of library to move 'Ok' albums into.")]
-    [CommandArgument(1, "[TOLIBRARY]")]
-    public string ToLibraryName { get; set; } = string.Empty;
+    [CommandOption("--to-library")]
+    public string? ToLibraryName { get; set; }
 
     [Description("Source path containing albums to move (use with --to-path for path-based mode, bypasses database library lookup).")]
     [CommandOption("--from-path")]
@@ -51,12 +51,12 @@ public class LibraryMoveOkSettings : LibrarySettings
 
         if (string.IsNullOrEmpty(LibraryName))
         {
-            return ValidationResult.Error("Library name is required (or use --from-path and --to-path for path-based mode)");
+            return ValidationResult.Error("Library name is required. Use --library or -l to specify the library (or use --from-path and --to-path for path-based mode)");
         }
 
         if (string.IsNullOrEmpty(ToLibraryName))
         {
-            return ValidationResult.Error("To library name is required (or use --from-path and --to-path for path-based mode)");
+            return ValidationResult.Error("To library name is required. Use --to-library to specify the destination library (or use --from-path and --to-path for path-based mode)");
         }
 
         return ValidationResult.Success();
