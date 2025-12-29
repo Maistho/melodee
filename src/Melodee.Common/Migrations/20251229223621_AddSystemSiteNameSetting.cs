@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Melodee.Common.Migrations
 {
     /// <inheritdoc />
-    public partial class AddPasswordResetEmailSubjectSetting : Migration
+    public partial class AddSystemSiteNameSetting : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -13,7 +13,7 @@ namespace Melodee.Common.Migrations
             migrationBuilder.InsertData(
                 table: "Settings",
                 columns: new[] { "Id", "ApiKey", "Category", "Comment", "CreatedAt", "Description", "IsLocked", "Key", "LastUpdatedAt", "Notes", "SortOrder", "Tags", "Value" },
-                values: new object[] { 1509, new Guid("a268fe56-a265-c29d-fd82-e5efc61f0505"), null, "Password reset email subject line", NodaTime.Instant.FromUnixTimeTicks(0L), "Subject for password reset emails", false, "email.resetPassword.subject", null, null, 0, null, "Reset your Melodee password" });
+                values: new object[] { 1103, new Guid("9468bf96-8fea-8dfb-c1a9-7b764c5178c6"), 11, "Name for this Melodee instance (used in emails and UI branding).", NodaTime.Instant.FromUnixTimeTicks(0L), "Customize the display name of your Melodee instance. Defaults to 'Melodee' if not set.", false, "system.siteName", null, null, 0, null, "Melodee" });
         }
 
         /// <inheritdoc />
@@ -22,7 +22,7 @@ namespace Melodee.Common.Migrations
             migrationBuilder.DeleteData(
                 table: "Settings",
                 keyColumn: "Id",
-                keyValue: 1509);
+                keyValue: 1103);
         }
     }
 }

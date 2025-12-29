@@ -108,7 +108,7 @@ public class LibraryCleanCommand : CommandBase<LibraryCleanSettings>
                         }
                     };
 
-                    result = await libraryService.CleanLibraryAsync(settings.LibraryName, cancellationToken);
+                    result = await libraryService.CleanLibraryAsync(settings.LibraryName!, cancellationToken);
                 });
 
             AnsiConsole.WriteLine();

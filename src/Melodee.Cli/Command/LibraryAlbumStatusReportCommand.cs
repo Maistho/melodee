@@ -18,13 +18,13 @@ public class LibraryAlbumStatusReportCommand : CommandBase<LibraryAlbumStatusRep
         using (var scope = CreateServiceProvider().CreateScope())
         {
             var libraryService = scope.ServiceProvider.GetRequiredService<LibraryService>();
-            
+
             MelodeeModels.OperationResult<MelodeeModels.Statistic[]?>? result = null;
 
             await AnsiConsole.Status()
                 .StartAsync("Generating album status report...", async ctx =>
                 {
-                    result = await libraryService.AlbumStatusReport(settings.LibraryName, cancellationToken);
+                    result = await libraryService.AlbumStatusReport(settings.LibraryName!, cancellationToken);
                 });
 
             if (result == null || !result.IsSuccess)
@@ -54,8 +54,8 @@ public class LibraryAlbumStatusReportCommand : CommandBase<LibraryAlbumStatusRep
                 foreach (var stat in stats)
                 {
                     table.AddRow(
-                        stat.Title.EscapeMarkup(), 
-                        $"[{stat.DisplayColor ?? "default"}]{stat.Data?.ToString().EscapeMarkup() ?? string.Empty}[/]", 
+                        stat.Title.EscapeMarkup(),
+                        $"[{stat.DisplayColor ?? "default"}]{stat.Data?.ToString().EscapeMarkup() ?? string.Empty}[/]",
                         stat.Message?.EscapeMarkup() ?? string.Empty);
                 }
                 AnsiConsole.Write(table);
@@ -83,7 +83,7 @@ public class LibraryAlbumStatusReportCommand : CommandBase<LibraryAlbumStatusRep
                 // 3. Other statuses
                 // Filter out the Ok stat and the Invalid Ok stats
                 var otherStats = stats.Where(x => x.Title != "Ok" && !x.Title.StartsWith("Album with `Ok` status"));
-                
+
                 // Group by Data (which contains the status string)
                 var grouped = otherStats
                     .GroupBy(x => x.Data?.ToString() ?? "Unknown")

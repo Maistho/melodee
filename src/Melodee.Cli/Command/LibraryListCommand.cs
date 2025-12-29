@@ -65,8 +65,8 @@ public class LibraryListCommand : CommandBase<LibraryListSettings>
                 };
 
                 var statusMarkup = library.IsLocked ? "[red]🔒 Locked[/]" : "[green]✓ Active[/]";
-                
-                var lastScanText = library.LastScanAt.HasValue 
+
+                var lastScanText = library.LastScanAt.HasValue
                     ? library.LastScanAt.Value.ToDateTimeUtc().ToString("yyyy-MM-dd HH:mm")
                     : "[grey]Never[/]";
 
@@ -91,7 +91,7 @@ public class LibraryListCommand : CommandBase<LibraryListSettings>
             AnsiConsole.Write(table);
             AnsiConsole.WriteLine();
             AnsiConsole.MarkupLine($"[grey]Total libraries: {libraries.Length}[/]");
-            
+
             var needsScan = libraries.Count(l => l.NeedsScanning() && !l.IsLocked);
             if (needsScan > 0)
             {

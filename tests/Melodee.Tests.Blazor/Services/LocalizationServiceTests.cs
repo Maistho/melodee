@@ -318,7 +318,7 @@ public class LocalizationServiceTests
         // Arrange
         var culture = new CultureInfo("zh-CN");
         _mockLocalStorage.Setup(x => x.SetItemAsStringAsync(It.IsAny<string>(), It.IsAny<string>()))
-            .ThrowsAsync(new InvalidOperationException("Storage error"));
+            .ThrowsAsync(new Exception("Storage error"));
 
         // Act
         await _service.SetCultureAsync(culture);

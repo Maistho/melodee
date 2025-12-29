@@ -111,11 +111,11 @@ public class SettingService : ServiceBase
         var orGroups = new List<List<FilterOperatorInfo>>();
         var andFilters = new List<FilterOperatorInfo>();
         var currentOrGroup = new List<FilterOperatorInfo>();
-        
+
         for (int i = 0; i < pagedRequest.FilterBy.Length; i++)
         {
             var filter = pagedRequest.FilterBy[i];
-            
+
             if (i == 0)
             {
                 // First filter starts a group
@@ -145,7 +145,7 @@ public class SettingService : ServiceBase
                 currentOrGroup.Add(filter);
             }
         }
-        
+
         // Save final group
         if (currentOrGroup.Count > 0)
         {
@@ -184,7 +184,7 @@ public class SettingService : ServiceBase
 
         // Build OR expression by combining individual filter results
         IQueryable<Setting>? result = null;
-        
+
         foreach (var filter in filters)
         {
             var filteredQuery = ApplySingleFilter(query, filter);

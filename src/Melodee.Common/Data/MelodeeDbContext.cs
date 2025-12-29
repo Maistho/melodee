@@ -1044,6 +1044,17 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
                 },
                 new Setting
                 {
+                    Id = 1103,
+                    ApiKey = SeedGuid("Setting", 1103),
+                    Category = (int)SettingCategory.System,
+                    Key = SettingRegistry.SystemSiteName,
+                    Comment = "Name for this Melodee instance (used in emails and UI branding).",
+                    Description = "Customize the display name of your Melodee instance. Defaults to 'Melodee' if not set.",
+                    Value = "Melodee",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
                     Id = 1101,
                     ApiKey = SeedGuid("Setting", 1101),
                     Category = (int)SettingCategory.System,

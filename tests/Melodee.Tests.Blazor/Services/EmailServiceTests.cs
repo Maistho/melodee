@@ -39,11 +39,11 @@ public class SmtpEmailSenderTests
         // Assert
         Assert.False(result);
 
-        // Verify warning was logged
+        // Verify warning was logged with structured logging
         _mockLogger.Verify(
             l => l.Warning(
                 It.Is<string>(s => s.Contains("Email sending is disabled")),
-                It.IsAny<object[]>()),
+                It.IsAny<string>()),
             Times.Once);
     }
 
@@ -103,11 +103,11 @@ public class SmtpEmailSenderTests
         // Act
         await sender.SendAsync(sensitiveEmail, "Test", "Body with secret token");
 
-        // Assert - verify email is masked in logs
+        // Assert - verify email is masked in logs (structured logging with single parameter)
         _mockLogger.Verify(
             l => l.Warning(
                 It.IsAny<string>(),
-                It.Is<object[]>(args => args.All(a => a == null || a.ToString() != sensitiveEmail))),
+                It.Is<string>(maskedEmail => !maskedEmail.Contains(sensitiveEmail))),
             Times.AtLeastOnce);
     }
 }
@@ -120,11 +120,13 @@ public class EmailTemplateServiceTests
 {
     private readonly Mock<IMelodeeConfigurationFactory> _mockConfigFactory;
     private readonly Mock<IMelodeeConfiguration> _mockConfig;
+    private readonly Mock<LibraryService> _mockLibraryService;
 
     public EmailTemplateServiceTests()
     {
         _mockConfigFactory = new Mock<IMelodeeConfigurationFactory>();
         _mockConfig = new Mock<IMelodeeConfiguration>();
+        _mockLibraryService = new Mock<LibraryService>();
 
         _mockConfigFactory.Setup(f => f.GetConfigurationAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(_mockConfig.Object);
@@ -137,7 +139,7 @@ public class EmailTemplateServiceTests
     public async Task RenderPasswordResetEmailAsync_ReplacesResetUrl()
     {
         // Arrange
-        var service = new EmailTemplateService(_mockConfigFactory.Object);
+        var service = new EmailTemplateService(_mockConfigFactory.Object, _mockLibraryService.Object);
         var resetUrl = "https://melodee.test/reset?token=abc123";
 
         // Act
@@ -152,7 +154,7 @@ public class EmailTemplateServiceTests
     public async Task RenderPasswordResetEmailAsync_ReplacesExpiryMinutes()
     {
         // Arrange
-        var service = new EmailTemplateService(_mockConfigFactory.Object);
+        var service = new EmailTemplateService(_mockConfigFactory.Object, _mockLibraryService.Object);
         var expiryMinutes = 120;
 
         // Act
@@ -178,7 +180,7 @@ public class EmailTemplateServiceTests
         _mockConfig.Setup(c => c.GetValue<string>(SettingRegistry.EmailResetPasswordHtmlBodyTemplate))
             .Returns(customHtmlTemplate);
 
-        var service = new EmailTemplateService(_mockConfigFactory.Object);
+        var service = new EmailTemplateService(_mockConfigFactory.Object, _mockLibraryService.Object);
 
         // Act
         var (subject, textBody, htmlBody) = await service.RenderPasswordResetEmailAsync("https://test.com/reset", 60);
@@ -189,5 +191,276 @@ public class EmailTemplateServiceTests
         Assert.Contains("60", textBody);
         Assert.Contains("https://test.com/reset", htmlBody);
         Assert.Contains("60", htmlBody);
+    }
+
+    [Fact]
+    public async Task RenderPasswordResetEmailAsync_WithValidBaseUrl_PopulatesBaseUrlVariable()
+    {
+        // Arrange
+        _mockConfig.Setup(c => c.GetValue<string>(SettingRegistry.SystemBaseUrl))
+            .Returns("https://melodee.example.com");
+
+        var service = new EmailTemplateService(_mockConfigFactory.Object, _mockLibraryService.Object);
+        var resetUrl = "https://melodee.example.com/account/reset-password?token=xyz789";
+
+        // Act
+        var (subject, textBody, htmlBody) = await service.RenderPasswordResetEmailAsync(resetUrl, 60);
+
+        // Assert - baseUrl should appear in footer
+        Assert.Contains("https://melodee.example.com", textBody);
+        Assert.Contains("https://melodee.example.com", htmlBody);
+        Assert.Contains("This email was sent from https://melodee.example.com", htmlBody);
+    }
+
+    [Fact]
+    public async Task RenderPasswordResetEmailAsync_WithNullBaseUrl_UsesFallback()
+    {
+        // Arrange
+        _mockConfig.Setup(c => c.GetValue<string>(SettingRegistry.SystemBaseUrl))
+            .Returns((string?)null);
+
+        var service = new EmailTemplateService(_mockConfigFactory.Object, _mockLibraryService.Object);
+        var resetUrl = "https://melodee.app/account/reset-password?token=xyz789";
+
+        // Act
+        var (subject, textBody, htmlBody) = await service.RenderPasswordResetEmailAsync(resetUrl, 60);
+
+        // Assert - should use fallback baseUrl
+        Assert.Contains("https://melodee.app", textBody);
+        Assert.Contains("https://melodee.app", htmlBody);
+    }
+
+    [Fact]
+    public async Task RenderPasswordResetEmailAsync_WithEmptyBaseUrl_UsesFallback()
+    {
+        // Arrange
+        _mockConfig.Setup(c => c.GetValue<string>(SettingRegistry.SystemBaseUrl))
+            .Returns(string.Empty);
+
+        var service = new EmailTemplateService(_mockConfigFactory.Object, _mockLibraryService.Object);
+
+        // Act
+        var (subject, textBody, htmlBody) = await service.RenderPasswordResetEmailAsync("https://test.com/reset", 60);
+
+        // Assert - should use fallback baseUrl
+        Assert.Contains("https://melodee.app", textBody);
+        Assert.Contains("https://melodee.app", htmlBody);
+    }
+
+    [Fact]
+    public async Task RenderPasswordResetEmailAsync_WithPlaceholderBaseUrl_UsesFallback()
+    {
+        // Arrange
+        _mockConfig.Setup(c => c.GetValue<string>(SettingRegistry.SystemBaseUrl))
+            .Returns("** REQUIRED: THIS MUST BE EDITED **");
+
+        var service = new EmailTemplateService(_mockConfigFactory.Object, _mockLibraryService.Object);
+
+        // Act
+        var (subject, textBody, htmlBody) = await service.RenderPasswordResetEmailAsync("https://test.com/reset", 60);
+
+        // Assert - should use fallback baseUrl
+        Assert.Contains("https://melodee.app", textBody);
+        Assert.Contains("https://melodee.app", htmlBody);
+        Assert.DoesNotContain("REQUIRED", htmlBody);
+        Assert.DoesNotContain("EDIT", htmlBody);
+    }
+
+    [Fact]
+    public async Task RenderPasswordResetEmailAsync_TrimsTrailingSlashFromBaseUrl()
+    {
+        // Arrange
+        _mockConfig.Setup(c => c.GetValue<string>(SettingRegistry.SystemBaseUrl))
+            .Returns("https://melodee.example.com/");
+
+        var service = new EmailTemplateService(_mockConfigFactory.Object, _mockLibraryService.Object);
+
+        // Act
+        var (subject, textBody, htmlBody) = await service.RenderPasswordResetEmailAsync("https://test.com/reset", 60);
+
+        // Assert - trailing slash should be removed
+        Assert.Contains("https://melodee.example.com", htmlBody);
+        Assert.DoesNotContain("https://melodee.example.com//", htmlBody);
+    }
+
+    [Fact]
+    public async Task RenderPasswordResetEmailAsync_HtmlDoesNotContainDoubleBraces()
+    {
+        // Arrange
+        var service = new EmailTemplateService(_mockConfigFactory.Object, _mockLibraryService.Object);
+
+        // Act
+        var (subject, textBody, htmlBody) = await service.RenderPasswordResetEmailAsync("https://test.com/reset", 60);
+
+        // Assert - CSS should not have double braces
+        Assert.DoesNotContain("{{", htmlBody);
+        Assert.DoesNotContain("}}", htmlBody);
+        Assert.Contains("body {", htmlBody); // Should have normal single braces
+        Assert.Contains(".header {", htmlBody);
+    }
+
+    [Fact]
+    public async Task RenderPasswordResetEmailAsync_ReplacesAllTemplateVariables()
+    {
+        // Arrange
+        _mockConfig.Setup(c => c.GetValue<string>(SettingRegistry.SystemBaseUrl))
+            .Returns("https://melodee.example.com");
+        _mockConfig.Setup(c => c.GetValue<string>(SettingRegistry.SystemSiteName))
+            .Returns("My Custom Melodee");
+
+        var service = new EmailTemplateService(_mockConfigFactory.Object, _mockLibraryService.Object);
+        var resetUrl = "https://melodee.example.com/account/reset-password?token=test123";
+        var expiryMinutes = 90;
+
+        // Act
+        var (subject, textBody, htmlBody) = await service.RenderPasswordResetEmailAsync(resetUrl, expiryMinutes);
+
+        // Assert - verify all template variables are replaced
+        Assert.DoesNotContain("{resetUrl}", textBody);
+        Assert.DoesNotContain("{resetUrl}", htmlBody);
+        Assert.DoesNotContain("{expiryMinutes}", textBody);
+        Assert.DoesNotContain("{expiryMinutes}", htmlBody);
+        Assert.DoesNotContain("{siteName}", textBody);
+        Assert.DoesNotContain("{siteName}", htmlBody);
+        Assert.DoesNotContain("{appName}", textBody);
+        Assert.DoesNotContain("{appName}", htmlBody);
+        Assert.DoesNotContain("{baseUrl}", textBody);
+        Assert.DoesNotContain("{baseUrl}", htmlBody);
+
+        // Verify actual values are present
+        Assert.Contains(resetUrl, textBody);
+        Assert.Contains(resetUrl, htmlBody);
+        Assert.Contains("90", textBody);
+        Assert.Contains("90", htmlBody);
+        Assert.Contains("My Custom Melodee", htmlBody);
+        Assert.Contains("https://melodee.example.com", htmlBody);
+    }
+
+    [Fact]
+    public async Task RenderPasswordResetEmailAsync_WithCustomSiteName_UsesCustomName()
+    {
+        // Arrange
+        _mockConfig.Setup(c => c.GetValue<string>(SettingRegistry.SystemSiteName))
+            .Returns("Steve's Music Server");
+
+        var service = new EmailTemplateService(_mockConfigFactory.Object, _mockLibraryService.Object);
+
+        // Act
+        var (subject, textBody, htmlBody) = await service.RenderPasswordResetEmailAsync("https://test.com/reset", 60);
+
+        // Assert - custom site name should appear in email
+        Assert.Contains("Steve's Music Server", textBody);
+        Assert.Contains("Steve's Music Server", htmlBody);
+        Assert.Contains("<h1>Steve's Music Server</h1>", htmlBody);
+    }
+
+    [Fact]
+    public async Task RenderPasswordResetEmailAsync_WithNullSiteName_UsesDefaultMelodee()
+    {
+        // Arrange
+        _mockConfig.Setup(c => c.GetValue<string>(SettingRegistry.SystemSiteName))
+            .Returns((string?)null);
+
+        var service = new EmailTemplateService(_mockConfigFactory.Object, _mockLibraryService.Object);
+
+        // Act
+        var (subject, textBody, htmlBody) = await service.RenderPasswordResetEmailAsync("https://test.com/reset", 60);
+
+        // Assert - should default to "Melodee"
+        Assert.Contains("Melodee", textBody);
+        Assert.Contains("Melodee", htmlBody);
+    }
+
+    [Fact]
+    public async Task RenderPasswordResetEmailAsync_WithEmptySiteName_UsesDefaultMelodee()
+    {
+        // Arrange
+        _mockConfig.Setup(c => c.GetValue<string>(SettingRegistry.SystemSiteName))
+            .Returns(string.Empty);
+
+        var service = new EmailTemplateService(_mockConfigFactory.Object, _mockLibraryService.Object);
+
+        // Act
+        var (subject, textBody, htmlBody) = await service.RenderPasswordResetEmailAsync("https://test.com/reset", 60);
+
+        // Assert - should default to "Melodee"
+        Assert.Contains("Melodee", textBody);
+        Assert.Contains("Melodee", htmlBody);
+    }
+
+    [Fact]
+    public async Task RenderPasswordResetEmailAsync_SupportsLegacyAppNameVariable()
+    {
+        // Arrange
+        _mockConfig.Setup(c => c.GetValue<string>(SettingRegistry.SystemSiteName))
+            .Returns("My Music");
+
+        var service = new EmailTemplateService(_mockConfigFactory.Object, _mockLibraryService.Object);
+
+        // Act - use a template with legacy {appName} variable
+        var (subject, textBody, htmlBody) = await service.RenderPasswordResetEmailAsync("https://test.com/reset", 60);
+
+        // Assert - {appName} should be replaced with siteName for backwards compatibility
+        Assert.DoesNotContain("{appName}", htmlBody);
+        Assert.DoesNotContain("{appName}", textBody);
+    }
+
+    [Fact]
+    public async Task RenderPasswordResetEmailAsync_HtmlContainsValidStructure()
+    {
+        // Arrange
+        var service = new EmailTemplateService(_mockConfigFactory.Object, _mockLibraryService.Object);
+        var resetUrl = "https://melodee.example.com/account/reset-password?token=abc123";
+
+        // Act
+        var (subject, textBody, htmlBody) = await service.RenderPasswordResetEmailAsync(resetUrl, 60);
+
+        // Assert - verify HTML structure
+        Assert.Contains("<!DOCTYPE html>", htmlBody);
+        Assert.Contains("<html>", htmlBody);
+        Assert.Contains("</html>", htmlBody);
+        Assert.Contains("<style>", htmlBody);
+        Assert.Contains("</style>", htmlBody);
+        Assert.Contains($"<a href=\"{resetUrl}\"", htmlBody);
+        Assert.Contains("Reset Password", htmlBody);
+        Assert.Contains("Password Reset Request", htmlBody);
+    }
+
+    [Theory]
+    [InlineData("http://localhost:5157")]
+    [InlineData("https://melodee.production.com")]
+    [InlineData("https://melodee.staging.com:8443")]
+    [InlineData("http://192.168.1.100:5000")]
+    public async Task RenderPasswordResetEmailAsync_WithVariousValidBaseUrls_UsesProvidedValue(string baseUrl)
+    {
+        // Arrange
+        _mockConfig.Setup(c => c.GetValue<string>(SettingRegistry.SystemBaseUrl))
+            .Returns(baseUrl);
+
+        var service = new EmailTemplateService(_mockConfigFactory.Object, _mockLibraryService.Object);
+        var resetUrl = $"{baseUrl.TrimEnd('/')}/account/reset-password?token=xyz";
+
+        // Act
+        var (subject, textBody, htmlBody) = await service.RenderPasswordResetEmailAsync(resetUrl, 60);
+
+        // Assert - baseUrl should be present in output
+        var expectedBaseUrl = baseUrl.TrimEnd('/');
+        Assert.Contains(expectedBaseUrl, htmlBody);
+        Assert.Contains(resetUrl, htmlBody);
+    }
+
+    [Fact]
+    public async Task RenderPasswordResetEmailAsync_TextBodyContainsResetUrl()
+    {
+        // Arrange
+        var service = new EmailTemplateService(_mockConfigFactory.Object, _mockLibraryService.Object);
+        var resetUrl = "https://melodee.example.com/account/reset-password?token=plaintext123";
+
+        // Act
+        var (subject, textBody, htmlBody) = await service.RenderPasswordResetEmailAsync(resetUrl, 60);
+
+        // Assert - text body should contain clickable URL for plain text email clients
+        Assert.Contains(resetUrl, textBody);
+        Assert.Contains("Reset your password using this link", textBody);
     }
 }

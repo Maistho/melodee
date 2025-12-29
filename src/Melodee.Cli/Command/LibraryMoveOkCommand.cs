@@ -179,8 +179,8 @@ public class LibraryMoveOkCommand : CommandBase<LibraryMoveOkSettings>
                         else
                         {
                             result = await libraryService.MoveAlbumsFromLibraryToLibrary(
-                                    settings.LibraryName,
-                                    settings.ToLibraryName,
+                                    settings.LibraryName!,
+                                    settings.ToLibraryName!,
                                     b => b.Status == AlbumStatus.Ok,
                                     settings.Verbose,
                                     cancellationToken)

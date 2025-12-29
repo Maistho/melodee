@@ -105,6 +105,7 @@ public static class SettingRegistry
     public const string SecurityBlacklistedEmails = "security.blacklistedEmails";
     public const string SecurityBlacklistedIPs = "security.blacklistedIPs";
     public const string SystemBaseUrl = "system.baseUrl";
+    public const string SystemSiteName = "system.siteName";
     public const string SystemIsDownloadingEnabled = "system.isDownloadingEnabled";
     public const string SystemMaxUploadSize = "system.maxUploadSize";
     // Streaming settings

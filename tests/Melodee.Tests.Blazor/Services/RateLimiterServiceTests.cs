@@ -138,7 +138,7 @@ public class RateLimiterServiceTests
         // but should be reasonably close to the limit and definitely block further attempts
         Assert.True(successCount <= maxAttempts * 2,
             $"Expected at most {maxAttempts * 2} successful attempts (allowing for race conditions), but got {successCount}");
-        
+
         // Verify rate limiter is now blocking
         Assert.False(rateLimiter.IsAllowed(key, maxAttempts));
     }

@@ -188,7 +188,8 @@
         if (firstRender)
         {
             var configuration = await MelodeeConfigurationFactory.GetConfigurationAsync();
-            _siteTitle = configuration.GetValue<string>(SettingRegistry.OpenSubsonicServerType) ?? string.Empty;
+            _siteTitle = configuration.GetValue<string>(SettingRegistry.SystemSiteName) ?? "Melodee";
+
             _mediaLibraryInfos = (await LibraryService.ListMediaLibrariesAsync())
                 .Data
                 .Where(x => x.TypeValue is LibraryType.Inbound or LibraryType.Staging)

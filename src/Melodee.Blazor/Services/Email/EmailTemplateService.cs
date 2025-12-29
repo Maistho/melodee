@@ -1,6 +1,5 @@
 using Melodee.Common.Configuration;
 using Melodee.Common.Constants;
-using Melodee.Common.Enums;
 using Melodee.Common.Services;
 
 namespace Melodee.Blazor.Services.Email;
@@ -50,9 +49,25 @@ public sealed class EmailTemplateService : IEmailTemplateService
         CancellationToken cancellationToken = default)
     {
         var config = await _configurationFactory.GetConfigurationAsync(cancellationToken);
-        var baseUrl = config.GetValue<string>(SettingRegistry.SystemBaseUrl) ?? "https://melodee.app";
-        var appName = "Melodee";
-        
+        var baseUrl = config.GetValue<string>(SettingRegistry.SystemBaseUrl);
+
+        // Validate and sanitize baseUrl
+        if (string.IsNullOrWhiteSpace(baseUrl) || baseUrl.Contains("REQUIRED") || baseUrl.Contains("EDIT"))
+        {
+            baseUrl = "https://melodee.app";
+        }
+        else
+        {
+            baseUrl = baseUrl.TrimEnd('/'); // Remove trailing slash for consistency
+        }
+
+        // Get site name from configuration, default to "Melodee"
+        var siteName = config.GetValue<string>(SettingRegistry.SystemSiteName);
+        if (string.IsNullOrWhiteSpace(siteName))
+        {
+            siteName = "Melodee";
+        }
+
         // Normalize language code (e.g., "en-US" or default to "en-US")
         var normalizedLanguage = NormalizeLanguageCode(languageCode);
 
@@ -68,8 +83,8 @@ public sealed class EmailTemplateService : IEmailTemplateService
             ?? GetDefaultHtmlTemplate(normalizedLanguage);
 
         // Replace template variables
-        var textBody = ReplaceVariables(textTemplate, resetUrl, expiryMinutes, appName, baseUrl);
-        var htmlBody = ReplaceVariables(htmlTemplate, resetUrl, expiryMinutes, appName, baseUrl);
+        var textBody = ReplaceVariables(textTemplate, resetUrl, expiryMinutes, siteName, baseUrl);
+        var htmlBody = ReplaceVariables(htmlTemplate, resetUrl, expiryMinutes, siteName, baseUrl);
 
         return (subject, textBody, htmlBody);
     }
@@ -111,25 +126,26 @@ public sealed class EmailTemplateService : IEmailTemplateService
         return languageCode.ToLowerInvariant();
     }
 
-    private static string ReplaceVariables(string template, string resetUrl, int expiryMinutes, string appName, string baseUrl)
+    private static string ReplaceVariables(string template, string resetUrl, int expiryMinutes, string siteName, string baseUrl)
     {
         return template
             .Replace("{resetUrl}", resetUrl)
             .Replace("{expiryMinutes}", expiryMinutes.ToString())
-            .Replace("{appName}", appName)
+            .Replace("{siteName}", siteName)
+            .Replace("{appName}", siteName) // Support legacy {appName} variable
             .Replace("{baseUrl}", baseUrl);
     }
 
     private static string GetDefaultSubject(string? languageCode)
     {
         // Future: implement localized subjects
-        return "Reset your Melodee password";
+        return "Reset your password";
     }
 
     private static string GetDefaultTextTemplate(string? languageCode)
     {
         // Future: implement localized templates
-        return @"Someone requested a password reset for your Melodee account.
+        return @"Someone requested a password reset for your {siteName} account.
 
 Reset your password using this link (valid for {expiryMinutes} minutes):
 {resetUrl}
@@ -150,22 +166,22 @@ This email was sent from {baseUrl}.";
     <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
     <title>Reset your password</title>
     <style>
-        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }}
-        .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }}
-        .header h1 {{ color: white; margin: 0; font-size: 24px; }}
-        .content {{ background: #ffffff; padding: 30px; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 8px 8px; }}
-        .button {{ display: inline-block; padding: 12px 24px; background: #667eea; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0; }}
-        .footer {{ text-align: center; margin-top: 20px; color: #666; font-size: 12px; }}
-        .warning {{ background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; margin: 20px 0; }}
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+        .header h1 { color: white; margin: 0; font-size: 24px; }
+        .content { background: #ffffff; padding: 30px; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 8px 8px; }
+        .button { display: inline-block; padding: 12px 24px; background: #667eea; color: white; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+        .warning { background: #fff3cd; border-left: 4px solid #ffc107; padding: 12px; margin: 20px 0; }
     </style>
 </head>
 <body>
     <div class=""header"">
-        <h1>{appName}</h1>
+        <h1>{siteName}</h1>
     </div>
     <div class=""content"">
         <h2>Password Reset Request</h2>
-        <p>Someone requested a password reset for your {appName} account.</p>
+        <p>Someone requested a password reset for your {siteName} account.</p>
         <p>Click the button below to reset your password:</p>
         <p style=""text-align: center;"">
             <a href=""{resetUrl}"" class=""button"">Reset Password</a>

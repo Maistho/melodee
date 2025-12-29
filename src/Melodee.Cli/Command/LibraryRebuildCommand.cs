@@ -54,7 +54,7 @@ public class LibraryRebuildCommand : CommandBase<LibraryRebuildSettings>
 
             if (!settings.CreateOnlyMissing)
             {
-                var cleanResult = await libraryService.CleanLibraryAsync(settings.LibraryName, cancellationToken);
+                var cleanResult = await libraryService.CleanLibraryAsync(settings.LibraryName!, cancellationToken);
                 if (!cleanResult.IsSuccess)
                 {
                     AnsiConsole.Write(
@@ -130,7 +130,7 @@ public class LibraryRebuildCommand : CommandBase<LibraryRebuildSettings>
                         }
                     };
 
-                    result = await libraryService.Rebuild(settings.LibraryName, settings.CreateOnlyMissing, settings.Verbose, settings.OnlyPath, cancellationToken).ConfigureAwait(false);
+                    result = await libraryService.Rebuild(settings.LibraryName!, settings.CreateOnlyMissing, settings.Verbose, settings.OnlyPath, cancellationToken).ConfigureAwait(false);
                 });
 
             AnsiConsole.WriteLine();

@@ -14,7 +14,7 @@ public static class Program
         app.Configure(config =>
         {
             config.SetApplicationName("mcli");
-            
+
             config.AddBranch<ConfigurationSetSetting>("configuration", add =>
             {
                 add.SetDescription("Manage Melodee configuration settings");
@@ -98,7 +98,7 @@ public static class Program
             var version = typeof(Program).Assembly.GetName().Version;
             AnsiConsole.MarkupLine($":musical_note: [bold cyan]Melodee Command Line Interface[/] [grey]v{version}[/]");
             AnsiConsole.WriteLine();
-            
+
             if (args.Length == 0)
             {
                 var panel = new Panel(

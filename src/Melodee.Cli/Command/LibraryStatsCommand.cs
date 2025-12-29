@@ -57,7 +57,7 @@ public class LibraryStatsCommand : CommandBase<LibraryStatsSettings>
                 var grid = new Grid();
                 grid.AddColumn(new GridColumn().NoWrap().PadRight(2));
                 grid.AddColumn(new GridColumn().NoWrap());
-                
+
                 var typeColor = library.TypeValue switch
                 {
                     Common.Enums.LibraryType.Inbound => "yellow",

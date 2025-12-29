@@ -3951,6 +3951,9 @@
   <data name="Auth.ContactAdminToResetPassword" xml:space="preserve">
     <value>Please contact your system administrator to reset your password.</value>
   </data>
+  <data name="Auth.PasswordResetUnavailable" xml:space="preserve">
+    <value>Password reset is currently unavailable. Please contact your system administrator.</value>
+  </data>
   <data name="Auth.RedirectingToLogin" xml:space="preserve">
     <value>Redirecting to login page...</value>
   </data>
