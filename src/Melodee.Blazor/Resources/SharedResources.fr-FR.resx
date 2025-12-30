@@ -3757,4 +3757,130 @@
   <data name="UploadAlbum.InvalidZip" xml:space="preserve">
     <value>Le fichier téléversé n'est pas une archive ZIP valide.</value>
   </data>
+  <data name="AdminSettings.AddNew" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Add New Setting</value>
+  </data>
+  <data name="AdminSettings.AddNewSetting" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Add New Setting</value>
+  </data>
+  <data name="AdminSettings.AllKeysExist" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] All settings from SettingRegistry already have records in the database.</value>
+  </data>
+  <data name="AdminSettings.Category" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Category</value>
+  </data>
+  <data name="AdminSettings.Description" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Description</value>
+  </data>
+  <data name="AdminSettings.EnterComment" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Enter comment (optional)</value>
+  </data>
+  <data name="AdminSettings.EnterDescription" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Enter description (optional)</value>
+  </data>
+  <data name="AdminSettings.EnterValue" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Enter setting value</value>
+  </data>
+  <data name="AdminSettings.FailedToAdd" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to add setting</value>
+  </data>
+  <data name="AdminSettings.KeyRequired" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Setting key is required</value>
+  </data>
+  <data name="AdminSettings.NoAvailableKeys" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No Available Settings</value>
+  </data>
+  <data name="AdminSettings.SelectKey" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Select a setting key...</value>
+  </data>
+  <data name="AdminSettings.SortOrder" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Sort Order</value>
+  </data>
+  <data name="AdminSettings.SuccessfullyAdded" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Successfully added new setting!</value>
+  </data>
+  <data name="Auth.BackToLogin" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Back to Login</value>
+  </data>
+  <data name="Auth.CheckEmailForResetLink" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] If an account with that email exists, you will receive a password reset link shortly.</value>
+  </data>
+  <data name="Auth.ConfirmNewPassword" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Confirm new password</value>
+  </data>
+  <data name="Auth.ConfirmPasswordRequired" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Please confirm your password</value>
+  </data>
+  <data name="Auth.EmailInvalid" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Please enter a valid email address</value>
+  </data>
+  <data name="Auth.EmailRequired" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Email is required</value>
+  </data>
+  <data name="Auth.EnterNewPassword" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Enter new password</value>
+  </data>
+  <data name="Auth.ForgotPasswordSubtitle" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Enter your email to receive a password reset link</value>
+  </data>
+  <data name="Auth.ForgotPasswordTitle" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Forgot Password</value>
+  </data>
+  <data name="Auth.InvalidOrExpiredToken" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Invalid or expired reset link</value>
+  </data>
+  <data name="Auth.InvalidToken" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Invalid reset token</value>
+  </data>
+  <data name="Auth.NewPassword" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] New Password</value>
+  </data>
+  <data name="Auth.PasswordMinLength" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Password must be at least 8 characters</value>
+  </data>
+  <data name="Auth.PasswordResetEmailSent" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Password reset link sent!</value>
+  </data>
+  <data name="Auth.PasswordResetSuccess" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Password reset successfully!</value>
+  </data>
+  <data name="Auth.PasswordResetUnavailable" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Password reset is currently unavailable. Please contact your system administrator.</value>
+  </data>
+  <data name="Auth.PasswordsMustMatch" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Passwords must match</value>
+  </data>
+  <data name="Auth.RedirectingToLogin" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Redirecting to login page...</value>
+  </data>
+  <data name="Auth.ResetPasswordError" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] An error occurred while resetting your password</value>
+  </data>
+  <data name="Auth.ResetPasswordFailed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to reset password</value>
+  </data>
+  <data name="Auth.ResetPasswordSubtitle" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Enter your new password</value>
+  </data>
+  <data name="Auth.ResetPasswordTitle" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Reset Password</value>
+  </data>
+  <data name="Auth.Resetting" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Resetting...</value>
+  </data>
+  <data name="Auth.SendResetLink" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Send Reset Link</value>
+  </data>
+  <data name="Auth.Sending" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Sending...</value>
+  </data>
+  <data name="Auth.TokenExpiredMessage" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] This password reset link has expired or is invalid. Please request a new one.</value>
+  </data>
+  <data name="Auth.TooManyAttempts" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Too many attempts. Please try again later.</value>
+  </data>
+  <data name="Auth.ValidatingToken" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Validating reset link...</value>
+  </data>
 </root>
