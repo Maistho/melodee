@@ -212,8 +212,16 @@ public abstract class ServiceBase
         }
 
         // Delete directory to merge as what is wanted has been moved 
-        Directory.Delete(albumToMove.Directory.FullName(), true);
-        Logger.Debug("[{ServiceName}] :\u2558: deleting directory [{FileName}]", nameof(LibraryService), albumToMove.Directory);
+        var directoryToDelete = albumToMove.Directory.FullName();
+        if (Directory.Exists(directoryToDelete))
+        {
+            Directory.Delete(directoryToDelete, true);
+            Logger.Debug("[{ServiceName}] :\u2558: deleting directory [{FileName}]", nameof(LibraryService), albumToMove.Directory);
+        }
+        else
+        {
+            Logger.Debug("[{ServiceName}] :\u2558: directory already deleted or does not exist [{FileName}]", nameof(LibraryService), albumToMove.Directory);
+        }
     }
 
 

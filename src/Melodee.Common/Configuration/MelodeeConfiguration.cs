@@ -60,6 +60,22 @@ public record MelodeeConfiguration(Dictionary<string, object?> Configuration) : 
         return input.Nullify();
     }
 
+    public string? GetIgnoredArticles()
+    {
+        return GetValue<string>(SettingRegistry.ProcessingIgnoredArticles).Nullify();
+    }
+
+    public string? NormalizeNameForComparison(string? input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            return null;
+        }
+
+        var articles = GetIgnoredArticles();
+        return input.ToNormalizedStringWithoutArticles(articles);
+    }
+
     public string GenerateWebSearchUrl(object[] searchTerms)
     {
         var term = HttpUtility.UrlEncode(string.Join(" ", searchTerms));

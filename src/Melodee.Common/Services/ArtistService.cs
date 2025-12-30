@@ -854,6 +854,9 @@ public class ArtistService(
         Guard.Against.Expression(x => x < 1, artistIdToMergeInfo, nameof(artistIdToMergeInfo));
         Guard.Against.NullOrEmpty(artistIdsToMerge, nameof(artistIdsToMerge));
 
+        Logger.Debug("Starting merge operation: Target artist ID [{TargetArtistId}], Source artist IDs [{SourceArtistIds}]",
+            artistIdToMergeInfo, string.Join(", ", artistIdsToMerge));
+
         await using (var scopedContext =
                      await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
         {
@@ -862,20 +865,26 @@ public class ArtistService(
             var dbArtistToMergeInto = await scopedContext
                 .Artists
                 .Include(x => x.Library)
+                .Include(x => x.Albums)
                 .FirstOrDefaultAsync(x => x.Id == artistIdToMergeInfo, cancellationToken)
                 .ConfigureAwait(false);
 
             if (dbArtistToMergeInto == null)
             {
+                Logger.Warning("Merge failed: Target artist [{TargetArtistId}] not found", artistIdToMergeInfo);
                 return new MelodeeModels.OperationResult<bool>($"Unknown artist to merge into [{artistIdToMergeInfo}].")
                 {
                     Data = false
                 };
             }
 
+            Logger.Debug("Target artist: [{ArtistName}] (ID: {ArtistId}), Library: [{LibraryName}], Albums: {AlbumCount}",
+                dbArtistToMergeInto.Name, dbArtistToMergeInto.Id, dbArtistToMergeInto.Library.Name, dbArtistToMergeInto.Albums.Count);
+
             var dbArtistToMergeIntoDirectoryPath = dbArtistToMergeInto.ToFileSystemDirectoryInfo().FullName();
             if (!fileSystemService.DirectoryExists(dbArtistToMergeIntoDirectoryPath))
             {
+                Logger.Debug("Creating target artist directory: [{Directory}]", dbArtistToMergeIntoDirectoryPath);
                 fileSystemService.CreateDirectory(dbArtistToMergeIntoDirectoryPath);
             }
 
@@ -884,6 +893,8 @@ public class ArtistService(
             var artistAlternateNamesToMerge = new List<string>();
             foreach (var artistApiKeyToMerge in artistIdsToMerge)
             {
+                Logger.Debug("Processing source artist ID [{SourceArtistId}]", artistApiKeyToMerge);
+                
                 var dbArtist = await scopedContext
                     .Artists
                     .Include(x => x.Library)
@@ -893,40 +904,192 @@ public class ArtistService(
                     .ConfigureAwait(false);
                 if (dbArtist == null)
                 {
+                    Logger.Warning("Merge failed: Source artist [{SourceArtistId}] not found", artistApiKeyToMerge);
                     return new MelodeeModels.OperationResult<bool>($"Unknown artist to merge [{artistApiKeyToMerge}].")
                     {
                         Data = false
                     };
                 }
 
+                Logger.Debug("Source artist: [{ArtistName}] (ID: {ArtistId}), Library: [{LibraryName}], Albums: {AlbumCount}, UserArtists: {UserArtistCount}",
+                    dbArtist.Name, dbArtist.Id, dbArtist.Library.Name, dbArtist.Albums.Count, dbArtist.UserArtists.Count);
+
                 artistAlternateNamesToMerge.Add(dbArtist.NameNormalized);
                 artistAlternateNamesToMerge.AddRange(dbArtist.AlternateNames.ToTags() ?? []);
+                Logger.Debug("Adding alternate names from source artist: [{AlternateNames}]", 
+                    string.Join(", ", dbArtist.AlternateNames.ToTags() ?? []));
 
                 var artistPinType = (int)UserPinType.Artist;
+                var existingUserPinUserIds = await scopedContext.UserPins
+                    .Where(up => up.PinType == artistPinType && up.PinId == dbArtistToMergeInto.Id)
+                    .Select(up => up.UserId)
+                    .ToListAsync(cancellationToken)
+                    .ConfigureAwait(false);
+
                 var userPins = await scopedContext.UserPins
                     .Where(x => x.PinType == artistPinType && x.PinId == dbArtist.Id)
                     .ToListAsync(cancellationToken)
                     .ConfigureAwait(false);
+                
+                Logger.Debug("Processing {UserPinCount} user pins from source artist, target already has {ExistingPinCount} pin user IDs",
+                    userPins.Count, existingUserPinUserIds.Count);
+                
+                var pinsTransferred = 0;
+                var pinsRemoved = 0;
                 foreach (var userPin in userPins)
                 {
-                    userPin.PinId = dbArtistToMergeInto.Id;
-                    userPin.LastUpdatedAt = now;
+                    if (existingUserPinUserIds.Contains(userPin.UserId))
+                    {
+                        scopedContext.UserPins.Remove(userPin);
+                        pinsRemoved++;
+                    }
+                    else
+                    {
+                        userPin.PinId = dbArtistToMergeInto.Id;
+                        userPin.LastUpdatedAt = now;
+                        existingUserPinUserIds.Add(userPin.UserId);
+                        pinsTransferred++;
+                    }
                 }
+                Logger.Debug("User pins: {Transferred} transferred, {Removed} removed (duplicates)", pinsTransferred, pinsRemoved);
 
-                foreach (var albumToMerge in dbArtist.Albums)
+                // Get existing album names (and normalized names) for target artist to check for conflicts
+                var existingAlbumNames = dbArtistToMergeInto.Albums
+                    .Select(a => a.NameNormalized)
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+                
+                Logger.Debug("Target artist has {ExistingAlbumCount} existing albums: [{AlbumNames}]",
+                    existingAlbumNames.Count, string.Join(", ", dbArtistToMergeInto.Albums.Select(a => a.Name)));
+
+                foreach (var albumToMerge in dbArtist.Albums.ToList())
                 {
                     try
                     {
-                        var albumToMergeDirectory = Path.Combine(dbArtist.Library.Path, dbArtist.Directory,
+                        Logger.Debug("Processing album [{AlbumName}] (ID: {AlbumId}, NameNormalized: [{NameNormalized}])",
+                            albumToMerge.Name, albumToMerge.Id, albumToMerge.NameNormalized);
+                        
+                        // Check if target artist already has an album with this name
+                        if (existingAlbumNames.Contains(albumToMerge.NameNormalized))
+                        {
+                            Logger.Debug("Album name conflict detected: Target artist already has album [{AlbumName}]", albumToMerge.Name);
+                            
+                            // Target artist already has an album with the same name
+                            // We need to merge the songs from this album into the existing album
+                            var existingAlbum = dbArtistToMergeInto.Albums
+                                .FirstOrDefault(a => string.Equals(a.NameNormalized, albumToMerge.NameNormalized, StringComparison.OrdinalIgnoreCase));
+                            
+                            if (existingAlbum != null)
+                            {
+                                Logger.Debug("Merging albums: Source album ID {SourceAlbumId} into target album ID {TargetAlbumId}",
+                                    albumToMerge.Id, existingAlbum.Id);
+                                
+                                // Transfer songs from source album to existing album if not duplicates
+                                var existingSongNumbers = await scopedContext.Songs
+                                    .Where(s => s.AlbumId == existingAlbum.Id)
+                                    .Select(s => s.SongNumber)
+                                    .ToListAsync(cancellationToken)
+                                    .ConfigureAwait(false);
+
+                                var songsToTransfer = await scopedContext.Songs
+                                    .Where(s => s.AlbumId == albumToMerge.Id)
+                                    .ToListAsync(cancellationToken)
+                                    .ConfigureAwait(false);
+
+                                Logger.Debug("Source album has {SourceSongCount} songs, target album has {TargetSongCount} existing song numbers",
+                                    songsToTransfer.Count, existingSongNumbers.Count);
+
+                                var songsTransferred = 0;
+                                var songsRemoved = 0;
+                                foreach (var song in songsToTransfer)
+                                {
+                                    if (existingSongNumbers.Contains(song.SongNumber))
+                                    {
+                                        Logger.Debug("Removing duplicate song: [{SongTitle}] (SongNumber: {SongNumber})", song.Title, song.SongNumber);
+                                        scopedContext.Songs.Remove(song);
+                                        songsRemoved++;
+                                    }
+                                    else
+                                    {
+                                        Logger.Debug("Transferring song: [{SongTitle}] (SongNumber: {SongNumber}) to target album", song.Title, song.SongNumber);
+                                        song.AlbumId = existingAlbum.Id;
+                                        song.LastUpdatedAt = now;
+                                        existingSongNumbers.Add(song.SongNumber);
+                                        songsTransferred++;
+                                    }
+                                }
+                                Logger.Debug("Album merge songs: {Transferred} transferred, {Removed} removed (duplicates)", songsTransferred, songsRemoved);
+
+                                // Transfer contributors from source album's songs
+                                var contributorsToTransfer = await scopedContext.Contributors
+                                    .Where(c => c.AlbumId == albumToMerge.Id)
+                                    .ToListAsync(cancellationToken)
+                                    .ConfigureAwait(false);
+
+                                Logger.Debug("Transferring {ContributorCount} contributors from source album to target album", contributorsToTransfer.Count);
+                                foreach (var contributor in contributorsToTransfer)
+                                {
+                                    contributor.AlbumId = existingAlbum.Id;
+                                    contributor.LastUpdatedAt = now;
+                                }
+
+                                // Handle file system merge
+                                var albumToMergeDirectory = Path.Combine(dbArtist.Library.Path, dbArtist.Directory,
+                                    albumToMerge.Directory);
+                                var existingAlbumDirectory = Path.Combine(dbArtistToMergeInto.Library.Path,
+                                    dbArtistToMergeInto.Directory, existingAlbum.Directory);
+
+                                Logger.Debug("File system merge: Source [{SourceDir}] -> Target [{TargetDir}]",
+                                    albumToMergeDirectory, existingAlbumDirectory);
+
+                                if (fileSystemService.DirectoryExists(albumToMergeDirectory))
+                                {
+                                    var albumJsonFiles = fileSystemService.GetFiles(
+                                        albumToMergeDirectory,
+                                        MelodeeModels.Album.JsonFileName);
+                                    if (albumJsonFiles.Length > 0)
+                                    {
+                                        Logger.Debug("Found album JSON file, processing existing directory merge");
+                                        var album = await fileSystemService.DeserializeAlbumAsync(albumJsonFiles[0],
+                                            cancellationToken).ConfigureAwait(false);
+                                        if (album != null)
+                                        {
+                                            await ProcessExistingDirectoryMoveMergeAsync(configuration, serializer, album,
+                                                existingAlbumDirectory, cancellationToken).ConfigureAwait(false);
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    Logger.Debug("Source album directory does not exist: [{Directory}]", albumToMergeDirectory);
+                                }
+
+                                // Remove the source album (it's being merged into existing)
+                                Logger.Debug("Removing source album from database: [{AlbumName}] (ID: {AlbumId})", albumToMerge.Name, albumToMerge.Id);
+                                scopedContext.Albums.Remove(albumToMerge);
+                                Logger.Information("Merged album [{AlbumName}] into existing album on target artist [{ArtistName}]", 
+                                    albumToMerge.Name, dbArtistToMergeInto.Name);
+                            }
+                            continue;
+                        }
+
+                        // No name conflict - transfer the album to the target artist
+                        Logger.Debug("No album name conflict - transferring album [{AlbumName}] to target artist", albumToMerge.Name);
+                        
+                        var albumToMergeDirectory2 = Path.Combine(dbArtist.Library.Path, dbArtist.Directory,
                             albumToMerge.Directory);
                         var albumToMergeNewDirectory = Path.Combine(dbArtistToMergeInto.Library.Path,
                             dbArtistToMergeInto.Directory, albumToMerge.Directory);
-                        if (fileSystemService.DirectoryExists(albumToMergeDirectory) && !fileSystemService.DirectoryExists(albumToMergeNewDirectory))
+                        
+                        Logger.Debug("Album directory move: [{SourceDir}] -> [{TargetDir}]", albumToMergeDirectory2, albumToMergeNewDirectory);
+                        
+                        if (fileSystemService.DirectoryExists(albumToMergeDirectory2) && !fileSystemService.DirectoryExists(albumToMergeNewDirectory))
                         {
-                            fileSystemService.MoveDirectory(albumToMergeDirectory, albumToMergeNewDirectory);
+                            Logger.Debug("Moving album directory to new location");
+                            fileSystemService.MoveDirectory(albumToMergeDirectory2, albumToMergeNewDirectory);
                         }
                         else if (fileSystemService.DirectoryExists(albumToMergeNewDirectory))
                         {
+                            Logger.Debug("Target directory already exists, processing merge");
                             var albumJsonFiles = fileSystemService.GetFiles(
                                 albumToMergeNewDirectory,
                                 MelodeeModels.Album.JsonFileName);
@@ -937,13 +1100,19 @@ public class ArtistService(
                                 if (album != null)
                                 {
                                     await ProcessExistingDirectoryMoveMergeAsync(configuration, serializer, album,
-                                        albumToMergeDirectory, cancellationToken).ConfigureAwait(false);
+                                        albumToMergeDirectory2, cancellationToken).ConfigureAwait(false);
                                 }
                             }
+                        }
+                        else
+                        {
+                            Logger.Debug("Source album directory does not exist: [{Directory}]", albumToMergeDirectory2);
                         }
 
                         albumToMerge.ArtistId = dbArtistToMergeInto.Id;
                         albumToMerge.LastUpdatedAt = now;
+                        existingAlbumNames.Add(albumToMerge.NameNormalized);
+                        Logger.Debug("Album [{AlbumName}] transferred to target artist", albumToMerge.Name);
                     }
                     catch (Exception e)
                     {
@@ -952,32 +1121,171 @@ public class ArtistService(
                     }
                 }
 
-                foreach (var userArtistToMerge in dbArtist.UserArtists)
-                {
-                    userArtistToMerge.ArtistId = dbArtistToMergeInto.Id;
-                    userArtistToMerge.LastUpdatedAt = now;
-                }
-
-                await scopedContext.Contributors
-                    .Where(x => x.ArtistId == dbArtist.Id)
-                    .ExecuteUpdateAsync(setters => setters
-                        .SetProperty(x => x.ArtistId, dbArtistToMergeInto.Id), cancellationToken)
+                // Handle UserArtists - check for duplicates before transferring
+                var existingUserArtistUserIds = await scopedContext.UserArtists
+                    .Where(ua => ua.ArtistId == dbArtistToMergeInto.Id)
+                    .Select(ua => ua.UserId)
+                    .ToListAsync(cancellationToken)
                     .ConfigureAwait(false);
 
+                Logger.Debug("Processing {UserArtistCount} UserArtists from source, target has {ExistingCount} existing",
+                    dbArtist.UserArtists.Count, existingUserArtistUserIds.Count);
+
+                var userArtistsTransferred = 0;
+                var userArtistsRemoved = 0;
+                foreach (var userArtistToMerge in dbArtist.UserArtists)
+                {
+                    if (existingUserArtistUserIds.Contains(userArtistToMerge.UserId))
+                    {
+                        // User already has a relationship with the target artist - remove the duplicate
+                        scopedContext.UserArtists.Remove(userArtistToMerge);
+                        userArtistsRemoved++;
+                    }
+                    else
+                    {
+                        userArtistToMerge.ArtistId = dbArtistToMergeInto.Id;
+                        userArtistToMerge.LastUpdatedAt = now;
+                        userArtistsTransferred++;
+                    }
+                }
+                Logger.Debug("UserArtists: {Transferred} transferred, {Removed} removed (duplicates)", userArtistsTransferred, userArtistsRemoved);
+
+                // Handle Contributors - need to check for unique constraint (ArtistId, MetaTagIdentifier, SongId)
+                var existingContributorKeys = await scopedContext.Contributors
+                    .Where(c => c.ArtistId == dbArtistToMergeInto.Id)
+                    .Select(c => new { c.MetaTagIdentifier, c.SongId })
+                    .ToListAsync(cancellationToken)
+                    .ConfigureAwait(false);
+
+                var contributorsToMerge = await scopedContext.Contributors
+                    .Where(c => c.ArtistId == dbArtist.Id)
+                    .ToListAsync(cancellationToken)
+                    .ConfigureAwait(false);
+
+                Logger.Debug("Processing {ContributorCount} contributors from source artist, target has {ExistingCount} existing contributor keys",
+                    contributorsToMerge.Count, existingContributorKeys.Count);
+
+                var contributorsTransferred = 0;
+                var contributorsRemoved = 0;
+                foreach (var contributor in contributorsToMerge)
+                {
+                    var wouldViolateConstraint = existingContributorKeys
+                        .Any(e => e.MetaTagIdentifier == contributor.MetaTagIdentifier && e.SongId == contributor.SongId);
+
+                    if (wouldViolateConstraint)
+                    {
+                        Logger.Debug("Removing duplicate contributor: MetaTagIdentifier={MetaTag}, SongId={SongId}",
+                            contributor.MetaTagIdentifier, contributor.SongId);
+                        scopedContext.Contributors.Remove(contributor);
+                        contributorsRemoved++;
+                    }
+                    else
+                    {
+                        contributor.ArtistId = dbArtistToMergeInto.Id;
+                        contributor.LastUpdatedAt = now;
+                        existingContributorKeys.Add(new { contributor.MetaTagIdentifier, contributor.SongId });
+                        contributorsTransferred++;
+                    }
+                }
+                Logger.Debug("Contributors: {Transferred} transferred, {Removed} removed (duplicates)", contributorsTransferred, contributorsRemoved);
+
+                // Transfer ArtistRelations where merged artist is the source (ArtistId)
+                var existingOutboundRelations = await scopedContext.ArtistRelation
+                    .Where(ar => ar.ArtistId == dbArtistToMergeInto.Id)
+                    .Select(ar => ar.RelatedArtistId)
+                    .ToListAsync(cancellationToken)
+                    .ConfigureAwait(false);
+
+                var outboundRelations = await scopedContext.ArtistRelation
+                    .Where(ar => ar.ArtistId == dbArtist.Id)
+                    .ToListAsync(cancellationToken)
+                    .ConfigureAwait(false);
+
+                Logger.Debug("Processing {OutboundCount} outbound artist relations from source, target has {ExistingCount} existing",
+                    outboundRelations.Count, existingOutboundRelations.Count);
+
+                var outboundTransferred = 0;
+                var outboundRemoved = 0;
+                foreach (var relation in outboundRelations)
+                {
+                    // Skip if target artist already has this relation, or if it would create self-reference
+                    if (existingOutboundRelations.Contains(relation.RelatedArtistId) ||
+                        relation.RelatedArtistId == dbArtistToMergeInto.Id)
+                    {
+                        Logger.Debug("Removing outbound relation: RelatedArtistId={RelatedArtistId} (duplicate or self-reference)",
+                            relation.RelatedArtistId);
+                        scopedContext.ArtistRelation.Remove(relation);
+                        outboundRemoved++;
+                    }
+                    else
+                    {
+                        relation.ArtistId = dbArtistToMergeInto.Id;
+                        relation.LastUpdatedAt = now;
+                        existingOutboundRelations.Add(relation.RelatedArtistId);
+                        outboundTransferred++;
+                    }
+                }
+                Logger.Debug("Outbound relations: {Transferred} transferred, {Removed} removed", outboundTransferred, outboundRemoved);
+
+                // Transfer ArtistRelations where merged artist is the target (RelatedArtistId)
+                var existingInboundRelations = await scopedContext.ArtistRelation
+                    .Where(ar => ar.RelatedArtistId == dbArtistToMergeInto.Id)
+                    .Select(ar => ar.ArtistId)
+                    .ToListAsync(cancellationToken)
+                    .ConfigureAwait(false);
+
+                var inboundRelations = await scopedContext.ArtistRelation
+                    .Where(ar => ar.RelatedArtistId == dbArtist.Id)
+                    .ToListAsync(cancellationToken)
+                    .ConfigureAwait(false);
+
+                Logger.Debug("Processing {InboundCount} inbound artist relations from source, target has {ExistingCount} existing",
+                    inboundRelations.Count, existingInboundRelations.Count);
+
+                var inboundTransferred = 0;
+                var inboundRemoved = 0;
+                foreach (var relation in inboundRelations)
+                {
+                    // Skip if this relation already exists, or if it would create self-reference
+                    if (existingInboundRelations.Contains(relation.ArtistId) ||
+                        relation.ArtistId == dbArtistToMergeInto.Id)
+                    {
+                        Logger.Debug("Removing inbound relation: ArtistId={ArtistId} (duplicate or self-reference)",
+                            relation.ArtistId);
+                        scopedContext.ArtistRelation.Remove(relation);
+                        inboundRemoved++;
+                    }
+                    else
+                    {
+                        relation.RelatedArtistId = dbArtistToMergeInto.Id;
+                        relation.LastUpdatedAt = now;
+                        existingInboundRelations.Add(relation.ArtistId);
+                        inboundTransferred++;
+                    }
+                }
+                Logger.Debug("Inbound relations: {Transferred} transferred, {Removed} removed", inboundTransferred, inboundRemoved);
+
+                Logger.Debug("Removing source artist from database: [{ArtistName}] (ID: {ArtistId})", dbArtist.Name, dbArtist.Id);
                 scopedContext.Artists.Remove(dbArtist);
 
+                Logger.Debug("Saving changes to database for source artist [{ArtistName}]", dbArtist.Name);
                 var saveResult = await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+                Logger.Debug("SaveChanges returned {RowsAffected} rows affected", saveResult);
+                
                 if (saveResult > 0)
                 {
                     var dbArtistDirectory = dbArtist.ToFileSystemDirectoryInfo();
                     if ((dbArtistToMergeInto.ImageCount ?? 0) == 0 && fileSystemService.DirectoryExists(dbArtistDirectory.FullName()))
                     {
+                        Logger.Debug("Target artist has no images, checking source artist directory for images");
                         dbArtistToMergeInto.ImageCount = dbArtistToMergeInto.ImageCount ?? 0;
                         var jpgFiles = fileSystemService.GetFiles(dbArtistDirectory.FullName(), "*.jpg");
+                        Logger.Debug("Found {ImageCount} jpg files in source artist directory", jpgFiles.Length);
                         foreach (var jpgFile in jpgFiles)
                         {
                             var fileName = fileSystemService.GetFileName(jpgFile);
                             var newPath = fileSystemService.CombinePath(dbArtistToMergeIntoDirectoryPath, fileName);
+                            Logger.Debug("Moving image: [{Source}] -> [{Target}]", jpgFile, newPath);
                             fileSystemService.MoveDirectory(jpgFile, newPath);
                             dbArtistToMergeInto.ImageCount++;
                         }
@@ -987,28 +1295,46 @@ public class ArtistService(
 
                     if (fileSystemService.DirectoryExists(dbArtistDirectory.FullName()))
                     {
+                        Logger.Debug("Deleting source artist directory: [{Directory}]", dbArtistDirectory.FullName());
                         fileSystemService.DeleteDirectory(dbArtistDirectory.FullName(), true);
                     }
                 }
 
                 libraryIdsToUpdate.Add(dbArtist.Library.Id);
+                Logger.Information("Successfully merged artist [{SourceArtist}] (ID: {SourceId}) into [{TargetArtist}] (ID: {TargetId})",
+                    dbArtist.Name, dbArtist.Id, dbArtistToMergeInto.Name, dbArtistToMergeInto.Id);
             }
 
-            if (dbArtistToMergeInto.AlternateNames == null)
+            // Add existing alternate names from target artist (fix: was checking == null but should be != null)
+            if (dbArtistToMergeInto.AlternateNames != null)
             {
                 artistAlternateNamesToMerge.AddRange(dbArtistToMergeInto.AlternateNames.ToTags() ?? []);
             }
 
-            dbArtistToMergeInto.AlternateNames = "".AddTags(artistAlternateNamesToMerge.Distinct(), doNormalize: true);
+            var distinctAlternateNames = artistAlternateNamesToMerge.Distinct().ToList();
+            Logger.Debug("Setting {Count} alternate names on target artist: [{AlternateNames}]",
+                distinctAlternateNames.Count, string.Join(", ", distinctAlternateNames));
+            
+            dbArtistToMergeInto.AlternateNames = "".AddTags(distinctAlternateNames, doNormalize: true);
+            dbArtistToMergeInto.LastUpdatedAt = now;
+            await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
+            Logger.Debug("Updating aggregate values for target artist ID {ArtistId}", dbArtistToMergeInto.Id);
             await UpdateArtistAggregateValuesByIdAsync(dbArtistToMergeInto.Id, cancellationToken).ConfigureAwait(false);
+            
             foreach (var libraryId in libraryIdsToUpdate.Distinct())
             {
+                Logger.Debug("Updating library aggregate stats for library ID {LibraryId}", libraryId);
                 await UpdateLibraryAggregateStatsByIdAsync(libraryId, cancellationToken).ConfigureAwait(false);
             }
 
             // To clear the entire cache is unusual, but here we have (likely) deleted many artists, safer to clear all cache and let repopulate as needed.
+            Logger.Debug("Clearing cache after merge operation");
             CacheManager.Clear();
+            
+            Logger.Information("Merge operation completed successfully. Merged {SourceCount} artist(s) into [{TargetArtist}]",
+                artistIdsToMerge.Length, dbArtistToMergeInto.Name);
+            
             return new MelodeeModels.OperationResult<bool>
             {
                 Data = true

@@ -1034,4 +1034,55 @@ public static partial class StringExtensions
         slug = slug.Trim('-');
         return slug.Length > 200 ? slug[..200] : slug;
     }
+
+    /// <summary>
+    ///     Strips leading articles from a string and returns the normalized result.
+    ///     Articles are removed only when they appear at the beginning followed by a space.
+    /// </summary>
+    /// <param name="input">The input string to normalize.</param>
+    /// <param name="articles">Pipe-delimited list of articles to strip (e.g., "THE|A|AN").</param>
+    /// <returns>The normalized string with leading articles removed, or null if input is null/empty.</returns>
+    public static string? StripLeadingArticles(this string? input, string? articles)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            return null;
+        }
+
+        if (string.IsNullOrWhiteSpace(articles))
+        {
+            return input;
+        }
+
+        var result = input;
+        foreach (var article in articles.ToTags() ?? [])
+        {
+            var articleWithSpace = $"{article} ";
+            if (result.StartsWith(articleWithSpace, StringComparison.OrdinalIgnoreCase))
+            {
+                result = result[articleWithSpace.Length..];
+                break;
+            }
+        }
+
+        return result.Nullify();
+    }
+
+    /// <summary>
+    ///     Normalizes a string for comparison by stripping leading articles and applying standard normalization.
+    ///     This is useful for detecting duplicates like "The Beatles" vs "Beatles".
+    /// </summary>
+    /// <param name="input">The input string to normalize.</param>
+    /// <param name="articles">Pipe-delimited list of articles to strip (e.g., "THE|A|AN").</param>
+    /// <returns>The fully normalized string suitable for comparison.</returns>
+    public static string? ToNormalizedStringWithoutArticles(this string? input, string? articles)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            return null;
+        }
+
+        var withoutArticles = input.StripLeadingArticles(articles);
+        return withoutArticles?.ToNormalizedString();
+    }
 }

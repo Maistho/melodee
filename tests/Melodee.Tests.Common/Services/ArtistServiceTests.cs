@@ -1,11 +1,16 @@
+using Melodee.Common.Data;
+using Melodee.Common.Data.Models;
 using Melodee.Common.Enums;
 using Melodee.Common.Extensions;
 using Melodee.Common.Filtering;
 using Melodee.Common.Models;
 using Melodee.Common.Models.Extensions;
 using NodaTime;
+using Album = Melodee.Common.Data.Models.Album;
 using Artist = Melodee.Common.Data.Models.Artist;
 using Library = Melodee.Common.Data.Models.Library;
+using Song = Melodee.Common.Data.Models.Song;
+using User = Melodee.Common.Data.Models.User;
 
 namespace Melodee.Tests.Common.Services;
 
@@ -976,6 +981,598 @@ public class ArtistServiceTests : ServiceTestBase
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(() =>
             service.MergeArtistsAsync(targetArtist.Id, []));
+    }
+
+    [Fact]
+    public async Task MergeArtistsAsync_WithDuplicateContributors_RemovesDuplicatesAndMerges()
+    {
+        await using var context = await MockFactory().CreateDbContextAsync();
+        var (targetArtist, sourceArtist, album, song) = await CreateArtistsWithAlbumAndSong(context);
+        
+        var metaTagId = (int)MetaTagIdentifier.Composer;
+        context.Contributors.Add(new Contributor
+        {
+            ArtistId = targetArtist.Id,
+            MetaTagIdentifier = metaTagId,
+            SongId = song.Id,
+            AlbumId = album.Id,
+            Role = "Composer",
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow)
+        });
+        context.Contributors.Add(new Contributor
+        {
+            ArtistId = sourceArtist.Id,
+            MetaTagIdentifier = metaTagId,
+            SongId = song.Id,
+            AlbumId = album.Id,
+            Role = "Composer",
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow)
+        });
+        await context.SaveChangesAsync();
+
+        var result = await GetArtistService().MergeArtistsAsync(targetArtist.Id, [sourceArtist.Id]);
+
+        AssertResultIsSuccessful(result);
+        Assert.True(result.Data);
+
+        await using var verifyContext = await MockFactory().CreateDbContextAsync();
+        var remainingContributors = verifyContext.Contributors
+            .Where(c => c.SongId == song.Id && c.MetaTagIdentifier == metaTagId)
+            .ToList();
+        Assert.Single(remainingContributors);
+        Assert.Equal(targetArtist.Id, remainingContributors.First().ArtistId);
+    }
+
+    [Fact]
+    public async Task MergeArtistsAsync_WithNonDuplicateContributors_TransfersAllContributors()
+    {
+        await using var context = await MockFactory().CreateDbContextAsync();
+        var (targetArtist, sourceArtist, album, song) = await CreateArtistsWithAlbumAndSong(context);
+
+        context.Contributors.Add(new Contributor
+        {
+            ArtistId = targetArtist.Id,
+            MetaTagIdentifier = (int)MetaTagIdentifier.Composer,
+            SongId = song.Id,
+            AlbumId = album.Id,
+            Role = "Composer",
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow)
+        });
+        context.Contributors.Add(new Contributor
+        {
+            ArtistId = sourceArtist.Id,
+            MetaTagIdentifier = (int)MetaTagIdentifier.Lyricist,
+            SongId = song.Id,
+            AlbumId = album.Id,
+            Role = "Arranger",
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow)
+        });
+        await context.SaveChangesAsync();
+
+        var result = await GetArtistService().MergeArtistsAsync(targetArtist.Id, [sourceArtist.Id]);
+
+        AssertResultIsSuccessful(result);
+
+        await using var verifyContext = await MockFactory().CreateDbContextAsync();
+        var targetContributors = verifyContext.Contributors
+            .Where(c => c.ArtistId == targetArtist.Id)
+            .ToList();
+        Assert.Equal(2, targetContributors.Count);
+        Assert.Contains(targetContributors, c => c.MetaTagIdentifier == (int)MetaTagIdentifier.Composer);
+        Assert.Contains(targetContributors, c => c.MetaTagIdentifier == (int)MetaTagIdentifier.Lyricist);
+    }
+
+    [Fact]
+    public async Task MergeArtistsAsync_WithDuplicateArtistRelations_RemovesDuplicatesAndMerges()
+    {
+        await using var context = await MockFactory().CreateDbContextAsync();
+        var library = await CreateAndSaveLibrary(context);
+        var targetArtist = await CreateAndSaveArtist(context, library, "Target Artist");
+        var sourceArtist = await CreateAndSaveArtist(context, library, "Source Artist");
+        var relatedArtist = await CreateAndSaveArtist(context, library, "Related Artist");
+
+        context.ArtistRelation.Add(new ArtistRelation
+        {
+            ArtistId = targetArtist.Id,
+            RelatedArtistId = relatedArtist.Id,
+            ArtistRelationType = (int)ArtistRelationType.Similar,
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow)
+        });
+        context.ArtistRelation.Add(new ArtistRelation
+        {
+            ArtistId = sourceArtist.Id,
+            RelatedArtistId = relatedArtist.Id,
+            ArtistRelationType = (int)ArtistRelationType.Similar,
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow)
+        });
+        await context.SaveChangesAsync();
+
+        var result = await GetArtistService().MergeArtistsAsync(targetArtist.Id, [sourceArtist.Id]);
+
+        AssertResultIsSuccessful(result);
+
+        await using var verifyContext = await MockFactory().CreateDbContextAsync();
+        var targetRelations = verifyContext.ArtistRelation
+            .Where(ar => ar.ArtistId == targetArtist.Id && ar.RelatedArtistId == relatedArtist.Id)
+            .ToList();
+        Assert.Single(targetRelations);
+    }
+
+    [Fact]
+    public async Task MergeArtistsAsync_WithSelfReferenceRelation_RemovesSelfReferenceAndMerges()
+    {
+        await using var context = await MockFactory().CreateDbContextAsync();
+        var library = await CreateAndSaveLibrary(context);
+        var targetArtist = await CreateAndSaveArtist(context, library, "Target Artist");
+        var sourceArtist = await CreateAndSaveArtist(context, library, "Source Artist");
+
+        context.ArtistRelation.Add(new ArtistRelation
+        {
+            ArtistId = sourceArtist.Id,
+            RelatedArtistId = targetArtist.Id,
+            ArtistRelationType = (int)ArtistRelationType.Similar,
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow)
+        });
+        await context.SaveChangesAsync();
+
+        var result = await GetArtistService().MergeArtistsAsync(targetArtist.Id, [sourceArtist.Id]);
+
+        AssertResultIsSuccessful(result);
+
+        await using var verifyContext = await MockFactory().CreateDbContextAsync();
+        var selfRelations = verifyContext.ArtistRelation
+            .Where(ar => ar.ArtistId == targetArtist.Id && ar.RelatedArtistId == targetArtist.Id)
+            .ToList();
+        Assert.Empty(selfRelations);
+    }
+
+    [Fact]
+    public async Task MergeArtistsAsync_WithInboundRelations_TransfersInboundRelations()
+    {
+        await using var context = await MockFactory().CreateDbContextAsync();
+        var library = await CreateAndSaveLibrary(context);
+        var targetArtist = await CreateAndSaveArtist(context, library, "Target Artist");
+        var sourceArtist = await CreateAndSaveArtist(context, library, "Source Artist");
+        var externalArtist = await CreateAndSaveArtist(context, library, "External Artist");
+
+        context.ArtistRelation.Add(new ArtistRelation
+        {
+            ArtistId = externalArtist.Id,
+            RelatedArtistId = sourceArtist.Id,
+            ArtistRelationType = (int)ArtistRelationType.Similar,
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow)
+        });
+        await context.SaveChangesAsync();
+
+        var result = await GetArtistService().MergeArtistsAsync(targetArtist.Id, [sourceArtist.Id]);
+
+        AssertResultIsSuccessful(result);
+
+        await using var verifyContext = await MockFactory().CreateDbContextAsync();
+        var transferredRelation = verifyContext.ArtistRelation
+            .FirstOrDefault(ar => ar.ArtistId == externalArtist.Id && ar.RelatedArtistId == targetArtist.Id);
+        Assert.NotNull(transferredRelation);
+    }
+
+    [Fact]
+    public async Task MergeArtistsAsync_WithAlbums_TransfersAlbums()
+    {
+        await using var context = await MockFactory().CreateDbContextAsync();
+        var library = await CreateAndSaveLibrary(context);
+        var targetArtist = await CreateAndSaveArtist(context, library, "Target Artist");
+        var sourceArtist = await CreateAndSaveArtist(context, library, "Source Artist");
+
+        var album = new Album
+        {
+            Name = "Test Album",
+            NameNormalized = "Test Album".ToNormalizedString()!,
+            ArtistId = sourceArtist.Id,
+            Directory = "test-album",
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow),
+            AlbumStatus = (int)AlbumStatus.Ok,
+            Duration = 3600,
+            SongCount = 10
+        };
+        context.Albums.Add(album);
+        await context.SaveChangesAsync();
+
+        var result = await GetArtistService().MergeArtistsAsync(targetArtist.Id, [sourceArtist.Id]);
+
+        AssertResultIsSuccessful(result);
+
+        await using var verifyContext = await MockFactory().CreateDbContextAsync();
+        var transferredAlbum = verifyContext.Albums.FirstOrDefault(a => a.Id == album.Id);
+        Assert.NotNull(transferredAlbum);
+        Assert.Equal(targetArtist.Id, transferredAlbum.ArtistId);
+    }
+
+    [Fact]
+    public async Task MergeArtistsAsync_WithDuplicateAlbumNames_MergesAlbumsCorrectly()
+    {
+        await using var context = await MockFactory().CreateDbContextAsync();
+        var library = await CreateAndSaveLibrary(context);
+        var targetArtist = await CreateAndSaveArtist(context, library, "Target Artist");
+        var sourceArtist = await CreateAndSaveArtist(context, library, "Source Artist");
+
+        var targetAlbum = new Album
+        {
+            Name = "Greatest Hits",
+            NameNormalized = "Greatest Hits".ToNormalizedString()!,
+            ArtistId = targetArtist.Id,
+            Directory = "greatest-hits",
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow),
+            AlbumStatus = (int)AlbumStatus.Ok,
+            Duration = 3600,
+            SongCount = 5
+        };
+        context.Albums.Add(targetAlbum);
+        await context.SaveChangesAsync();
+
+        var sourceAlbum = new Album
+        {
+            Name = "Greatest Hits",
+            NameNormalized = "Greatest Hits".ToNormalizedString()!,
+            ArtistId = sourceArtist.Id,
+            Directory = "greatest-hits-2",
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow),
+            AlbumStatus = (int)AlbumStatus.Ok,
+            Duration = 3600,
+            SongCount = 3
+        };
+        context.Albums.Add(sourceAlbum);
+        await context.SaveChangesAsync();
+
+        var targetSong1 = CreateTestSong(targetAlbum.Id, "Hit Song 1", 1, "hash1");
+        var targetSong2 = CreateTestSong(targetAlbum.Id, "Hit Song 2", 2, "hash2");
+        var sourceSong1 = CreateTestSong(sourceAlbum.Id, "Hit Song 3", 3, "hash3");
+        var sourceSong2 = CreateTestSong(sourceAlbum.Id, "Hit Song 1 Duplicate", 1, "hash4");
+        context.Songs.AddRange(targetSong1, targetSong2, sourceSong1, sourceSong2);
+        await context.SaveChangesAsync();
+
+        var result = await GetArtistService().MergeArtistsAsync(targetArtist.Id, [sourceArtist.Id]);
+
+        AssertResultIsSuccessful(result);
+
+        await using var verifyContext = await MockFactory().CreateDbContextAsync();
+        
+        var remainingAlbums = verifyContext.Albums
+            .Where(a => a.ArtistId == targetArtist.Id)
+            .ToList();
+        Assert.Single(remainingAlbums);
+        Assert.Equal("Greatest Hits", remainingAlbums.First().Name);
+
+        var songsInTargetAlbum = verifyContext.Songs
+            .Where(s => s.AlbumId == targetAlbum.Id)
+            .ToList();
+        Assert.Equal(3, songsInTargetAlbum.Count);
+        Assert.Contains(songsInTargetAlbum, s => s.SongNumber == 1);
+        Assert.Contains(songsInTargetAlbum, s => s.SongNumber == 2);
+        Assert.Contains(songsInTargetAlbum, s => s.SongNumber == 3);
+
+        var sourceAlbumRemoved = verifyContext.Albums.FirstOrDefault(a => a.Id == sourceAlbum.Id);
+        Assert.Null(sourceAlbumRemoved);
+    }
+
+    [Fact]
+    public async Task MergeArtistsAsync_WithMultipleContributorsOnDifferentSongs_TransfersAllUniqueContributors()
+    {
+        await using var context = await MockFactory().CreateDbContextAsync();
+        var library = await CreateAndSaveLibrary(context);
+        var targetArtist = await CreateAndSaveArtist(context, library, "Target Artist");
+        var sourceArtist = await CreateAndSaveArtist(context, library, "Source Artist");
+
+        var album = new Album
+        {
+            Name = "Test Album",
+            NameNormalized = "Test Album".ToNormalizedString()!,
+            ArtistId = targetArtist.Id,
+            Directory = "test-album",
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow),
+            AlbumStatus = (int)AlbumStatus.Ok,
+            Duration = 3600,
+            SongCount = 2
+        };
+        context.Albums.Add(album);
+        await context.SaveChangesAsync();
+
+        var song1 = CreateTestSong(album.Id, "Song 1", 1, "hash1");
+        var song2 = CreateTestSong(album.Id, "Song 2", 2, "hash2");
+        context.Songs.AddRange(song1, song2);
+        await context.SaveChangesAsync();
+
+        context.Contributors.Add(new Contributor
+        {
+            ArtistId = sourceArtist.Id,
+            MetaTagIdentifier = (int)MetaTagIdentifier.Composer,
+            SongId = song1.Id,
+            AlbumId = album.Id,
+            Role = "Composer",
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow)
+        });
+        context.Contributors.Add(new Contributor
+        {
+            ArtistId = sourceArtist.Id,
+            MetaTagIdentifier = (int)MetaTagIdentifier.Composer,
+            SongId = song2.Id,
+            AlbumId = album.Id,
+            Role = "Composer",
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow)
+        });
+        await context.SaveChangesAsync();
+
+        var result = await GetArtistService().MergeArtistsAsync(targetArtist.Id, [sourceArtist.Id]);
+
+        AssertResultIsSuccessful(result);
+
+        await using var verifyContext = await MockFactory().CreateDbContextAsync();
+        var targetContributors = verifyContext.Contributors
+            .Where(c => c.ArtistId == targetArtist.Id)
+            .ToList();
+        Assert.Equal(2, targetContributors.Count);
+    }
+
+    [Fact]
+    public async Task MergeArtistsAsync_WithMixedDuplicateAndUniqueContributors_HandlesCorrectly()
+    {
+        await using var context = await MockFactory().CreateDbContextAsync();
+        var (targetArtist, sourceArtist, album, song) = await CreateArtistsWithAlbumAndSong(context);
+
+        context.Contributors.Add(new Contributor
+        {
+            ArtistId = targetArtist.Id,
+            MetaTagIdentifier = (int)MetaTagIdentifier.Composer,
+            SongId = song.Id,
+            AlbumId = album.Id,
+            Role = "Composer",
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow)
+        });
+        context.Contributors.Add(new Contributor
+        {
+            ArtistId = sourceArtist.Id,
+            MetaTagIdentifier = (int)MetaTagIdentifier.Composer,
+            SongId = song.Id,
+            AlbumId = album.Id,
+            Role = "Composer",
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow)
+        });
+        context.Contributors.Add(new Contributor
+        {
+            ArtistId = sourceArtist.Id,
+            MetaTagIdentifier = (int)MetaTagIdentifier.Lyricist,
+            SongId = song.Id,
+            AlbumId = album.Id,
+            Role = "Arranger",
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow)
+        });
+        await context.SaveChangesAsync();
+
+        var result = await GetArtistService().MergeArtistsAsync(targetArtist.Id, [sourceArtist.Id]);
+
+        AssertResultIsSuccessful(result);
+
+        await using var verifyContext = await MockFactory().CreateDbContextAsync();
+        var targetContributors = verifyContext.Contributors
+            .Where(c => c.ArtistId == targetArtist.Id)
+            .ToList();
+        Assert.Equal(2, targetContributors.Count);
+        Assert.Single(targetContributors, c => c.MetaTagIdentifier == (int)MetaTagIdentifier.Composer);
+        Assert.Single(targetContributors, c => c.MetaTagIdentifier == (int)MetaTagIdentifier.Lyricist);
+    }
+
+    [Fact]
+    public async Task MergeArtistsAsync_MergingMultipleArtistsWithSameContributor_HandlesCorrectly()
+    {
+        await using var context = await MockFactory().CreateDbContextAsync();
+        var library = await CreateAndSaveLibrary(context);
+        var targetArtist = await CreateAndSaveArtist(context, library, "Target Artist");
+        var sourceArtist1 = await CreateAndSaveArtist(context, library, "Source Artist 1");
+        var sourceArtist2 = await CreateAndSaveArtist(context, library, "Source Artist 2");
+
+        var album = new Album
+        {
+            Name = "Test Album",
+            NameNormalized = "Test Album".ToNormalizedString()!,
+            ArtistId = targetArtist.Id,
+            Directory = "test-album",
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow),
+            AlbumStatus = (int)AlbumStatus.Ok,
+            Duration = 3600,
+            SongCount = 1
+        };
+        context.Albums.Add(album);
+        await context.SaveChangesAsync();
+
+        var song = CreateTestSong(album.Id, "Test Song", 1, "hash1");
+        context.Songs.Add(song);
+        await context.SaveChangesAsync();
+
+        context.Contributors.Add(new Contributor
+        {
+            ArtistId = sourceArtist1.Id,
+            MetaTagIdentifier = (int)MetaTagIdentifier.Composer,
+            SongId = song.Id,
+            AlbumId = album.Id,
+            Role = "Composer",
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow)
+        });
+        context.Contributors.Add(new Contributor
+        {
+            ArtistId = sourceArtist2.Id,
+            MetaTagIdentifier = (int)MetaTagIdentifier.Composer,
+            SongId = song.Id,
+            AlbumId = album.Id,
+            Role = "Composer",
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow)
+        });
+        await context.SaveChangesAsync();
+
+        var result = await GetArtistService().MergeArtistsAsync(targetArtist.Id, [sourceArtist1.Id, sourceArtist2.Id]);
+
+        AssertResultIsSuccessful(result);
+
+        await using var verifyContext = await MockFactory().CreateDbContextAsync();
+        var targetContributors = verifyContext.Contributors
+            .Where(c => c.SongId == song.Id && c.MetaTagIdentifier == (int)MetaTagIdentifier.Composer)
+            .ToList();
+        Assert.Single(targetContributors);
+        Assert.Equal(targetArtist.Id, targetContributors.First().ArtistId);
+    }
+
+    [Fact]
+    public async Task MergeArtistsAsync_WithDuplicateInboundRelations_RemovesDuplicates()
+    {
+        await using var context = await MockFactory().CreateDbContextAsync();
+        var library = await CreateAndSaveLibrary(context);
+        var targetArtist = await CreateAndSaveArtist(context, library, "Target Artist");
+        var sourceArtist = await CreateAndSaveArtist(context, library, "Source Artist");
+        var externalArtist = await CreateAndSaveArtist(context, library, "External Artist");
+
+        context.ArtistRelation.Add(new ArtistRelation
+        {
+            ArtistId = externalArtist.Id,
+            RelatedArtistId = targetArtist.Id,
+            ArtistRelationType = (int)ArtistRelationType.Similar,
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow)
+        });
+        context.ArtistRelation.Add(new ArtistRelation
+        {
+            ArtistId = externalArtist.Id,
+            RelatedArtistId = sourceArtist.Id,
+            ArtistRelationType = (int)ArtistRelationType.Similar,
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow)
+        });
+        await context.SaveChangesAsync();
+
+        var result = await GetArtistService().MergeArtistsAsync(targetArtist.Id, [sourceArtist.Id]);
+
+        AssertResultIsSuccessful(result);
+
+        await using var verifyContext = await MockFactory().CreateDbContextAsync();
+        var inboundRelations = verifyContext.ArtistRelation
+            .Where(ar => ar.ArtistId == externalArtist.Id && ar.RelatedArtistId == targetArtist.Id)
+            .ToList();
+        Assert.Single(inboundRelations);
+    }
+
+    [Fact]
+    public async Task MergeArtistsAsync_WithUserArtists_TransfersUserArtists()
+    {
+        await using var context = await MockFactory().CreateDbContextAsync();
+        var library = await CreateAndSaveLibrary(context);
+        var targetArtist = await CreateAndSaveArtist(context, library, "Target Artist");
+        var sourceArtist = await CreateAndSaveArtist(context, library, "Source Artist");
+
+        var user = new User
+        {
+            UserName = "testuser",
+            UserNameNormalized = "testuser".ToNormalizedString()!,
+            Email = "test@example.com",
+            EmailNormalized = "test@example.com".ToNormalizedString()!,
+            PublicKey = Guid.NewGuid().ToString(),
+            PasswordEncrypted = "encrypted",
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow)
+        };
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var userArtist = new UserArtist
+        {
+            UserId = user.Id,
+            ArtistId = sourceArtist.Id,
+            IsStarred = true,
+            StarredAt = Instant.FromDateTimeUtc(DateTime.UtcNow),
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow)
+        };
+        context.UserArtists.Add(userArtist);
+        await context.SaveChangesAsync();
+
+        var result = await GetArtistService().MergeArtistsAsync(targetArtist.Id, [sourceArtist.Id]);
+
+        AssertResultIsSuccessful(result);
+
+        await using var verifyContext = await MockFactory().CreateDbContextAsync();
+        var transferredUserArtist = verifyContext.UserArtists
+            .FirstOrDefault(ua => ua.UserId == user.Id && ua.ArtistId == targetArtist.Id);
+        Assert.NotNull(transferredUserArtist);
+        Assert.True(transferredUserArtist.IsStarred);
+    }
+
+    private async Task<Library> CreateAndSaveLibrary(MelodeeDbContext context)
+    {
+        var library = new Library
+        {
+            Name = "Test Library",
+            Path = "/test/library/path",
+            Type = (int)LibraryType.Storage,
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow)
+        };
+        context.Libraries.Add(library);
+        await context.SaveChangesAsync();
+        return library;
+    }
+
+    private async Task<Artist> CreateAndSaveArtist(MelodeeDbContext context, Library library, string name)
+    {
+        var artist = new Artist
+        {
+            ApiKey = Guid.NewGuid(),
+            Directory = name.ToNormalizedString()!,
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow),
+            LibraryId = library.Id,
+            Name = name,
+            NameNormalized = name.ToNormalizedString()!
+        };
+        context.Artists.Add(artist);
+        await context.SaveChangesAsync();
+        return artist;
+    }
+
+    private async Task<(Artist targetArtist, Artist sourceArtist, Album album, Song song)> CreateArtistsWithAlbumAndSong(MelodeeDbContext context)
+    {
+        var library = await CreateAndSaveLibrary(context);
+        var targetArtist = await CreateAndSaveArtist(context, library, "Target Artist");
+        var sourceArtist = await CreateAndSaveArtist(context, library, "Source Artist");
+
+        var album = new Album
+        {
+            Name = "Test Album",
+            NameNormalized = "Test Album".ToNormalizedString()!,
+            ArtistId = targetArtist.Id,
+            Directory = "test-album",
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow),
+            AlbumStatus = (int)AlbumStatus.Ok,
+            Duration = 3600,
+            SongCount = 1
+        };
+        context.Albums.Add(album);
+        await context.SaveChangesAsync();
+
+        var song = CreateTestSong(album.Id, "Test Song", 1, "hash1");
+        context.Songs.Add(song);
+        await context.SaveChangesAsync();
+
+        return (targetArtist, sourceArtist, album, song);
+    }
+
+    private static Song CreateTestSong(int albumId, string title, int songNumber, string fileHash)
+    {
+        return new Song
+        {
+            Title = title,
+            TitleNormalized = title.ToNormalizedString()!,
+            AlbumId = albumId,
+            FileName = $"{title.ToNormalizedString()}.mp3",
+            FileSize = 1000,
+            SongNumber = songNumber,
+            CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow),
+            Duration = 180,
+            FileHash = fileHash,
+            SamplingRate = 44100,
+            BitRate = 320,
+            BitDepth = 16,
+            BPM = 120,
+            ContentType = "audio/mpeg"
+        };
     }
 
     #endregion

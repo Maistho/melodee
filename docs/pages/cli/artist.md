@@ -21,6 +21,7 @@ mcli artist [COMMAND] [OPTIONS]
 | `list` | `ls` | List artists in the database |
 | `search` | `s` | Search for artists by name |
 | `stats` | | Show artist statistics including missing images and potential duplicates |
+| `find-duplicates` | `fd` | Find and optionally merge duplicate artists using advanced similarity detection |
 | `delete` | `rm` | Delete an artist from the database |
 
 ---
@@ -358,6 +359,224 @@ The stats command detects potential duplicate artists by grouping them by their 
 
 ---
 
+## artist find-duplicates
+
+Find potential duplicate artists using advanced similarity detection algorithms. This command identifies artists that may be duplicates based on name similarity, name flipping (e.g., "John Smith" vs "Smith, John"), shared external IDs, overlapping albums, and more.
+
+### Usage
+
+```bash
+mcli artist find-duplicates [OPTIONS]
+```
+
+### Options
+
+| Option | Alias | Default | Description |
+|--------|-------|---------|-------------|
+| `-m`, `--min-score` | | `0.85` | Minimum similarity score (0.0-1.0). Higher values = stricter matching. |
+| `--merge` | | `false` | Automatically merge detected duplicates into the "Keep" artist |
+| `-y`, `--yes` | | `false` | Skip confirmation prompt when merging |
+| `--raw` | | `false` | Output results in JSON format |
+| `--verbose` | | `false` | Output verbose debug and timing results |
+
+### Similarity Score Guidelines
+
+| Score | Description | Typical Matches |
+|-------|-------------|-----------------|
+| 0.97+ | Very high confidence | Name flips ("Miles Davis" ↔ "Davis, Miles") |
+| 0.92-0.96 | High confidence | Minor spelling variations, missing articles |
+| 0.90-0.91 | Medium confidence | Similar names, abbreviations |
+| 0.85-0.89 | Lower confidence | May include false positives |
+
+### Examples
+
+```bash
+# Find duplicates with default threshold (0.85)
+./mcli artist find-duplicates
+
+# Find only high-confidence duplicates (0.9+)
+./mcli artist find-duplicates -m 0.9
+
+# Find very high confidence duplicates only
+./mcli artist find-duplicates -m 0.97
+
+# Find duplicates and merge them (with confirmation)
+./mcli artist find-duplicates -m 0.9 --merge
+
+# Find and merge without confirmation (USE WITH CAUTION)
+./mcli artist find-duplicates -m 0.95 --merge -y
+
+# JSON output for scripting
+./mcli artist find-duplicates -m 0.9 --raw
+```
+
+### Output
+
+```
+╭─────────────────┬───────┬────────────────────────┬───────┬────────────────────────────────────┬───────┬────────────┬─────────────────────────────────╮
+│      Group      │ Score │ Keep (←)               │    ID │ Merge (→)                          │    ID │ Shared IDs │ Reasons                         │
+├─────────────────┼───────┼────────────────────────┼───────┼────────────────────────────────────┼───────┼────────────┼─────────────────────────────────┤
+│ artist-dup-0029 │ 0.97  │ Miles Davis            │  3224 │ Davis, Miles                       │  5981 │ -          │ NameFlip                        │
+│                 │       │                        │       │                                    │       │            │                                 │
+│ artist-dup-0035 │ 0.97  │ George Benson          │  1686 │ Benson, George                     │  6646 │ -          │ NameFlip                        │
+│                 │       │                        │       │                                    │       │            │                                 │
+│ artist-dup-0003 │ 0.90  │ The Beatles            │  1220 │ Beatles                            │   947 │ -          │ ExactName                       │
+│                 │       │                        │       │                                    │       │            │                                 │
+│ artist-dup-0075 │ 0.90  │ Pixies                 │ 14228 │ The Pixies                         │ 14724 │ -          │ ExactName, Albums, AlbumOverlap │
+╰─────────────────┴───────┴────────────────────────┴───────┴────────────────────────────────────┴───────┴────────────┴─────────────────────────────────╯
+
+Found 125 duplicate group(s) with 126 pair(s) involving 251 artist(s)
+  High confidence (≥0.9): 125
+```
+
+### Detection Reasons
+
+The command identifies duplicates using multiple detection methods:
+
+| Reason | Description |
+|--------|-------------|
+| `ExactName` | Names match exactly after normalization (removing "The", punctuation, etc.) |
+| `NameFlip` | Names match when first/last are swapped ("John Smith" = "Smith, John") |
+| `NameSim` | Names are similar based on Levenshtein distance |
+| `SharedMusicBrainzId` | Artists share the same MusicBrainz ID |
+| `SharedSpotifyId` | Artists share the same Spotify ID |
+| `SharedDiscogsId` | Artists share the same Discogs ID |
+| `Albums` | Artists have albums with identical names |
+| `AlbumOverlap` | Artists have multiple overlapping album titles |
+
+### Merge Behavior
+
+When using `--merge`, the command will:
+
+1. **Keep the "Keep" artist** - The artist in the "Keep (←)" column is preserved
+2. **Transfer all data** from merged artists:
+   - Albums are reassigned to the kept artist
+   - Songs are reassigned to the kept artist
+   - Contributor relationships are updated
+   - User ratings/stars are transferred
+   - Play counts are aggregated
+   - External IDs (MusicBrainz, Spotify, Discogs) are merged if not already present
+   - Alternate names are preserved for searchability
+3. **Delete the merged artists** - Artists in the "Merge (→)" column are deleted
+
+### Merge Output
+
+```
+Are you sure you want to merge 125 duplicate group(s)? [y/n] (n): y
+  ✓ Merged 1 artist(s) into Miles Davis                           
+  ✓ Merged 1 artist(s) into George Benson                         
+  ✓ Merged 1 artist(s) into The Beatles                           
+  ✗ Error merging into Pixies: Duplicate album detected           
+                                                                  
+Merging artists... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%  
+                                                                  
+Merge complete: 122 succeeded, 3 failed
+  Log file can be found here /mnt/melodee/logs/mcli
+```
+
+### What Gets Merged
+
+When artist B is merged into artist A:
+
+| Data Type | Merge Behavior |
+|-----------|----------------|
+| **Albums** | All albums from B are reassigned to A |
+| **Songs** | All songs from B are reassigned to A |
+| **Contributors** | Artist contributor relationships are updated to reference A |
+| **User Ratings** | Ratings for B's content are preserved under A |
+| **User Stars** | Stars are transferred to A (avoids duplicates) |
+| **Play History** | Play counts are aggregated |
+| **External IDs** | MusicBrainz, Spotify, Discogs IDs from B are added to A if A doesn't have them |
+| **Alternate Names** | B's name variants are added to A's alternate names for searchability |
+| **Images** | A's images are kept; B's images are not transferred |
+| **Metadata** | A's metadata (bio, etc.) takes precedence |
+
+### Safety Features
+
+- **Confirmation required**: By default, merge requires user confirmation
+- **Locked artists skipped**: Artists marked as locked cannot be merged or deleted
+- **Duplicate album handling**: If both artists have albums with identical titles, the merge handles this gracefully
+- **Transaction safety**: Each merge is performed in a database transaction
+- **Detailed logging**: All merge operations are logged to the log file for audit purposes
+- **Error recovery**: Failed merges don't affect other merge operations
+
+### Troubleshooting Merge Failures
+
+Common reasons for merge failures:
+
+1. **Duplicate unique constraints**: Both artists may have albums that, when combined, violate uniqueness constraints
+2. **Database locks**: Another process may be accessing the artist records
+3. **Locked artists**: The target artist may be locked
+
+Check the log file for detailed error information:
+```bash
+tail -100 /mnt/melodee/logs/mcli/melodee-mcli-*.log
+```
+
+### Best Practices
+
+1. **Start with high threshold**: Begin with `-m 0.95` or higher to process obvious duplicates first
+2. **Review before merging**: Run without `--merge` first to review the detected duplicates
+3. **Backup database**: Before large merge operations, backup your database
+4. **Process incrementally**: Merge in batches rather than all at once
+5. **Check logs**: Review the log file after merge operations for any issues
+
+### JSON Output
+
+```json
+{
+  "Groups": [
+    {
+      "GroupId": "artist-dup-0029",
+      "Score": 0.97,
+      "KeepArtist": {
+        "Id": 3224,
+        "Name": "Miles Davis",
+        "AlbumCount": 45,
+        "SongCount": 523
+      },
+      "MergeArtists": [
+        {
+          "Id": 5981,
+          "Name": "Davis, Miles",
+          "AlbumCount": 2,
+          "SongCount": 24
+        }
+      ],
+      "SharedIds": [],
+      "Reasons": ["NameFlip"]
+    }
+  ],
+  "Summary": {
+    "TotalGroups": 125,
+    "TotalPairs": 126,
+    "TotalArtists": 251,
+    "HighConfidence": 125
+  }
+}
+```
+
+### Workflow Example
+
+```bash
+# Step 1: Review high-confidence duplicates
+./mcli artist find-duplicates -m 0.95
+
+# Step 2: If results look good, merge them
+./mcli artist find-duplicates -m 0.95 --merge
+
+# Step 3: Review medium-confidence duplicates more carefully
+./mcli artist find-duplicates -m 0.90
+
+# Step 4: Manually review the output, then merge if appropriate
+./mcli artist find-duplicates -m 0.90 --merge
+
+# Step 5: Check for any remaining duplicates at lower threshold
+./mcli artist find-duplicates -m 0.85
+```
+
+---
+
 ## artist delete
 
 Delete an artist and all associated albums from the database.
@@ -445,10 +664,31 @@ When using `--keep-files`:
 
 ## Workflow Examples
 
-### Finding and Cleaning Up Duplicates
+### Finding and Cleaning Up Duplicates (Recommended)
 
 ```bash
-# 1. Find potential duplicates
+# 1. Find high-confidence duplicates first
+./mcli artist find-duplicates -m 0.95
+
+# 2. Review the output - check that "Keep" and "Merge" artists are correct
+
+# 3. Merge the high-confidence duplicates
+./mcli artist find-duplicates -m 0.95 --merge
+
+# 4. Lower threshold and review medium-confidence matches
+./mcli artist find-duplicates -m 0.90
+
+# 5. If results look good, merge them
+./mcli artist find-duplicates -m 0.90 --merge
+
+# 6. Check logs for any issues
+tail -50 /mnt/melodee/logs/mcli/melodee-mcli-*.log
+```
+
+### Legacy: Finding Duplicates Manually
+
+```bash
+# 1. Find potential duplicates using stats
 ./mcli artist stats | grep -A 20 "Potential Duplicates"
 
 # 2. Search for specific duplicate

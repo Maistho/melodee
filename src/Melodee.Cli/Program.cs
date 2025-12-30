@@ -47,6 +47,9 @@ public static class Program
                 add.AddCommand<ArtistDeleteCommand>("delete")
                     .WithAlias("rm")
                     .WithDescription("Delete an artist from the database.");
+                add.AddCommand<ArtistFindDuplicatesCommand>("find-duplicates")
+                    .WithAlias("fd")
+                    .WithDescription("Find potential duplicate artists based on external IDs, name similarity, and album overlap.");
             });
             config.AddBranch<ConfigurationSettings>("configuration", add =>
             {

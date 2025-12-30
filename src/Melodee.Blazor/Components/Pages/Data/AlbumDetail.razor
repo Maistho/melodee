@@ -915,14 +915,24 @@
 
     private async Task IsSongStarredClicked(Song song)
     {
-        var result = await UserService.ToggleSongStarAsync(CurrentUsersId, song.ApiKey, IsSongStarred(song));
+        var newStarredState = !IsSongStarred(song);
+        var result = await UserService.ToggleSongStarAsync(CurrentUsersId, song.ApiKey, newStarredState);
         NotificationService.Notify(NotificationMessageForResult(result, L("AlbumDetail.TogglingSongFavorite"), ToastTime));
+        if (result.IsSuccess)
+        {
+            UpdateLocalUserSong(song.Id, us => us.IsStarred = newStarredState);
+        }
     }
 
     private async Task IsSongHatedClicked(Song song)
     {
-        var result = await UserService.ToggleSongHatedAsync(CurrentUsersId, song.ApiKey, IsSongHated(song));
+        var newHatedState = !IsSongHated(song);
+        var result = await UserService.ToggleSongHatedAsync(CurrentUsersId, song.ApiKey, newHatedState);
         NotificationService.Notify(NotificationMessageForResult(result, L("AlbumDetail.TogglingSongHatred"), ToastTime));
+        if (result.IsSuccess)
+        {
+            UpdateLocalUserSong(song.Id, us => us.IsHated = newHatedState);
+        }
     }
 
     private async Task DoWebSearch(int searchType)
@@ -1059,6 +1069,31 @@
     {
         var result = await UserService.SetSongRatingAsync(CurrentUsersId, song.Id, arg);
         NotificationService.Notify(NotificationMessageForResult(result, L("AlbumDetail.SetSongRating"), ToastTime));
+        if (result.IsSuccess)
+        {
+            UpdateLocalUserSong(song.Id, us => us.Rating = arg);
+        }
+    }
+
+    private void UpdateLocalUserSong(int songId, Action<UserSong> updateAction)
+    {
+        var existingUserSong = _userSongs.FirstOrDefault(x => x.SongId == songId);
+        if (existingUserSong != null)
+        {
+            updateAction(existingUserSong);
+        }
+        else
+        {
+            var newUserSong = new UserSong
+            {
+                UserId = CurrentUsersId,
+                SongId = songId,
+                CreatedAt = SystemClock.Instance.GetCurrentInstant()
+            };
+            updateAction(newUserSong);
+            _userSongs = [.._userSongs, newUserSong];
+        }
+        StateHasChanged();
     }
 
     private Task PlaySong(Song song)

@@ -462,4 +462,76 @@ public class StringExtensionsTests
     {
         Assert.Equal(shouldBe, one.IsSimilar(two));
     }
+
+    [Theory]
+    [InlineData("The Beatles", "THE|A|AN", "Beatles")]
+    [InlineData("the beatles", "THE|A|AN", "beatles")]
+    [InlineData("THE BEATLES", "THE|A|AN", "BEATLES")]
+    [InlineData("A Flock Of Seagulls", "THE|A|AN", "Flock Of Seagulls")]
+    [InlineData("An American Werewolf", "THE|A|AN", "American Werewolf")]
+    [InlineData("DJ Tiesto", "THE|A|AN|DJ|MC", "Tiesto")]
+    [InlineData("MC Hammer", "THE|A|AN|DJ|MC", "Hammer")]
+    [InlineData("El Mariachi", "THE|EL|LA|LOS|LAS", "Mariachi")]
+    [InlineData("La Bamba", "THE|EL|LA|LOS|LAS", "Bamba")]
+    [InlineData("Los Lobos", "THE|EL|LA|LOS|LAS", "Lobos")]
+    [InlineData("Las Ketchup", "THE|EL|LA|LOS|LAS", "Ketchup")]
+    [InlineData("Beatles", "THE|A|AN", "Beatles")]
+    [InlineData("Theocracy", "THE|A|AN", "Theocracy")]
+    [InlineData("Theatre", "THE|A|AN", "Theatre")]
+    [InlineData("Anthem", "THE|A|AN", "Anthem")]
+    [InlineData("", "THE|A|AN", null)]
+    [InlineData(null, "THE|A|AN", null)]
+    [InlineData("The Beatles", "", "The Beatles")]
+    [InlineData("The Beatles", null, "The Beatles")]
+    public void StripLeadingArticles_VariousInputs_ReturnsExpected(string? input, string? articles, string? expected)
+    {
+        var result = input.StripLeadingArticles(articles);
+        Assert.Equal(expected, result);
+    }
+
+    [Theory]
+    [InlineData("The Beatles", "THE|A|AN", "BEATLES")]
+    [InlineData("Beatles", "THE|A|AN", "BEATLES")]
+    [InlineData("the beatles", "THE|A|AN", "BEATLES")]
+    [InlineData("A Flock Of Seagulls", "THE|A|AN", "FLOCKOFSEAGULLS")]
+    [InlineData("DJ Tiesto", "THE|A|AN|DJ|MC", "TIESTO")]
+    [InlineData("El Mariachi", "THE|EL|LA|LOS|LAS", "MARIACHI")]
+    [InlineData("", "THE|A|AN", null)]
+    [InlineData(null, "THE|A|AN", null)]
+    public void ToNormalizedStringWithoutArticles_VariousInputs_ReturnsExpected(string? input, string? articles, string? expected)
+    {
+        var result = input.ToNormalizedStringWithoutArticles(articles);
+        Assert.Equal(expected, result);
+    }
+
+    [Fact]
+    public void StripLeadingArticles_WithMultiLanguageArticles_StripsCorrectly()
+    {
+        const string articles = "THE|EL|LA|LOS|LAS|LE|LES|OS|AS|O|A";
+
+        Assert.Equal("Beatles", "The Beatles".StripLeadingArticles(articles));
+        Assert.Equal("Mariachi", "El Mariachi".StripLeadingArticles(articles));
+        Assert.Equal("Bamba", "La Bamba".StripLeadingArticles(articles));
+        Assert.Equal("Lobos", "Los Lobos".StripLeadingArticles(articles));
+        Assert.Equal("Ketchup", "Las Ketchup".StripLeadingArticles(articles));
+        Assert.Equal("Misérables", "Les Misérables".StripLeadingArticles(articles));
+    }
+
+    [Fact]
+    public void StripLeadingArticles_OnlyStripsFirstArticle()
+    {
+        const string articles = "THE|A|AN";
+
+        Assert.Equal("The The", "The The The".StripLeadingArticles(articles));
+        Assert.Equal("A Team", "The A Team".StripLeadingArticles(articles));
+    }
+
+    [Fact]
+    public void StripLeadingArticles_DoesNotStripMiddleArticles()
+    {
+        const string articles = "THE|A|AN";
+
+        Assert.Equal("Rolling Stones", "The Rolling Stones".StripLeadingArticles(articles));
+        Assert.NotEqual("Rolling Stons", "The Rolling The Stones".StripLeadingArticles(articles));
+    }
 }

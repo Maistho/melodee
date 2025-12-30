@@ -100,6 +100,12 @@ mcli [BRANCH] [COMMAND] [OPTIONS]
 # Find artists added in the last 30 days, sorted by album count
 ./mcli artist search --since 30 --sort Albums --sort-dir desc
 
+# Find duplicate artists with high confidence
+./mcli artist find-duplicates -m 0.9
+
+# Find and merge duplicate artists
+./mcli artist find-duplicates -m 0.95 --merge
+
 # List background jobs with next run times
 ./mcli job list
 

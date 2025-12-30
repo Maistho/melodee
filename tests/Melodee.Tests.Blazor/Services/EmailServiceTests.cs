@@ -39,11 +39,9 @@ public class SmtpEmailSenderTests
         // Assert
         Assert.False(result);
 
-        // Verify warning was logged with structured logging
+        // Verify warning was logged (no parameters in this log call)
         _mockLogger.Verify(
-            l => l.Warning(
-                It.Is<string>(s => s.Contains("Email sending is disabled")),
-                It.IsAny<string>()),
+            l => l.Warning(It.Is<string>(s => s.Contains("Email sending is disabled"))),
             Times.Once);
     }
 
@@ -94,7 +92,7 @@ public class SmtpEmailSenderTests
     [Fact]
     public async Task SendAsync_DoesNotLogSensitiveData()
     {
-        // Arrange
+        // Arrange - when email is disabled, it logs a warning without any email info
         _mockConfig.Setup(c => c.GetValue<bool?>(SettingRegistry.EmailEnabled)).Returns(false);
 
         var sender = new SmtpEmailSender(_mockLogger.Object, _mockConfigFactory.Object);
@@ -103,11 +101,9 @@ public class SmtpEmailSenderTests
         // Act
         await sender.SendAsync(sensitiveEmail, "Test", "Body with secret token");
 
-        // Assert - verify email is masked in logs (structured logging with single parameter)
+        // Assert - verify warning was logged but doesn't contain the sensitive email
         _mockLogger.Verify(
-            l => l.Warning(
-                It.IsAny<string>(),
-                It.Is<string>(maskedEmail => !maskedEmail.Contains(sensitiveEmail))),
+            l => l.Warning(It.Is<string>(s => !s.Contains(sensitiveEmail))),
             Times.AtLeastOnce);
     }
 }
