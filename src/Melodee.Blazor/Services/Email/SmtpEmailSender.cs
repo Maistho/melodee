@@ -38,8 +38,7 @@ public sealed class SmtpEmailSender : IEmailSender
             var emailEnabled = config.GetValue<bool?>(SettingRegistry.EmailEnabled) ?? false;
             if (!emailEnabled)
             {
-                _logger.Warning("Email sending is disabled. Email would have been sent to: {MaskedEmail}",
-                    LogSanitizer.MaskEmail(toEmail));
+                _logger.Warning("Email sending is disabled. Request was skipped.");
                 return false;
             }
 
@@ -100,8 +99,7 @@ public sealed class SmtpEmailSender : IEmailSender
                 await client.SendAsync(message, cancellationToken);
                 await client.DisconnectAsync(true, cancellationToken);
 
-                _logger.Information("Email sent successfully to: {MaskedEmail}, Subject: {Subject}",
-                    LogSanitizer.MaskEmail(toEmail),
+                _logger.Information("Email sent successfully. Subject: {Subject}",
                     LogSanitizer.Sanitize(subject));
 
                 return true;
@@ -109,9 +107,7 @@ public sealed class SmtpEmailSender : IEmailSender
             catch (Exception ex)
             {
                 _logger.Error(ex,
-                    "SMTP error sending email. To: {MaskedEmail}, From: {MaskedFrom}, Host: {Host}, Port: {Port}, SSL: {SSL}, StartTLS: {StartTLS}, Exception: {ExceptionType}, Message: {Message}",
-                    LogSanitizer.MaskEmail(toEmail),
-                    LogSanitizer.MaskEmail(fromEmail),
+                    "SMTP error sending email. Host: {Host}, Port: {Port}, SSL: {SSL}, StartTLS: {StartTLS}, Exception: {ExceptionType}, Message: {Message}",
                     smtpHost,
                     smtpPort,
                     smtpUseSsl,
@@ -123,8 +119,7 @@ public sealed class SmtpEmailSender : IEmailSender
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Failed to send email to: {MaskedEmail}. Exception: {ExceptionType}",
-                LogSanitizer.MaskEmail(toEmail),
+            _logger.Error(ex, "Failed to send email. Exception: {ExceptionType}",
                 ex.GetType().Name);
             return false;
         }

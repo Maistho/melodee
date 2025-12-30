@@ -7,6 +7,7 @@ using Melodee.Common.Enums;
 using Melodee.Common.Extensions;
 using Melodee.Common.Services;
 using Melodee.Common.Utility;
+using Melodee.Common.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Spectre.Console;
@@ -29,6 +30,7 @@ public class LibraryValidateCommand : CommandBase<LibraryValidateSettings>
 
         var libraryService = scope.ServiceProvider.GetRequiredService<LibraryService>();
         var dbContextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<MelodeeDbContext>>();
+        var serializer = scope.ServiceProvider.GetRequiredService<ISerializer>();
 
         var libraries = await libraryService.ListAsync(new MelodeeModels.PagedRequest { PageSize = short.MaxValue }, cancellationToken);
         var library = libraries.Data.FirstOrDefault(x => x.Name.ToNormalizedString() == settings.LibraryName?.ToNormalizedString());
@@ -102,7 +104,7 @@ public class LibraryValidateCommand : CommandBase<LibraryValidateSettings>
                     diskTask.IsIndeterminate = true;
                     diskTask.StartTask();
 
-                    await ValidateDiskAgainstDatabaseAsync(dbContext, library, result, settings.Verbose, cancellationToken);
+                    await ValidateDiskAgainstDatabaseAsync(dbContext, library, result, settings.Verbose, serializer, cancellationToken);
 
                     diskTask.Description = "[green]✓ Disk validation complete[/]";
                     diskTask.Value = 100;
@@ -114,7 +116,7 @@ public class LibraryValidateCommand : CommandBase<LibraryValidateSettings>
         else
         {
             await ValidateDatabaseAgainstDiskAsync(dbContext, library, result, settings.Fix, settings.Verbose, cancellationToken);
-            await ValidateDiskAgainstDatabaseAsync(dbContext, library, result, settings.Verbose, cancellationToken);
+            await ValidateDiskAgainstDatabaseAsync(dbContext, library, result, settings.Verbose, serializer, cancellationToken);
         }
 
         var elapsed = Stopwatch.GetElapsedTime(startTime);
@@ -139,7 +141,8 @@ public class LibraryValidateCommand : CommandBase<LibraryValidateSettings>
                     orphanedArtists = result.OrphanedArtists.Select(a => new { a.Id, a.Name, a.Directory }).ToArray(),
                     orphanedAlbums = result.OrphanedAlbums.Select(a => new { a.Id, a.Name, a.Directory, ArtistName = a.Artist?.Name }).ToArray(),
                     missingSongs = result.MissingSongs.Select(s => new { s.Id, s.Title, s.FileName, AlbumName = s.Album?.Name }).ToArray(),
-                    unregisteredDirectories = result.UnregisteredDirectories.ToArray()
+                    unregisteredDirectories = result.UnregisteredDirectories.ToArray(),
+                    directoriesFlaggedForDeletion = result.DirectoriesFlaggedForDeletion.Select(d => new { d.Path, Status = d.Status.ToString() }).ToArray()
                 },
                 fixed_ = settings.Fix ? new
                 {
@@ -170,6 +173,7 @@ public class LibraryValidateCommand : CommandBase<LibraryValidateSettings>
         summaryTable.AddRow("Albums", result.AlbumsChecked.ToString("N0"), FormatIssueCount(result.OrphanedAlbums.Count));
         summaryTable.AddRow("Songs", result.SongsChecked.ToString("N0"), FormatIssueCount(result.MissingSongs.Count));
         summaryTable.AddRow("Disk Directories", result.DirectoriesScanned.ToString("N0"), FormatIssueCount(result.UnregisteredDirectories.Count));
+        summaryTable.AddRow("Invalid Directories", result.DirectoriesFlaggedForDeletion.Count.ToString("N0"), FormatIssueCount(result.DirectoriesFlaggedForDeletion.Count));
 
         AnsiConsole.Write(summaryTable);
         AnsiConsole.WriteLine();
@@ -285,6 +289,30 @@ public class LibraryValidateCommand : CommandBase<LibraryValidateSettings>
             AnsiConsole.WriteLine();
         }
 
+        if (result.DirectoriesFlaggedForDeletion.Count > 0)
+        {
+            var deletionTable = new Table()
+                .Border(TableBorder.Rounded)
+                .BorderColor(Color.Red)
+                .Title("[red]Invalid Directories (on disk, flagged for deletion)[/]");
+
+            deletionTable.AddColumn("Directory Path");
+            deletionTable.AddColumn("Detected Status");
+
+            foreach (var dir in result.DirectoriesFlaggedForDeletion.Take(25))
+            {
+                deletionTable.AddRow(dir.Path.EscapeMarkup(), dir.Status.ToString().EscapeMarkup());
+            }
+
+            if (result.DirectoriesFlaggedForDeletion.Count > 25)
+            {
+                deletionTable.AddRow($"... and {result.DirectoriesFlaggedForDeletion.Count - 25} more", "");
+            }
+
+            AnsiConsole.Write(deletionTable);
+            AnsiConsole.WriteLine();
+        }
+
         if (settings.Fix && (result.ArtistsRemoved > 0 || result.AlbumsRemoved > 0 || result.SongsRemoved > 0))
         {
             AnsiConsole.Write(new Panel(
@@ -302,7 +330,8 @@ public class LibraryValidateCommand : CommandBase<LibraryValidateSettings>
         else
         {
             var totalIssues = result.OrphanedArtists.Count + result.OrphanedAlbums.Count +
-                              result.MissingSongs.Count + result.UnregisteredDirectories.Count;
+                              result.MissingSongs.Count + result.UnregisteredDirectories.Count +
+                              result.DirectoriesFlaggedForDeletion.Count;
             AnsiConsole.MarkupLine($"[red]✗ Library validation failed - {totalIssues} issue(s) found.[/]");
 
             if (!settings.Fix && (result.OrphanedArtists.Count > 0 || result.OrphanedAlbums.Count > 0 || result.MissingSongs.Count > 0))
@@ -417,6 +446,7 @@ public class LibraryValidateCommand : CommandBase<LibraryValidateSettings>
         Library library,
         ValidationResult result,
         bool verbose,
+        ISerializer serializer,
         CancellationToken cancellationToken)
     {
         if (!Directory.Exists(library.Path))
@@ -485,11 +515,69 @@ public class LibraryValidateCommand : CommandBase<LibraryValidateSettings>
 
                         if (!knownPaths.Contains(normalizedPath))
                         {
+                            var albumStatus = await TryGetAlbumStatusAsync(albumDir, serializer, cancellationToken);
+
+                            if (albumStatus.HasValue && albumStatus.Value != AlbumStatus.Ok)
+                            {
+                                result.DirectoriesFlaggedForDeletion.Add(new InvalidDirectory(albumDir, albumStatus.Value));
+                                continue;
+                            }
+
                             result.UnregisteredDirectories.Add(albumDir);
                         }
                     }
                 }
             }
+        }
+    }
+
+    private static async Task<AlbumStatus?> TryGetAlbumStatusAsync(
+        string albumDir,
+        ISerializer serializer,
+        CancellationToken cancellationToken)
+    {
+        var melodeeFile = Directory.GetFiles(albumDir, $"*{MelodeeModels.Album.JsonFileName}", SearchOption.TopDirectoryOnly)
+            .FirstOrDefault()
+                        ?? Directory.GetFiles(albumDir, $"*{MelodeeModels.Album.JsonFileName}", SearchOption.AllDirectories)
+                .FirstOrDefault();
+
+        if (melodeeFile == null)
+        {
+            return null;
+        }
+
+        try
+        {
+            await using var stream = File.OpenRead(melodeeFile);
+            using var document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
+            var statusProperty = document.RootElement
+                .EnumerateObject()
+                .FirstOrDefault(p => string.Equals(p.Name, "status", StringComparison.OrdinalIgnoreCase));
+            if (!string.IsNullOrWhiteSpace(statusProperty.Name))
+            {
+                var rawStatus = statusProperty.Value.GetString();
+                if (!string.IsNullOrWhiteSpace(rawStatus) &&
+                    Enum.TryParse<AlbumStatus>(rawStatus, true, out var parsedStatus))
+                {
+                    return parsedStatus;
+                }
+            }
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            Trace.WriteLine($"Unable to parse melodee.json status for [{albumDir}]: {ex.Message}");
+        }
+
+        try
+        {
+            var album = await MelodeeModels.Album.DeserializeAndInitializeAlbumAsync(serializer, melodeeFile, cancellationToken)
+                .ConfigureAwait(false);
+            return album?.Status;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            Trace.WriteLine($"Unable to deserialize melodee.json for [{albumDir}]: {ex.Message}");
+            return null;
         }
     }
 
@@ -504,6 +592,7 @@ public class LibraryValidateCommand : CommandBase<LibraryValidateSettings>
         public List<Album> OrphanedAlbums { get; } = [];
         public List<Song> MissingSongs { get; } = [];
         public List<string> UnregisteredDirectories { get; } = [];
+        public List<InvalidDirectory> DirectoriesFlaggedForDeletion { get; } = [];
 
         public int ArtistsRemoved { get; set; }
         public int AlbumsRemoved { get; set; }
@@ -512,6 +601,9 @@ public class LibraryValidateCommand : CommandBase<LibraryValidateSettings>
         public bool IsValid => OrphanedArtists.Count == 0 &&
                                OrphanedAlbums.Count == 0 &&
                                MissingSongs.Count == 0 &&
-                               UnregisteredDirectories.Count == 0;
+                               UnregisteredDirectories.Count == 0 &&
+                               DirectoriesFlaggedForDeletion.Count == 0;
     }
+
+    private sealed record InvalidDirectory(string Path, AlbumStatus Status);
 }
