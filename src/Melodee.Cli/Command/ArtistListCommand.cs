@@ -1,5 +1,4 @@
 using Melodee.Cli.CommandSettings;
-using Melodee.Common.Filtering;
 using Melodee.Common.Models;
 using Melodee.Common.Services;
 using Microsoft.Extensions.DependencyInjection;

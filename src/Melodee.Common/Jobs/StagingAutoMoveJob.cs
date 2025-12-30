@@ -2,6 +2,7 @@ using Melodee.Common.Configuration;
 using Melodee.Common.Constants;
 using Melodee.Common.Enums;
 using Melodee.Common.Services;
+using Melodee.Common.Services.Models;
 using Quartz;
 using Serilog;
 
@@ -86,34 +87,52 @@ public class StagingAutoMoveJob(
             return;
         }
 
-        var moveResult = await libraryService.MoveAlbumsFromLibraryToLibrary(
-            stagingLibrary.Name,
-            targetLibrary.Name,
-            album => album.Status == AlbumStatus.Ok,
-            false,
-            context.CancellationToken).ConfigureAwait(false);
-
-        if (moveResult.IsSuccess)
+        var albumsMoved = 0;
+        void OnProcessingProgress(object? sender, ProcessingEvent e)
         {
-            var movedCount = context.MergedJobDataMap.GetInt(JobMapNameRegistry.Count);
-            Logger.Information(
-                "[{JobName}] Completed staging auto-move: moved albums from [{StagingLibrary}] to [{StorageLibrary}]",
-                nameof(StagingAutoMoveJob),
-                stagingLibrary.Name,
-                targetLibrary.Name);
-
-            // Chain to LibraryInsertJob if this was a scheduled run (not manual) and we moved something
-            if (!IsManualTrigger(context) && movedCount > 0)
+            if (e is { Type: ProcessingEventType.Stop, Statistics: not null })
             {
-                await TriggerNextJobAsync(context, JobKeyRegistry.LibraryProcessJobJobKey).ConfigureAwait(false);
+                albumsMoved = e.Statistics.AlbumsMoved;
             }
         }
-        else
+
+        libraryService.OnProcessingProgressEvent += OnProcessingProgress;
+        try
         {
-            Logger.Warning(
-                "[{JobName}] Failed to move albums: {Messages}",
-                nameof(StagingAutoMoveJob),
-                string.Join(", ", moveResult.Messages ?? []));
+            var moveResult = await libraryService.MoveAlbumsFromLibraryToLibrary(
+                stagingLibrary.Name,
+                targetLibrary.Name,
+                album => album.Status == AlbumStatus.Ok,
+                false,
+                context.CancellationToken).ConfigureAwait(false);
+
+            if (moveResult.IsSuccess)
+            {
+                context.Result = new ScanStepResult(AlbumsMoved: albumsMoved);
+                Logger.Information(
+                    "[{JobName}] Completed staging auto-move: moved [{MovedCount}] albums from [{StagingLibrary}] to [{StorageLibrary}]",
+                    nameof(StagingAutoMoveJob),
+                    albumsMoved,
+                    stagingLibrary.Name,
+                    targetLibrary.Name);
+
+                // Chain to LibraryInsertJob if this was a scheduled run (not manual) and we moved something
+                if (!IsManualTrigger(context) && albumsMoved > 0)
+                {
+                    await TriggerNextJobAsync(context, JobKeyRegistry.LibraryProcessJobJobKey).ConfigureAwait(false);
+                }
+            }
+            else
+            {
+                Logger.Warning(
+                    "[{JobName}] Failed to move albums: {Messages}",
+                    nameof(StagingAutoMoveJob),
+                    string.Join(", ", moveResult.Messages ?? []));
+            }
+        }
+        finally
+        {
+            libraryService.OnProcessingProgressEvent -= OnProcessingProgress;
         }
     }
 

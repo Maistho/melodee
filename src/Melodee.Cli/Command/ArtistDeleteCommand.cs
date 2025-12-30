@@ -1,5 +1,4 @@
 using Melodee.Cli.CommandSettings;
-using Melodee.Common.Data;
 using Melodee.Common.Data.Models.Extensions;
 using Melodee.Common.Services;
 using Microsoft.EntityFrameworkCore;

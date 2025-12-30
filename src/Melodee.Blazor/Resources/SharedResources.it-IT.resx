@@ -4017,4 +4017,7 @@
   <data name="Auth.ValidatingToken" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Validating reset link...</value>
   </data>
+  <data name="About.DocumentationSite" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Melodee Documentation Site</value>
+  </data>
 </root>

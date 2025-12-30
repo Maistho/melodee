@@ -398,6 +398,11 @@ public class LibraryInsertJob(
                 Log.Error(exception, "[{JobName}] Processing Exception", nameof(LibraryInsertJob));
             }
 
+            context.Result = new ScanStepResult(
+                ArtistsInserted: _totalArtistsInserted,
+                AlbumsInserted: _totalAlbumsInserted,
+                SongsInserted: _totalSongsInserted);
+
             Log.Information("ℹ️ [{JobName}] Completed. {StopSummary}",
                 nameof(LibraryInsertJob),
                 stopSummary);

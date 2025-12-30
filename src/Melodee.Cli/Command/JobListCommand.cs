@@ -29,7 +29,7 @@ public class JobListCommand : CommandBase<JobListSettings>
 
         foreach (var (jobKey, jobInfo) in JobRegistry.Jobs)
         {
-            if (jobInfo.CronSettingKey != null && 
+            if (jobInfo.CronSettingKey != null &&
                 cronSettings.TryGetValue(jobInfo.CronSettingKey, out var cronExpression) &&
                 !string.IsNullOrWhiteSpace(cronExpression))
             {

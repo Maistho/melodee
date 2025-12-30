@@ -1,6 +1,5 @@
 using Melodee.Common.Configuration;
 using Melodee.Common.Data;
-using Melodee.Common.Jobs;
 using Melodee.Common.Metadata;
 using Melodee.Common.Models.SearchEngines.ArtistSearchEngineServiceData;
 using Melodee.Common.Plugins.Scrobbling;
@@ -31,7 +30,7 @@ public abstract class CommandBase<T> : AsyncCommand<T> where T : Spectre.Console
     /// Format: yyyyMMddTHHmmss (e.g., 20251230T141623)
     /// </summary>
     protected const string Iso8601DateFormat = "yyyyMMdd'T'HHmmss";
-    
+
     protected IConfigurationRoot Configuration()
     {
         var basePath = Directory.GetCurrentDirectory();

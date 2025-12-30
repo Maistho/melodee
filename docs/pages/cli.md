@@ -73,6 +73,12 @@ mcli [BRANCH] [COMMAND] [OPTIONS]
 # Full scan workflow - process inbound → staging → storage → database
 ./mcli library scan
 
+# Silent scan for cron jobs (no output, exit code only)
+./mcli library scan --silent
+
+# JSON scan output for scripting/automation
+./mcli library scan --json
+
 # Show album statistics
 ./mcli album stats
 
@@ -110,8 +116,10 @@ These options are available across most commands:
 
 | Option | Description |
 |--------|-------------|
-| `--verbose` | Output verbose debug and timing information (default: true) |
+| `--verbose` | Output verbose debug and timing information (default: false) |
 | `--raw` | Output in JSON format for scripting |
+| `--silent` | Suppress all output (for cron jobs, returns exit code only) |
+| `--json` | Output results as JSON (structured output for automation) |
 | `-h`, `--help` | Show help information for the command |
 
 ## Exit Codes

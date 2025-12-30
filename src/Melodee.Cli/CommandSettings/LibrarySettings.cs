@@ -9,8 +9,8 @@ public class LibrarySettings : Spectre.Console.Cli.CommandSettings
     [CommandOption("--library|-l")]
     public string? LibraryName { get; set; }
 
-    [Description("Output verbose debug and timing results to console.")]
+    [Description("Output verbose debug and timing results to console. (default: False)")]
     [CommandOption("--verbose")]
-    [DefaultValue(true)]
+    [DefaultValue(false)]
     public bool Verbose { get; set; }
 }

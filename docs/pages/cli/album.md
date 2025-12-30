@@ -43,7 +43,7 @@ mcli album list [OPTIONS]
 | `--raw` | | `false` | Output results in JSON format |
 | `-n`, `--limit` | | `50` | Maximum number of results to return |
 | `-s`, `--status` | | | Filter by album status (Ok, New, Invalid) |
-| `--verbose` | | `true` | Output verbose debug and timing results |
+| `--verbose` | | `false` | Output verbose debug and timing results |
 
 ### Examples
 
@@ -108,7 +108,7 @@ mcli album search [QUERY] [OPTIONS]
 | `--delete` | | `false` | ⚠️ Delete all albums matching the search criteria |
 | `-y`, `--yes` | | `false` | Skip confirmation prompt when deleting |
 | `--keep-files` | | `false` | Keep album files on disk when deleting (database only) |
-| `--verbose` | | `true` | Output verbose debug and timing results |
+| `--verbose` | | `false` | Output verbose debug and timing results |
 
 ### Examples
 
@@ -270,7 +270,7 @@ mcli album stats [OPTIONS]
 | Option | Alias | Default | Description |
 |--------|-------|---------|-------------|
 | `--raw` | | `false` | Output results in JSON format |
-| `--verbose` | | `true` | Output verbose debug and timing results |
+| `--verbose` | | `false` | Output verbose debug and timing results |
 
 ### Examples
 
@@ -346,7 +346,7 @@ mcli album delete <ID> [OPTIONS]
 |--------|-------|---------|-------------|
 | `--keep-files` | | `false` | Keep the album directory on disk (do not delete files) |
 | `-y`, `--yes` | | `false` | Skip confirmation prompt |
-| `--verbose` | | `true` | Output verbose debug and timing results |
+| `--verbose` | | `false` | Output verbose debug and timing results |
 
 ### Examples
 
@@ -404,7 +404,7 @@ mcli album image-issues [OPTIONS]
 | `--missing` | | `true` | Include albums with missing images |
 | `--invalid` | | `true` | Include albums with invalid images (wrong size, not square, etc.) |
 | `--misnumbered` | | `true` | Include albums with incorrectly numbered images |
-| `--verbose` | | `true` | Output verbose debug and timing results |
+| `--verbose` | | `false` | Output verbose debug and timing results |
 
 ### Image Naming Convention
 

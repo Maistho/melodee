@@ -11,8 +11,8 @@ public class ParseSettings : Spectre.Console.Cli.CommandSettings
     [Required]
     public string Filename { get; init; } = string.Empty;
 
-    [Description("Output verbose debug and timing results to console.")]
+    [Description("Output verbose debug and timing results to console. (default: False)")]
     [CommandOption("--verbose")]
-    [DefaultValue(true)]
+    [DefaultValue(false)]
     public bool Verbose { get; init; }
 }

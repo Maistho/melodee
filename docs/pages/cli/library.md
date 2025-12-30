@@ -27,6 +27,7 @@ mcli library [COMMAND] [OPTIONS]
 | `process` | `p` | Process media from inbound to staging (step 1 only) |
 | `move-ok` | `m` | Move 'Ok' status albums to another library |
 | `purge` | | Purge library data from database |
+| `validate` | `v` | Validate library integrity (DB vs disk consistency) |
 
 ---
 
@@ -45,7 +46,7 @@ mcli library list [OPTIONS]
 | Option | Default | Description |
 |--------|---------|-------------|
 | `--raw` | `false` | Output in JSON format for scripting |
-| `--verbose` | `true` | Include verbose debug output |
+| `--verbose` | `false` | Include verbose debug output |
 
 ### Examples
 
@@ -101,7 +102,7 @@ mcli library stats --library <NAME> [OPTIONS]
 | `--library` | `-l` | **Required** | Name of the library to analyze |
 | `--borked` | | `false` | Show only issues, skip informational stats |
 | `--raw` | | `false` | Output in JSON format |
-| `--verbose` | | `true` | Include verbose debug output |
+| `--verbose` | | `false` | Include verbose debug output |
 
 ### Examples
 
@@ -164,7 +165,7 @@ mcli library album-report --library <NAME> [OPTIONS]
 | `--library` | `-l` | **Required** | Name of the library |
 | `--full` | | `false` | Show detailed list instead of summary |
 | `--raw` | | `false` | Output in JSON format |
-| `--verbose` | | `true` | Include verbose debug output |
+| `--verbose` | | `false` | Include verbose debug output |
 
 ### Examples
 
@@ -210,7 +211,7 @@ mcli library clean --library <NAME> [OPTIONS]
 | Option | Alias | Default | Description |
 |--------|-------|---------|-------------|
 | `--library` | `-l` | **Required** | Name of the library to clean |
-| `--verbose` | | `true` | Include verbose debug output |
+| `--verbose` | | `false` | Include verbose debug output |
 
 ### What It Does
 
@@ -255,7 +256,7 @@ mcli library rebuild --library <NAME> [PATH] [OPTIONS]
 |--------|-------|---------|-------------|
 | `--library` | `-l` | **Required** | Name of the library |
 | `--only-missing` | | `true` | Only create missing metadata files |
-| `--verbose` | | `true` | Include verbose debug output |
+| `--verbose` | | `false` | Include verbose debug output |
 
 ### Examples
 
@@ -292,7 +293,9 @@ mcli library scan [OPTIONS]
 | Option | Alias | Default | Description |
 |--------|-------|---------|-------------|
 | `--force` | | `false` | Force processing even if recently scanned |
-| `--verbose` | | `true` | Include verbose debug output |
+| `--verbose` | | `false` | Include verbose debug output |
+| `--silent` | | `false` | Suppress all output (silent mode) |
+| `--json` | | `false` | Output results as JSON (implies --silent for progress) |
 
 ### What It Does
 
@@ -307,7 +310,7 @@ This command orchestrates the **entire media ingestion pipeline** in sequence:
 
 This is the **recommended way to add new music** - a single command that handles everything.
 
-### Example
+### Examples
 
 ```bash
 # Standard scan - process everything end-to-end
@@ -315,9 +318,43 @@ This is the **recommended way to add new music** - a single command that handles
 
 # Force full reprocessing
 ./mcli library scan --force
+
+# Silent mode for cron jobs (no output, exit code only)
+./mcli library scan --silent
+
+# JSON output for scripting and automation
+./mcli library scan --json
+
+# Check exit code in scripts
+./mcli library scan --silent && echo "Scan successful" || echo "Scan failed"
 ```
 
-### Output
+### JSON Output Example
+
+When using `--json`, the command outputs structured JSON:
+
+```json
+{
+  "success": true,
+  "durationSeconds": 145.23,
+  "duration": "00:02:25",
+  "steps": [
+    { "name": "Processing inbound files", "success": true, "durationSeconds": 83.5 },
+    { "name": "Revalidating staging albums", "success": true, "durationSeconds": 5.1 },
+    { "name": "Moving approved albums to storage", "success": true, "durationSeconds": 12.3 },
+    { "name": "Inserting albums into database", "success": true, "durationSeconds": 44.3 }
+  ],
+  "summary": {
+    "inboundProcessing": { "newArtists": 5, "newAlbums": 12, "newSongs": 145 },
+    "stagingRevalidation": { "albumsRevalidated": 3, "albumsNowValid": 2 },
+    "storageTransfer": { "albumsMoved": 14 },
+    "databaseInsert": { "artistsInserted": 5, "albumsInserted": 14, "songsInserted": 168 }
+  },
+  "errors": []
+}
+```
+
+### Interactive Output
 
 ```
 ╭─────────────────────────────────────╮
@@ -333,6 +370,20 @@ This is the **recommended way to add new music** - a single command that handles
 ✓ Inserting albums into database     (00:45)
 
 ── Library scan completed in 00:02:25 ──
+
+╭─────────────────────────────────────╮
+│           Scan Summary              │
+├─────────────────────────────────────┤
+│ Inbound Processing                  │
+│   New artists discovered        5   │
+│   New albums discovered        12   │
+│   New songs discovered        145   │
+├─────────────────────────────────────┤
+│ Database Insert                     │
+│   Artists inserted              5   │
+│   Albums inserted              14   │
+│   Songs inserted              168   │
+╰─────────────────────────────────────╯
 ```
 
 ---
@@ -358,7 +409,7 @@ mcli library process --library <NAME> [OPTIONS]
 | `--pre-script` | | | Script to run before processing |
 | `--inbound` | | | Inbound path (path-based mode) |
 | `--staging` | | | Staging path (path-based mode) |
-| `--verbose` | | `true` | Include verbose debug output |
+| `--verbose` | | `false` | Include verbose debug output |
 
 ### What It Does
 
@@ -401,7 +452,7 @@ mcli library move-ok --library <FROM> --to-library <TO> [OPTIONS]
 | `--to-library` | | **Required** | Destination library name |
 | `--from-path` | | | Source path (path-based mode) |
 | `--to-path` | | | Destination path (path-based mode) |
-| `--verbose` | | `true` | Include verbose debug output |
+| `--verbose` | | `false` | Include verbose debug output |
 
 ### Examples
 
@@ -433,7 +484,7 @@ mcli library purge --library <NAME> [OPTIONS]
 |--------|-------|---------|-------------|
 | `--library` | `-l` | **Required** | Name of the library to purge |
 | `--force` | | `false` | Ignore last scan timestamp |
-| `--verbose` | | `true` | Include verbose debug output |
+| `--verbose` | | `false` | Include verbose debug output |
 
 ### What Gets Deleted
 
@@ -457,6 +508,123 @@ mcli library purge --library <NAME> [OPTIONS]
 ```bash
 ./mcli library purge --library "Staging"
 ```
+
+---
+
+## library validate
+
+Validates library integrity by checking bidirectional consistency between database records and files on disk.
+
+### Usage
+
+```bash
+mcli library validate --library <NAME> [OPTIONS]
+```
+
+### Options
+
+| Option | Alias | Default | Description |
+|--------|-------|---------|-------------|
+| `--library` | `-l` | **Required** | Name of the storage library to validate |
+| `--fix` | | `false` | Remove orphaned database records |
+| `--json` | | `false` | Output results as JSON |
+| `--verbose` | | `false` | Include verbose debug output |
+
+### What It Validates
+
+1. **Database → Disk**: Checks that all artists, albums, and songs in the database have corresponding files/directories on disk
+2. **Disk → Database**: Checks that all album directories with media files on disk are registered in the database
+
+### Issues Detected
+
+| Issue Type | Description | Fix Option |
+|------------|-------------|------------|
+| Orphaned Artists | Artist in DB but directory missing on disk | `--fix` removes from DB |
+| Orphaned Albums | Album in DB but directory missing on disk | `--fix` removes from DB |
+| Missing Songs | Song in DB but file missing on disk | `--fix` removes from DB |
+| Unregistered Directories | Album directory on disk not in DB | Run `library scan` to add |
+
+### Examples
+
+```bash
+# Basic validation - check for issues
+./mcli library validate --library "Storage"
+
+# JSON output for scripting
+./mcli library validate -l "Storage" --json
+
+# Auto-fix orphaned DB records
+./mcli library validate -l "Storage" --fix
+
+# Pipe JSON to jq for processing
+./mcli library validate -l "Storage" --json | jq '.issues.orphanedAlbums | length'
+```
+
+### Example Output
+
+```
+╭───────────────────────────────────╮
+│     Library Validation            │
+├───────────────────────────────────┤
+│ Library     Storage               │
+│ Path        /mnt/music/library    │
+│ Fix Mode    No                    │
+╰───────────────────────────────────╯
+
+✓ Validating database records against disk
+✓ Validating disk directories against database
+
+── Validation completed in 00:02.345 ──
+
+╭─────────────────┬─────────┬────────╮
+│ Category        │ Checked │ Issues │
+├─────────────────┼─────────┼────────┤
+│ Artists         │   1,234 │      0 │
+│ Albums          │  15,678 │      3 │
+│ Songs           │ 187,234 │     12 │
+│ Disk Dirs       │  15,700 │      5 │
+╰─────────────────┴─────────┴────────╯
+
+✗ Library validation failed - 20 issue(s) found.
+Tip: Use --fix to remove orphaned database records.
+Tip: Run 'mcli library scan' to add unregistered directories.
+```
+
+### JSON Output Example
+
+```json
+{
+  "success": false,
+  "libraryName": "Storage",
+  "libraryPath": "/mnt/music/library",
+  "durationSeconds": 2.345,
+  "summary": {
+    "artistsChecked": 1234,
+    "albumsChecked": 15678,
+    "songsChecked": 187234,
+    "directoriesScanned": 15700
+  },
+  "issues": {
+    "orphanedArtists": [],
+    "orphanedAlbums": [
+      { "id": 123, "name": "Missing Album", "directory": "M/Mi/Missing Artist/Missing Album/" }
+    ],
+    "missingSongs": [
+      { "id": 456, "title": "Lost Track", "fileName": "01 - Lost Track.mp3", "albumName": "Some Album" }
+    ],
+    "unregisteredDirectories": [
+      "/mnt/music/library/N/Ne/New Artist/New Album"
+    ]
+  },
+  "fixed_": null
+}
+```
+
+### Safety
+
+- ✅ Read-only by default (only reports issues)
+- ⚠️ `--fix` modifies database (removes orphaned records)
+- ❌ Only works with Storage libraries
 
 ---
 
@@ -502,6 +670,28 @@ echo "Starting full rebuild of $LIBRARY..."
 ./mcli library scan --force
 
 echo "Rebuild complete"
+```
+
+### Validate and Fix Library Integrity
+
+```bash
+#!/bin/bash
+# Check and fix library integrity issues
+
+LIBRARY="Storage"
+
+echo "Validating library integrity..."
+
+# First, check for issues
+./mcli library validate -l "$LIBRARY"
+
+# If issues found, fix orphaned DB records
+./mcli library validate -l "$LIBRARY" --fix
+
+# Add any unregistered directories to DB
+./mcli library scan
+
+echo "Library validation complete"
 ```
 
 ---

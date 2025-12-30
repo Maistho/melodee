@@ -15,8 +15,8 @@ public class ShowTagsSettings : Spectre.Console.Cli.CommandSettings
     [CommandOption("-o|--onlytags")]
     public string? OnlyTags { get; init; }
 
-    [Description("Output verbose debug and timing results to console.")]
+    [Description("Output verbose debug and timing results to console. (default: False)")]
     [CommandOption("--verbose")]
-    [DefaultValue(true)]
+    [DefaultValue(false)]
     public bool Verbose { get; init; }
 }

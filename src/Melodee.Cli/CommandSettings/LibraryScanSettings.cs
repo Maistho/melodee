@@ -17,4 +17,14 @@ public class LibraryScanSettings : Spectre.Console.Cli.CommandSettings
     [CommandOption("--verbose")]
     [DefaultValue(false)]
     public bool Verbose { get; set; }
+
+    [Description("Suppress all output (silent mode).")]
+    [CommandOption("--silent")]
+    [DefaultValue(false)]
+    public bool Silent { get; set; }
+
+    [Description("Output results as JSON (implies --silent for progress display).")]
+    [CommandOption("--json")]
+    [DefaultValue(false)]
+    public bool Json { get; set; }
 }

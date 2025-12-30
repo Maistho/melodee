@@ -6,9 +6,9 @@ namespace Melodee.Cli.CommandSettings;
 
 public class ImportSetting : Spectre.Console.Cli.CommandSettings
 {
-    [Description("Output verbose debug and timing results to console.")]
+    [Description("Output verbose debug and timing results to console. (default: False)")]
     [CommandOption("--verbose")]
-    [DefaultValue(true)]
+    [DefaultValue(false)]
     public bool Verbose { get; init; }
 
     [Description("CSV filename")]

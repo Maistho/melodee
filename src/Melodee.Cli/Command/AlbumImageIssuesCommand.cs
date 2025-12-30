@@ -5,7 +5,6 @@ using Melodee.Common.Data;
 using Melodee.Common.Data.Models;
 using Melodee.Common.Data.Models.Extensions;
 using Melodee.Common.Enums;
-using Melodee.Common.Models.Extensions;
 using Melodee.Common.Plugins.Validation;
 using Melodee.Common.Utility;
 using Microsoft.EntityFrameworkCore;

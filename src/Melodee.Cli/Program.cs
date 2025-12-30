@@ -111,6 +111,9 @@ public static class Program
                 add.AddCommand<LibraryStatsCommand>("stats")
                     .WithAlias("ss")
                     .WithDescription("Show statistics for given library and library directory.");
+                add.AddCommand<LibraryValidateCommand>("validate")
+                    .WithAlias("v")
+                    .WithDescription("Validate library integrity: check DB records match disk files and vice versa.");
             });
             config.AddBranch<ParseSettings>("parser", add =>
             {

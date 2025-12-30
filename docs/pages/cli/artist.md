@@ -41,7 +41,7 @@ mcli artist list [OPTIONS]
 |--------|-------|---------|-------------|
 | `--raw` | | `false` | Output results in JSON format |
 | `-n`, `--limit` | | `50` | Maximum number of results to return |
-| `--verbose` | | `true` | Output verbose debug and timing results |
+| `--verbose` | | `false` | Output verbose debug and timing results |
 
 ### Examples
 
@@ -121,7 +121,7 @@ mcli artist search [QUERY] [OPTIONS]
 | `--delete` | | `false` | ⚠️ Delete all artists matching the search criteria |
 | `-y`, `--yes` | | `false` | Skip confirmation prompt when deleting |
 | `--keep-files` | | `false` | Keep artist files on disk when deleting (database only) |
-| `--verbose` | | `true` | Output verbose debug and timing results |
+| `--verbose` | | `false` | Output verbose debug and timing results |
 
 ### Examples
 
@@ -277,7 +277,7 @@ mcli artist stats [OPTIONS]
 | Option | Alias | Default | Description |
 |--------|-------|---------|-------------|
 | `--raw` | | `false` | Output results in JSON format |
-| `--verbose` | | `true` | Output verbose debug and timing results |
+| `--verbose` | | `false` | Output verbose debug and timing results |
 
 ### Examples
 
@@ -380,7 +380,7 @@ mcli artist delete <ID> [OPTIONS]
 |--------|-------|---------|-------------|
 | `--keep-files` | | `false` | Keep the artist directory on disk (do not delete files) |
 | `-y`, `--yes` | | `false` | Skip confirmation prompt |
-| `--verbose` | | `true` | Output verbose debug and timing results |
+| `--verbose` | | `false` | Output verbose debug and timing results |
 
 ### Examples
 
