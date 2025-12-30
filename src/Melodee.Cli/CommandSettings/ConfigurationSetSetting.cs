@@ -4,13 +4,8 @@ using Spectre.Console.Cli;
 
 namespace Melodee.Cli.CommandSettings;
 
-public class ConfigurationSetSetting : Spectre.Console.Cli.CommandSettings
+public class ConfigurationSetSetting : ConfigurationSettings
 {
-    [Description("Output verbose debug and timing results to console.")]
-    [CommandOption("--verbose")]
-    [DefaultValue(true)]
-    public bool Verbose { get; init; }
-
     [Description("Remove configuration setting.")]
     [CommandOption("--remove")]
     [DefaultValue(false)]

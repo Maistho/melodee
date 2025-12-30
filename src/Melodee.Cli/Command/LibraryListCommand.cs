@@ -1,4 +1,5 @@
 using Melodee.Cli.CommandSettings;
+using Melodee.Common.Data.Models.Extensions;
 using Melodee.Common.Models;
 using Melodee.Common.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -66,11 +67,13 @@ public class LibraryListCommand : CommandBase<LibraryListSettings>
 
                 var statusMarkup = library.IsLocked ? "[red]🔒 Locked[/]" : "[green]✓ Active[/]";
 
-                var lastScanText = library.LastScanAt.HasValue
-                    ? library.LastScanAt.Value.ToDateTimeUtc().ToString("yyyy-MM-dd HH:mm")
-                    : "[grey]Never[/]";
+                var lastScanText = !library.ShouldBeScanned()
+                    ? "[grey]N/A[/]"
+                    : library.LastScanAt.HasValue
+                        ? library.LastScanAt.Value.ToDateTimeUtc().ToString("yyyy-MM-dd HH:mm")
+                        : "[grey]Never[/]";
 
-                var needsScanning = library.NeedsScanning();
+                var needsScanning = library.ShouldBeScanned() && library.NeedsScanning();
                 if (needsScanning && !library.IsLocked)
                 {
                     lastScanText = $"[yellow]{lastScanText} ⚠[/]";
@@ -92,7 +95,7 @@ public class LibraryListCommand : CommandBase<LibraryListSettings>
             AnsiConsole.WriteLine();
             AnsiConsole.MarkupLine($"[grey]Total libraries: {libraries.Length}[/]");
 
-            var needsScan = libraries.Count(l => l.NeedsScanning() && !l.IsLocked);
+            var needsScan = libraries.Count(l => l.ShouldBeScanned() && l.NeedsScanning() && !l.IsLocked);
             if (needsScan > 0)
             {
                 AnsiConsole.MarkupLine($"[yellow]⚠ {needsScan} library(ies) need scanning[/]");

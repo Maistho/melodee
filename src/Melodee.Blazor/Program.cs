@@ -584,10 +584,10 @@ if (!isQuartzDisabled)
     {
         await quartzScheduler.ScheduleJob(
             JobBuilder.Create<ArtistSearchEngineRepositoryHousekeepingJob>()
-                .WithIdentity(JobKeyRegistry.ArtistSearchEngineHousekeepingJobJobKey)
+                .WithIdentity(JobKeyRegistry.ArtistSearchEngineHousekeepingJobKey)
                 .Build(),
             TriggerBuilder.Create()
-                .WithIdentity("ArtistSearchEngineHousekeepingJobJobKey-trigger")
+                .WithIdentity("ArtistSearchEngineHousekeepingJob-trigger")
                 .WithCronSchedule(artistSearchEngineHousekeepingCronExpression!)
                 .StartNow()
                 .Build());
@@ -676,6 +676,22 @@ if (!isQuartzDisabled)
                 .UsingJobData(JobMapNameRegistry.ScanStatus, ScanStatus.Idle.ToString())
                 .UsingJobData(JobMapNameRegistry.Count, 0)
                 .WithCronSchedule(stagingAutoMoveCronExpression!)
+                .StartNow()
+                .Build());
+    }
+
+    var stagingAlbumRevalidationCronExpression = melodeeConfiguration.GetValue<string>(SettingRegistry.JobsStagingAlbumRevalidationCronExpression);
+    if (stagingAlbumRevalidationCronExpression.Nullify() != null)
+    {
+        await quartzScheduler.ScheduleJob(
+            JobBuilder.Create<StagingAlbumRevalidationJob>()
+                .WithIdentity(JobKeyRegistry.StagingAlbumRevalidationJobKey)
+                .Build(),
+            TriggerBuilder.Create()
+                .WithIdentity("StagingAlbumRevalidationJob-trigger")
+                .UsingJobData(JobMapNameRegistry.ScanStatus, ScanStatus.Idle.ToString())
+                .UsingJobData(JobMapNameRegistry.Count, 0)
+                .WithCronSchedule(stagingAlbumRevalidationCronExpression!)
                 .StartNow()
                 .Build());
     }

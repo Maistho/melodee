@@ -15,9 +15,46 @@ public static class Program
         {
             config.SetApplicationName("mcli");
 
-            config.AddBranch<ConfigurationSetSetting>("configuration", add =>
+            config.AddBranch<AlbumSettings>("album", add =>
+            {
+                add.SetDescription("Album data management and statistics");
+                add.AddCommand<AlbumListCommand>("list")
+                    .WithAlias("ls")
+                    .WithDescription("List albums in the database.");
+                add.AddCommand<AlbumSearchCommand>("search")
+                    .WithAlias("s")
+                    .WithDescription("Search for albums by name.");
+                add.AddCommand<AlbumStatsCommand>("stats")
+                    .WithDescription("Show album statistics grouped by status.");
+                add.AddCommand<AlbumDeleteCommand>("delete")
+                    .WithAlias("rm")
+                    .WithDescription("Delete an album from the database.");
+                add.AddCommand<AlbumImageIssuesCommand>("image-issues")
+                    .WithAlias("img")
+                    .WithDescription("Find albums with missing, invalid, or misnumbered images.");
+            });
+            config.AddBranch<ArtistSettings>("artist", add =>
+            {
+                add.SetDescription("Artist data management and statistics");
+                add.AddCommand<ArtistListCommand>("list")
+                    .WithAlias("ls")
+                    .WithDescription("List artists in the database.");
+                add.AddCommand<ArtistSearchCommand>("search")
+                    .WithAlias("s")
+                    .WithDescription("Search for artists by name.");
+                add.AddCommand<ArtistStatsCommand>("stats")
+                    .WithDescription("Show artist statistics including missing images and potential duplicates.");
+                add.AddCommand<ArtistDeleteCommand>("delete")
+                    .WithAlias("rm")
+                    .WithDescription("Delete an artist from the database.");
+            });
+            config.AddBranch<ConfigurationSettings>("configuration", add =>
             {
                 add.SetDescription("Manage Melodee configuration settings");
+                add.AddCommand<ConfigurationListCommand>("list")
+                    .WithDescription("List all configuration settings.");
+                add.AddCommand<ConfigurationGetCommand>("get")
+                    .WithDescription("Get a specific configuration setting value.");
                 add.AddCommand<ConfigurationSetCommand>("set")
                     .WithDescription("Modify Melodee configuration.");
             });
@@ -36,6 +73,10 @@ public static class Program
             config.AddBranch<JobSettings>("job", add =>
             {
                 add.SetDescription("Run background jobs and maintenance tasks");
+                add.AddCommand<JobListCommand>("list")
+                    .WithDescription("List all known background jobs with their execution history and statistics.");
+                add.AddCommand<JobRunCommand>("run")
+                    .WithDescription("Run a specific background job by name.");
                 add.AddCommand<JobRunArtistSearchEngineDatabaseHousekeepingJobCommand>("artistsearchengine-refresh")
                     .WithDescription("Run artist search engine refresh job. This updates the local database of artists albums from search engines.");
                 add.AddCommand<JobRunMusicBrainzUpdateDatabaseJobCommand>("musicbrainz-update")
@@ -77,17 +118,17 @@ public static class Program
                 add.AddCommand<ParseCommand>("parse")
                     .WithDescription("Parse a given media file (CUE, NFO, SFV, etc.) and show results.");
             });
-            config.AddBranch<ValidateSettings>("validate", add =>
-            {
-                add.SetDescription("Validate media files and metadata");
-                add.AddCommand<ValidateCommand>("album")
-                    .WithDescription("Validate a metadata album data file (melodee.json).");
-            });
             config.AddBranch<ShowTagsSettings>("tags", add =>
             {
                 add.SetDescription("Display and manage media file tags");
                 add.AddCommand<ShowTagsCommand>("show")
                     .WithDescription("Load given media file and show all known ID3 tags.");
+            });
+            config.AddBranch<ValidateSettings>("validate", add =>
+            {
+                add.SetDescription("Validate media files and metadata");
+                add.AddCommand<ValidateCommand>("album")
+                    .WithDescription("Validate a metadata album data file (melodee.json).");
             });
         });
 

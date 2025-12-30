@@ -31,6 +31,7 @@ public static class SettingRegistry
     public const string JobsLibraryProcessCronExpression = "jobs.libraryProcess.cronExpression";
     public const string JobsLibraryInsertCronExpression = "jobs.libraryInsert.cronExpression";
     public const string JobsStagingAutoMoveCronExpression = "jobs.stagingAutoMove.cronExpression";
+    public const string JobsStagingAlbumRevalidationCronExpression = "jobs.stagingAlbumRevalidation.cronExpression";
     public const string JobsMusicBrainzUpdateDatabaseCronExpression = "jobs.musicbrainzUpdateDatabase.cronExpression";
     public const string LyricFilesEnabled = "lyrics.filesEnabled";
     public const string MagicDoRemoveFeaturingArtistFromSongArtist = "magic.doRemoveFeaturingArtistFromSongArtist";

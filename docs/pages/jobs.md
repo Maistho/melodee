@@ -78,6 +78,40 @@ Automatically moves validated albums from staging to storage.
 
 This job enables truly automatic music ingestion. Well-tagged albums that pass validation flow through the entire pipeline without manual intervention. Albums that need review remain in staging until manually approved.
 
+### StagingAlbumRevalidationJob
+
+Periodically re-validates albums in staging that have invalid or unknown artists.
+
+| Property | Value |
+|----------|-------|
+| **Default Schedule** | Weekly on Sunday at 3am (`0 0 3 ? * SUN`) |
+| **Setting Key** | `jobs.stagingAlbumRevalidation.cronExpression` |
+| **Chains To** | None (independent job) |
+
+**What It Does:**
+
+1. Retrieves the staging library configuration
+2. Scans for albums with `HasInvalidArtists` or `HasUnknownArtist` status reasons
+3. Re-queries the ArtistSearchEngineService for each album's artist
+4. If the artist is now found in search engines, updates the album with the result
+5. Re-validates the album - if now valid, status becomes `AlbumStatus.Ok`
+6. Saves updated albums so StagingAutoMoveJob can move them to storage
+
+**Skip Conditions:**
+
+- Staging library is locked
+- No albums with invalid/unknown artist status in staging
+
+**Why This Matters:**
+
+This job provides a self-healing mechanism for albums that were processed before their artist data became available in external sources (MusicBrainz, Spotify, etc.). When an artist is later added to these sources, this job automatically detects and fixes affected albums. This is particularly useful for:
+
+- New or indie artists who may not have immediate search engine coverage
+- Albums processed during search engine downtime
+- Bulk imports where some artists weren't recognized initially
+
+Albums that become valid through revalidation will automatically flow through to storage via StagingAutoMoveJob, completing the ingestion pipeline without manual intervention.
+
 ### LibraryInsertJob
 
 Reads metadata from storage libraries and inserts records into the database, making music playable via API.

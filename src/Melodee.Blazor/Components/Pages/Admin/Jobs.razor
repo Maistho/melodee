@@ -2,6 +2,7 @@
 @inherits MelodeeComponentBase
 @using System.Globalization
 @using Melodee.Blazor.ViewModels
+@using Melodee.Common.Constants
 @using Melodee.Common.Data
 @using Microsoft.EntityFrameworkCore
 @using NodaTime
@@ -599,6 +600,49 @@
                     });
                 }
             }
+
+            // Add known jobs from JobRegistry that aren't currently scheduled
+            var scheduledJobNames = _jobs.Select(j => j.JobName).ToHashSet();
+            foreach (var (jobKey, jobInfo) in JobRegistry.Jobs)
+            {
+                if (scheduledJobNames.Contains(jobKey.Name)) continue;
+
+                // Check if this job has any history even though it's not currently scheduled
+                jobHistoryStats.TryGetValue(jobKey.Name, out var stats);
+
+                _jobs.Add(new JobStatusDetail
+                {
+                    JobName = jobKey.Name,
+                    JobGroup = jobKey.Group,
+                    JobKey = jobKey,
+                    Description = jobInfo.Description,
+                    TriggerState = "Not Scheduled",
+                    TriggerType = "---",
+                    CronExpression = null,
+                    CronDescription = jobInfo.CronSettingKey != null ? $"Configure via: {jobInfo.CronSettingKey}" : "No configurable schedule",
+                    NextFireTimeUtc = null,
+                    PreviousFireTimeUtc = stats?.LastRun?.ToDateTimeOffset(),
+                    StartTimeUtc = DateTimeOffset.MinValue,
+                    EndTimeUtc = null,
+                    TimesTriggered = 0,
+                    IsCurrentlyExecuting = false,
+                    RunTime = null,
+                    IsDurable = false,
+                    DisallowConcurrentExecution = false,
+                    PersistJobDataAfterExecution = false,
+                    RequestsRecovery = false,
+                    JobData = null,
+                    TotalRunCount = stats?.TotalRunCount ?? 0,
+                    SuccessCount = stats?.SuccessCount ?? 0,
+                    FailureCount = stats?.FailureCount ?? 0,
+                    ManualTriggerCount = stats?.ManualTriggerCount ?? 0,
+                    AverageDurationMs = stats?.AverageDurationMs,
+                    MinDurationMs = stats?.MinDurationMs,
+                    MaxDurationMs = stats?.MaxDurationMs,
+                    LastErrorMessage = stats?.LastFailure?.ErrorMessage,
+                    LastFailureTime = stats?.LastFailure?.CompletedAt?.ToDateTimeOffset()
+                });
+            }
         }
         catch (Exception ex)
         {
@@ -816,6 +860,7 @@
         "Blocked" => BadgeStyle.Info,
         "Error" => BadgeStyle.Danger,
         "Complete" => BadgeStyle.Secondary,
+        "Not Scheduled" => BadgeStyle.Light,
         _ => BadgeStyle.Light
     };
 
