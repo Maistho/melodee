@@ -1764,15 +1764,17 @@ public class ArtistService(
         // Load target album with all necessary includes
         var targetAlbum = await context.Albums
             .Include(a => a.Songs)
+                .ThenInclude(s => s.UserSongs)
             .Include(a => a.Contributors)
             .Include(a => a.Artist)
             .ThenInclude(a => a.Library)
             .FirstAsync(x => x.Id == request.TargetAlbumId, cancellationToken)
             .ConfigureAwait(false);
 
-        // Load source albums
+        // Load source albums with all song-related data
         var sourceAlbums = await context.Albums
             .Include(a => a.Songs)
+                .ThenInclude(s => s.UserSongs)
             .Include(a => a.Contributors)
             .Include(a => a.UserAlbums)
             .Include(a => a.Artist)
@@ -1781,9 +1783,32 @@ public class ArtistService(
             .ToArrayAsync(cancellationToken)
             .ConfigureAwait(false);
 
+        // Get all source song IDs for bulk loading related data
+        var sourceSongIds = sourceAlbums.SelectMany(a => a.Songs.Select(s => s.Id)).ToArray();
+        var targetSongIds = targetAlbum.Songs.Select(s => s.Id).ToArray();
+        var allSongIds = sourceSongIds.Concat(targetSongIds).ToArray();
+
+        // Load related song data in bulk for efficiency
+        var playlistSongs = await context.PlaylistSong
+            .Where(ps => allSongIds.Contains(ps.SongId))
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
+        
+        var playQueues = await context.PlayQues
+            .Where(pq => allSongIds.Contains(pq.SongId))
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
+        
+        var bookmarks = await context.Bookmarks
+            .Where(b => allSongIds.Contains(b.SongId))
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
+        
+        var playHistory = await context.UserSongPlayHistories
+            .Where(h => allSongIds.Contains(h.SongId))
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
+
         var actionLog = new List<string>();
         var songsMoved = 0;
         var songsSkipped = 0;
+        var songsMerged = 0;
         var imagesMoved = 0;
         var imagesSkipped = 0;
         var metadataMerged = 0;
@@ -1805,6 +1830,18 @@ public class ArtistService(
 
                 if (resolution?.Action == MelodeeModels.AlbumMerge.AlbumMergeResolutionAction.SkipSource)
                 {
+                    // Even when skipping, merge user data to the target song if one exists
+                    var targetSongForUserData = targetAlbum.Songs.FirstOrDefault(s =>
+                        s.SongNumber == sourceSong.SongNumber ||
+                        (string.Equals(s.TitleNormalized, sourceSong.TitleNormalized, StringComparison.OrdinalIgnoreCase) &&
+                         Math.Abs(s.Duration - sourceSong.Duration) < SongDurationToleranceMs));
+                    
+                    if (targetSongForUserData != null)
+                    {
+                        MergeSongUserData(context, sourceSong, targetSongForUserData, playlistSongs, playQueues, bookmarks, playHistory, now, actionLog);
+                        songsMerged++;
+                    }
+                    
                     songsSkipped++;
                     actionLog.Add($"Skipped track {sourceSong.SongNumber}: {sourceSong.Title} from {sourceAlbum.Name}");
                     continue;
@@ -1820,16 +1857,23 @@ public class ArtistService(
                 {
                     if (resolution?.Action == MelodeeModels.AlbumMerge.AlbumMergeResolutionAction.ReplaceWithSource)
                     {
+                        // Merge user data from existing song to source song before removing
+                        MergeSongUserData(context, existingSong, sourceSong, playlistSongs, playQueues, bookmarks, playHistory, now, actionLog);
+                        
                         // Remove existing and add source
                         context.Songs.Remove(existingSong);
                         sourceSong.AlbumId = targetAlbum.Id;
                         songsMoved++;
+                        songsMerged++;
                         actionLog.Add($"Replaced track {sourceSong.SongNumber}: {existingSong.Title} with {sourceSong.Title}");
                     }
                     else
                     {
+                        // Default: keep target, merge source user data to target
+                        MergeSongUserData(context, sourceSong, existingSong, playlistSongs, playQueues, bookmarks, playHistory, now, actionLog);
+                        songsMerged++;
                         songsSkipped++;
-                        actionLog.Add($"Skipped duplicate track {sourceSong.SongNumber}: {sourceSong.Title}");
+                        actionLog.Add($"Skipped duplicate track {sourceSong.SongNumber}: {sourceSong.Title} (user data merged)");
                         continue;
                     }
                 }
@@ -1949,6 +1993,7 @@ public class ArtistService(
             SourceAlbumNames = sourceAlbums.Select(a => a.Name).ToArray(),
             SongsMoved = songsMoved,
             SongsSkipped = songsSkipped,
+            SongsUserDataMerged = songsMerged,
             ImagesMoved = imagesMoved,
             ImagesSkipped = imagesSkipped,
             MetadataMerged = metadataMerged,
@@ -2021,6 +2066,118 @@ public class ArtistService(
         return resolutions.FirstOrDefault(r =>
             r.TrackIds != null &&
             r.TrackIds.Values.Contains(song.Id));
+    }
+
+    /// <summary>
+    /// Merges user-related data from a source song to a target song.
+    /// Handles UserSongs, PlaylistSongs, PlayQueues, Bookmarks, and UserSongPlayHistory.
+    /// </summary>
+    private void MergeSongUserData(
+        MelodeeDbContext context,
+        Song sourceSong,
+        Song targetSong,
+        List<PlaylistSong> playlistSongs,
+        List<PlayQueue> playQueues,
+        List<Bookmark> bookmarks,
+        List<UserSongPlayHistory> playHistory,
+        Instant now,
+        List<string> actionLog)
+    {
+        var userDataMerged = 0;
+
+        // Merge UserSongs (play counts, ratings, stars)
+        foreach (var sourceUserSong in sourceSong.UserSongs.ToList())
+        {
+            var targetUserSong = targetSong.UserSongs.FirstOrDefault(us => us.UserId == sourceUserSong.UserId);
+            
+            if (targetUserSong != null)
+            {
+                // Merge: combine play counts, keep highest rating, preserve star if either has it
+                targetUserSong.PlayedCount += sourceUserSong.PlayedCount;
+                targetUserSong.Rating = Math.Max(targetUserSong.Rating, sourceUserSong.Rating);
+                targetUserSong.IsStarred = targetUserSong.IsStarred || sourceUserSong.IsStarred;
+                targetUserSong.IsHated = targetUserSong.IsHated && sourceUserSong.IsHated; // Only hated if both are hated
+                targetUserSong.LastPlayedAt = targetUserSong.LastPlayedAt > sourceUserSong.LastPlayedAt 
+                    ? targetUserSong.LastPlayedAt 
+                    : sourceUserSong.LastPlayedAt;
+                targetUserSong.StarredAt ??= sourceUserSong.StarredAt;
+                targetUserSong.LastUpdatedAt = now;
+                
+                context.UserSongs.Remove(sourceUserSong);
+                userDataMerged++;
+            }
+            else
+            {
+                // Move: re-point to target song
+                sourceUserSong.SongId = targetSong.Id;
+                sourceUserSong.LastUpdatedAt = now;
+                userDataMerged++;
+            }
+        }
+
+        // Merge PlaylistSongs - re-point to target song, avoiding duplicates
+        var sourcePlaylistSongs = playlistSongs.Where(ps => ps.SongId == sourceSong.Id).ToList();
+        foreach (var sourcePs in sourcePlaylistSongs)
+        {
+            var existsInPlaylist = playlistSongs.Any(ps => ps.SongId == targetSong.Id && ps.PlaylistId == sourcePs.PlaylistId);
+            if (!existsInPlaylist)
+            {
+                sourcePs.SongId = targetSong.Id;
+                sourcePs.SongApiKey = targetSong.ApiKey;
+                userDataMerged++;
+            }
+            else
+            {
+                context.PlaylistSong.Remove(sourcePs);
+            }
+        }
+
+        // Merge PlayQueues - re-point to target song
+        var sourcePlayQueues = playQueues.Where(pq => pq.SongId == sourceSong.Id).ToList();
+        foreach (var sourcePq in sourcePlayQueues)
+        {
+            var existsInQueue = playQueues.Any(pq => pq.SongId == targetSong.Id && pq.UserId == sourcePq.UserId);
+            if (!existsInQueue)
+            {
+                sourcePq.SongId = targetSong.Id;
+                sourcePq.SongApiKey = targetSong.ApiKey;
+                userDataMerged++;
+            }
+            else
+            {
+                context.PlayQues.Remove(sourcePq);
+            }
+        }
+
+        // Merge Bookmarks - re-point to target song
+        var sourceBookmarks = bookmarks.Where(b => b.SongId == sourceSong.Id).ToList();
+        foreach (var sourceBookmark in sourceBookmarks)
+        {
+            var existsForUser = bookmarks.Any(b => b.SongId == targetSong.Id && b.UserId == sourceBookmark.UserId);
+            if (!existsForUser)
+            {
+                sourceBookmark.SongId = targetSong.Id;
+                sourceBookmark.LastUpdatedAt = now;
+                userDataMerged++;
+            }
+            else
+            {
+                context.Bookmarks.Remove(sourceBookmark);
+            }
+        }
+
+        // Merge Play History - re-point all history to target song (preserves full history)
+        var sourceHistory = playHistory.Where(h => h.SongId == sourceSong.Id).ToList();
+        foreach (var history in sourceHistory)
+        {
+            history.SongId = targetSong.Id;
+            userDataMerged++;
+        }
+
+        if (userDataMerged > 0)
+        {
+            actionLog.Add($"Merged {userDataMerged} user data items from '{sourceSong.Title}' to '{targetSong.Title}'");
+        }
     }
 
     private void MergeMetadata(

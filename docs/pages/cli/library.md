@@ -28,6 +28,7 @@ mcli library [COMMAND] [OPTIONS]
 | `move-ok` | `m` | Move 'Ok' status albums to another library |
 | `purge` | | Purge library data from database |
 | `validate` | `v` | Validate library integrity (DB vs disk consistency) |
+| `find-duplicate-dirs` | `fdd` | Find duplicate album directories and resolve using metadata |
 
 ---
 
@@ -625,6 +626,157 @@ Tip: Run 'mcli library scan' to add unregistered directories.
 - ✅ Read-only by default (only reports issues)
 - ⚠️ `--fix` modifies database (removes orphaned records)
 - ❌ Only works with Storage libraries
+
+---
+
+## library find-duplicate-dirs
+
+Finds duplicate album directories (same album name, different years) and optionally resolves them using metadata searches from MusicBrainz, Spotify, and other sources.
+
+### Usage
+
+```bash
+mcli library find-duplicate-dirs --library <NAME> [OPTIONS]
+```
+
+### Options
+
+| Option | Alias | Default | Description |
+|--------|-------|---------|-------------|
+| `--library` | `-l` | **Required** | Name of the storage library to scan |
+| `--search` | | `false` | Search metadata sources to determine correct year |
+| `--delete` | | `false` | Delete incorrect duplicates (requires `--search`) |
+| `--artist` | `-a` | | Filter to specific artist name (partial match) |
+| `--limit` | `-n` | | Maximum number of duplicate groups to process |
+| `--json` | | `false` | Output results as JSON |
+| `--verbose` | | `false` | Include verbose debug output |
+
+### What It Does
+
+1. **Scans** the library for album directories with the same normalized name but different years
+2. **Identifies** potential duplicates (e.g., "Hot Pink [2019]" and "Hot Pink [2020]")
+3. **Searches** metadata sources (when `--search` is used) to determine the correct release year
+4. **Suggests** which directories to keep and which to delete
+5. **Deletes** incorrect directories (when `--delete` is used)
+
+### Examples
+
+```bash
+# Find all duplicate album directories
+./mcli library find-duplicate-dirs --library "Storage"
+
+# Filter to a specific artist
+./mcli library find-duplicate-dirs -l "Storage" --artist "Doja Cat"
+
+# Search metadata to determine correct year
+./mcli library find-duplicate-dirs -l "Storage" --search
+
+# Search and auto-delete incorrect duplicates
+./mcli library find-duplicate-dirs -l "Storage" --search --delete
+
+# JSON output for scripting
+./mcli library find-duplicate-dirs -l "Storage" --search --json
+
+# Limit to first 10 groups
+./mcli library find-duplicate-dirs -l "Storage" --limit 10
+```
+
+### Example Output (Basic)
+
+```
+╭─────────────┬──────────────────┬──────────────────────────────┬──────┬───────╮
+│ Artist      │ Album            │ Directory                    │ Year │ Files │
+├─────────────┼──────────────────┼──────────────────────────────┼──────┼───────┤
+│ Doja Cat    │ Hot Pink         │ Hot Pink [2019]              │ 2019 │    12 │
+│             │                  │ Hot Pink [2020]              │ 2020 │    12 │
+│             │                  │                              │      │       │
+│ Pink Floyd  │ The Wall         │ The Wall [1979]              │ 1979 │    26 │
+│             │                  │ The Wall [1980]              │ 1980 │    26 │
+╰─────────────┴──────────────────┴──────────────────────────────┴──────┴───────╯
+
+Found 2 duplicate album group(s) with 4 directories
+```
+
+### Example Output (With Metadata Search)
+
+```
+╭─────────────┬──────────────────┬──────────────────────┬──────┬───────┬───────────────┬─────────────────┬──────────╮
+│ Artist      │ Album            │ Directory            │ Year │ Files │ Metadata Year │ Source          │ Status   │
+├─────────────┼──────────────────┼──────────────────────┼──────┼───────┼───────────────┼─────────────────┼──────────┤
+│ Doja Cat    │ Hot Pink         │ Hot Pink [2019]      │ 2019 │    12 │ 2019          │ SearchEngine    │ ✓ Keep   │
+│             │                  │ Hot Pink [2020]      │ 2020 │    12 │               │                 │ ✗ Delete │
+│             │                  │                      │      │       │               │                 │          │
+│ Pink Floyd  │ The Wall         │ The Wall [1979]      │ 1979 │    26 │ 1979          │ SearchEngine    │ ✓ Keep   │
+│             │                  │ The Wall [1980]      │ 1980 │    26 │               │                 │ ✗ Delete │
+╰─────────────┴──────────────────┴──────────────────────┴──────┴───────┴───────────────┴─────────────────┴──────────╯
+
+Found 2 duplicate album group(s) with 4 directories
+  Resolved via metadata: 2
+  Directories suggested for deletion: 2
+```
+
+### JSON Output Example
+
+```json
+{
+  "durationSeconds": 12.34,
+  "totalGroups": 2,
+  "totalDirectories": 4,
+  "resolvedGroups": 2,
+  "directoriesToDelete": 2,
+  "groups": [
+    {
+      "artistName": "Doja Cat",
+      "albumName": "Hot Pink",
+      "metadataYear": 2019,
+      "metadataSource": "SearchEngine",
+      "musicBrainzId": "abc123-...",
+      "spotifyId": "xyz789",
+      "suggestedCorrectDirectory": "/mnt/music/library/D/Do/Doja Cat/Hot Pink [2019]",
+      "suggestedDeleteDirectories": [
+        "/mnt/music/library/D/Do/Doja Cat/Hot Pink [2020]"
+      ],
+      "directories": [
+        {
+          "path": "/mnt/music/library/D/Do/Doja Cat/Hot Pink [2019]",
+          "albumName": "Hot Pink",
+          "year": 2019,
+          "fileCount": 12,
+          "isCorrectYear": true
+        },
+        {
+          "path": "/mnt/music/library/D/Do/Doja Cat/Hot Pink [2020]",
+          "albumName": "Hot Pink",
+          "year": 2020,
+          "fileCount": 12,
+          "isCorrectYear": false
+        }
+      ]
+    }
+  ]
+}
+```
+
+### How Year Detection Works
+
+The command detects album years from:
+
+1. **Directory name patterns**: `[2019]`, `(2019)`, or `2019` prefix
+2. **Melodee metadata files**: `melodee.json` if present
+3. **Metadata searches**: MusicBrainz, Spotify, and other configured search engines
+
+### Safety
+
+- ✅ Read-only by default (only reports duplicates)
+- ⚠️ `--search` queries external metadata APIs
+- ⚠️ `--delete` permanently removes directories (requires confirmation)
+- ❌ Only works with Storage libraries
+
+### Use Cases
+
+1. **Post-migration cleanup**: After importing a large music collection, find and resolve duplicate albums with inconsistent years
+2. **Quality assurance**: Identify albums that may have been ripped or tagged with incorrect years
+3. **Library maintenance**: Periodic checks to keep your library clean and consistent
 
 ---
 

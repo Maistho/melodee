@@ -36,6 +36,11 @@ public record AlbumMergeReport
     public int SongsSkipped { get; init; }
 
     /// <summary>
+    /// Number of songs where user data was merged (play counts, ratings, stars, etc.)
+    /// </summary>
+    public int SongsUserDataMerged { get; init; }
+
+    /// <summary>
     /// Number of images moved to target
     /// </summary>
     public int ImagesMoved { get; init; }

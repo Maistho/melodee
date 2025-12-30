@@ -36,11 +36,19 @@ public class ArtistFindDuplicatesCommand : CommandBase<ArtistFindDuplicatesSetti
 
         IReadOnlyList<ArtistDuplicateGroup> groups = [];
 
+        AnsiConsole.MarkupLine("[blue]Searching for duplicate artists...[/]");
+        AnsiConsole.MarkupLine($"[grey]  Min score: {criteria.MinScore:P0}, Limit: {criteria.Limit?.ToString() ?? "unlimited"}[/]");
+        
         await AnsiConsole.Status()
-            .StartAsync("Searching for duplicate artists...", async ctx =>
+            .Spinner(Spinner.Known.Dots)
+            .SpinnerStyle(Style.Parse("green bold"))
+            .StartAsync("Querying database for potential duplicates...", async ctx =>
             {
                 groups = await duplicateFinder.FindDuplicatesAsync(criteria, cancellationToken);
+                ctx.Status($"Found {groups.Count} duplicate group(s)");
             });
+        
+        AnsiConsole.MarkupLine($"[green]Found {groups.Count} potential duplicate group(s)[/]");
 
         if (groups.Count == 0)
         {

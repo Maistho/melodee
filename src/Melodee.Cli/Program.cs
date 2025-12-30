@@ -117,6 +117,9 @@ public static class Program
                 add.AddCommand<LibraryValidateCommand>("validate")
                     .WithAlias("v")
                     .WithDescription("Validate library integrity: check DB records match disk files and vice versa.");
+                add.AddCommand<AlbumFindDuplicateDirsCommand>("find-duplicate-dirs")
+                    .WithAlias("fdd")
+                    .WithDescription("Find duplicate album directories and optionally resolve using metadata searches.");
             });
             config.AddBranch<ParseSettings>("parser", add =>
             {

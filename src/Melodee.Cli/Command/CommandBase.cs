@@ -94,6 +94,7 @@ public abstract class CommandBase<T> : AsyncCommand<T> where T : Spectre.Console
         services.AddScoped<AlbumImageSearchEngineService>();
         services.AddScoped<ArtistImageSearchEngineService>();
         services.AddScoped<ArtistSearchEngineService>();
+        services.AddScoped<AlbumSearchEngineService>();
         services.AddScoped<ChartService>();
         services.AddScoped<DirectoryProcessorToStagingService>();
         services.AddScoped<LibraryService>();
