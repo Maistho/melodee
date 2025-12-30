@@ -30,6 +30,12 @@ public class User : DataModelBase
     public required string EmailNormalized { get; set; }
 
     /// <summary>
+    ///     Date and time when the user's email was confirmed (e.g., by clicking a password reset link).
+    ///     Null indicates the email has not been confirmed.
+    /// </summary>
+    public Instant? EmailConfirmedDate { get; set; }
+
+    /// <summary>
     ///     This is the PublicKey (really its a private key) used to encrypt and decrypt the users password for Subsonic
     ///     clients authentication. When this
     ///     changes the users password will need reset.

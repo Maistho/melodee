@@ -18,9 +18,17 @@ public sealed class MelodeeConfigurationFactory(IDbContextFactory<MelodeeDbConte
 
     private IMelodeeConfiguration? _configuration;
 
+    /// <summary>
+    /// Event raised when configuration has been reset and components should reload their configuration.
+    /// </summary>
+    public event EventHandler? ConfigurationChanged;
+
     public void Reset()
     {
         _configuration = null;
+
+        // Notify all subscribers that configuration has changed
+        ConfigurationChanged?.Invoke(this, EventArgs.Empty);
     }
 
     public async Task<IMelodeeConfiguration> GetConfigurationAsync(CancellationToken cancellationToken = default)

@@ -155,6 +155,9 @@
         // Subscribe to culture changes
         LocalizationService.CultureChanged += OnCultureChanged;
 
+        // Subscribe to configuration changes
+        MelodeeConfigurationFactory.ConfigurationChanged += OnConfigurationChanged;
+
         MainLayoutProxyService.HeaderChanged += OnHeaderChange;
         MainLayoutProxyService.SpinnerVisibleChanged += OnSpinnerChange;
     }
@@ -163,6 +166,13 @@
     {
         _isRtl = LocalizationService.IsRightToLeft();
         InvokeAsync(StateHasChanged);
+    }
+
+    private async void OnConfigurationChanged(object? sender, EventArgs e)
+    {
+        // Reload configuration-dependent values
+        await LoadConfigurationAsync();
+        await InvokeAsync(StateHasChanged);
     }
 
     private void OnHeaderChange(object? sender, EventArgs e)
@@ -178,6 +188,7 @@
     public void Dispose()
     {
         LocalizationService.CultureChanged -= OnCultureChanged;
+        MelodeeConfigurationFactory.ConfigurationChanged -= OnConfigurationChanged;
         MainLayoutProxyService.HeaderChanged -= OnHeaderChange;
         MainLayoutProxyService.SpinnerVisibleChanged -= OnSpinnerChange;
         _activityTimer?.Dispose();
@@ -187,8 +198,7 @@
     {
         if (firstRender)
         {
-            var configuration = await MelodeeConfigurationFactory.GetConfigurationAsync();
-            _siteTitle = configuration.GetValue<string>(SettingRegistry.SystemSiteName) ?? "Melodee";
+            await LoadConfigurationAsync();
 
             _mediaLibraryInfos = (await LibraryService.ListMediaLibrariesAsync())
                 .Data
@@ -203,6 +213,12 @@
 
             StateHasChanged();
         }
+    }
+
+    private async Task LoadConfigurationAsync()
+    {
+        var configuration = await MelodeeConfigurationFactory.GetConfigurationAsync();
+        _siteTitle = configuration.GetValue<string>(SettingRegistry.SystemSiteName) ?? "Melodee";
     }
 
     private async Task CheckUnreadRequestsAsync()

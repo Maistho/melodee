@@ -2296,6 +2296,14 @@ IBus bus)
         // Clear the reset token
         user.PasswordResetToken = null;
         user.PasswordResetTokenExpiresAt = null;
+
+        // Confirm email when user successfully resets password via email link
+        // This validates they have access to the email account
+        if (user.EmailConfirmedDate == null)
+        {
+            user.EmailConfirmedDate = SystemClock.Instance.GetCurrentInstant();
+        }
+
         user.LastUpdatedAt = SystemClock.Instance.GetCurrentInstant();
 
         await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

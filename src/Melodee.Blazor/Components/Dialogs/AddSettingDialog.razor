@@ -1,0 +1,102 @@
+@using Melodee.Blazor.Components.Pages
+@using Melodee.Common.Data.Models
+@using NodaTime
+
+@inherits MelodeeComponentBase
+
+@inject DialogService DialogService
+
+<RadzenStack Gap="1rem">
+    <RadzenTemplateForm TItem="Setting" Data="@_newSetting" Submit="@OnSubmit">
+        <RadzenStack Gap="0.5rem">
+            <RadzenFormField Text="@L("AdminSettings.Key")" Variant="Variant.Outlined">
+                <RadzenDropDown @bind-Value="@_newSetting.Key"
+                                Data="@AvailableKeys"
+                                Style="width: 100%"
+                                Name="Key"
+                                AllowFiltering="true"
+                                FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                                Placeholder="@L("AdminSettings.SelectKey")"/>
+                <RadzenRequiredValidator Component="Key" Text="@L("AdminSettings.KeyRequired")"/>
+            </RadzenFormField>
+
+            <RadzenFormField Text="@L("AdminSettings.Value")" Variant="Variant.Outlined">
+                <RadzenTextBox @bind-Value="@_newSetting.Value"
+                               Style="width: 100%"
+                               Name="Value"
+                               Placeholder="@L("AdminSettings.EnterValue")"/>
+            </RadzenFormField>
+
+            <RadzenFormField Text="@L("AdminSettings.Comment")" Variant="Variant.Outlined">
+                <RadzenTextArea @bind-Value="@_newSetting.Comment"
+                                Style="width: 100%"
+                                Rows="3"
+                                Name="Comment"
+                                Placeholder="@L("AdminSettings.EnterComment")"/>
+            </RadzenFormField>
+
+            <RadzenFormField Text="@L("AdminSettings.Description")" Variant="Variant.Outlined">
+                <RadzenTextArea @bind-Value="@_newSetting.Description"
+                                Style="width: 100%"
+                                Rows="2"
+                                Name="Description"
+                                Placeholder="@L("AdminSettings.EnterDescription")"/>
+            </RadzenFormField>
+
+            <RadzenFormField Text="@L("AdminSettings.Category")" Variant="Variant.Outlined">
+                <RadzenNumeric @bind-Value="@_newSetting.Category"
+                               Style="width: 100%"
+                               Name="Category"
+                               Min="0"/>
+            </RadzenFormField>
+
+            <RadzenFormField Text="@L("AdminSettings.SortOrder")" Variant="Variant.Outlined">
+                <RadzenNumeric @bind-Value="@_newSetting.SortOrder"
+                               Style="width: 100%"
+                               Name="SortOrder"
+                               Min="0"/>
+            </RadzenFormField>
+        </RadzenStack>
+
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" class="rz-mt-4" JustifyContent="JustifyContent.End">
+            <RadzenButton ButtonType="ButtonType.Submit"
+                          Text="@L("Actions.Add")"
+                          Icon="add"
+                          ButtonStyle="ButtonStyle.Primary"/>
+            <RadzenButton Text="@L("Actions.Cancel")"
+                          ButtonStyle="ButtonStyle.Light"
+                          Click="@Cancel"/>
+        </RadzenStack>
+    </RadzenTemplateForm>
+</RadzenStack>
+
+@code {
+    [Parameter]
+    public List<string> AvailableKeys { get; set; } = new();
+
+    private Setting _newSetting = new()
+    {
+        Key = string.Empty,
+        Value = string.Empty,
+        Category = 0,
+        SortOrder = 0,
+        IsLocked = false,
+        ApiKey = Guid.NewGuid(),
+        CreatedAt = NodaTime.SystemClock.Instance.GetCurrentInstant()
+    };
+
+    private void OnSubmit()
+    {
+        if (string.IsNullOrWhiteSpace(_newSetting.Key))
+        {
+            return;
+        }
+
+        DialogService.Close(_newSetting);
+    }
+
+    private void Cancel()
+    {
+        DialogService.Close(null);
+    }
+}

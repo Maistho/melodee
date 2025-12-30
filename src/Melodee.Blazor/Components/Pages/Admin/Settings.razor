@@ -1,9 +1,13 @@
 @page "/admin/settings"
 @inherits MelodeeComponentBase
+@using Melodee.Blazor.Components.Dialogs
+@using Melodee.Common.Constants
 @using Melodee.Common.Data.Models
+@using Melodee.Common.Extensions
 @using Melodee.Common.Filtering
 @using FilterOperator = Melodee.Common.Filtering.FilterOperator
 
+@inject DialogService DialogService
 @inject MainLayoutProxyService MainLayoutProxyService
 @inject ILogger Logger
 @inject SettingService SettingService
@@ -18,15 +22,24 @@
         <RadzenBreadCrumbItem Path="/" Text="@L("Navigation.Dashboard")"/>
         <RadzenBreadCrumbItem Icon="settings" Text="@L("AdminSettings.PageTitle")"/>
     </RadzenBreadCrumb>
-    <DebounceInput class="rz-textbox rz-w-100"
-                   autocomplete="off"
-                   @bind-Value="@_debounceInputValue"
-                   @bind-Value:event="OnInput"
-                   DebounceTime="800"
-                   MinLength="3"
-                   OnValueChanged="@DoSearchAsync"
-                   ForceNotifyByEnter="true"
-                   ForceNotifyOnBlur="true"/>
+    
+    <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.Center">
+        <DebounceInput class="rz-textbox"
+                       style="flex: 1"
+                       autocomplete="off"
+                       @bind-Value="@_debounceInputValue"
+                       @bind-Value:event="OnInput"
+                       DebounceTime="800"
+                       MinLength="3"
+                       OnValueChanged="@DoSearchAsync"
+                       ForceNotifyByEnter="true"
+                       ForceNotifyOnBlur="true"/>
+        <RadzenButton 
+            Text="@L("AdminSettings.AddNew")"
+            Icon="add"
+            ButtonStyle="ButtonStyle.Primary"
+            Click="@OpenAddSettingDialog"/>
+    </RadzenStack>
 
     <RadzenDataGrid
         @ref="_grid"
@@ -104,6 +117,77 @@
     IMelodeeConfiguration _configuration = new MelodeeConfiguration([]);
 
     string _debounceInputValue = "";
+
+    private async Task OpenAddSettingDialog()
+    {
+        // Get all setting keys from SettingRegistry
+        var allSettingKeys = typeof(SettingRegistry).GetAllPublicConstantValues<string>().OrderBy(x => x).ToList();
+        
+        // Get existing setting keys
+        var existingKeys = await SettingService.GetAllKeysAsync();
+        
+        // Filter out keys that already have records
+        var availableKeys = allSettingKeys.Where(k => !existingKeys.Contains(k, StringComparer.OrdinalIgnoreCase)).ToList();
+        
+        if (!availableKeys.Any())
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Warning,
+                Duration = ToastTime,
+                SummaryContent = _ => @<RadzenText TextStyle="TextStyle.H6">@L("AdminSettings.NoAvailableKeys")</RadzenText>,
+                DetailContent = ns => @<RadzenStack>
+                    <RadzenText TextStyle="TextStyle.Body2">@L("AdminSettings.AllKeysExist")</RadzenText>
+                    <RadzenButton Text="@L("Actions.Close")" Click="@(_ => ns.Messages.Clear())"/>
+                </RadzenStack>
+            });
+            return;
+        }
+        
+        var result = await DialogService.OpenAsync<AddSettingDialog>(
+            L("AdminSettings.AddNewSetting"),
+            new Dictionary<string, object>
+            {
+                { "AvailableKeys", availableKeys }
+            },
+            new DialogOptions
+            {
+                Width = "600px",
+                Resizable = true,
+                Draggable = true
+            });
+        
+        if (result is Setting newSetting)
+        {
+            var addResult = await SettingService.AddAsync(newSetting);
+            if (addResult.IsSuccess && addResult.Data != null)
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Duration = ToastTime,
+                    SummaryContent = _ => @<RadzenText TextStyle="TextStyle.H6">@L("AdminSettings.SuccessfullyAdded")</RadzenText>,
+                    DetailContent = ns => @<RadzenButton Text="@L("Actions.Close")" Click="@(_ => ns.Messages.Clear())"/>
+                });
+                
+                // Reload data
+                await LoadData(new LoadDataArgs { Sorts = [], Filters = [] });
+            }
+            else
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Duration = ToastTime * 3,
+                    SummaryContent = _ => @<RadzenText TextStyle="TextStyle.H6">@L("AdminSettings.FailedToAdd")</RadzenText>,
+                    DetailContent = ns => @<RadzenStack>
+                        <RadzenText TextStyle="TextStyle.Body2">@string.Join(", ", addResult.Messages ?? [])</RadzenText>
+                        <RadzenButton Text="@L("Actions.Close")" Click="@(_ => ns.Messages.Clear())"/>
+                    </RadzenStack>
+                });
+            }
+        }
+    }
 
     async Task EditRow(Setting setting)
     {

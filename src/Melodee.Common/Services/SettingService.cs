@@ -455,4 +455,17 @@ public class SettingService : ServiceBase
             Data = result
         };
     }
+
+    /// <summary>
+    /// Gets all existing setting keys from the database.
+    /// </summary>
+    public async Task<List<string>> GetAllKeysAsync(CancellationToken cancellationToken = default)
+    {
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        return await scopedContext.Settings
+            .AsNoTracking()
+            .Select(s => s.Key)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+    }
 }
