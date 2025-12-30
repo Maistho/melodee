@@ -1,6 +1,6 @@
 ---
-description: 'Localization requirements for Melodee.Blazor components and pages'
-applyTo: '**/*.razor, **/*.razor.cs'
+description: 'Localization requirements for Melodee.Blazor components and pages - MANDATORY: All language files must be updated together'
+applyTo: '**/*.razor, **/*.razor.cs, **/Resources/**/*.resx'
 ---
 
 # Blazor Localization Guidelines
@@ -94,21 +94,70 @@ Use dot-notation with these prefixes:
 
 ## Adding New Localization Keys
 
-When adding new UI text:
+**⚠️ CRITICAL REQUIREMENT**: When adding ANY new localization key, you **MUST** add it to ALL 10 language files in a SINGLE operation. Partial updates will cause CI/CD failures.
+
+### Mandatory Process (NO EXCEPTIONS)
+
+#### Option A: Use the Helper Script (RECOMMENDED)
+
+Use the provided script to add a key to all 10 files automatically:
+
+```bash
+bash scripts/add-localization-key.sh "YourKey.Name" "English text here"
+```
+
+This will:
+- Add the key to all 10 resource files
+- Use the English value for en-US
+- Add `[NEEDS TRANSLATION]` prefix for other languages
+- Prevent you from forgetting any language file
+
+Examples:
+```bash
+bash scripts/add-localization-key.sh "Actions.Export" "Export"
+bash scripts/add-localization-key.sh "Messages.ExportSuccess" "Successfully exported {0} items"
+```
+
+#### Option B: Manual Addition
+
+If you must add keys manually:
 
 1. **Add key to base resource file**: `src/Melodee.Blazor/Resources/SharedResources.resx`
-2. **Add translations to ALL language files**:
-   - `SharedResources.de-DE.resx`
-   - `SharedResources.es-ES.resx`
-   - `SharedResources.fr-FR.resx`
-   - `SharedResources.it-IT.resx`
-   - `SharedResources.ja-JP.resx`
-   - `SharedResources.pt-BR.resx`
-   - `SharedResources.ru-RU.resx`
-   - `SharedResources.zh-CN.resx`
-   - `SharedResources.ar-SA.resx`
+   
+2. **IMMEDIATELY add the SAME key to ALL 9 translation files** in the same commit:
+   - `SharedResources.de-DE.resx` (German)
+   - `SharedResources.es-ES.resx` (Spanish)
+   - `SharedResources.fr-FR.resx` (French)
+   - `SharedResources.it-IT.resx` (Italian)
+   - `SharedResources.ja-JP.resx` (Japanese)
+   - `SharedResources.pt-BR.resx` (Portuguese - Brazil)
+   - `SharedResources.ru-RU.resx` (Russian)
+   - `SharedResources.zh-CN.resx` (Chinese - Simplified)
+   - `SharedResources.ar-SA.resx` (Arabic - Saudi Arabia)
 
-3. **Run validation**: `bash scripts/validate-resources.sh`
+3. **For translations you don't know**: Use placeholder text with `[NEEDS TRANSLATION]` prefix:
+   ```xml
+   <data name="YourKey.Name" xml:space="preserve">
+     <value>[NEEDS TRANSLATION] English text here</value>
+   </data>
+   ```
+
+#### Final Steps (Required for Both Options)
+
+1. **MANDATORY validation BEFORE committing**: 
+   ```bash
+   bash scripts/validate-resources.sh
+   ```
+   This script MUST pass before you commit. If it fails, you've missed a language file.
+
+2. **Commit all 10 files together**: Never commit the base file without the translation files.
+
+### Why This Matters
+
+- The Localization Validation workflow runs on every push and will FAIL if keys are missing
+- Missing keys break the application for users in those languages
+- Partial updates require emergency fixes and delay deployment
+- All 10 files must have identical key sets (1,274 keys as of 2025-12-30)
 
 ### Resource File Format
 
@@ -154,5 +203,32 @@ No additional work is needed in individual components.
 
 - **Never run `dotnet format` on `.resx` files** - it corrupts the XML schema
 - The `.editorconfig` has `generated_code = true` for `*.resx` to prevent this
-- All 10 language files must have identical keys
+- **All 10 language files must have identical keys** - this is enforced by CI/CD
 - Missing keys will display the key name as fallback (e.g., "Dashboard.Title")
+- **ALWAYS update all language files together in a single commit**
+- Use the validation script before every commit touching resource files
+
+## Pre-Commit Checklist for Resource File Changes
+
+Before committing any changes to resource files, verify:
+
+- [ ] Added/modified key exists in base `SharedResources.resx`
+- [ ] Same key exists in all 9 translation files (de-DE, es-ES, fr-FR, it-IT, ja-JP, pt-BR, ru-RU, zh-CN, ar-SA)
+- [ ] Used `[NEEDS TRANSLATION]` prefix for placeholder translations
+- [ ] Ran `bash scripts/validate-resources.sh` successfully
+- [ ] All 10 resource files are staged for commit together
+- [ ] Validation script output shows all keys present for all languages
+
+## Common Mistakes to Avoid
+
+❌ **NEVER DO THIS:**
+- Adding a key to only the base English file
+- Committing base file separately from translation files
+- Assuming translations can be "added later"
+- Skipping the validation script
+
+✅ **ALWAYS DO THIS:**
+- Add keys to all 10 files in one operation
+- Run validation script before committing
+- Commit all resource files together
+- Use placeholders for unknown translations
