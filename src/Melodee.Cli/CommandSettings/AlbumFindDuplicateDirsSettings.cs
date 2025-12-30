@@ -15,7 +15,12 @@ public class AlbumFindDuplicateDirsSettings : LibrarySettings
     [DefaultValue(false)]
     public bool JsonOutput { get; init; }
 
-    [Description("Automatically delete duplicate directories that have incorrect metadata (requires --search).")]
+    [Description("Merge duplicate directories into the canonical release (correct year). Unique songs from re-releases are preserved. Requires --search.")]
+    [CommandOption("--merge")]
+    [DefaultValue(false)]
+    public bool Merge { get; init; }
+    
+    [Description("DEPRECATED: Use --merge instead. This option now performs a merge operation.")]
     [CommandOption("--delete")]
     [DefaultValue(false)]
     public bool Delete { get; init; }

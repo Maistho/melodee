@@ -2115,21 +2115,29 @@ public class ArtistService(
             }
         }
 
-        // Merge PlaylistSongs - re-point to target song, avoiding duplicates
+        // Merge PlaylistSongs - since SongId is part of composite key, we must delete and recreate
         var sourcePlaylistSongs = playlistSongs.Where(ps => ps.SongId == sourceSong.Id).ToList();
         foreach (var sourcePs in sourcePlaylistSongs)
         {
             var existsInPlaylist = playlistSongs.Any(ps => ps.SongId == targetSong.Id && ps.PlaylistId == sourcePs.PlaylistId);
+            
+            // Always remove the source playlist song entry
+            context.PlaylistSong.Remove(sourcePs);
+            
             if (!existsInPlaylist)
             {
-                sourcePs.SongId = targetSong.Id;
-                sourcePs.SongApiKey = targetSong.ApiKey;
+                // Create a new entry pointing to target song (since SongId is part of composite key, we can't update it)
+                var newPlaylistSong = new PlaylistSong
+                {
+                    SongId = targetSong.Id,
+                    SongApiKey = targetSong.ApiKey,
+                    PlaylistId = sourcePs.PlaylistId,
+                    PlaylistOrder = sourcePs.PlaylistOrder
+                };
+                context.PlaylistSong.Add(newPlaylistSong);
                 userDataMerged++;
             }
-            else
-            {
-                context.PlaylistSong.Remove(sourcePs);
-            }
+            // If exists, the duplicate is simply removed (no action log needed, already handled)
         }
 
         // Merge PlayQueues - re-point to target song

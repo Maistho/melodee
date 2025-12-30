@@ -35,14 +35,24 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
     {
         var startTime = Stopwatch.GetTimestamp();
         
-        Log.Debug("Starting AlbumFindDuplicateDirsCommand with settings: LibraryName={LibraryName}, ArtistFilter={ArtistFilter}, SearchMetadata={SearchMetadata}, Delete={Delete}, Limit={Limit}",
-            settings.LibraryName, settings.ArtistFilter, settings.SearchMetadata, settings.Delete, settings.Limit);
+        // Handle both --merge and deprecated --delete (both now perform merge)
+        var shouldMerge = settings.Merge || settings.Delete;
+        if (settings.Delete)
+        {
+            AnsiConsole.MarkupLine("[yellow]Warning: --delete is deprecated and now performs a merge operation. Use --merge instead.[/]");
+            Log.Warning("--delete option is deprecated, use --merge instead");
+        }
+        
+        Log.Debug("Starting AlbumFindDuplicateDirsCommand with settings: LibraryName={LibraryName}, ArtistFilter={ArtistFilter}, SearchMetadata={SearchMetadata}, Merge={Merge}, Limit={Limit}",
+            settings.LibraryName, settings.ArtistFilter, settings.SearchMetadata, shouldMerge, settings.Limit);
 
         using var scope = CreateServiceProvider().CreateScope();
         var libraryService = scope.ServiceProvider.GetRequiredService<LibraryService>();
         var serializer = scope.ServiceProvider.GetRequiredService<ISerializer>();
         var configurationFactory = scope.ServiceProvider.GetRequiredService<IMelodeeConfigurationFactory>();
         var albumSearchEngineService = scope.ServiceProvider.GetRequiredService<AlbumSearchEngineService>();
+        var artistService = scope.ServiceProvider.GetRequiredService<ArtistService>();
+        var albumService = scope.ServiceProvider.GetRequiredService<AlbumService>();
 
         Log.Debug("Services resolved successfully");
         
@@ -70,10 +80,10 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
             return 1;
         }
 
-        if (settings.Delete && !settings.SearchMetadata)
+        if (shouldMerge && !settings.SearchMetadata)
         {
-            Log.Error("--delete flag requires --search flag to be set");
-            AnsiConsole.MarkupLine("[red]Error:[/] --delete requires --search to determine which directory is correct.");
+            Log.Error("--merge flag requires --search flag to be set");
+            AnsiConsole.MarkupLine("[red]Error:[/] --merge requires --search to determine which directory is the canonical release.");
             return 1;
         }
 
@@ -176,17 +186,17 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
                                             dir.Path, dir.Year, dir.IsCorrectYear);
                                     }
 
-                                    group.SuggestedCorrectDirectory = group.Directories
+                                    group.SuggestedTargetDirectory = group.Directories
                                         .FirstOrDefault(d => d.IsCorrectYear == true)?.Path;
-                                    group.SuggestedDeleteDirectories = group.Directories
+                                    group.SuggestedMergeDirectories = group.Directories
                                         .Where(d => d.IsCorrectYear == false)
                                         .Select(d => d.Path)
                                         .ToArray();
                                     
                                     resolvedCount++;
-                                    Log.Debug("Resolved {Artist} - {Album}: CorrectDir={CorrectDir}, DeleteDirs={DeleteCount}",
+                                    Log.Debug("Resolved {Artist} - {Album}: TargetDir={TargetDir}, MergeDirs={MergeCount}",
                                         group.ArtistName, group.AlbumName, 
-                                        group.SuggestedCorrectDirectory, group.SuggestedDeleteDirectories?.Length ?? 0);
+                                        group.SuggestedTargetDirectory, group.SuggestedMergeDirectories?.Length ?? 0);
                                 }
                                 else
                                 {
@@ -224,10 +234,10 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
             OutputTable(duplicateGroups, settings.SearchMetadata);
         }
 
-        if (settings.Delete && settings.SearchMetadata)
+        if (shouldMerge && settings.SearchMetadata)
         {
-            Log.Information("Starting delete operation for duplicate directories");
-            await DeleteDuplicateDirectoriesAsync(duplicateGroups, cancellationToken);
+            Log.Information("Starting merge operation for duplicate directories");
+            await MergeDuplicateDirectoriesAsync(duplicateGroups, artistService, albumService, library.Id, cancellationToken);
         }
 
         var totalElapsed = Stopwatch.GetElapsedTime(startTime);
@@ -552,8 +562,8 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
                     }
                     else if (dir.IsCorrectYear == false)
                     {
-                        statusColor = "red";
-                        statusText = "✗ Delete";
+                        statusColor = "yellow";
+                        statusText = "→ Merge";
                     }
                     else
                     {
@@ -602,16 +612,16 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
         var totalGroups = groups.Count;
         var totalDirs = groups.Sum(g => g.Directories.Count);
         var resolvedGroups = groups.Count(g => g.MetadataYear.HasValue);
-        var dirsToDelete = groups.Sum(g => g.SuggestedDeleteDirectories?.Length ?? 0);
+        var dirsToMerge = groups.Sum(g => g.SuggestedMergeDirectories?.Length ?? 0);
 
         AnsiConsole.MarkupLine($"[grey]Found {totalGroups} duplicate album group(s) with {totalDirs} directories[/]");
 
         if (hasMetadata)
         {
             AnsiConsole.MarkupLine($"  [cyan]Resolved via metadata:[/] {resolvedGroups}");
-            if (dirsToDelete > 0)
+            if (dirsToMerge > 0)
             {
-                AnsiConsole.MarkupLine($"  [yellow]Directories suggested for deletion:[/] {dirsToDelete}");
+                AnsiConsole.MarkupLine($"  [yellow]Directories to merge:[/] {dirsToMerge}");
             }
         }
     }
@@ -625,7 +635,7 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
             totalGroups = groups.Count,
             totalDirectories = groups.Sum(g => g.Directories.Count),
             resolvedGroups = groups.Count(g => g.MetadataYear.HasValue),
-            directoriesToDelete = groups.Sum(g => g.SuggestedDeleteDirectories?.Length ?? 0),
+            directoriesToMerge = groups.Sum(g => g.SuggestedMergeDirectories?.Length ?? 0),
             groups = groups.Select(g => new
             {
                 artistName = g.ArtistName,
@@ -634,8 +644,8 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
                 metadataSource = g.MetadataSource,
                 musicBrainzId = g.MusicBrainzId,
                 spotifyId = g.SpotifyId,
-                suggestedCorrectDirectory = g.SuggestedCorrectDirectory,
-                suggestedDeleteDirectories = g.SuggestedDeleteDirectories,
+                suggestedTargetDirectory = g.SuggestedTargetDirectory,
+                suggestedMergeDirectories = g.SuggestedMergeDirectories,
                 directories = g.Directories.Select(d => new
                 {
                     path = d.Path,
@@ -654,44 +664,58 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
         }));
     }
 
-    private static async Task DeleteDuplicateDirectoriesAsync(
+    private static async Task MergeDuplicateDirectoriesAsync(
         List<DuplicateAlbumGroup> groups,
+        ArtistService artistService,
+        AlbumService albumService,
+        int libraryId,
         CancellationToken cancellationToken)
     {
-        var dirsToDelete = groups
-            .Where(g => g.SuggestedDeleteDirectories?.Length > 0)
-            .SelectMany(g => g.SuggestedDeleteDirectories!)
-            .ToArray();
+        var groupsToMerge = groups
+            .Where(g => g.SuggestedMergeDirectories?.Length > 0 && !string.IsNullOrEmpty(g.SuggestedTargetDirectory))
+            .ToList();
 
-        Log.Debug("DeleteDuplicateDirectoriesAsync: {DirCount} directories identified for deletion", dirsToDelete.Length);
+        var totalDirsToMerge = groupsToMerge.Sum(g => g.SuggestedMergeDirectories!.Length);
         
-        if (dirsToDelete.Length == 0)
+        Log.Debug("MergeDuplicateDirectoriesAsync: {GroupCount} groups with {DirCount} directories identified for merge", 
+            groupsToMerge.Count, totalDirsToMerge);
+        
+        if (groupsToMerge.Count == 0)
         {
-            Log.Information("No directories identified for deletion");
-            AnsiConsole.MarkupLine("[yellow]No directories identified for deletion.[/]");
+            Log.Information("No directories identified for merge");
+            AnsiConsole.MarkupLine("[yellow]No directories identified for merge.[/]");
             return;
         }
 
-        Log.Debug("Directories to delete: {Directories}", string.Join(", ", dirsToDelete.Select(Path.GetFileName)));
+        AnsiConsole.MarkupLine($"\n[bold]Merge Summary:[/]");
+        AnsiConsole.MarkupLine($"  • [cyan]{groupsToMerge.Count}[/] album groups to process");
+        AnsiConsole.MarkupLine($"  • [cyan]{totalDirsToMerge}[/] source directories to merge");
+        AnsiConsole.MarkupLine($"\n[dim]Merging will:[/]");
+        AnsiConsole.MarkupLine($"  [dim]1. Move unique songs from re-releases to the canonical release[/]");
+        AnsiConsole.MarkupLine($"  [dim]2. Update database records (playlists, play history, ratings)[/]");
+        AnsiConsole.MarkupLine($"  [dim]3. Recalculate album metadata (duration, track count)[/]");
+        AnsiConsole.MarkupLine($"  [dim]4. Remove empty source directories[/]");
 
         var confirmed = AnsiConsole.Confirm(
-            $"[yellow]Are you sure you want to delete {dirsToDelete.Length} duplicate directories?[/]",
+            $"\n[yellow]Proceed with merge operation?[/]",
             defaultValue: false);
 
         if (!confirmed)
         {
-            Log.Information("Delete operation cancelled by user");
-            AnsiConsole.MarkupLine("[grey]Delete operation cancelled.[/]");
+            Log.Information("Merge operation cancelled by user");
+            AnsiConsole.MarkupLine("[grey]Merge operation cancelled.[/]");
             return;
         }
 
-        Log.Information("User confirmed deletion of {DirCount} directories", dirsToDelete.Length);
+        Log.Information("User confirmed merge of {GroupCount} groups", groupsToMerge.Count);
         
         var successCount = 0;
         var failCount = 0;
-        var deleteStartTime = Stopwatch.GetTimestamp();
+        var filesMoved = 0;
+        var mergeStartTime = Stopwatch.GetTimestamp();
 
         await AnsiConsole.Progress()
+            .AutoRefresh(true)
             .Columns(
                 new TaskDescriptionColumn(),
                 new ProgressBarColumn(),
@@ -699,49 +723,272 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
                 new SpinnerColumn())
             .StartAsync(async ctx =>
             {
-                var task = ctx.AddTask("[red]Deleting duplicate directories...[/]", maxValue: dirsToDelete.Length);
+                var task = ctx.AddTask("[green]Merging duplicate directories...[/]", maxValue: groupsToMerge.Count);
 
-                foreach (var dir in dirsToDelete)
+                foreach (var group in groupsToMerge)
                 {
                     if (cancellationToken.IsCancellationRequested)
                     {
-                        Log.Warning("Delete operation cancelled by user");
+                        Log.Warning("Merge operation cancelled by user");
                         break;
                     }
 
                     try
                     {
-                        if (Directory.Exists(dir))
+                        var targetDir = group.SuggestedTargetDirectory!;
+                        var sourceDirs = group.SuggestedMergeDirectories!;
+                        
+                        Log.Information("Merging {Artist} - {Album}: {SourceCount} source dirs into {TargetDir}",
+                            group.ArtistName, group.AlbumName, sourceDirs.Length, Path.GetFileName(targetDir));
+                        
+                        // First, try to merge in database if albums exist there
+                        var dbMergeResult = await TryMergeInDatabaseAsync(
+                            artistService, albumService, libraryId,
+                            group.ArtistName, targetDir, sourceDirs, 
+                            cancellationToken);
+                        
+                        if (dbMergeResult.Success)
                         {
-                            Log.Debug("Deleting directory: {Directory}", dir);
-                            Directory.Delete(dir, true);
-                            successCount++;
-                            Log.Information("Successfully deleted directory: {Directory}", dir);
-                            AnsiConsole.MarkupLine($"  [green]✓[/] Deleted: {Path.GetFileName(dir).EscapeMarkup()}");
+                            Log.Information("Database merge successful for {Artist} - {Album}", group.ArtistName, group.AlbumName);
                         }
-                        else
+                        else if (dbMergeResult.NotInDatabase)
                         {
-                            Log.Warning("Directory no longer exists: {Directory}", dir);
+                            Log.Debug("Albums not in database, performing file-system only merge for {Artist} - {Album}", 
+                                group.ArtistName, group.AlbumName);
                         }
+                        
+                        // Now merge physical files
+                        foreach (var sourceDir in sourceDirs)
+                        {
+                            if (!Directory.Exists(sourceDir))
+                            {
+                                Log.Warning("Source directory no longer exists: {Directory}", sourceDir);
+                                continue;
+                            }
+                            
+                            var movedCount = await MergeFilesAsync(sourceDir, targetDir, cancellationToken);
+                            filesMoved += movedCount;
+                            
+                            // If directory is now empty (or only has non-media files), delete it
+                            if (Directory.Exists(sourceDir))
+                            {
+                                var remainingMediaFiles = Directory.EnumerateFiles(sourceDir, "*", SearchOption.AllDirectories)
+                                    .Count(f => Common.Utility.FileHelper.IsFileMediaType(Path.GetExtension(f)));
+                                
+                                if (remainingMediaFiles == 0)
+                                {
+                                    try
+                                    {
+                                        Directory.Delete(sourceDir, true);
+                                        Log.Information("Deleted empty source directory: {Directory}", sourceDir);
+                                        AnsiConsole.MarkupLine($"  [green]✓[/] Merged and removed: {Path.GetFileName(sourceDir).EscapeMarkup()}");
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Log.Warning(ex, "Failed to delete empty source directory: {Directory}", sourceDir);
+                                    }
+                                }
+                                else
+                                {
+                                    Log.Warning("Source directory still has {Count} media files after merge: {Directory}", 
+                                        remainingMediaFiles, sourceDir);
+                                    AnsiConsole.MarkupLine($"  [yellow]![/] Merged but {remainingMediaFiles} files remain: {Path.GetFileName(sourceDir).EscapeMarkup()}");
+                                }
+                            }
+                        }
+                        
+                        successCount++;
+                        AnsiConsole.MarkupLine($"  [green]✓[/] {group.ArtistName.EscapeMarkup()} - {group.AlbumName.EscapeMarkup()}");
                     }
                     catch (Exception ex)
                     {
                         failCount++;
-                        Log.Error(ex, "Failed to delete directory: {Directory}", dir);
-                        AnsiConsole.MarkupLine($"  [red]✗[/] Failed to delete {Path.GetFileName(dir).EscapeMarkup()}: {ex.Message.EscapeMarkup()}");
+                        Log.Error(ex, "Failed to merge {Artist} - {Album}", group.ArtistName, group.AlbumName);
+                        AnsiConsole.MarkupLine($"  [red]✗[/] {group.ArtistName.EscapeMarkup()} - {group.AlbumName.EscapeMarkup()}: {ex.Message.EscapeMarkup()}");
                     }
 
                     task.Increment(1);
-                    await Task.Yield();
                 }
             });
 
-        var deleteElapsed = Stopwatch.GetElapsedTime(deleteStartTime);
-        Log.Information("Delete operation completed in {ElapsedSeconds:F2}s. Succeeded={Success}, Failed={Failed}",
-            deleteElapsed.TotalSeconds, successCount, failCount);
+        var mergeElapsed = Stopwatch.GetElapsedTime(mergeStartTime);
+        Log.Information("Merge operation completed in {ElapsedSeconds:F2}s. Succeeded={Success}, Failed={Failed}, FilesMoved={Files}",
+            mergeElapsed.TotalSeconds, successCount, failCount, filesMoved);
 
         AnsiConsole.WriteLine();
-        AnsiConsole.MarkupLine($"[bold]Delete complete:[/] [green]{successCount} succeeded[/], [red]{failCount} failed[/]");
+        AnsiConsole.MarkupLine($"[bold]Merge complete:[/]");
+        AnsiConsole.MarkupLine($"  [green]✓ {successCount} album(s) merged successfully[/]");
+        if (failCount > 0)
+        {
+            AnsiConsole.MarkupLine($"  [red]✗ {failCount} album(s) failed[/]");
+        }
+        AnsiConsole.MarkupLine($"  [cyan]📁 {filesMoved} file(s) moved[/]");
+    }
+
+    private static async Task<(bool Success, bool NotInDatabase)> TryMergeInDatabaseAsync(
+        ArtistService artistService,
+        AlbumService albumService,
+        int libraryId,
+        string artistName,
+        string targetDir,
+        string[] sourceDirs,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Find the target album in database by directory path
+            var targetAlbum = await albumService.GetByDirectoryAsync(targetDir, cancellationToken);
+            if (targetAlbum == null)
+            {
+                return (false, true); // Not in database
+            }
+
+            var sourceAlbumIds = new List<int>();
+            foreach (var sourceDir in sourceDirs)
+            {
+                var sourceAlbum = await albumService.GetByDirectoryAsync(sourceDir, cancellationToken);
+                if (sourceAlbum != null)
+                {
+                    sourceAlbumIds.Add(sourceAlbum.Id);
+                }
+            }
+
+            if (sourceAlbumIds.Count == 0)
+            {
+                return (false, true); // Source albums not in database
+            }
+
+            // First detect conflicts so we can auto-resolve them
+            var conflictResult = await artistService.DetectAlbumMergeConflictsAsync(
+                targetAlbum.ArtistId,
+                targetAlbum.Id,
+                sourceAlbumIds.ToArray(),
+                cancellationToken);
+
+            if (!conflictResult.IsSuccess)
+            {
+                Log.Warning("Failed to detect conflicts for merge: {Messages}", string.Join(", ", conflictResult.Messages ?? []));
+                return (false, false);
+            }
+
+            // Auto-resolve all conflicts by keeping target values (the canonical release)
+            var resolutions = new List<MelodeeModels.AlbumMerge.AlbumMergeResolution>();
+            if (conflictResult.Data.HasConflicts && conflictResult.Data.Conflicts != null)
+            {
+                foreach (var conflict in conflictResult.Data.Conflicts.Where(c => c.IsRequired))
+                {
+                    resolutions.Add(new MelodeeModels.AlbumMerge.AlbumMergeResolution
+                    {
+                        ConflictId = conflict.ConflictId,
+                        Action = MelodeeModels.AlbumMerge.AlbumMergeResolutionAction.KeepTarget
+                    });
+                    
+                    Log.Debug("Auto-resolved conflict {ConflictId} ({Type}) with KeepTarget", 
+                        conflict.ConflictId, conflict.ConflictType);
+                }
+            }
+
+            // Use the artist service to merge albums
+            var mergeRequest = new MelodeeModels.AlbumMerge.AlbumMergeRequest
+            {
+                ArtistId = targetAlbum.ArtistId,
+                TargetAlbumId = targetAlbum.Id,
+                SourceAlbumIds = sourceAlbumIds.ToArray(),
+                Resolutions = resolutions.ToArray()
+            };
+            
+            var mergeResult = await artistService.MergeAlbumsAsync(mergeRequest, cancellationToken);
+
+            if (mergeResult.IsSuccess)
+            {
+                Log.Information("Database merge completed: {SongsMoved} songs moved, {SongsUserDataMerged} user data records merged",
+                    mergeResult.Data?.SongsMoved ?? 0, mergeResult.Data?.SongsUserDataMerged ?? 0);
+            }
+
+            return (mergeResult.IsSuccess, false);
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Database merge failed for {Artist}, falling back to file-system merge", artistName);
+            return (false, false);
+        }
+    }
+
+    private static async Task<int> MergeFilesAsync(
+        string sourceDir,
+        string targetDir,
+        CancellationToken cancellationToken)
+    {
+        var movedCount = 0;
+        
+        if (!Directory.Exists(targetDir))
+        {
+            Log.Warning("Target directory does not exist: {Directory}", targetDir);
+            return 0;
+        }
+
+        var sourceFiles = Directory.EnumerateFiles(sourceDir, "*", SearchOption.TopDirectoryOnly)
+            .Where(f => Common.Utility.FileHelper.IsFileMediaType(Path.GetExtension(f)))
+            .ToList();
+
+        var targetFiles = Directory.EnumerateFiles(targetDir, "*", SearchOption.TopDirectoryOnly)
+            .Select(f => Path.GetFileName(f).ToLowerInvariant())
+            .ToHashSet();
+
+        foreach (var sourceFile in sourceFiles)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                break;
+            }
+
+            var fileName = Path.GetFileName(sourceFile);
+            var targetPath = Path.Combine(targetDir, fileName);
+
+            // Check if file already exists in target (by name)
+            if (targetFiles.Contains(fileName.ToLowerInvariant()))
+            {
+                Log.Debug("Skipping duplicate file: {FileName}", fileName);
+                continue;
+            }
+
+            // Check if a file with the same content exists (by size comparison as quick check)
+            var sourceSize = new FileInfo(sourceFile).Length;
+            var existingWithSameSize = Directory.EnumerateFiles(targetDir, "*", SearchOption.TopDirectoryOnly)
+                .Where(f => Common.Utility.FileHelper.IsFileMediaType(Path.GetExtension(f)))
+                .Any(f => new FileInfo(f).Length == sourceSize);
+
+            if (existingWithSameSize)
+            {
+                Log.Debug("Skipping file with matching size already in target: {FileName}", fileName);
+                continue;
+            }
+
+            try
+            {
+                // Generate unique name if conflict
+                var finalTargetPath = targetPath;
+                var counter = 1;
+                while (File.Exists(finalTargetPath))
+                {
+                    var nameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
+                    var ext = Path.GetExtension(fileName);
+                    finalTargetPath = Path.Combine(targetDir, $"{nameWithoutExt}_{counter}{ext}");
+                    counter++;
+                }
+
+                File.Move(sourceFile, finalTargetPath);
+                movedCount++;
+                Log.Debug("Moved file: {Source} -> {Target}", sourceFile, finalTargetPath);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Failed to move file: {File}", sourceFile);
+            }
+        }
+
+        await Task.CompletedTask; // Keep async signature for consistency
+        return movedCount;
     }
 
     private sealed class DuplicateAlbumGroup
@@ -753,8 +1000,8 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
         public string? MetadataSource { get; set; }
         public Guid? MusicBrainzId { get; set; }
         public string? SpotifyId { get; set; }
-        public string? SuggestedCorrectDirectory { get; set; }
-        public string[]? SuggestedDeleteDirectories { get; set; }
+        public string? SuggestedTargetDirectory { get; set; }
+        public string[]? SuggestedMergeDirectories { get; set; }
     }
 
     private sealed class AlbumDirectoryInfo

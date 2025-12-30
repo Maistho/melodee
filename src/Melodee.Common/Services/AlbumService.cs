@@ -503,6 +503,25 @@ public class AlbumService(
         return await GetAsync(id.Value, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Get an album by its directory path.
+    /// </summary>
+    public async Task<Album?> GetByDirectoryAsync(
+        string directoryPath,
+        CancellationToken cancellationToken = default)
+    {
+        Guard.Against.NullOrWhiteSpace(directoryPath, nameof(directoryPath));
+
+        await using (var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
+        {
+            return await scopedContext.Albums
+                .Include(a => a.Artist)
+                .Where(a => a.Directory == directoryPath)
+                .FirstOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
+    }
+
     public async Task<MelodeeModels.OperationResult<bool>> UpdateAsync(
         Album album,
         CancellationToken cancellationToken = default)
