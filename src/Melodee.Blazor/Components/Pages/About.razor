@@ -11,7 +11,7 @@
 <PageTitle>@L("Navigation.About")</PageTitle>
 
 <RadzenStack Gap="1rem">
-    <RadzenText TextStyle="TextStyle.H4">@L("About.Title", _siteTitle)</RadzenText>
+    <RadzenText TextStyle="TextStyle.H4">@L("About.Title", new object[] { _siteTitle })</RadzenText>
 
     <RadzenRow>
       <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
@@ -26,7 +26,7 @@
                     <RadzenText TextStyle="TextStyle.Overline">@L("About.ServerTime")</RadzenText>
                     <RadzenText TextStyle="TextStyle.Caption">@L("About.UTC")</RadzenText>
                     <RadzenText TextStyle="TextStyle.H6">@_serverNowUtc.InUtc().LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)</RadzenText>
-                    <RadzenText TextStyle="TextStyle.Caption">@L("About.YourTime", CurrentUser?.TimeZoneId() ?? "")</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Caption">@L("About.YourTime", new object[] { CurrentUser?.TimeZoneId() ?? "" })</RadzenText>
                     <RadzenText TextStyle="TextStyle.H6">@(CurrentUser?.FormatInstant(_serverNowUtc) ?? MelodeeConfiguration.DefaultNoValuePlaceHolder)</RadzenText>
                 </RadzenStack>
             </RadzenCard>
@@ -91,7 +91,7 @@
         _serverNowUtc = SystemClock.Instance.GetCurrentInstant();
 
         var configuration = await MelodeeConfigurationFactory.GetConfigurationAsync();
-        _siteTitle = configuration.GetValue<string>(SettingRegistry.OpenSubsonicServerType) ?? string.Empty;
+        _siteTitle = configuration.GetValue<string>(SettingRegistry.SystemSiteName) ?? SettingDefaults.DefaultSiteName;
 
         _serverStats.Add(new KeyValue(L("About.Platform"), RuntimeInformation.OSDescription));
         _serverStats.Add(new KeyValue(L("About.Architecture"), RuntimeInformation.OSArchitecture.ToString()));

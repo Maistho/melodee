@@ -48,7 +48,7 @@ public sealed class SystemController(
         var minorVersion = version?.Minor ?? 0;
         var patchVersion = version?.Build ?? 0;
 
-        return Ok(new ServerInfo(configuration.GetValue<string>(SettingRegistry.OpenSubsonicServerType) ?? "Melodee",
+        return Ok(new ServerInfo(configuration.GetValue<string>(SettingRegistry.OpenSubsonicServerType) ?? SettingDefaults.DefaultSiteName,
             "Melodee API",
             majorVersion,
             minorVersion,

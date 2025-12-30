@@ -84,18 +84,41 @@ public class LocalizationService : ILocalizationService
     {
         try
         {
-            var localizedString = _localizer[key, args];
-            if (localizedString.ResourceNotFound)
+            // Get the template string without formatting
+            var template = _localizer[key];
+            if (template.ResourceNotFound)
             {
                 _logger.LogWarning("Resource key not found: {Key}", key);
                 return string.Format(key, args);
             }
-            return localizedString.Value;
+
+            // If we have arguments, explicitly format the template
+            if (args != null && args.Length > 0)
+            {
+                try
+                {
+                    return string.Format(template.Value, args);
+                }
+                catch (FormatException ex)
+                {
+                    _logger.LogWarning(ex, "Failed to format localized string for key: {Key}, template: {Template}", key, template.Value);
+                    return template.Value;
+                }
+            }
+
+            return template.Value;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error localizing key: {Key} with args", key);
-            return string.Format(key, args);
+            try
+            {
+                return string.Format(key, args);
+            }
+            catch
+            {
+                return key;
+            }
         }
     }
 

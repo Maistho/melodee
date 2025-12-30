@@ -120,10 +120,10 @@
         await base.OnInitializedAsync();
         _objRef = DotNetObjectReference.Create(this);
 
-        Logger.Information("[MusicPlayer] Initializing ScrobbleService for user [{User}]", 
+        Logger.Information("[MusicPlayer] Initializing ScrobbleService for user [{User}]",
             CurrentUser?.Identity?.Name ?? "Unknown");
         await ScrobbleService.InitializeAsync(Configuration);
-        
+
         // Get user agent from browser
         try
         {
@@ -161,16 +161,16 @@
             _nowPlayingRecordedForCurrentSong = true; // Set flag immediately to prevent race condition
             Logger.Information("[MusicPlayer] OnTimeUpdate triggering NowPlaying for song [{SongId}] at [{Time}] seconds",
                 CurrentSong.ApiKey, currentTime);
-            
-            var ipAddress = HttpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString() 
+
+            var ipAddress = HttpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString()
                 ?? HttpContextAccessor.HttpContext?.Request?.Headers["X-Forwarded-For"].FirstOrDefault()
                 ?? HttpContextAccessor.HttpContext?.Request?.Headers["X-Real-IP"].FirstOrDefault();
-            
+
             await ScrobbleService.NowPlaying(
-                UserInfo.FromClaimsPrincipal(CurrentUser), 
-                CurrentSong.ApiKey, 
-                currentTime, 
-                Configuration.GetValue<string>(SettingRegistry.OpenSubsonicServerType) ?? "Melodee",
+                UserInfo.FromClaimsPrincipal(CurrentUser),
+                CurrentSong.ApiKey,
+                currentTime,
+                Configuration.GetValue<string>(SettingRegistry.OpenSubsonicServerType) ?? SettingDefaults.DefaultSiteName,
                 _userAgent,
                 ipAddress);
         }
@@ -180,19 +180,19 @@
     public async Task OnSongEnded()
     {
         Logger.Information("[MusicPlayer] OnSongEnded triggering Scrobble for song [{SongId}]", CurrentSong.ApiKey);
-        
-        var ipAddress = HttpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString() 
+
+        var ipAddress = HttpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString()
             ?? HttpContextAccessor.HttpContext?.Request?.Headers["X-Forwarded-For"].FirstOrDefault()
             ?? HttpContextAccessor.HttpContext?.Request?.Headers["X-Real-IP"].FirstOrDefault();
-        
+
         await ScrobbleService.Scrobble(
-            UserInfo.FromClaimsPrincipal(CurrentUser!), 
-            CurrentSong.ApiKey, 
-            false, 
-            Configuration.GetValue<string>(SettingRegistry.OpenSubsonicServerType) ?? "Melodee",
+            UserInfo.FromClaimsPrincipal(CurrentUser!),
+            CurrentSong.ApiKey,
+            false,
+            Configuration.GetValue<string>(SettingRegistry.OpenSubsonicServerType) ?? SettingDefaults.DefaultSiteName,
             _userAgent,
             ipAddress);
-        
+
         // Check if we should continue to next song
         if (IsRepeatEnabled || CurrentSongIndex < Songs.Count - 1)
         {
@@ -378,7 +378,7 @@
         {
             throw new Exception("Base URL is not available for generating streaming URLs. Please configure the system.baseUrl setting.");
         }
-        
+
         return $"{baseUrl}/rest/stream?id={CurrentSong.ToApiKey()}";
     }
 

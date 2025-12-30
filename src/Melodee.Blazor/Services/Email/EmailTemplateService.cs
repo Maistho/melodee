@@ -62,11 +62,7 @@ public sealed class EmailTemplateService : IEmailTemplateService
         }
 
         // Get site name from configuration, default to "Melodee"
-        var siteName = config.GetValue<string>(SettingRegistry.SystemSiteName);
-        if (string.IsNullOrWhiteSpace(siteName))
-        {
-            siteName = "Melodee";
-        }
+        var siteName = config.GetValue<string>(SettingRegistry.SystemSiteName) ?? SettingDefaults.DefaultSiteName;
 
         // Normalize language code (e.g., "en-US" or default to "en-US")
         var normalizedLanguage = NormalizeLanguageCode(languageCode);

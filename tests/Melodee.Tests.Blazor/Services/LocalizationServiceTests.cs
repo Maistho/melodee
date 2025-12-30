@@ -96,9 +96,10 @@ public class LocalizationServiceTests
         // Arrange
         const string key = "Validation.PasswordTooShort";
         const int minLength = 8;
+        const string template = "Password must be at least {0} characters";
         var expectedValue = $"Password must be at least {minLength} characters";
-        var localizedString = new LocalizedString(key, expectedValue, false);
-        _mockLocalizer.Setup(x => x[key, minLength]).Returns(localizedString);
+        var localizedString = new LocalizedString(key, template, false);
+        _mockLocalizer.Setup(x => x[key]).Returns(localizedString);
 
         // Act
         var result = _service.Localize(key, minLength);
@@ -207,7 +208,7 @@ public class LocalizationServiceTests
         const string key = "Missing.Key.{0}";
         const string arg = "test";
         var localizedString = new LocalizedString(key, key, true);
-        _mockLocalizer.Setup(x => x[key, arg]).Returns(localizedString);
+        _mockLocalizer.Setup(x => x[key]).Returns(localizedString);
 
         // Act
         var result = _service.Localize(key, arg);

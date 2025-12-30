@@ -44,7 +44,7 @@ public sealed class SmtpEmailSender : IEmailSender
             }
 
             // Get SMTP configuration
-            var fromName = config.GetValue<string>(SettingRegistry.EmailFromName) ?? "Melodee";
+            var fromName = config.GetValue<string>(SettingRegistry.EmailFromName) ?? SettingDefaults.DefaultSiteName;
             var fromEmail = config.GetValue<string>(SettingRegistry.EmailFromEmail);
             var smtpHost = config.GetValue<string>(SettingRegistry.EmailSmtpHost);
             var smtpPort = config.GetValue<int?>(SettingRegistry.EmailSmtpPort) ?? 587;

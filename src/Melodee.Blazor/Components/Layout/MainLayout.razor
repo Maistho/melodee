@@ -218,7 +218,7 @@
     private async Task LoadConfigurationAsync()
     {
         var configuration = await MelodeeConfigurationFactory.GetConfigurationAsync();
-        _siteTitle = configuration.GetValue<string>(SettingRegistry.SystemSiteName) ?? "Melodee";
+        _siteTitle = configuration.GetValue<string>(SettingRegistry.SystemSiteName) ?? SettingDefaults.DefaultSiteName;
     }
 
     private async Task CheckUnreadRequestsAsync()
