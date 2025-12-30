@@ -95,19 +95,19 @@ Showing 3 of 1,234 artists
 
 ## artist search
 
-Search for artists by name using normalized string matching.
+Search for artists by name with optional date filtering, sorting, and bulk delete.
 
 ### Usage
 
 ```bash
-mcli artist search <QUERY> [OPTIONS]
+mcli artist search [QUERY] [OPTIONS]
 ```
 
 ### Arguments
 
 | Argument | Required | Description |
 |----------|----------|-------------|
-| `QUERY` | Yes | Search query for artist name |
+| `QUERY` | No | Search query for artist name. Use `*` or omit to match all artists. |
 
 ### Options
 
@@ -115,6 +115,12 @@ mcli artist search <QUERY> [OPTIONS]
 |--------|-------|---------|-------------|
 | `--raw` | | `false` | Output results in JSON format |
 | `-n`, `--limit` | | `25` | Maximum number of results to return |
+| `--since` | | | Only show artists created within the last N days |
+| `--sort` | | | Sort by column: Name, Albums, Songs, Added, Rating |
+| `--sort-dir` | | `asc` | Sort direction: `asc` or `desc` |
+| `--delete` | | `false` | ⚠️ Delete all artists matching the search criteria |
+| `-y`, `--yes` | | `false` | Skip confirmation prompt when deleting |
+| `--keep-files` | | `false` | Keep artist files on disk when deleting (database only) |
 | `--verbose` | | `true` | Output verbose debug and timing results |
 
 ### Examples
@@ -126,8 +132,63 @@ mcli artist search <QUERY> [OPTIONS]
 # Search with more results
 ./mcli artist search "john" -n 50
 
+# Find all artists added in the last 7 days
+./mcli artist search --since 7
+
+# Find all artists added today
+./mcli artist search --since 1
+
 # JSON output for scripting
 ./mcli artist search "pink" --raw
+
+# Get recently added artists as JSON
+./mcli artist search --since 7 --raw
+```
+
+### Sorting Examples
+
+```bash
+# Sort by name (A-Z)
+./mcli artist search --sort Name
+
+# Sort by name (Z-A)
+./mcli artist search --sort Name --sort-dir desc
+
+# Sort by album count (most albums first)
+./mcli artist search --sort Albums --sort-dir desc
+
+# Sort by song count (most songs first)
+./mcli artist search --sort Songs --sort-dir desc
+
+# Artists added in last 10 days, sorted by added date (oldest first)
+./mcli artist search --since 10 --sort Added
+
+# Artists added in last 10 days, sorted by added date (newest first)
+./mcli artist search --since 10 --sort Added --sort-dir desc
+
+# Sort by rating (highest first)
+./mcli artist search --sort Rating --sort-dir desc
+```
+
+### Bulk Delete Examples
+
+⚠️ **WARNING: Delete operations are permanent and cannot be undone!**
+
+```bash
+# Delete all artists added in the last 5 days (with confirmation)
+./mcli artist search --since 5 --delete
+
+# Delete artists matching "test" (with confirmation)
+./mcli artist search "test" --delete
+
+# Delete without confirmation (USE WITH CAUTION)
+./mcli artist search --since 1 --delete -y
+
+# Delete from database but keep files on disk
+./mcli artist search "duplicate" --delete --keep-files
+
+# Delete all artists matching query, keeping files, no confirmation
+./mcli artist search "bad import" --delete --keep-files -y
 ```
 
 ### Output
@@ -135,15 +196,69 @@ mcli artist search <QUERY> [OPTIONS]
 ```
 Search results for: beatles
 
-╭─────────────────────────────┬──────────────────────┬────────┬───────┬────────╮
-│ Name                        │ Alternate Names      │ Albums │ Songs │ Rating │
-├─────────────────────────────┼──────────────────────┼────────┼───────┼────────┤
-│ The Beatles                 │ Beatles, Fab Four    │     13 │   227 │  4.8★  │
-│ The Bootleg Beatles         │ ---                  │      2 │    24 │  3.5★  │
-╰─────────────────────────────┴──────────────────────┴────────┴───────┴────────╯
+╭─────────────────────────────┬────────┬───────┬────────╮
+│ Name                        │ Albums │ Songs │ Rating │
+├─────────────────────────────┼────────┼───────┼────────┤
+│ The Beatles                 │     13 │   227 │  4.8★  │
+│ The Bootleg Beatles         │      2 │    24 │  3.5★  │
+╰─────────────────────────────┴────────┴───────┴────────╯
 
 Found 2 matching artists (showing 2)
 ```
+
+### Output with --since
+
+When using `--since`, results are sorted by creation date (newest first) and include an "Added" column using ISO8601 format (YYYYMMDDTHHMMSS):
+
+```
+Artists created in the last 7 days
+
+╭─────────────────────────────┬────────┬───────┬─────────────────┬────────╮
+│ Name                        │ Albums │ Songs │      Added      │ Rating │
+├─────────────────────────────┼────────┼───────┼─────────────────┼────────┤
+│ New Artist                  │      2 │    24 │ 20241230T142300 │   ---  │
+│ Another New Artist          │      1 │    10 │ 20241229T091500 │   ---  │
+╰─────────────────────────────┴────────┴───────┴─────────────────┴────────╯
+
+Found 2 matching artists (showing 2)
+```
+
+### Delete Confirmation
+
+When using `--delete`, a confirmation prompt is shown with details about what will be deleted:
+
+```
+Artists created in the last 5 days
+
+╭─────────────────────────────┬────────┬───────┬─────────────────┬────────╮
+│ Name                        │ Albums │ Songs │      Added      │ Rating │
+├─────────────────────────────┼────────┼───────┼─────────────────┼────────┤
+│ Test Artist                 │      2 │    15 │ 20241230T100000 │   ---  │
+│ Bad Import Artist           │      3 │    32 │ 20241229T153000 │   ---  │
+╰─────────────────────────────┴────────┴───────┴─────────────────┴────────╯
+
+Found 2 matching artists (showing 2)
+
+───────────────────────  ⚠️  DESTRUCTIVE OPERATION  ⚠️  ───────────────────────
+
+This will permanently delete:
+  • 2 artist(s)
+  • 5 album(s)
+  • 47 song(s)
+  • All associated files on disk
+
+This action cannot be undone!
+
+Are you sure you want to delete these artists? [y/n] (n):
+```
+
+### Safety Features
+
+- **Confirmation required**: By default, you must confirm before deletion
+- **Locked artists skipped**: Artists marked as locked will not be deleted
+- **Clear summary**: Shows exactly how many artists, albums, songs, and files will be affected
+- **Keep files option**: Use `--keep-files` to remove from database only
+- **Progress indicator**: Shows deletion progress for large batch operations
 
 ---
 

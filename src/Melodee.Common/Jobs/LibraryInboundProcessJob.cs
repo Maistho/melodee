@@ -113,6 +113,9 @@ public sealed class LibraryInboundProcessJob(
             processedCount = result.Data.NewAlbumsCount + result.Data.NewArtistsCount + result.Data.NewSongsCount;
             dataMap.Put(JobMapNameRegistry.ScanStatus, ScanStatus.Idle.ToString());
             dataMap.Put(JobMapNameRegistry.Count, processedCount);
+            dataMap.Put(JobMapNameRegistry.NewArtistsCount, result.Data.NewArtistsCount);
+            dataMap.Put(JobMapNameRegistry.NewAlbumsCount, result.Data.NewAlbumsCount);
+            dataMap.Put(JobMapNameRegistry.NewSongsCount, result.Data.NewSongsCount);
             await libraryService.CreateLibraryScanHistory(inboundLibrary, new LibraryScanHistory
             {
                 CreatedAt = Instant.FromDateTimeUtc(DateTime.UtcNow),
@@ -122,6 +125,11 @@ public sealed class LibraryInboundProcessJob(
                 FoundArtistsCount = result.Data.NewArtistsCount,
                 FoundSongsCount = result.Data.NewSongsCount
             }, context.CancellationToken).ConfigureAwait(false);
+
+            context.Result = new ScanStepResult(
+                NewArtistsCount: result.Data.NewArtistsCount,
+                NewAlbumsCount: result.Data.NewAlbumsCount,
+                NewSongsCount: result.Data.NewSongsCount);
 
             // Chain to StagingAutoMoveJob if this was a scheduled run (not manual) and we processed something
             if (!IsManualTrigger(context) && processedCount > 0)

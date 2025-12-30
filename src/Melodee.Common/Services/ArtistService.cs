@@ -139,6 +139,7 @@ public class ArtistService(
                         query.Where(a => a.IsLocked == boolValue),
                     _ => query
                 },
+                "createdat" => ApplyCreatedAtFilter(query, filter),
                 _ => query
             };
         }
@@ -170,6 +171,7 @@ public class ArtistService(
                         (Expression<Func<Artist, bool>>)(a => a.IsLocked == boolValue),
                     _ => null
                 },
+                "createdat" => GetCreatedAtPredicate(filter),
                 _ => null
             };
 
@@ -195,6 +197,42 @@ public class ArtistService(
         }
 
         return query;
+    }
+
+    private static IQueryable<Artist> ApplyCreatedAtFilter(IQueryable<Artist> query, FilterOperatorInfo filter)
+    {
+        if (filter.Value is not Instant instantValue)
+        {
+            return query;
+        }
+
+        return filter.Operator switch
+        {
+            FilterOperator.GreaterThanOrEquals => query.Where(a => a.CreatedAt >= instantValue),
+            FilterOperator.GreaterThan => query.Where(a => a.CreatedAt > instantValue),
+            FilterOperator.LessThanOrEquals => query.Where(a => a.CreatedAt <= instantValue),
+            FilterOperator.LessThan => query.Where(a => a.CreatedAt < instantValue),
+            FilterOperator.Equals => query.Where(a => a.CreatedAt == instantValue),
+            _ => query
+        };
+    }
+
+    private static Expression<Func<Artist, bool>>? GetCreatedAtPredicate(FilterOperatorInfo filter)
+    {
+        if (filter.Value is not Instant instantValue)
+        {
+            return null;
+        }
+
+        return filter.Operator switch
+        {
+            FilterOperator.GreaterThanOrEquals => a => a.CreatedAt >= instantValue,
+            FilterOperator.GreaterThan => a => a.CreatedAt > instantValue,
+            FilterOperator.LessThanOrEquals => a => a.CreatedAt <= instantValue,
+            FilterOperator.LessThan => a => a.CreatedAt < instantValue,
+            FilterOperator.Equals => a => a.CreatedAt == instantValue,
+            _ => null
+        };
     }
 
     private static IQueryable<Artist> ApplyOrdering(IQueryable<Artist> query, MelodeeModels.PagedRequest pagedRequest)
@@ -475,6 +513,14 @@ public class ArtistService(
         int[] artistIds,
         CancellationToken cancellationToken = default)
     {
+        return await DeleteAsync(artistIds, deleteFiles: true, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<MelodeeModels.OperationResult<bool>> DeleteAsync(
+        int[] artistIds,
+        bool deleteFiles,
+        CancellationToken cancellationToken = default)
+    {
         Guard.Against.NullOrEmpty(artistIds, nameof(artistIds));
 
         bool result;
@@ -503,10 +549,13 @@ public class ArtistService(
                     .FirstAsync(x => x.Id == artistId, cancellationToken)
                     .ConfigureAwait(false);
 
-                var artistDirectory = Path.Combine(artist.Library.Path, artist.Directory);
-                if (fileSystemService.DirectoryExists(artistDirectory))
+                if (deleteFiles)
                 {
-                    fileSystemService.DeleteDirectory(artistDirectory, true);
+                    var artistDirectory = Path.Combine(artist.Library.Path, artist.Directory);
+                    if (fileSystemService.DirectoryExists(artistDirectory))
+                    {
+                        fileSystemService.DeleteDirectory(artistDirectory, true);
+                    }
                 }
 
                 var artistContributors = await scopedContext.Contributors.Where(x => x.ArtistId == artistId)
@@ -529,6 +578,7 @@ public class ArtistService(
                 await UpdateLibraryAggregateStatsByIdAsync(libraryId, cancellationToken).ConfigureAwait(false);
             }
 
+            Logger.Information("Deleted artists [{ArtistIds}] (files deleted: {DeleteFiles}).", artistIds, deleteFiles);
             result = true;
         }
 

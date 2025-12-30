@@ -107,7 +107,7 @@ public static class Program
                     .WithDescription("Rebuild melodee metadata albums in the given library.");
                 add.AddCommand<LibraryScanCommand>("scan")
                     .WithAlias("s")
-                    .WithDescription("Scan all non inbound and staging libraries for database updates from albums.");
+                    .WithDescription("Full library scan workflow: process inbound → revalidate staging → move to storage → insert into database.");
                 add.AddCommand<LibraryStatsCommand>("stats")
                     .WithAlias("ss")
                     .WithDescription("Show statistics for given library and library directory.");

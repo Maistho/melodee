@@ -8,6 +8,7 @@ using Melodee.Common.Data.Models;
 using Melodee.Common.Data.Models.Extensions;
 using Melodee.Common.Enums;
 using Melodee.Common.Extensions;
+using Melodee.Common.Filtering;
 using Melodee.Common.MessageBus.Events;
 using Melodee.Common.Models.Collection;
 using Melodee.Common.Models.Extensions;
@@ -344,6 +345,14 @@ public class AlbumService(
         int[] albumIds,
         CancellationToken cancellationToken = default)
     {
+        return await DeleteAsync(albumIds, deleteFiles: true, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<MelodeeModels.OperationResult<bool>> DeleteAsync(
+        int[] albumIds,
+        bool deleteFiles,
+        CancellationToken cancellationToken = default)
+    {
         Guard.Against.NullOrEmpty(albumIds, nameof(albumIds));
 
         bool result;
@@ -373,10 +382,13 @@ public class AlbumService(
                     .FirstAsync(x => x.Id == albuMid, cancellationToken)
                     .ConfigureAwait(false);
 
-                var albumDirectory = Path.Combine(album.Artist.Library.Path, album.Artist.Directory, album.Directory);
-                if (fileSystemService.DirectoryExists(albumDirectory))
+                if (deleteFiles)
                 {
-                    fileSystemService.DeleteDirectory(albumDirectory, true);
+                    var albumDirectory = Path.Combine(album.Artist.Library.Path, album.Artist.Directory, album.Directory);
+                    if (fileSystemService.DirectoryExists(albumDirectory))
+                    {
+                        fileSystemService.DeleteDirectory(albumDirectory, true);
+                    }
                 }
 
                 scopedContext.Albums.Remove(album);
@@ -395,7 +407,7 @@ public class AlbumService(
                 await UpdateLibraryAggregateStatsByIdAsync(libraryId, cancellationToken).ConfigureAwait(false);
             }
 
-            Logger.Information("Deleted albums [{AlbumIds}].", albumIds);
+            Logger.Information("Deleted albums [{AlbumIds}] (files deleted: {DeleteFiles}).", albumIds, deleteFiles);
             result = true;
         }
 
@@ -1086,6 +1098,7 @@ public class AlbumService(
                     "releasedate" => DateTime.TryParse(value, out var dateValue)
                         ? query.Where(a => a.ReleaseDate.Year == dateValue.Year)
                         : query,
+                    "createdat" => ApplyCreatedAtFilter(query, filter),
                     _ => query
                 };
             }
@@ -1121,6 +1134,7 @@ public class AlbumService(
                     "releasedate" => DateTime.TryParse(value, out var dateValue)
                         ? (Expression<Func<Album, bool>>)(a => a.ReleaseDate.Year == dateValue.Year)
                         : null,
+                    "createdat" => GetCreatedAtPredicate(filter),
                     _ => null
                 };
 
@@ -1174,6 +1188,42 @@ public class AlbumService(
             query = query.Where(finalPredicate);
         }
         return query;
+    }
+
+    private static IQueryable<Album> ApplyCreatedAtFilter(IQueryable<Album> query, FilterOperatorInfo filter)
+    {
+        if (filter.Value is not Instant instantValue)
+        {
+            return query;
+        }
+
+        return filter.Operator switch
+        {
+            FilterOperator.GreaterThanOrEquals => query.Where(a => a.CreatedAt >= instantValue),
+            FilterOperator.GreaterThan => query.Where(a => a.CreatedAt > instantValue),
+            FilterOperator.LessThanOrEquals => query.Where(a => a.CreatedAt <= instantValue),
+            FilterOperator.LessThan => query.Where(a => a.CreatedAt < instantValue),
+            FilterOperator.Equals => query.Where(a => a.CreatedAt == instantValue),
+            _ => query
+        };
+    }
+
+    private static Expression<Func<Album, bool>>? GetCreatedAtPredicate(FilterOperatorInfo filter)
+    {
+        if (filter.Value is not Instant instantValue)
+        {
+            return null;
+        }
+
+        return filter.Operator switch
+        {
+            FilterOperator.GreaterThanOrEquals => a => a.CreatedAt >= instantValue,
+            FilterOperator.GreaterThan => a => a.CreatedAt > instantValue,
+            FilterOperator.LessThanOrEquals => a => a.CreatedAt <= instantValue,
+            FilterOperator.LessThan => a => a.CreatedAt < instantValue,
+            FilterOperator.Equals => a => a.CreatedAt == instantValue,
+            _ => null
+        };
     }
 
 

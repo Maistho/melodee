@@ -58,22 +58,24 @@ mcli job list [OPTIONS]
 ╭──────┬────────────┬────────────────┬─────────────╮
 │ Jobs │ Total Runs │ Failures (24h) │ Active Jobs │
 ├──────┼────────────┼────────────────┼─────────────┤
-│  8   │     156    │       0        │      3      │
+│  9   │     156    │       0        │      4      │
 ╰──────┴────────────┴────────────────┴─────────────╯
 
-╭─────────────────────────────────────────┬──────┬─────────┬──────────┬──────────────────┬─────────╮
-│ Job Name                                │ Runs │ Success │ Avg Time │     Last Run     │ Status  │
-├─────────────────────────────────────────┼──────┼─────────┼──────────┼──────────────────┼─────────┤
-│ ArtistHousekeepingJob                   │   45 │    100% │     92ms │ 2024-12-30 13:00 │  ✓ OK   │
-│ ArtistSearchEngineHousekeepingJob       │   12 │    100% │   1.2sec │ 2024-12-30 12:00 │  ✓ OK   │
-│ ChartUpdateJob                          │    8 │    100% │    450ms │ 2024-12-30 06:00 │  ✓ OK   │
-│ LibraryInboundProcessJob                │   56 │     98% │     57ms │ 2024-12-30 13:05 │  ✓ OK   │
-│ LibraryProcessJob                       │   23 │    100% │   2.3sec │ 2024-12-30 13:00 │  ✓ OK   │
-│ MusicBrainzUpdateDatabaseJob            │    1 │    100% │  45.2min │ 2024-12-28 02:00 │  ✓ OK   │
-│ NowPlayingCleanupJob                    │   11 │    100% │     12ms │ 2024-12-30 13:00 │  ✓ OK   │
-│ StagingAlbumRevalidationJob             │    0 │     --- │      --- │      Never       │ No runs │
-│ StagingAutoMoveJob                      │    0 │     --- │      --- │      Never       │ No runs │
-╰─────────────────────────────────────────┴──────┴─────────┴──────────┴──────────────────┴─────────╯
+╭─────────────────────────────────────────┬──────┬─────────┬──────────┬─────────────────┬─────────────────┬─────────╮
+│ Job Name                                │ Runs │ Success │ Avg Time │    Last Run     │   Next Run *    │ Status  │
+├─────────────────────────────────────────┼──────┼─────────┼──────────┼─────────────────┼─────────────────┼─────────┤
+│ ArtistHousekeepingJob                   │   45 │    100% │     92ms │ 20241230T130000 │ 20241230T140000 │  ✓ OK   │
+│ ArtistSearchEngineHousekeepingJob       │   12 │    100% │   1.2sec │ 20241230T120000 │ 20241231T000000 │  ✓ OK   │
+│ ChartUpdateJob                          │    8 │    100% │    450ms │ 20241230T060000 │ 20241231T060000 │  ✓ OK   │
+│ LibraryInboundProcessJob                │   56 │     98% │     57ms │ 20241230T130500 │ 20241230T131000 │  ✓ OK   │
+│ LibraryProcessJob                       │   23 │    100% │   2.3sec │ 20241230T130000 │ 20241230T140000 │  ✓ OK   │
+│ MusicBrainzUpdateDatabaseJob            │    1 │    100% │  45.2min │ 20241228T020000 │ 20250104T020000 │  ✓ OK   │
+│ NowPlayingCleanupJob                    │   11 │    100% │     12ms │ 20241230T130000 │ 20241230T130500 │  ✓ OK   │
+│ StagingAlbumRevalidationJob             │    2 │    100% │    3.4s  │ 20241230T020000 │ 20250106T020000 │  ✓ OK   │
+│ StagingAutoMoveJob                      │   15 │    100% │    890ms │ 20241230T130000 │ 20241230T130500 │  ✓ OK   │
+╰─────────────────────────────────────────┴──────┴─────────┴──────────┴─────────────────┴─────────────────┴─────────╯
+
+* Next Run times are approximate, calculated from cron expressions
 ```
 
 ### Summary Statistics
@@ -138,6 +140,7 @@ mcli job run -j <JOB_NAME> [OPTIONS]
 | `LibraryProcessJob` | General library processing |
 | `MusicBrainzUpdateDatabaseJob` | Downloads and updates MusicBrainz database |
 | `NowPlayingCleanupJob` | Cleans up old now-playing records |
+| `StagingAlbumRevalidationJob` | Re-validates albums with invalid artists |
 | `StagingAutoMoveJob` | Automatically moves OK albums from staging |
 
 ### Examples

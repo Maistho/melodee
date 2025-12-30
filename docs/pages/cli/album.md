@@ -82,19 +82,19 @@ Showing 3 of 1,234 albums
 
 ## album search
 
-Search for albums by name using normalized string matching.
+Search for albums by name with optional date filtering, sorting, and bulk delete.
 
 ### Usage
 
 ```bash
-mcli album search <QUERY> [OPTIONS]
+mcli album search [QUERY] [OPTIONS]
 ```
 
 ### Arguments
 
 | Argument | Required | Description |
 |----------|----------|-------------|
-| `QUERY` | Yes | Search query for album name |
+| `QUERY` | No | Search query for album name. Use `*` or omit to match all albums. |
 
 ### Options
 
@@ -102,6 +102,12 @@ mcli album search <QUERY> [OPTIONS]
 |--------|-------|---------|-------------|
 | `--raw` | | `false` | Output results in JSON format |
 | `-n`, `--limit` | | `25` | Maximum number of results to return |
+| `--since` | | | Only show albums created within the last N days |
+| `--sort` | | | Sort by column: Artist, Album, Year, Songs, Added, Status |
+| `--sort-dir` | | `asc` | Sort direction: `asc` or `desc` |
+| `--delete` | | `false` | ⚠️ Delete all albums matching the search criteria |
+| `-y`, `--yes` | | `false` | Skip confirmation prompt when deleting |
+| `--keep-files` | | `false` | Keep album files on disk when deleting (database only) |
 | `--verbose` | | `true` | Output verbose debug and timing results |
 
 ### Examples
@@ -113,8 +119,69 @@ mcli album search <QUERY> [OPTIONS]
 # Search with more results
 ./mcli album search "best of" -n 50
 
+# Find all albums added in the last 7 days
+./mcli album search --since 7
+
+# Find all albums added today
+./mcli album search --since 1
+
+# Find albums added in last 30 days matching "beatles"
+./mcli album search "beatles" --since 30
+
 # JSON output for scripting
 ./mcli album search "greatest hits" --raw
+
+# Get recently added albums as JSON
+./mcli album search --since 7 --raw
+```
+
+### Sorting Examples
+
+```bash
+# Sort by artist name (A-Z)
+./mcli album search --sort Artist
+
+# Sort by artist name (Z-A)
+./mcli album search --sort Artist --sort-dir desc
+
+# Sort by year (oldest first)
+./mcli album search --sort Year
+
+# Sort by year (newest first)
+./mcli album search --sort Year --sort-dir desc
+
+# Albums added in last 10 days, sorted by added date (oldest first)
+./mcli album search --since 10 --sort Added
+
+# Albums added in last 10 days, sorted by added date (newest first)
+./mcli album search --since 10 --sort Added --sort-dir desc
+
+# Sort by song count (most songs first)
+./mcli album search --sort Songs --sort-dir desc
+
+# Sort all albums by status
+./mcli album search --sort Status
+```
+
+### Bulk Delete Examples
+
+⚠️ **WARNING: Delete operations are permanent and cannot be undone!**
+
+```bash
+# Delete all albums added in the last 5 days (with confirmation)
+./mcli album search --since 5 --delete
+
+# Delete albums matching "test" (with confirmation)
+./mcli album search "test" --delete
+
+# Delete without confirmation (USE WITH CAUTION)
+./mcli album search --since 1 --delete -y
+
+# Delete from database but keep files on disk
+./mcli album search "duplicate" --delete --keep-files
+
+# Delete all albums matching query, keeping files, no confirmation
+./mcli album search "bad import" --delete --keep-files -y
 ```
 
 ### Output
@@ -131,6 +198,60 @@ Search results for: dark
 
 Found 2 matching albums (showing 2)
 ```
+
+### Output with --since
+
+When using `--since`, results are sorted by creation date (newest first) and include an "Added" column using ISO8601 format (YYYYMMDDTHHMMSS):
+
+```
+Albums created in the last 7 days
+
+╭──────────────────────────┬────────────────────────────┬──────┬───────┬─────────────────┬────────╮
+│ Artist                   │ Album                      │ Year │ Songs │      Added      │ Status │
+├──────────────────────────┼────────────────────────────┼──────┼───────┼─────────────────┼────────┤
+│ Taylor Swift             │ The Tortured Poets Dept.   │ 2024 │    16 │ 20241230T142300 │ Ok     │
+│ Billie Eilish            │ Hit Me Hard and Soft       │ 2024 │    10 │ 20241229T091500 │ Ok     │
+│ Sabrina Carpenter        │ Short n' Sweet             │ 2024 │    12 │ 20241228T184200 │ Ok     │
+╰──────────────────────────┴────────────────────────────┴──────┴───────┴─────────────────┴────────╯
+
+Found 3 matching albums (showing 3)
+```
+
+### Delete Confirmation
+
+When using `--delete`, a confirmation prompt is shown with details about what will be deleted:
+
+```
+Albums created in the last 5 days
+
+╭──────────────────────────┬────────────────────────────┬──────┬───────┬─────────────┬────────╮
+│ Artist                   │ Album                      │ Year │ Songs │    Added    │ Status │
+├──────────────────────────┼────────────────────────────┼──────┼───────┼─────────────┼────────┤
+│ Test Artist              │ Test Album                 │ 2024 │     5 │ 12-30 10:00 │ Ok     │
+│ Another Test             │ Bad Import                 │ 2024 │    12 │ 12-29 15:30 │ Ok     │
+╰──────────────────────────┴────────────────────────────┴──────┴───────┴─────────────┴────────╯
+
+Found 2 matching albums (showing 2)
+
+───────────────────────  ⚠️  DESTRUCTIVE OPERATION  ⚠️  ───────────────────────
+
+This will permanently delete:
+  • 2 album(s)
+  • 17 song(s)
+  • All associated files on disk
+
+This action cannot be undone!
+
+Are you sure you want to delete these albums? [y/n] (n):
+```
+
+### Safety Features
+
+- **Confirmation required**: By default, you must confirm before deletion
+- **Locked albums skipped**: Albums marked as locked will not be deleted
+- **Clear summary**: Shows exactly how many albums, songs, and files will be affected
+- **Keep files option**: Use `--keep-files` to remove from database only
+- **Progress indicator**: Shows deletion progress for large batch operations
 
 ---
 

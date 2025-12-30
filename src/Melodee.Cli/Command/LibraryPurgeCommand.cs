@@ -13,15 +13,15 @@ namespace Melodee.Cli.Command;
 /// <summary>
 ///     This runs the library purge command that erases everything in a library
 /// </summary>
-public class LibraryPurgeCommand : CommandBase<LibraryScanSettings>
+public class LibraryPurgeCommand : CommandBase<LibrarySettings>
 {
-    public override async Task<int> ExecuteAsync(CommandContext context, LibraryScanSettings settings, CancellationToken cancellationToken)
+    public override async Task<int> ExecuteAsync(CommandContext context, LibrarySettings settings, CancellationToken cancellationToken)
     {
         using (var scope = CreateServiceProvider().CreateScope())
         {
             var libraryService = scope.ServiceProvider.GetRequiredService<LibraryService>();
             var libraries = await libraryService.ListAsync(new PagedRequest { PageSize = short.MaxValue }, cancellationToken).ConfigureAwait(false);
-            var library = libraries.Data.FirstOrDefault(x => x.Name.ToNormalizedString() == settings.LibraryName.ToNormalizedString());
+            var library = libraries.Data.FirstOrDefault(x => x.Name.ToNormalizedString() == settings.LibraryName?.ToNormalizedString());
             if (library == null)
             {
                 AnsiConsole.Write(

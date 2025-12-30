@@ -73,6 +73,7 @@ public class StagingAlbumRevalidationJob(
         var startTicks = Stopwatch.GetTimestamp();
         var albumsRevalidated = 0;
         var albumsNowValid = 0;
+        var dataMap = context.JobDetail.JobDataMap;
 
         try
         {
@@ -234,6 +235,13 @@ public class StagingAlbumRevalidationJob(
             }
 
             var elapsed = Stopwatch.GetElapsedTime(startTicks);
+
+            dataMap.Put(JobMapNameRegistry.AlbumsRevalidated, albumsRevalidated);
+            dataMap.Put(JobMapNameRegistry.AlbumsNowValid, albumsNowValid);
+
+            context.Result = new ScanStepResult(
+                AlbumsRevalidated: albumsRevalidated,
+                AlbumsNowValid: albumsNowValid);
 
             OnProcessingEvent?.Invoke(
                 this,

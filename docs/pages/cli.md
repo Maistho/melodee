@@ -70,13 +70,31 @@ mcli [BRANCH] [COMMAND] [OPTIONS]
 # List all libraries
 ./mcli library list
 
+# Full scan workflow - process inbound → staging → storage → database
+./mcli library scan
+
 # Show album statistics
 ./mcli album stats
+
+# Search for albums
+./mcli album search "Beatles"
+
+# Find albums added in the last 7 days
+./mcli album search --since 7
+
+# Search and sort by year (newest first)
+./mcli album search --sort Year --sort-dir desc
+
+# Bulk delete albums added in the last 5 days (with confirmation)
+./mcli album search --since 5 --delete
 
 # Search for an artist
 ./mcli artist search "Beatles"
 
-# List background jobs
+# Find artists added in the last 30 days, sorted by album count
+./mcli artist search --since 30 --sort Albums --sort-dir desc
+
+# List background jobs with next run times
 ./mcli job list
 
 # Run a specific job

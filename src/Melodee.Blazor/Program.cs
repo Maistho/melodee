@@ -639,16 +639,19 @@ if (!isQuartzDisabled)
                 .Build());
     }
 
-    // Schedule NowPlayingCleanupJob to run every 5 minutes
-    await quartzScheduler.ScheduleJob(
-        JobBuilder.Create<NowPlayingCleanupJob>()
-            .WithIdentity(JobKeyRegistry.NowPlayingCleanupJobKey)
-            .Build(),
-        TriggerBuilder.Create()
-            .WithIdentity("NowPlayingCleanupJob-trigger")
-            .WithCronSchedule("0 */5 * * * ?")
-            .StartNow()
-            .Build());
+    var nowPlayingCleanupCronExpression = melodeeConfiguration.GetValue<string>(SettingRegistry.JobsNowPlayingCleanupCronExpression);
+    if (nowPlayingCleanupCronExpression.Nullify() != null)
+    {
+        await quartzScheduler.ScheduleJob(
+            JobBuilder.Create<NowPlayingCleanupJob>()
+                .WithIdentity(JobKeyRegistry.NowPlayingCleanupJobKey)
+                .Build(),
+            TriggerBuilder.Create()
+                .WithIdentity("NowPlayingCleanupJob-trigger")
+                .WithCronSchedule(nowPlayingCleanupCronExpression!)
+                .StartNow()
+                .Build());
+    }
 
     var chartUpdateCronExpression = melodeeConfiguration.GetValue<string>(SettingRegistry.JobsChartUpdateCronExpression);
     if (chartUpdateCronExpression.Nullify() != null)

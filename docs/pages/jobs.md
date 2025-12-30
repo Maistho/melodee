@@ -260,6 +260,8 @@ LibraryInsertJob
         ▼ (terminal - no further chaining)
 ```
 
+> **Note:** `StagingAlbumRevalidationJob` runs on its own schedule (weekly by default) to re-check albums that previously failed artist validation. It is not part of the automatic chain but is included when running `./mcli library scan`.
+
 ### Automatic vs Manual Mode
 
 **Scheduled Triggers (Automatic Chaining):**
@@ -277,6 +279,28 @@ LibraryInsertJob
 This design means:
 - Drop files in inbound → music is playable within ~20 minutes (if validated)
 - Manual triggers give full control for debugging or selective processing
+
+### CLI Full Scan Command
+
+The CLI provides a single command that runs the entire ingestion pipeline in sequence:
+
+```bash
+./mcli library scan
+```
+
+This is equivalent to running all four jobs in order:
+1. LibraryInboundProcessJob
+2. StagingAlbumRevalidationJob
+3. StagingAutoMoveJob
+4. LibraryInsertJob
+
+Use `--force` to ignore timestamps and reprocess everything:
+
+```bash
+./mcli library scan --force
+```
+
+See [CLI Library Commands](/cli/library/) for full documentation.
 
 ## Managing Jobs
 

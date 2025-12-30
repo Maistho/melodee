@@ -38,7 +38,7 @@ public static class JobRegistry
 
         [JobKeyRegistry.NowPlayingCleanupJobKey] = new(
             "Cleans up stale now playing records",
-            null),
+            SettingRegistry.JobsNowPlayingCleanupCronExpression),
 
         [JobKeyRegistry.ArtistSearchEngineHousekeepingJobKey] = new(
             "Refreshes artist data from search engines",

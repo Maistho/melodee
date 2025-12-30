@@ -4,6 +4,7 @@ using Melodee.Common.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using NodaTime;
+using Quartz;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
@@ -19,6 +20,31 @@ public class JobListCommand : CommandBase<JobListSettings>
         using var scope = CreateServiceProvider().CreateScope();
         var dbContextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<MelodeeDbContext>>();
         await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        // Get cron expressions from settings to calculate next fire times
+        var nextFireTimes = new Dictionary<string, DateTimeOffset?>();
+        var cronSettings = await dbContext.Settings
+            .Where(s => s.Key.StartsWith("jobs.") && s.Key.EndsWith(".cronExpression"))
+            .ToDictionaryAsync(s => s.Key, s => s.Value, cancellationToken);
+
+        foreach (var (jobKey, jobInfo) in JobRegistry.Jobs)
+        {
+            if (jobInfo.CronSettingKey != null && 
+                cronSettings.TryGetValue(jobInfo.CronSettingKey, out var cronExpression) &&
+                !string.IsNullOrWhiteSpace(cronExpression))
+            {
+                try
+                {
+                    var cron = new CronExpression(cronExpression);
+                    var nextFire = cron.GetNextValidTimeAfter(DateTimeOffset.UtcNow);
+                    nextFireTimes[jobKey.Name] = nextFire;
+                }
+                catch
+                {
+                    // Invalid cron expression, skip
+                }
+            }
+        }
 
         var twentyFourHoursAgo = SystemClock.Instance.GetCurrentInstant().Minus(Duration.FromHours(24));
 
@@ -56,6 +82,7 @@ public class JobListCommand : CommandBase<JobListSettings>
             .Select(jobName =>
             {
                 var stats = jobStats.FirstOrDefault(s => s.JobName == jobName);
+                nextFireTimes.TryGetValue(jobName, out var nextRun);
                 return new
                 {
                     JobName = jobName,
@@ -71,6 +98,7 @@ public class JobListCommand : CommandBase<JobListSettings>
                     MinDurationMs = stats?.MinDurationMs,
                     MaxDurationMs = stats?.MaxDurationMs,
                     LastRunAt = stats?.LastRunAt,
+                    NextRunAt = nextRun,
                     LastSuccess = stats?.LastSuccess,
                     LastFailure = stats?.LastFailure,
                     LastErrorMessage = stats?.LastErrorMessage,
@@ -94,6 +122,7 @@ public class JobListCommand : CommandBase<JobListSettings>
                 MinDurationMs = job.MinDurationMs.HasValue ? Math.Round(job.MinDurationMs.Value, 2) : (double?)null,
                 MaxDurationMs = job.MaxDurationMs.HasValue ? Math.Round(job.MaxDurationMs.Value, 2) : (double?)null,
                 LastRunAt = job.LastRunAt?.ToDateTimeUtc(),
+                NextRunAt = job.NextRunAt?.UtcDateTime,
                 LastSuccess = job.LastSuccess?.ToDateTimeUtc(),
                 LastFailure = job.LastFailure?.ToDateTimeUtc(),
                 job.LastErrorMessage,
@@ -130,6 +159,7 @@ public class JobListCommand : CommandBase<JobListSettings>
         table.AddColumn(new TableColumn("[bold]Success[/]").RightAligned());
         table.AddColumn(new TableColumn("[bold]Avg Time[/]").RightAligned());
         table.AddColumn(new TableColumn("[bold]Last Run[/]").Centered());
+        table.AddColumn(new TableColumn("[bold]Next Run*[/]").Centered());
         table.AddColumn(new TableColumn("[bold]Status[/]").Centered());
 
         foreach (var job in jobList)
@@ -151,8 +181,12 @@ public class JobListCommand : CommandBase<JobListSettings>
                 : "[grey]---[/]";
 
             var lastRunText = job.LastRunAt.HasValue
-                ? job.LastRunAt.Value.ToDateTimeUtc().ToString("yyyy-MM-dd HH:mm")
+                ? job.LastRunAt.Value.ToDateTimeUtc().ToString(Iso8601DateFormat)
                 : "[grey]Never[/]";
+
+            var nextRunText = job.NextRunAt.HasValue
+                ? job.NextRunAt.Value.LocalDateTime.ToString(Iso8601DateFormat)
+                : "[grey]Not scheduled[/]";
 
             string statusMarkup;
             if (job.Failures24h > 0)
@@ -178,11 +212,13 @@ public class JobListCommand : CommandBase<JobListSettings>
                 $"[{successRateColor}]{successRateText}[/]",
                 avgTimeText,
                 lastRunText,
+                nextRunText,
                 statusMarkup
             );
         }
 
         AnsiConsole.Write(table);
+        AnsiConsole.MarkupLine("[grey]* Next Run is approximate, calculated from cron expression[/]");
         AnsiConsole.WriteLine();
 
         var jobsWithErrors = jobList.Where(j => !string.IsNullOrEmpty(j.LastErrorMessage)).ToList();
@@ -192,7 +228,7 @@ public class JobListCommand : CommandBase<JobListSettings>
             foreach (var job in jobsWithErrors.Take(3))
             {
                 var errorPanel = new Panel($"[red]{job.LastErrorMessage?.EscapeMarkup()}[/]")
-                    .Header($"[bold]{job.JobName}[/] - {job.LastFailure?.ToDateTimeUtc():yyyy-MM-dd HH:mm}")
+                    .Header($"[bold]{job.JobName}[/] - {job.LastFailure?.ToDateTimeUtc().ToString(Iso8601DateFormat)}")
                     .Border(BoxBorder.Rounded)
                     .BorderColor(Color.Red);
                 AnsiConsole.Write(errorPanel);

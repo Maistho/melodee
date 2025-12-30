@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -21,8 +21,8 @@ namespace Melodee.Common.Migrations
         {
             migrationBuilder.DeleteData(
                 table: "Settings",
-                keyColumn: "Key",
-                keyValue: "jobs.stagingAlbumRevalidation.cronExpression");
+                keyColumn: "ApiKey",
+                keyValue: new Guid("b9f4a3e2-7c81-4d5f-8a2b-3e1f9c6d0a4b"));
         }
     }
 }

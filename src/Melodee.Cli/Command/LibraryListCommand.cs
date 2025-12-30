@@ -70,7 +70,7 @@ public class LibraryListCommand : CommandBase<LibraryListSettings>
                 var lastScanText = !library.ShouldBeScanned()
                     ? "[grey]N/A[/]"
                     : library.LastScanAt.HasValue
-                        ? library.LastScanAt.Value.ToDateTimeUtc().ToString("yyyy-MM-dd HH:mm")
+                        ? library.LastScanAt.Value.ToDateTimeUtc().ToString(Iso8601DateFormat)
                         : "[grey]Never[/]";
 
                 var needsScanning = library.ShouldBeScanned() && library.NeedsScanning();

@@ -23,8 +23,8 @@ mcli library [COMMAND] [OPTIONS]
 | `album-report` | `ar` | Show report of albums found in library |
 | `clean` | `c` | Clean library and delete folders without media files |
 | `rebuild` | `r` | Rebuild melodee metadata albums in library |
-| `scan` | `s` | Scan libraries for database updates |
-| `process` | `p` | Process media from inbound to staging |
+| `scan` | `s` | **Full scan workflow** - process inbound → staging → storage → database |
+| `process` | `p` | Process media from inbound to staging (step 1 only) |
 | `move-ok` | `m` | Move 'Ok' status albums to another library |
 | `purge` | | Purge library data from database |
 
@@ -60,13 +60,13 @@ mcli library list [OPTIONS]
 ### Output
 
 ```
-╭──────────┬─────────┬──────────────────────────────┬─────────┬────────┬───────┬──────────────────┬───────────╮
-│ Name     │ Type    │ Path                         │ Artists │ Albums │ Songs │    Last Scan     │   Status  │
-├──────────┼─────────┼──────────────────────────────┼─────────┼────────┼───────┼──────────────────┼───────────┤
-│ Inbound  │ Inbound │ /mnt/music/inbound           │       0 │      0 │     0 │       N/A        │    ✓ OK   │
-│ Staging  │ Staging │ /mnt/music/staging           │      42 │    156 │  1892 │ 2024-12-30 13:00 │ ⚠ Needs   │
-│ Storage  │ Storage │ /mnt/music/library           │   1,234 │ 15,678 │187234 │ 2024-12-30 13:05 │    ✓ OK   │
-╰──────────┴─────────┴──────────────────────────────┴─────────┴────────┴───────┴──────────────────┴───────────╯
+╭──────────┬─────────┬──────────────────────────────┬─────────┬────────┬───────┬─────────────────┬───────────╮
+│ Name     │ Type    │ Path                         │ Artists │ Albums │ Songs │    Last Scan    │   Status  │
+├──────────┼─────────┼──────────────────────────────┼─────────┼────────┼───────┼─────────────────┼───────────┤
+│ Inbound  │ Inbound │ /mnt/music/inbound           │       0 │      0 │     0 │       N/A       │    ✓ OK   │
+│ Staging  │ Staging │ /mnt/music/staging           │      42 │    156 │  1892 │ 20241230T130000 │ ⚠ Needs   │
+│ Storage  │ Storage │ /mnt/music/library           │   1,234 │ 15,678 │187234 │ 20241230T130500 │    ✓ OK   │
+╰──────────┴─────────┴──────────────────────────────┴─────────┴────────┴───────┴─────────────────┴───────────╯
 
 Total libraries: 3
 ⚠ 1 library(ies) need scanning
@@ -279,37 +279,60 @@ mcli library rebuild --library <NAME> [PATH] [OPTIONS]
 
 ## library scan
 
-Updates database from library filesystem.
+Performs a **full library scan workflow** - the complete media ingestion pipeline.
 
 ### Usage
 
 ```bash
-mcli library scan --library <NAME> [OPTIONS]
+mcli library scan [OPTIONS]
 ```
 
 ### Options
 
 | Option | Alias | Default | Description |
 |--------|-------|---------|-------------|
-| `--library` | `-l` | **Required** | Name of the library to scan |
-| `--force` | | `false` | Force scan even if recently scanned |
+| `--force` | | `false` | Force processing even if recently scanned |
 | `--verbose` | | `true` | Include verbose debug output |
 
 ### What It Does
 
-1. Reads `melodee.json` files from library
-2. Updates database with album, artist, song information
-3. Processes artwork and metadata
-4. Records scan history
+This command orchestrates the **entire media ingestion pipeline** in sequence:
+
+| Step | Job | Description |
+|------|-----|-------------|
+| 1 | LibraryInboundProcessJob | Processes raw files from inbound → staging |
+| 2 | StagingAlbumRevalidationJob | Re-validates albums with invalid artists |
+| 3 | StagingAutoMoveJob | Moves approved albums from staging → storage |
+| 4 | LibraryInsertJob | Inserts albums from storage into database |
+
+This is the **recommended way to add new music** - a single command that handles everything.
 
 ### Example
 
 ```bash
-# Scan if changed
-./mcli library scan --library "Storage"
+# Standard scan - process everything end-to-end
+./mcli library scan
 
-# Force full scan
-./mcli library scan -l "Storage" --force
+# Force full reprocessing
+./mcli library scan --force
+```
+
+### Output
+
+```
+╭─────────────────────────────────────╮
+│     Library Scan Configuration      │
+├─────────────────────────────────────┤
+│ Force Mode    No                    │
+│ Verbose       No                    │
+╰─────────────────────────────────────╯
+
+✓ Processing inbound files           (01:23)
+✓ Revalidating staging albums        (00:05)
+✓ Moving approved albums to storage  (00:12)
+✓ Inserting albums into database     (00:45)
+
+── Library scan completed in 00:02:25 ──
 ```
 
 ---
@@ -439,30 +462,31 @@ mcli library purge --library <NAME> [OPTIONS]
 
 ## Workflow Examples
 
-### Daily Processing Pipeline
+### Add New Music (Recommended)
 
 ```bash
-#!/bin/bash
-# Complete processing pipeline
+# Single command to process all new music end-to-end
+./mcli library scan
+```
 
-# 1. Process new inbound files
-./mcli library process -l "Inbound"
+This is the simplest and recommended approach. It handles:
+- Processing files from inbound
+- Validating and revalidating albums
+- Moving approved albums to storage
+- Adding them to the database
 
-# 2. Move approved albums to storage
-./mcli library move-ok -l "Staging" --to-library "Storage"
+### Force Full Reprocessing
 
-# 3. Scan storage for updates
-./mcli library scan -l "Storage"
-
-# 4. Clean up staging
-./mcli library clean -l "Staging"
+```bash
+# Force reprocess everything, ignoring timestamps
+./mcli library scan --force
 ```
 
 ### Full Library Rebuild
 
 ```bash
 #!/bin/bash
-# Complete library rebuild
+# Complete library rebuild (metadata regeneration)
 
 LIBRARY="Storage"
 
@@ -475,7 +499,7 @@ echo "Starting full rebuild of $LIBRARY..."
 ./mcli library rebuild -l "$LIBRARY" --only-missing false
 
 # Rescan into database
-./mcli library scan -l "$LIBRARY" --force
+./mcli library scan --force
 
 echo "Rebuild complete"
 ```

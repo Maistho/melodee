@@ -26,6 +26,12 @@ namespace Melodee.Cli.Command;
 
 public abstract class CommandBase<T> : AsyncCommand<T> where T : Spectre.Console.Cli.CommandSettings
 {
+    /// <summary>
+    /// ISO8601 date format for consistent CLI output that sorts correctly.
+    /// Format: yyyyMMddTHHmmss (e.g., 20251230T141623)
+    /// </summary>
+    protected const string Iso8601DateFormat = "yyyyMMdd'T'HHmmss";
+    
     protected IConfigurationRoot Configuration()
     {
         var basePath = Directory.GetCurrentDirectory();
@@ -102,6 +108,7 @@ public abstract class CommandBase<T> : AsyncCommand<T> where T : Spectre.Console
         services.AddScoped<PlaylistService>();
         services.AddScoped<UserService>();
         services.AddScoped<UserQueueService>();
+        services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();
 
         return services.BuildServiceProvider();
     }

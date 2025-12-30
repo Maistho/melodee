@@ -67,7 +67,7 @@ public class LibraryStatsCommand : CommandBase<LibraryStatsSettings>
                 };
 
                 var lastScanText = library.LastScanAt.HasValue
-                    ? library.LastScanAt.Value.ToDateTimeUtc().ToString("yyyy-MM-dd HH:mm:ss UTC")
+                    ? library.LastScanAt.Value.ToDateTimeUtc().ToString(Iso8601DateFormat)
                     : "[grey]Never scanned[/]";
 
                 var statusIcon = library.IsLocked ? "🔒" : "✓";
