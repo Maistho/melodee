@@ -33,6 +33,8 @@ public sealed class MusicBrainzCoverArtArchiveSearchEngine(
 
         if (!configuration.GetValue<bool>(SettingRegistry.SearchEngineMusicBrainzEnabled))
         {
+            Log.Debug("[{PluginName}] MusicBrainz is disabled, skipping cover art search",
+                DisplayName);
             return new OperationResult<ImageSearchResult[]?>(
                 "MusicBrainz Cover Art Archive image search plugin is disabled.")
             {
@@ -42,9 +44,12 @@ public sealed class MusicBrainzCoverArtArchiveSearchEngine(
 
         try
         {
+            Log.Debug("[{PluginName}] Searching for album cover: Artist=[{Artist}], Album=[{Album}], Year=[{Year}], ArtistMusicBrainzId=[{ArtistMbId}], AlbumMusicBrainzId=[{AlbumMbId}]",
+                DisplayName, query?.Artist, query?.Name, query?.Year, query?.ArtistMusicBrainzId, query?.MusicBrainzIdValue);
+            
             var artistSearchResult = await repository.SearchArtist(new ArtistQuery
             {
-                MusicBrainzId = query.ArtistMusicBrainzId,
+                MusicBrainzId = query?.ArtistMusicBrainzId,
                 Name = query?.Artist ?? string.Empty,
                 AlbumMusicBrainzIds = query?.MusicBrainzIdValue == null ? null : [query.MusicBrainzIdValue.Value],
                 AlbumKeyValues =
@@ -52,10 +57,15 @@ public sealed class MusicBrainzCoverArtArchiveSearchEngine(
                     new KeyValue(query?.Year.ToString() ?? string.Empty, query?.NameNormalized)
                 ]
             }, 1, cancellationToken).ConfigureAwait(false);
+            
             if (artistSearchResult.IsSuccess)
             {
-                var rg = artistSearchResult.Data.FirstOrDefault()?.Releases?.FirstOrDefault()
-                    ?.MusicBrainzResourceGroupId;
+                var artist = artistSearchResult.Data.FirstOrDefault();
+                var rg = artist?.Releases?.FirstOrDefault()?.MusicBrainzResourceGroupId;
+                
+                Log.Debug("[{PluginName}] Artist search returned: Found=[{Found}], ArtistName=[{ArtistName}], ReleaseCount=[{ReleaseCount}], ReleaseGroupId=[{ReleaseGroupId}]",
+                    DisplayName, artist != null, artist?.Name, artist?.Releases?.Length ?? 0, rg);
+                
                 if (rg != null)
                 {
                     result.Add(new ImageSearchResult
@@ -65,7 +75,15 @@ public sealed class MusicBrainzCoverArtArchiveSearchEngine(
                         ThumbnailUrl = string.Empty,
                         MediaUrl = $"https://coverartarchive.org/release-group/{rg}/front"
                     });
+                    
+                    Log.Debug("[{PluginName}] FOUND cover art URL for album [{Album}]: {Url}",
+                        DisplayName, query?.Name, result.First().MediaUrl);
                 }
+            }
+            else
+            {
+                Log.Debug("[{PluginName}] Artist search failed for album [{Album}]",
+                    DisplayName, query?.Name);
             }
         }
         catch (Exception e)
@@ -77,8 +95,8 @@ public sealed class MusicBrainzCoverArtArchiveSearchEngine(
 
         if (result.Count == 0)
         {
-            Log.Debug("[{PluginName}] no MusicBrainz Cover Art response for query[{Query}]",
-                nameof(MusicBrainzArtistSearchEnginePlugin), query);
+            Log.Debug("[{PluginName}] NO cover art found for album [{Album}] by [{Artist}] ({Year})",
+                DisplayName, query?.Name, query?.Artist, query?.Year);
         }
 
         return new OperationResult<ImageSearchResult[]?>

@@ -1,5 +1,7 @@
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Globalization;
+using System.Text.RegularExpressions;
 using Lucene.Net.Analysis.Standard;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
@@ -33,9 +35,87 @@ namespace Melodee.Common.Plugins.SearchEngine.MusicBrainz.Data;
 public class SQLiteMusicBrainzRepository(
     ILogger logger,
     IMelodeeConfigurationFactory configurationFactory,
-    IDbContextFactory<MusicBrainzDbContext> dbContextFactory) : MusicBrainzRepositoryBase(logger, configurationFactory)
+    IDbContextFactory<MusicBrainzDbContext> dbContextFactory) : MusicBrainzRepositoryBase(logger, configurationFactory), IDisposable
 {
     private const LuceneVersion AppLuceneVersion = LuceneVersion.LUCENE_48;
+    private const int CacheMaxSize = 10000;
+    private const int CacheExpirationMinutes = 60;
+    
+    private static readonly object LuceneLock = new();
+    private static FSDirectory? _luceneDirectory;
+    private static DirectoryReader? _luceneReader;
+    private static IndexSearcher? _luceneSearcher;
+    private static string? _lucenePath;
+    
+    private static readonly ConcurrentDictionary<string, CachedSearchResult> SearchCache = new();
+    
+    private sealed record CachedSearchResult(PagedResult<ArtistSearchResult> Result, DateTime CachedAt);
+    
+    public void Dispose()
+    {
+        CloseLuceneResources();
+        GC.SuppressFinalize(this);
+    }
+    
+    private static void CloseLuceneResources()
+    {
+        lock (LuceneLock)
+        {
+            _luceneSearcher = null;
+            _luceneReader?.Dispose();
+            _luceneReader = null;
+            _luceneDirectory?.Dispose();
+            _luceneDirectory = null;
+            _lucenePath = null;
+        }
+    }
+    
+    private IndexSearcher? GetOrCreateSearcher(string lucenePath)
+    {
+        lock (LuceneLock)
+        {
+            // If path changed or not initialized, recreate
+            if (_lucenePath != lucenePath || _luceneDirectory == null || _luceneReader == null)
+            {
+                CloseLuceneResources();
+                
+                if (!Directory.Exists(lucenePath) || Directory.GetFiles(lucenePath).Length == 0)
+                {
+                    return null;
+                }
+                
+                _lucenePath = lucenePath;
+                _luceneDirectory = FSDirectory.Open(lucenePath);
+                _luceneReader = DirectoryReader.Open(_luceneDirectory);
+                _luceneSearcher = new IndexSearcher(_luceneReader);
+                
+                Logger.Debug("[{RepoName}] Initialized persistent Lucene searcher at [{Path}]",
+                    nameof(SQLiteMusicBrainzRepository), lucenePath);
+            }
+            
+            return _luceneSearcher;
+        }
+    }
+    
+    private static void CleanExpiredCache()
+    {
+        var cutoff = DateTime.UtcNow.AddMinutes(-CacheExpirationMinutes);
+        var expiredKeys = SearchCache.Where(kvp => kvp.Value.CachedAt < cutoff).Select(kvp => kvp.Key).ToList();
+        foreach (var key in expiredKeys)
+        {
+            SearchCache.TryRemove(key, out _);
+        }
+        
+        // If still over max size, remove oldest entries
+        if (SearchCache.Count > CacheMaxSize)
+        {
+            var toRemove = SearchCache.OrderBy(kvp => kvp.Value.CachedAt).Take(SearchCache.Count - CacheMaxSize + 100).Select(kvp => kvp.Key).ToList();
+            foreach (var key in toRemove)
+            {
+                SearchCache.TryRemove(key, out _);
+            }
+        }
+    }
 
     public override async Task<Album?> GetAlbumByMusicBrainzId(Guid musicBrainzId,
         CancellationToken cancellationToken = default)
@@ -54,8 +134,17 @@ public class SQLiteMusicBrainzRepository(
         CancellationToken cancellationToken = default)
     {
         var startTicks = Stopwatch.GetTimestamp();
+        
+        // Check cache first
+        var cacheKey = $"{query.NameNormalized}:{query.MusicBrainzIdValue}:{maxResults}";
+        if (SearchCache.TryGetValue(cacheKey, out var cached) && 
+            cached.CachedAt > DateTime.UtcNow.AddMinutes(-CacheExpirationMinutes))
+        {
+            Logger.Debug("[{RepoName}] Cache HIT for [{Query}]", nameof(SQLiteMusicBrainzRepository), query.NameNormalized);
+            return cached.Result;
+        }
+        
         var data = new List<ArtistSearchResult>();
-
         var maxLuceneResults = 10;
         var totalCount = 0;
 
@@ -65,44 +154,87 @@ public class SQLiteMusicBrainzRepository(
                               $"Invalid setting for [{SettingRegistry.SearchEngineMusicBrainzStoragePath}]");
 
         var musicBrainzIdsFromLucene = new List<string>();
-
-        // For tests and when no Lucene index exists, use direct database search
         var shouldUseDirectSearch = query.MusicBrainzIdValue == null;
 
         if (query.MusicBrainzIdValue != null)
         {
+            Logger.Debug("[{RepoName}] Searching by MusicBrainzId: {MusicBrainzId}",
+                nameof(SQLiteMusicBrainzRepository), query.MusicBrainzIdValue.Value);
             musicBrainzIdsFromLucene.Add(query.MusicBrainzIdValue.Value.ToString());
             shouldUseDirectSearch = false;
         }
         else
         {
             var lucenePath = Path.Combine(storagePath, "lucene");
-            if (Directory.Exists(lucenePath) && Directory.GetFiles(lucenePath).Length > 0)
+            var searcher = GetOrCreateSearcher(lucenePath);
+            
+            if (searcher != null)
             {
-                using (var dir = FSDirectory.Open(lucenePath))
+                Logger.Debug("[{RepoName}] Using Lucene index at [{Path}] for query: NameNormalized=[{NameNormalized}], NameNormalizedReversed=[{NameNormalizedReversed}]",
+                    nameof(SQLiteMusicBrainzRepository), lucenePath, query.NameNormalized, query.NameNormalizedReversed);
+                
+                // Build a comprehensive query with multiple search strategies
+                BooleanQuery categoryQuery = [];
+                
+                // Strategy 1: Exact match on normalized name (highest priority via boosting)
+                var exactQuery = new TermQuery(new Term(nameof(Artist.NameNormalized), query.NameNormalized)) { Boost = 10.0f };
+                categoryQuery.Add(new BooleanClause(exactQuery, Occur.SHOULD));
+                
+                // Strategy 2: Exact match on reversed name
+                var reversedQuery = new TermQuery(new Term(nameof(Artist.NameNormalized), query.NameNormalizedReversed)) { Boost = 8.0f };
+                categoryQuery.Add(new BooleanClause(reversedQuery, Occur.SHOULD));
+                
+                // Strategy 3: Prefix match for partial names (e.g., "METALLICA" matches "METALLICABAND")
+                if (query.NameNormalized.Length >= 4)
                 {
-                    var analyzer = new StandardAnalyzer(AppLuceneVersion);
-                    var indexConfig = new IndexWriterConfig(AppLuceneVersion, analyzer);
-                    using (var writer = new IndexWriter(dir, indexConfig))
+                    var prefixQuery = new PrefixQuery(new Term(nameof(Artist.NameNormalized), query.NameNormalized)) { Boost = 5.0f };
+                    categoryQuery.Add(new BooleanClause(prefixQuery, Occur.SHOULD));
+                }
+                
+                // Strategy 4: Fuzzy match for typos/variations (edit distance 1-2)
+                if (query.NameNormalized.Length >= 5)
+                {
+                    var fuzzyQuery = new FuzzyQuery(new Term(nameof(Artist.NameNormalized), query.NameNormalized), 2) { Boost = 3.0f };
+                    categoryQuery.Add(new BooleanClause(fuzzyQuery, Occur.SHOULD));
+                }
+                
+                // Strategy 5: Search in alternate names (aliases)
+                var alternateQuery = new TermQuery(new Term(nameof(Artist.AlternateNames), query.NameNormalized)) { Boost = 4.0f };
+                categoryQuery.Add(new BooleanClause(alternateQuery, Occur.SHOULD));
+                
+                // Strategy 6: Word tokenization - for multi-word artists like "David Sylvian And Robert Fripp"
+                // or collaborations like "Smokey Robinson Miracles" -> search for "SMOKEY", "ROBINSON", "MIRACLES"
+                var words = ExtractWordsFromNormalized(query.NameNormalized);
+                if (words.Length > 1)
+                {
+                    Logger.Debug("[{RepoName}] Tokenized query into [{WordCount}] words: [{Words}]",
+                        nameof(SQLiteMusicBrainzRepository), words.Length, string.Join(", ", words.Take(5)));
+                    
+                    foreach (var word in words.Where(w => w.Length >= 4).Take(3))
                     {
-                        using (var reader = writer.GetReader(true))
-                        {
-                            var searcher = new IndexSearcher(reader);
-                            BooleanQuery categoryQuery = [];
-                            var catQuery1 = new TermQuery(new Term(nameof(Artist.NameNormalized), query.NameNormalized));
-                            var catQuery2 =
-                                new TermQuery(new Term(nameof(Artist.NameNormalized), query.NameNormalizedReversed));
-                            var catQuery3 = new TermQuery(new Term(nameof(Artist.AlternateNames), query.NameNormalized));
-                            categoryQuery.Add(new BooleanClause(catQuery1, Occur.SHOULD));
-                            categoryQuery.Add(new BooleanClause(catQuery2, Occur.SHOULD));
-                            categoryQuery.Add(new BooleanClause(catQuery3, Occur.SHOULD));
-                            ScoreDoc[] hits = searcher.Search(categoryQuery, maxLuceneResults).ScoreDocs;
-                            musicBrainzIdsFromLucene.AddRange(hits.Select(t => searcher.Doc(t.Doc))
-                                .Select(hitDoc => hitDoc.Get(nameof(Artist.MusicBrainzIdRaw))));
-                            shouldUseDirectSearch = musicBrainzIdsFromLucene.Count == 0;
-                        }
+                        // Search for each significant word as a prefix
+                        var wordPrefixQuery = new PrefixQuery(new Term(nameof(Artist.NameNormalized), word)) { Boost = 2.0f };
+                        categoryQuery.Add(new BooleanClause(wordPrefixQuery, Occur.SHOULD));
+                        
+                        // Also search in alternate names
+                        var wordAltQuery = new TermQuery(new Term(nameof(Artist.AlternateNames), word));
+                        categoryQuery.Add(new BooleanClause(wordAltQuery, Occur.SHOULD));
                     }
                 }
+                
+                ScoreDoc[] hits = searcher.Search(categoryQuery, maxLuceneResults).ScoreDocs;
+                musicBrainzIdsFromLucene.AddRange(hits.Select(t => searcher.Doc(t.Doc))
+                    .Select(hitDoc => hitDoc.Get(nameof(Artist.MusicBrainzIdRaw))));
+                
+                Logger.Debug("[{RepoName}] Lucene search returned [{HitCount}] hits for [{NameNormalized}]",
+                    nameof(SQLiteMusicBrainzRepository), hits.Length, query.NameNormalized);
+                
+                shouldUseDirectSearch = musicBrainzIdsFromLucene.Count == 0;
+            }
+            else
+            {
+                Logger.Warning("[{RepoName}] Lucene index not available at [{Path}], falling back to direct database search",
+                    nameof(SQLiteMusicBrainzRepository), lucenePath);
             }
         }
 
@@ -116,94 +248,111 @@ public class SQLiteMusicBrainzRepository(
                 // Use direct search when Lucene is not available or found no results
                 if (shouldUseDirectSearch && !string.IsNullOrEmpty(query.NameNormalized))
                 {
+                    Logger.Debug("[{RepoName}] Using direct database search for [{NameNormalized}]",
+                        nameof(SQLiteMusicBrainzRepository), query.NameNormalized);
+                    
+                    // OPTIMIZED: First try exact match (uses index), then fall back to broader search
                     var directArtists = await context.Artists
                         .AsNoTracking()
-                        .Where(a => a.NameNormalized == query.NameNormalized ||
-                                   a.NameNormalized.Contains(query.NameNormalized) ||
-                                   (a.AlternateNames != null && a.AlternateNames.Contains(query.NameNormalized)))
+                        .Where(a => a.NameNormalized == query.NameNormalized)
                         .OrderBy(a => a.SortName)
+                        .Take(maxLuceneResults)
                         .ToArrayAsync(cancellationToken);
-
-                    foreach (var artist in directArtists)
+                    
+                    // If no exact match, try reversed name match (also uses index)
+                    if (directArtists.Length == 0 && query.NameNormalizedReversed != query.NameNormalized)
                     {
-                        var rank = artist.NameNormalized == query.NameNormalized ? 10 : 1;
-                        if (artist.AlternateNamesValues.Contains(query.NameNormalized))
-                        {
-                            rank++;
-                        }
-
-                        if (artist.AlternateNamesValues.Contains(query.Name.CleanString().ToNormalizedString()))
-                        {
-                            rank++;
-                        }
-
-                        if (artist.AlternateNamesValues.Contains(query.NameNormalizedReversed))
-                        {
-                            rank++;
-                        }
-
-                        // Get artist albums like in the normal path
-                        var artistAlbums = await context.Albums
+                        directArtists = await context.Artists
                             .AsNoTracking()
-                            .Where(a => a.MusicBrainzArtistId == artist.MusicBrainzArtistId &&
-                                       a.ReleaseDate > DateTime.MinValue)
+                            .Where(a => a.NameNormalized == query.NameNormalizedReversed)
+                            .OrderBy(a => a.SortName)
+                            .Take(maxLuceneResults)
                             .ToArrayAsync(cancellationToken);
+                    }
 
-                        if (artistAlbums.Length > 0)
-                        {
-                            // Group by release group and take the earliest release date from each group
-                            var newArtistAlbums = artistAlbums
+                    Logger.Debug("[{RepoName}] Direct search found [{Count}] artists for [{NameNormalized}]",
+                        nameof(SQLiteMusicBrainzRepository), directArtists.Length, query.NameNormalized);
+
+                    if (directArtists.Length > 0)
+                    {
+                        // OPTIMIZED: Batch load all albums for found artists in a single query
+                        var artistIds = directArtists.Select(a => a.MusicBrainzArtistId).ToArray();
+                        var allAlbums = await context.Albums
+                            .AsNoTracking()
+                            .Where(a => artistIds.Contains(a.MusicBrainzArtistId) && a.ReleaseDate > DateTime.MinValue)
+                            .ToArrayAsync(cancellationToken);
+                        
+                        var albumsByArtist = allAlbums
+                            .GroupBy(a => a.MusicBrainzArtistId)
+                            .ToDictionary(g => g.Key, g => g
                                 .GroupBy(x => x.ReleaseGroupMusicBrainzIdRaw)
-                                .Select(group => group.OrderBy(x => x.ReleaseDate).First())
-                                .ToArray();
+                                .Select(rg => rg.OrderBy(x => x.ReleaseDate).First())
+                                .ToArray());
 
-                            artistAlbums = newArtistAlbums;
-                        }
-
-                        rank += artistAlbums.Length;
-
-                        if (query.AlbumKeyValues != null)
+                        foreach (var artist in directArtists)
                         {
-                            rank += artistAlbums.Length;
-                            foreach (var albumKeyValues in query.AlbumKeyValues)
+                            var rank = artist.NameNormalized == query.NameNormalized ? 10 : 1;
+                            if (artist.AlternateNamesValues.Contains(query.NameNormalized))
                             {
-                                rank += artistAlbums.Count(x =>
-                                    x.ReleaseDate.Year.ToString() == albumKeyValues.Key &&
-                                    x.NameNormalized == albumKeyValues.Value.ToNormalizedString());
+                                rank++;
                             }
-                        }
 
-                        data.Add(new ArtistSearchResult
-                        {
-                            AlternateNames = artist.AlternateNames?.ToTags()?.ToArray() ?? [],
-                            FromPlugin =
-                                $"{nameof(MusicBrainzArtistSearchEnginePlugin)}:{nameof(SQLiteMusicBrainzRepository)}",
-                            UniqueId = SafeParser.Hash(artist.MusicBrainzId.ToString()),
-                            Rank = rank,
-                            Name = artist.Name,
-                            SortName = artist.SortName,
-                            MusicBrainzId = artist.MusicBrainzId,
-                            AlbumCount = artistAlbums.Count(x => x.ReleaseDate > DateTime.MinValue),
-                            Releases = artistAlbums
-                                .Where(x => x.ReleaseDate > DateTime.MinValue)
-                                .OrderBy(x => x.ReleaseDate)
-                                .ThenBy(x => x.SortName).Select(x => new AlbumSearchResult
+                            if (artist.AlternateNamesValues.Contains(query.Name.CleanString().ToNormalizedString()))
+                            {
+                                rank++;
+                            }
+
+                            if (artist.AlternateNamesValues.Contains(query.NameNormalizedReversed))
+                            {
+                                rank++;
+                            }
+
+                            var artistAlbums = albumsByArtist.GetValueOrDefault(artist.MusicBrainzArtistId, []);
+                            rank += artistAlbums.Length;
+
+                            if (query.AlbumKeyValues != null)
+                            {
+                                rank += artistAlbums.Length;
+                                foreach (var albumKeyValues in query.AlbumKeyValues)
                                 {
-                                    AlbumType = SafeParser.ToEnum<AlbumType>(x.ReleaseType),
-                                    ReleaseDate = x.ReleaseDate.ToString("o", CultureInfo.InvariantCulture),
-                                    UniqueId = SafeParser.Hash(x.MusicBrainzId.ToString()),
-                                    Name = x.Name,
-                                    NameNormalized = x.NameNormalized,
-                                    MusicBrainzResourceGroupId = x.ReleaseGroupMusicBrainzId,
-                                    SortName = x.SortName,
-                                    MusicBrainzId = x.MusicBrainzId
-                                }).ToArray()
-                        });
+                                    rank += artistAlbums.Count(x =>
+                                        x.ReleaseDate.Year.ToString() == albumKeyValues.Key &&
+                                        x.NameNormalized == albumKeyValues.Value.ToNormalizedString());
+                                }
+                            }
+
+                            data.Add(new ArtistSearchResult
+                            {
+                                AlternateNames = artist.AlternateNames?.ToTags()?.ToArray() ?? [],
+                                FromPlugin =
+                                    $"{nameof(MusicBrainzArtistSearchEnginePlugin)}:{nameof(SQLiteMusicBrainzRepository)}",
+                                UniqueId = SafeParser.Hash(artist.MusicBrainzId.ToString()),
+                                Rank = rank,
+                                Name = artist.Name,
+                                SortName = artist.SortName,
+                                MusicBrainzId = artist.MusicBrainzId,
+                                AlbumCount = artistAlbums.Count(x => x.ReleaseDate > DateTime.MinValue),
+                                Releases = artistAlbums
+                                    .Where(x => x.ReleaseDate > DateTime.MinValue)
+                                    .OrderBy(x => x.ReleaseDate)
+                                    .ThenBy(x => x.SortName).Select(x => new AlbumSearchResult
+                                    {
+                                        AlbumType = SafeParser.ToEnum<AlbumType>(x.ReleaseType),
+                                        ReleaseDate = x.ReleaseDate.ToString("o", CultureInfo.InvariantCulture),
+                                        UniqueId = SafeParser.Hash(x.MusicBrainzId.ToString()),
+                                        Name = x.Name,
+                                        NameNormalized = x.NameNormalized,
+                                        MusicBrainzResourceGroupId = x.ReleaseGroupMusicBrainzId,
+                                        SortName = x.SortName,
+                                        MusicBrainzId = x.MusicBrainzId
+                                    }).ToArray()
+                            });
+                        }
                     }
 
                     totalCount = directArtists.Length;
                 }
-                else
+                else if (musicBrainzIdsFromLucene.Count > 0)
                 {
                     // Optimized EF Core query with no tracking for read-only operations
                     var artists = await context.Artists
@@ -212,81 +361,81 @@ public class SQLiteMusicBrainzRepository(
                         .OrderBy(a => a.SortName)
                         .ToArrayAsync(cancellationToken);
 
-                    foreach (var artist in artists)
+                    if (artists.Length > 0)
                     {
-                        var rank = artist.NameNormalized == query.NameNormalized ? 10 : 1;
-                        if (artist.AlternateNamesValues.Contains(query.NameNormalized))
-                        {
-                            rank++;
-                        }
-
-                        if (artist.AlternateNamesValues.Contains(query.Name.CleanString().ToNormalizedString()))
-                        {
-                            rank++;
-                        }
-
-                        if (artist.AlternateNamesValues.Contains(query.NameNormalizedReversed))
-                        {
-                            rank++;
-                        }
-
-                        // Optimized EF Core query for albums with proper joins and filtering
-                        var artistAlbums = await context.Albums
+                        // OPTIMIZED: Batch load all albums for found artists in a single query
+                        var artistIds = artists.Select(a => a.MusicBrainzArtistId).ToArray();
+                        var allAlbums = await context.Albums
                             .AsNoTracking()
-                            .Where(a => a.MusicBrainzArtistId == artist.MusicBrainzArtistId &&
-                                       a.ReleaseDate > DateTime.MinValue) // DoIncludeInArtistSearch condition
+                            .Where(a => artistIds.Contains(a.MusicBrainzArtistId) && a.ReleaseDate > DateTime.MinValue)
                             .ToArrayAsync(cancellationToken);
-
-                        if (artistAlbums.Length > 0)
-                        {
-                            // Group by release group and take the earliest release date from each group
-                            var newArtistAlbums = artistAlbums
+                        
+                        var albumsByArtist = allAlbums
+                            .GroupBy(a => a.MusicBrainzArtistId)
+                            .ToDictionary(g => g.Key, g => g
                                 .GroupBy(x => x.ReleaseGroupMusicBrainzIdRaw)
-                                .Select(group => group.OrderBy(x => x.ReleaseDate).First())
-                                .ToArray();
+                                .Select(rg => rg.OrderBy(x => x.ReleaseDate).First())
+                                .ToArray());
 
-                            artistAlbums = newArtistAlbums;
-                        }
-
-                        rank += artistAlbums.Length;
-
-                        if (query.AlbumKeyValues != null)
+                        foreach (var artist in artists)
                         {
-                            rank += artistAlbums.Length;
-                            foreach (var albumKeyValues in query.AlbumKeyValues)
+                            var rank = artist.NameNormalized == query.NameNormalized ? 10 : 1;
+                            if (artist.AlternateNamesValues.Contains(query.NameNormalized))
                             {
-                                rank += artistAlbums.Count(x =>
-                                    x.ReleaseDate.Year.ToString() == albumKeyValues.Key &&
-                                    x.NameNormalized == albumKeyValues.Value.ToNormalizedString());
+                                rank++;
                             }
-                        }
 
-                        data.Add(new ArtistSearchResult
-                        {
-                            AlternateNames = artist.AlternateNames?.ToTags()?.ToArray() ?? [],
-                            FromPlugin =
-                                $"{nameof(MusicBrainzArtistSearchEnginePlugin)}:{nameof(SQLiteMusicBrainzRepository)}",
-                            UniqueId = SafeParser.Hash(artist.MusicBrainzId.ToString()),
-                            Rank = rank,
-                            Name = artist.Name,
-                            SortName = artist.SortName,
-                            MusicBrainzId = artist.MusicBrainzId,
-                            AlbumCount = artistAlbums.Count(x => x.ReleaseDate > DateTime.MinValue),
-                            Releases = artistAlbums
-                                .Where(x => x.ReleaseDate > DateTime.MinValue)
-                                .OrderBy(x => x.ReleaseDate)
-                                .ThenBy(x => x.SortName).Select(x => new AlbumSearchResult
+                            if (artist.AlternateNamesValues.Contains(query.Name.CleanString().ToNormalizedString()))
+                            {
+                                rank++;
+                            }
+
+                            if (artist.AlternateNamesValues.Contains(query.NameNormalizedReversed))
+                            {
+                                rank++;
+                            }
+
+                            var artistAlbums = albumsByArtist.GetValueOrDefault(artist.MusicBrainzArtistId, []);
+                            rank += artistAlbums.Length;
+
+                            if (query.AlbumKeyValues != null)
+                            {
+                                rank += artistAlbums.Length;
+                                foreach (var albumKeyValues in query.AlbumKeyValues)
                                 {
-                                    AlbumType = SafeParser.ToEnum<AlbumType>(x.ReleaseType),
-                                    ReleaseDate = x.ReleaseDate.ToString("o", CultureInfo.InvariantCulture),
-                                    UniqueId = SafeParser.Hash(x.MusicBrainzId.ToString()),
-                                    Name = x.Name,
-                                    NameNormalized = x.NameNormalized,
-                                    MusicBrainzResourceGroupId = x.ReleaseGroupMusicBrainzId,
-                                    SortName = x.SortName,
-                                    MusicBrainzId = x.MusicBrainzId
-                                }).ToArray()
-                        });
+                                    rank += artistAlbums.Count(x =>
+                                        x.ReleaseDate.Year.ToString() == albumKeyValues.Key &&
+                                        x.NameNormalized == albumKeyValues.Value.ToNormalizedString());
+                                }
+                            }
+
+                            data.Add(new ArtistSearchResult
+                            {
+                                AlternateNames = artist.AlternateNames?.ToTags()?.ToArray() ?? [],
+                                FromPlugin =
+                                    $"{nameof(MusicBrainzArtistSearchEnginePlugin)}:{nameof(SQLiteMusicBrainzRepository)}",
+                                UniqueId = SafeParser.Hash(artist.MusicBrainzId.ToString()),
+                                Rank = rank,
+                                Name = artist.Name,
+                                SortName = artist.SortName,
+                                MusicBrainzId = artist.MusicBrainzId,
+                                AlbumCount = artistAlbums.Count(x => x.ReleaseDate > DateTime.MinValue),
+                                Releases = artistAlbums
+                                    .Where(x => x.ReleaseDate > DateTime.MinValue)
+                                    .OrderBy(x => x.ReleaseDate)
+                                    .ThenBy(x => x.SortName).Select(x => new AlbumSearchResult
+                                    {
+                                        AlbumType = SafeParser.ToEnum<AlbumType>(x.ReleaseType),
+                                        ReleaseDate = x.ReleaseDate.ToString("o", CultureInfo.InvariantCulture),
+                                        UniqueId = SafeParser.Hash(x.MusicBrainzId.ToString()),
+                                        Name = x.Name,
+                                        NameNormalized = x.NameNormalized,
+                                        MusicBrainzResourceGroupId = x.ReleaseGroupMusicBrainzId,
+                                        SortName = x.SortName,
+                                        MusicBrainzId = x.MusicBrainzId
+                                    }).ToArray()
+                            });
+                        }
                     }
 
                     totalCount = artists.Length;
@@ -303,13 +452,37 @@ public class SQLiteMusicBrainzRepository(
             Logger.Error(e, "[MusicBrainzRepository] Search Engine Exception ArtistQuery [{Query}]", query.ToString());
         }
 
-        return new PagedResult<ArtistSearchResult>
+        var elapsedMs = Stopwatch.GetElapsedTime(startTicks).TotalMilliseconds;
+        
+        var result = new PagedResult<ArtistSearchResult>
         {
-            OperationTime = Stopwatch.GetElapsedTime(startTicks).Microseconds,
+            OperationTime = (long)elapsedMs * 1000, // Convert to microseconds
             TotalCount = totalCount,
             TotalPages = maxResults > 0 ? SafeParser.ToNumber<int>((totalCount + maxResults - 1) / maxResults) : 0,
             Data = data.OrderByDescending(x => x.Rank).Take(Math.Max(0, maxResults)).ToArray()
         };
+        
+        // Cache the result
+        SearchCache[cacheKey] = new CachedSearchResult(result, DateTime.UtcNow);
+        
+        // Periodically clean expired cache entries (every ~100 searches)
+        if (SearchCache.Count > CacheMaxSize / 10 && Random.Shared.Next(100) == 0)
+        {
+            CleanExpiredCache();
+        }
+        
+        if (data.Count > 0)
+        {
+            Logger.Debug("[{RepoName}] SearchArtist COMPLETE: Found [{Count}] results for [{Query}] in {ElapsedMs:F1}ms. Top result: [{TopArtist}]",
+                nameof(SQLiteMusicBrainzRepository), data.Count, query.NameNormalized, elapsedMs, data.First().Name);
+        }
+        else
+        {
+            Logger.Debug("[{RepoName}] SearchArtist COMPLETE: NO RESULTS for [{Query}] in {ElapsedMs:F1}ms (LuceneHits={LuceneHits}, DirectSearch={DirectSearch})",
+                nameof(SQLiteMusicBrainzRepository), query.NameNormalized, elapsedMs, musicBrainzIdsFromLucene.Count, shouldUseDirectSearch);
+        }
+        
+        return result;
     }
 
     public override async Task<OperationResult<bool>> ImportData(
@@ -540,5 +713,100 @@ public class SQLiteMusicBrainzRepository(
                        LoadedMaterializedAlbums.Count > 0
             };
         }
+    }
+
+    /// <summary>
+    /// Extracts individual words from a normalized artist name for tokenized search.
+    /// Uses common word boundaries and patterns to split concatenated names.
+    /// </summary>
+    /// <example>
+    /// "SMOKEYROBINSONMIRACLES" -> ["SMOKEY", "ROBINSON", "MIRACLES"]
+    /// "ARMINVANBUURENANDDJSHAH" -> ["ARMIN", "VAN", "BUUREN", "AND", "DJ", "SHAH"]
+    /// </example>
+    private static string[] ExtractWordsFromNormalized(string normalizedName)
+    {
+        if (string.IsNullOrEmpty(normalizedName) || normalizedName.Length < 4)
+        {
+            return [];
+        }
+
+        var words = new List<string>();
+        
+        // Common patterns that indicate word boundaries in normalized (uppercase, no spaces) text
+        // These are common prefixes/suffixes/conjunctions that help identify where words start/end
+        string[] commonPatterns = 
+        [
+            "AND", "THE", "FEAT", "FEATURING", "WITH", "VS", "VERSUS",
+            "DJ", "MC", "DR", "MR", "MRS", "MS",
+            "VAN", "VON", "DE", "LA", "LE", "EL",
+            "BAND", "GROUP", "TRIO", "QUARTET", "QUINTET", "ORCHESTRA", "ENSEMBLE",
+            "PROJECT", "EXPERIENCE", "COLLECTIVE", "FAMILY", "BROTHERS", "SISTERS"
+        ];
+        
+        var remaining = normalizedName;
+        
+        // First pass: try to identify known patterns/words
+        foreach (var pattern in commonPatterns.OrderByDescending(p => p.Length))
+        {
+            var idx = remaining.IndexOf(pattern, StringComparison.Ordinal);
+            if (idx >= 0)
+            {
+                // Found a known pattern - this helps us identify word boundaries
+                if (idx > 0)
+                {
+                    var before = remaining[..idx];
+                    if (before.Length >= 3)
+                    {
+                        words.Add(before);
+                    }
+                }
+                
+                words.Add(pattern);
+                
+                if (idx + pattern.Length < remaining.Length)
+                {
+                    var after = remaining[(idx + pattern.Length)..];
+                    if (after.Length >= 3)
+                    {
+                        // Recursively extract from the remainder
+                        words.AddRange(ExtractWordsFromNormalized(after));
+                    }
+                }
+                
+                return words.Distinct().Where(w => w.Length >= 3).ToArray();
+            }
+        }
+        
+        // Second pass: if no known patterns found, try to split on uppercase transitions
+        // This works for names like "BEATLES" which is just one word
+        // For longer concatenated names, we'll return the whole string plus try some heuristic splits
+        
+        // If the name is reasonably short, it's probably a single word/name
+        if (normalizedName.Length <= 12)
+        {
+            return [normalizedName];
+        }
+        
+        // For longer strings, try splitting at common name lengths (5-8 chars)
+        // This is a heuristic that helps with names like "SMOKEYROBINSON" -> "SMOKEY" + "ROBINSON"
+        words.Add(normalizedName);
+        
+        // Also add potential first-name splits (common first name lengths)
+        foreach (var splitLen in new[] { 5, 6, 7, 8 })
+        {
+            if (normalizedName.Length > splitLen + 3)
+            {
+                var firstPart = normalizedName[..splitLen];
+                var secondPart = normalizedName[splitLen..];
+                
+                if (firstPart.Length >= 4 && secondPart.Length >= 4)
+                {
+                    words.Add(firstPart);
+                    words.Add(secondPart);
+                }
+            }
+        }
+        
+        return words.Distinct().Where(w => w.Length >= 3).ToArray();
     }
 }

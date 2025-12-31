@@ -307,30 +307,38 @@ public static class FileSystemDirectoryInfoExtensions
     {
         if (string.IsNullOrWhiteSpace(fileSystemDirectoryInfo.Path))
         {
-            return [];
+            yield break;
         }
 
         var dirInfo = new DirectoryInfo(fileSystemDirectoryInfo.Path);
         if (!dirInfo.Exists)
         {
-            return [];
+            yield break;
         }
 
-        var result = new List<FileSystemDirectoryInfo>();
         var modifiedSinceValue = modifiedSince?.ToDateTimeUtc() ?? DateTime.MinValue;
-        result.AddRange(from dir in dirInfo.EnumerateDirectories("*.*", searchOption)
-                .OrderBy(x => x.LastWriteTimeUtc)
-                        where dir.LastWriteTimeUtc >= modifiedSinceValue &&
-                              dir.EnumerateFiles("*.*", SearchOption.TopDirectoryOnly)
-                                  .Any(x => FileHelper.IsFileMediaType(x.Extension))
-                        select dir.ToFileSystemDirectoryInfo());
+        
+        // Use streaming enumeration to avoid loading all directories into memory at once
+        foreach (var dir in dirInfo.EnumerateDirectories("*.*", searchOption))
+        {
+            if (dir.LastWriteTimeUtc >= modifiedSinceValue &&
+                dir.EnumerateFiles("*.*", SearchOption.TopDirectoryOnly)
+                    .Any(x => FileHelper.IsFileMediaType(x.Extension)))
+            {
+                var fsDir = dir.ToFileSystemDirectoryInfo();
+                if (fsDir != null)
+                {
+                    yield return fsDir;
+                }
+            }
+        }
+        
+        // Check if the root directory itself has media files
         if (dirInfo.EnumerateFiles("*.*", SearchOption.TopDirectoryOnly)
             .Any(x => x.LastWriteTimeUtc >= modifiedSinceValue && FileHelper.IsFileMediaType(x.Extension)))
         {
-            result.Add(fileSystemDirectoryInfo);
+            yield return fileSystemDirectoryInfo;
         }
-
-        return result.ToArray();
     }
 
     public static (string, int) GetNextFileNameForType(this FileSystemDirectoryInfo fileSystemDirectoryInfo, string imageType)

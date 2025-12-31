@@ -814,54 +814,80 @@ public class LibraryService : ServiceBase
             value => value < 1 ? int.MaxValue : value);
 
         var libraryDirectoryInfo = library.ToFileSystemDirectoryInfo();
-        var directoriesToProcess = libraryDirectoryInfo
-            .GetFileSystemDirectoryInfosToProcess(null, SearchOption.AllDirectories).ToList();
+        
+        // Optimized: Use deferred enumeration with early path filtering to avoid loading all directories into memory
+        IEnumerable<MelodeeModels.FileSystemDirectoryInfo> directoryEnumerable;
+        var normalizedOnlyPath = onlyPath.Nullify()?.ToNormalizedString();
+        
+        if (normalizedOnlyPath != null)
+        {
+            // When filtering by path, use targeted search instead of enumerating all directories
+            directoryEnumerable = libraryDirectoryInfo
+                .GetFileSystemDirectoryInfosToProcess(null, SearchOption.AllDirectories)
+                .Where(x => x.Name.ToNormalizedString() == normalizedOnlyPath);
+        }
+        else
+        {
+            directoryEnumerable = libraryDirectoryInfo
+                .GetFileSystemDirectoryInfosToProcess(null, SearchOption.AllDirectories);
+        }
+        
+        // Materialize to array for count and iteration (needed for progress reporting)
+        var directoriesToProcess = directoryEnumerable.ToArray();
+        
+        if (normalizedOnlyPath != null && directoriesToProcess.Length == 0)
+        {
+            return new MelodeeModels.OperationResult<bool>(
+                $"Path unknown or not found [{onlyPath}] in library, please check path and try again.")
+            {
+                Data = false
+            };
+        }
+
         var directoriesProcessed = 0;
         var totalFilesFound = 0;
 
-        if (onlyPath.Nullify() != null)
-        {
-            directoriesToProcess = directoriesToProcess.Where(x => x.Name.ToNormalizedString() == onlyPath.ToNormalizedString()).ToList();
-            if (directoriesToProcess.Count == 0)
-            {
-                return new MelodeeModels.OperationResult<bool>(
-                    $"Path unknown or not found [{onlyPath}] in library, please check path and try again.")
-                {
-                    Data = false
-                };
-            }
-        }
-
         Logger.Debug("[{Name}] Found [{Count}] directories to rebuild in library.",
             nameof(Rebuild),
-            directoriesToProcess.Count);
+            directoriesToProcess.Length);
 
         // Fire start event
         OnProcessingProgressEvent?.Invoke(this,
             new ProcessingEvent(
                 ProcessingEventType.Start,
                 nameof(Rebuild),
-                directoriesToProcess.Count,
+                directoriesToProcess.Length,
                 0,
                 "Starting rebuild"
             ));
 
-        foreach (var directoryInfo in directoriesToProcess)
+        // Pre-filter directories that already have melodee.json when doCreateOnlyMissing is true
+        // This avoids redundant checks inside the loop and the MakeMetadataFileAsync call
+        var filteredDirectories = doCreateOnlyMissing
+            ? directoriesToProcess.Where(d => !d.MelodeeJsonFiles(false).Any()).ToArray()
+            : directoriesToProcess;
+
+        var totalDirectoriesToReport = directoriesToProcess.Length;
+        var skippedCount = directoriesToProcess.Length - filteredDirectories.Length;
+        
+        if (skippedCount > 0)
+        {
+            Logger.Debug("[{Name}] Skipped [{Count}] directories that already have melodee.json files.",
+                nameof(Rebuild),
+                skippedCount);
+            directoriesProcessed = skippedCount;
+        }
+
+        foreach (var directoryInfo in filteredDirectories)
         {
             if (cancellationToken.IsCancellationRequested)
             {
                 break;
             }
 
-            if (directoriesProcessed > maxAlbumProcessingCount)
+            if (directoriesProcessed >= maxAlbumProcessingCount)
             {
                 break;
-            }
-
-            var isMetaDataFileFound = directoryInfo.MelodeeJsonFiles(false).Any();
-            if (isMetaDataFileFound && doCreateOnlyMissing)
-            {
-                continue;
             }
 
             var processResult = await _melodeeMetadataMaker
@@ -884,7 +910,7 @@ public class LibraryService : ServiceBase
                 new ProcessingEvent(
                     ProcessingEventType.Processing,
                     nameof(Rebuild),
-                    directoriesToProcess.Count,
+                    totalDirectoriesToReport,
                     directoriesProcessed,
                     $"Processing [{directoryInfo.Name}]"
                 ));
@@ -905,7 +931,7 @@ public class LibraryService : ServiceBase
             new ProcessingEvent(
                 ProcessingEventType.Stop,
                 nameof(Rebuild),
-                directoriesToProcess.Count,
+                totalDirectoriesToReport,
                 directoriesProcessed,
                 $"Completed rebuild. Created {numberOfMelodeeFilesCreated} metadata files."
             ));

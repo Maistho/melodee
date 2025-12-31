@@ -449,37 +449,65 @@ public class MusicBrainzUpdateDatabaseJob(
         {
             Logger.Warning("[{JobName}] Job was cancelled.", nameof(MusicBrainzUpdateDatabaseJob));
             SetJobResult(context, JobResultStatus.Failed, "Job was cancelled.");
-            throw;
+            // Don't rethrow - let finally block handle cleanup
         }
         catch (Exception e)
         {
             Logger.Error(e, "[{JobName}] Unhandled exception during job execution", nameof(MusicBrainzUpdateDatabaseJob));
-
-            if (tempDbName != null && storagePath != null)
-            {
-                Logger.Debug("[{JobName}] Restoring backup database from: [{TempDbName}]", nameof(MusicBrainzUpdateDatabaseJob), tempDbName);
-                var dbName = Path.Combine(storagePath, "musicbrainz.db");
-                if (File.Exists(dbName))
-                {
-                    File.Delete(dbName);
-                }
-                File.Move(tempDbName, dbName);
-            }
-
             SetJobResult(context, JobResultStatus.Failed, e.Message);
         }
         finally
         {
-            Logger.Debug("[{JobName}] Cleaning up - deleting lock file and re-enabling search engine...", nameof(MusicBrainzUpdateDatabaseJob));
+            Logger.Debug("[{JobName}] Cleaning up - deleting lock file, restoring backup if needed, and re-enabling search engine...", nameof(MusicBrainzUpdateDatabaseJob));
 
-            if (File.Exists(lockfile))
+            // Restore backup database if import didn't complete successfully
+            var jobResult = (context as MelodeeJobExecutionContext)?.JobResult;
+            var importSucceeded = jobResult?.Status == JobResultStatus.Success;
+
+            if (!importSucceeded && tempDbName != null && storagePath != null && File.Exists(tempDbName))
             {
-                File.Delete(lockfile);
+                try
+                {
+                    Logger.Information("[{JobName}] Restoring backup database from: [{TempDbName}]", nameof(MusicBrainzUpdateDatabaseJob), tempDbName);
+                    var dbName = Path.Combine(storagePath, "musicbrainz.db");
+                    if (File.Exists(dbName))
+                    {
+                        File.Delete(dbName);
+                    }
+                    File.Move(tempDbName, dbName);
+                    Logger.Information("[{JobName}] Backup database restored successfully.", nameof(MusicBrainzUpdateDatabaseJob));
+                }
+                catch (Exception restoreEx)
+                {
+                    Logger.Error(restoreEx, "[{JobName}] Failed to restore backup database from [{TempDbName}]", nameof(MusicBrainzUpdateDatabaseJob), tempDbName);
+                }
             }
 
-            await settingService
-                .SetAsync(SettingRegistry.SearchEngineMusicBrainzEnabled, "true", context.CancellationToken)
-                .ConfigureAwait(false);
+            // Always delete lock file
+            if (File.Exists(lockfile))
+            {
+                try
+                {
+                    File.Delete(lockfile);
+                }
+                catch (Exception lockEx)
+                {
+                    Logger.Warning(lockEx, "[{JobName}] Failed to delete lock file: [{LockFile}]", nameof(MusicBrainzUpdateDatabaseJob), lockfile);
+                }
+            }
+
+            // Always re-enable MusicBrainz search engine - use CancellationToken.None since we're in finally and need this to succeed
+            try
+            {
+                await settingService
+                    .SetAsync(SettingRegistry.SearchEngineMusicBrainzEnabled, "true", CancellationToken.None)
+                    .ConfigureAwait(false);
+                Logger.Information("[{JobName}] MusicBrainz search engine re-enabled.", nameof(MusicBrainzUpdateDatabaseJob));
+            }
+            catch (Exception enableEx)
+            {
+                Logger.Error(enableEx, "[{JobName}] CRITICAL: Failed to re-enable MusicBrainz search engine! Manual intervention required.", nameof(MusicBrainzUpdateDatabaseJob));
+            }
 
             var totalJobTime = Stopwatch.GetElapsedTime(jobStartTicks);
             Logger.Debug("[{JobName}] Job cleanup complete. Total execution time: {Elapsed:F1} minutes.",
