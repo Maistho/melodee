@@ -944,6 +944,7 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
         CancellationToken cancellationToken)
     {
         var movedCount = 0;
+        var deletedCount = 0;
         
         if (!Directory.Exists(targetDir))
         {
@@ -958,6 +959,11 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
         var targetFiles = Directory.EnumerateFiles(targetDir, "*", SearchOption.TopDirectoryOnly)
             .Select(f => Path.GetFileName(f).ToLowerInvariant())
             .ToHashSet();
+        
+        var targetFileSizes = Directory.EnumerateFiles(targetDir, "*", SearchOption.TopDirectoryOnly)
+            .Where(f => Common.Utility.FileHelper.IsFileMediaType(Path.GetExtension(f)))
+            .Select(f => new FileInfo(f).Length)
+            .ToHashSet();
 
         foreach (var sourceFile in sourceFiles)
         {
@@ -968,29 +974,45 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
 
             var fileName = Path.GetFileName(sourceFile);
             var targetPath = Path.Combine(targetDir, fileName);
+            var sourceSize = new FileInfo(sourceFile).Length;
 
             // Check if file already exists in target (by name)
             if (targetFiles.Contains(fileName.ToLowerInvariant()))
             {
-                Log.Debug("Skipping duplicate file: {FileName}", fileName);
+                // Delete the duplicate from source since target already has it
+                try
+                {
+                    File.Delete(sourceFile);
+                    deletedCount++;
+                    Log.Debug("Deleted duplicate file (same name exists in target): {FileName}", fileName);
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning(ex, "Failed to delete duplicate file: {File}", sourceFile);
+                }
                 continue;
             }
 
             // Check if a file with the same content exists (by size comparison as quick check)
-            var sourceSize = new FileInfo(sourceFile).Length;
-            var existingWithSameSize = Directory.EnumerateFiles(targetDir, "*", SearchOption.TopDirectoryOnly)
-                .Where(f => Common.Utility.FileHelper.IsFileMediaType(Path.GetExtension(f)))
-                .Any(f => new FileInfo(f).Length == sourceSize);
-
-            if (existingWithSameSize)
+            if (targetFileSizes.Contains(sourceSize))
             {
-                Log.Debug("Skipping file with matching size already in target: {FileName}", fileName);
+                // Delete the duplicate from source since target likely has the same content
+                try
+                {
+                    File.Delete(sourceFile);
+                    deletedCount++;
+                    Log.Debug("Deleted duplicate file (matching size exists in target): {FileName}", fileName);
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning(ex, "Failed to delete duplicate file: {File}", sourceFile);
+                }
                 continue;
             }
 
             try
             {
-                // Generate unique name if conflict
+                // Generate unique name if conflict (shouldn't happen now but keep as safety)
                 var finalTargetPath = targetPath;
                 var counter = 1;
                 while (File.Exists(finalTargetPath))
@@ -1008,6 +1030,60 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
             catch (Exception ex)
             {
                 Log.Warning(ex, "Failed to move file: {File}", sourceFile);
+            }
+        }
+
+        if (deletedCount > 0)
+        {
+            Log.Debug("Deleted {DeletedCount} duplicate files from source directory", deletedCount);
+        }
+
+        // Also merge non-media files (images, nfo, etc.) that might be useful
+        var imageExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp" };
+        var metadataExtensions = new[] { ".nfo", ".txt", ".cue", ".log", ".m3u", ".m3u8" };
+        var allowedExtensions = imageExtensions.Concat(metadataExtensions).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        
+        var sourceNonMediaFiles = Directory.EnumerateFiles(sourceDir, "*", SearchOption.TopDirectoryOnly)
+            .Where(f => allowedExtensions.Contains(Path.GetExtension(f)))
+            .ToList();
+            
+        var targetNonMediaFileNames = Directory.EnumerateFiles(targetDir, "*", SearchOption.TopDirectoryOnly)
+            .Select(f => Path.GetFileName(f).ToLowerInvariant())
+            .ToHashSet();
+
+        foreach (var sourceFile in sourceNonMediaFiles)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                break;
+            }
+
+            var fileName = Path.GetFileName(sourceFile);
+            
+            // Skip if target already has a file with this name
+            if (targetNonMediaFileNames.Contains(fileName.ToLowerInvariant()))
+            {
+                try
+                {
+                    File.Delete(sourceFile);
+                    Log.Debug("Deleted duplicate non-media file: {FileName}", fileName);
+                }
+                catch (Exception ex)
+                {
+                    Log.Warning(ex, "Failed to delete duplicate non-media file: {File}", sourceFile);
+                }
+                continue;
+            }
+
+            try
+            {
+                var targetPath = Path.Combine(targetDir, fileName);
+                File.Move(sourceFile, targetPath);
+                Log.Debug("Moved non-media file: {Source} -> {Target}", sourceFile, targetPath);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Failed to move non-media file: {File}", sourceFile);
             }
         }
 
