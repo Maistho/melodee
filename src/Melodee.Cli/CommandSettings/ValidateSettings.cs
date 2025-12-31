@@ -29,4 +29,8 @@ public class ValidateSettings : Spectre.Console.Cli.CommandSettings
     [CommandOption("--verbose")]
     [DefaultValue(false)]
     public bool Verbose { get; init; }
+
+    [Description("Output result as JSON.")]
+    [CommandOption("-j|--json")]
+    public bool? Json { get; init; }
 }

@@ -46,12 +46,18 @@ public class ValidateCommand : CommandBase<ValidateSettings>
 
                 if (!validationResult.IsSuccess || validationResult.Data == null)
                 {
-                    AnsiConsole.MarkupLine($"[red]Error: {string.Join(", ", validationResult.Messages ?? [])}[/]");
+                    AnsiConsole.MarkupLine($"[red]Error: {Markup.Escape(string.Join(", ", validationResult.Messages ?? []))}[/]");
                     return 1;
                 }
 
                 var result = validationResult.Data;
                 isValid = result.IsValid;
+
+                if (settings.Json == true)
+                {
+                    AnsiConsole.WriteLine(serializer.Serialize(result) ?? string.Empty);
+                    return isValid ? 0 : 1;
+                }
 
                 // Display summary table
                 var summaryTable = new Table()
@@ -71,6 +77,7 @@ public class ValidateCommand : CommandBase<ValidateSettings>
                 var albumTable = new Table()
                     .Border(TableBorder.Rounded)
                     .AddColumn("Album")
+                    .AddColumn("ApiKey")
                     .AddColumn("Year")
                     .AddColumn("Status")
                     .AddColumn("Directory")
@@ -86,6 +93,7 @@ public class ValidateCommand : CommandBase<ValidateSettings>
 
                     albumTable.AddRow(
                         albumDetail.AlbumName.Length > 40 ? albumDetail.AlbumName[..37] + "..." : albumDetail.AlbumName,
+                        albumDetail.AlbumApiKey.ToString(),
                         albumDetail.ReleaseYear?.ToString() ?? "—",
                         $"[{statusColor}]{(albumDetail.IsValid ? "✓" : "✗")}[/]",
                         $"[{dirColor}]{(albumDetail.DirectoryExists ? "✓" : "✗")}[/]",
@@ -105,11 +113,11 @@ public class ValidateCommand : CommandBase<ValidateSettings>
                     {
                         if (invalidAlbum.Messages.Any())
                         {
-                            AnsiConsole.MarkupLine($"\n[bold]{invalidAlbum.AlbumName}[/] ({invalidAlbum.ReleaseYear?.ToString() ?? "?"}):");
+                            AnsiConsole.MarkupLine($"\n[bold]{Markup.Escape(invalidAlbum.AlbumName)}[/] ({invalidAlbum.ReleaseYear?.ToString() ?? "?"}):");
                             foreach (var msg in invalidAlbum.Messages)
                             {
                                 var icon = msg.Severity == Common.Models.Validation.ValidationResultMessageSeverity.Critical ? "[red]✗[/]" : "[yellow]⚠[/]";
-                                AnsiConsole.MarkupLine($"  {icon} {msg.Message}");
+                                AnsiConsole.MarkupLine($"  {icon} {Markup.Escape(msg.Message)}");
                             }
                         }
                     }
@@ -156,6 +164,13 @@ public class ValidateCommand : CommandBase<ValidateSettings>
             {
                 var validationResult = albumValidator.ValidateAlbum(album);
                 isValid = validationResult.IsSuccess;
+
+                if (settings.Json == true)
+                {
+                    AnsiConsole.WriteLine(serializer.Serialize(validationResult) ?? string.Empty);
+                    return isValid ? 0 : 1;
+                }
+
                 AnsiConsole.Write(
                     new Panel(new JsonText(serializer.Serialize(validationResult) ?? string.Empty))
                         .Header("Validation Result")

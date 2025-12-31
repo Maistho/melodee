@@ -154,6 +154,7 @@ public static class Program
             config.AddBranch<ValidateSettings>("validate", add =>
             {
                 add.SetDescription("Validate media files and metadata");
+                add.SetDefaultCommand<ValidateCommand>();
                 add.AddCommand<ValidateCommand>("album")
                     .WithDescription("Validate a metadata album data file (melodee.json).");
             });

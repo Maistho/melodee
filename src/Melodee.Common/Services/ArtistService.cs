@@ -2997,7 +2997,7 @@ public class ArtistService(
     /// <summary>
     /// Validates all albums for a given artist by checking their melodee.json files and directory structure.
     /// </summary>
-    public async Task<MelodeeModels.OperationResult<Plugins.Validation.Models.ArtistAlbumsValidationResult>> ValidateArtistAlbumsAsync(
+    public async Task<MelodeeModels.OperationResult<Plugins.Validation.Models.ArtistAlbumsValidationResult?>> ValidateArtistAlbumsAsync(
         Guid artistApiKey,
         CancellationToken cancellationToken = default)
     {
@@ -3012,7 +3012,7 @@ public class ArtistService(
 
         if (artist == null)
         {
-            return new MelodeeModels.OperationResult<Plugins.Validation.Models.ArtistAlbumsValidationResult>([$"Artist with ApiKey [{artistApiKey}] not found."])
+            return new MelodeeModels.OperationResult<Plugins.Validation.Models.ArtistAlbumsValidationResult?>([$"Artist with ApiKey [{artistApiKey}] not found."])
             {
                 Data = null
             };
@@ -3148,6 +3148,6 @@ public class ArtistService(
         Logger.Information("Validated {Total} albums for artist [{ArtistName}]: {Valid} valid, {Invalid} invalid",
             result2.TotalAlbums, artist.Name, result2.ValidAlbums, result2.InvalidAlbums);
 
-        return new MelodeeModels.OperationResult<Plugins.Validation.Models.ArtistAlbumsValidationResult> { Data = result2 };
+        return new MelodeeModels.OperationResult<Plugins.Validation.Models.ArtistAlbumsValidationResult?> { Data = result2 };
     }
 }
