@@ -4020,4 +4020,70 @@
 <data name="About.DocumentationSite" xml:space="preserve">
     <value>Melodee Documentation Site</value>
   </data>
+<data name="Actions.BackToChart" xml:space="preserve">
+    <value>Back to Chart</value>
+  </data>
+<data name="ChartsMissingReport.HeaderForChart" xml:space="preserve">
+    <value>Missing Albums for {0}</value>
+  </data>
+<data name="ArtistDetail.ValidateAlbums" xml:space="preserve">
+    <value>Validate all albums for this artist</value>
+  </data>
+<data name="ArtistDetail.ValidateAlbumsTitle" xml:space="preserve">
+    <value>Album Validation: {0}</value>
+  </data>
+<data name="ArtistValidation.ValidatingAlbums" xml:space="preserve">
+    <value>Validating albums...</value>
+  </data>
+<data name="ArtistValidation.TotalAlbums" xml:space="preserve">
+    <value>Total Albums</value>
+  </data>
+<data name="ArtistValidation.ValidAlbums" xml:space="preserve">
+    <value>Valid</value>
+  </data>
+<data name="ArtistValidation.InvalidAlbums" xml:space="preserve">
+    <value>Invalid</value>
+  </data>
+<data name="ArtistValidation.AllValid" xml:space="preserve">
+    <value>All Valid</value>
+  </data>
+<data name="ArtistValidation.IssuesFound" xml:space="preserve">
+    <value>Issues Found</value>
+  </data>
+<data name="ArtistValidation.AlbumDetails" xml:space="preserve">
+    <value>Album Details</value>
+  </data>
+<data name="ArtistValidation.Directory" xml:space="preserve">
+    <value>Directory</value>
+  </data>
+<data name="ArtistValidation.Cover" xml:space="preserve">
+    <value>Cover</value>
+  </data>
+<data name="ArtistValidation.Issues" xml:space="preserve">
+    <value>Issues</value>
+  </data>
+<data name="ArtistValidation.Valid" xml:space="preserve">
+    <value>Valid</value>
+  </data>
+<data name="ArtistValidation.Invalid" xml:space="preserve">
+    <value>Invalid</value>
+  </data>
+<data name="ArtistValidation.DirectoryExists" xml:space="preserve">
+    <value>Directory exists</value>
+  </data>
+<data name="ArtistValidation.DirectoryMissing" xml:space="preserve">
+    <value>Directory missing</value>
+  </data>
+<data name="ArtistValidation.HasCoverImage" xml:space="preserve">
+    <value>Has cover image</value>
+  </data>
+<data name="ArtistValidation.NoCoverImage" xml:space="preserve">
+    <value>No cover image</value>
+  </data>
+<data name="ArtistValidation.MoreIssues" xml:space="preserve">
+    <value>+{0} more issues</value>
+  </data>
+<data name="ArtistValidation.NoResults" xml:space="preserve">
+    <value>No validation results available.</value>
+  </data>
 </root>

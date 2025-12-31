@@ -9,6 +9,10 @@ public class ValidateSettings : Spectre.Console.Cli.CommandSettings
     [CommandOption("--apiKey")]
     public string? ApiKey { get; init; }
 
+    [Description("ApiKey of Artist to Validate all albums for.")]
+    [CommandOption("--artistApiKey")]
+    public string? ArtistApiKey { get; init; }
+
     [Description("Path to Melodee Data File (melodee.json) file to Validate.")]
     [CommandOption("--file")]
     public string? PathToMelodeeDataFile { get; init; }

@@ -1,0 +1,164 @@
+@inherits MelodeeComponentBase
+@using Melodee.Common.Plugins.Validation.Models
+@using Melodee.Common.Models.Validation
+
+@inject DialogService DialogService
+
+<div style="display: flex; flex-direction: column; height: 100%; gap: 1rem;">
+    @if (_isLoading)
+    {
+        <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="flex: 1;">
+            <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Primary" Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate"/>
+            <RadzenText TextStyle="TextStyle.Body1" class="rz-text-secondary-color">@L("ArtistValidation.ValidatingAlbums")</RadzenText>
+        </RadzenStack>
+    }
+    else if (ValidationResult != null)
+    {
+        <RadzenCard Style="padding: 0.75rem;">
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="2rem" AlignItems="AlignItems.Center" Wrap="FlexWrap.Wrap">
+                <RadzenStack Gap="0.25rem">
+                    <RadzenText TextStyle="TextStyle.Overline" class="rz-text-secondary-color">@L("ArtistValidation.TotalAlbums")</RadzenText>
+                    <RadzenText TextStyle="TextStyle.H5" style="margin: 0">@ValidationResult.TotalAlbums</RadzenText>
+                </RadzenStack>
+                <RadzenStack Gap="0.25rem">
+                    <RadzenText TextStyle="TextStyle.Overline" class="rz-text-secondary-color">@L("ArtistValidation.ValidAlbums")</RadzenText>
+                    <RadzenText TextStyle="TextStyle.H5" style="margin: 0; color: var(--rz-success);">@ValidationResult.ValidAlbums</RadzenText>
+                </RadzenStack>
+                <RadzenStack Gap="0.25rem">
+                    <RadzenText TextStyle="TextStyle.Overline" class="rz-text-secondary-color">@L("ArtistValidation.InvalidAlbums")</RadzenText>
+                    <RadzenText TextStyle="TextStyle.H5" Style="@GetInvalidAlbumsStyle()">@ValidationResult.InvalidAlbums</RadzenText>
+                </RadzenStack>
+                <RadzenStack Gap="0.25rem">
+                    <RadzenText TextStyle="TextStyle.Overline" class="rz-text-secondary-color">@L("Label.Status")</RadzenText>
+                    @if (ValidationResult.IsValid)
+                    {
+                        <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="@L("ArtistValidation.AllValid")"/>
+                    }
+                    else
+                    {
+                        <RadzenBadge BadgeStyle="BadgeStyle.Danger" Text="@L("ArtistValidation.IssuesFound")"/>
+                    }
+                </RadzenStack>
+            </RadzenStack>
+        </RadzenCard>
+
+        <RadzenCard Style="flex: 1; display: flex; flex-direction: column; padding: 0.75rem; overflow: hidden;">
+            <RadzenText TextStyle="TextStyle.Subtitle2" Style="margin-bottom: 0.5rem;">@L("ArtistValidation.AlbumDetails")</RadzenText>
+            <div style="flex: 1; overflow-y: auto;">
+                <RadzenDataGrid TItem="AlbumValidationDetail"
+                                Data="@ValidationResult.AlbumResults"
+                                Density="Density.Compact"
+                                AllowPaging="true"
+                                PageSize="15"
+                                AllowSorting="true">
+                    <Columns>
+                        <RadzenDataGridColumn Property="@nameof(AlbumValidationDetail.IsValid)" Title="@L("Label.Status")" Width="80px" Sortable="true">
+                            <Template Context="album">
+                                @if (album.IsValid)
+                                {
+                                    <RadzenIcon Icon="check_circle" IconColor="Colors.Success" title="@L("ArtistValidation.Valid")"/>
+                                }
+                                else
+                                {
+                                    <RadzenIcon Icon="error" IconColor="Colors.Danger" title="@L("ArtistValidation.Invalid")"/>
+                                }
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn Property="@nameof(AlbumValidationDetail.AlbumName)" Title="@L("Common.Album")" Width="200px" Sortable="true"/>
+                        <RadzenDataGridColumn Property="@nameof(AlbumValidationDetail.ReleaseYear)" Title="@L("Common.Year")" Width="80px" Sortable="true">
+                            <Template Context="album">
+                                @(album.ReleaseYear?.ToString() ?? "—")
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn Property="@nameof(AlbumValidationDetail.DirectoryExists)" Title="@L("ArtistValidation.Directory")" Width="100px" Sortable="true">
+                            <Template Context="album">
+                                @if (album.DirectoryExists)
+                                {
+                                    <RadzenIcon Icon="folder" IconColor="Colors.Success" title="@L("ArtistValidation.DirectoryExists")"/>
+                                }
+                                else
+                                {
+                                    <RadzenIcon Icon="folder_off" IconColor="Colors.Danger" title="@L("ArtistValidation.DirectoryMissing")"/>
+                                }
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn Property="@nameof(AlbumValidationDetail.HasCoverImage)" Title="@L("ArtistValidation.Cover")" Width="80px" Sortable="true">
+                            <Template Context="album">
+                                @if (album.HasCoverImage)
+                                {
+                                    <RadzenIcon Icon="image" IconColor="Colors.Success" title="@L("ArtistValidation.HasCoverImage")"/>
+                                }
+                                else
+                                {
+                                    <RadzenIcon Icon="hide_image" IconColor="Colors.Warning" title="@L("ArtistValidation.NoCoverImage")"/>
+                                }
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn Title="@L("ArtistValidation.Issues")" Sortable="false">
+                            <Template Context="album">
+                                @if (album.Messages.Any())
+                                {
+                                    <RadzenStack Gap="0.25rem">
+                                        @foreach (var msg in album.Messages.Take(3))
+                                        {
+                                            <RadzenText TextStyle="TextStyle.Caption" class="@(msg.Severity == ValidationResultMessageSeverity.Critical ? "rz-color-danger" : "rz-color-warning")">
+                                                @(msg.Severity == ValidationResultMessageSeverity.Critical ? "✗" : "⚠") @msg.Message
+                                            </RadzenText>
+                                        }
+                                        @if (album.Messages.Count > 3)
+                                        {
+                                            <RadzenText TextStyle="TextStyle.Caption" class="rz-text-secondary-color">
+                                                @L("ArtistValidation.MoreIssues", album.Messages.Count - 3)
+                                            </RadzenText>
+                                        }
+                                    </RadzenStack>
+                                }
+                                else
+                                {
+                                    <RadzenText TextStyle="TextStyle.Caption" class="rz-text-secondary-color">—</RadzenText>
+                                }
+                            </Template>
+                        </RadzenDataGridColumn>
+                    </Columns>
+                </RadzenDataGrid>
+            </div>
+        </RadzenCard>
+
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+            <RadzenButton Text="@L("Actions.Close")" ButtonStyle="ButtonStyle.Light" Click="@Close"/>
+        </RadzenStack>
+    }
+    else
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Warning" ShowIcon="true">
+            @L("ArtistValidation.NoResults")
+        </RadzenAlert>
+        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+            <RadzenButton Text="@L("Actions.Close")" ButtonStyle="ButtonStyle.Light" Click="@Close"/>
+        </RadzenStack>
+    }
+</div>
+
+@code {
+    [Parameter] public ArtistAlbumsValidationResult? ValidationResult { get; set; }
+
+    [Parameter] public bool IsLoading { get; set; }
+
+    bool _isLoading;
+
+    protected override void OnParametersSet()
+    {
+        _isLoading = IsLoading;
+    }
+
+    string GetInvalidAlbumsStyle()
+    {
+        var color = ValidationResult?.InvalidAlbums > 0 ? "var(--rz-danger)" : "inherit";
+        return $"margin: 0; color: {color};";
+    }
+
+    void Close()
+    {
+        DialogService.Close();
+    }
+}

@@ -100,6 +100,9 @@
         <RadzenMenuItem Text="@L("Actions.Rescan")" Visible="CurrentUser?.IsEditor() ?? false" Disabled="_artist.IsLocked"
                         Click="RescanButtonClick" title="@L("ArtistDetail.RescanArtist")"
                         Icon="refresh"></RadzenMenuItem>
+        <RadzenMenuItem Text="@L("Actions.Validate")" Visible="CurrentUser?.IsEditor() ?? false"
+                        Click="ValidateAlbumsClick" title="@L("ArtistDetail.ValidateAlbums")"
+                        Icon="verified"></RadzenMenuItem>
         <RadzenMenuItem Text="@L("Actions.Json")" Visible="CurrentUser?.IsEditor() ?? false" Click="GenerateJsonClick"
                         title="@L("ArtistDetail.GenerateJson")" Icon="text_snippet"></RadzenMenuItem>
         <RadzenMenuItem Text="@L("Actions.WebSearch")" Click="OnInternetSearchClick" title="@L("ArtistDetail.WebSearch")"
@@ -343,7 +346,7 @@
                             else if (_artistImagesInByteBase64.Length < 2)
                             {
                                 <RadzenImage
-                                    Path=@($"/images/{_artist.ToApiKey()}/{ ImageSize.Medium}")
+                                    Path=@($"/images/{_artist.ToApiKey()}/{ImageSize.Medium}{(_showItem == ShowItem.Images ? $"?v={_imageCacheBuster}" : "")}")
                                     Style="margin:auto;display: block;max-width: 450px;max-height: 450px;width: auto;height: auto;object-fit: contain;"
                                     AlternateText="@_artist.Name"/>
                             }
@@ -486,6 +489,7 @@
     class ArtistImageListItem { public required System.IO.FileInfo File { get; init; } public required string ImageBase64 { get; init; } }
     List<ArtistImageListItem> _artistImageList = [];
     HashSet<string> _selectedImagePaths = [];
+    long _imageCacheBuster = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
     string? _biographyNoAvailablePlaceholder = string.Empty;
 
@@ -652,7 +656,7 @@
                 var artistDirectory = Path.Combine(_artist.Library.Path, _artist.Directory).ToFileSystemDirectoryInfo();
                 if (!artistDirectory.Exists())
                 {
-                    _alertMessages.Add(L("ArtistDetail.ArtistDirectoryNotFound", artistDirectory.FullName()));
+                    _alertMessages.Add(L("ArtistDetail.ArtistDirectoryNotFound", (object)artistDirectory.FullName()));
                 }
 
                 await LoadAlbums();
@@ -727,6 +731,8 @@
                 break;
             case var text when text == L("Nav.Images"):
                 _showItem = ShowItem.Images;
+                _imageCacheBuster = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                await RefreshArtistImages();
                 break;
             case var text when text == L("Nav.Relationships"):
                 _showItem = ShowItem.Relationships;
@@ -837,6 +843,7 @@
 
     private async Task RefreshArtistImages()
     {
+        _imageCacheBuster = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var artistDirectory = Path.Combine(_artist.Library.Path, _artist.Directory).ToFileSystemDirectoryInfo();
         _artistImageFiles = artistDirectory.FileInfosForExtension("jpg", false).ToArray();
         var list = new List<string>();
@@ -1054,6 +1061,26 @@
             var rescanresult = await ArtistService.RescanAsync([_artist.Id]);
             NotificationService.Notify(NotificationMessageForResult(rescanresult, L("ArtistDetail.SubmittingRescanJob"), ToastTime));
         }
+    }
+
+    private async Task ValidateAlbumsClick()
+    {
+        var validationResult = await ArtistService.ValidateArtistAlbumsAsync(_artist.ApiKey);
+
+        await DialogService.OpenAsync<ArtistValidationDialog>(
+            L("ArtistDetail.ValidateAlbumsTitle", _artist.Name),
+            new Dictionary<string, object?>
+            {
+                { nameof(ArtistValidationDialog.ValidationResult), validationResult.Data },
+                { nameof(ArtistValidationDialog.IsLoading), false }
+            },
+            new DialogOptions
+            {
+                Width = "900px",
+                Height = "600px",
+                Resizable = true,
+                Draggable = true
+            });
     }
 
     private void ToggleAlbumSelected(bool? selected, AlbumDataInfo album)

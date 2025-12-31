@@ -24,37 +24,42 @@ mcli validate [COMMAND] [OPTIONS]
 
 ## validate album
 
-Validates a Melodee metadata file (`melodee.json`) and reports any issues found.
+Validates a Melodee metadata file (`melodee.json`) and reports any issues found. Can also validate all albums for a given artist.
 
 ### Usage
 
 ```bash
-mcli validate album <FILENAME> [OPTIONS]
+mcli validate album [OPTIONS]
 ```
-
-### Arguments
-
-| Argument | Required | Description |
-|----------|----------|-------------|
-| `FILENAME` | Yes | Path to the melodee.json file to validate |
 
 ### Options
 
 | Option | Alias | Default | Description |
 |--------|-------|---------|-------------|
-| `--verbose` | | `true` | Output verbose debug and timing results |
+| `--file` | | | Path to the melodee.json file to validate |
+| `--apiKey` | | | ApiKey of an album to validate |
+| `--artistApiKey` | | | ApiKey of an artist to validate all albums for |
+| `--library` | | | Name of Library (used with --id) |
+| `--id` | | | Id of Melodee Data File to validate (used with --library) |
+| `--verbose` | | `false` | Output verbose debug and timing results |
 
 ### Examples
 
 ```bash
 # Validate a melodee.json file
-./mcli validate album "/path/to/album/melodee.json"
+./mcli validate album --file "/path/to/album/melodee.json"
+
+# Validate an album by ApiKey
+./mcli validate album --apiKey "12345678-1234-1234-1234-123456789012"
+
+# Validate all albums for an artist by ApiKey
+./mcli validate album --artistApiKey "87654321-4321-4321-4321-210987654321"
 
 # Validate with verbose output
-./mcli validate album "/path/to/album/melodee.json" --verbose
+./mcli validate album --file "/path/to/album/melodee.json" --verbose
 ```
 
-### Output (Valid File)
+### Output (Single Album - Valid)
 
 ```
 ╭─────────────────────────────────────────────────────────────────────────────╮
@@ -71,26 +76,36 @@ mcli validate album <FILENAME> [OPTIONS]
 ╰─────────────────────────────────────────────────────────────────────────────╯
 ```
 
-### Output (Invalid File)
+### Output (Artist Albums Validation)
 
 ```
 ╭─────────────────────────────────────────────────────────────────────────────╮
-│ Validation Results                                                          │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ File: /path/to/album/melodee.json                                           │
-│ Status: ✗ Invalid                                                           │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ Errors Found:                                                               │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ ✗ Missing required field: Artist                                            │
-│ ✗ Track 3: Duration is 0                                                    │
-│ ✗ No album artwork found                                                    │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ Warnings:                                                                   │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ ⚠ Track 5: Missing MusicBrainz ID                                           │
-│ ⚠ Genre not specified                                                       │
-╰─────────────────────────────────────────────────────────────────────────────╯
+│ Artist Albums Validation Summary                                            │
+├───────────┬─────────────────────────────────────────────────────────────────┤
+│ Property  │ Value                                                           │
+├───────────┼─────────────────────────────────────────────────────────────────┤
+│ Artist    │ The Beatles                                                     │
+│ Total     │ 13                                                              │
+│ Valid     │ 11                                                              │
+│ Invalid   │ 2                                                               │
+│ Status    │ ✗ Issues Found                                                  │
+╰───────────┴─────────────────────────────────────────────────────────────────╯
+
+╭─────────────────────────────────────────────────────────────────────────────╮
+│ Album Details                                                               │
+├──────────────────────────────┬──────┬────────┬───────┬───────┬──────────────┤
+│ Album                        │ Year │ Status │ Dir   │ Cover │ Issues       │
+├──────────────────────────────┼──────┼────────┼───────┼───────┼──────────────┤
+│ Abbey Road                   │ 1969 │ ✓      │ ✓     │ ✓     │ 0            │
+│ Let It Be                    │ 1970 │ ✗      │ ✗     │ ✗     │ 2            │
+│ ...                          │      │        │       │       │              │
+╰──────────────────────────────┴──────┴────────┴───────┴───────┴──────────────╯
+
+Issues Found:
+
+Let It Be (1970):
+  ✗ Album directory does not exist: /library/The Beatles/Let It Be
+  ✗ melodee.json file not found
 ```
 
 ### Validation Rules
@@ -119,6 +134,14 @@ mcli validate album <FILENAME> [OPTIONS]
 | Front Cover | At least one front cover image |
 | Format | Images must be JPEG, PNG, or WebP |
 | Size | Images should meet minimum size requirements |
+
+**Directory Validation (Artist Mode):**
+
+| Rule | Description |
+|------|-------------|
+| Directory Exists | Album directory must exist on disk |
+| melodee.json | Metadata file must be present |
+| Cover Image | At least one image file present |
 
 **Metadata Quality:**
 

@@ -55,6 +55,10 @@ else
             </RadzenColumn>
             <RadzenColumn>
                 <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                    @if (_unlinkedCount > 0)
+                    {
+                        <RadzenButton Text="@L("Charts.MissingReport")" Icon="report" ButtonStyle="ButtonStyle.Info" Click="@(() => NavigationManager.NavigateTo($"/charts/missing-report/{ApiKey}"))"/>
+                    }
                     @if (AuthService.IsAdmin)
                     {
                         <RadzenButton Text="@L("Actions.Edit")" Icon="edit" ButtonStyle="ButtonStyle.Primary" Click="@(() => NavigationManager.NavigateTo($"/charts/edit/{ApiKey}"))"/>
@@ -202,8 +206,8 @@ else
                             <RadzenDataGridColumn Property="@nameof(ChartItem.Rank)" Title="@L("TableHeader.Hash")" Width="60px"/>
                             <RadzenDataGridColumn Property="@nameof(ChartItem.ArtistName)" Title="@L("TableHeader.Artist")" Width="200px"/>
                             <RadzenDataGridColumn Property="@nameof(ChartItem.AlbumTitle)" Title="@L("TableHeader.Album")" Width="250px"/>
-                            <RadzenDataGridColumn Property="@nameof(ChartItem.ReleaseYear)" Title="@L("TableHeader.Year")" Width="80px"/>
-                            <RadzenDataGridColumn Title="@L("TableHeader.Status")" Width="100px">
+                            <RadzenDataGridColumn Property="@nameof(ChartItem.ReleaseYear)" Title="@L("TableHeader.Year")" Width="80px" Sortable="true"/>
+                            <RadzenDataGridColumn Property="@nameof(ChartItem.LinkStatusValue)" Title="@L("TableHeader.Status")" Width="100px" Sortable="true">
                                 <Template Context="item">
                                     @switch (item.LinkStatusValue)
                                     {

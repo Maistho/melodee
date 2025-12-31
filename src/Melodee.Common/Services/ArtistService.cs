@@ -468,10 +468,10 @@ public class ArtistService(
             CacheManager.Remove(CacheKeyDetailByMusicBrainzIdTemplate.FormatSmart(artist.MusicBrainzId.Value.ToString()), Artist.CacheRegion);
         }
 
-        CacheManager.Remove(CacheKeyArtistImageBytesAndEtagTemplate.FormatSmart(artist.Id, ImageSize.Thumbnail), Artist.CacheRegion);
-        CacheManager.Remove(CacheKeyArtistImageBytesAndEtagTemplate.FormatSmart(artist.Id, ImageSize.Small), Artist.CacheRegion);
-        CacheManager.Remove(CacheKeyArtistImageBytesAndEtagTemplate.FormatSmart(artist.Id, ImageSize.Medium), Artist.CacheRegion);
-        CacheManager.Remove(CacheKeyArtistImageBytesAndEtagTemplate.FormatSmart(artist.Id, ImageSize.Large), Artist.CacheRegion);
+        CacheManager.Remove(CacheKeyArtistImageBytesAndEtagTemplate.FormatSmart(artist.ApiKey, ImageSize.Thumbnail), Artist.CacheRegion);
+        CacheManager.Remove(CacheKeyArtistImageBytesAndEtagTemplate.FormatSmart(artist.ApiKey, ImageSize.Small), Artist.CacheRegion);
+        CacheManager.Remove(CacheKeyArtistImageBytesAndEtagTemplate.FormatSmart(artist.ApiKey, ImageSize.Medium), Artist.CacheRegion);
+        CacheManager.Remove(CacheKeyArtistImageBytesAndEtagTemplate.FormatSmart(artist.ApiKey, ImageSize.Large), Artist.CacheRegion);
 
         await albumService.ClearCacheForArtist(artist.Id, cancellationToken);
     }
@@ -2992,5 +2992,162 @@ public class ArtistService(
             .ConfigureAwait(false);
 
         return new MelodeeModels.OperationResult<Artist[]> { Data = artists };
+    }
+
+    /// <summary>
+    /// Validates all albums for a given artist by checking their melodee.json files and directory structure.
+    /// </summary>
+    public async Task<MelodeeModels.OperationResult<Plugins.Validation.Models.ArtistAlbumsValidationResult>> ValidateArtistAlbumsAsync(
+        Guid artistApiKey,
+        CancellationToken cancellationToken = default)
+    {
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var artist = await scopedContext.Artists
+            .AsNoTracking()
+            .Include(a => a.Library)
+            .Include(a => a.Albums)
+            .FirstOrDefaultAsync(a => a.ApiKey == artistApiKey, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (artist == null)
+        {
+            return new MelodeeModels.OperationResult<Plugins.Validation.Models.ArtistAlbumsValidationResult>([$"Artist with ApiKey [{artistApiKey}] not found."])
+            {
+                Data = null
+            };
+        }
+
+        var config = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
+        var albumValidator = new Plugins.Validation.AlbumValidator(config);
+
+        var albumResults = new List<Plugins.Validation.Models.AlbumValidationDetail>();
+        var validCount = 0;
+        var invalidCount = 0;
+
+        foreach (var dbAlbum in artist.Albums)
+        {
+            var albumDirectory = Path.Combine(artist.Library.Path, artist.Directory, dbAlbum.Directory);
+            var melodeeFilePath = Path.Combine(albumDirectory, MelodeeModels.Album.JsonFileName);
+            var directoryExists = Directory.Exists(albumDirectory);
+            var hasCoverImage = false;
+
+            MelodeeModels.Album? album = null;
+            Plugins.Validation.Models.AlbumValidationResult? validationResult = null;
+            var messages = new List<MelodeeModels.Validation.ValidationResultMessage>();
+
+            if (!directoryExists)
+            {
+                messages.Add(new MelodeeModels.Validation.ValidationResultMessage
+                {
+                    Message = $"Album directory does not exist: {albumDirectory}",
+                    Severity = MelodeeModels.Validation.ValidationResultMessageSeverity.Critical
+                });
+                invalidCount++;
+            }
+            else
+            {
+                if (File.Exists(melodeeFilePath))
+                {
+                    try
+                    {
+                        album = await MelodeeModels.Album.DeserializeAndInitializeAlbumAsync(serializer, melodeeFilePath, cancellationToken).ConfigureAwait(false);
+                        if (album != null)
+                        {
+                            var result = albumValidator.ValidateAlbum(album);
+                            validationResult = result.Data;
+                            if (result.Data?.Messages != null)
+                            {
+                                messages.AddRange(result.Data.Messages);
+                            }
+                        }
+                        else
+                        {
+                            messages.Add(new MelodeeModels.Validation.ValidationResultMessage
+                            {
+                                Message = "Failed to deserialize melodee.json file",
+                                Severity = MelodeeModels.Validation.ValidationResultMessageSeverity.Critical
+                            });
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Warning(ex, "Failed to validate album [{AlbumName}] at [{Path}]", dbAlbum.Name, melodeeFilePath);
+                        messages.Add(new MelodeeModels.Validation.ValidationResultMessage
+                        {
+                            Message = $"Error reading melodee.json: {ex.Message}",
+                            Severity = MelodeeModels.Validation.ValidationResultMessageSeverity.Critical
+                        });
+                    }
+                }
+                else
+                {
+                    messages.Add(new MelodeeModels.Validation.ValidationResultMessage
+                    {
+                        Message = $"melodee.json file not found at: {melodeeFilePath}",
+                        Severity = MelodeeModels.Validation.ValidationResultMessageSeverity.Critical
+                    });
+                }
+
+                hasCoverImage = (dbAlbum.ImageCount ?? 0) > 0 ||
+                                (album?.Images?.Count() ?? 0) > 0 ||
+                                Directory.GetFiles(albumDirectory, "*.jpg", SearchOption.TopDirectoryOnly)
+                    .Concat(Directory.GetFiles(albumDirectory, "*.jpeg", SearchOption.TopDirectoryOnly))
+                    .Concat(Directory.GetFiles(albumDirectory, "*.png", SearchOption.TopDirectoryOnly))
+                    .Concat(Directory.GetFiles(albumDirectory, "*.webp", SearchOption.TopDirectoryOnly))
+                    .Any();
+
+                if (!hasCoverImage)
+                {
+                    messages.Add(new MelodeeModels.Validation.ValidationResultMessage
+                    {
+                        Message = "Album does not have cover image",
+                        Severity = MelodeeModels.Validation.ValidationResultMessageSeverity.Undesired
+                    });
+                }
+
+                var isValid = directoryExists &&
+                              messages.All(m => m.Severity != MelodeeModels.Validation.ValidationResultMessageSeverity.Critical) &&
+                              (validationResult?.AlbumStatus == Enums.AlbumStatus.Ok || validationResult == null && messages.Count == 0);
+
+                if (isValid)
+                {
+                    validCount++;
+                }
+                else
+                {
+                    invalidCount++;
+                }
+            }
+
+            albumResults.Add(new Plugins.Validation.Models.AlbumValidationDetail
+            {
+                AlbumApiKey = dbAlbum.ApiKey,
+                AlbumName = dbAlbum.Name,
+                ReleaseYear = dbAlbum.ReleaseDate.Year > 0 ? dbAlbum.ReleaseDate.Year : null,
+                IsValid = directoryExists && messages.All(m => m.Severity != MelodeeModels.Validation.ValidationResultMessageSeverity.Critical),
+                Status = validationResult?.AlbumStatus ?? (directoryExists ? Enums.AlbumStatus.New : Enums.AlbumStatus.Invalid),
+                StatusReasons = validationResult?.AlbumStatusReasons ?? (directoryExists ? Enums.AlbumNeedsAttentionReasons.NotSet : Enums.AlbumNeedsAttentionReasons.AlbumCannotBeLoaded),
+                Messages = messages,
+                DirectoryExists = directoryExists,
+                HasCoverImage = hasCoverImage,
+                DirectoryPath = albumDirectory
+            });
+        }
+
+        var result2 = new Plugins.Validation.Models.ArtistAlbumsValidationResult
+        {
+            ArtistApiKey = artistApiKey,
+            ArtistName = artist.Name,
+            TotalAlbums = artist.Albums.Count,
+            ValidAlbums = validCount,
+            InvalidAlbums = invalidCount,
+            AlbumResults = albumResults.OrderBy(a => a.IsValid).ThenBy(a => a.AlbumName).ToList()
+        };
+
+        Logger.Information("Validated {Total} albums for artist [{ArtistName}]: {Valid} valid, {Invalid} invalid",
+            result2.TotalAlbums, artist.Name, result2.ValidAlbums, result2.InvalidAlbums);
+
+        return new MelodeeModels.OperationResult<Plugins.Validation.Models.ArtistAlbumsValidationResult> { Data = result2 };
     }
 }

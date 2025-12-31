@@ -1,4 +1,5 @@
 @page "/charts/missing-report"
+@page "/charts/missing-report/{ChartApiKey:guid}"
 
 @inherits MelodeeComponentBase
 @attribute [Authorize(Roles = "Administrator")]
@@ -22,13 +23,17 @@
 <RadzenBreadCrumb Class="rz-pb-5">
     <RadzenBreadCrumbItem Path="/" Text="@L("Nav.Home")"/>
     <RadzenBreadCrumbItem Path="/charts" Icon="format_list_numbered" Text="@L("Navigation.Charts")"/>
+    @if (_filteredChart != null)
+    {
+        <RadzenBreadCrumbItem Path="@($"/charts/{_filteredChart.ApiKey}")" Text="@_filteredChart.Title"/>
+    }
     <RadzenBreadCrumbItem Icon="report" Text="@L("Charts.MissingReport")"/>
 </RadzenBreadCrumb>
 
 <RadzenStack Gap="1rem">
     <RadzenRow AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
         <RadzenColumn>
-            <RadzenText Text="@L("ChartsMissingReport.Header")" TextStyle="TextStyle.DisplayH6" TagName="TagName.H1" style="margin: 0"/>
+            <RadzenText Text="@(_filteredChart != null ? L("ChartsMissingReport.HeaderForChart", _filteredChart.Title) : L("ChartsMissingReport.Header"))" TextStyle="TextStyle.DisplayH6" TagName="TagName.H1" style="margin: 0"/>
             <RadzenText TextStyle="TextStyle.Subtitle1" class="rz-text-secondary-color">
                 @L("ChartsMissingReport.Description")
             </RadzenText>
@@ -36,7 +41,14 @@
         <RadzenColumn>
             <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
                 <RadzenButton Text="@L("Actions.DownloadJSON")" Icon="download" ButtonStyle="ButtonStyle.Secondary" Disabled="@(_isLoading || _missingAlbums.Count == 0)" Click="@DownloadJson"/>
-                <RadzenButton Text="@L("Actions.BackToCharts")" Icon="arrow_back" ButtonStyle="ButtonStyle.Light" Click="@(() => NavigationManager.NavigateTo("/charts"))"/>
+                @if (_filteredChart != null)
+                {
+                    <RadzenButton Text="@L("Actions.BackToChart")" Icon="arrow_back" ButtonStyle="ButtonStyle.Light" Click="@(() => NavigationManager.NavigateTo($"/charts/{_filteredChart.ApiKey}"))"/>
+                }
+                else
+                {
+                    <RadzenButton Text="@L("Actions.BackToCharts")" Icon="arrow_back" ButtonStyle="ButtonStyle.Light" Click="@(() => NavigationManager.NavigateTo("/charts"))"/>
+                }
             </RadzenStack>
         </RadzenColumn>
     </RadzenRow>
@@ -134,10 +146,13 @@
 </RadzenStack>
 
 @code {
+    [Parameter] public Guid? ChartApiKey { get; set; }
+
     bool _isLoading = true;
     List<MissingAlbumInfo> _missingAlbums = [];
     int _totalCharts;
     int _totalMissingItems;
+    Chart? _filteredChart;
 
     protected override async Task OnInitializedAsync()
     {
@@ -147,6 +162,10 @@
 
     async Task DownloadJson()
     {
+        var fileName = _filteredChart != null 
+            ? $"missing-albums-{_filteredChart.Title.ToLowerInvariant().Replace(" ", "-")}.json" 
+            : "missing-albums.json";
+        
         var payload = new
         {
             missing = _missingAlbums.Select(m => new
@@ -168,7 +187,7 @@
 
         using var streamRef = new DotNetStreamReference(stream: fileStream);
 
-        await JsRuntime.InvokeVoidAsync("downloadFileFromStream", "missing-albums.json", streamRef);
+        await JsRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
     }
 
     async Task LoadReportAsync()
@@ -177,57 +196,72 @@
         MainLayoutProxyService.ToggleSpinnerVisible();
         try
         {
-            var chartsResult = await ChartService.ListAsync(new PagedRequest { Page = 1, PageSize = 10000 }, includeHidden: true);
+            List<Chart> charts;
             
-            if (chartsResult.IsSuccess && chartsResult.Data != null)
+            if (ChartApiKey.HasValue && ChartApiKey.Value != Guid.Empty)
             {
-                var charts = chartsResult.Data.ToList();
-                _totalCharts = charts.Count;
-
-                var unlinkedItems = new Dictionary<string, MissingAlbumInfo>();
-
-                foreach (var chart in charts)
+                var chartResult = await ChartService.GetByApiKeyAsync(ChartApiKey.Value);
+                if (chartResult.IsSuccess && chartResult.Data != null)
                 {
-                    var unlinked = chart.Items
-                        .Where(i => i.LinkStatusValue != ChartItemLinkStatus.Linked)
-                        .ToList();
-
-                    foreach (var item in unlinked)
-                    {
-                        var key = $"{item.ArtistName.ToUpperInvariant()}|{item.AlbumTitle.ToUpperInvariant()}";
-                        
-                        if (!unlinkedItems.TryGetValue(key, out var missingAlbum))
-                        {
-                            missingAlbum = new MissingAlbumInfo
-                            {
-                                ArtistName = item.ArtistName,
-                                AlbumTitle = item.AlbumTitle,
-                                ReleaseYear = item.ReleaseYear,
-                                Charts = []
-                            };
-                            unlinkedItems[key] = missingAlbum;
-                        }
-
-                        if (!missingAlbum.Charts.Any(c => c.Id == chart.Id))
-                        {
-                            missingAlbum.Charts.Add(new ChartInfo
-                            {
-                                Id = chart.Id,
-                                ApiKey = chart.ApiKey,
-                                Title = chart.Title
-                            });
-                        }
-                    }
+                    _filteredChart = chartResult.Data;
+                    charts = [_filteredChart];
                 }
+                else
+                {
+                    charts = [];
+                }
+            }
+            else
+            {
+                var chartsResult = await ChartService.ListAsync(new PagedRequest { Page = 1, PageSize = 10000 }, includeHidden: true);
+                charts = chartsResult.IsSuccess && chartsResult.Data != null ? chartsResult.Data.ToList() : [];
+            }
+            
+            _totalCharts = charts.Count;
 
-                _missingAlbums = unlinkedItems.Values
-                    .OrderByDescending(m => m.ChartCount)
-                    .ThenBy(m => m.ArtistName)
-                    .ThenBy(m => m.AlbumTitle)
+            var unlinkedItems = new Dictionary<string, MissingAlbumInfo>();
+
+            foreach (var chart in charts)
+            {
+                var unlinked = chart.Items
+                    .Where(i => i.LinkStatusValue != ChartItemLinkStatus.Linked)
                     .ToList();
 
-                _totalMissingItems = _missingAlbums.Sum(m => m.ChartCount);
+                foreach (var item in unlinked)
+                {
+                    var key = $"{item.ArtistName.ToUpperInvariant()}|{item.AlbumTitle.ToUpperInvariant()}";
+                    
+                    if (!unlinkedItems.TryGetValue(key, out var missingAlbum))
+                    {
+                        missingAlbum = new MissingAlbumInfo
+                        {
+                            ArtistName = item.ArtistName,
+                            AlbumTitle = item.AlbumTitle,
+                            ReleaseYear = item.ReleaseYear,
+                            Charts = []
+                        };
+                        unlinkedItems[key] = missingAlbum;
+                    }
+
+                    if (!missingAlbum.Charts.Any(c => c.Id == chart.Id))
+                    {
+                        missingAlbum.Charts.Add(new ChartInfo
+                        {
+                            Id = chart.Id,
+                            ApiKey = chart.ApiKey,
+                            Title = chart.Title
+                        });
+                    }
+                }
             }
+
+            _missingAlbums = unlinkedItems.Values
+                .OrderByDescending(m => m.ChartCount)
+                .ThenBy(m => m.ArtistName)
+                .ThenBy(m => m.AlbumTitle)
+                .ToList();
+
+            _totalMissingItems = _missingAlbums.Sum(m => m.ChartCount);
         }
         catch (Exception e)
         {

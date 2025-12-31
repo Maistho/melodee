@@ -329,8 +329,14 @@ public sealed record Album
 
         result.MelodeeDataFileName = fullPathToMelodeeDataFile;
 
-        // See if Artist melodee.json exists in one folder up, if present use it for the albums artist overwriting any artist set on the albums melodee.json file
+        // Update Directory to match the actual location of the melodee.json file
         var fi = new FileInfo(fullPathToMelodeeDataFile);
+        if (fi.Directory != null)
+        {
+            result.Directory = fi.Directory.ToDirectorySystemInfo();
+        }
+
+        // See if Artist melodee.json exists in one folder up, if present use it for the albums artist overwriting any artist set on the albums melodee.json file
         var artistMelodeeJsonFile = fi.Directory?.Parent?.FindFirstFileInParentDirectories(Artist.JsonFileName);
         try
         {

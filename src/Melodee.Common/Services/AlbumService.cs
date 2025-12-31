@@ -80,10 +80,10 @@ public class AlbumService(
 
         CacheManager.Remove(CacheKeyDetailTemplate.FormatSmart(album.Id), Album.CacheRegion);
 
-        CacheManager.Remove(CacheKeyAlbumImageBytesAndEtagTemplate.FormatSmart(album.Id, ImageSize.Thumbnail), Album.CacheRegion);
-        CacheManager.Remove(CacheKeyAlbumImageBytesAndEtagTemplate.FormatSmart(album.Id, ImageSize.Small), Album.CacheRegion);
-        CacheManager.Remove(CacheKeyAlbumImageBytesAndEtagTemplate.FormatSmart(album.Id, ImageSize.Medium), Album.CacheRegion);
-        CacheManager.Remove(CacheKeyAlbumImageBytesAndEtagTemplate.FormatSmart(album.Id, ImageSize.Large), Album.CacheRegion);
+        CacheManager.Remove(CacheKeyAlbumImageBytesAndEtagTemplate.FormatSmart(album.ApiKey, ImageSize.Thumbnail), Album.CacheRegion);
+        CacheManager.Remove(CacheKeyAlbumImageBytesAndEtagTemplate.FormatSmart(album.ApiKey, ImageSize.Small), Album.CacheRegion);
+        CacheManager.Remove(CacheKeyAlbumImageBytesAndEtagTemplate.FormatSmart(album.ApiKey, ImageSize.Medium), Album.CacheRegion);
+        CacheManager.Remove(CacheKeyAlbumImageBytesAndEtagTemplate.FormatSmart(album.ApiKey, ImageSize.Large), Album.CacheRegion);
 
         // Clear genres cache as album genres may have changed
         CacheManager.Remove(CacheKeyGenres, Album.CacheRegion);

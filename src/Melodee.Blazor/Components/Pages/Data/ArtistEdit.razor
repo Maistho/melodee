@@ -63,7 +63,7 @@
             else
             {
                 <RadzenImage
-                    Path=@($"/images/{_artist.ToApiKey()}/{ ImageSize.Medium }")
+                    Path=@($"/images/{_artist.ToApiKey()}/{ImageSize.Medium}?v={_imageCacheBuster}")
                     Style="margin-right: 5px; width: 100%; height: auto;"
                     AlternateText="@_artist.Name"/>
             }
@@ -342,6 +342,7 @@
 @code {
 
     bool _isLoading = true;
+    long _imageCacheBuster = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
     List<KeyValue> _musicBrainzArtists = [];
     List<Library> _libraries = [];
@@ -531,7 +532,8 @@
 
                 if (saveResult.IsSuccess)
                 {
-                    NavigationManager.Refresh(true);
+                    _imageCacheBuster = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                    StateHasChanged();
                 }
                 else
                 {

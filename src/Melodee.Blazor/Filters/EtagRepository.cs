@@ -27,20 +27,23 @@ public class EtagRepository
         if (!string.IsNullOrWhiteSpace(apiKeyId) && !string.IsNullOrWhiteSpace(etag))
         {
             var entry = new ETagEntry(etag, DateTime.UtcNow);
-            var added = _eTags.TryAdd(apiKeyId!, entry);
-
-            if (added)
+            
+            // Use AddOrUpdate to ensure the ETag is always current
+            _eTags.AddOrUpdate(apiKeyId!, entry, (_, _) => entry);
+            
+            // Only track in insertion order if this is a new entry
+            if (!_insertionOrder.Contains(apiKeyId!))
             {
                 _insertionOrder.Enqueue(apiKeyId!);
                 Interlocked.Increment(ref _currentCount);
-
-                if (_currentCount > _maxEntries || ShouldCleanup())
-                {
-                    _ = Task.Run(CleanupExpiredEntries);
-                }
             }
 
-            return added;
+            if (_currentCount > _maxEntries || ShouldCleanup())
+            {
+                _ = Task.Run(CleanupExpiredEntries);
+            }
+
+            return true;
         }
 
         return false;
@@ -81,6 +84,46 @@ public class EtagRepository
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Removes the ETag entry for a specific API key ID, forcing the next request to fetch fresh content.
+    /// </summary>
+    /// <param name="apiKeyId">The API key ID to invalidate</param>
+    /// <returns>True if the entry was removed, false if it didn't exist</returns>
+    public bool InvalidateEtag(string? apiKeyId)
+    {
+        if (!string.IsNullOrWhiteSpace(apiKeyId) && _eTags.TryRemove(apiKeyId!, out _))
+        {
+            Interlocked.Decrement(ref _currentCount);
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Removes all ETag entries that start with the specified prefix.
+    /// Useful for invalidating all image sizes for an artist or album.
+    /// </summary>
+    /// <param name="apiKeyIdPrefix">The prefix to match (e.g., artist or album API key)</param>
+    /// <returns>Number of entries invalidated</returns>
+    public int InvalidateEtagsStartingWith(string? apiKeyIdPrefix)
+    {
+        if (string.IsNullOrWhiteSpace(apiKeyIdPrefix))
+        {
+            return 0;
+        }
+
+        var count = 0;
+        foreach (var key in _eTags.Keys.Where(k => k.StartsWith(apiKeyIdPrefix!, StringComparison.OrdinalIgnoreCase)).ToList())
+        {
+            if (_eTags.TryRemove(key, out _))
+            {
+                Interlocked.Decrement(ref _currentCount);
+                count++;
+            }
+        }
+        return count;
     }
 
     private bool ShouldCleanup()

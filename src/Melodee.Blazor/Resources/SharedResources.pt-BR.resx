@@ -4020,4 +4020,70 @@
   <data name="About.DocumentationSite" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Melodee Documentation Site</value>
   </data>
+  <data name="Actions.BackToChart" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Back to Chart</value>
+  </data>
+  <data name="ChartsMissingReport.HeaderForChart" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Missing Albums for {0}</value>
+  </data>
+  <data name="ArtistDetail.ValidateAlbums" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Validate all albums for this artist</value>
+  </data>
+  <data name="ArtistDetail.ValidateAlbumsTitle" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Album Validation: {0}</value>
+  </data>
+  <data name="ArtistValidation.ValidatingAlbums" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Validating albums...</value>
+  </data>
+  <data name="ArtistValidation.TotalAlbums" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Total Albums</value>
+  </data>
+  <data name="ArtistValidation.ValidAlbums" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Valid</value>
+  </data>
+  <data name="ArtistValidation.InvalidAlbums" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Invalid</value>
+  </data>
+  <data name="ArtistValidation.AllValid" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] All Valid</value>
+  </data>
+  <data name="ArtistValidation.IssuesFound" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Issues Found</value>
+  </data>
+  <data name="ArtistValidation.AlbumDetails" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Album Details</value>
+  </data>
+  <data name="ArtistValidation.Directory" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Directory</value>
+  </data>
+  <data name="ArtistValidation.Cover" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Cover</value>
+  </data>
+  <data name="ArtistValidation.Issues" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Issues</value>
+  </data>
+  <data name="ArtistValidation.Valid" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Valid</value>
+  </data>
+  <data name="ArtistValidation.Invalid" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Invalid</value>
+  </data>
+  <data name="ArtistValidation.DirectoryExists" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Directory exists</value>
+  </data>
+  <data name="ArtistValidation.DirectoryMissing" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Directory missing</value>
+  </data>
+  <data name="ArtistValidation.HasCoverImage" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Has cover image</value>
+  </data>
+  <data name="ArtistValidation.NoCoverImage" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No cover image</value>
+  </data>
+  <data name="ArtistValidation.MoreIssues" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] +{0} more issues</value>
+  </data>
+  <data name="ArtistValidation.NoResults" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No validation results available.</value>
+  </data>
 </root>

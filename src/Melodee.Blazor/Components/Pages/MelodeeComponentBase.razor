@@ -46,11 +46,13 @@
 
     /// <summary>
     /// Localize a string by resource key with fallback.
+    /// Use this when the key might not exist and you want a specific fallback value.
+    /// For format strings with arguments, use L(key, args...) instead.
     /// </summary>
     /// <param name="key">Resource key</param>
     /// <param name="fallback">Fallback value if key not found</param>
     /// <returns>Localized string or fallback</returns>
-    protected string L(string key, string fallback) => LocalizationService.Localize(key, fallback);
+    protected string LWithFallback(string key, string fallback) => LocalizationService.Localize(key, fallback);
 
     /// <summary>
     /// Localize a string with format arguments.

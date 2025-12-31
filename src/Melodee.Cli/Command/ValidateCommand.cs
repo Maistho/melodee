@@ -16,7 +16,7 @@ using Spectre.Console.Json;
 namespace Melodee.Cli.Command;
 
 /// <summary>
-///     Validates a given album
+///     Validates a given album or all albums for an artist
 /// </summary>
 public class ValidateCommand : CommandBase<ValidateSettings>
 {
@@ -31,6 +31,94 @@ public class ValidateCommand : CommandBase<ValidateSettings>
 
             var config = await configFactory.GetConfigurationAsync();
 
+            // Handle artist validation
+            if (settings.ArtistApiKey != null)
+            {
+                var artistApiKey = SafeParser.ToGuid(settings.ArtistApiKey);
+                if (artistApiKey == null)
+                {
+                    Log.Logger.Error("Invalid artist ApiKey: {ApiKey}", settings.ArtistApiKey);
+                    return 1;
+                }
+
+                var artistService = scope.ServiceProvider.GetRequiredService<ArtistService>();
+                var validationResult = await artistService.ValidateArtistAlbumsAsync(artistApiKey.Value, cancellationToken).ConfigureAwait(false);
+
+                if (!validationResult.IsSuccess || validationResult.Data == null)
+                {
+                    AnsiConsole.MarkupLine($"[red]Error: {string.Join(", ", validationResult.Messages ?? [])}[/]");
+                    return 1;
+                }
+
+                var result = validationResult.Data;
+                isValid = result.IsValid;
+
+                // Display summary table
+                var summaryTable = new Table()
+                    .Border(TableBorder.Rounded)
+                    .AddColumn("Property")
+                    .AddColumn("Value");
+
+                summaryTable.AddRow("Artist", result.ArtistName);
+                summaryTable.AddRow("Total Albums", result.TotalAlbums.ToString());
+                summaryTable.AddRow("Valid Albums", $"[green]{result.ValidAlbums}[/]");
+                summaryTable.AddRow("Invalid Albums", result.InvalidAlbums > 0 ? $"[red]{result.InvalidAlbums}[/]" : "0");
+                summaryTable.AddRow("Status", result.IsValid ? "[green]✓ All Valid[/]" : "[red]✗ Issues Found[/]");
+
+                AnsiConsole.Write(new Panel(summaryTable).Header("Artist Albums Validation Summary").BorderColor(result.IsValid ? Color.Green : Color.Red));
+
+                // Display album details table
+                var albumTable = new Table()
+                    .Border(TableBorder.Rounded)
+                    .AddColumn("Album")
+                    .AddColumn("Year")
+                    .AddColumn("Status")
+                    .AddColumn("Directory")
+                    .AddColumn("Cover")
+                    .AddColumn("Issues");
+
+                foreach (var albumDetail in result.AlbumResults)
+                {
+                    var statusColor = albumDetail.IsValid ? "green" : "red";
+                    var dirColor = albumDetail.DirectoryExists ? "green" : "red";
+                    var coverColor = albumDetail.HasCoverImage ? "green" : "yellow";
+                    var issueCount = albumDetail.Messages.Count(m => m.Severity == Common.Models.Validation.ValidationResultMessageSeverity.Critical);
+
+                    albumTable.AddRow(
+                        albumDetail.AlbumName.Length > 40 ? albumDetail.AlbumName[..37] + "..." : albumDetail.AlbumName,
+                        albumDetail.ReleaseYear?.ToString() ?? "—",
+                        $"[{statusColor}]{(albumDetail.IsValid ? "✓" : "✗")}[/]",
+                        $"[{dirColor}]{(albumDetail.DirectoryExists ? "✓" : "✗")}[/]",
+                        $"[{coverColor}]{(albumDetail.HasCoverImage ? "✓" : "✗")}[/]",
+                        issueCount > 0 ? $"[red]{issueCount}[/]" : "[green]0[/]"
+                    );
+                }
+
+                AnsiConsole.Write(new Panel(albumTable).Header("Album Details").BorderColor(Color.Blue));
+
+                // Show detailed issues for invalid albums
+                var invalidAlbums = result.AlbumResults.Where(a => !a.IsValid || a.Messages.Any()).ToList();
+                if (invalidAlbums.Any())
+                {
+                    AnsiConsole.MarkupLine("\n[yellow]Issues Found:[/]");
+                    foreach (var invalidAlbum in invalidAlbums)
+                    {
+                        if (invalidAlbum.Messages.Any())
+                        {
+                            AnsiConsole.MarkupLine($"\n[bold]{invalidAlbum.AlbumName}[/] ({invalidAlbum.ReleaseYear?.ToString() ?? "?"}):");
+                            foreach (var msg in invalidAlbum.Messages)
+                            {
+                                var icon = msg.Severity == Common.Models.Validation.ValidationResultMessageSeverity.Critical ? "[red]✗[/]" : "[yellow]⚠[/]";
+                                AnsiConsole.MarkupLine($"  {icon} {msg.Message}");
+                            }
+                        }
+                    }
+                }
+
+                return isValid ? 0 : 1;
+            }
+
+            // Handle single album validation
             var albumValidator = new AlbumValidator(config);
 
             Album? album = null;

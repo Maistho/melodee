@@ -351,7 +351,7 @@
                         else if (_albumsImagesInByteBase64.Length < 2)
                         {
                             <RadzenImage
-                                Path=@($"/images/{_album.ToApiKey()}/{ ImageSize.Medium}")
+                                Path=@($"/images/{_album.ToApiKey()}/{ImageSize.Medium}{(_showItem == ShowItem.Images ? $"?v={_imageCacheBuster}" : "")}")
                                 Style="margin:auto;display: block;max-width: 450px;max-height: 450px;width: auto;height: auto;object-fit: contain;"
                                 AlternateText="@_album.Name"/>
                         }
@@ -563,6 +563,7 @@
     List<AlbumChartInfo> _albumCharts = [];
 
     string[] _albumsImagesInByteBase64 = [];
+    long _imageCacheBuster = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
     // Album Images (selection + listing)
     System.IO.FileInfo[] _albumImageFiles = [];
     class AlbumImageListItem { public required System.IO.FileInfo File { get; init; } public required string ImageBase64 { get; init; } }
@@ -630,7 +631,7 @@
                 _userSongs = await UserService.UserSongsForAlbumAsync(CurrentUsersId, _album.ApiKey) ?? [];
                 if (!_albumDirectory.Exists())
                 {
-                    _alertMessages.Add(L("AlbumDetail.AlbumDirectoryNotFound", _albumDirectory.FullName()));
+                    _alertMessages.Add(L("AlbumDetail.AlbumDirectoryNotFound", (object)_albumDirectory.FullName()));
                 }
 
                 if (_album.ImageCount > 1)
@@ -664,7 +665,7 @@
         }
     }
 
-    private void OnShowItemChange(TreeEventArgs arg)
+    private async void OnShowItemChange(TreeEventArgs arg)
     {
         switch (arg.Text)
         {
@@ -679,6 +680,8 @@
                 break;
             case var text when text == L("Nav.Images"):
                 _showItem = ShowItem.Images;
+                _imageCacheBuster = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                await RefreshAlbumImages();
                 break;
         }
     }
@@ -701,6 +704,7 @@
 
     private async Task RefreshAlbumImages()
     {
+        _imageCacheBuster = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         _albumImageFiles = _albumDirectory
             .AllFileImageTypeFileInfos()
             .OrderBy(f => f.Name, StringComparer.OrdinalIgnoreCase)

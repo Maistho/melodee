@@ -398,7 +398,7 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
                             }
 
                             Interlocked.Increment(ref processedAlbums);
-                            var albumInfo = ParseAlbumDirectory(albumDir, artistName, serializer, mediaFiles.Count, ct);
+                            var albumInfo = await ParseAlbumDirectoryAsync(albumDir, artistName, serializer, mediaFiles.Count, ct);
                             
                             if (albumInfo != null)
                             {
@@ -478,7 +478,7 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
         return duplicateGroups.OrderBy(x => x.ArtistName).ThenBy(x => x.AlbumName).ToList();
     }
 
-    private static AlbumDirectoryInfo? ParseAlbumDirectory(
+    private static async Task<AlbumDirectoryInfo?> ParseAlbumDirectoryAsync(
         string albumDir,
         string artistName,
         ISerializer serializer,
@@ -517,8 +517,7 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
                 Log.Verbose("Found melodee file: {MelodeeFile}", melodeeFile);
                 try
                 {
-                    var album = MelodeeModels.Album.DeserializeAndInitializeAlbumAsync(serializer, melodeeFile, cancellationToken)
-                        .GetAwaiter().GetResult();
+                    var album = await MelodeeModels.Album.DeserializeAndInitializeAlbumAsync(serializer, melodeeFile, cancellationToken);
                     if (album != null)
                     {
                         albumName = album.AlbumTitle() ?? albumName;
