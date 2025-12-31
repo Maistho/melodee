@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using System.Diagnostics;
 using Ardalis.GuardClauses;
 using Melodee.Common.Configuration;
@@ -327,41 +326,42 @@ public class ArtistSearchEngineService(
                 return null;
             }
 
-            var pluginsResult = new ConcurrentBag<ArtistSearchResult>();
-            var breakFlag = false;
-            await Parallel.ForEachAsync(
-                _artistSearchEnginePlugins
-                    .Where(x => x.IsEnabled)
-                    .OrderBy(x => x.SortOrder)
-                    .TakeWhile(_ => !Volatile.Read(ref breakFlag)), cancellationToken, async (plugin, tt) =>
-                {
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        Volatile.Write(ref breakFlag, true);
-                    }
+            var pluginsResult = new List<ArtistSearchResult>();
 
-                    var startTicks = Stopwatch.GetTimestamp();
-                    // Don't limit the number of results from the search engine as they will be put into the local database and limited on result to method call.
-                    var pluginResult = await plugin.DoArtistSearchAsync(query, int.MaxValue, tt).ConfigureAwait(false);
-                    if (pluginResult is { IsSuccess: true, Data: not null })
+            // Execute search engines sequentially in SortOrder - stop early if we find a good match
+            // This prevents unnecessary API calls to rate-limited services like Spotify
+            foreach (var plugin in _artistSearchEnginePlugins.Where(x => x.IsEnabled).OrderBy(x => x.SortOrder))
+            {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+
+                var startTicks = Stopwatch.GetTimestamp();
+                var pluginResult = await plugin.DoArtistSearchAsync(query, int.MaxValue, cancellationToken).ConfigureAwait(false);
+                if (pluginResult is { IsSuccess: true, Data: not null })
+                {
+                    foreach (var d in pluginResult.Data)
                     {
-                        foreach (var d in pluginResult.Data)
+                        if (d.Name.ToNormalizedString().IsSimilar(query.NameNormalized))
                         {
-                            if (d.Name.ToNormalizedString().IsSimilar(query.NameNormalized))
-                            {
-                                pluginsResult.Add(d);
-                            }
+                            pluginsResult.Add(d);
                         }
                     }
+                }
 
-                    Logger.Debug("[{Plugin}] performed artist search. Elapsed [{ElapsedTime}]",
-                        plugin.DisplayName,
-                        Stopwatch.GetElapsedTime(startTicks).TotalMilliseconds);
-                    if (plugin.StopProcessing)
-                    {
-                        Volatile.Write(ref breakFlag, true);
-                    }
-                });
+                Logger.Debug("[{Plugin}] performed artist search. Elapsed [{ElapsedTime}]",
+                    plugin.DisplayName,
+                    Stopwatch.GetElapsedTime(startTicks).TotalMilliseconds);
+
+                // If we found results from a higher-priority source, stop searching
+                // This avoids hitting rate-limited APIs like Spotify unnecessarily
+                if (pluginsResult.Count > 0 || plugin.StopProcessing)
+                {
+                    break;
+                }
+            }
+
             if (pluginsResult.Count > 0)
             {
                 var startTicks = Stopwatch.GetTimestamp();

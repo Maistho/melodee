@@ -469,7 +469,7 @@ public class TestLocalizableComponent : MelodeeComponentBase
     }
 
     public string TestL(string key) => L(key);
-    public string TestLWithFallback(string key, string fallback) => L(key, fallback);
+    public string TestLWithFallback(string key, string fallback) => LWithFallback(key, fallback);
     public string TestLWithArgs(string key, params object[] args) => L(key, args);
     public string TestFormatDate(DateTime date, string? format = null) => FormatDate(date, format);
     public string TestFormatNumber(decimal number, string? format = null) => FormatNumber(number, format);

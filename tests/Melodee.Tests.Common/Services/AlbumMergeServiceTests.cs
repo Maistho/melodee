@@ -112,7 +112,7 @@ public class AlbumMergeServiceTests : ServiceTestBase
         await using var context = await MockFactory().CreateDbContextAsync();
         var mergedUserSong = await context.UserSongs
             .FirstOrDefaultAsync(us => us.SongId == targetSong.Id && us.UserId == user.Id);
-        
+
         Assert.NotNull(mergedUserSong);
         Assert.Equal(15, mergedUserSong.PlayedCount);
         Assert.Equal(5, mergedUserSong.Rating);
@@ -136,7 +136,7 @@ public class AlbumMergeServiceTests : ServiceTestBase
         await using var context = await MockFactory().CreateDbContextAsync();
         var mergedUserSong = await context.UserSongs
             .FirstOrDefaultAsync(us => us.SongId == targetSong.Id && us.UserId == user.Id);
-        
+
         Assert.NotNull(mergedUserSong);
         Assert.Equal(4, mergedUserSong.Rating);
     }
@@ -159,7 +159,7 @@ public class AlbumMergeServiceTests : ServiceTestBase
         await using var context = await MockFactory().CreateDbContextAsync();
         var mergedUserSong = await context.UserSongs
             .FirstOrDefaultAsync(us => us.SongId == targetSong.Id && us.UserId == user.Id);
-        
+
         Assert.NotNull(mergedUserSong);
         Assert.True(mergedUserSong.IsStarred);
     }
@@ -182,7 +182,7 @@ public class AlbumMergeServiceTests : ServiceTestBase
         await using var context = await MockFactory().CreateDbContextAsync();
         var mergedUserSong = await context.UserSongs
             .FirstOrDefaultAsync(us => us.SongId == targetSong.Id && us.UserId == user.Id);
-        
+
         Assert.NotNull(mergedUserSong);
         Assert.False(mergedUserSong.IsHated);
     }
@@ -197,7 +197,7 @@ public class AlbumMergeServiceTests : ServiceTestBase
         var user = await CreateTestUser();
         var olderDate = Instant.FromDateTimeUtc(DateTime.UtcNow.AddDays(-10));
         var newerDate = Instant.FromDateTimeUtc(DateTime.UtcNow.AddDays(-1));
-        
+
         await CreateUserSong(user, targetSong, lastPlayedAt: olderDate);
         await CreateUserSong(user, sourceSong, lastPlayedAt: newerDate);
 
@@ -208,7 +208,7 @@ public class AlbumMergeServiceTests : ServiceTestBase
         await using var context = await MockFactory().CreateDbContextAsync();
         var mergedUserSong = await context.UserSongs
             .FirstOrDefaultAsync(us => us.SongId == targetSong.Id && us.UserId == user.Id);
-        
+
         Assert.NotNull(mergedUserSong);
         Assert.Equal(newerDate, mergedUserSong.LastPlayedAt);
     }
@@ -228,11 +228,11 @@ public class AlbumMergeServiceTests : ServiceTestBase
         Assert.True(result.IsSuccess, $"Merge failed: {string.Join(", ", result.Messages ?? [])}");
 
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         // The user song should now be associated with the target song
         var targetUserSong = await context.UserSongs
             .FirstOrDefaultAsync(us => us.SongId == targetSong.Id && us.UserId == user.Id);
-        
+
         Assert.NotNull(targetUserSong);
         Assert.Equal(10, targetUserSong.PlayedCount);
         Assert.Equal(5, targetUserSong.Rating);
@@ -262,7 +262,7 @@ public class AlbumMergeServiceTests : ServiceTestBase
         var playlistSongs = await context.PlaylistSong
             .Where(ps => ps.PlaylistId == playlist.Id)
             .ToListAsync();
-        
+
         Assert.Single(playlistSongs);
         Assert.Equal(targetSong.Id, playlistSongs[0].SongId);
     }
@@ -287,7 +287,7 @@ public class AlbumMergeServiceTests : ServiceTestBase
         var playlistSongs = await context.PlaylistSong
             .Where(ps => ps.PlaylistId == playlist.Id)
             .ToListAsync();
-        
+
         Assert.Single(playlistSongs);
         Assert.Equal(targetSong.Id, playlistSongs[0].SongId);
     }
@@ -315,7 +315,7 @@ public class AlbumMergeServiceTests : ServiceTestBase
         await using var context = await MockFactory().CreateDbContextAsync();
         var historyCount = await context.UserSongPlayHistories
             .CountAsync(h => h.SongId == targetSong.Id);
-        
+
         Assert.Equal(3, historyCount);
     }
 
@@ -339,7 +339,7 @@ public class AlbumMergeServiceTests : ServiceTestBase
 
         await using var context = await MockFactory().CreateDbContextAsync();
         var movedBookmark = await context.Bookmarks.FindAsync(bookmark.Id);
-        
+
         Assert.NotNull(movedBookmark);
         Assert.Equal(targetSong.Id, movedBookmark.SongId);
         Assert.Equal(60000, movedBookmark.Position);
@@ -365,10 +365,10 @@ public class AlbumMergeServiceTests : ServiceTestBase
         var bookmarks = await context.Bookmarks
             .Where(b => b.UserId == user.Id)
             .ToListAsync();
-        
+
         Assert.Single(bookmarks);
         Assert.Equal(targetSong.Id, bookmarks[0].SongId);
-        
+
         var removedBookmark = await context.Bookmarks.FindAsync(sourceBookmark.Id);
         Assert.Null(removedBookmark);
     }
@@ -401,7 +401,7 @@ public class AlbumMergeServiceTests : ServiceTestBase
         await using var context = await MockFactory().CreateDbContextAsync();
         var mergedUserSong = await context.UserSongs
             .FirstOrDefaultAsync(us => us.SongId == targetSong.Id && us.UserId == user.Id);
-        
+
         Assert.NotNull(mergedUserSong);
         Assert.Equal(15, mergedUserSong.PlayedCount);
         Assert.Equal(5, mergedUserSong.Rating);
@@ -416,7 +416,7 @@ public class AlbumMergeServiceTests : ServiceTestBase
 
         var user1 = await CreateTestUser("user1@test.com");
         var user2 = await CreateTestUser("user2@test.com");
-        
+
         await CreateUserSong(user1, targetSong, playedCount: 5, rating: 3);
         await CreateUserSong(user1, sourceSong, playedCount: 10, rating: 4);
         await CreateUserSong(user2, sourceSong, playedCount: 20, rating: 5, isStarred: true);
@@ -426,7 +426,7 @@ public class AlbumMergeServiceTests : ServiceTestBase
         Assert.True(result.IsSuccess, $"Merge failed: {string.Join(", ", result.Messages ?? [])}");
 
         await using var context = await MockFactory().CreateDbContextAsync();
-        
+
         var user1Song = await context.UserSongs
             .FirstOrDefaultAsync(us => us.SongId == targetSong.Id && us.UserId == user1.Id);
         Assert.NotNull(user1Song);
@@ -458,10 +458,10 @@ public class AlbumMergeServiceTests : ServiceTestBase
     public async Task MergeAlbumsAsync_BonusTracks_MovedToTarget()
     {
         var (targetAlbum, sourceAlbum, artist, library) = await CreateMergeTestAlbums();
-        
+
         await CreateSongForAlbum(targetAlbum, "Track 1", 1, duration: 180000);
         await CreateSongForAlbum(targetAlbum, "Track 2", 2, duration: 200000);
-        
+
         await CreateSongForAlbum(sourceAlbum, "Track 1", 1, duration: 180000);
         await CreateSongForAlbum(sourceAlbum, "Track 2", 2, duration: 200000);
         await CreateSongForAlbum(sourceAlbum, "Bonus Track 1", 3, duration: 150000);
@@ -477,7 +477,7 @@ public class AlbumMergeServiceTests : ServiceTestBase
         var targetSongs = await context.Songs
             .Where(s => s.AlbumId == targetAlbum.Id)
             .ToListAsync();
-        
+
         Assert.Equal(4, targetSongs.Count);
         Assert.Contains(targetSongs, s => s.Title == "Bonus Track 1");
         Assert.Contains(targetSongs, s => s.Title == "Bonus Track 2");
@@ -540,7 +540,7 @@ public class AlbumMergeServiceTests : ServiceTestBase
             SourceAlbumIds = []
         };
 
-        await Assert.ThrowsAsync<ArgumentException>(() => 
+        await Assert.ThrowsAsync<ArgumentException>(() =>
             GetArtistService().MergeAlbumsAsync(request));
     }
 
@@ -556,7 +556,7 @@ public class AlbumMergeServiceTests : ServiceTestBase
         var sourceAlbum = await CreateAlbumForArtist(artist, "Source Album");
         return (targetAlbum, sourceAlbum, artist, library);
     }
-    
+
     /// <summary>
     /// Helper to execute merge with auto-generated resolutions for detected conflicts.
     /// This allows tests to focus on user data merging rather than conflict resolution workflow.
@@ -565,11 +565,11 @@ public class AlbumMergeServiceTests : ServiceTestBase
         int artistId, int targetAlbumId, int[] sourceAlbumIds)
     {
         var artistService = GetArtistService();
-        
+
         // Detect conflicts first
         var conflictResult = await artistService.DetectAlbumMergeConflictsAsync(
             artistId, targetAlbumId, sourceAlbumIds);
-        
+
         if (!conflictResult.IsSuccess)
         {
             return new Melodee.Common.Models.OperationResult<AlbumMergeReport>(conflictResult.Messages)
@@ -577,7 +577,7 @@ public class AlbumMergeServiceTests : ServiceTestBase
                 Data = null!
             };
         }
-        
+
         // Auto-resolve any conflicts - use KeepTarget for all required conflicts
         var resolutions = new List<AlbumMergeResolution>();
         if (conflictResult.Data?.Conflicts != null)
@@ -592,7 +592,7 @@ public class AlbumMergeServiceTests : ServiceTestBase
                 });
             }
         }
-        
+
         var request = new AlbumMergeRequest
         {
             ArtistId = artistId,
@@ -600,7 +600,7 @@ public class AlbumMergeServiceTests : ServiceTestBase
             SourceAlbumIds = sourceAlbumIds,
             Resolutions = resolutions.ToArray()
         };
-        
+
         return await artistService.MergeAlbumsAsync(request);
     }
 
@@ -704,10 +704,10 @@ public class AlbumMergeServiceTests : ServiceTestBase
     }
 
     private async Task<UserSong> CreateUserSong(
-        User user, 
-        Song song, 
-        int playedCount = 0, 
-        int rating = 0, 
+        User user,
+        Song song,
+        int playedCount = 0,
+        int rating = 0,
         bool isStarred = false,
         bool isHated = false,
         Instant? lastPlayedAt = null)

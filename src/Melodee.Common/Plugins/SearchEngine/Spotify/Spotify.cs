@@ -12,7 +12,6 @@ using Melodee.Common.Utility;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using SpotifyAPI.Web;
-using SpotifyAPI.Web.Http;
 
 namespace Melodee.Common.Plugins.SearchEngine.Spotify;
 
@@ -284,6 +283,10 @@ public class Spotify(
                     query.ToString());
             }
         }
+        catch (APITooManyRequestsException)
+        {
+            // Already handled by ExecuteSpotifyAsync with cooldown - don't log as error
+        }
         catch (Exception ex)
         {
             logger.Error(ex, "Error searching for artist query [{Query}]", query.ToString());
@@ -303,7 +306,7 @@ public class Spotify(
 
     public bool IsEnabled { get; set; } = false;
 
-    public int SortOrder { get; } = 1;
+    public int SortOrder { get; } = 100; // Last resort - Spotify has aggressive rate limiting
 
     public async Task<PagedResult<ArtistSearchResult>> DoArtistSearchAsync(ArtistQuery query, int maxResults,
         CancellationToken cancellationToken = default)
@@ -339,7 +342,7 @@ public class Spotify(
 
             var apiAccessToken = configuration.GetValue<string>(SettingRegistry.SearchEngineSpotifyAccessToken);
 
-            var config = SpotifyClientConfig.CreateDefault(); //.WithRetryHandler(new MelodeeRetryHandler());
+            var config = SpotifyClientConfig.CreateDefault();
 
             if (string.IsNullOrWhiteSpace(apiAccessToken))
             {
@@ -396,8 +399,11 @@ public class Spotify(
                     var newResults = new List<ArtistSearchResult>();
                     foreach (var artist in results.Where(x => x.SpotifyId != null))
                     {
-                        var artistAlbumsResult = await spotify.Artists.GetAlbums(artist.SpotifyId!,
-                            new ArtistsAlbumsRequest(), cancellationToken);
+                        var artistAlbumsResult = await ExecuteSpotifyAsync(
+                            token => spotify.Artists.GetAlbums(artist.SpotifyId!,
+                                new ArtistsAlbumsRequest(), token),
+                            "artist-albums",
+                            cancellationToken);
                         if (artistAlbumsResult?.Items?.Count > 0)
                         {
                             newResults.Add(artist with
@@ -430,6 +436,10 @@ public class Spotify(
                     }
                 }
             }
+        }
+        catch (APITooManyRequestsException)
+        {
+            // Already handled by ExecuteSpotifyAsync with cooldown - don't log as error
         }
         catch (Exception ex)
         {
@@ -563,16 +573,5 @@ public class Spotify(
                 return new PagedResult<SongSearchResult>(["Spotify top songs search failed."]) { Data = [] };
             }
         }, cancellationToken, TimeSpan.FromHours(6), ServiceBase.CacheName);
-    }
-}
-
-public class MelodeeRetryHandler : IRetryHandler
-{
-    public Task<IResponse> HandleRetry(IRequest request, IResponse response, IRetryHandler.RetryFunc retry,
-        CancellationToken cancel = default)
-    {
-        Thread.Sleep(1000);
-        var newResponse = retry(request, cancel);
-        return newResponse;
     }
 }

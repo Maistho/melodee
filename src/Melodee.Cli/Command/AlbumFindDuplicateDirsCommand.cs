@@ -27,17 +27,17 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
     // Pre-compiled regex patterns for better performance
     private static readonly Regex YearRegex = new(@"\[(\d{4})\]|\((\d{4})\)|^(\d{4})\s", RegexOptions.Compiled);
     private static readonly Regex YearRemovalRegex = new(@"\s*[\[\(]?\d{4}[\]\)]?\s*", RegexOptions.Compiled);
-    
+
     // Regex to strip database ID from artist directory names (e.g., "Artist Name [12345]" -> "Artist Name")
     private static readonly Regex ArtistIdRegex = new(@"\s*\[\d+\]\s*$", RegexOptions.Compiled);
-    
+
     public override async Task<int> ExecuteAsync(
         CommandContext context,
         AlbumFindDuplicateDirsSettings settings,
         CancellationToken cancellationToken)
     {
         var startTime = Stopwatch.GetTimestamp();
-        
+
         // Handle both --merge and deprecated --delete (both now perform merge)
         var shouldMerge = settings.Merge || settings.Delete;
         if (settings.Delete)
@@ -45,7 +45,7 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
             AnsiConsole.MarkupLine("[yellow]Warning: --delete is deprecated and now performs a merge operation. Use --merge instead.[/]");
             Log.Warning("--delete option is deprecated, use --merge instead");
         }
-        
+
         Log.Debug("Starting AlbumFindDuplicateDirsCommand with settings: LibraryName={LibraryName}, ArtistFilter={ArtistFilter}, SearchMetadata={SearchMetadata}, Merge={Merge}, Limit={Limit}",
             settings.LibraryName, settings.ArtistFilter, settings.SearchMetadata, shouldMerge, settings.Limit);
 
@@ -58,15 +58,15 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
         var albumService = scope.ServiceProvider.GetRequiredService<AlbumService>();
 
         Log.Debug("Services resolved successfully");
-        
+
         var libraries = await libraryService.ListAsync(new PagedRequest { PageSize = short.MaxValue }, cancellationToken);
         Log.Debug("Found {LibraryCount} libraries", libraries.Data.Count());
-        
+
         var library = libraries.Data.FirstOrDefault(x => x.Name.ToNormalizedString() == settings.LibraryName?.ToNormalizedString());
 
         if (library == null)
         {
-            Log.Error("Library '{LibraryName}' not found. Available libraries: {AvailableLibraries}", 
+            Log.Error("Library '{LibraryName}' not found. Available libraries: {AvailableLibraries}",
                 settings.LibraryName, string.Join(", ", libraries.Data.Select(l => l.Name)));
             AnsiConsole.MarkupLine($"[red]Error:[/] Library '{settings.LibraryName}' not found.");
             return 1;
@@ -94,12 +94,12 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
 
         Log.Information("Starting scan of library path: {LibraryPath}", library.Path);
         var scanStartTime = Stopwatch.GetTimestamp();
-        
+
         AnsiConsole.MarkupLine($"[blue]Scanning library:[/] {library.Path.EscapeMarkup()}");
         duplicateGroups = await FindDuplicateAlbumDirectoriesAsync(library.Path, settings.ArtistFilter, serializer, cancellationToken);
-        
+
         var scanElapsed = Stopwatch.GetElapsedTime(scanStartTime);
-        Log.Information("Directory scan completed in {ElapsedSeconds:F2}s. Found {GroupCount} duplicate groups", 
+        Log.Information("Directory scan completed in {ElapsedSeconds:F2}s. Found {GroupCount} duplicate groups",
             scanElapsed.TotalSeconds, duplicateGroups.Count);
 
         if (settings.Limit.HasValue && settings.Limit.Value > 0)
@@ -127,7 +127,7 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
             var searchStartTime = Stopwatch.GetTimestamp();
             var searchedCount = 0;
             var resolvedCount = 0;
-            
+
             await AnsiConsole.Progress()
                 .Columns(
                     new TaskDescriptionColumn(),
@@ -150,10 +150,10 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
                         {
                             // Strip the database ID from artist name for search (e.g., "Artist [123]" -> "Artist")
                             var searchArtistName = ArtistIdRegex.Replace(group.ArtistName, string.Empty).Trim();
-                            
-                            Log.Debug("Searching metadata for Artist={Artist} (search: {SearchArtist}), Album={Album}", 
+
+                            Log.Debug("Searching metadata for Artist={Artist} (search: {SearchArtist}), Album={Album}",
                                 group.ArtistName, searchArtistName, group.AlbumName);
-                            
+
                             var searchResult = await albumSearchEngineService.DoSearchAsync(
                                 new AlbumQuery
                                 {
@@ -165,7 +165,7 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
                                 cancellationToken);
 
                             searchedCount++;
-                            Log.Debug("Search returned {ResultCount} results for {Artist} - {Album}", 
+                            Log.Debug("Search returned {ResultCount} results for {Artist} - {Album}",
                                 searchResult.Data.Count(), group.ArtistName, group.AlbumName);
 
                             if (searchResult.Data.Any())
@@ -179,7 +179,7 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
                                 {
                                     Log.Debug("Found matching album: Year={Year}, Rank={Rank}, MusicBrainzId={MbId}, SpotifyId={SpotifyId}",
                                         matchingAlbum.Year, matchingAlbum.Rank, matchingAlbum.MusicBrainzId, matchingAlbum.SpotifyId);
-                                    
+
                                     group.MetadataYear = matchingAlbum.Year;
                                     group.MetadataSource = "SearchEngine";
                                     group.MusicBrainzId = matchingAlbum.MusicBrainzId;
@@ -210,10 +210,10 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
                                             .Where(d => d.Path != targetDir.Path)
                                             .Select(d => d.Path)
                                             .ToArray();
-                                        
+
                                         resolvedCount++;
                                         Log.Debug("Resolved {Artist} - {Album}: TargetDir={TargetDir}, MergeDirs={MergeCount}",
-                                            group.ArtistName, group.AlbumName, 
+                                            group.ArtistName, group.AlbumName,
                                             group.SuggestedTargetDirectory, group.SuggestedMergeDirectories?.Length ?? 0);
                                     }
                                     else
@@ -241,7 +241,7 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
                         task.Increment(1);
                     }
                 });
-            
+
             var searchElapsed = Stopwatch.GetElapsedTime(searchStartTime);
             Log.Information("Metadata search completed in {ElapsedSeconds:F2}s. Searched={Searched}, Resolved={Resolved}",
                 searchElapsed.TotalSeconds, searchedCount, resolvedCount);
@@ -299,14 +299,14 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
             .Where(d => Path.GetFileName(d).Length == 1)
             .ToArray();
         Log.Debug("Found {TopLevelDirCount} letter directories in library", topLevelDirs.Length);
-        
+
         var processedArtists = 0;
         var processedAlbums = 0;
         var scanStartTime = Stopwatch.GetTimestamp();
 
         // Collect all artist directories first (fast enumeration)
         var allArtistDirs = new List<(string artistDir, string artistName)>();
-        
+
         foreach (var letterDir in topLevelDirs)
         {
             if (cancellationToken.IsCancellationRequested)
@@ -315,7 +315,7 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
             }
 
             var letterName = Path.GetFileName(letterDir);
-            
+
             foreach (var twoLetterDir in Directory.EnumerateDirectories(letterDir, "*", enumerationOptions))
             {
                 var twoLetterName = Path.GetFileName(twoLetterDir);
@@ -337,14 +337,14 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
                     allArtistDirs.Add((artistDir, artistName));
                 }
             }
-            
+
             Log.Verbose("Enumerated letter '{Letter}': {ArtistCount} artists so far", letterName, allArtistDirs.Count);
         }
 
         var enumElapsed = Stopwatch.GetElapsedTime(scanStartTime);
         Log.Information("Directory enumeration completed in {ElapsedSeconds:F2}s. Found {ArtistCount} artist directories",
             enumElapsed.TotalSeconds, allArtistDirs.Count);
-        
+
         AnsiConsole.MarkupLine($"[grey]Found {allArtistDirs.Count:N0} artist directories in {enumElapsed.TotalSeconds:F1}s[/]");
 
         // Process artist directories in parallel with limited concurrency
@@ -357,7 +357,7 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
         var progressLock = new object();
         var lastProgressReport = Stopwatch.GetTimestamp();
         var duplicateCount = 0; // Track duplicates incrementally instead of recounting
-        
+
         await AnsiConsole.Progress()
             .AutoRefresh(true)
             .AutoClear(false)
@@ -377,12 +377,12 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
                 var duplicateTask = ctx.AddTask("[yellow]Duplicates found[/]", maxValue: 1, autoStart: false);
                 duplicateTask.IsIndeterminate = true;
                 duplicateTask.StartTask();
-                
+
                 await Parallel.ForEachAsync(allArtistDirs, parallelOptions, async (item, ct) =>
                 {
                     var (artistDir, artistName) = item;
                     Interlocked.Increment(ref processedArtists);
-                    
+
                     try
                     {
                         foreach (var albumDir in Directory.EnumerateDirectories(artistDir, "*", enumerationOptions))
@@ -399,14 +399,14 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
 
                             Interlocked.Increment(ref processedAlbums);
                             var albumInfo = await ParseAlbumDirectoryAsync(albumDir, artistName, serializer, mediaFiles.Count, ct);
-                            
+
                             if (albumInfo != null)
                             {
                                 var key = $"{artistName}|{albumInfo.AlbumNameNormalized}";
                                 var bag = artistDirectories.GetOrAdd(key, _ => new System.Collections.Concurrent.ConcurrentBag<AlbumDirectoryInfo>());
                                 var previousCount = bag.Count;
                                 bag.Add(albumInfo);
-                                
+
                                 // Track duplicates incrementally: if we just created a duplicate (count went from 1 to 2)
                                 if (previousCount == 1)
                                 {
@@ -422,7 +422,7 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
 
                     // Update progress bar
                     artistTask.Increment(1);
-                    
+
                     // Update descriptions with current counts periodically
                     var now = Stopwatch.GetTimestamp();
                     if (Stopwatch.GetElapsedTime(lastProgressReport, now).TotalMilliseconds >= 250)
@@ -434,7 +434,7 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
                                 lastProgressReport = now;
                                 albumTask.Description = $"[blue]Albums scanned: {processedAlbums:N0}[/]";
                                 duplicateTask.Description = $"[yellow]Duplicates found: {duplicateCount:N0}[/]";
-                                
+
                                 // Log to file every 5 seconds
                                 var elapsed = Stopwatch.GetElapsedTime(scanStartTime);
                                 if (elapsed.TotalSeconds % 5 < 0.3)
@@ -446,7 +446,7 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
                         }
                     }
                 });
-                
+
                 // Final update
                 albumTask.Description = $"[blue]Albums scanned: {processedAlbums:N0}[/]";
                 duplicateTask.Description = $"[yellow]Duplicates found: {duplicateCount:N0}[/]";
@@ -468,7 +468,7 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
                 Directories = kvp.Value.OrderBy(x => x.Year).ToList()
             };
             duplicateGroups.Add(group);
-            
+
             Log.Debug("Duplicate group created: Artist={Artist}, Album={Album}, DirectoryCount={Count}, Years={Years}",
                 group.ArtistName, group.AlbumName, group.Directories.Count,
                 string.Join(", ", group.Directories.Select(d => d.Year?.ToString() ?? "?")));
@@ -699,10 +699,10 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
             .ToList();
 
         var totalDirsToMerge = groupsToMerge.Sum(g => g.SuggestedMergeDirectories!.Length);
-        
-        Log.Debug("MergeDuplicateDirectoriesAsync: {GroupCount} groups with {DirCount} directories identified for merge", 
+
+        Log.Debug("MergeDuplicateDirectoriesAsync: {GroupCount} groups with {DirCount} directories identified for merge",
             groupsToMerge.Count, totalDirsToMerge);
-        
+
         if (groupsToMerge.Count == 0)
         {
             Log.Information("No directories identified for merge");
@@ -731,7 +731,7 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
         }
 
         Log.Information("User confirmed merge of {GroupCount} groups", groupsToMerge.Count);
-        
+
         var successCount = 0;
         var failCount = 0;
         var filesMoved = 0;
@@ -760,26 +760,26 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
                     {
                         var targetDir = group.SuggestedTargetDirectory!;
                         var sourceDirs = group.SuggestedMergeDirectories!;
-                        
+
                         Log.Information("Merging {Artist} - {Album}: {SourceCount} source dirs into {TargetDir}",
                             group.ArtistName, group.AlbumName, sourceDirs.Length, Path.GetFileName(targetDir));
-                        
+
                         // First, try to merge in database if albums exist there
                         var dbMergeResult = await TryMergeInDatabaseAsync(
                             artistService, albumService, libraryId,
-                            group.ArtistName, targetDir, sourceDirs, 
+                            group.ArtistName, targetDir, sourceDirs,
                             cancellationToken);
-                        
+
                         if (dbMergeResult.Success)
                         {
                             Log.Information("Database merge successful for {Artist} - {Album}", group.ArtistName, group.AlbumName);
                         }
                         else if (dbMergeResult.NotInDatabase)
                         {
-                            Log.Debug("Albums not in database, performing file-system only merge for {Artist} - {Album}", 
+                            Log.Debug("Albums not in database, performing file-system only merge for {Artist} - {Album}",
                                 group.ArtistName, group.AlbumName);
                         }
-                        
+
                         // Now merge physical files
                         foreach (var sourceDir in sourceDirs)
                         {
@@ -788,16 +788,16 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
                                 Log.Warning("Source directory no longer exists: {Directory}", sourceDir);
                                 continue;
                             }
-                            
+
                             var movedCount = await MergeFilesAsync(sourceDir, targetDir, cancellationToken);
                             filesMoved += movedCount;
-                            
+
                             // If directory is now empty (or only has non-media files), delete it
                             if (Directory.Exists(sourceDir))
                             {
                                 var remainingMediaFiles = Directory.EnumerateFiles(sourceDir, "*", SearchOption.AllDirectories)
                                     .Count(f => Common.Utility.FileHelper.IsFileMediaType(Path.GetExtension(f)));
-                                
+
                                 if (remainingMediaFiles == 0)
                                 {
                                     try
@@ -813,13 +813,13 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
                                 }
                                 else
                                 {
-                                    Log.Warning("Source directory still has {Count} media files after merge: {Directory}", 
+                                    Log.Warning("Source directory still has {Count} media files after merge: {Directory}",
                                         remainingMediaFiles, sourceDir);
                                     AnsiConsole.MarkupLine($"  [yellow]![/] Merged but {remainingMediaFiles} files remain: {Path.GetFileName(sourceDir).EscapeMarkup()}");
                                 }
                             }
                         }
-                        
+
                         successCount++;
                         AnsiConsole.MarkupLine($"  [green]✓[/] {group.ArtistName.EscapeMarkup()} - {group.AlbumName.EscapeMarkup()}");
                     }
@@ -905,8 +905,8 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
                         ConflictId = conflict.ConflictId,
                         Action = MelodeeModels.AlbumMerge.AlbumMergeResolutionAction.KeepTarget
                     });
-                    
-                    Log.Debug("Auto-resolved conflict {ConflictId} ({Type}) with KeepTarget", 
+
+                    Log.Debug("Auto-resolved conflict {ConflictId} ({Type}) with KeepTarget",
                         conflict.ConflictId, conflict.ConflictType);
                 }
             }
@@ -919,7 +919,7 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
                 SourceAlbumIds = sourceAlbumIds.ToArray(),
                 Resolutions = resolutions.ToArray()
             };
-            
+
             var mergeResult = await artistService.MergeAlbumsAsync(mergeRequest, cancellationToken);
 
             if (mergeResult.IsSuccess)
@@ -944,7 +944,7 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
     {
         var movedCount = 0;
         var deletedCount = 0;
-        
+
         if (!Directory.Exists(targetDir))
         {
             Log.Warning("Target directory does not exist: {Directory}", targetDir);
@@ -958,7 +958,7 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
         var targetFiles = Directory.EnumerateFiles(targetDir, "*", SearchOption.TopDirectoryOnly)
             .Select(f => Path.GetFileName(f).ToLowerInvariant())
             .ToHashSet();
-        
+
         var targetFileSizes = Directory.EnumerateFiles(targetDir, "*", SearchOption.TopDirectoryOnly)
             .Where(f => Common.Utility.FileHelper.IsFileMediaType(Path.GetExtension(f)))
             .Select(f => new FileInfo(f).Length)
@@ -1041,11 +1041,11 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
         var imageExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp" };
         var metadataExtensions = new[] { ".nfo", ".txt", ".cue", ".log", ".m3u", ".m3u8" };
         var allowedExtensions = imageExtensions.Concat(metadataExtensions).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        
+
         var sourceNonMediaFiles = Directory.EnumerateFiles(sourceDir, "*", SearchOption.TopDirectoryOnly)
             .Where(f => allowedExtensions.Contains(Path.GetExtension(f)))
             .ToList();
-            
+
         var targetNonMediaFileNames = Directory.EnumerateFiles(targetDir, "*", SearchOption.TopDirectoryOnly)
             .Select(f => Path.GetFileName(f).ToLowerInvariant())
             .ToHashSet();
@@ -1058,7 +1058,7 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
             }
 
             var fileName = Path.GetFileName(sourceFile);
-            
+
             // Skip if target already has a file with this name
             if (targetNonMediaFileNames.Contains(fileName.ToLowerInvariant()))
             {

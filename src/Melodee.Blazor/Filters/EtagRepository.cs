@@ -27,10 +27,10 @@ public class EtagRepository
         if (!string.IsNullOrWhiteSpace(apiKeyId) && !string.IsNullOrWhiteSpace(etag))
         {
             var entry = new ETagEntry(etag, DateTime.UtcNow);
-            
+
             // Use AddOrUpdate to ensure the ETag is always current
             _eTags.AddOrUpdate(apiKeyId!, entry, (_, _) => entry);
-            
+
             // Only track in insertion order if this is a new entry
             if (!_insertionOrder.Contains(apiKeyId!))
             {

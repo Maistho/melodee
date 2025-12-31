@@ -75,18 +75,119 @@ public class JobRunCommand : CommandBase<JobRunSettings>
         var stopwatch = Stopwatch.StartNew();
         string? errorMessage = null;
         var success = false;
+        JobResult? jobResult = null;
 
         try
         {
-            await AnsiConsole.Status()
-                .Spinner(Spinner.Known.Dots)
-                .StartAsync($"Running {jobName}...", async ctx =>
+            // Subscribe to progress updates
+            jc.Progress.ProgressChanged += progress =>
+            {
+                // Progress is logged but not displayed inline during Status spinner
+                // The progress info will be available after completion
+            };
+
+            await AnsiConsole.Progress()
+                .AutoClear(false)
+                .HideCompleted(false)
+                .Columns(
+                    new TaskDescriptionColumn(),
+                    new ProgressBarColumn(),
+                    new PercentageColumn(),
+                    new SpinnerColumn())
+                .StartAsync(async ctx =>
                 {
+                    var overallTask = ctx.AddTask($"[bold]{jobName}[/]", maxValue: 100);
+                    ProgressTask? currentStageTask = null;
+                    string? lastStageName = null;
+
+                    // Subscribe to progress updates
+                    jc.Progress.ProgressChanged += progress =>
+                    {
+                        overallTask.Value = progress.OverallPercentComplete;
+
+                        // Handle stage changes
+                        if (progress.CurrentStageProgress != null)
+                        {
+                            var stageName = progress.CurrentStageProgress.StageName;
+
+                            if (stageName != lastStageName)
+                            {
+                                // Complete previous stage task
+                                if (currentStageTask != null)
+                                {
+                                    currentStageTask.Value = currentStageTask.MaxValue;
+                                    currentStageTask.StopTask();
+                                }
+
+                                // Create new stage task
+                                var maxValue = progress.CurrentStageProgress.TotalItems > 0
+                                    ? progress.CurrentStageProgress.TotalItems
+                                    : 100;
+                                currentStageTask = ctx.AddTask($"  {stageName}", maxValue: maxValue);
+                                lastStageName = stageName;
+                            }
+
+                            // Update current stage progress
+                            if (currentStageTask != null)
+                            {
+                                if (progress.CurrentStageProgress.TotalItems > 0)
+                                {
+                                    currentStageTask.Value = progress.CurrentStageProgress.CurrentItem;
+                                }
+                                else
+                                {
+                                    // Indeterminate progress - pulse
+                                    currentStageTask.IsIndeterminate = true;
+                                }
+
+                                if (progress.CurrentStageProgress.CurrentItemDescription != null)
+                                {
+                                    currentStageTask.Description = $"  {stageName}: {progress.CurrentStageProgress.CurrentItemDescription}";
+                                }
+                            }
+                        }
+                    };
+
                     await job.Execute(jc);
+
+                    // Complete any remaining tasks
+                    if (currentStageTask != null)
+                    {
+                        currentStageTask.Value = currentStageTask.MaxValue;
+                        currentStageTask.StopTask();
+                    }
+                    overallTask.Value = 100;
                 });
 
-            success = true;
-            AnsiConsole.MarkupLine($"[green]✓ Job completed successfully:[/] {jobName}");
+            jobResult = jc.JobResult;
+
+            if (jobResult != null)
+            {
+                switch (jobResult.Status)
+                {
+                    case JobResultStatus.Success:
+                        success = true;
+                        AnsiConsole.MarkupLine($"[green]✓ Job completed successfully:[/] {jobName}");
+                        AnsiConsole.MarkupLine($"  [grey]{jobResult.Message.EscapeMarkup()}[/]");
+                        break;
+                    case JobResultStatus.Skipped:
+                        success = true; // Skipped is not a failure
+                        AnsiConsole.MarkupLine($"[yellow]⚠ Job skipped:[/] {jobName}");
+                        AnsiConsole.MarkupLine($"  [grey]{jobResult.Message.EscapeMarkup()}[/]");
+                        break;
+                    case JobResultStatus.Failed:
+                        errorMessage = jobResult.Message;
+                        AnsiConsole.MarkupLine($"[red]✗ Job failed:[/] {jobName}");
+                        AnsiConsole.MarkupLine($"  [grey]{jobResult.Message.EscapeMarkup()}[/]");
+                        break;
+                }
+            }
+            else
+            {
+                // Job didn't set a result - assume success for backward compatibility
+                success = true;
+                AnsiConsole.MarkupLine($"[green]✓ Job completed:[/] {jobName}");
+            }
         }
         catch (Exception ex)
         {
@@ -117,6 +218,8 @@ public class JobRunCommand : CommandBase<JobRunSettings>
                 dbContext.JobHistories.Add(jobHistory);
                 await dbContext.SaveChangesAsync(cancellationToken);
             }
+
+            AnsiConsole.MarkupLine($"[grey]Elapsed time: {stopwatch.Elapsed.TotalSeconds:F1}s[/]");
         }
 
         return success ? 0 : 1;

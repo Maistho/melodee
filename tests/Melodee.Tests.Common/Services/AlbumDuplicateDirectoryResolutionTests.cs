@@ -96,7 +96,7 @@ public sealed class AlbumDuplicateDirectoryResolutionTests
 
         var groups = GroupDuplicatesByNormalizedName(directories, "Test Artist");
 
-        Assert.Single(groups.Where(g => g.Directories.Count > 1));
+        Assert.Single(groups, g => g.Directories.Count > 1);
         var duplicateGroup = groups.First(g => g.Directories.Count > 1);
         Assert.Equal(2, duplicateGroup.Directories.Count);
         Assert.Equal("Gold River", duplicateGroup.AlbumName);
@@ -267,7 +267,7 @@ public sealed class AlbumDuplicateDirectoryResolutionTests
     {
         var dirNormalized = directoryName.ToNormalizedString();
         var searchNormalized = searchResultName.ToNormalizedString();
-        
+
         if (shouldMatch)
         {
             Assert.Equal(dirNormalized, searchNormalized);
@@ -398,7 +398,7 @@ public sealed class AlbumDuplicateDirectoryResolutionTests
         {
             targetDir.IsTarget = true;
             group.SuggestedTargetDirectory = targetDir.Path;
-            
+
             // ALL other directories (regardless of year) should be merged into target
             group.SuggestedMergeDirectories = group.Directories
                 .Where(d => d != targetDir) // All except the target

@@ -2,7 +2,6 @@ using System.Diagnostics;
 using System.Text.Json;
 using Melodee.Cli.CommandSettings;
 using Melodee.Common.Data;
-using Melodee.Common.Enums;
 using Melodee.Common.Models;
 using Melodee.Common.Models.SearchEngines.ArtistSearchEngineServiceData;
 using Melodee.Common.Plugins.SearchEngine.MusicBrainz.Data;

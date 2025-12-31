@@ -988,7 +988,7 @@ public class ArtistServiceTests : ServiceTestBase
     {
         await using var context = await MockFactory().CreateDbContextAsync();
         var (targetArtist, sourceArtist, album, song) = await CreateArtistsWithAlbumAndSong(context);
-        
+
         var metaTagId = (int)MetaTagIdentifier.Composer;
         context.Contributors.Add(new Contributor
         {
@@ -1234,7 +1234,7 @@ public class ArtistServiceTests : ServiceTestBase
         AssertResultIsSuccessful(result);
 
         await using var verifyContext = await MockFactory().CreateDbContextAsync();
-        
+
         var remainingAlbums = verifyContext.Albums
             .Where(a => a.ArtistId == targetArtist.Id)
             .ToList();

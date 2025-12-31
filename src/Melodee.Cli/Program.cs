@@ -93,7 +93,7 @@ public static class Program
             });
             config.AddBranch<JobSettings>("job", add =>
             {
-                add.SetDescription("Run background jobs and maintenance tasks");
+                add.SetDescription("Run jobs synchronously from the command line");
                 add.AddCommand<JobRunArtistSearchEngineDatabaseHousekeepingJobCommand>("artistsearchengine-refresh")
                     .WithDescription("Run artist search engine refresh job. This updates the local database of artists albums from search engines.");
                 add.AddCommand<JobListCommand>("list")
@@ -101,7 +101,7 @@ public static class Program
                 add.AddCommand<JobRunMusicBrainzUpdateDatabaseJobCommand>("musicbrainz-update")
                     .WithDescription("Run MusicBrainz update database job. This downloads MusicBrainz data dump and creates local database for Melodee when scanning metadata.");
                 add.AddCommand<JobRunCommand>("run")
-                    .WithDescription("Run a specific background job by name.");
+                    .WithDescription("Run a specific job by name synchronously (waits for completion).");
             });
             config.AddBranch("library", add =>
             {
