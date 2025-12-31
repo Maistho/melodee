@@ -3,9 +3,9 @@ title: Quick Start for Homelabs
 permalink: /quickstart/
 ---
 
-# Quick Start Guide for Homelab Enthusiasts
+# Quick Start Guide
 
-This guide provides a fast path to getting Melodee running in your homelab environment with best practices for home deployments.
+This guide provides a fast path to getting Melodee running in your homelab environment with best practices for home lab deployments.
 
 ## Prerequisites
 

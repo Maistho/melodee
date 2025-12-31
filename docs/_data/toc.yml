@@ -25,6 +25,16 @@
       url: "libraries"
     - title: "Background Jobs"
       url: "jobs"
+    - title: "Charts"
+      url: "charts"
+    - title: "Playlists"
+      url: "playlists"
+    - title: "Requests"
+      url: "requests"
+    - title: "Scrobbling"
+      url: "scrobbling"
+    - title: "Shares"
+      url: "shares"
 
 - title: Tools & Interfaces
   links:

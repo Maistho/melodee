@@ -20,20 +20,20 @@ Provide a self‑hosted, privacy‑respecting platform to: ingest messy music co
 - First‑class API contracts (OpenSubsonic + Melodee native) with versioning.
 - Configuration‑driven behavior (rules engine for tag cleanup, naming, validation).
 
-## High‑Level Architecture
+## High‑Level Melodee Ecosystem
 
-Component overview:
+Application Overview
 
-| Component | Purpose | Key Tech |
-|-----------|---------|---------|
-| Melodee Blazor | Administrative web UI + OpenSubsonic & native REST API host + streaming pipeline | .NET 10, Blazor Server, Radzen |
-| Melodee API (native / OpenSubsonic) | Programmatic access layer consumed by external clients & integrations | ASP.NET Core, API Versioning |
-| Melodee.Cli | Operational & maintenance commands (jobs, migrations, utilities) | .NET Console |
-| MeloAmp | Cross‑platform desktop client (browse, play, queue mgmt, theming, equalizer, scrobbling) | Electron, React, Material‑UI, TypeScript |
-| Melodee Player | Native Android & Android Auto streaming client (voice, Media3 playback, clean architecture) | Kotlin, Jetpack Compose, Media3 |
+| Application/Component                                               | Purpose | Key Tech |
+|---------------------------------------------------------------------|---------|---------|
+| [Melodee Blazor](https://github.com/melodee-project/melodee)        | Administrative web UI + OpenSubsonic & native REST API host + streaming pipeline | .NET 10, Blazor Server, Radzen |
+| Melodee API (native / OpenSubsonic)                                 | Programmatic access layer consumed by external clients & integrations | ASP.NET Core, API Versioning |
+| Melodee.Cli                                                         | Operational & maintenance commands (jobs, migrations, utilities) | .NET Console |
+| [MeloAmp](https://github.com/melodee-project/meloamp)               | Cross‑platform desktop client (browse, play, queue mgmt, theming, equalizer, scrobbling) | Electron, React, Material‑UI, TypeScript |
+| [Melodee Player](https://github.com/melodee-project/melodee-player) | Native Android & Android Auto streaming client (voice, Media3 playback, clean architecture) | Kotlin, Jetpack Compose, Media3 |
 
 
-### Component Roles
+### Application/Component Roles
 
 - **Melodee.Blazor**: Hosts APIs, runs background jobs, presents the administrative and power‑user interface (metadata editing, artwork, user/security settings, job dashboard).
 - **Melodee API**: Two faces—OpenSubsonic (compatibility for existing ecosystem clients) and Native JSON (clean, opinionated resource models). Both sit behind the same hosting process for efficiency.
