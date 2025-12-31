@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Ardalis.GuardClauses;
 using Melodee.Common.Configuration;
 using Melodee.Common.Constants;
@@ -33,10 +34,17 @@ public class MelodeeMetadataMaker(
     /// <summary>
     ///     For a given directory generate a Melodee Metadata file (melodee.json). Does not modify files in place.
     /// </summary>
+    /// <param name="directory">Directory to process</param>
+    /// <param name="doCreateOnlyIfMissing">Only create if melodee.json doesn't exist</param>
+    /// <param name="skipImages">Skip searching for, downloading and processing images (existing valid images are kept)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
     public async Task<OperationResult<Album?>> MakeMetadataFileAsync(string directory,
         bool doCreateOnlyIfMissing,
+        bool skipImages = false,
         CancellationToken cancellationToken = default)
     {
+        var totalStartTicks = Stopwatch.GetTimestamp();
+
         Guard.Against.NullOrEmpty(directory, nameof(directory));
 
         var directoryInfo = directory.ToFileSystemDirectoryInfo();
@@ -57,20 +65,23 @@ public class MelodeeMetadataMaker(
             };
         }
 
+        var configStartTicks = Stopwatch.GetTimestamp();
         var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
 
         await artistSearchEngineService.InitializeAsync(configuration, cancellationToken).ConfigureAwait(false);
         await mediaEditService.InitializeAsync(configuration, cancellationToken).ConfigureAwait(false);
+        var configElapsedMs = Stopwatch.GetElapsedTime(configStartTicks).TotalMilliseconds;
 
         var albumValidator = new AlbumValidator(configuration);
         var imageValidator = new ImageValidator(configuration);
         var imageConvertor = new ImageConvertor(configuration);
-        var songPlugin = new AtlMetaTag(new MetaTagsProcessor(configuration, serializer), imageConvertor,
-            imageValidator, configuration);
+        var songPlugin = new AtlMetaTag(new MetaTagsProcessor(configuration, serializer), imageConvertor, imageValidator, configuration);
         var mp3Files = new Mp3Files([songPlugin], albumValidator, serializer, logger, configuration);
 
-        var processResult =
-            await mp3Files.ProcessDirectoryAsync(directoryInfo, cancellationToken).ConfigureAwait(false);
+        var processStartTicks = Stopwatch.GetTimestamp();
+        var processResult = await mp3Files.ProcessDirectoryAsync(directoryInfo, cancellationToken).ConfigureAwait(false);
+        var processElapsedMs = Stopwatch.GetElapsedTime(processStartTicks).TotalMilliseconds;
+
         if (!processResult.IsSuccess)
         {
             return new OperationResult<Album?>($"Could not generate metadata album from directory [{directory}]")
@@ -94,22 +105,99 @@ public class MelodeeMetadataMaker(
         var albumImages = new List<ImageInfo>();
         var duplicateThreshold = configuration.GetValue<int?>(SettingRegistry.ImagingDuplicateThreshold) ??
                                  MelodeeConfiguration.DefaultImagingDuplicateThreshold;
-        var foundAlbumImages =
-            (await album.FindImages(songPlugin, duplicateThreshold, imageConvertor, imageValidator,
-                    configuration.GetValue<bool>(SettingRegistry.ProcessingDoDeleteOriginal), cancellationToken)
-                .ConfigureAwait(false)).ToArray();
-        if (foundAlbumImages.Length != 0)
+
+        if (skipImages)
         {
-            foreach (var foundAlbumImage in foundAlbumImages)
+            // When skipping images, only validate existing images without processing/converting
+            // Delete invalid images if configured to do so
+            var doDeleteInvalid = configuration.GetValue<bool>(SettingRegistry.ProcessingDoDeleteOriginal);
+            var imageFiles = ImageHelper.ImageFilesInDirectory(album.Directory.Path, SearchOption.TopDirectoryOnly).ToList();
+            foreach (var dir in album.ImageDirectories())
+            {
+                imageFiles.AddRange(ImageHelper.ImageFilesInDirectory(dir.FullName, SearchOption.TopDirectoryOnly));
+            }
+
+            var index = 1;
+            foreach (var imageFile in imageFiles.Order())
             {
                 if (cancellationToken.IsCancellationRequested)
                 {
                     break;
                 }
 
-                if (!albumImages.Any(x => x.IsCrcHashMatch(foundAlbumImage.CrcHash)))
+                var fileInfo = new FileInfo(imageFile);
+                var pictureIdentifier = ImageHelper.IsAlbumSecondaryImage(fileInfo)
+                    ? PictureIdentifier.SecondaryFront
+                    : PictureIdentifier.Front;
+
+                var imageValidationResult = await imageValidator.ValidateImage(fileInfo, pictureIdentifier, cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (!imageValidationResult.Data.IsValid)
                 {
-                    albumImages.Add(foundAlbumImage);
+                    if (doDeleteInvalid)
+                    {
+                        fileInfo.Delete();
+                        logger.Debug("[{Name}] Deleted invalid image [{ImageFile}]", nameof(MelodeeMetadataMaker), imageFile);
+                    }
+                    else
+                    {
+                        logger.Debug("[{Name}] Skipping invalid image [{ImageFile}]", nameof(MelodeeMetadataMaker), imageFile);
+                    }
+
+                    continue;
+                }
+
+                var imageInfo = await Image.LoadAsync(fileInfo.FullName, cancellationToken).ConfigureAwait(false);
+                var crc32 = Crc32.Calculate(fileInfo);
+
+                if (albumImages.Any(x => x.IsCrcHashMatch(crc32)))
+                {
+                    continue;
+                }
+
+                var fileFileSystemDirectoryInfo = fileInfo.Directory!.ToDirectorySystemInfo();
+                var isSameDirectory = string.Equals(fileFileSystemDirectoryInfo.Path, album.Directory.Path, StringComparison.OrdinalIgnoreCase);
+                albumImages.Add(new ImageInfo
+                {
+                    CrcHash = crc32,
+                    FileInfo = new FileSystemFileInfo
+                    {
+                        Name = fileInfo.Name,
+                        Size = fileInfo.ToFileSystemInfo().Size,
+                        OriginalName = fileInfo.Name
+                    },
+                    DirectoryInfo = isSameDirectory ? null : fileFileSystemDirectoryInfo,
+                    OriginalFilename = fileInfo.Name,
+                    PictureIdentifier = pictureIdentifier,
+                    Width = imageInfo.Width,
+                    Height = imageInfo.Height,
+                    SortOrder = index + (int)pictureIdentifier * 1000 + imageInfo.Width + imageInfo.Height
+                });
+                index++;
+            }
+
+            logger.Debug("[{Name}] Skip images mode: found [{Count}] valid existing images", nameof(MelodeeMetadataMaker), albumImages.Count);
+        }
+        else
+        {
+            var foundAlbumImages =
+                (await album.FindImages(songPlugin, duplicateThreshold, imageConvertor, imageValidator,
+                        configuration.GetValue<bool>(SettingRegistry.ProcessingDoDeleteOriginal), cancellationToken)
+                    .ConfigureAwait(false)).ToArray();
+            if (foundAlbumImages.Length != 0)
+            {
+                foreach (var foundAlbumImage in foundAlbumImages)
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        break;
+                    }
+
+                    if (!albumImages.Any(x => x.IsCrcHashMatch(foundAlbumImage.CrcHash)))
+                    {
+                        albumImages.Add(foundAlbumImage);
+                    }
                 }
             }
         }
@@ -148,7 +236,7 @@ public class MelodeeMetadataMaker(
         album.Directory = directoryInfo;
 
         // See if artist can be found using ArtistSearchEngine to populate metadata, set UniqueId and MusicBrainzId
-
+        var artistSearchStartTicks = Stopwatch.GetTimestamp();
         var searchRequest = album.Artist.ToArtistQuery([
             new KeyValue((album.AlbumYear() ?? 0).ToString(),
                 album.AlbumTitle().ToNormalizedString() ?? album.AlbumTitle())
@@ -157,6 +245,8 @@ public class MelodeeMetadataMaker(
                 1,
                 cancellationToken)
             .ConfigureAwait(false);
+        var artistSearchElapsedMs = Stopwatch.GetElapsedTime(artistSearchStartTicks).TotalMilliseconds;
+
         if (artistSearchResult.IsSuccess)
         {
             var artistFromSearch = artistSearchResult.Data.OrderByDescending(x => x.Rank).FirstOrDefault();
@@ -220,8 +310,8 @@ public class MelodeeMetadataMaker(
             }
         }
 
-        // If album has no images then see if ImageSearchEngine can find any
-        if (album.Images?.Count() == 0)
+        // If album has no images then see if ImageSearchEngine can find any (unless skipImages is set)
+        if (!skipImages && album.Images?.Count() == 0)
         {
             var albumImageSearchRequest = album.ToAlbumQuery();
             var albumImageSearchResult = await albumImageSearchEngineService.DoSearchAsync(albumImageSearchRequest,
@@ -312,6 +402,18 @@ public class MelodeeMetadataMaker(
                 }
             }
         }
+
+        var totalElapsedMs = Stopwatch.GetElapsedTime(totalStartTicks).TotalMilliseconds;
+
+        logger.Information(
+            "[{Name}] PERF [{Directory}]: Total={TotalMs:F0}ms | Config={ConfigMs:F0}ms | Process={ProcessMs:F0}ms | ArtistSearch={ArtistSearchMs:F0}ms | Artist=[{ArtistName}]",
+            nameof(MelodeeMetadataMaker),
+            directoryInfo.Name,
+            totalElapsedMs,
+            configElapsedMs,
+            processElapsedMs,
+            artistSearchElapsedMs,
+            album?.Artist.Name ?? "Unknown");
 
         if (album?.IsValid ?? false)
         {

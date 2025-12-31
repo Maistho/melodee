@@ -115,7 +115,7 @@ public sealed class AlbumAddEventHandler(
 
                     // Process album metadata with better error handling
                     var processResult = await melodeeMetadataMaker
-                        .MakeMetadataFileAsync(message.AlbumDirectory, false, cancellationToken).ConfigureAwait(false);
+                        .MakeMetadataFileAsync(message.AlbumDirectory, false, false, cancellationToken).ConfigureAwait(false);
                     if (!processResult.IsSuccess || processResult.Data == null)
                     {
                         logger.Warning("[{Name}] Unable to rebuild media in directory [{DirName}]. Error: [{Error}]",

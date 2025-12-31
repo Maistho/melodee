@@ -22,14 +22,14 @@ public class MusicBrainzArtistSearchEnginePlugin(IMusicBrainzRepository reposito
         CancellationToken cancellationToken = default)
     {
         var startTicks = Stopwatch.GetTimestamp();
-        
+
         Log.Debug("[{PluginName}] Searching for artist: Name=[{Name}], NameNormalized=[{NameNormalized}], MusicBrainzId=[{MusicBrainzId}]",
             DisplayName, query.Name, query.NameNormalized, query.MusicBrainzId);
-        
+
         var result = await repository.SearchArtist(query, maxResults, cancellationToken);
-        
+
         var elapsedMs = Stopwatch.GetElapsedTime(startTicks).TotalMilliseconds;
-        
+
         if (result.IsSuccess && result.Data.Any())
         {
             var topResult = result.Data.First();
@@ -41,7 +41,7 @@ public class MusicBrainzArtistSearchEnginePlugin(IMusicBrainzRepository reposito
             Log.Debug("[{PluginName}] NO MATCH for artist [{ArtistName}] (NameNormalized={NameNormalized}) in {ElapsedMs:F1}ms",
                 DisplayName, query.Name, query.NameNormalized, elapsedMs);
         }
-        
+
         return result;
     }
 }

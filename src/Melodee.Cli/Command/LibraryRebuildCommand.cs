@@ -37,7 +37,9 @@ public class LibraryRebuildCommand : CommandBase<LibraryRebuildSettings>
 
             configGrid
                 .AddRow("[b]Library[/]", $"{settings.LibraryName.EscapeMarkup()}")
-                .AddRow("[b]Mode[/]", settings.CreateOnlyMissing ? "[blue]Create Only Missing[/]" : "[blue]Full Rebuild[/]");
+                .AddRow("[b]Mode[/]", settings.CreateOnlyMissing ? "[blue]Create Only Missing[/]" : "[blue]Full Rebuild[/]")
+                .AddRow("[b]Skip Images[/]", settings.SkipImages ? "[yellow]Yes[/]" : "[green]No[/]")
+                .AddRow("[b]Limit[/]", settings.Limit.HasValue ? $"[cyan]{settings.Limit.Value:N0}[/]" : "[green]Unlimited[/]");
 
             if (!string.IsNullOrEmpty(settings.OnlyPath))
             {
@@ -125,12 +127,12 @@ public class LibraryRebuildCommand : CommandBase<LibraryRebuildSettings>
                                 progressTask.StopTask();
 
                                 var elapsed = Stopwatch.GetElapsedTime(startTime);
-                                progressTask.Description = $"[green]✓ Completed:[/] {FormatNumber(e.Max)} directories rebuilt | [cyan]Time: {elapsed:hh\\:mm\\:ss}[/]";
+                                progressTask.Description = $"[green]✓ Completed:[/] {FormatNumber(e.Current)} directories rebuilt | [cyan]Time: {elapsed:hh\\:mm\\:ss}[/]";
                                 break;
                         }
                     };
 
-                    result = await libraryService.Rebuild(settings.LibraryName!, settings.CreateOnlyMissing, settings.Verbose, settings.OnlyPath, cancellationToken).ConfigureAwait(false);
+                    result = await libraryService.Rebuild(settings.LibraryName!, settings.CreateOnlyMissing, settings.Verbose, settings.OnlyPath, settings.SkipImages, settings.Limit, cancellationToken).ConfigureAwait(false);
                 });
 
             AnsiConsole.WriteLine();

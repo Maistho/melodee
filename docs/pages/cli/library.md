@@ -256,7 +256,9 @@ mcli library rebuild --library <NAME> [PATH] [OPTIONS]
 | Option | Alias | Default | Description |
 |--------|-------|---------|-------------|
 | `--library` | `-l` | **Required** | Name of the library |
+| `--limit` | `-n` | | Maximum number of albums to process and then quit |
 | `--only-missing` | | `true` | Only create missing metadata files |
+| `--skip-images` | | `false` | Skip searching for, downloading and processing images. Existing images are kept unless invalid. |
 | `--verbose` | | `false` | Include verbose debug output |
 
 ### Examples
@@ -270,6 +272,12 @@ mcli library rebuild --library <NAME> [PATH] [OPTIONS]
 
 # Rebuild specific album
 ./mcli library rebuild -l "Storage" "The Beatles/Abbey Road"
+
+# Rebuild without processing images (faster, keeps existing images)
+./mcli library rebuild -l "Storage" --skip-images
+
+# Process only first 100 albums
+./mcli library rebuild -l "Storage" --limit 100
 ```
 
 ### Safety

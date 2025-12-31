@@ -11,6 +11,15 @@ public class LibraryRebuildSettings : LibrarySettings
     [DefaultValue(true)]
     public bool CreateOnlyMissing { get; init; }
 
+    [Description("Skip searching for, downloading and processing images. Existing images are kept unless invalid.")]
+    [CommandOption("--skip-images")]
+    [DefaultValue(false)]
+    public bool SkipImages { get; init; }
+
+    [Description("Maximum number of albums to process and then quit, null is unlimited.")]
+    [CommandOption("-n|--limit")]
+    public int? Limit { get; init; }
+
     [Description("Rebuild only this library path.")]
     [CommandArgument(0, "[only-path]")]
     public string? OnlyPath { get; init; }

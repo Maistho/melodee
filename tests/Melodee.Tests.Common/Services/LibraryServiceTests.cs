@@ -1480,7 +1480,7 @@ public sealed class LibraryServiceTests : ServiceTestBase
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(() =>
-            libraryService.Rebuild(string.Empty, false, false, null, CancellationToken.None));
+            libraryService.Rebuild(string.Empty, false, false, null, false, null, CancellationToken.None));
     }
 
     [Fact]
@@ -1491,7 +1491,7 @@ public sealed class LibraryServiceTests : ServiceTestBase
         var libraryService = GetLibraryService();
 
         // Act
-        var result = await libraryService.Rebuild("NonExistingLibrary", false, false, null, CancellationToken.None);
+        var result = await libraryService.Rebuild("NonExistingLibrary", false, false, null, false, null, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -1508,7 +1508,7 @@ public sealed class LibraryServiceTests : ServiceTestBase
         await CreateLibraryInDb(1, "Locked Library", LibraryType.Storage, isLocked: true);
 
         // Act
-        var result = await libraryService.Rebuild("Locked Library", false, false, null, CancellationToken.None);
+        var result = await libraryService.Rebuild("Locked Library", false, false, null, false, null, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -1525,7 +1525,7 @@ public sealed class LibraryServiceTests : ServiceTestBase
         await CreateLibraryInDb(1, "Inbound Library", LibraryType.Inbound);
 
         // Act
-        var result = await libraryService.Rebuild("Inbound Library", false, false, null, CancellationToken.None);
+        var result = await libraryService.Rebuild("Inbound Library", false, false, null, false, null, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);

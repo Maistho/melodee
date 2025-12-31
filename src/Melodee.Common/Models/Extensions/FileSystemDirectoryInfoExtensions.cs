@@ -317,7 +317,7 @@ public static class FileSystemDirectoryInfoExtensions
         }
 
         var modifiedSinceValue = modifiedSince?.ToDateTimeUtc() ?? DateTime.MinValue;
-        
+
         // Use streaming enumeration to avoid loading all directories into memory at once
         foreach (var dir in dirInfo.EnumerateDirectories("*.*", searchOption))
         {
@@ -332,7 +332,7 @@ public static class FileSystemDirectoryInfoExtensions
                 }
             }
         }
-        
+
         // Check if the root directory itself has media files
         if (dirInfo.EnumerateFiles("*.*", SearchOption.TopDirectoryOnly)
             .Any(x => x.LastWriteTimeUtc >= modifiedSinceValue && FileHelper.IsFileMediaType(x.Extension)))

@@ -1,25 +1,33 @@
+using Melodee.Common.Configuration;
 using Melodee.Common.Extensions;
 using Melodee.Common.Models;
 using Melodee.Common.Models.SearchEngines;
 using Melodee.Common.Plugins.SearchEngine.MusicBrainz.Data;
-using Melodee.Tests.Common.Services;
 using Microsoft.EntityFrameworkCore;
 using Moq;
+using Serilog;
 using Album = Melodee.Common.Plugins.SearchEngine.MusicBrainz.Data.Models.Materialized.Album;
 using Artist = Melodee.Common.Plugins.SearchEngine.MusicBrainz.Data.Models.Materialized.Artist;
 
 namespace Melodee.Tests.Common.Plugins.SearchEngine;
 
-public class SQLiteMusicBrainzRepositoryTests : ServiceTestBase
+public class SQLiteMusicBrainzRepositoryTests : IDisposable, IAsyncDisposable
 {
     private readonly DbContextOptions<MusicBrainzDbContext> _dbContextOptions;
     private readonly Microsoft.Data.Sqlite.SqliteConnection _connection;
     private SQLiteMusicBrainzRepository _repository;
+    private readonly ILogger _logger;
 
     public SQLiteMusicBrainzRepositoryTests()
     {
-        // Create a persistent in-memory database connection with proper caching
-        _connection = new Microsoft.Data.Sqlite.SqliteConnection("Data Source=:memory:;Cache=Shared");
+        _logger = new LoggerConfiguration()
+            .MinimumLevel.Warning()
+            .WriteTo.Console()
+            .CreateLogger();
+
+        // Use a unique in-memory database per test instance to ensure isolation
+        // Mode=Memory ensures it's in-memory only. No Cache=Shared to prevent any cross-test sharing.
+        _connection = new Microsoft.Data.Sqlite.SqliteConnection("Data Source=:memory:");
         _connection.Open();
 
         _dbContextOptions = new DbContextOptionsBuilder<MusicBrainzDbContext>()
@@ -43,9 +51,16 @@ public class SQLiteMusicBrainzRepositoryTests : ServiceTestBase
         var dbContextFactory = mockFactory.Object;
 
         _repository = new SQLiteMusicBrainzRepository(
-            Logger,
+            _logger,
             MockConfigurationFactory(),
             dbContextFactory);
+    }
+
+    private static IMelodeeConfigurationFactory MockConfigurationFactory()
+    {
+        var mock = new Mock<IMelodeeConfigurationFactory>();
+        mock.Setup(f => f.GetConfigurationAsync(It.IsAny<CancellationToken>())).ReturnsAsync(TestsBase.NewPluginsConfiguration);
+        return mock.Object;
     }
 
 
@@ -112,13 +127,17 @@ public class SQLiteMusicBrainzRepositoryTests : ServiceTestBase
     }
 
     [Fact]
-    public async Task SearchArtist_WithNormalizedName_ReturnsMatchingArtists()
+    public async Task SearchArtist_WithNormalizedName_AndMusicBrainzId_ReturnsMatchingArtists()
     {
+        // This test verifies that database search works when searching with a MusicBrainzId
+        // Name-only searches require Lucene index, but searches with MusicBrainzId use direct database lookup
         SetupTestArtistData();
 
+        var artistId = Guid.Parse("12345678-1234-1234-1234-123456789012");
         var query = new ArtistQuery
         {
-            Name = "Test Artist"
+            Name = "Test Artist",
+            MusicBrainzId = artistId.ToString()
         };
 
         var result = await _repository.SearchArtist(query, 10);
@@ -126,6 +145,7 @@ public class SQLiteMusicBrainzRepositoryTests : ServiceTestBase
         Assert.NotNull(result);
         Assert.True(result.IsSuccess);
         Assert.NotEmpty(result.Data);
+        Assert.Equal("Test Artist", result.Data.First().Name);
     }
 
     [Fact]
@@ -508,18 +528,16 @@ public class SQLiteMusicBrainzRepositoryTests : ServiceTestBase
         context.SaveChanges();
     }
 
-    public override void Dispose()
+    public void Dispose()
     {
         _repository = null!;
         _connection.Close();
         _connection.Dispose();
-        base.Dispose();
     }
 
-    public override async ValueTask DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         _connection.Close();
         await _connection.DisposeAsync();
-        await base.DisposeAsync();
     }
 }

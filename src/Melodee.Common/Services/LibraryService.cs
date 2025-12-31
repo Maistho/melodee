@@ -776,6 +776,8 @@ public class LibraryService : ServiceBase
         bool doCreateOnlyMissing,
         bool settingsVerbose,
         string? onlyPath,
+        bool skipImages = false,
+        int? limit = null,
         CancellationToken cancellationToken = default)
     {
         Guard.Against.NullOrEmpty(libraryName, nameof(libraryName));
@@ -810,15 +812,15 @@ public class LibraryService : ServiceBase
         }
 
         var configuration = await _configurationFactory.GetConfigurationAsync(cancellationToken);
-        var maxAlbumProcessingCount = configuration.GetValue<int>(SettingRegistry.ProcessingMaximumProcessingCount,
+        var maxAlbumProcessingCount = limit ?? configuration.GetValue<int>(SettingRegistry.ProcessingMaximumProcessingCount,
             value => value < 1 ? int.MaxValue : value);
 
         var libraryDirectoryInfo = library.ToFileSystemDirectoryInfo();
-        
+
         // Optimized: Use deferred enumeration with early path filtering to avoid loading all directories into memory
         IEnumerable<MelodeeModels.FileSystemDirectoryInfo> directoryEnumerable;
         var normalizedOnlyPath = onlyPath.Nullify()?.ToNormalizedString();
-        
+
         if (normalizedOnlyPath != null)
         {
             // When filtering by path, use targeted search instead of enumerating all directories
@@ -831,10 +833,10 @@ public class LibraryService : ServiceBase
             directoryEnumerable = libraryDirectoryInfo
                 .GetFileSystemDirectoryInfosToProcess(null, SearchOption.AllDirectories);
         }
-        
+
         // Materialize to array for count and iteration (needed for progress reporting)
         var directoriesToProcess = directoryEnumerable.ToArray();
-        
+
         if (normalizedOnlyPath != null && directoriesToProcess.Length == 0)
         {
             return new MelodeeModels.OperationResult<bool>(
@@ -869,7 +871,7 @@ public class LibraryService : ServiceBase
 
         var totalDirectoriesToReport = directoriesToProcess.Length;
         var skippedCount = directoriesToProcess.Length - filteredDirectories.Length;
-        
+
         if (skippedCount > 0)
         {
             Logger.Debug("[{Name}] Skipped [{Count}] directories that already have melodee.json files.",
@@ -890,9 +892,15 @@ public class LibraryService : ServiceBase
                 break;
             }
 
-            var processResult = await _melodeeMetadataMaker
-                .MakeMetadataFileAsync(directoryInfo.FullName(), doCreateOnlyMissing, cancellationToken)
-                .ConfigureAwait(false);
+            MelodeeModels.OperationResult<MelodeeModels.Album?> processResult;
+
+            using (Operation.At(LogEventLevel.Debug)
+                       .Time("[{Name}] Handle [{id}]", nameof(LibraryService), "MakeMetadataFileAsync"))
+            {
+                processResult = await _melodeeMetadataMaker
+                    .MakeMetadataFileAsync(directoryInfo.FullName(), doCreateOnlyMissing, skipImages, cancellationToken)
+                    .ConfigureAwait(false);
+            }
             if (processResult.IsSuccess)
             {
                 totalFilesFound += processResult.Data?.SongTotalValue() ?? 0;

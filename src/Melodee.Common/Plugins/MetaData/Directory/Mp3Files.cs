@@ -62,35 +62,60 @@ public class Mp3Files(
             {
                 HandleMelodeeTagFiles(fileSystemDirectoryInfo);
 
-                foreach (var fileSystemInfo in fileSystemDirectoryInfo.AllMediaTypeFileInfos(SearchOption
-                             .TopDirectoryOnly))
+                // Get all media files upfront to enable parallel processing
+                var mediaFiles = fileSystemDirectoryInfo.AllMediaTypeFileInfos(SearchOption.TopDirectoryOnly).ToArray();
+
+                // Process files in parallel for better I/O throughput
+                var maxDegreeOfParallelism = Math.Min(Environment.ProcessorCount, 4);
+                var songResults = new System.Collections.Concurrent.ConcurrentBag<(Common.Models.Song? Song, string? ViaPlugin, List<string> Messages, List<Exception> Errors)>();
+
+                await Parallel.ForEachAsync(mediaFiles, new ParallelOptions
+                {
+                    MaxDegreeOfParallelism = maxDegreeOfParallelism,
+                    CancellationToken = cancellationToken
+                }, async (fileSystemInfo, token) =>
                 {
                     var fsi = fileSystemInfo.ToFileSystemInfo();
+                    var localMessages = new List<string>();
+                    var localErrors = new List<Exception>();
+
                     foreach (var plugin in songPlugins.OrderBy(x => x.SortOrder))
                     {
-                        if (cancellationToken.IsCancellationRequested)
+                        if (token.IsCancellationRequested)
                         {
                             break;
                         }
 
                         if (plugin.DoesHandleFile(fileSystemDirectoryInfo, fsi))
                         {
-                            var pluginResult =
-                                await plugin.ProcessFileAsync(fileSystemDirectoryInfo, fsi, cancellationToken);
-                            errors.AddRange(pluginResult.Errors ?? []);
-                            messages.AddRange(pluginResult.Messages ?? []);
+                            var pluginResult = await plugin.ProcessFileAsync(fileSystemDirectoryInfo, fsi, token);
+                            localErrors.AddRange(pluginResult.Errors ?? []);
+                            localMessages.AddRange(pluginResult.Messages ?? []);
                             if (pluginResult.IsSuccess)
                             {
-                                songs.Add(pluginResult.Data);
-                                viaPlugins.Add($"{nameof(Mp3Files)}:{plugin.DisplayName}");
-                                processedFileCount++;
+                                songResults.Add((pluginResult.Data, $"{nameof(Mp3Files)}:{plugin.DisplayName}", localMessages, localErrors));
                                 break;
                             }
 
-                            Trace.WriteLine(
-                                $"Plugin [{plugin.DisplayName}] failed to to process file: [{fsi}] result [{serializer.Serialize(pluginResult)}]");
+                            Trace.WriteLine($"Plugin [{plugin.DisplayName}] failed to process file: [{fsi}] result [{serializer.Serialize(pluginResult)}]");
                         }
                     }
+                });
+
+                // Collect results from parallel processing
+                foreach (var result in songResults)
+                {
+                    if (result.Song != null)
+                    {
+                        songs.Add(result.Song);
+                        processedFileCount++;
+                    }
+                    if (result.ViaPlugin != null)
+                    {
+                        viaPlugins.Add(result.ViaPlugin);
+                    }
+                    messages.AddRange(result.Messages);
+                    errors.AddRange(result.Errors);
                 }
 
                 await HandleDuplicates(fileSystemDirectoryInfo, songs.ToArray(), cancellationToken);
@@ -280,23 +305,13 @@ public class Mp3Files(
     private async Task HandleDuplicates(FileSystemDirectoryInfo fileSystemDirectoryInfo, Common.Models.Song[] seenSongs,
         CancellationToken cancellationToken = default)
     {
-        Trace.WriteLine($"Checking for duplicate files in [{fileSystemDirectoryInfo.FullName()}]...");
-
-        if (seenSongs.Length == 0)
+        if (seenSongs.Length < 2)
         {
             return;
         }
 
+        // First check for duplicate songs by their hash (much faster than file-level duplicate detection)
         var ss = seenSongs.ToList();
-        var foundDuplicates = await fileSystemDirectoryInfo.FindDuplicatesAsync(cancellationToken: cancellationToken)
-            .ConfigureAwait(false);
-        foreach (var dup in foundDuplicates.SelectMany(x => x.Value))
-        {
-            dup.Delete();
-            Trace.WriteLine($"Deleted duplicate: {dup.FullName}");
-            ss.RemoveAll(x => x.File.FullName(fileSystemDirectoryInfo) == dup.FullName);
-        }
-
         var duplicateSongs = ss.GroupBy(x => x.DuplicateHashCheck).Where(x => x.Count() > 1).ToArray();
         if (duplicateSongs.Any())
         {
@@ -309,7 +324,26 @@ public class Mp3Files(
                     var duplicateSongFile = ds.File.FullName(fileSystemDirectoryInfo);
                     File.Delete(duplicateSongFile);
                     Trace.WriteLine($"Deleted duplicate song: {duplicateSongFile}");
+                    ss.RemoveAll(x => x.File.FullName(fileSystemDirectoryInfo) == duplicateSongFile);
                 }
+            }
+        }
+
+        // Only do expensive file-level duplicate detection if we still have potential duplicates
+        // (files with same size that weren't caught by song hash check)
+        var filesBySize = ss.GroupBy(s => new FileInfo(s.File.FullName(fileSystemDirectoryInfo)).Length)
+            .Where(g => g.Count() > 1)
+            .ToArray();
+
+        if (filesBySize.Length > 0)
+        {
+            Trace.WriteLine($"Checking for file-level duplicates in [{fileSystemDirectoryInfo.FullName()}]...");
+            var foundDuplicates = await fileSystemDirectoryInfo.FindDuplicatesAsync(cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
+            foreach (var dup in foundDuplicates.SelectMany(x => x.Value))
+            {
+                dup.Delete();
+                Trace.WriteLine($"Deleted duplicate: {dup.FullName}");
             }
         }
     }
