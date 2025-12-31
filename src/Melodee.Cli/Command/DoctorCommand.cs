@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 using Melodee.Cli.CommandSettings;
+using Melodee.Common.Constants;
 using Melodee.Common.Data;
 using Melodee.Common.Models;
 using Melodee.Common.Models.SearchEngines.ArtistSearchEngineServiceData;
@@ -19,6 +20,12 @@ public sealed class DoctorCommand : CommandBase<DoctorSettings>
 {
     private sealed record CheckResult(string Name, bool Success, string Details, TimeSpan Duration);
 
+    private sealed record ConfigurableServiceResult(
+        string Category,
+        string Name,
+        string SettingKey,
+        bool Enabled);
+
     private sealed record LibraryPathResult(
         string Name,
         string Type,
@@ -33,6 +40,7 @@ public sealed class DoctorCommand : CommandBase<DoctorSettings>
 
         var checks = new List<CheckResult>();
         var libraries = new List<LibraryPathResult>();
+        var configurableServices = new List<ConfigurableServiceResult>();
 
         var configPathInfo = GetConfigurationPathInfo();
 
@@ -84,7 +92,7 @@ public sealed class DoctorCommand : CommandBase<DoctorSettings>
                 return 1;
             }
 
-            RenderSummary(checks, libraries, startedAt.Elapsed, settings.WriteTest);
+            RenderSummary(checks, libraries, configurableServices, startedAt.Elapsed, settings.WriteTest);
             return 1;
         }
 
@@ -107,7 +115,7 @@ public sealed class DoctorCommand : CommandBase<DoctorSettings>
                 return 1;
             }
 
-            RenderSummary(checks, libraries, startedAt.Elapsed, settings.WriteTest);
+            RenderSummary(checks, libraries, configurableServices, startedAt.Elapsed, settings.WriteTest);
             return 1;
         }
 
@@ -136,7 +144,7 @@ public sealed class DoctorCommand : CommandBase<DoctorSettings>
                 return 1;
             }
 
-            RenderSummary(checks, libraries, startedAt.Elapsed, settings.WriteTest);
+            RenderSummary(checks, libraries, configurableServices, startedAt.Elapsed, settings.WriteTest);
             return 1;
         }
 
@@ -257,6 +265,51 @@ public sealed class DoctorCommand : CommandBase<DoctorSettings>
                             : (settings.WriteTest ? "All library paths exist (write test enabled)" : "All library paths exist"),
                         sw.Elapsed);
                 });
+
+                await RunCheckAsync(progress, checks, "Configurable Services", async () =>
+                {
+                    var sw = Stopwatch.StartNew();
+
+                    await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
+                    var settingsDict = await db.Settings
+                        .Where(s => s.Key.Contains(".enabled"))
+                        .ToDictionaryAsync(s => s.Key, s => s.Value, cancellationToken);
+
+                    var serviceDefinitions = new (string Category, string Name, string SettingKey)[]
+                    {
+                        ("Search Engine", "Brave", SettingRegistry.SearchEngineBraveEnabled),
+                        ("Search Engine", "Deezer", SettingRegistry.SearchEngineDeezerEnabled),
+                        ("Search Engine", "iTunes", SettingRegistry.SearchEngineITunesEnabled),
+                        ("Search Engine", "Last.fm", SettingRegistry.SearchEngineLastFmEnabled),
+                        ("Search Engine", "MusicBrainz", SettingRegistry.SearchEngineMusicBrainzEnabled),
+                        ("Search Engine", "Spotify", SettingRegistry.SearchEngineSpotifyEnabled),
+                        ("Search Engine", "Metal API", SettingRegistry.SearchEngineMetalApiEnabled),
+                        ("Scrobbling", "Scrobbling", SettingRegistry.ScrobblingEnabled),
+                        ("Scrobbling", "Last.fm", SettingRegistry.ScrobblingLastFmEnabled),
+                        ("Processing", "Conversion", SettingRegistry.ConversionEnabled),
+                        ("Processing", "Magic", SettingRegistry.MagicEnabled),
+                        ("Processing", "Scripting", SettingRegistry.ScriptingEnabled),
+                        ("Plugins", "CueSheet", SettingRegistry.PluginEnabledCueSheet),
+                        ("Plugins", "M3U", SettingRegistry.PluginEnabledM3u),
+                        ("Plugins", "NFO", SettingRegistry.PluginEnabledNfo),
+                        ("Plugins", "Simple File Verification", SettingRegistry.PluginEnabledSimpleFileVerification),
+                        ("System", "Email", SettingRegistry.EmailEnabled),
+                    };
+
+                    foreach (var (category, name, settingKey) in serviceDefinitions)
+                    {
+                        var enabled = settingsDict.TryGetValue(settingKey, out var value)
+                            && bool.TryParse(value, out var b) && b;
+                        configurableServices.Add(new ConfigurableServiceResult(category, name, settingKey, enabled));
+                    }
+
+                    var enabledCount = configurableServices.Count(s => s.Enabled);
+                    return new CheckResult(
+                        "Configurable Services",
+                        true,
+                        $"{enabledCount}/{configurableServices.Count} services enabled",
+                        sw.Elapsed);
+                });
             });
 
         if (settings.ReturnRaw)
@@ -267,14 +320,15 @@ public sealed class DoctorCommand : CommandBase<DoctorSettings>
                 durationSeconds = startedAt.Elapsed.TotalSeconds,
                 configuration = configPathInfo,
                 checks = checks.Select(c => new { name = c.Name, success = c.Success, details = c.Details, durationMs = (int)c.Duration.TotalMilliseconds }),
-                libraries
+                libraries,
+                configurableServices = configurableServices.Select(s => new { category = s.Category, name = s.Name, settingKey = s.SettingKey, enabled = s.Enabled })
             };
 
             Console.WriteLine(JsonSerializer.Serialize(obj, new JsonSerializerOptions { WriteIndented = true }));
             return checks.All(c => c.Success) ? 0 : 1;
         }
 
-        RenderSummary(checks, libraries, startedAt.Elapsed, settings.WriteTest);
+        RenderSummary(checks, libraries, configurableServices, startedAt.Elapsed, settings.WriteTest);
 
         return checks.All(c => c.Success) ? 0 : 1;
     }
@@ -291,7 +345,7 @@ public sealed class DoctorCommand : CommandBase<DoctorSettings>
         results.Add(result);
     }
 
-    private static void RenderSummary(IReadOnlyCollection<CheckResult> checks, IReadOnlyCollection<LibraryPathResult> libraries, TimeSpan elapsed, bool writeTest)
+    private static void RenderSummary(IReadOnlyCollection<CheckResult> checks, IReadOnlyCollection<LibraryPathResult> libraries, IReadOnlyCollection<ConfigurableServiceResult> configurableServices, TimeSpan elapsed, bool writeTest)
     {
         var header = new Panel(new Markup($"[bold cyan]mcli doctor[/] completed in [grey]{elapsed:c}[/]"))
         {
@@ -361,6 +415,33 @@ public sealed class DoctorCommand : CommandBase<DoctorSettings>
             AnsiConsole.Write(new Panel(libTable)
             {
                 Header = new PanelHeader("[bold]Library Paths[/]", Justify.Left),
+                Border = BoxBorder.Rounded,
+                BorderStyle = new Style(foreground: Color.Grey)
+            });
+            AnsiConsole.WriteLine();
+        }
+
+        if (configurableServices.Count != 0)
+        {
+            var serviceTable = new Table().RoundedBorder();
+            serviceTable.AddColumn("Category");
+            serviceTable.AddColumn("Service");
+            serviceTable.AddColumn("Status");
+            serviceTable.AddColumn(new TableColumn("Setting Key").Centered());
+
+            foreach (var s in configurableServices.OrderBy(s => s.Category).ThenBy(s => s.Name))
+            {
+                var statusText = s.Enabled ? "[green]Enabled[/]" : "[dim]Disabled[/]";
+                serviceTable.AddRow(
+                    s.Category.EscapeMarkup(),
+                    s.Name.EscapeMarkup(),
+                    statusText,
+                    $"[dim]{s.SettingKey.EscapeMarkup()}[/]");
+            }
+
+            AnsiConsole.Write(new Panel(serviceTable)
+            {
+                Header = new PanelHeader("[bold]Configurable Services[/]", Justify.Left),
                 Border = BoxBorder.Rounded,
                 BorderStyle = new Style(foreground: Color.Grey)
             });
