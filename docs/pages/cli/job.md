@@ -18,10 +18,10 @@ mcli job [COMMAND] [OPTIONS]
 
 | Command | Description |
 |---------|-------------|
-| `list` | List all known background jobs with their execution history and statistics |
-| `run` | Run a specific background job by name |
 | `artistsearchengine-refresh` | Run artist search engine refresh job |
+| `list` | List all known background jobs with their execution history and statistics |
 | `musicbrainz-update` | Run MusicBrainz database update job |
+| `run` | Run a specific background job by name |
 
 ---
 

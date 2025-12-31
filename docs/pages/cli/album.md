@@ -18,11 +18,11 @@ mcli album [COMMAND] [OPTIONS]
 
 | Command | Alias | Description |
 |---------|-------|-------------|
+| `delete` | `rm` | Delete an album from the database |
+| `image-issues` | `img` | Find albums with missing, invalid, or misnumbered images |
 | `list` | `ls` | List albums in the database |
 | `search` | `s` | Search for albums by name |
 | `stats` | | Show album statistics grouped by status |
-| `delete` | `rm` | Delete an album from the database |
-| `image-issues` | `img` | Find albums with missing, invalid, or misnumbered images |
 
 ---
 
@@ -40,8 +40,8 @@ mcli album list [OPTIONS]
 
 | Option | Alias | Default | Description |
 |--------|-------|---------|-------------|
-| `--raw` | | `false` | Output results in JSON format |
 | `-n`, `--limit` | | `50` | Maximum number of results to return |
+| `--raw` | | `false` | Output results in JSON format |
 | `-s`, `--status` | | | Filter by album status (Ok, New, Invalid) |
 | `--verbose` | | `false` | Output verbose debug and timing results |
 
@@ -100,15 +100,15 @@ mcli album search [QUERY] [OPTIONS]
 
 | Option | Alias | Default | Description |
 |--------|-------|---------|-------------|
-| `--raw` | | `false` | Output results in JSON format |
+| `--delete` | | `false` | ⚠️ Delete all albums matching the search criteria |
+| `--keep-files` | | `false` | Keep album files on disk when deleting (database only) |
 | `-n`, `--limit` | | `25` | Maximum number of results to return |
+| `--raw` | | `false` | Output results in JSON format |
 | `--since` | | | Only show albums created within the last N days |
 | `--sort` | | | Sort by column: Artist, Album, Year, Songs, Added, Status |
 | `--sort-dir` | | `asc` | Sort direction: `asc` or `desc` |
-| `--delete` | | `false` | ⚠️ Delete all albums matching the search criteria |
-| `-y`, `--yes` | | `false` | Skip confirmation prompt when deleting |
-| `--keep-files` | | `false` | Keep album files on disk when deleting (database only) |
 | `--verbose` | | `false` | Output verbose debug and timing results |
+| `-y`, `--yes` | | `false` | Skip confirmation prompt when deleting |
 
 ### Examples
 
@@ -345,8 +345,8 @@ mcli album delete <ID> [OPTIONS]
 | Option | Alias | Default | Description |
 |--------|-------|---------|-------------|
 | `--keep-files` | | `false` | Keep the album directory on disk (do not delete files) |
-| `-y`, `--yes` | | `false` | Skip confirmation prompt |
 | `--verbose` | | `false` | Output verbose debug and timing results |
+| `-y`, `--yes` | | `false` | Skip confirmation prompt |
 
 ### Examples
 
@@ -399,11 +399,11 @@ mcli album image-issues [OPTIONS]
 
 | Option | Alias | Default | Description |
 |--------|-------|---------|-------------|
-| `--raw` | | `false` | Output results in JSON format |
-| `-n`, `--limit` | | `100` | Maximum number of results to return |
-| `--missing` | | `true` | Include albums with missing images |
 | `--invalid` | | `true` | Include albums with invalid images (wrong size, not square, etc.) |
+| `-n`, `--limit` | | `100` | Maximum number of results to return |
 | `--misnumbered` | | `true` | Include albums with incorrectly numbered images |
+| `--missing` | | `true` | Include albums with missing images |
+| `--raw` | | `false` | Output results in JSON format |
 | `--verbose` | | `false` | Output verbose debug and timing results |
 
 ### Image Naming Convention

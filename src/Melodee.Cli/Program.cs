@@ -9,6 +9,20 @@ public static class Program
 {
     public static int Main(string[] args)
     {
+        // Support "mcli help [command path]" as an alias for "--help" / "<command> --help".
+        // (Spectre.Console.Cli supports --help, but users commonly expect a help subcommand.)
+        if (args.Length > 0 && string.Equals(args[0], "help", StringComparison.OrdinalIgnoreCase))
+        {
+            var noAnsi = args.Skip(1).Any(static a => string.Equals(a, "--no-ansi", StringComparison.OrdinalIgnoreCase));
+            var forwarded = args.Skip(1)
+                .Where(static a => !string.Equals(a, "--no-ansi", StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+
+            args = forwarded.Length == 0
+                ? noAnsi ? ["--help", "--no-ansi"] : ["--help"]
+                : noAnsi ? [.. forwarded, "--help", "--no-ansi"] : [.. forwarded, "--help"];
+        }
+
         var app = new CommandApp();
 
         app.Configure(config =>
@@ -18,6 +32,12 @@ public static class Program
             config.AddBranch<AlbumSettings>("album", add =>
             {
                 add.SetDescription("Album data management and statistics");
+                add.AddCommand<AlbumDeleteCommand>("delete")
+                    .WithAlias("rm")
+                    .WithDescription("Delete an album from the database.");
+                add.AddCommand<AlbumImageIssuesCommand>("image-issues")
+                    .WithAlias("img")
+                    .WithDescription("Find albums with missing, invalid, or misnumbered images.");
                 add.AddCommand<AlbumListCommand>("list")
                     .WithAlias("ls")
                     .WithDescription("List albums in the database.");
@@ -26,16 +46,16 @@ public static class Program
                     .WithDescription("Search for albums by name.");
                 add.AddCommand<AlbumStatsCommand>("stats")
                     .WithDescription("Show album statistics grouped by status.");
-                add.AddCommand<AlbumDeleteCommand>("delete")
-                    .WithAlias("rm")
-                    .WithDescription("Delete an album from the database.");
-                add.AddCommand<AlbumImageIssuesCommand>("image-issues")
-                    .WithAlias("img")
-                    .WithDescription("Find albums with missing, invalid, or misnumbered images.");
             });
             config.AddBranch<ArtistSettings>("artist", add =>
             {
                 add.SetDescription("Artist data management and statistics");
+                add.AddCommand<ArtistDeleteCommand>("delete")
+                    .WithAlias("rm")
+                    .WithDescription("Delete an artist from the database.");
+                add.AddCommand<ArtistFindDuplicatesCommand>("find-duplicates")
+                    .WithAlias("fd")
+                    .WithDescription("Find potential duplicate artists based on external IDs, name similarity, and album overlap.");
                 add.AddCommand<ArtistListCommand>("list")
                     .WithAlias("ls")
                     .WithDescription("List artists in the database.");
@@ -44,23 +64,21 @@ public static class Program
                     .WithDescription("Search for artists by name.");
                 add.AddCommand<ArtistStatsCommand>("stats")
                     .WithDescription("Show artist statistics including missing images and potential duplicates.");
-                add.AddCommand<ArtistDeleteCommand>("delete")
-                    .WithAlias("rm")
-                    .WithDescription("Delete an artist from the database.");
-                add.AddCommand<ArtistFindDuplicatesCommand>("find-duplicates")
-                    .WithAlias("fd")
-                    .WithDescription("Find potential duplicate artists based on external IDs, name similarity, and album overlap.");
             });
             config.AddBranch<ConfigurationSettings>("configuration", add =>
             {
                 add.SetDescription("Manage Melodee configuration settings");
-                add.AddCommand<ConfigurationListCommand>("list")
-                    .WithDescription("List all configuration settings.");
                 add.AddCommand<ConfigurationGetCommand>("get")
                     .WithDescription("Get a specific configuration setting value.");
+                add.AddCommand<ConfigurationListCommand>("list")
+                    .WithDescription("List all configuration settings.");
                 add.AddCommand<ConfigurationSetCommand>("set")
                     .WithDescription("Modify Melodee configuration.");
             });
+
+            config.AddCommand<DoctorCommand>("doctor")
+                .WithDescription("Run environment and configuration diagnostics to validate Melodee is ready to run.");
+
             config.AddBranch<ShowMpegInfoSettings>("file", add =>
             {
                 add.SetDescription("File analysis and inspection tools");
@@ -76,14 +94,14 @@ public static class Program
             config.AddBranch<JobSettings>("job", add =>
             {
                 add.SetDescription("Run background jobs and maintenance tasks");
-                add.AddCommand<JobListCommand>("list")
-                    .WithDescription("List all known background jobs with their execution history and statistics.");
-                add.AddCommand<JobRunCommand>("run")
-                    .WithDescription("Run a specific background job by name.");
                 add.AddCommand<JobRunArtistSearchEngineDatabaseHousekeepingJobCommand>("artistsearchengine-refresh")
                     .WithDescription("Run artist search engine refresh job. This updates the local database of artists albums from search engines.");
+                add.AddCommand<JobListCommand>("list")
+                    .WithDescription("List all known background jobs with their execution history and statistics.");
                 add.AddCommand<JobRunMusicBrainzUpdateDatabaseJobCommand>("musicbrainz-update")
                     .WithDescription("Run MusicBrainz update database job. This downloads MusicBrainz data dump and creates local database for Melodee when scanning metadata.");
+                add.AddCommand<JobRunCommand>("run")
+                    .WithDescription("Run a specific background job by name.");
             });
             config.AddBranch("library", add =>
             {
@@ -94,17 +112,20 @@ public static class Program
                 add.AddCommand<LibraryCleanCommand>("clean")
                     .WithAlias("c")
                     .WithDescription("Clean library and delete any folders without media files. CAUTION: Destructive!");
+                add.AddCommand<AlbumFindDuplicateDirsCommand>("find-duplicate-dirs")
+                    .WithAlias("fdd")
+                    .WithDescription("Find duplicate album directories and optionally resolve using metadata searches.");
                 add.AddCommand<LibraryListCommand>("list")
                     .WithAlias("ls")
                     .WithDescription("List all libraries with their details.");
+                add.AddCommand<LibraryMoveOkCommand>("move-ok")
+                    .WithAlias("m")
+                    .WithDescription("Move 'Ok' status albums into the given library.");
                 add.AddCommand<ProcessInboundCommand>("process")
                     .WithAlias("p")
                     .WithDescription("Process media in given library into staging library.");
                 add.AddCommand<LibraryPurgeCommand>("purge")
                     .WithDescription("Purge library, deleting artists, albums, album songs and resetting library stats. CAUTION: Destructive!");
-                add.AddCommand<LibraryMoveOkCommand>("move-ok")
-                    .WithAlias("m")
-                    .WithDescription("Move 'Ok' status albums into the given library.");
                 add.AddCommand<LibraryRebuildCommand>("rebuild")
                     .WithAlias("r")
                     .WithDescription("Rebuild melodee metadata albums in the given library.");
@@ -117,9 +138,6 @@ public static class Program
                 add.AddCommand<LibraryValidateCommand>("validate")
                     .WithAlias("v")
                     .WithDescription("Validate library integrity: check DB records match disk files and vice versa.");
-                add.AddCommand<AlbumFindDuplicateDirsCommand>("find-duplicate-dirs")
-                    .WithAlias("fdd")
-                    .WithDescription("Find duplicate album directories and optionally resolve using metadata searches.");
             });
             config.AddBranch<ParseSettings>("parser", add =>
             {

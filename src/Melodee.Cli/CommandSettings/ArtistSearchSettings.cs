@@ -12,15 +12,25 @@ public class ArtistSearchSettings : ArtistSettings
     [CommandArgument(0, "[QUERY]")]
     public string Query { get; init; } = "*";
 
-    [Description("Output results in JSON format.")]
-    [CommandOption("--raw")]
+    [Description("Delete all artists matching the search criteria. ⚠️ DESTRUCTIVE - cannot be undone.")]
+    [CommandOption("--delete")]
     [DefaultValue(false)]
-    public bool ReturnRaw { get; init; }
+    public bool Delete { get; init; }
+
+    [Description("Keep artist files on disk when deleting (only remove from database).")]
+    [CommandOption("--keep-files")]
+    [DefaultValue(false)]
+    public bool KeepFiles { get; init; }
 
     [Description("Maximum number of results to return.")]
     [CommandOption("-n|--limit")]
     [DefaultValue(25)]
     public int Limit { get; init; }
+
+    [Description("Output results in JSON format.")]
+    [CommandOption("--raw")]
+    [DefaultValue(false)]
+    public bool ReturnRaw { get; init; }
 
     [Description("Only show artists created within the last N days.")]
     [CommandOption("--since")]
@@ -35,20 +45,10 @@ public class ArtistSearchSettings : ArtistSettings
     [DefaultValue("asc")]
     public string SortDirection { get; init; } = "asc";
 
-    [Description("Delete all artists matching the search criteria. ⚠️ DESTRUCTIVE - cannot be undone.")]
-    [CommandOption("--delete")]
-    [DefaultValue(false)]
-    public bool Delete { get; init; }
-
     [Description("Skip confirmation prompt when deleting (use with caution).")]
     [CommandOption("-y|--yes")]
     [DefaultValue(false)]
     public bool SkipConfirmation { get; init; }
-
-    [Description("Keep artist files on disk when deleting (only remove from database).")]
-    [CommandOption("--keep-files")]
-    [DefaultValue(false)]
-    public bool KeepFiles { get; init; }
 
     public override ValidationResult Validate()
     {

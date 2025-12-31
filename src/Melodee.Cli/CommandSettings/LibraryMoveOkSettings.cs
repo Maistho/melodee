@@ -6,14 +6,14 @@ namespace Melodee.Cli.CommandSettings;
 
 public class LibraryMoveOkSettings : LibrarySettings
 {
-    [Description("Name of library to move 'Ok' albums into.")]
-    [CommandOption("--to-library")]
-    public string? ToLibraryName { get; set; }
-
     [Description("Source path containing albums to move (use with --to-path for path-based mode, bypasses database library lookup).")]
     [CommandOption("--from-path")]
     [DefaultValue(null)]
     public string? FromPath { get; set; }
+
+    [Description("Name of library to move 'Ok' albums into.")]
+    [CommandOption("--to-library")]
+    public string? ToLibraryName { get; set; }
 
     [Description("Destination path to move 'Ok' albums into (use with --from-path for path-based mode, bypasses database library lookup).")]
     [CommandOption("--to-path")]

@@ -56,6 +56,7 @@ mcli [BRANCH] [COMMAND] [OPTIONS]
 | [album](/cli/album/) | Album data management and statistics | [View Details](/cli/album/) |
 | [artist](/cli/artist/) | Artist data management and statistics | [View Details](/cli/artist/) |
 | [configuration](/cli/configuration/) | Manage Melodee configuration settings | [View Details](/cli/configuration/) |
+| [doctor](/cli/doctor/) | Run environment and configuration diagnostics | [View Details](/cli/doctor/) |
 | [file](/cli/file/) | File analysis and inspection tools | [View Details](/cli/file/) |
 | [import](/cli/import/) | Import data from external sources | [View Details](/cli/import/) |
 | [job](/cli/job/) | Run background jobs and maintenance tasks | [View Details](/cli/job/) |
@@ -122,11 +123,11 @@ These options are available across most commands:
 
 | Option | Description |
 |--------|-------------|
-| `--verbose` | Output verbose debug and timing information (default: false) |
+| `-h`, `--help` | Show help information for the command |
+| `--json` | Output results as JSON (structured output for automation) |
 | `--raw` | Output in JSON format for scripting |
 | `--silent` | Suppress all output (for cron jobs, returns exit code only) |
-| `--json` | Output results as JSON (structured output for automation) |
-| `-h`, `--help` | Show help information for the command |
+| `--verbose` | Output verbose debug and timing information (default: false) |
 
 ## Exit Codes
 

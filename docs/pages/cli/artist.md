@@ -18,11 +18,11 @@ mcli artist [COMMAND] [OPTIONS]
 
 | Command | Alias | Description |
 |---------|-------|-------------|
+| `delete` | `rm` | Delete an artist from the database |
+| `find-duplicates` | `fd` | Find and optionally merge duplicate artists using advanced similarity detection |
 | `list` | `ls` | List artists in the database |
 | `search` | `s` | Search for artists by name |
 | `stats` | | Show artist statistics including missing images and potential duplicates |
-| `find-duplicates` | `fd` | Find and optionally merge duplicate artists using advanced similarity detection |
-| `delete` | `rm` | Delete an artist from the database |
 
 ---
 
@@ -40,8 +40,8 @@ mcli artist list [OPTIONS]
 
 | Option | Alias | Default | Description |
 |--------|-------|---------|-------------|
-| `--raw` | | `false` | Output results in JSON format |
 | `-n`, `--limit` | | `50` | Maximum number of results to return |
+| `--raw` | | `false` | Output results in JSON format |
 | `--verbose` | | `false` | Output verbose debug and timing results |
 
 ### Examples
@@ -114,15 +114,15 @@ mcli artist search [QUERY] [OPTIONS]
 
 | Option | Alias | Default | Description |
 |--------|-------|---------|-------------|
-| `--raw` | | `false` | Output results in JSON format |
+| `--delete` | | `false` | ⚠️ Delete all artists matching the search criteria |
+| `--keep-files` | | `false` | Keep artist files on disk when deleting (database only) |
 | `-n`, `--limit` | | `25` | Maximum number of results to return |
+| `--raw` | | `false` | Output results in JSON format |
 | `--since` | | | Only show artists created within the last N days |
 | `--sort` | | | Sort by column: Name, Albums, Songs, Added, Rating |
 | `--sort-dir` | | `asc` | Sort direction: `asc` or `desc` |
-| `--delete` | | `false` | ⚠️ Delete all artists matching the search criteria |
-| `-y`, `--yes` | | `false` | Skip confirmation prompt when deleting |
-| `--keep-files` | | `false` | Keep artist files on disk when deleting (database only) |
 | `--verbose` | | `false` | Output verbose debug and timing results |
+| `-y`, `--yes` | | `false` | Skip confirmation prompt when deleting |
 
 ### Examples
 
@@ -373,11 +373,11 @@ mcli artist find-duplicates [OPTIONS]
 
 | Option | Alias | Default | Description |
 |--------|-------|---------|-------------|
-| `-m`, `--min-score` | | `0.85` | Minimum similarity score (0.0-1.0). Higher values = stricter matching. |
 | `--merge` | | `false` | Automatically merge detected duplicates into the "Keep" artist |
-| `-y`, `--yes` | | `false` | Skip confirmation prompt when merging |
+| `-m`, `--min-score` | | `0.85` | Minimum similarity score (0.0-1.0). Higher values = stricter matching. |
 | `--raw` | | `false` | Output results in JSON format |
 | `--verbose` | | `false` | Output verbose debug and timing results |
+| `-y`, `--yes` | | `false` | Skip confirmation prompt when merging |
 
 ### Similarity Score Guidelines
 
@@ -598,8 +598,8 @@ mcli artist delete <ID> [OPTIONS]
 | Option | Alias | Default | Description |
 |--------|-------|---------|-------------|
 | `--keep-files` | | `false` | Keep the artist directory on disk (do not delete files) |
-| `-y`, `--yes` | | `false` | Skip confirmation prompt |
 | `--verbose` | | `false` | Output verbose debug and timing results |
+| `-y`, `--yes` | | `false` | Skip confirmation prompt |
 
 ### Examples
 

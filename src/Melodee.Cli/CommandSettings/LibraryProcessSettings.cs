@@ -16,6 +16,11 @@ public class LibraryProcessSettings : LibrarySettings
     [DefaultValue(true)]
     public bool ForceMode { get; init; }
 
+    [Description("Inbound path to process (use with --staging for path-based mode, bypasses database library lookup).")]
+    [CommandOption("--inbound")]
+    [DefaultValue(null)]
+    public string? InboundPath { get; set; }
+
     [Description("Maximum number of albums to process and then quit, null is unlimited.")]
     [CommandOption("--limit")]
     [DefaultValue(null)]
@@ -25,11 +30,6 @@ public class LibraryProcessSettings : LibrarySettings
     [CommandOption("--pre-script")]
     [DefaultValue(null)]
     public string? PreDiscoveryScript { get; set; }
-
-    [Description("Inbound path to process (use with --staging for path-based mode, bypasses database library lookup).")]
-    [CommandOption("--inbound")]
-    [DefaultValue(null)]
-    public string? InboundPath { get; set; }
 
     [Description("Staging path for processed output (use with --inbound for path-based mode, bypasses database library lookup).")]
     [CommandOption("--staging")]

@@ -9,15 +9,15 @@ namespace Melodee.Cli.CommandSettings;
 /// </summary>
 public class LibraryValidateSettings : LibrarySettings
 {
-    [Description("Output in JSON format for scripting. (default: False)")]
-    [CommandOption("--json")]
-    [DefaultValue(false)]
-    public bool Json { get; init; }
-
     [Description("Fix issues by removing orphaned database records. (default: False)")]
     [CommandOption("--fix")]
     [DefaultValue(false)]
     public bool Fix { get; init; }
+
+    [Description("Output in JSON format for scripting. (default: False)")]
+    [CommandOption("--json")]
+    [DefaultValue(false)]
+    public bool Json { get; init; }
 
     public override ValidationResult Validate()
     {

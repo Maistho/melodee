@@ -18,17 +18,17 @@ mcli library [COMMAND] [OPTIONS]
 
 | Command | Alias | Description |
 |---------|-------|-------------|
-| `list` | `ls` | List all libraries with their details |
-| `stats` | `ss` | Show statistics for a specific library |
 | `album-report` | `ar` | Show report of albums found in library |
 | `clean` | `c` | Clean library and delete folders without media files |
+| `find-duplicate-dirs` | `fdd` | Find duplicate album directories and resolve using metadata |
+| `list` | `ls` | List all libraries with their details |
+| `move-ok` | `m` | Move 'Ok' status albums to another library |
+| `process` | `p` | Process media from inbound to staging (step 1 only) |
+| `purge` | | Purge library data from database |
 | `rebuild` | `r` | Rebuild melodee metadata albums in library |
 | `scan` | `s` | **Full scan workflow** - process inbound → staging → storage → database |
-| `process` | `p` | Process media from inbound to staging (step 1 only) |
-| `move-ok` | `m` | Move 'Ok' status albums to another library |
-| `purge` | | Purge library data from database |
+| `stats` | `ss` | Show statistics for a specific library |
 | `validate` | `v` | Validate library integrity (DB vs disk consistency) |
-| `find-duplicate-dirs` | `fdd` | Find duplicate album directories and resolve using metadata |
 
 ---
 
@@ -100,8 +100,8 @@ mcli library stats --library <NAME> [OPTIONS]
 
 | Option | Alias | Default | Description |
 |--------|-------|---------|-------------|
-| `--library` | `-l` | **Required** | Name of the library to analyze |
 | `--borked` | | `false` | Show only issues, skip informational stats |
+| `--library` | `-l` | **Required** | Name of the library to analyze |
 | `--raw` | | `false` | Output in JSON format |
 | `--verbose` | | `false` | Include verbose debug output |
 
@@ -163,8 +163,8 @@ mcli library album-report --library <NAME> [OPTIONS]
 
 | Option | Alias | Default | Description |
 |--------|-------|---------|-------------|
-| `--library` | `-l` | **Required** | Name of the library |
 | `--full` | | `false` | Show detailed list instead of summary |
+| `--library` | `-l` | **Required** | Name of the library |
 | `--raw` | | `false` | Output in JSON format |
 | `--verbose` | | `false` | Include verbose debug output |
 
@@ -294,9 +294,9 @@ mcli library scan [OPTIONS]
 | Option | Alias | Default | Description |
 |--------|-------|---------|-------------|
 | `--force` | | `false` | Force processing even if recently scanned |
-| `--verbose` | | `false` | Include verbose debug output |
-| `--silent` | | `false` | Suppress all output (silent mode) |
 | `--json` | | `false` | Output results as JSON (implies --silent for progress) |
+| `--silent` | | `false` | Suppress all output (silent mode) |
+| `--verbose` | | `false` | Include verbose debug output |
 
 ### What It Does
 
@@ -403,12 +403,12 @@ mcli library process --library <NAME> [OPTIONS]
 
 | Option | Alias | Default | Description |
 |--------|-------|---------|-------------|
-| `--library` | `-l` | **Required** | Name of the inbound library |
 | `--copy` | | `true` | Copy files instead of moving |
 | `--force` | | `true` | Override existing metadata files |
+| `--inbound` | | | Inbound path (path-based mode) |
+| `--library` | `-l` | **Required** | Name of the inbound library |
 | `--limit` | | | Maximum albums to process |
 | `--pre-script` | | | Script to run before processing |
-| `--inbound` | | | Inbound path (path-based mode) |
 | `--staging` | | | Staging path (path-based mode) |
 | `--verbose` | | `false` | Include verbose debug output |
 
@@ -449,9 +449,9 @@ mcli library move-ok --library <FROM> --to-library <TO> [OPTIONS]
 
 | Option | Alias | Default | Description |
 |--------|-------|---------|-------------|
+| `--from-path` | | | Source path (path-based mode) |
 | `--library` | `-l` | **Required** | Source library name |
 | `--to-library` | | **Required** | Destination library name |
-| `--from-path` | | | Source path (path-based mode) |
 | `--to-path` | | | Destination path (path-based mode) |
 | `--verbose` | | `false` | Include verbose debug output |
 
@@ -483,8 +483,8 @@ mcli library purge --library <NAME> [OPTIONS]
 
 | Option | Alias | Default | Description |
 |--------|-------|---------|-------------|
-| `--library` | `-l` | **Required** | Name of the library to purge |
 | `--force` | | `false` | Ignore last scan timestamp |
+| `--library` | `-l` | **Required** | Name of the library to purge |
 | `--verbose` | | `false` | Include verbose debug output |
 
 ### What Gets Deleted
@@ -526,9 +526,9 @@ mcli library validate --library <NAME> [OPTIONS]
 
 | Option | Alias | Default | Description |
 |--------|-------|---------|-------------|
-| `--library` | `-l` | **Required** | Name of the storage library to validate |
 | `--fix` | | `false` | Remove orphaned database records |
 | `--json` | | `false` | Output results as JSON |
+| `--library` | `-l` | **Required** | Name of the storage library to validate |
 | `--verbose` | | `false` | Include verbose debug output |
 
 ### What It Validates
@@ -643,12 +643,12 @@ mcli library find-duplicate-dirs --library <NAME> [OPTIONS]
 
 | Option | Alias | Default | Description |
 |--------|-------|---------|-------------|
-| `--library` | `-l` | **Required** | Name of the storage library to scan |
-| `--search` | | `false` | Search metadata sources to determine correct year |
-| `--delete` | | `false` | Delete incorrect duplicates (requires `--search`) |
 | `--artist` | `-a` | | Filter to specific artist name (partial match) |
-| `--limit` | `-n` | | Maximum number of duplicate groups to process |
+| `--delete` | | `false` | Delete incorrect duplicates (requires `--search`) |
 | `--json` | | `false` | Output results as JSON |
+| `--library` | `-l` | **Required** | Name of the storage library to scan |
+| `--limit` | `-n` | | Maximum number of duplicate groups to process |
+| `--search` | | `false` | Search metadata sources to determine correct year |
 | `--verbose` | | `false` | Include verbose debug output |
 
 ### What It Does

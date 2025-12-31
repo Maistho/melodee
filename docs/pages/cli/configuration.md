@@ -18,8 +18,8 @@ mcli configuration [COMMAND] [OPTIONS]
 
 | Command | Description |
 |---------|-------------|
-| `list` | List all configuration settings |
 | `get` | Get a specific configuration setting value |
+| `list` | List all configuration settings |
 | `set` | Modify a configuration setting |
 
 ---
@@ -38,8 +38,8 @@ mcli configuration list [OPTIONS]
 
 | Option | Alias | Default | Description |
 |--------|-------|---------|-------------|
-| `--raw` | | `false` | Output results in JSON format |
 | `-c`, `--category` | | | Filter settings by category prefix |
+| `--raw` | | `false` | Output results in JSON format |
 | `--verbose` | | `true` | Output verbose debug and timing results |
 
 ### Examples
