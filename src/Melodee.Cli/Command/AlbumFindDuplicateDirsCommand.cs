@@ -28,6 +28,9 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
     private static readonly Regex YearRegex = new(@"\[(\d{4})\]|\((\d{4})\)|^(\d{4})\s", RegexOptions.Compiled);
     private static readonly Regex YearRemovalRegex = new(@"\s*[\[\(]?\d{4}[\]\)]?\s*", RegexOptions.Compiled);
     
+    // Regex to strip database ID from artist directory names (e.g., "Artist Name [12345]" -> "Artist Name")
+    private static readonly Regex ArtistIdRegex = new(@"\s*\[\d+\]\s*$", RegexOptions.Compiled);
+    
     public override async Task<int> ExecuteAsync(
         CommandContext context,
         AlbumFindDuplicateDirsSettings settings,
@@ -145,13 +148,16 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
 
                         try
                         {
-                            Log.Debug("Searching metadata for Artist={Artist}, Album={Album}", 
-                                group.ArtistName, group.AlbumName);
+                            // Strip the database ID from artist name for search (e.g., "Artist [123]" -> "Artist")
+                            var searchArtistName = ArtistIdRegex.Replace(group.ArtistName, string.Empty).Trim();
+                            
+                            Log.Debug("Searching metadata for Artist={Artist} (search: {SearchArtist}), Album={Album}", 
+                                group.ArtistName, searchArtistName, group.AlbumName);
                             
                             var searchResult = await albumSearchEngineService.DoSearchAsync(
                                 new AlbumQuery
                                 {
-                                    Artist = group.ArtistName,
+                                    Artist = searchArtistName,
                                     Name = group.AlbumName,
                                     Year = 0
                                 },
@@ -186,17 +192,35 @@ public class AlbumFindDuplicateDirsCommand : CommandBase<AlbumFindDuplicateDirsS
                                             dir.Path, dir.Year, dir.IsCorrectYear);
                                     }
 
-                                    group.SuggestedTargetDirectory = group.Directories
-                                        .FirstOrDefault(d => d.IsCorrectYear == true)?.Path;
-                                    group.SuggestedMergeDirectories = group.Directories
-                                        .Where(d => d.IsCorrectYear == false)
-                                        .Select(d => d.Path)
-                                        .ToArray();
-                                    
-                                    resolvedCount++;
-                                    Log.Debug("Resolved {Artist} - {Album}: TargetDir={TargetDir}, MergeDirs={MergeCount}",
-                                        group.ArtistName, group.AlbumName, 
-                                        group.SuggestedTargetDirectory, group.SuggestedMergeDirectories?.Length ?? 0);
+                                    // Find the best target directory:
+                                    // 1. Must have correct year
+                                    // 2. Prefer non-duplicate prefixed directories
+                                    // 3. If tie, prefer the one with most files (likely has bonus tracks)
+                                    var targetDir = group.Directories
+                                        .Where(d => d.IsCorrectYear == true)
+                                        .OrderBy(d => Path.GetFileName(d.Path).StartsWith("_duplicate_", StringComparison.OrdinalIgnoreCase) ? 1 : 0)
+                                        .ThenByDescending(d => d.FileCount)
+                                        .FirstOrDefault();
+
+                                    if (targetDir != null)
+                                    {
+                                        group.SuggestedTargetDirectory = targetDir.Path;
+                                        // ALL other directories should be merged into target
+                                        group.SuggestedMergeDirectories = group.Directories
+                                            .Where(d => d.Path != targetDir.Path)
+                                            .Select(d => d.Path)
+                                            .ToArray();
+                                        
+                                        resolvedCount++;
+                                        Log.Debug("Resolved {Artist} - {Album}: TargetDir={TargetDir}, MergeDirs={MergeCount}",
+                                            group.ArtistName, group.AlbumName, 
+                                            group.SuggestedTargetDirectory, group.SuggestedMergeDirectories?.Length ?? 0);
+                                    }
+                                    else
+                                    {
+                                        Log.Debug("No directory with matching year {Year} found for {Artist} - {Album}",
+                                            matchingAlbum.Year, group.ArtistName, group.AlbumName);
+                                    }
                                 }
                                 else
                                 {
