@@ -191,4 +191,47 @@ public class JellyfinTokenParserTests
 
         result.Should().BeFalse();
     }
+
+    [Fact]
+    public void GetTokenPrefix_ReturnsFirst8Characters()
+    {
+        var token = "abcdefghijklmnop";
+
+        var prefix = JellyfinTokenParser.GetTokenPrefix(token);
+
+        prefix.Should().Be("abcdefgh");
+        prefix.Should().HaveLength(8);
+    }
+
+    [Fact]
+    public void GetTokenPrefix_ShortToken_ReturnsFullToken()
+    {
+        var token = "abc";
+
+        var prefix = JellyfinTokenParser.GetTokenPrefix(token);
+
+        prefix.Should().Be("abc");
+    }
+
+    [Fact]
+    public void GetTokenPrefix_Exactly8Characters_ReturnsFullToken()
+    {
+        var token = "12345678";
+
+        var prefix = JellyfinTokenParser.GetTokenPrefix(token);
+
+        prefix.Should().Be("12345678");
+    }
+
+    [Fact]
+    public void GetTokenPrefix_GeneratedToken_ReturnsConsistentPrefix()
+    {
+        var token = JellyfinTokenParser.GenerateToken();
+
+        var prefix1 = JellyfinTokenParser.GetTokenPrefix(token);
+        var prefix2 = JellyfinTokenParser.GetTokenPrefix(token);
+
+        prefix1.Should().Be(prefix2);
+        prefix1.Should().HaveLength(8);
+    }
 }

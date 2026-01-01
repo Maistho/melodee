@@ -8,6 +8,7 @@ namespace Melodee.Common.Data.Models;
 [Serializable]
 [Index(nameof(UserId))]
 [Index(nameof(TokenHash), IsUnique = true)]
+[Index(nameof(TokenPrefixHash))]
 [Index(nameof(UserId), nameof(ExpiresAt), nameof(RevokedAt))]
 public class JellyfinAccessToken
 {
@@ -21,6 +22,14 @@ public class JellyfinAccessToken
     [Required]
     [MaxLength(MaxLengthDefinitions.HashOrGuidLength)]
     public required string TokenHash { get; set; }
+
+    /// <summary>
+    /// First 8 characters of the raw token, used for fast prefix-based lookup
+    /// before performing full HMAC verification.
+    /// </summary>
+    [Required]
+    [MaxLength(8)]
+    public required string TokenPrefixHash { get; set; }
 
     [Required]
     [MaxLength(32)]

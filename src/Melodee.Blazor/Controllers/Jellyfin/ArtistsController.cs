@@ -99,6 +99,18 @@ public class ArtistsController(
             } : null
         }).ToArray();
 
+        // Compute collection ETag based on latest update time
+        var latestUpdate = artists.Any()
+            ? artists.Max(a => a.LastUpdatedAt ?? a.CreatedAt)
+            : Clock.GetCurrentInstant();
+        var collectionEtag = ComputeCollectionEtag(totalCount, skip, take, latestUpdate);
+
+        if (IsNotModified(collectionEtag))
+        {
+            return NotModified(collectionEtag);
+        }
+
+        SetETagHeader(collectionEtag);
         return Ok(new JellyfinArtistsResult
         {
             Items = items,
@@ -143,12 +155,19 @@ public class ArtistsController(
             return JellyfinNotFound("Artist not found.");
         }
 
+        var etag = ComputeEtag(artist.ApiKey, artist.LastUpdatedAt ?? artist.CreatedAt);
+        if (IsNotModified(etag))
+        {
+            return NotModified(etag);
+        }
+
+        SetETagHeader(etag);
         return Ok(new JellyfinBaseItem
         {
             Name = artist.Name,
             ServerId = GetServerId(),
             Id = ToJellyfinId(artist.ApiKey),
-            Etag = ComputeEtag(artist.ApiKey, artist.LastUpdatedAt ?? artist.CreatedAt),
+            Etag = etag,
             DateCreated = FormatInstantForJellyfin(artist.CreatedAt),
             SortName = artist.SortName ?? artist.Name,
             Type = "MusicArtist",
@@ -165,6 +184,13 @@ public class ArtistsController(
     private static string ComputeEtag(Guid apiKey, Instant lastUpdated)
     {
         var input = $"{apiKey:N}-{lastUpdated.ToUnixTimeTicks()}";
+        var hash = MD5.HashData(Encoding.UTF8.GetBytes(input));
+        return Convert.ToHexString(hash).ToLowerInvariant();
+    }
+
+    private static string ComputeCollectionEtag(int totalCount, int skip, int take, Instant latestUpdate)
+    {
+        var input = $"collection-{totalCount}-{skip}-{take}-{latestUpdate.ToUnixTimeTicks()}";
         var hash = MD5.HashData(Encoding.UTF8.GetBytes(input));
         return Convert.ToHexString(hash).ToLowerInvariant();
     }

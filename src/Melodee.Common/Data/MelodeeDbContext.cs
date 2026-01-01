@@ -1313,6 +1313,46 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
                     Description = "Allow X-Emby-* and X-MediaBrowser-* headers for authentication (default: true)",
                     Value = "true",
                     CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1705,
+                    ApiKey = SeedGuid("Setting", 1705),
+                    Key = SettingRegistry.JellyfinTokenPepper,
+                    Comment = "Secret pepper for Jellyfin token hashing",
+                    Description = "Server-side secret used in token hash computation. Change this value in production for added security.",
+                    Value = "ChangeThisPepperInProduction",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1706,
+                    ApiKey = SeedGuid("Setting", 1706),
+                    Key = SettingRegistry.JellyfinRateLimitApiRequestsPerPeriod,
+                    Comment = "API requests allowed per period",
+                    Description = "Maximum number of Jellyfin API requests allowed per rate limit period (default: 200)",
+                    Value = "200",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1707,
+                    ApiKey = SeedGuid("Setting", 1707),
+                    Key = SettingRegistry.JellyfinRateLimitApiPeriodSeconds,
+                    Comment = "Rate limit period in seconds",
+                    Description = "Duration of the rate limit period in seconds (default: 60)",
+                    Value = "60",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1708,
+                    ApiKey = SeedGuid("Setting", 1708),
+                    Key = SettingRegistry.JellyfinRateLimitStreamConcurrentPerUser,
+                    Comment = "Concurrent streams per user",
+                    Description = "Maximum number of concurrent audio streams allowed per user (default: 2)",
+                    Value = "2",
+                    CreatedAt = seedDataTimestamp
                 }
             );
         });
@@ -1453,12 +1493,12 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
         // modelBuilder.Entity<Song>()
         //     .HasIndex(s => new
         //     {
-        //         SongTitle= s.Title, 
-        //         AlbumTitle= s.AlbumDisc.Title, 
+        //         SongTitle= s.Title,
+        //         AlbumTitle= s.AlbumDisc.Title,
         //         ArtistName = s.AlbumDisc.Album.Name
         //     })
         //     .HasMethod("GIN")
-        //     .IsTsVectorExpressionIndex("english");          
+        //     .IsTsVectorExpressionIndex("english");
 
         // modelBuilder.Entity<User>()
         //     .HasGeneratedTsVectorColumn(u => u.SearchVector, "english", u => new { u.Email, u.UserName })

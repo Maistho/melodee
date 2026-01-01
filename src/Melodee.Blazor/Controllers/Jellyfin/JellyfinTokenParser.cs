@@ -102,6 +102,14 @@ public static partial class JellyfinTokenParser
         return Convert.ToHexString(bytes).ToLowerInvariant();
     }
 
+    /// <summary>
+    /// Extracts the first 8 characters of a token for prefix-based lookup.
+    /// </summary>
+    public static string GetTokenPrefix(string token)
+    {
+        return token.Length >= 8 ? token[..8] : token;
+    }
+
     public static string GenerateSalt()
     {
         var bytes = new byte[16];

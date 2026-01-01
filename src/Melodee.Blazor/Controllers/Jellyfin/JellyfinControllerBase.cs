@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using Melodee.Blazor.Controllers.Jellyfin.Models;
 using Melodee.Blazor.Filters;
@@ -7,7 +6,6 @@ using Melodee.Common.Constants;
 using Melodee.Common.Data;
 using Melodee.Common.Data.Models;
 using Melodee.Common.Serialization;
-using Melodee.Common.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
@@ -85,21 +83,22 @@ public abstract class JellyfinControllerBase(
 
         var pepper = await GetTokenPepperAsync(cancellationToken);
         var now = Clock.GetCurrentInstant();
+        var tokenPrefix = JellyfinTokenParser.GetTokenPrefix(tokenInfo.Token);
 
         await using var dbContext = await DbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        // Token lookup requires iterating valid tokens and verifying HMAC because each token
-        // has a unique salt. MaxActiveTokensPerUser (default: 10) bounds the iteration.
-        // For high-scale deployments, consider adding a token prefix hash for faster lookup.
-        var validTokens = await dbContext.JellyfinAccessTokens
+        // Use prefix-based lookup to narrow candidates before HMAC verification.
+        // This significantly reduces the number of HMAC computations needed.
+        var candidateTokens = await dbContext.JellyfinAccessTokens
             .AsNoTracking()
             .Include(t => t.User)
-            .Where(t => t.RevokedAt == null && (t.ExpiresAt == null || t.ExpiresAt > now))
+            .Where(t => t.TokenPrefixHash == tokenPrefix
+                        && t.RevokedAt == null
+                        && (t.ExpiresAt == null || t.ExpiresAt > now))
             .OrderByDescending(t => t.LastUsedAt ?? t.CreatedAt)
-            .Take(1000)
             .ToListAsync(cancellationToken);
 
-        foreach (var storedToken in validTokens)
+        foreach (var storedToken in candidateTokens)
         {
             if (JellyfinTokenParser.VerifyToken(tokenInfo.Token, storedToken.TokenSalt, pepper, storedToken.TokenHash))
             {
@@ -139,6 +138,38 @@ public abstract class JellyfinControllerBase(
     }
 
     protected string GetCorrelationId() => HttpContext.TraceIdentifier;
+
+    /// <summary>
+    /// Checks If-None-Match header and returns 304 Not Modified if the ETag matches.
+    /// </summary>
+    /// <param name="etag">The current ETag value for the resource.</param>
+    /// <returns>True if the client already has the current version (should return 304).</returns>
+    protected bool IsNotModified(string etag)
+    {
+        if (Request.Headers.TryGetValue("If-None-Match", out var ifNoneMatch))
+        {
+            var clientEtag = ifNoneMatch.ToString().Trim('"');
+            return string.Equals(clientEtag, etag, StringComparison.OrdinalIgnoreCase);
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Sets the ETag header on the response.
+    /// </summary>
+    protected void SetETagHeader(string etag)
+    {
+        Response.Headers.ETag = $"\"{etag}\"";
+    }
+
+    /// <summary>
+    /// Returns a 304 Not Modified response with the ETag header set.
+    /// </summary>
+    protected IActionResult NotModified(string etag)
+    {
+        SetETagHeader(etag);
+        return StatusCode(StatusCodes.Status304NotModified);
+    }
 
     protected IActionResult JellyfinUnauthorized(string detail = "Missing or invalid authentication token.")
     {

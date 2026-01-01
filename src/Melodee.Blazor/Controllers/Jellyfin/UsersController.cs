@@ -60,6 +60,7 @@ public class UsersController(
 
         var tokenInfo = JellyfinTokenParser.ParseFromRequest(Request);
         var token = JellyfinTokenParser.GenerateToken();
+        var tokenPrefix = JellyfinTokenParser.GetTokenPrefix(token);
         var salt = JellyfinTokenParser.GenerateSalt();
         var pepper = await GetTokenPepperAsync(cancellationToken);
         var tokenHash = JellyfinTokenParser.HashToken(token, salt, pepper);
@@ -97,6 +98,7 @@ public class UsersController(
         {
             UserId = user.Id,
             TokenHash = tokenHash,
+            TokenPrefixHash = tokenPrefix,
             TokenSalt = salt,
             CreatedAt = now,
             ExpiresAt = expiresAt,

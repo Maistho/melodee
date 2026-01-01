@@ -335,35 +335,46 @@ builder.Services.AddRateLimiter(options =>
                 AutoReplenishment = true
             }));
     options.AddPolicy("jellyfin-api", context =>
-        RateLimitPartition.GetTokenBucketLimiter(context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+    {
+        var apiTokenLimit = builder.Configuration.GetValue<int>("Jellyfin:RateLimit:ApiTokenLimit", 200);
+        var apiPeriodSeconds = builder.Configuration.GetValue<int>("Jellyfin:RateLimit:ApiPeriodSeconds", 60);
+        return RateLimitPartition.GetTokenBucketLimiter(context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             _ => new TokenBucketRateLimiterOptions
             {
-                TokenLimit = 60,
+                TokenLimit = apiTokenLimit,
                 QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                 QueueLimit = 20,
-                ReplenishmentPeriod = TimeSpan.FromSeconds(30),
-                TokensPerPeriod = 60,
+                ReplenishmentPeriod = TimeSpan.FromSeconds(apiPeriodSeconds),
+                TokensPerPeriod = apiTokenLimit,
                 AutoReplenishment = true
-            }));
+            });
+    });
     options.AddPolicy("jellyfin-auth", context =>
-        RateLimitPartition.GetTokenBucketLimiter(context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+    {
+        var authTokenLimit = builder.Configuration.GetValue<int>("Jellyfin:RateLimit:AuthTokenLimit", 10);
+        var authPeriodSeconds = builder.Configuration.GetValue<int>("Jellyfin:RateLimit:AuthPeriodSeconds", 60);
+        return RateLimitPartition.GetTokenBucketLimiter(context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             _ => new TokenBucketRateLimiterOptions
             {
-                TokenLimit = 10,
+                TokenLimit = authTokenLimit,
                 QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                 QueueLimit = 5,
-                ReplenishmentPeriod = TimeSpan.FromMinutes(1),
-                TokensPerPeriod = 10,
+                ReplenishmentPeriod = TimeSpan.FromSeconds(authPeriodSeconds),
+                TokensPerPeriod = authTokenLimit,
                 AutoReplenishment = true
-            }));
+            });
+    });
     options.AddPolicy("jellyfin-stream", context =>
-        RateLimitPartition.GetConcurrencyLimiter(context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+    {
+        var streamConcurrentLimit = builder.Configuration.GetValue<int>("Jellyfin:RateLimit:StreamConcurrentLimit", 10);
+        return RateLimitPartition.GetConcurrencyLimiter(context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             _ => new ConcurrencyLimiterOptions
             {
-                PermitLimit = 10,
+                PermitLimit = streamConcurrentLimit,
                 QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                 QueueLimit = 5
-            }));
+            });
+    });
 });
 
 builder.Services.AddSingleton<IAppVersionProvider, AppVersionProvider>();

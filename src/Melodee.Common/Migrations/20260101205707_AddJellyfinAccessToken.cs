@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 using NodaTime;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -20,6 +20,7 @@ namespace Melodee.Common.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     UserId = table.Column<int>(type: "integer", nullable: false),
                     TokenHash = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
+                    TokenPrefixHash = table.Column<string>(type: "character varying(8)", maxLength: 8, nullable: false),
                     TokenSalt = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: false),
                     CreatedAt = table.Column<Instant>(type: "timestamp with time zone", nullable: false),
                     LastUsedAt = table.Column<Instant>(type: "timestamp with time zone", nullable: true),
@@ -46,6 +47,11 @@ namespace Melodee.Common.Migrations
                 table: "JellyfinAccessTokens",
                 column: "TokenHash",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_JellyfinAccessTokens_TokenPrefixHash",
+                table: "JellyfinAccessTokens",
+                column: "TokenPrefixHash");
 
             migrationBuilder.CreateIndex(
                 name: "IX_JellyfinAccessTokens_UserId",

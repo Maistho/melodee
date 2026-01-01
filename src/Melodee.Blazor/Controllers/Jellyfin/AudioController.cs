@@ -105,7 +105,7 @@ public class AudioController(
 
         if (Request.Headers.TryGetValue("Range", out var rangeHeader))
         {
-            return await HandleRangeRequestAsync(filePath, fileInfo.Length, rangeHeader.ToString(), contentType, cancellationToken);
+            return await HandleRangeRequestAsync(filePath, fileInfo.Length, rangeHeader.ToString(), contentType, user.Id, itemId, cancellationToken);
         }
 
         return PhysicalFile(filePath, contentType, enableRangeProcessing: true);
@@ -124,7 +124,14 @@ public class AudioController(
         return StreamAudioAsync(itemId, extension, @static, startTimeTicks, audioBitRate, cancellationToken);
     }
 
-    private async Task<IActionResult> HandleRangeRequestAsync(string filePath, long fileLength, string rangeHeader, string contentType, CancellationToken cancellationToken)
+    private async Task<IActionResult> HandleRangeRequestAsync(
+        string filePath,
+        long fileLength,
+        string rangeHeader,
+        string contentType,
+        int userId,
+        string itemId,
+        CancellationToken cancellationToken)
     {
         if (!rangeHeader.StartsWith("bytes=", StringComparison.OrdinalIgnoreCase))
         {
@@ -180,20 +187,48 @@ public class AudioController(
 
         var buffer = new byte[StreamBufferSize];
         var remaining = length;
-        while (remaining > 0)
+        var bytesSent = 0L;
+        var streamCanceled = false;
+
+        try
         {
-            if (cancellationToken.IsCancellationRequested)
+            while (remaining > 0)
             {
-                logger.LogDebug("JellyfinStreamCanceled FilePath={FilePath}", filePath);
-                break;
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    streamCanceled = true;
+                    break;
+                }
+
+                var toRead = (int)Math.Min(buffer.Length, remaining);
+                var read = await fileStream.ReadAsync(buffer.AsMemory(0, toRead), cancellationToken);
+                if (read == 0) break;
+
+                await Response.Body.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
+                bytesSent += read;
+                remaining -= read;
             }
+        }
+        catch (OperationCanceledException)
+        {
+            streamCanceled = true;
+        }
+        catch (IOException)
+        {
+            streamCanceled = true;
+        }
 
-            var toRead = (int)Math.Min(buffer.Length, remaining);
-            var read = await fileStream.ReadAsync(buffer.AsMemory(0, toRead), cancellationToken);
-            if (read == 0) break;
-
-            await Response.Body.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
-            remaining -= read;
+        if (streamCanceled)
+        {
+            logger.LogInformation(
+                "JellyfinStreamCanceled UserId={UserId} ItemId={ItemId} BytesSent={BytesSent} TotalBytes={TotalBytes} Reason={Reason}",
+                userId, itemId, bytesSent, length, "ClientDisconnect");
+        }
+        else if (bytesSent == length)
+        {
+            logger.LogDebug(
+                "JellyfinStreamComplete UserId={UserId} ItemId={ItemId} BytesSent={BytesSent}",
+                userId, itemId, bytesSent);
         }
 
         return new EmptyResult();
