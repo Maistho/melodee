@@ -141,4 +141,15 @@ public static class SettingRegistry
 
     // Security settings
     public const string SecurityPasswordResetTokenExpiryMinutes = "security.passwordResetTokenExpiryMinutes";
+
+    // Jellyfin API settings
+    public const string JellyfinEnabled = "jellyfin.enabled";
+    public const string JellyfinRoutePrefix = "jellyfin.routePrefix";
+    public const string JellyfinTokenExpiresAfterHours = "jellyfin.token.expiresAfterHours";
+    public const string JellyfinTokenMaxActivePerUser = "jellyfin.token.maxActivePerUser";
+    public const string JellyfinTokenAllowLegacyHeaders = "jellyfin.token.allowLegacyHeaders";
+    public const string JellyfinTokenPepper = "jellyfin.token.pepper";
+    public const string JellyfinRateLimitApiRequestsPerPeriod = "jellyfin.rateLimit.apiRequestsPerPeriod";
+    public const string JellyfinRateLimitApiPeriodSeconds = "jellyfin.rateLimit.apiPeriodSeconds";
+    public const string JellyfinRateLimitStreamConcurrentPerUser = "jellyfin.rateLimit.streamConcurrentPerUser";
 }
