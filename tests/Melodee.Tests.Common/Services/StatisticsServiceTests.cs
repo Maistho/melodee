@@ -925,7 +925,7 @@ public class StatisticsServiceTests : ServiceTestBase
     }
 
     [Fact]
-    public async Task GetAlbumsByYearAsync_ShouldReturnEmpty_WhenNone AlbumsExist()
+    public async Task GetAlbumsByYearAsync_ShouldReturnEmpty_WhenNoAlbumsExist()
     {
         var service = GetStatisticsService();
 

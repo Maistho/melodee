@@ -728,21 +728,21 @@ public sealed class StatisticsService(
     {
         await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
 
-        var albums = await context.Albums
+        var grouped = await context.Albums
             .AsNoTracking()
-            .Select(x => x.ReleaseDate.Year)
+            .GroupBy(x => x.ReleaseDate.Year)
+            .Select(g => new { Year = g.Key, Count = g.Count() })
+            .OrderBy(x => x.Year)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        var grouped = albums
-            .GroupBy(year => year)
-            .Select(g => new TopItemStat(g.Key.ToString(), g.Count()))
-            .OrderBy(x => x.Label)
+        var result = grouped
+            .Select(x => new TopItemStat(x.Year.ToString(), x.Count))
             .ToArray();
 
         return new OperationResult<TopItemStat[]>
         {
-            Data = grouped
+            Data = result
         };
     }
 
@@ -750,30 +750,18 @@ public sealed class StatisticsService(
     {
         await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
 
-        var albumGenres = await context.Albums
+        var albums = await context.Albums
             .AsNoTracking()
-            .Where(a => a.Genres != null && a.Genres.Length > 0)
-            .Select(a => a.Genres)
+            .Select(a => a.Genres != null && a.Genres.Length > 0 ? a.Genres[0] : "Unknown")
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        var grouped = albumGenres
-            .Select(genreArray => genreArray != null && genreArray.Length > 0 ? genreArray[0] : "Unknown")
+        var grouped = albums
             .GroupBy(g => g, StringComparer.OrdinalIgnoreCase)
             .Select(g => new TopItemStat(g.Key, g.Count()))
             .OrderByDescending(x => x.Value)
             .ThenBy(x => x.Label)
             .ToArray();
-
-        var unknownCount = await context.Albums
-            .AsNoTracking()
-            .CountAsync(a => a.Genres == null || a.Genres.Length == 0, cancellationToken)
-            .ConfigureAwait(false);
-
-        if (unknownCount > 0)
-        {
-            grouped = grouped.Concat(new[] { new TopItemStat("Unknown", unknownCount) }).ToArray();
-        }
 
         return new OperationResult<TopItemStat[]>
         {
@@ -812,17 +800,14 @@ public sealed class StatisticsService(
     {
         await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
 
-        var playHistories = await context.UserSongPlayHistories
+        var artistNames = await context.UserSongPlayHistories
             .AsNoTracking()
-            .Include(x => x.Song)
-            .ThenInclude(s => s.Album)
-            .ThenInclude(a => a.Artist)
-            .Select(x => new { ArtistName = x.Song.Album.Artist.Name })
+            .Select(x => x.Song.Album.Artist.Name)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        var artistPlayCounts = playHistories
-            .GroupBy(x => x.ArtistName, StringComparer.OrdinalIgnoreCase)
+        var artistPlayCounts = artistNames
+            .GroupBy(name => name, StringComparer.OrdinalIgnoreCase)
             .Select(g => new TopItemStat(g.Key, g.Count()))
             .OrderByDescending(x => x.Value)
             .ThenBy(x => x.Label)
