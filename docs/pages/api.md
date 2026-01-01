@@ -7,7 +7,7 @@ permalink: /api/
 
 This page documents the native Melodee API (Controllers in `src/Melodee.Blazor/Controllers/Melodee/`). For an overview of both API options (Native Melodee API and OpenSubsonic API), see the [API Overview](/apis/) page.
 
-For interactive API documentation and testing, visit the Swagger UI at `/swagger` when Melodee is running.
+For interactive API documentation and testing, visit the Scalar UI at `/scalar/v1` when Melodee is running. You can also download the OpenAPI specification at `/openapi/v1.json`.
 
 ## Authentication
 

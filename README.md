@@ -323,7 +323,7 @@ To enable Google Sign-In, configure the following in `appsettings.json`:
 }
 ```
 
-For API documentation including authentication endpoints, access `/swagger` on a running instance.
+For API documentation including authentication endpoints, access `/scalar/v1` on a running instance. Download the OpenAPI specification at `/openapi/v1.json`. For OpenSubsonic API, refer to the [OpenSubsonic specification](https://opensubsonic.netlify.app/).
 
 ## 🏗️ Architecture
 
