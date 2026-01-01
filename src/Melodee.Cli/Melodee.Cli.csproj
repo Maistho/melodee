@@ -8,7 +8,7 @@
     <AssemblyName>mcli</AssemblyName>
     <Deterministic>false</Deterministic>
     <NoWarn>$(NoWarn);NU1507</NoWarn>
-    <VersionPrefix>1.6.4</VersionPrefix>
+    <VersionPrefix>1.6.5</VersionPrefix>
     <VersionSuffix>build$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss"))</VersionSuffix>
     <AssemblyVersion>$(VersionPrefix).0</AssemblyVersion>
     <FileVersion>$(VersionPrefix).0</FileVersion>

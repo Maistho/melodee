@@ -142,7 +142,7 @@ public class SQLiteMusicBrainzRepository(
         if (SearchCache.TryGetValue(cacheKey, out var cached) &&
             cached.CachedAt > DateTime.UtcNow.AddMinutes(-CacheExpirationMinutes))
         {
-            Logger.Debug("[{RepoName}] Cache HIT for [{Query}]", nameof(SQLiteMusicBrainzRepository), query.NameNormalized);
+            Logger.Debug("[{RepoName}] Cache HIT for [{Query}]", nameof(SQLiteMusicBrainzRepository), LogSanitizer.Sanitize(query.NameNormalized));
             return cached.Result;
         }
 
@@ -173,7 +173,7 @@ public class SQLiteMusicBrainzRepository(
             if (searcher != null)
             {
                 Logger.Debug("[{RepoName}] Using Lucene index at [{Path}] for query: NameNormalized=[{NameNormalized}], NameNormalizedReversed=[{NameNormalizedReversed}]",
-                    nameof(SQLiteMusicBrainzRepository), lucenePath, query.NameNormalized, query.NameNormalizedReversed);
+                    nameof(SQLiteMusicBrainzRepository), lucenePath, LogSanitizer.Sanitize(query.NameNormalized), LogSanitizer.Sanitize(query.NameNormalizedReversed));
 
                 // Build a comprehensive query with multiple search strategies
                 BooleanQuery categoryQuery = [];
@@ -210,7 +210,7 @@ public class SQLiteMusicBrainzRepository(
                 if (words.Length > 1)
                 {
                     Logger.Debug("[{RepoName}] Tokenized query into [{WordCount}] words: [{Words}]",
-                        nameof(SQLiteMusicBrainzRepository), words.Length, string.Join(", ", words.Take(5)));
+                        nameof(SQLiteMusicBrainzRepository), words.Length, LogSanitizer.Sanitize(string.Join(", ", words.Take(5))));
 
                     foreach (var word in words.Where(w => w.Length >= 4).Take(3))
                     {
@@ -229,7 +229,7 @@ public class SQLiteMusicBrainzRepository(
                     .Select(hitDoc => hitDoc.Get(nameof(Artist.MusicBrainzIdRaw))));
 
                 Logger.Debug("[{RepoName}] Lucene search returned [{HitCount}] hits for [{NameNormalized}]",
-                    nameof(SQLiteMusicBrainzRepository), hits.Length, query.NameNormalized);
+                    nameof(SQLiteMusicBrainzRepository), hits.Length, LogSanitizer.Sanitize(query.NameNormalized));
 
                 // OPTIMIZATION: If Lucene index exists and returns 0 results, don't fall back to direct search
                 // The Lucene index contains the same data as the database, so if Lucene finds nothing,
@@ -257,7 +257,7 @@ public class SQLiteMusicBrainzRepository(
                 if (shouldUseDirectSearch && !string.IsNullOrEmpty(query.NameNormalized))
                 {
                     Logger.Debug("[{RepoName}] Using direct database search for [{NameNormalized}]",
-                        nameof(SQLiteMusicBrainzRepository), query.NameNormalized);
+                        nameof(SQLiteMusicBrainzRepository), LogSanitizer.Sanitize(query.NameNormalized));
 
                     // OPTIMIZED: First try exact match (uses index), then fall back to broader search
                     var directArtists = await context.Artists
@@ -290,7 +290,7 @@ public class SQLiteMusicBrainzRepository(
                     }
 
                     Logger.Debug("[{RepoName}] Direct search found [{Count}] artists for [{NameNormalized}]",
-                        nameof(SQLiteMusicBrainzRepository), directArtists.Length, query.NameNormalized);
+                        nameof(SQLiteMusicBrainzRepository), directArtists.Length, LogSanitizer.Sanitize(query.NameNormalized));
 
                     if (directArtists.Length > 0)
                     {
@@ -493,12 +493,12 @@ public class SQLiteMusicBrainzRepository(
         if (data.Count > 0)
         {
             Logger.Debug("[{RepoName}] SearchArtist COMPLETE: Found [{Count}] results for [{Query}] in {ElapsedMs:F1}ms. Top result: [{TopArtist}]",
-                nameof(SQLiteMusicBrainzRepository), data.Count, query.NameNormalized, elapsedMs, data.First().Name);
+                nameof(SQLiteMusicBrainzRepository), data.Count, LogSanitizer.Sanitize(query.NameNormalized), elapsedMs, LogSanitizer.Sanitize(data.First().Name));
         }
         else
         {
             Logger.Debug("[{RepoName}] SearchArtist COMPLETE: NO RESULTS for [{Query}] in {ElapsedMs:F1}ms (LuceneHits={LuceneHits}, DirectSearch={DirectSearch})",
-                nameof(SQLiteMusicBrainzRepository), query.NameNormalized, elapsedMs, musicBrainzIdsFromLucene.Count, shouldUseDirectSearch);
+                nameof(SQLiteMusicBrainzRepository), LogSanitizer.Sanitize(query.NameNormalized), elapsedMs, musicBrainzIdsFromLucene.Count, shouldUseDirectSearch);
         }
 
         return result;
