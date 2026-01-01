@@ -45,8 +45,20 @@ Reference OpenAPI spec: `prompts/jellyfin-openapi-stable.json` (Jellyfin 10.11.5
   `/api/jf` in the server implementation.
 - Keep all Jellyfin code isolated in a new controller namespace:
 
-  `Melodee.Controllers.Jellyfin` (within the `Melodee.Blazor` project).
+  `Melodee.Blazor.Controllers.Jellyfin` (within the `Melodee.Blazor` project).
 - Include clear security and performance requirements to avoid unsafe shortcuts.
+
+## Phase map (completion checklist)
+
+Use this as a quick, high-level progress tracker.
+
+- [ ] Phase 0: Plumbing and scaffolding
+- [ ] Phase 1: Server discovery and login
+- [ ] Phase 2: User views and music browsing primitives
+- [ ] Phase 3: Item details, images, and playlists
+- [ ] Phase 4: Audio streaming
+- [ ] Phase 5: Playback reporting (optional)
+- [ ] Phase 6: Token management, hardening, and admin (optional)
 
 ## Critical endpoints summary
 
@@ -55,7 +67,7 @@ This table is the minimal contract to get real Jellyfin music clients working.
 | Endpoint | Method | Phase | Auth | Expected behavior |
 | --- | --- | --- | --- | --- |
 | `/System/Info/Public` | GET | 1 | No | Returns server identity + capabilities needed for client onboarding |
-| `/System/Ping` | GET | 1 | No | Returns `204` (preferred) or small `200` per schema |
+| `/System/Ping` | GET/POST | 1 | No | Returns `204` (preferred) or small `200` per schema |
 | `/System/Info` | GET | 1 | Yes (recommended) | Returns authenticated server info; can be minimal |
 | `/Users/AuthenticateByName` | POST | 1 | No | Validates Melodee credentials; returns Jellyfin `AuthenticationResult` |
 | `/UserViews` | GET | 2 | Yes | Returns “Music” view(s) mapped to Melodee roots |
@@ -120,8 +132,18 @@ Secondary detection (needed for real-world Jellyfin clients and pre-auth flows):
 
 ### Middleware behavior
 
-Implement a middleware (example name: `JellyfinRoutingMiddleware`) inserted
-**before** `app.MapControllers()`.
+Implement a middleware (example name: `JellyfinRoutingMiddleware`) that runs
+early enough that the rewritten path is used by endpoint routing.
+
+Placement requirement:
+
+- Path rewriting must happen before endpoint routing selects an endpoint.
+- Place `app.UseMiddleware<JellyfinRoutingMiddleware>()` early in `Program.cs`,
+  before `app.UseAuthentication()`.
+
+Recommended placement:
+
+- After response compression and Swagger (if enabled), and before any auth.
 
 Rules:
 
@@ -150,7 +172,7 @@ Create a new folder under `src/Melodee.Blazor/Controllers/`:
 
 Controllers must use namespace:
 
-- `Melodee.Controllers.Jellyfin`
+- `Melodee.Blazor.Controllers.Jellyfin`
 
 Add a base controller patterned after existing `CommonBase` / OpenSubsonic
 controllers, but tuned to Jellyfin semantics:
@@ -200,7 +222,17 @@ Hashing requirements:
 
 - Hashing algorithm:
 
-  - compute `TokenHash = SHA-256(TokenSalt || AccessToken)`.
+  - prefer HMAC for clearer cryptographic intent:
+
+    - compute `TokenHash = HMAC-SHA256(PepperKey, TokenSalt || AccessToken)`.
+
+      - `PepperKey` is a server secret (config/env), not stored in the DB.
+      - `TokenSalt` is stored per token to ensure uniqueness even if a token is
+        reused accidentally.
+
+  - if HMAC is not used, an acceptable fallback is:
+
+    - `SHA-256(TokenSalt || Pepper || AccessToken)`.
   - `TokenSalt` must be unique per token (recommended 16+ bytes from a CSPRNG).
 
 - Comparison:
@@ -209,8 +241,8 @@ Hashing requirements:
 
 Optional hardening (recommended if easy):
 
-- Add a server-side “pepper” secret (config/env) and compute
-  `SHA-256(TokenSalt || Pepper || AccessToken)` to reduce impact if DB is leaked.
+- Ensure a server-side “pepper” secret exists (config/env) so DB compromise does
+  not immediately reveal token-verification capability.
 
 ### Issuance endpoint
 
@@ -222,6 +254,14 @@ Behavior:
 
 - Validate username/password against Melodee’s user system.
 - On success, create a new Jellyfin access token.
+
+Concurrency requirement:
+
+- Token issuance and enforcement of `MaxActiveTokensPerUser` must be
+  concurrency-safe.
+
+  - Use a transactional approach (or equivalent) so concurrent logins cannot
+    exceed the cap.
 - Return a Jellyfin `AuthenticationResult` shape (per OpenAPI schema):
 
   - include `AccessToken`
@@ -345,6 +385,16 @@ Deliverables:
   - `jellyfin-api`
   - `jellyfin-stream` (optional separate policy)
 - Add basic controller base + token parser utilities.
+- Add EF Core migration for the new `JellyfinAccessToken` persistence model.
+
+Auth flow verification note:
+
+- If Jellyfin auth is implemented such that `HttpContext.User` is set before
+  `app.UseAuthentication()` runs, verify the standard authentication middleware
+  does not overwrite the user principal when it fails to authenticate.
+
+  - Typical behavior is safe (auth middleware only sets the principal on
+    success), but this should be verified with tests.
 
 Unit tests:
 
@@ -358,6 +408,7 @@ Endpoints:
 
 - `GET /System/Info/Public`
 - `GET /System/Ping`
+- `POST /System/Ping` (some clients use POST)
 - `GET /System/Info` (may require auth)
 - `POST /Users/AuthenticateByName`
 
@@ -366,6 +417,14 @@ Behavior:
 - `/System/Info/Public` returns enough fields for clients to display server name
 
   and decide it is a Jellyfin-compatible server.
+
+CORS decision note:
+
+- Confirm whether any Jellyfin web-based clients (or browser tooling) will call
+  these endpoints cross-origin.
+
+  - If yes, define a narrowly scoped CORS policy for the Jellyfin surface.
+  - If no, explicitly keep CORS disabled for these endpoints.
 - `/System/Ping` returns `204` or a small `200` response per schema.
 - `/Users/AuthenticateByName` issues token and returns `AuthenticationResult`.
 
@@ -464,13 +523,26 @@ Endpoints (prioritize by observed client traffic):
 - `GET /Items/{id}` (if required by clients)
 - `GET /Items/{id}/Images/*` (or equivalent image endpoints per OpenAPI)
 - `GET /Playlists`
-- `POST /Playlists` (optional)
+- `POST /Playlists` (optional; non-MVP)
 - `GET /Playlists/{id}` and playlist item listing
 
 Notes:
 
 - Images: serve album art / artist art with correct caching headers.
 - If Jellyfin requires image tags, implement stable tags based on last-modified.
+
+Image sizing parameters (common client behavior):
+
+- Many clients call image endpoints with width/height parameters.
+
+  - Support `maxWidth`/`maxHeight` (or equivalent per OpenAPI) if practical.
+  - If not supported in MVP, accept and ignore these params (do not error).
+
+Playlist write scope clarification:
+
+- MVP expectation: playlist read/browse only.
+- Playlist write operations are explicitly deferred (Phase 3 optional) and are
+  not required for initial Jellyfin client playback compatibility.
 
 Unit tests:
 
@@ -527,6 +599,17 @@ Resource management requirements:
   - Prefer framework streaming primitives (`FileStreamResult`/`PhysicalFileResult`)
     over buffering.
   - Ensure range requests do not result in per-request full file reads.
+
+- Failure behavior:
+
+  - If a stream fails after headers have been sent (disk error, file deleted),
+    the response cannot be reshaped into JSON. Prefer:
+
+    - abort the connection
+    - log a structured error with `traceId`, userId, itemId
+
+  - If a stream fails before headers are sent, return a safe error response
+    (typically `404` if item no longer exists, otherwise `503`).
 
 Unit tests:
 
@@ -615,7 +698,7 @@ usage while preventing obvious abuse. They should be validated at startup.
 
 - `Jellyfin:RateLimiting:ApiRequestsPerPeriod` and `Jellyfin:RateLimiting:ApiPeriodSeconds`
 
-  - default: `100` requests per `60` seconds per user (browse + metadata)
+  - default: `200` requests per `60` seconds per user (browse + metadata)
   - validation: min `10` per period; max should be capped (e.g., `5000`) to
     avoid accidental misconfiguration
 
@@ -626,9 +709,9 @@ usage while preventing obvious abuse. They should be validated at startup.
 
 Concrete example:
 
-- “100 requests per minute per user” means:
+- “200 requests per minute per user” means:
 
-  - `ApiRequestsPerPeriod=100`
+  - `ApiRequestsPerPeriod=200`
   - `ApiPeriodSeconds=60`
 
 ### SettingRegistry keys (proposed)
@@ -725,8 +808,21 @@ Requirements:
 - Expired/revoked token during an active stream:
 
   - minimum requirement: token must be valid at stream start
-  - recommended: do not revalidate mid-stream unless there is a clear product
-    requirement; doing so can break playback on long tracks
+  - recommended default: do not revalidate mid-stream (can break playback)
+
+Mid-stream revalidation policy (configurable):
+
+- Add a configuration option for how to handle long-lived streams:
+
+  - `Jellyfin:Token:RevalidateDuringStreamPolicy` (string enum)
+
+    - `Never` (default): validate token only at stream start
+    - `StartOnly`: synonym for `Never` (optional)
+    - `Periodic`: revalidate at safe boundaries (implementation-defined; avoid
+      per-chunk DB lookups)
+
+- Regardless of policy, do not terminate an in-flight response abruptly without
+  clear client compatibility testing.
 
 - User deleted/disabled with active tokens:
 
@@ -763,7 +859,32 @@ Partition strategy (recommended):
 
   - `/UserViews`, `/Artists`, common `/Items` queries
 - Use existing cache abstractions (`ICacheManager`) to keep patterns consistent.
-- Use ETags for images and optionally for library responses if stable.
+- Use ETags for images and for browse responses when stable.
+
+Cache keys and invalidation:
+
+- Cache keys for browse endpoints must include:
+
+  - `UserId` (permissions differ)
+  - the effective view/root id (if applicable)
+  - paging/sort/search parameters
+
+- Invalidation strategy:
+
+  - TTL-only is acceptable for MVP.
+  - If the codebase provides a library-change event signal (scan complete,
+    metadata update), use it to evict relevant browse caches.
+
+Conditional request handling (browse endpoints):
+
+- For `/UserViews`, `/Artists`, `/Items` responses where the payload can be
+  represented by a stable cache key:
+
+  - emit `ETag` and `Last-Modified` (if a meaningful last-modified is known)
+  - honor `If-None-Match` and `If-Modified-Since`
+  - return `304 Not Modified` when appropriate
+
+- This is especially valuable for clients that poll browse endpoints frequently.
 
 ### Database query optimization
 
@@ -858,6 +979,26 @@ Manual test checklist:
 4. Play a track end-to-end
 5. Seek within a track (range requests)
 6. Verify that Melodee API (`/api/v1`) and OpenSubsonic (`/rest`) still work
+
+### Coexistence test requirements
+
+These requirements ensure Jellyfin emulation remains additive and does not
+regress existing API surfaces.
+
+#### Mandatory regression tests
+
+- All existing tests in `tests/Melodee.Tests.Blazor/` must pass.
+- All OpenSubsonic controller tests must pass unchanged.
+- All Melodee API controller tests must pass unchanged.
+
+#### Integration verification
+
+Before merging any Jellyfin phase:
+
+1. Authenticate via Melodee JWT API (`/api/v1/auth`).
+2. Authenticate via OpenSubsonic (`/rest/ping` with credentials).
+3. Authenticate via Jellyfin (`/Users/AuthenticateByName`).
+4. Verify all three work for the same user account simultaneously.
 
 ### Client compatibility checklist (quirks to watch)
 
