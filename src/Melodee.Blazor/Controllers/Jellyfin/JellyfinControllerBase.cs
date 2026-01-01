@@ -87,10 +87,16 @@ public abstract class JellyfinControllerBase(
         var now = Clock.GetCurrentInstant();
 
         await using var dbContext = await DbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        // Token lookup requires iterating valid tokens and verifying HMAC because each token
+        // has a unique salt. MaxActiveTokensPerUser (default: 10) bounds the iteration.
+        // For high-scale deployments, consider adding a token prefix hash for faster lookup.
         var validTokens = await dbContext.JellyfinAccessTokens
             .AsNoTracking()
             .Include(t => t.User)
             .Where(t => t.RevokedAt == null && (t.ExpiresAt == null || t.ExpiresAt > now))
+            .OrderByDescending(t => t.LastUsedAt ?? t.CreatedAt)
+            .Take(1000)
             .ToListAsync(cancellationToken);
 
         foreach (var storedToken in validTokens)

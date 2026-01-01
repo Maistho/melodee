@@ -1447,8 +1447,6 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
                 .WithMany()
                 .HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            jat.HasIndex(x => new { x.UserId, x.ExpiresAt, x.RevokedAt });
         });
 
         // sph; left here for example of GIN FTS. More info here https://www.npgsql.org/efcore/mapping/full-text-search.html?tabs=pg12%2Cv5

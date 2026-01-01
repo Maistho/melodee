@@ -25,6 +25,8 @@ public class ItemsController(
     IClock clock,
     ILogger<ItemsController> logger) : JellyfinControllerBase(etagRepository, serializer, configuration, configurationFactory, dbContextFactory, clock)
 {
+    private const int StreamBufferSize = 65536;
+
     private static readonly HashSet<string> SupportedItemTypes = new(StringComparer.OrdinalIgnoreCase)
     {
         "MusicArtist", "MusicAlbum", "Audio"
@@ -577,10 +579,10 @@ public class ItemsController(
         Response.Headers.Append("Content-Length", length.ToString());
         Response.ContentType = contentType;
 
-        await using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, 65536, true);
+        await using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, StreamBufferSize, true);
         fileStream.Seek(start, SeekOrigin.Begin);
 
-        var buffer = new byte[65536];
+        var buffer = new byte[StreamBufferSize];
         var remaining = length;
         while (remaining > 0 && !cancellationToken.IsCancellationRequested)
         {

@@ -8,6 +8,7 @@ namespace Melodee.Common.Data.Models;
 [Serializable]
 [Index(nameof(UserId))]
 [Index(nameof(TokenHash), IsUnique = true)]
+[Index(nameof(UserId), nameof(ExpiresAt), nameof(RevokedAt))]
 public class JellyfinAccessToken
 {
     public int Id { get; set; }

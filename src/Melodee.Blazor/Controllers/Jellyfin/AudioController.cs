@@ -22,6 +22,8 @@ public class AudioController(
     IClock clock,
     ILogger<AudioController> logger) : JellyfinControllerBase(etagRepository, serializer, configuration, configurationFactory, dbContextFactory, clock)
 {
+    private const int StreamBufferSize = 65536;
+
     [HttpGet("{itemId}/stream")]
     [HttpHead("{itemId}/stream")]
     public async Task<IActionResult> StreamAudioAsync(
@@ -173,10 +175,10 @@ public class AudioController(
         Response.Headers.Append("Content-Length", length.ToString());
         Response.ContentType = contentType;
 
-        await using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, 65536, true);
+        await using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, StreamBufferSize, true);
         fileStream.Seek(start, SeekOrigin.Begin);
 
-        var buffer = new byte[65536];
+        var buffer = new byte[StreamBufferSize];
         var remaining = length;
         while (remaining > 0)
         {
