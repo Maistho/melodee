@@ -756,6 +756,11 @@ namespace Melodee.Common.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
 
+                    b.Property<string>("TokenPrefixHash")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)");
+
                     b.Property<string>("TokenSalt")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -772,6 +777,8 @@ namespace Melodee.Common.Migrations
 
                     b.HasIndex("TokenHash")
                         .IsUnique();
+
+                    b.HasIndex("TokenPrefixHash");
 
                     b.HasIndex("UserId");
 
@@ -3019,6 +3026,114 @@ namespace Melodee.Common.Migrations
                             Key = "security.passwordResetTokenExpiryMinutes",
                             SortOrder = 0,
                             Value = "60"
+                        },
+                        new
+                        {
+                            Id = 1700,
+                            ApiKey = new Guid("226cfbc6-3866-fa17-7729-23849a7b8077"),
+                            Comment = "Enable Jellyfin API compatibility",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            Description = "When enabled, Melodee exposes Jellyfin-compatible endpoints for third-party music players",
+                            IsLocked = false,
+                            Key = "jellyfin.enabled",
+                            SortOrder = 0,
+                            Value = "true"
+                        },
+                        new
+                        {
+                            Id = 1701,
+                            ApiKey = new Guid("eefa4040-71d4-b7b0-4218-52b5aa1c7408"),
+                            Comment = "Internal route prefix for Jellyfin API",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            Description = "The internal route prefix used for Jellyfin API endpoints (default: /api/jf)",
+                            IsLocked = false,
+                            Key = "jellyfin.routePrefix",
+                            SortOrder = 0,
+                            Value = "/api/jf"
+                        },
+                        new
+                        {
+                            Id = 1702,
+                            ApiKey = new Guid("57d8a083-6ad7-9d6f-a31f-8b4f94e7a2a0"),
+                            Comment = "Jellyfin token expiry time in hours",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            Description = "How long Jellyfin access tokens remain valid (default: 168 hours / 7 days)",
+                            IsLocked = false,
+                            Key = "jellyfin.token.expiresAfterHours",
+                            SortOrder = 0,
+                            Value = "168"
+                        },
+                        new
+                        {
+                            Id = 1703,
+                            ApiKey = new Guid("1696717a-dbe7-3278-52c1-bc43a5c7ed86"),
+                            Comment = "Maximum active Jellyfin tokens per user",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            Description = "The maximum number of active Jellyfin tokens allowed per user (default: 10)",
+                            IsLocked = false,
+                            Key = "jellyfin.token.maxActivePerUser",
+                            SortOrder = 0,
+                            Value = "10"
+                        },
+                        new
+                        {
+                            Id = 1704,
+                            ApiKey = new Guid("732d29c7-1df6-4084-b126-f485463a10a4"),
+                            Comment = "Allow legacy Emby/MediaBrowser headers",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            Description = "Allow X-Emby-* and X-MediaBrowser-* headers for authentication (default: true)",
+                            IsLocked = false,
+                            Key = "jellyfin.token.allowLegacyHeaders",
+                            SortOrder = 0,
+                            Value = "true"
+                        },
+                        new
+                        {
+                            Id = 1705,
+                            ApiKey = new Guid("57ef8277-a41c-a3e3-d68b-3e6c16a98728"),
+                            Comment = "Secret pepper for Jellyfin token hashing",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            Description = "Server-side secret used in token hash computation. Change this value in production for added security.",
+                            IsLocked = false,
+                            Key = "jellyfin.token.pepper",
+                            SortOrder = 0,
+                            Value = "ChangeThisPepperInProduction"
+                        },
+                        new
+                        {
+                            Id = 1706,
+                            ApiKey = new Guid("191427dc-3a4b-e304-fe21-9457435456d7"),
+                            Comment = "API requests allowed per period",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            Description = "Maximum number of Jellyfin API requests allowed per rate limit period (default: 200)",
+                            IsLocked = false,
+                            Key = "jellyfin.rateLimit.apiRequestsPerPeriod",
+                            SortOrder = 0,
+                            Value = "200"
+                        },
+                        new
+                        {
+                            Id = 1707,
+                            ApiKey = new Guid("e10e7d3e-d4e8-a507-7a8e-ff526828ddd1"),
+                            Comment = "Rate limit period in seconds",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            Description = "Duration of the rate limit period in seconds (default: 60)",
+                            IsLocked = false,
+                            Key = "jellyfin.rateLimit.apiPeriodSeconds",
+                            SortOrder = 0,
+                            Value = "60"
+                        },
+                        new
+                        {
+                            Id = 1708,
+                            ApiKey = new Guid("96e4d8c5-a98c-ecd1-755a-eaccd69eaa20"),
+                            Comment = "Concurrent streams per user",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            Description = "Maximum number of concurrent audio streams allowed per user (default: 2)",
+                            IsLocked = false,
+                            Key = "jellyfin.rateLimit.streamConcurrentPerUser",
+                            SortOrder = 0,
+                            Value = "2"
                         });
                 });
 
