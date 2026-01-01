@@ -3961,4 +3961,10 @@
   <data name="Stats.TopArtistsByPlays" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Top 10 Most Played Artists</value>
   </data>
+  <data name="Stats.TopArtistsByAlbumCount" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Top 10 Artists by Album Count</value>
+  </data>
+  <data name="Stats.ReleasesByGenre" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Releases by Genre</value>
+  </data>
 </root>
