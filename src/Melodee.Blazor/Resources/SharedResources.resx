@@ -4089,4 +4089,7 @@
 <data name="About.OpenSubsonicApiDocs" xml:space="preserve">
     <value>OpenSubsonic API Docs</value>
   </data>
+<data name="Stats.TopArtistsByPlays" xml:space="preserve">
+    <value>Top 10 Most Played Artists</value>
+  </data>
 </root>

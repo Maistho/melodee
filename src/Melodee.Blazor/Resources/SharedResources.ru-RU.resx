@@ -3955,4 +3955,13 @@
   <data name="About.OpenSubsonicApiDocs" xml:space="preserve">
     <value>[NEEDS TRANSLATION] OpenSubsonic API Docs</value>
   </data>
+  <data name="Stats.ReleasesByGenre" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Releases by Genre</value>
+  </data>
+  <data name="Stats.ReleasesByYear" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Releases by Year</value>
+  </data>
+  <data name="Stats.TopArtistsByPlays" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Top 10 Most Played Artists</value>
+  </data>
 </root>

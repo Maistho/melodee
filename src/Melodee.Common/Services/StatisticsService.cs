@@ -723,4 +723,115 @@ public sealed class StatisticsService(
             Data = ZeroFillDailySeries(points, startDay, endDay)
         };
     }
+
+    public async Task<OperationResult<TopItemStat[]>> GetAlbumsByYearAsync(CancellationToken cancellationToken = default)
+    {
+        await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var albums = await context.Albums
+            .AsNoTracking()
+            .Select(x => x.ReleaseDate.Year)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var grouped = albums
+            .GroupBy(year => year)
+            .Select(g => new TopItemStat(g.Key.ToString(), g.Count()))
+            .OrderBy(x => x.Label)
+            .ToArray();
+
+        return new OperationResult<TopItemStat[]>
+        {
+            Data = grouped
+        };
+    }
+
+    public async Task<OperationResult<TopItemStat[]>> GetAlbumsByGenreAsync(CancellationToken cancellationToken = default)
+    {
+        await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var albumGenres = await context.Albums
+            .AsNoTracking()
+            .Where(a => a.Genres != null && a.Genres.Length > 0)
+            .Select(a => a.Genres)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var grouped = albumGenres
+            .Select(genreArray => genreArray != null && genreArray.Length > 0 ? genreArray[0] : "Unknown")
+            .GroupBy(g => g, StringComparer.OrdinalIgnoreCase)
+            .Select(g => new TopItemStat(g.Key, g.Count()))
+            .OrderByDescending(x => x.Value)
+            .ThenBy(x => x.Label)
+            .ToArray();
+
+        var unknownCount = await context.Albums
+            .AsNoTracking()
+            .CountAsync(a => a.Genres == null || a.Genres.Length == 0, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (unknownCount > 0)
+        {
+            grouped = grouped.Concat(new[] { new TopItemStat("Unknown", unknownCount) }).ToArray();
+        }
+
+        return new OperationResult<TopItemStat[]>
+        {
+            Data = grouped
+        };
+    }
+
+    public async Task<OperationResult<TopItemStat[]>> GetTopArtistsByAlbumCountAsync(
+        int topN = 10,
+        CancellationToken cancellationToken = default)
+    {
+        await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var artistAlbumCounts = await context.Artists
+            .AsNoTracking()
+            .Select(a => new { a.Name, a.AlbumCount })
+            .OrderByDescending(a => a.AlbumCount)
+            .ThenBy(a => a.Name)
+            .Take(topN)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var result = artistAlbumCounts
+            .Select(a => new TopItemStat(a.Name, a.AlbumCount))
+            .ToArray();
+
+        return new OperationResult<TopItemStat[]>
+        {
+            Data = result
+        };
+    }
+
+    public async Task<OperationResult<TopItemStat[]>> GetTopArtistsByPlaysAsync(
+        int topN = 10,
+        CancellationToken cancellationToken = default)
+    {
+        await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var playHistories = await context.UserSongPlayHistories
+            .AsNoTracking()
+            .Include(x => x.Song)
+            .ThenInclude(s => s.Album)
+            .ThenInclude(a => a.Artist)
+            .Select(x => new { ArtistName = x.Song.Album.Artist.Name })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var artistPlayCounts = playHistories
+            .GroupBy(x => x.ArtistName, StringComparer.OrdinalIgnoreCase)
+            .Select(g => new TopItemStat(g.Key, g.Count()))
+            .OrderByDescending(x => x.Value)
+            .ThenBy(x => x.Label)
+            .Take(topN)
+            .ToArray();
+
+        return new OperationResult<TopItemStat[]>
+        {
+            Data = artistPlayCounts
+        };
+    }
 }

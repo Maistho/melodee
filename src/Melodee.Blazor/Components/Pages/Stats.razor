@@ -110,6 +110,56 @@
         </RadzenStack>
     </RadzenCard>
 
+    <RadzenRow>
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenCard>
+                <RadzenText TextStyle="TextStyle.H6">@L("Stats.ReleasesByYear")</RadzenText>
+                <RadzenChart Style="height:320px;">
+                    <RadzenPieSeries Data="@_albumsByYear" CategoryProperty="Label" ValueProperty="Value" />
+                </RadzenChart>
+            </RadzenCard>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenCard>
+                <RadzenText TextStyle="TextStyle.H6">@L("Stats.ReleasesByGenre")</RadzenText>
+                <RadzenChart Style="height:320px;">
+                    <RadzenPieSeries Data="@_albumsByGenre" CategoryProperty="Label" ValueProperty="Value" />
+                </RadzenChart>
+            </RadzenCard>
+        </RadzenColumn>
+    </RadzenRow>
+
+    <RadzenRow>
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenCard>
+                <RadzenText TextStyle="TextStyle.H6">@L("Stats.TopArtistsByAlbumCount")</RadzenText>
+                <RadzenChart Style="height:320px;">
+                    <RadzenColumnSeries Data="@_topArtistsByAlbumCount" CategoryProperty="Label" ValueProperty="Value" />
+                    <RadzenCategoryAxis>
+                        <RadzenAxisTitle Text="@L("Common.Artist")"/>
+                    </RadzenCategoryAxis>
+                    <RadzenValueAxis>
+                        <RadzenAxisTitle Text="@L("Stats.CountColumnTitle")"/>
+                    </RadzenValueAxis>
+                </RadzenChart>
+            </RadzenCard>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenCard>
+                <RadzenText TextStyle="TextStyle.H6">@L("Stats.TopArtistsByPlays")</RadzenText>
+                <RadzenChart Style="height:320px;">
+                    <RadzenColumnSeries Data="@_topArtistsByPlays" CategoryProperty="Label" ValueProperty="Value" />
+                    <RadzenCategoryAxis>
+                        <RadzenAxisTitle Text="@L("Common.Artist")"/>
+                    </RadzenCategoryAxis>
+                    <RadzenValueAxis>
+                        <RadzenAxisTitle Text="@L("Stats.PlaysColumnTitle")"/>
+                    </RadzenValueAxis>
+                </RadzenChart>
+            </RadzenCard>
+        </RadzenColumn>
+    </RadzenRow>
+
     @if (CurrentUser?.IsEditor() == true || CurrentUser?.IsAdmin() == true)
     {
         <RadzenCard>
@@ -186,6 +236,10 @@
     TimeSeriesPoint[] _shareViewsPerDay = [];
     TimeSeriesPoint[] _libraryScansPerDay = [];
     Statistic[] _missingImages = [];
+    TopItemStat[] _albumsByYear = [];
+    TopItemStat[] _albumsByGenre = [];
+    TopItemStat[] _topArtistsByAlbumCount = [];
+    TopItemStat[] _topArtistsByPlays = [];
 
     private LocalDate _rangeStart;
     private LocalDate _rangeEnd;
@@ -221,6 +275,10 @@
         var playsTask = StatisticsService.GetUserSongPlaysPerDayAsync(userApiKey, _rangeStart, _rangeEnd, _timeZoneId);
         var addedTask = StatisticsService.GetSongsAddedPerDayAsync(_rangeStart, _rangeEnd, _timeZoneId);
         var topSongsTask = StatisticsService.GetUserTopPlayedSongsAsync(userApiKey, _rangeStart, _rangeEnd, _timeZoneId, 10);
+        var albumsByYearTask = StatisticsService.GetAlbumsByYearAsync();
+        var albumsByGenreTask = StatisticsService.GetAlbumsByGenreAsync();
+        var topArtistsByAlbumCountTask = StatisticsService.GetTopArtistsByAlbumCountAsync(10);
+        var topArtistsByPlaysTask = StatisticsService.GetTopArtistsByPlaysAsync(10);
         Task<OperationResult<Statistic[]>>? missingImagesTask = null;
         Task<OperationResult<TimeSeriesPoint[]>>? searchesTask = null;
         Task<OperationResult<TimeSeriesPoint[]>>? sharesTask = null;
@@ -240,6 +298,7 @@
         await Task.WhenAll(new Task[]
         {
             kpiTask, summaryTask, playsTask, addedTask, topSongsTask,
+            albumsByYearTask, albumsByGenreTask, topArtistsByAlbumCountTask, topArtistsByPlaysTask,
             missingImagesTask ?? Task.CompletedTask,
             searchesTask ?? Task.CompletedTask,
             sharesTask ?? Task.CompletedTask,
@@ -251,6 +310,10 @@
         _playsPerDay = playsTask.Result.Data ?? [];
         _songsAddedPerDay = addedTask.Result.Data ?? [];
         _topSongs = topSongsTask.Result.Data ?? [];
+        _albumsByYear = albumsByYearTask.Result.Data ?? [];
+        _albumsByGenre = albumsByGenreTask.Result.Data ?? [];
+        _topArtistsByAlbumCount = topArtistsByAlbumCountTask.Result.Data ?? [];
+        _topArtistsByPlays = topArtistsByPlaysTask.Result.Data ?? [];
         _missingImages = missingImagesTask?.Result.Data ?? [];
         _searchesPerDay = searchesTask?.Result.Data ?? [];
         _shareViewsPerDay = sharesTask?.Result.Data ?? [];

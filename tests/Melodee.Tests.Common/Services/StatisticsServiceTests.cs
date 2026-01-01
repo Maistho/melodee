@@ -923,4 +923,237 @@ public class StatisticsServiceTests : ServiceTestBase
         Assert.Equal("Song A", result.Data[0].Label);
         Assert.Equal(2, result.Data[0].Value);
     }
+
+    [Fact]
+    public async Task GetAlbumsByYearAsync_ShouldReturnEmpty_WhenNone AlbumsExist()
+    {
+        var service = GetStatisticsService();
+
+        var result = await service.GetAlbumsByYearAsync();
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+        Assert.Empty(result.Data);
+    }
+
+    [Fact]
+    public async Task GetAlbumsByYearAsync_ShouldGroupByYear_AndOrderByYear()
+    {
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            context.Albums.RemoveRange(context.Albums);
+            context.Artists.RemoveRange(context.Artists);
+            context.Libraries.RemoveRange(context.Libraries);
+            await context.SaveChangesAsync();
+
+            var library = new Library
+            {
+                Name = "Test Library",
+                Path = "/test/path",
+                Type = (int)LibraryType.Storage,
+                CreatedAt = Instant.FromUtc(2025, 12, 1, 0, 0)
+            };
+            context.Libraries.Add(library);
+            await context.SaveChangesAsync();
+
+            var artist = new Artist
+            {
+                ApiKey = Guid.NewGuid(),
+                Directory = "artist",
+                Name = "Artist",
+                NameNormalized = "ARTIST",
+                LibraryId = library.Id,
+                CreatedAt = Instant.FromUtc(2025, 12, 1, 0, 0)
+            };
+            context.Artists.Add(artist);
+            await context.SaveChangesAsync();
+
+            context.Albums.AddRange(
+                new Album { ApiKey = Guid.NewGuid(), ArtistId = artist.Id, Artist = artist, Name = "Album1", NameNormalized = "ALBUM1", Directory = "/a1/", ReleaseDate = new LocalDate(2020, 1, 1), CreatedAt = Instant.FromUtc(2025, 1, 1, 0, 0) },
+                new Album { ApiKey = Guid.NewGuid(), ArtistId = artist.Id, Artist = artist, Name = "Album2", NameNormalized = "ALBUM2", Directory = "/a2/", ReleaseDate = new LocalDate(2020, 6, 1), CreatedAt = Instant.FromUtc(2025, 1, 1, 0, 0) },
+                new Album { ApiKey = Guid.NewGuid(), ArtistId = artist.Id, Artist = artist, Name = "Album3", NameNormalized = "ALBUM3", Directory = "/a3/", ReleaseDate = new LocalDate(2021, 1, 1), CreatedAt = Instant.FromUtc(2025, 1, 1, 0, 0) }
+            );
+            await context.SaveChangesAsync();
+        }
+
+        var service = GetStatisticsService();
+        var result = await service.GetAlbumsByYearAsync();
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+        Assert.Equal(2, result.Data.Length);
+        Assert.Equal("2020", result.Data[0].Label);
+        Assert.Equal(2, result.Data[0].Value);
+        Assert.Equal("2021", result.Data[1].Label);
+        Assert.Equal(1, result.Data[1].Value);
+    }
+
+    [Fact]
+    public async Task GetAlbumsByGenreAsync_ShouldReturnEmpty_WhenNoAlbumsExist()
+    {
+        var service = GetStatisticsService();
+
+        var result = await service.GetAlbumsByGenreAsync();
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+        Assert.Empty(result.Data);
+    }
+
+    [Fact]
+    public async Task GetAlbumsByGenreAsync_ShouldGroupByGenre_AndOrderByCount()
+    {
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            context.Albums.RemoveRange(context.Albums);
+            context.Artists.RemoveRange(context.Artists);
+            context.Libraries.RemoveRange(context.Libraries);
+            await context.SaveChangesAsync();
+
+            var library = new Library
+            {
+                Name = "Test Library",
+                Path = "/test/path",
+                Type = (int)LibraryType.Storage,
+                CreatedAt = Instant.FromUtc(2025, 12, 1, 0, 0)
+            };
+            context.Libraries.Add(library);
+            await context.SaveChangesAsync();
+
+            var artist = new Artist
+            {
+                ApiKey = Guid.NewGuid(),
+                Directory = "artist",
+                Name = "Artist",
+                NameNormalized = "ARTIST",
+                LibraryId = library.Id,
+                CreatedAt = Instant.FromUtc(2025, 12, 1, 0, 0)
+            };
+            context.Artists.Add(artist);
+            await context.SaveChangesAsync();
+
+            context.Albums.AddRange(
+                new Album { ApiKey = Guid.NewGuid(), ArtistId = artist.Id, Artist = artist, Name = "Album1", NameNormalized = "ALBUM1", Directory = "/a1/", ReleaseDate = new LocalDate(2020, 1, 1), Genres = new[] { "Rock" }, CreatedAt = Instant.FromUtc(2025, 1, 1, 0, 0) },
+                new Album { ApiKey = Guid.NewGuid(), ArtistId = artist.Id, Artist = artist, Name = "Album2", NameNormalized = "ALBUM2", Directory = "/a2/", ReleaseDate = new LocalDate(2020, 6, 1), Genres = new[] { "Rock", "Alternative" }, CreatedAt = Instant.FromUtc(2025, 1, 1, 0, 0) },
+                new Album { ApiKey = Guid.NewGuid(), ArtistId = artist.Id, Artist = artist, Name = "Album3", NameNormalized = "ALBUM3", Directory = "/a3/", ReleaseDate = new LocalDate(2021, 1, 1), Genres = new[] { "Jazz" }, CreatedAt = Instant.FromUtc(2025, 1, 1, 0, 0) },
+                new Album { ApiKey = Guid.NewGuid(), ArtistId = artist.Id, Artist = artist, Name = "Album4", NameNormalized = "ALBUM4", Directory = "/a4/", ReleaseDate = new LocalDate(2021, 1, 1), CreatedAt = Instant.FromUtc(2025, 1, 1, 0, 0) }
+            );
+            await context.SaveChangesAsync();
+        }
+
+        var service = GetStatisticsService();
+        var result = await service.GetAlbumsByGenreAsync();
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+        Assert.Equal(3, result.Data.Length);
+        Assert.Equal("Rock", result.Data[0].Label);
+        Assert.Equal(2, result.Data[0].Value);
+        Assert.Equal("Jazz", result.Data[1].Label);
+        Assert.Equal(1, result.Data[1].Value);
+        Assert.Equal("Unknown", result.Data[2].Label);
+        Assert.Equal(1, result.Data[2].Value);
+    }
+
+    [Fact]
+    public async Task GetTopArtistsByAlbumCountAsync_ShouldReturnTopN()
+    {
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            context.Artists.RemoveRange(context.Artists);
+            context.Libraries.RemoveRange(context.Libraries);
+            await context.SaveChangesAsync();
+
+            var library = new Library
+            {
+                Name = "Test Library",
+                Path = "/test/path",
+                Type = (int)LibraryType.Storage,
+                CreatedAt = Instant.FromUtc(2025, 12, 1, 0, 0)
+            };
+            context.Libraries.Add(library);
+            await context.SaveChangesAsync();
+
+            context.Artists.AddRange(
+                new Artist { ApiKey = Guid.NewGuid(), Directory = "a1", Name = "Artist A", NameNormalized = "ARTIST A", LibraryId = library.Id, AlbumCount = 5, CreatedAt = Instant.FromUtc(2025, 1, 1, 0, 0) },
+                new Artist { ApiKey = Guid.NewGuid(), Directory = "a2", Name = "Artist B", NameNormalized = "ARTIST B", LibraryId = library.Id, AlbumCount = 3, CreatedAt = Instant.FromUtc(2025, 1, 1, 0, 0) },
+                new Artist { ApiKey = Guid.NewGuid(), Directory = "a3", Name = "Artist C", NameNormalized = "ARTIST C", LibraryId = library.Id, AlbumCount = 1, CreatedAt = Instant.FromUtc(2025, 1, 1, 0, 0) }
+            );
+            await context.SaveChangesAsync();
+        }
+
+        var service = GetStatisticsService();
+        var result = await service.GetTopArtistsByAlbumCountAsync(2);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+        Assert.Equal(2, result.Data.Length);
+        Assert.Equal("Artist A", result.Data[0].Label);
+        Assert.Equal(5, result.Data[0].Value);
+        Assert.Equal("Artist B", result.Data[1].Label);
+        Assert.Equal(3, result.Data[1].Value);
+    }
+
+    [Fact]
+    public async Task GetTopArtistsByPlaysAsync_ShouldReturnTopN()
+    {
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            context.UserSongPlayHistories.RemoveRange(context.UserSongPlayHistories);
+            context.Songs.RemoveRange(context.Songs);
+            context.Albums.RemoveRange(context.Albums);
+            context.Artists.RemoveRange(context.Artists);
+            context.Libraries.RemoveRange(context.Libraries);
+            context.Users.RemoveRange(context.Users);
+            await context.SaveChangesAsync();
+
+            var library = new Library
+            {
+                Name = "Test Library",
+                Path = "/test/path",
+                Type = (int)LibraryType.Storage,
+                CreatedAt = Instant.FromUtc(2025, 12, 1, 0, 0)
+            };
+            context.Libraries.Add(library);
+            await context.SaveChangesAsync();
+
+            var artist1 = new Artist { ApiKey = Guid.NewGuid(), Directory = "a1", Name = "Artist A", NameNormalized = "ARTIST A", LibraryId = library.Id, CreatedAt = Instant.FromUtc(2025, 1, 1, 0, 0) };
+            var artist2 = new Artist { ApiKey = Guid.NewGuid(), Directory = "a2", Name = "Artist B", NameNormalized = "ARTIST B", LibraryId = library.Id, CreatedAt = Instant.FromUtc(2025, 1, 1, 0, 0) };
+            context.Artists.AddRange(artist1, artist2);
+            await context.SaveChangesAsync();
+
+            var album1 = new Album { ApiKey = Guid.NewGuid(), ArtistId = artist1.Id, Artist = artist1, Name = "Album1", NameNormalized = "ALBUM1", Directory = "/a1/", ReleaseDate = new LocalDate(2020, 1, 1), CreatedAt = Instant.FromUtc(2025, 1, 1, 0, 0) };
+            var album2 = new Album { ApiKey = Guid.NewGuid(), ArtistId = artist2.Id, Artist = artist2, Name = "Album2", NameNormalized = "ALBUM2", Directory = "/a2/", ReleaseDate = new LocalDate(2020, 1, 1), CreatedAt = Instant.FromUtc(2025, 1, 1, 0, 0) };
+            context.Albums.AddRange(album1, album2);
+            await context.SaveChangesAsync();
+
+            var song1 = new Song { AlbumId = album1.Id, Title = "Song 1", TitleNormalized = "SONG 1", SongNumber = 1, FileName = "s1.flac", FileSize = 1, FileHash = "h1", Duration = 1000, SamplingRate = 44100, BitRate = 320, BitDepth = 16, BPM = 120, ContentType = "audio/flac", CreatedAt = Instant.FromUtc(2025, 1, 1, 0, 0) };
+            var song2 = new Song { AlbumId = album2.Id, Title = "Song 2", TitleNormalized = "SONG 2", SongNumber = 1, FileName = "s2.flac", FileSize = 1, FileHash = "h2", Duration = 1000, SamplingRate = 44100, BitRate = 320, BitDepth = 16, BPM = 120, ContentType = "audio/flac", CreatedAt = Instant.FromUtc(2025, 1, 1, 0, 0) };
+            context.Songs.AddRange(song1, song2);
+            await context.SaveChangesAsync();
+
+            var user = new User { ApiKey = Guid.NewGuid(), UserName = "testuser", UserNameNormalized = "TESTUSER", Email = "test@example.com", EmailNormalized = "TEST@EXAMPLE.COM", PublicKey = "pk", PasswordEncrypted = "enc", CreatedAt = Instant.FromUtc(2025, 12, 1, 0, 0) };
+            context.Users.Add(user);
+            await context.SaveChangesAsync();
+
+            context.UserSongPlayHistories.AddRange(
+                new UserSongPlayHistory { UserId = user.Id, SongId = song1.Id, PlayedAt = Instant.FromUtc(2025, 12, 14, 0, 0), Client = "test", Source = 1 },
+                new UserSongPlayHistory { UserId = user.Id, SongId = song1.Id, PlayedAt = Instant.FromUtc(2025, 12, 14, 1, 0), Client = "test", Source = 1 },
+                new UserSongPlayHistory { UserId = user.Id, SongId = song1.Id, PlayedAt = Instant.FromUtc(2025, 12, 14, 2, 0), Client = "test", Source = 1 },
+                new UserSongPlayHistory { UserId = user.Id, SongId = song2.Id, PlayedAt = Instant.FromUtc(2025, 12, 14, 3, 0), Client = "test", Source = 1 }
+            );
+            await context.SaveChangesAsync();
+        }
+
+        var service = GetStatisticsService();
+        var result = await service.GetTopArtistsByPlaysAsync(2);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+        Assert.Equal(2, result.Data.Length);
+        Assert.Equal("Artist A", result.Data[0].Label);
+        Assert.Equal(3, result.Data[0].Value);
+        Assert.Equal("Artist B", result.Data[1].Label);
+        Assert.Equal(1, result.Data[1].Value);
+    }
 }
