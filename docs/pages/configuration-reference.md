@@ -66,6 +66,22 @@ This page provides a comprehensive reference of all configuration options availa
 | `BRAVE_SEARCH__BASEURL` | https://api.search.brave.com | Brave Search API base URL |
 | `BRAVE_SEARCH__IMAGESEARCHPATH` | /res/v1/images/search | Image search API path |
 
+### Plugin Configuration
+
+Override plugin settings using these environment variables (standard .NET configuration mapping):
+
+| Variable | Description |
+|----------|-------------|
+| `Plugins__MetadataProviders__Spotify__Enabled` | Enable/Disable Spotify metadata |
+| `Plugins__MetadataProviders__Spotify__ClientId` | Spotify Client ID |
+| `Plugins__MetadataProviders__Spotify__ClientSecret` | Spotify Client Secret |
+| `Plugins__MetadataProviders__LastFm__Enabled` | Enable/Disable Last.FM metadata |
+| `Plugins__MetadataProviders__LastFm__ApiKey` | Last.FM API Key |
+| `Plugins__MetadataProviders__LastFm__ApiSecret` | Last.FM Shared Secret |
+| `Plugins__MetadataProviders__MusicBrainz__Enabled` | Enable/Disable MusicBrainz (local) |
+| `Plugins__MetadataProviders__Itunes__Enabled` | Enable/Disable iTunes metadata |
+| `Plugins__MetadataProviders__Deezer__Enabled` | Enable/Disable Deezer metadata |
+
 ## AppSettings Configuration
 
 ### System Configuration
@@ -180,6 +196,12 @@ This page provides a comprehensive reference of all configuration options availa
       },
       "Itunes": {
         "Enabled": true
+      },
+      "Deezer": {
+        "Enabled": true
+      },
+      "MetalApi": {
+        "Enabled": false
       }
     }
   }

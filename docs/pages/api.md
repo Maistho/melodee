@@ -66,6 +66,123 @@ Returns:
 }
 ```
 
+### Artists
+
+Base: `/api/v1/artists`
+
+| Method | Path | Query/Body | Description |
+|--------|------|------------|-------------|
+| GET | /api/v1/artists/{id} | — | Get artist by ID (GUID). |
+| GET | /api/v1/artists | q, page, pageSize, orderBy, orderDirection | List artists with pagination and filtering. |
+| GET | /api/v1/artists/recent | limit | Get recently added artists. |
+| GET | /api/v1/artists/{id}/albums | page, pageSize, orderBy, orderDirection | Get albums for an artist. |
+| GET | /api/v1/artists/{id}/songs | q, page, pageSize, orderBy, orderDirection | Get songs for an artist. |
+| POST | /api/v1/artists/starred/{apiKey}/{isStarred} | — | Toggle starred status for an artist. |
+| POST | /api/v1/artists/setrating/{apiKey}/{rating} | — | Set rating for an artist (0-5). |
+| POST | /api/v1/artists/hated/{apiKey}/{isHated} | — | Toggle hated status for an artist. |
+
+### Playlists
+
+Base: `/api/v1/playlists`
+
+| Method | Path | Query/Body | Description |
+|--------|------|------------|-------------|
+| GET | /api/v1/playlists/{id} | — | Get playlist by ID. |
+| GET | /api/v1/playlists | page, pageSize | List all playlists. |
+| GET | /api/v1/playlists/{apiKey}/songs | page, pageSize | Get songs in a playlist. |
+| POST | /api/v1/playlists | `{ name, comment, isPublic, songIds }` | Create a new playlist. |
+| PUT | /api/v1/playlists/{apiKey} | `{ name, comment, isPublic }` | Update playlist metadata. |
+| DELETE | /api/v1/playlists/{apiKey} | — | Delete a playlist. |
+| POST | /api/v1/playlists/{apiKey}/songs | `[ songId1, songId2, ... ]` | Add songs to a playlist. |
+| DELETE | /api/v1/playlists/{apiKey}/songs | `[ songId1, songId2, ... ]` | Remove songs from a playlist. |
+| PUT | /api/v1/playlists/{apiKey}/songs/reorder | `{ songIds: [...] }` | Reorder songs (send full list of IDs in new order). |
+| POST | /api/v1/playlists/{apiKey}/image | Form File | Upload playlist cover image. |
+| DELETE | /api/v1/playlists/{apiKey}/image | — | Delete playlist cover image. |
+
+### User
+
+Base: `/api/v1/user`
+
+Endpoints for the currently authenticated user.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | /api/v1/user/me | Get current user profile. |
+| GET | /api/v1/user/last-played | Get last played songs. |
+| GET | /api/v1/user/playlists | Get user's playlists. |
+| GET | /api/v1/user/songs/liked | Get liked (starred) songs. |
+| GET | /api/v1/user/songs/disliked | Get disliked (hated) songs. |
+| GET | /api/v1/user/songs/rated | Get rated songs. |
+| GET | /api/v1/user/songs/top-rated | Get top rated songs (4+ stars). |
+| GET | /api/v1/user/songs/recently-played | Get recently played songs. |
+| GET | /api/v1/user/albums/* | Similar endpoints for albums (liked, disliked, etc.). |
+| GET | /api/v1/user/artists/* | Similar endpoints for artists (liked, disliked, etc.). |
+| GET | /api/v1/user/me/linked-providers | Get linked social accounts. |
+| POST | /api/v1/user/me/link/google | Link Google account. |
+| DELETE | /api/v1/user/me/link/google | Unlink Google account. |
+
+### Shares
+
+Base: `/api/v1/shares`
+
+| Method | Path | Query/Body | Description |
+|--------|------|------------|-------------|
+| GET | /api/v1/shares/{apiKey} | — | Get share details. |
+| GET | /api/v1/shares | page, pageSize | List user's shares. |
+| POST | /api/v1/shares | `{ shareType, resourceId, description, ... }` | Create a share. |
+| PUT | /api/v1/shares/{apiKey} | `{ description, isDownloadable, expiresAt }` | Update a share. |
+| DELETE | /api/v1/shares/{apiKey} | — | Delete a share. |
+| GET | /api/v1/shares/public/{shareUniqueId} | — | Public access to shared content (No Auth). |
+
+### Requests
+
+Base: `/api/v1/requests`
+
+| Method | Path | Query/Body | Description |
+|--------|------|------------|-------------|
+| GET | /api/v1/requests | page, pageSize, query, mine, status | List requests. |
+| GET | /api/v1/requests/{apiKey} | — | Get request details. |
+| POST | /api/v1/requests | `{ category, description, ... }` | Create a new request. |
+| PUT | /api/v1/requests/{apiKey} | `{ description, ... }` | Update a request. |
+| POST | /api/v1/requests/{apiKey}/complete | — | Mark request as complete. |
+| DELETE | /api/v1/requests/{apiKey} | — | Delete a request. |
+| GET | /api/v1/requests/{apiKey}/comments | page, pageSize | List comments. |
+| POST | /api/v1/requests/{apiKey}/comments | `{ body, parentCommentApiKey }` | Add a comment. |
+| GET | /api/v1/requests/activity | — | Check for unread activity. |
+
+### Queue
+
+Base: `/api/v1/queue`
+
+| Method | Path | Query/Body | Description |
+|--------|------|------------|-------------|
+| GET | /api/v1/queue | — | Get current user's play queue. |
+| PUT | /api/v1/queue | `{ songIds, currentSongId, position }` | Save/Update play queue. |
+| DELETE | /api/v1/queue | — | Clear play queue. |
+
+### Charts
+
+Base: `/api/v1/charts`
+
+| Method | Path | Query/Body | Description |
+|--------|------|------------|-------------|
+| GET | /api/v1/charts | page, pageSize, tags, year | List charts. |
+| GET | /api/v1/charts/{idOrSlug} | — | Get chart details. |
+| GET | /api/v1/charts/{idOrSlug}/playlist | — | Get generated playlist tracks for a chart. |
+
+### Genres
+
+Base: `/api/v1/genres`
+
+| Method | Path | Query/Body | Description |
+|--------|------|------------|-------------|
+| GET | /api/v1/genres | page, limit, orderBy, orderDirection | List genres. |
+| GET | /api/v1/genres/{id}/songs | page, limit | Get songs in a genre. |
+| POST | /api/v1/genres/starred/{id}/{isStarred} | — | Toggle starred status. |
+| POST | /api/v1/genres/hated/{id}/{isHated} | — | Toggle hated status. |
+| GET | /api/v1/genres/starred | — | Get starred genres. |
+| GET | /api/v1/genres/hated | — | Get hated genres. |
+
 ### Albums
 
 Base: `/api/v1/Albums`
