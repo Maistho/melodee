@@ -100,6 +100,12 @@ builder.Services.AddSwaggerGen(options =>
         Version = "v1",
         Description = "OpenSubsonic-compatible API for third-party music player clients."
     });
+    options.SwaggerDoc("jellyfin", new OpenApiInfo
+    {
+        Title = "Jellyfin API",
+        Version = "v1",
+        Description = "Jellyfin-compatible API for third-party Jellyfin music player clients."
+    });
     options.DocInclusionPredicate((docName, desc) =>
     {
         var controllerActionDescriptor = desc.ActionDescriptor as ControllerActionDescriptor;
@@ -108,6 +114,7 @@ builder.Services.AddSwaggerGen(options =>
         {
             "melodee" => ns.Contains(".Controllers.Melodee", StringComparison.OrdinalIgnoreCase),
             "opensubsonic" => ns.Contains(".Controllers.OpenSubsonic", StringComparison.OrdinalIgnoreCase),
+            "jellyfin" => ns.Contains(".Controllers.Jellyfin", StringComparison.OrdinalIgnoreCase),
             _ => false
         };
     });
@@ -327,6 +334,36 @@ builder.Services.AddRateLimiter(options =>
                 TokensPerPeriod = 10,
                 AutoReplenishment = true
             }));
+    options.AddPolicy("jellyfin-api", context =>
+        RateLimitPartition.GetTokenBucketLimiter(context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new TokenBucketRateLimiterOptions
+            {
+                TokenLimit = 60,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 20,
+                ReplenishmentPeriod = TimeSpan.FromSeconds(30),
+                TokensPerPeriod = 60,
+                AutoReplenishment = true
+            }));
+    options.AddPolicy("jellyfin-auth", context =>
+        RateLimitPartition.GetTokenBucketLimiter(context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new TokenBucketRateLimiterOptions
+            {
+                TokenLimit = 10,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 5,
+                ReplenishmentPeriod = TimeSpan.FromMinutes(1),
+                TokensPerPeriod = 10,
+                AutoReplenishment = true
+            }));
+    options.AddPolicy("jellyfin-stream", context =>
+        RateLimitPartition.GetConcurrencyLimiter(context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new ConcurrencyLimiterOptions
+            {
+                PermitLimit = 10,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 5
+            }));
 });
 
 builder.Services.AddSingleton<IAppVersionProvider, AppVersionProvider>();
@@ -483,6 +520,7 @@ app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/melodee/swagger.json", "Melodee API v1");
     c.SwaggerEndpoint("/swagger/opensubsonic/swagger.json", $"OpenSubsonic API v{openSubsonicVersion}");
+    c.SwaggerEndpoint("/swagger/jellyfin/swagger.json", "Jellyfin API v1");
 });
 
 // Configure static files with efficient caching - MUST be before UseStatusCodePages
@@ -735,6 +773,9 @@ localizationOptions.RequestCultureProviders.Insert(0,
     new Microsoft.AspNetCore.Localization.CookieRequestCultureProvider());
 
 app.UseRequestLocalization(localizationOptions);
+
+// Jellyfin API routing - must be before UseAntiforgery/UseAuthentication
+app.UseMiddleware<JellyfinRoutingMiddleware>();
 
 app.UseAntiforgery();
 app.UseAuthentication();

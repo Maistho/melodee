@@ -1,0 +1,171 @@
+using System.Security.Cryptography;
+using System.Text;
+using Melodee.Blazor.Controllers.Jellyfin.Models;
+using Melodee.Blazor.Filters;
+using Melodee.Common.Configuration;
+using Melodee.Common.Data;
+using Melodee.Common.Serialization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
+using NodaTime;
+
+namespace Melodee.Blazor.Controllers.Jellyfin;
+
+[ApiController]
+[Route("api/jf/[controller]")]
+[ApiExplorerSettings(GroupName = "jellyfin")]
+[EnableRateLimiting("jellyfin-api")]
+public class ArtistsController(
+    EtagRepository etagRepository,
+    ISerializer serializer,
+    IConfiguration configuration,
+    IMelodeeConfigurationFactory configurationFactory,
+    IDbContextFactory<MelodeeDbContext> dbContextFactory,
+    IClock clock) : JellyfinControllerBase(etagRepository, serializer, configuration, configurationFactory, dbContextFactory, clock)
+{
+    [HttpGet]
+    public async Task<IActionResult> GetArtistsAsync(
+        [FromQuery] string? searchTerm,
+        [FromQuery] int? startIndex,
+        [FromQuery] int? limit,
+        [FromQuery] string? parentId,
+        [FromQuery] string? fields,
+        [FromQuery] bool? enableUserData,
+        CancellationToken cancellationToken)
+    {
+        var user = await AuthenticateJellyfinAsync(cancellationToken);
+        if (user == null)
+        {
+            return JellyfinUnauthorized();
+        }
+
+        var skip = Math.Max(0, startIndex ?? 0);
+        var take = Math.Clamp(limit ?? 100, 1, 500);
+
+        await using var dbContext = await DbContextFactory.CreateDbContextAsync(cancellationToken);
+        var query = dbContext.Artists
+            .AsNoTracking()
+            .Where(a => !a.IsLocked);
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var normalizedSearch = searchTerm.ToUpperInvariant();
+            query = query.Where(a => a.NameNormalized.Contains(normalizedSearch));
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var artists = await query
+            .OrderBy(a => a.SortName ?? a.Name)
+            .Skip(skip)
+            .Take(take)
+            .Select(a => new
+            {
+                a.Id,
+                a.ApiKey,
+                a.Name,
+                a.SortName,
+                a.Description,
+                a.CreatedAt,
+                a.LastUpdatedAt,
+                AlbumCount = a.Albums.Count(alb => !alb.IsLocked)
+            })
+            .ToListAsync(cancellationToken);
+
+        var items = artists.Select(a => new JellyfinBaseItem
+        {
+            Name = a.Name,
+            ServerId = GetServerId(),
+            Id = ToJellyfinId(a.ApiKey),
+            Etag = ComputeEtag(a.ApiKey, a.LastUpdatedAt ?? a.CreatedAt),
+            DateCreated = FormatInstantForJellyfin(a.CreatedAt),
+            SortName = a.SortName ?? a.Name,
+            Type = "MusicArtist",
+            IsFolder = true,
+            CanDownload = user.HasDownloadRole,
+            Overview = a.Description,
+            ChildCount = a.AlbumCount,
+            ImageTags = new Dictionary<string, string>(),
+            BackdropImageTags = [],
+            MediaType = "Audio",
+            UserData = enableUserData == true ? new JellyfinUserItemData
+            {
+                PlaybackPositionTicks = 0,
+                PlayCount = 0,
+                IsFavorite = false,
+                Played = false,
+                Key = a.ApiKey.ToString("N")
+            } : null
+        }).ToArray();
+
+        return Ok(new JellyfinArtistsResult
+        {
+            Items = items,
+            TotalRecordCount = totalCount,
+            StartIndex = skip
+        });
+    }
+
+    [HttpGet("{artistId}")]
+    public async Task<IActionResult> GetArtistAsync(string artistId, CancellationToken cancellationToken)
+    {
+        var user = await AuthenticateJellyfinAsync(cancellationToken);
+        if (user == null)
+        {
+            return JellyfinUnauthorized();
+        }
+
+        if (!TryParseJellyfinGuid(artistId, out var apiKey))
+        {
+            return JellyfinBadRequest("Invalid artist ID format.");
+        }
+
+        await using var dbContext = await DbContextFactory.CreateDbContextAsync(cancellationToken);
+        var artist = await dbContext.Artists
+            .AsNoTracking()
+            .Where(a => a.ApiKey == apiKey && !a.IsLocked)
+            .Select(a => new
+            {
+                a.Id,
+                a.ApiKey,
+                a.Name,
+                a.SortName,
+                a.Description,
+                a.CreatedAt,
+                a.LastUpdatedAt,
+                AlbumCount = a.Albums.Count(alb => !alb.IsLocked)
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (artist == null)
+        {
+            return JellyfinNotFound("Artist not found.");
+        }
+
+        return Ok(new JellyfinBaseItem
+        {
+            Name = artist.Name,
+            ServerId = GetServerId(),
+            Id = ToJellyfinId(artist.ApiKey),
+            Etag = ComputeEtag(artist.ApiKey, artist.LastUpdatedAt ?? artist.CreatedAt),
+            DateCreated = FormatInstantForJellyfin(artist.CreatedAt),
+            SortName = artist.SortName ?? artist.Name,
+            Type = "MusicArtist",
+            IsFolder = true,
+            CanDownload = user.HasDownloadRole,
+            Overview = artist.Description,
+            ChildCount = artist.AlbumCount,
+            ImageTags = new Dictionary<string, string>(),
+            BackdropImageTags = [],
+            MediaType = "Audio"
+        });
+    }
+
+    private static string ComputeEtag(Guid apiKey, Instant lastUpdated)
+    {
+        var input = $"{apiKey:N}-{lastUpdated.ToUnixTimeTicks()}";
+        var hash = MD5.HashData(Encoding.UTF8.GetBytes(input));
+        return Convert.ToHexString(hash).ToLowerInvariant();
+    }
+}
