@@ -48,6 +48,23 @@ Reference OpenAPI spec: `prompts/jellyfin-openapi-stable.json` (Jellyfin 10.11.5
   `Melodee.Controllers.Jellyfin` (within the `Melodee.Blazor` project).
 - Include clear security and performance requirements to avoid unsafe shortcuts.
 
+## Critical endpoints summary
+
+This table is the minimal contract to get real Jellyfin music clients working.
+
+| Endpoint | Method | Phase | Auth | Expected behavior |
+| --- | --- | --- | --- | --- |
+| `/System/Info/Public` | GET | 1 | No | Returns server identity + capabilities needed for client onboarding |
+| `/System/Ping` | GET | 1 | No | Returns `204` (preferred) or small `200` per schema |
+| `/System/Info` | GET | 1 | Yes (recommended) | Returns authenticated server info; can be minimal |
+| `/Users/AuthenticateByName` | POST | 1 | No | Validates Melodee credentials; returns Jellyfin `AuthenticationResult` |
+| `/UserViews` | GET | 2 | Yes | Returns “Music” view(s) mapped to Melodee roots |
+| `/Artists` | GET | 2 | Yes | Returns paged artist list and search support |
+| `/Items` | GET | 2 | Yes | Returns paged item list (artists/albums/tracks) with safe param handling |
+| `/Audio/{itemId}/stream` | GET/HEAD | 4 | Yes | Serves audio with range support; no full buffering |
+| `/Items/{itemId}/File` | GET | 4 | Yes | Direct file response (range aware if supported) |
+| `/Items/{itemId}/Download` | GET | 4 | Yes | Same content as File but with download-friendly headers |
+
 ## Non-goals
 
 - Implementing the full Jellyfin API surface (video, live TV, DLNA, transcoding).
@@ -67,6 +84,19 @@ will live under:
 - `/api/jf/*`
 
 A **routing middleware** will map Jellyfin client requests to this internal prefix.
+
+### Architecture (high-level)
+
+```text
+Jellyfin Client
+  |  (Authorization: MediaBrowser ... / X-Emby-Authorization)
+  v
+ASP.NET Core pipeline
+  -> JellyfinRoutingMiddleware (detect + rewrite to /api/jf/*)
+  -> Authentication/Authorization/RateLimiter
+  -> Jellyfin Controllers (/api/jf/*)
+  -> Melodee domain/services (library + streaming)
+```
 
 ### Jellyfin request detection (header-based routing)
 
@@ -154,11 +184,33 @@ Recommended model (new table/entity):
 
   - `Id` (GUID)
   - `UserId` (GUID)
-  - `TokenHash` (SHA-256 or stronger; store only hash)
+  - `TokenHash` (store only hash)
+  - `TokenSalt` (store per-token unique salt)
   - `CreatedAt`, `LastUsedAt`
   - `ExpiresAt` (nullable for non-expiring, but prefer expiry)
   - `RevokedAt` (nullable)
   - `Client`, `Device`, `DeviceId`, `Version` (from headers when available)
+
+Hashing requirements:
+
+- Token generation:
+
+  - tokens must be cryptographically random (e.g., 256-bit) and treated as
+    bearer secrets.
+
+- Hashing algorithm:
+
+  - compute `TokenHash = SHA-256(TokenSalt || AccessToken)`.
+  - `TokenSalt` must be unique per token (recommended 16+ bytes from a CSPRNG).
+
+- Comparison:
+
+  - use constant-time comparison when checking hashes.
+
+Optional hardening (recommended if easy):
+
+- Add a server-side “pepper” secret (config/env) and compute
+  `SHA-256(TokenSalt || Pepper || AccessToken)` to reduce impact if DB is leaked.
 
 ### Issuance endpoint
 
@@ -206,6 +258,74 @@ Error responses:
 - For unsupported endpoints, respond with `404` (preferred) or `410` if endpoint is
 
   explicitly deprecated in OpenAPI and known not to be supported.
+
+### Error handling and mapping (consistency)
+
+Goal: map internal Melodee failures into Jellyfin-friendly responses without
+leaking sensitive details, while keeping behavior consistent across all
+Jellyfin endpoints.
+
+Guidance:
+
+- Use a single error shaping mechanism (preferred: a centralized exception
+  handler for the Jellyfin route group or a shared base controller helper).
+- Return `application/json` and a Jellyfin-compatible `ProblemDetails` shape.
+- Map errors consistently (suggested baseline mapping):
+
+  - `400 BadRequest`: validation failures (missing required fields, invalid GUID,
+    invalid `Range` syntax, etc.)
+  - `401 Unauthorized`: missing/invalid token, invalid username/password
+  - `403 Forbidden`: authenticated but not permitted (library restrictions,
+    disabled account, admin-only endpoint)
+  - `404 NotFound`: unknown item id / playlist id / image tag
+  - `409 Conflict`: state conflict (duplicate playlist name where prohibited,
+    optimistic concurrency mismatch if implemented)
+  - `416 Range Not Satisfiable`: invalid byte ranges
+  - `429 Too Many Requests`: rate-limited (ensure retry headers as appropriate)
+  - `500 Internal Server Error`: unexpected exceptions only
+
+- Include stable, non-sensitive fields:
+
+  - `status`, `title`, `detail` (sanitized)
+  - `traceId` (from `HttpContext.TraceIdentifier`) for supportability
+  - optionally `errorCode` (Melodee-defined string enum) for client debugging
+
+Examples (recommended response bodies):
+
+- Invalid or missing token (`401`):
+
+```json
+{
+  "type": "about:blank",
+  "title": "Unauthorized",
+  "status": 401,
+  "detail": "Missing or invalid authentication token.",
+  "traceId": "00-..."
+}
+```
+
+- Rate limited (`429`):
+
+Headers:
+
+```text
+Retry-After: 60
+```
+
+Body:
+
+```json
+{
+  "type": "about:blank",
+  "title": "Too Many Requests",
+  "status": 429,
+  "detail": "Rate limit exceeded. Please retry later.",
+  "traceId": "00-..."
+}
+```
+
+Non-goal: attempting to perfectly mirror Jellyfin server error bodies. The
+priority is client compatibility and debuggability.
 
 ## Phased Implementation Plan
 
@@ -275,6 +395,50 @@ Implementation notes:
 - Map Jellyfin “views” to Melodee library roots.
 
   - At minimum, expose a single “Music” view.
+
+#### Data mapping notes (artists, albums, items)
+
+The Jellyfin API surface is entity-centric (Items with types and IDs). Melodee
+has distinct domain entities. The implementation should define and test stable
+ID mappings and type projections.
+
+Proposed baseline mapping (minimal subset for music clients):
+
+- Jellyfin `UserView`:
+
+  - `Id` maps to a Melodee library root identifier (or a synthetic ID if Melodee
+    does not expose roots). Keep stable across restarts.
+  - `Name`: “Music” or per-root name.
+
+- Jellyfin `Artist` items:
+
+  - `Id` maps to Melodee `Artist.Id`.
+  - `Name` maps to Melodee artist name.
+  - `ImageTags`: derive from artist image last-modified (or a content hash).
+
+- Jellyfin `MusicAlbum` items:
+
+  - `Id` maps to Melodee `Album.Id`.
+  - `Name` maps to album title.
+  - `AlbumArtist` / `AlbumArtists`: map from Melodee album artist relationships.
+  - `ProductionYear`: map if available; otherwise omit.
+  - `ImageTags`: derive from album art last-modified.
+
+- Jellyfin `Audio` items (tracks):
+
+  - `Id` maps to Melodee `Song.Id` (or track entity ID).
+  - `Name` maps to track title.
+  - `AlbumId` maps to Melodee album ID.
+  - `ArtistItems` maps to Melodee track artists.
+  - `RunTimeTicks`: duration in ticks.
+  - `MediaSources`: include container/codec/bitrate metadata when available.
+
+Rules:
+
+- IDs exposed via Jellyfin must be opaque to clients but stable.
+- Avoid exposing filesystem paths.
+- If a client requests unsupported fields via `fields=...`, ignore unknown
+  fields safely (do not error).
 - For `/Items` and `/Artists`, support common query params used by clients:
 
   - `searchTerm`, `startIndex`, `limit`, `parentId`, `includeItemTypes`,
@@ -344,6 +508,26 @@ Performance and safety:
 - Add per-user concurrency limits for streaming (reuse/extend `StreamingLimiter`).
 - Ensure file handles are disposed promptly.
 
+Resource management requirements:
+
+- Cancellation:
+
+  - All streaming endpoints must honor `HttpContext.RequestAborted`.
+  - If using manual stream copy, pass the cancellation token to copy methods.
+
+- Cleanup:
+
+  - Ensure streams are disposed even on partial reads and client disconnects.
+  - Avoid holding DB contexts open for the duration of a stream.
+  - If temporary files are ever introduced (future transcoding), ensure deletion
+    on success, failure, and cancellation.
+
+- Backpressure:
+
+  - Prefer framework streaming primitives (`FileStreamResult`/`PhysicalFileResult`)
+    over buffering.
+  - Ensure range requests do not result in per-request full file reads.
+
 Unit tests:
 
 - `HEAD` returns headers without body
@@ -401,6 +585,52 @@ Add configuration under a new section `Jellyfin:` in `appsettings.json`:
   - `ApiPeriodSeconds`
   - `StreamConcurrentPerUser`
 
+### Defaults and validation rules (recommended)
+
+These defaults are intended to be safe and practical for typical home/server
+usage while preventing obvious abuse. They should be validated at startup.
+
+- `Jellyfin:Enabled`
+
+  - default: `false`
+
+- `Jellyfin:RoutePrefix`
+
+  - default: `/api/jf`
+  - validation: must start with `/` and must not be `/api` or `/rest`
+
+- `Jellyfin:Token:ExpiresAfterHours`
+
+  - default: `168` (7 days)
+  - validation: min `1`, max `8760` (1 year)
+
+- `Jellyfin:Token:MaxActiveTokensPerUser`
+
+  - default: `10`
+  - validation: min `1`, max `50`
+
+- `Jellyfin:Token:AllowLegacyHeaderTokens`
+
+  - default: `true` (compatibility); allow disabling for stricter deployments
+
+- `Jellyfin:RateLimiting:ApiRequestsPerPeriod` and `Jellyfin:RateLimiting:ApiPeriodSeconds`
+
+  - default: `100` requests per `60` seconds per user (browse + metadata)
+  - validation: min `10` per period; max should be capped (e.g., `5000`) to
+    avoid accidental misconfiguration
+
+- `Jellyfin:RateLimiting:StreamConcurrentPerUser`
+
+  - default: `2`
+  - validation: min `1`, max `10`
+
+Concrete example:
+
+- “100 requests per minute per user” means:
+
+  - `ApiRequestsPerPeriod=100`
+  - `ApiPeriodSeconds=60`
+
 ### SettingRegistry keys (proposed)
 
 If Melodee prefers database-backed configuration, add keys:
@@ -415,6 +645,67 @@ All new settings must be added to:
 - `MelodeeConfiguration.AllSettings(...)`
 - test configuration in `tests/Melodee.Tests.Common/TestsBase.cs`
 
+## Migration and coexistence strategy
+
+Goal: support Jellyfin clients without breaking existing Melodee REST API and
+OpenSubsonic users.
+
+Guidance:
+
+- Coexistence:
+
+  - Keep `/api/v{version}` (Melodee) and `/rest/*` (OpenSubsonic) behavior
+    unchanged.
+  - Jellyfin emulation must only activate when detected via headers or
+    allowlisted paths.
+
+- OpenSubsonic users:
+
+  - No required migration; Jellyfin emulation is additive.
+  - Users can run both client types against the same Melodee instance.
+
+- Migration path (optional, operator-guided):
+
+  - Authentication:
+
+    - users authenticate with the same Melodee username/password via
+      `/Users/AuthenticateByName`.
+    - tokens are newly issued Jellyfin tokens; do not reuse OpenSubsonic tokens.
+
+  - Token/config migration:
+
+    - default: no automated token migration (different formats and security
+      properties).
+    - optional future utility: an admin-only tool to bulk revoke Jellyfin tokens
+      or export token issuance audit logs.
+
+- Potential conflicts to avoid:
+
+  - Do not rewrite requests that already target `/api/*` or `/rest/*`.
+  - Ensure cookie middleware continues to bypass API routes and does not inject
+    UI cookies into Jellyfin responses.
+  - Rate limiting partitions and limits should not be shared across emulations
+    unless intentionally configured (avoid one client type starving another).
+
+## Jellyfin versioning strategy
+
+Reference schema: Jellyfin 10.11.5 OpenAPI.
+
+Requirements:
+
+- Assume clients may vary and send different query params/headers.
+- Prefer “tolerant reader” behavior:
+
+  - ignore unknown query parameters
+  - ignore unknown JSON fields in request bodies
+  - keep response contracts stable, but omit fields that cannot be computed
+
+- Track compatibility changes explicitly:
+
+  - keep a small allowlist of known client variants (Desktop, JellyAmp, etc.)
+  - add contract tests for endpoints known to differ by client version
+  - avoid branching behavior on client version unless necessary and tested
+
 ## Security Considerations
 
 ### Token rotation and revocation
@@ -422,6 +713,25 @@ All new settings must be added to:
 - Do not store tokens in plaintext.
 - Support multiple tokens per user (per device) and per-token revocation.
 - Support expiry; ensure stale tokens cannot be used indefinitely.
+
+### Edge cases to handle explicitly
+
+- Concurrent token issuance (same user/device):
+
+  - enforce `MaxActiveTokensPerUser` deterministically (transactional check or
+    post-insert pruning with a consistent ordering)
+  - ensure no race condition allows unbounded token growth
+
+- Expired/revoked token during an active stream:
+
+  - minimum requirement: token must be valid at stream start
+  - recommended: do not revalidate mid-stream unless there is a clear product
+    requirement; doing so can break playback on long tracks
+
+- User deleted/disabled with active tokens:
+
+  - treat as `403` on new requests
+  - revoke or hard-invalidate all tokens for that user (prefer cascade revoke)
 
 ### Rate limiting
 
@@ -471,6 +781,27 @@ Partition strategy (recommended):
 
 ### Unit tests
 
+Tooling (align with repo conventions):
+
+- Test framework: xUnit
+- Mocking: Moq
+
+Mocking strategy:
+
+- Domain/services:
+
+  - mock database abstractions and external services (filesystem, metadata)
+    using Moq.
+
+- Streaming:
+
+  - avoid real filesystem dependency in most unit tests by using in-memory
+    streams or temp files created within the test scope.
+
+- Middleware:
+
+  - use `DefaultHttpContext` and set headers/paths explicitly.
+
 Where:
 
 - Service-level mapping tests: `tests/Melodee.Tests.Common/Services/`
@@ -492,6 +823,24 @@ Coverage requirements:
   - very large `limit` values
   - unknown query params
 
+### Performance targets (baseline expectations)
+
+These are targets for engineering and regression detection (not guarantees).
+
+- Browse endpoints (`/UserViews`, `/Artists`, `/Items`):
+
+  - p50 < 200ms, p95 < 1000ms on a typical library size
+
+- Stream start latency (`/Audio/{id}/stream` first byte):
+
+  - p50 < 300ms, p95 < 1500ms (assuming local storage and warm cache)
+
+How to validate:
+
+- Use existing benchmark harness under `benchmarks/` when applicable.
+- Add targeted performance regression tests under
+  `tests/Melodee.Tests.Common/Performance/` for query shapes and memory usage.
+
 ### Integration testing (manual)
 
 Clients:
@@ -510,6 +859,39 @@ Manual test checklist:
 5. Seek within a track (range requests)
 6. Verify that Melodee API (`/api/v1`) and OpenSubsonic (`/rest`) still work
 
+### Client compatibility checklist (quirks to watch)
+
+| Client | Headers/auth behavior to verify | Playback behavior to verify |
+| --- | --- | --- |
+| Jellyfin Desktop | Sends `X-Emby-Authorization` and/or `Authorization: MediaBrowser ...` | Often performs `HEAD` before `GET`; requires range/seek to work |
+| JellyAmp | May send device/client fields in auth headers | Rapid browse calls; ensure caching + rate limiting are tuned |
+| Tauon | Tends to be strict about content types and metadata fields | Seeks frequently; validate `206` + `Content-Range` correctness |
+| jellycli | Simple flows; good for smoke tests | Streams via direct GET; validate auth + 200/206 behavior |
+
+## User management and permissions
+
+Goal: integrate Jellyfin auth and library access with Melodee’s existing user
+and permission model.
+
+Guidance:
+
+- Authentication:
+
+  - `/Users/AuthenticateByName` must validate against Melodee users.
+  - Jellyfin tokens are separate from JWT and should not grant broader access
+    than the authenticated Melodee user.
+
+- Authorization:
+
+  - Enforce library visibility constraints consistently across browse and
+    streaming endpoints.
+  - Ensure item IDs are checked for ownership/visibility before streaming.
+
+- Future capability (optional):
+
+  - allow admins to view/revoke issued Jellyfin tokens by user and device
+  - emit audit logs on token issuance and revocation
+
 ## Observability
 
 - Log Jellyfin requests with:
@@ -517,7 +899,97 @@ Manual test checklist:
   - correlation id (`HttpContext.TraceIdentifier`)
   - user id (if available)
   - client/device headers (sanitized)
+
 - Add structured logs for:
 
   - token issuance, revocation, auth failures
   - streaming start/stop and cancellation
+  - rate-limit rejections (partition key, endpoint group)
+
+Example log templates (structured logging):
+
+- Token issued:
+
+  - `JellyfinTokenIssued UserId={UserId} TokenId={TokenId} Client={Client} DeviceId={DeviceId}`
+
+- Auth failed:
+
+  - `JellyfinAuthFailed UserName={UserName} RemoteIp={RemoteIp} Reason={Reason}`
+
+- Stream started:
+
+  - `JellyfinStreamStart UserId={UserId} ItemId={ItemId} Range={Range} Static={Static}`
+
+- Stream canceled:
+
+  - `JellyfinStreamCanceled UserId={UserId} ItemId={ItemId} BytesSent={BytesSent} Reason={Reason}`
+
+### Monitoring and metrics (Jellyfin-specific)
+
+Add metrics that are specific to the Jellyfin surface, so operators can
+distinguish Jellyfin client load from other APIs.
+
+Suggested metrics:
+
+- request rate and latency by endpoint group (`System`, `Users`, `Items`,
+  `Artists`, `Audio`)
+- auth failures and rate-limit rejections
+- active streams (gauge) and stream start/stop counts
+- bytes served (counter) and range request ratio
+- cache hit/miss for browse endpoints
+
+Minimum logging for streaming:
+
+- itemId, userId, response status, bytes served (if available)
+- cancellation reason (client disconnect vs server cancellation)
+
+## Troubleshooting (client compatibility)
+
+Common issues and what to check:
+
+- Client cannot add server:
+
+  - confirm `/System/Info/Public` is reachable at the base URL (no prefix)
+  - verify middleware rewrites correctly when no auth header is present
+
+- Auth succeeds but browsing fails:
+
+  - verify token parsing for `X-Emby-Authorization` and `Authorization` schema
+  - check rate limiting for browse endpoints
+
+- Playback starts but seeking fails:
+
+  - confirm `Accept-Ranges: bytes` and `206` responses for valid ranges
+  - validate `Content-Range` formatting and `416` behavior for invalid ranges
+
+- High CPU/memory during playback:
+
+  - confirm no full buffering
+  - confirm DB context is not held for stream lifetime
+  - confirm concurrency limits are applied
+
+## Glossary
+
+- Jellyfin token:
+
+  - A bearer token issued by `/Users/AuthenticateByName` and presented by
+    clients via `Authorization: MediaBrowser ...` or related headers.
+
+- MediaBrowser:
+
+  - The authorization scheme string used by Jellyfin/Emby-style clients in the
+    `Authorization` header.
+
+- UserView:
+
+  - A top-level “library view” a client navigates into (e.g., “Music”).
+
+- Item:
+
+  - A Jellyfin entity (artist, album, track, playlist, etc.) identified by an
+    ID and a type.
+
+- Route prefix:
+
+  - The internal namespace for Jellyfin controllers (default `/api/jf`), reached
+    via middleware rewrite from external root paths.
