@@ -30,14 +30,23 @@ public class JellyfinRoutingMiddleware(
     public async Task InvokeAsync(HttpContext context)
     {
         var path = context.Request.Path.Value ?? string.Empty;
+        var method = context.Request.Method;
+        var clientIp = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        var userAgent = context.Request.Headers.UserAgent.ToString();
+
+        logger.LogDebug("JellyfinRouting: {Method} {Path} from {ClientIp} UserAgent={UserAgent}",
+            method, path, clientIp, userAgent);
 
         if (path.StartsWith(JellyfinInternalPrefix, StringComparison.OrdinalIgnoreCase))
         {
+            logger.LogDebug("JellyfinRouting: Path already prefixed with {Prefix}, checking if enabled", JellyfinInternalPrefix);
             if (!await IsJellyfinEnabledAsync(context))
             {
+                logger.LogDebug("JellyfinRouting: Jellyfin disabled, returning 404 for {Path}", path);
                 context.Response.StatusCode = StatusCodes.Status404NotFound;
                 return;
             }
+            logger.LogDebug("JellyfinRouting: Passing through prefixed path {Path}", path);
             await next(context);
             return;
         }
@@ -46,22 +55,33 @@ public class JellyfinRoutingMiddleware(
         {
             if (path.StartsWith(excludedPrefix, StringComparison.OrdinalIgnoreCase))
             {
+                logger.LogTrace("JellyfinRouting: Skipping excluded path prefix {ExcludedPrefix} for {Path}", excludedPrefix, path);
                 await next(context);
                 return;
             }
         }
 
-        if (IsJellyfinRequest(context.Request, path))
+        var (isJellyfin, detectionReason) = IsJellyfinRequestWithReason(context.Request, path);
+        if (isJellyfin)
         {
+            logger.LogDebug("JellyfinRouting: Detected Jellyfin request via {DetectionReason} for {Path}", detectionReason, path);
+            
             if (!await IsJellyfinEnabledAsync(context))
             {
+                logger.LogWarning("JellyfinRouting: Request detected but Jellyfin API is disabled. Path={Path} DetectedVia={DetectionReason} ClientIp={ClientIp}",
+                    path, detectionReason, clientIp);
                 await next(context);
                 return;
             }
 
             var newPath = JellyfinInternalPrefix + path;
-            logger.LogDebug("JellyfinRoutingMiddleware rewriting path {OldPath} to {NewPath}", path, newPath);
+            logger.LogInformation("JellyfinRouting: Rewriting {OldPath} -> {NewPath} (detected via {DetectionReason}) ClientIp={ClientIp}",
+                path, newPath, detectionReason, clientIp);
             context.Request.Path = newPath;
+        }
+        else
+        {
+            logger.LogTrace("JellyfinRouting: Not a Jellyfin request: {Path}", path);
         }
 
         await next(context);
@@ -71,6 +91,7 @@ public class JellyfinRoutingMiddleware(
     {
         if (context.Items.TryGetValue(JellyfinEnabledCacheKey, out var cached) && cached is bool cachedValue)
         {
+            logger.LogTrace("JellyfinRouting: Using cached JellyfinEnabled={Enabled}", cachedValue);
             return cachedValue;
         }
 
@@ -79,28 +100,29 @@ public class JellyfinRoutingMiddleware(
             var config = await configurationFactory.GetConfigurationAsync(context.RequestAborted);
             var enabled = config.GetValue<bool>(SettingRegistry.JellyfinEnabled);
             context.Items[JellyfinEnabledCacheKey] = enabled;
+            logger.LogDebug("JellyfinRouting: JellyfinEnabled setting resolved to {Enabled}", enabled);
             return enabled;
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Failed to check JellyfinEnabled setting, defaulting to disabled");
+            logger.LogWarning(ex, "JellyfinRouting: Failed to check JellyfinEnabled setting, defaulting to disabled");
             context.Items[JellyfinEnabledCacheKey] = false;
             return false;
         }
     }
 
-    private static bool IsJellyfinRequest(HttpRequest request, string path)
+    private static (bool IsJellyfin, string Reason) IsJellyfinRequestWithReason(HttpRequest request, string path)
     {
         if (AllowlistedPreAuthPaths.Contains(path))
         {
-            return true;
+            return (true, $"AllowlistedPath:{path}");
         }
 
         if (request.Headers.TryGetValue("Authorization", out var authHeader))
         {
             if (HasMediaBrowserToken(authHeader))
             {
-                return true;
+                return (true, "AuthorizationHeader:MediaBrowser");
             }
         }
 
@@ -108,21 +130,26 @@ public class JellyfinRoutingMiddleware(
         {
             if (embyAuthHeader.ToString().StartsWith(MediaBrowserSchema, StringComparison.OrdinalIgnoreCase))
             {
-                return true;
+                return (true, "X-Emby-Authorization");
             }
         }
 
         if (request.Headers.ContainsKey("X-MediaBrowser-Token"))
         {
-            return true;
+            return (true, "X-MediaBrowser-Token");
         }
 
         if (request.Headers.ContainsKey("X-Emby-Token"))
         {
-            return true;
+            return (true, "X-Emby-Token");
         }
 
-        return false;
+        return (false, "NoMatch");
+    }
+
+    private static bool IsJellyfinRequest(HttpRequest request, string path)
+    {
+        return IsJellyfinRequestWithReason(request, path).IsJellyfin;
     }
 
     private static bool HasMediaBrowserToken(StringValues authHeader)

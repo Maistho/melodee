@@ -511,6 +511,10 @@ if (useForwardedHeaders)
 // Enable response compression early in the pipeline
 app.UseResponseCompression();
 
+// Jellyfin API routing - MUST be very early in pipeline before endpoint routing kicks in
+// This rewrites paths like /System/Info/Public to /api/jf/System/Info/Public
+app.UseMiddleware<JellyfinRoutingMiddleware>();
+
 app.UseSwagger();
 
 // Get OpenSubsonic version from configuration before configuring SwaggerUI
@@ -784,9 +788,6 @@ localizationOptions.RequestCultureProviders.Insert(0,
     new Microsoft.AspNetCore.Localization.CookieRequestCultureProvider());
 
 app.UseRequestLocalization(localizationOptions);
-
-// Jellyfin API routing - must be before UseAntiforgery/UseAuthentication
-app.UseMiddleware<JellyfinRoutingMiddleware>();
 
 app.UseAntiforgery();
 app.UseAuthentication();

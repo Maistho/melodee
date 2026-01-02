@@ -20,7 +20,8 @@ public class AudioController(
     IMelodeeConfigurationFactory configurationFactory,
     IDbContextFactory<MelodeeDbContext> dbContextFactory,
     IClock clock,
-    ILogger<AudioController> logger) : JellyfinControllerBase(etagRepository, serializer, configuration, configurationFactory, dbContextFactory, clock)
+    ILoggerFactory loggerFactory,
+    ILogger<AudioController> logger) : JellyfinControllerBase(etagRepository, serializer, configuration, configurationFactory, dbContextFactory, clock, loggerFactory)
 {
     private const int StreamBufferSize = 65536;
 

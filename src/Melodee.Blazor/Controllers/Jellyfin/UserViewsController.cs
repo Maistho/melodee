@@ -23,7 +23,8 @@ public class UserViewsController(
     IConfiguration configuration,
     IMelodeeConfigurationFactory configurationFactory,
     IDbContextFactory<MelodeeDbContext> dbContextFactory,
-    IClock clock) : JellyfinControllerBase(etagRepository, serializer, configuration, configurationFactory, dbContextFactory, clock)
+    IClock clock,
+    ILoggerFactory loggerFactory) : JellyfinControllerBase(etagRepository, serializer, configuration, configurationFactory, dbContextFactory, clock, loggerFactory)
 {
     [HttpGet]
     public async Task<IActionResult> GetUserViewsAsync(CancellationToken cancellationToken)

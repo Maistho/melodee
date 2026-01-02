@@ -28,8 +28,9 @@ public class SessionsController(
     IMelodeeConfigurationFactory configurationFactory,
     IDbContextFactory<MelodeeDbContext> dbContextFactory,
     IClock clock,
+    ILoggerFactory loggerFactory,
     ScrobbleService scrobbleService,
-    ILogger<SessionsController> logger) : JellyfinControllerBase(etagRepository, serializer, configuration, configurationFactory, dbContextFactory, clock)
+    ILogger<SessionsController> logger) : JellyfinControllerBase(etagRepository, serializer, configuration, configurationFactory, dbContextFactory, clock, loggerFactory)
 {
     /// <summary>
     /// Reports playback has started within a session.

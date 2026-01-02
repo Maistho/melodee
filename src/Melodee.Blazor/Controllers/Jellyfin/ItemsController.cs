@@ -23,7 +23,8 @@ public class ItemsController(
     IMelodeeConfigurationFactory configurationFactory,
     IDbContextFactory<MelodeeDbContext> dbContextFactory,
     IClock clock,
-    ILogger<ItemsController> logger) : JellyfinControllerBase(etagRepository, serializer, configuration, configurationFactory, dbContextFactory, clock)
+    ILoggerFactory loggerFactory,
+    ILogger<ItemsController> logger) : JellyfinControllerBase(etagRepository, serializer, configuration, configurationFactory, dbContextFactory, clock, loggerFactory)
 {
     private const int StreamBufferSize = 65536;
 

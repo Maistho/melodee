@@ -24,7 +24,8 @@ public class SystemController(
     IMelodeeConfigurationFactory configurationFactory,
     IDbContextFactory<MelodeeDbContext> dbContextFactory,
     IClock clock,
-    ILogger<SystemController> logger) : JellyfinControllerBase(etagRepository, serializer, configuration, configurationFactory, dbContextFactory, clock)
+    ILoggerFactory loggerFactory,
+    ILogger<SystemController> logger) : JellyfinControllerBase(etagRepository, serializer, configuration, configurationFactory, dbContextFactory, clock, loggerFactory)
 {
     private static readonly string ServerVersion = Assembly.GetExecutingAssembly()
         .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "1.0.0";

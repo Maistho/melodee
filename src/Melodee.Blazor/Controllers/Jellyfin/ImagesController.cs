@@ -27,9 +27,10 @@ public class ImagesController(
     IMelodeeConfigurationFactory configurationFactory,
     IDbContextFactory<MelodeeDbContext> dbContextFactory,
     IClock clock,
+    ILoggerFactory loggerFactory,
     AlbumService albumService,
     ArtistService artistService,
-    ILogger<ImagesController> logger) : JellyfinControllerBase(etagRepository, serializer, configuration, configurationFactory, dbContextFactory, clock)
+    ILogger<ImagesController> logger) : JellyfinControllerBase(etagRepository, serializer, configuration, configurationFactory, dbContextFactory, clock, loggerFactory)
 {
 
     /// <summary>

@@ -18,7 +18,8 @@ public abstract class JellyfinControllerBase(
     IConfiguration configuration,
     IMelodeeConfigurationFactory configurationFactory,
     IDbContextFactory<MelodeeDbContext> dbContextFactory,
-    IClock clock) : ControllerBase
+    IClock clock,
+    ILoggerFactory loggerFactory) : ControllerBase
 {
     private const string ConfigCacheKey = "__jellyfin_config_cache";
     private const string ServerIdCacheKey = "__jellyfin_server_id";
@@ -30,6 +31,9 @@ public abstract class JellyfinControllerBase(
     protected IMelodeeConfigurationFactory ConfigurationFactory { get; } = configurationFactory;
     protected IDbContextFactory<MelodeeDbContext> DbContextFactory { get; } = dbContextFactory;
     protected IClock Clock { get; } = clock;
+    
+    private ILogger? _jellyfinLogger;
+    protected ILogger JellyfinLogger => _jellyfinLogger ??= loggerFactory.CreateLogger("Melodee.Jellyfin");
 
     protected async Task<IMelodeeConfiguration> GetConfigurationAsync(CancellationToken cancellationToken = default)
     {
@@ -70,16 +74,26 @@ public abstract class JellyfinControllerBase(
 
     protected async Task<User?> AuthenticateJellyfinAsync(CancellationToken cancellationToken = default)
     {
+        var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        var requestPath = HttpContext.Request.Path.Value ?? "unknown";
+        
         if (HttpContext.Items.TryGetValue(UserCacheKey, out var cached) && cached is User cachedUser)
         {
+            JellyfinLogger.LogDebug("JellyfinAuth: Using cached user {UserId}:{UserName} for {Path}",
+                cachedUser.Id, cachedUser.UserName, requestPath);
             return cachedUser;
         }
 
         var tokenInfo = JellyfinTokenParser.ParseFromRequest(Request);
         if (string.IsNullOrWhiteSpace(tokenInfo.Token))
         {
+            JellyfinLogger.LogDebug("JellyfinAuth: No token found in request for {Path} from {ClientIp}. TokenSource={TokenSource}",
+                requestPath, clientIp, tokenInfo.Source);
             return null;
         }
+
+        JellyfinLogger.LogDebug("JellyfinAuth: Token found via {TokenSource} for {Path} from {ClientIp}, ClientName={ClientName} DeviceId={DeviceId}",
+            tokenInfo.Source, requestPath, clientIp, tokenInfo.Client ?? "unknown", tokenInfo.DeviceId ?? "unknown");
 
         var pepper = await GetTokenPepperAsync(cancellationToken);
         var now = Clock.GetCurrentInstant();
@@ -87,8 +101,6 @@ public abstract class JellyfinControllerBase(
 
         await using var dbContext = await DbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        // Use prefix-based lookup to narrow candidates before HMAC verification.
-        // This significantly reduces the number of HMAC computations needed.
         var candidateTokens = await dbContext.JellyfinAccessTokens
             .AsNoTracking()
             .Include(t => t.User)
@@ -98,14 +110,22 @@ public abstract class JellyfinControllerBase(
             .OrderByDescending(t => t.LastUsedAt ?? t.CreatedAt)
             .ToListAsync(cancellationToken);
 
+        JellyfinLogger.LogDebug("JellyfinAuth: Found {CandidateCount} candidate tokens matching prefix for {Path}",
+            candidateTokens.Count, requestPath);
+
         foreach (var storedToken in candidateTokens)
         {
             if (JellyfinTokenParser.VerifyToken(tokenInfo.Token, storedToken.TokenSalt, pepper, storedToken.TokenHash))
             {
                 if (storedToken.User.IsLocked)
                 {
+                    JellyfinLogger.LogWarning("JellyfinAuth: Token valid but user {UserId}:{UserName} is locked. Path={Path} ClientIp={ClientIp}",
+                        storedToken.User.Id, storedToken.User.UserName, requestPath, clientIp);
                     return null;
                 }
+
+                JellyfinLogger.LogDebug("JellyfinAuth: Authenticated user {UserId}:{UserName} via token {TokenId} for {Path}",
+                    storedToken.User.Id, storedToken.User.UserName, storedToken.Id, requestPath);
 
                 HttpContext.Items[UserCacheKey] = storedToken.User;
 
@@ -114,6 +134,8 @@ public abstract class JellyfinControllerBase(
             }
         }
 
+        JellyfinLogger.LogDebug("JellyfinAuth: No matching token found for {Path} from {ClientIp}. CandidatesChecked={CandidateCount}",
+            requestPath, clientIp, candidateTokens.Count);
         return null;
     }
 

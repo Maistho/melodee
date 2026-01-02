@@ -25,8 +25,9 @@ public class UsersController(
     IMelodeeConfigurationFactory configurationFactory,
     IDbContextFactory<MelodeeDbContext> dbContextFactory,
     IClock clock,
+    ILoggerFactory loggerFactory,
     UserService userService,
-    ILogger<UsersController> logger) : JellyfinControllerBase(etagRepository, serializer, configuration, configurationFactory, dbContextFactory, clock)
+    ILogger<UsersController> logger) : JellyfinControllerBase(etagRepository, serializer, configuration, configurationFactory, dbContextFactory, clock, loggerFactory)
 {
     [HttpPost("AuthenticateByName")]
     [AllowAnonymous]

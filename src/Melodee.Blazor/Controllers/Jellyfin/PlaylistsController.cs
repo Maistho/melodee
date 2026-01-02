@@ -30,7 +30,8 @@ public class PlaylistsController(
     IMelodeeConfigurationFactory configurationFactory,
     IDbContextFactory<MelodeeDbContext> dbContextFactory,
     IClock clock,
-    PlaylistService playlistService) : JellyfinControllerBase(etagRepository, serializer, configuration, configurationFactory, dbContextFactory, clock)
+    ILoggerFactory loggerFactory,
+    PlaylistService playlistService) : JellyfinControllerBase(etagRepository, serializer, configuration, configurationFactory, dbContextFactory, clock, loggerFactory)
 {
     /// <summary>
     /// Get all playlists for the authenticated user.
