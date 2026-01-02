@@ -112,6 +112,9 @@ public class MusicGenresController(
 
     private static Guid ComputeGenreGuid(string genre)
     {
+        // NOTE: MD5 is used here for deterministic GUID generation from genre names for Jellyfin API compatibility.
+        // This is NOT a cryptographic use - it's purely for generating stable genre identifiers.
+        // lgtm[cs/weak-crypto] MD5 used for non-cryptographic GUID generation, not for security
         var hash = MD5.HashData(Encoding.UTF8.GetBytes($"genre:{genre.ToUpperInvariant()}"));
         return new Guid(hash);
     }
@@ -119,6 +122,9 @@ public class MusicGenresController(
     private static string ComputeCollectionEtag(int totalCount, int skip, int take, Instant latestUpdate)
     {
         var input = $"musicgenres-{totalCount}-{skip}-{take}-{latestUpdate.ToUnixTimeTicks()}";
+        // NOTE: MD5 is used here for generating ETag values for HTTP caching in Jellyfin API compatibility.
+        // This is NOT a cryptographic use - ETags are public cache identifiers, not security tokens.
+        // lgtm[cs/weak-crypto] MD5 used for non-cryptographic ETag generation, not for security
         var hash = MD5.HashData(Encoding.UTF8.GetBytes(input));
         return Convert.ToHexString(hash).ToLowerInvariant();
     }

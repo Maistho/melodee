@@ -55,6 +55,9 @@ public abstract class JellyfinControllerBase(
         }
 
         var instanceId = Configuration.GetValue<string>("Jwt:Issuer") ?? "Melodee";
+        // NOTE: MD5 is used here for deterministic GUID generation from instance ID for Jellyfin API compatibility.
+        // This is NOT a cryptographic use - it's purely for generating a stable server identifier.
+        // lgtm[cs/weak-crypto] MD5 used for non-cryptographic GUID generation, not for security
         var hash = MD5.HashData(System.Text.Encoding.UTF8.GetBytes(instanceId));
         var id = new Guid(hash).ToString("N");
         HttpContext.Items[ServerIdCacheKey] = id;
