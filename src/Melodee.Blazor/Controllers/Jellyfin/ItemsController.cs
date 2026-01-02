@@ -209,11 +209,71 @@ public class ItemsController(
 
         var mediaSource = CreateMediaSourceWithDetails(song);
         
-        return Ok(new
+        return Ok(new JellyfinPlaybackInfoResult
         {
-            MediaSources = new[] { mediaSource },
+            MediaSources = [mediaSource],
             PlaySessionId = Guid.NewGuid().ToString("N")
         });
+    }
+
+    /// <summary>
+    /// Delete an item (playlist only - songs/albums/artists cannot be deleted via API).
+    /// </summary>
+    [HttpDelete("{itemId}")]
+    public async Task<IActionResult> DeleteItemAsync(string itemId, CancellationToken cancellationToken)
+    {
+        var user = await AuthenticateJellyfinAsync(cancellationToken);
+        if (user == null)
+        {
+            return JellyfinUnauthorized();
+        }
+
+        if (!TryParseJellyfinGuid(itemId, out var apiKey))
+        {
+            return JellyfinBadRequest("Invalid item ID format.");
+        }
+
+        await using var dbContext = await DbContextFactory.CreateDbContextAsync(cancellationToken);
+        
+        var playlist = await dbContext.Playlists
+            .FirstOrDefaultAsync(p => p.ApiKey == apiKey && p.UserId == user.Id, cancellationToken);
+
+        if (playlist != null)
+        {
+            dbContext.Playlists.Remove(playlist);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return NoContent();
+        }
+
+        return JellyfinNotFound("Item not found or cannot be deleted.");
+    }
+
+    /// <summary>
+    /// Refresh/rescan an item (library refresh).
+    /// </summary>
+    [HttpPost("{itemId}/Refresh")]
+    public async Task<IActionResult> RefreshItemAsync(
+        string itemId,
+        [FromQuery] bool? recursive,
+        [FromQuery] string? imageRefreshMode,
+        [FromQuery] string? metadataRefreshMode,
+        CancellationToken cancellationToken)
+    {
+        var user = await AuthenticateJellyfinAsync(cancellationToken);
+        if (user == null)
+        {
+            return JellyfinUnauthorized();
+        }
+
+        if (!TryParseJellyfinGuid(itemId, out var apiKey))
+        {
+            return JellyfinBadRequest("Invalid item ID format.");
+        }
+
+        logger.LogInformation("JellyfinRefreshRequest ItemId={ItemId} Recursive={Recursive} by User={UserId}", 
+            itemId, recursive ?? false, user.Id);
+
+        return NoContent();
     }
 
     [HttpGet("{itemId}/File")]

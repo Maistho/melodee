@@ -158,6 +158,242 @@ public class PlaylistsController(
         });
     }
 
+    /// <summary>
+    /// Create a new playlist.
+    /// </summary>
+    [HttpPost]
+    public async Task<IActionResult> CreatePlaylistAsync(
+        [FromBody] JellyfinCreatePlaylistRequest request,
+        CancellationToken cancellationToken)
+    {
+        var user = await AuthenticateJellyfinAsync(cancellationToken);
+        if (user == null)
+        {
+            return JellyfinUnauthorized();
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Name))
+        {
+            return JellyfinBadRequest("Playlist name is required.");
+        }
+
+        Guid[]? songApiKeys = null;
+        if (request.Ids is { Length: > 0 })
+        {
+            songApiKeys = request.Ids
+                .Select(id => TryParseJellyfinGuid(id, out var apiKey) ? apiKey : (Guid?)null)
+                .Where(k => k.HasValue)
+                .Select(k => k!.Value)
+                .ToArray();
+        }
+
+        var createResult = await playlistService.CreatePlaylistAsync(
+            request.Name,
+            user.Id,
+            null,
+            request.IsPublic ?? false,
+            songApiKeys,
+            false,
+            cancellationToken);
+
+        if (!createResult.IsSuccess || string.IsNullOrEmpty(createResult.Data))
+        {
+            return JellyfinBadRequest(createResult.Messages?.FirstOrDefault() ?? "Failed to create playlist.");
+        }
+
+        return Ok(new JellyfinCreatePlaylistResponse
+        {
+            Id = createResult.Data.Replace("-", string.Empty)
+        });
+    }
+
+    /// <summary>
+    /// Add items to a playlist.
+    /// </summary>
+    [HttpPost("{playlistId}/Items")]
+    public async Task<IActionResult> AddItemsToPlaylistAsync(
+        string playlistId,
+        [FromQuery] string? ids,
+        [FromQuery] string? userId,
+        CancellationToken cancellationToken)
+    {
+        var user = await AuthenticateJellyfinAsync(cancellationToken);
+        if (user == null)
+        {
+            return JellyfinUnauthorized();
+        }
+
+        if (!TryParseJellyfinGuid(playlistId, out var playlistApiKey))
+        {
+            return JellyfinBadRequest("Invalid playlist ID format.");
+        }
+
+        if (string.IsNullOrWhiteSpace(ids))
+        {
+            return NoContent();
+        }
+
+        var songApiKeys = ids.Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .Select(id => TryParseJellyfinGuid(id.Trim(), out var apiKey) ? apiKey : (Guid?)null)
+            .Where(k => k.HasValue)
+            .Select(k => k!.Value)
+            .ToArray();
+
+        if (songApiKeys.Length == 0)
+        {
+            return NoContent();
+        }
+
+        var result = await playlistService.AddSongsToPlaylistAsync(playlistApiKey, songApiKeys, cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            return JellyfinNotFound("Playlist not found or access denied.");
+        }
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Remove items from a playlist.
+    /// </summary>
+    [HttpDelete("{playlistId}/Items")]
+    public async Task<IActionResult> RemoveItemsFromPlaylistAsync(
+        string playlistId,
+        [FromQuery] string? entryIds,
+        CancellationToken cancellationToken)
+    {
+        var user = await AuthenticateJellyfinAsync(cancellationToken);
+        if (user == null)
+        {
+            return JellyfinUnauthorized();
+        }
+
+        if (!TryParseJellyfinGuid(playlistId, out var playlistApiKey))
+        {
+            return JellyfinBadRequest("Invalid playlist ID format.");
+        }
+
+        if (string.IsNullOrWhiteSpace(entryIds))
+        {
+            return NoContent();
+        }
+
+        var songApiKeys = entryIds.Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .Select(id => TryParseJellyfinGuid(id.Trim(), out var apiKey) ? apiKey : (Guid?)null)
+            .Where(k => k.HasValue)
+            .Select(k => k!.Value)
+            .ToArray();
+
+        if (songApiKeys.Length == 0)
+        {
+            return NoContent();
+        }
+
+        var result = await playlistService.RemoveSongsFromPlaylistAsync(playlistApiKey, songApiKeys, cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            return JellyfinNotFound("Playlist not found or access denied.");
+        }
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Move an item within a playlist to a new position.
+    /// </summary>
+    [HttpPost("{playlistId}/Items/{itemId}/Move/{newIndex:int}")]
+    public async Task<IActionResult> MovePlaylistItemAsync(
+        string playlistId,
+        string itemId,
+        int newIndex,
+        CancellationToken cancellationToken)
+    {
+        var user = await AuthenticateJellyfinAsync(cancellationToken);
+        if (user == null)
+        {
+            return JellyfinUnauthorized();
+        }
+
+        if (!TryParseJellyfinGuid(playlistId, out var playlistApiKey))
+        {
+            return JellyfinBadRequest("Invalid playlist ID format.");
+        }
+
+        if (!TryParseJellyfinGuid(itemId, out var songApiKey))
+        {
+            return JellyfinBadRequest("Invalid item ID format.");
+        }
+
+        var userInfo = user.ToUserInfo();
+        
+        await using var dbContext = await DbContextFactory.CreateDbContextAsync(cancellationToken);
+        var playlist = await dbContext.Playlists
+            .Include(p => p.Songs)
+            .ThenInclude(ps => ps.Song)
+            .FirstOrDefaultAsync(p => p.ApiKey == playlistApiKey, cancellationToken);
+
+        if (playlist == null)
+        {
+            return JellyfinNotFound("Playlist not found.");
+        }
+
+        var playlistSong = playlist.Songs.FirstOrDefault(ps => ps.Song.ApiKey == songApiKey);
+        if (playlistSong == null)
+        {
+            return JellyfinNotFound("Item not found in playlist.");
+        }
+
+        var orderedSongs = playlist.Songs.OrderBy(ps => ps.PlaylistOrder).ToList();
+        var currentIndex = orderedSongs.IndexOf(playlistSong);
+        
+        if (currentIndex == newIndex || newIndex < 0 || newIndex >= orderedSongs.Count)
+        {
+            return NoContent();
+        }
+
+        orderedSongs.RemoveAt(currentIndex);
+        orderedSongs.Insert(newIndex, playlistSong);
+
+        for (var i = 0; i < orderedSongs.Count; i++)
+        {
+            orderedSongs[i].PlaylistOrder = i + 1;
+        }
+
+        playlist.LastUpdatedAt = Clock.GetCurrentInstant();
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Delete a playlist.
+    /// </summary>
+    [HttpDelete("{playlistId}")]
+    public async Task<IActionResult> DeletePlaylistAsync(string playlistId, CancellationToken cancellationToken)
+    {
+        var user = await AuthenticateJellyfinAsync(cancellationToken);
+        if (user == null)
+        {
+            return JellyfinUnauthorized();
+        }
+
+        if (!TryParseJellyfinGuid(playlistId, out var playlistApiKey))
+        {
+            return JellyfinBadRequest("Invalid playlist ID format.");
+        }
+
+        var result = await playlistService.DeleteByApiKeyAsync(playlistApiKey, user.Id, cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            return JellyfinNotFound("Playlist not found or access denied.");
+        }
+
+        return NoContent();
+    }
+
     private JellyfinBaseItem MapToJellyfinPlaylist(Common.Data.Models.Playlist playlist, bool canDownload)
     {
         return new JellyfinBaseItem

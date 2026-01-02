@@ -490,3 +490,48 @@ public record JellyfinArtistsResult
     [JsonPropertyName("StartIndex")]
     public int StartIndex { get; init; }
 }
+
+public record JellyfinPlaybackInfoResult
+{
+    [JsonPropertyName("MediaSources")]
+    public required JellyfinMediaSource[] MediaSources { get; init; }
+
+    [JsonPropertyName("PlaySessionId")]
+    public string? PlaySessionId { get; init; }
+}
+
+public record JellyfinCreatePlaylistRequest
+{
+    [JsonPropertyName("Name")]
+    public string? Name { get; init; }
+
+    [JsonPropertyName("Ids")]
+    public string[]? Ids { get; init; }
+
+    [JsonPropertyName("UserId")]
+    public string? UserId { get; init; }
+
+    [JsonPropertyName("MediaType")]
+    public string? MediaType { get; init; }
+
+    [JsonPropertyName("Users")]
+    public JellyfinPlaylistUserPermissions[]? Users { get; init; }
+
+    [JsonPropertyName("IsPublic")]
+    public bool? IsPublic { get; init; }
+}
+
+public record JellyfinPlaylistUserPermissions
+{
+    [JsonPropertyName("UserId")]
+    public string? UserId { get; init; }
+
+    [JsonPropertyName("CanEdit")]
+    public bool CanEdit { get; init; }
+}
+
+public record JellyfinCreatePlaylistResponse
+{
+    [JsonPropertyName("Id")]
+    public required string Id { get; init; }
+}

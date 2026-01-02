@@ -141,6 +141,83 @@ public class AudioController(
         return StreamAudioAsync(itemId, container, true, null, maxStreamingBitrate, cancellationToken);
     }
 
+    /// <summary>
+    /// Get lyrics for an audio item.
+    /// </summary>
+    [HttpGet("{itemId}/Lyrics")]
+    public async Task<IActionResult> GetLyricsAsync(string itemId, CancellationToken cancellationToken)
+    {
+        var user = await AuthenticateJellyfinAsync(cancellationToken);
+        if (user == null)
+        {
+            return JellyfinUnauthorized();
+        }
+
+        if (!TryParseJellyfinGuid(itemId, out var apiKey))
+        {
+            return JellyfinBadRequest("Invalid item ID format.");
+        }
+
+        await using var dbContext = await DbContextFactory.CreateDbContextAsync(cancellationToken);
+        var song = await dbContext.Songs
+            .AsNoTracking()
+            .Include(s => s.Album)
+            .ThenInclude(a => a.Artist)
+            .ThenInclude(ar => ar.Library)
+            .Where(s => s.ApiKey == apiKey && !s.IsLocked)
+            .Select(s => new
+            {
+                s.FileName,
+                AlbumDirectory = s.Album.Directory,
+                ArtistDirectory = s.Album.Artist.Directory,
+                LibraryPath = s.Album.Artist.Library.Path
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (song == null)
+        {
+            return JellyfinNotFound("Audio item not found.");
+        }
+
+        var audioFilePath = Path.Combine(song.LibraryPath, song.ArtistDirectory, song.AlbumDirectory, song.FileName);
+        var lrcFilePath = Path.ChangeExtension(audioFilePath, ".lrc");
+
+        if (!System.IO.File.Exists(lrcFilePath))
+        {
+            return Ok(new { Lyrics = Array.Empty<object>() });
+        }
+
+        var lyrics = new List<object>();
+        var lines = await System.IO.File.ReadAllLinesAsync(lrcFilePath, cancellationToken);
+
+        foreach (var line in lines)
+        {
+            var match = System.Text.RegularExpressions.Regex.Match(line, @"\[(\d{2}):(\d{2})\.(\d{2,3})\](.*)");
+            if (match.Success)
+            {
+                var minutes = int.Parse(match.Groups[1].Value);
+                var seconds = int.Parse(match.Groups[2].Value);
+                var milliseconds = match.Groups[3].Value;
+                if (milliseconds.Length == 2) milliseconds += "0";
+                var ms = int.Parse(milliseconds);
+                
+                var startTicks = ((minutes * 60L + seconds) * 1000 + ms) * 10000;
+                var text = match.Groups[4].Value.Trim();
+                
+                if (!string.IsNullOrEmpty(text))
+                {
+                    lyrics.Add(new { Text = text, Start = startTicks });
+                }
+            }
+            else if (!line.StartsWith("[") && !string.IsNullOrWhiteSpace(line))
+            {
+                lyrics.Add(new { Text = line.Trim(), Start = (long?)null });
+            }
+        }
+
+        return Ok(new { Lyrics = lyrics });
+    }
+
     private async Task<IActionResult> HandleRangeRequestAsync(
         string filePath,
         long fileLength,

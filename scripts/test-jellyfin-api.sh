@@ -1,16 +1,24 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -uo pipefail
 
 # Jellyfin API endpoint tester for Melodee
 # Tests the pre-auth endpoints that Jellyfin clients call during server discovery
 
 BASE_URL="${1:-http://localhost:5157}"
+USERNAME="${JF_USERNAME:-steven}"
+PASSWORD="${JF_PASSWORD:-${MELODEE_PASSWORD:-password}}"
 
 echo "Testing Jellyfin API endpoints on: $BASE_URL"
 echo "============================================="
 
+TEST_NUM=0
+
+increment_test() {
+    TEST_NUM=$((TEST_NUM + 1))
+}
+
 # Test 0: HEAD / (server discovery - Jellyfin clients send this first)
-echo -e "\n[0] HEAD / (server discovery)"
+echo -e "\n[$TEST_NUM] HEAD / (server discovery)"
 http_code=$(curl -s -o /dev/null -w "%{http_code}" -X HEAD "$BASE_URL/")
 
 if [ "$http_code" = "200" ]; then
@@ -20,7 +28,8 @@ else
 fi
 
 # Test 1: /System/Info/Public (anonymous, pre-auth)
-echo -e "\n[1] GET /System/Info/Public (anonymous)"
+increment_test
+echo -e "\n[$TEST_NUM] GET /System/Info/Public (anonymous)"
 response=$(curl -s -w "\nHTTP_CODE:%{http_code}" "$BASE_URL/System/Info/Public")
 http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
 body=$(echo "$response" | sed '/HTTP_CODE:/d')
@@ -35,7 +44,8 @@ else
 fi
 
 # Test 2: /System/Ping (anonymous, pre-auth)
-echo -e "\n[2] GET /System/Ping (anonymous)"
+increment_test
+echo -e "\n[$TEST_NUM] GET /System/Ping (anonymous)"
 response=$(curl -s -w "\nHTTP_CODE:%{http_code}" "$BASE_URL/System/Ping")
 http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
 
@@ -46,7 +56,8 @@ else
 fi
 
 # Test 3: POST /System/Ping
-echo -e "\n[3] POST /System/Ping (anonymous)"
+increment_test
+echo -e "\n[$TEST_NUM] POST /System/Ping (anonymous)"
 response=$(curl -s -w "\nHTTP_CODE:%{http_code}" -X POST "$BASE_URL/System/Ping")
 http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
 
@@ -57,7 +68,8 @@ else
 fi
 
 # Test 4: Direct /api/jf/System/Info/Public (should also work)
-echo -e "\n[4] GET /api/jf/System/Info/Public (direct prefix)"
+increment_test
+echo -e "\n[$TEST_NUM] GET /api/jf/System/Info/Public (direct prefix)"
 response=$(curl -s -w "\nHTTP_CODE:%{http_code}" "$BASE_URL/api/jf/System/Info/Public")
 http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
 body=$(echo "$response" | sed '/HTTP_CODE:/d')
@@ -72,7 +84,8 @@ else
 fi
 
 # Test 5: HEAD /api/jf (direct root)
-echo -e "\n[5] HEAD /api/jf (direct root)"
+increment_test
+echo -e "\n[$TEST_NUM] HEAD /api/jf (direct root)"
 http_code=$(curl -s -o /dev/null -w "%{http_code}" -X HEAD "$BASE_URL/api/jf")
 
 if [ "$http_code" = "200" ]; then
@@ -82,7 +95,8 @@ else
 fi
 
 # Test 6: Authenticated endpoint without token (should fail)
-echo -e "\n[6] GET /UserViews (no auth - should fail)"
+increment_test
+echo -e "\n[$TEST_NUM] GET /UserViews (no auth - should fail)"
 response=$(curl -s -w "\nHTTP_CODE:%{http_code}" "$BASE_URL/UserViews")
 http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
 
@@ -93,7 +107,8 @@ else
 fi
 
 # Test 7: With MediaBrowser header but no valid token
-echo -e "\n[7] GET /UserViews (with MediaBrowser header, invalid token)"
+increment_test
+echo -e "\n[$TEST_NUM] GET /UserViews (with MediaBrowser header, invalid token)"
 response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
     -H 'Authorization: MediaBrowser Token="invalid_token_12345"' \
     "$BASE_URL/UserViews")
@@ -106,9 +121,8 @@ else
 fi
 
 # Test 8: Authenticate and get token
-echo -e "\n[8] POST /Users/AuthenticateByName (get token)"
-USERNAME="${JF_USERNAME:-steven}"
-PASSWORD="${JF_PASSWORD:-password}"
+increment_test
+echo -e "\n[$TEST_NUM] POST /Users/AuthenticateByName (get token)"
 
 auth_response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
     -X POST "$BASE_URL/Users/AuthenticateByName" \
@@ -136,7 +150,8 @@ fi
 AUTH_HEADER="MediaBrowser Token=\"$ACCESS_TOKEN\", Client=\"TestScript\", Device=\"Bash\", DeviceId=\"test-device-001\", Version=\"1.0\""
 
 # Test 9: Get UserViews (libraries)
-echo -e "\n[9] GET /UserViews (get libraries)"
+increment_test
+echo -e "\n[$TEST_NUM] GET /UserViews (get libraries)"
 response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
     -H "Authorization: $AUTH_HEADER" \
     "$BASE_URL/UserViews")
@@ -156,7 +171,8 @@ else
 fi
 
 # Test 10: Get Albums from first library
-echo -e "\n[10] GET /Items?includeItemTypes=MusicAlbum (get albums)"
+increment_test
+echo -e "\n[$TEST_NUM] GET /Items?includeItemTypes=MusicAlbum (get albums)"
 response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
     -H "Authorization: $AUTH_HEADER" \
     "$BASE_URL/Items?includeItemTypes=MusicAlbum&limit=10&startIndex=0&recursive=true")
@@ -167,16 +183,17 @@ if [ "$http_code" = "200" ]; then
     echo "✓ Status: $http_code"
     TOTAL_ALBUMS=$(echo "$body" | grep -o '"TotalRecordCount":[0-9]*' | cut -d: -f2)
     FIRST_ALBUM=$(echo "$body" | grep -o '"Name":"[^"]*"' | head -1 | cut -d'"' -f4)
+    FIRST_ALBUM_ID=$(echo "$body" | grep -o '"Id":"[^"]*"' | head -1 | cut -d'"' -f4)
     echo "  Total albums: ${TOTAL_ALBUMS:-0}"
-    echo "  First album: ${FIRST_ALBUM:-none}"
-    echo "  Response preview: $(echo "$body" | head -c 500)"
+    echo "  First album: ${FIRST_ALBUM:-none} (Id: ${FIRST_ALBUM_ID:-none})"
 else
     echo "✗ Status: $http_code"
     echo "Response: $body"
 fi
 
 # Test 11: Get Artists
-echo -e "\n[11] GET /Items?includeItemTypes=MusicArtist (get artists)"
+increment_test
+echo -e "\n[$TEST_NUM] GET /Items?includeItemTypes=MusicArtist (get artists)"
 response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
     -H "Authorization: $AUTH_HEADER" \
     "$BASE_URL/Items?includeItemTypes=MusicArtist&limit=10&startIndex=0&recursive=true")
@@ -195,23 +212,410 @@ else
 fi
 
 # Test 12: Get Songs/Audio
-echo -e "\n[12] GET /Items?includeItemTypes=Audio (get songs)"
+increment_test
+echo -e "\n[$TEST_NUM] GET /Items?includeItemTypes=Audio (get songs)"
 response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
     -H "Authorization: $AUTH_HEADER" \
     "$BASE_URL/Items?includeItemTypes=Audio&limit=10&startIndex=0&recursive=true")
 http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
 body=$(echo "$response" | sed '/HTTP_CODE:/d')
 
+FIRST_SONG_ID=""
 if [ "$http_code" = "200" ]; then
     echo "✓ Status: $http_code"
     TOTAL_SONGS=$(echo "$body" | grep -o '"TotalRecordCount":[0-9]*' | cut -d: -f2)
     FIRST_SONG=$(echo "$body" | grep -o '"Name":"[^"]*"' | head -1 | cut -d'"' -f4)
+    FIRST_SONG_ID=$(echo "$body" | grep -o '"Id":"[^"]*"' | head -1 | cut -d'"' -f4)
     echo "  Total songs: ${TOTAL_SONGS:-0}"
-    echo "  First song: ${FIRST_SONG:-none}"
+    echo "  First song: ${FIRST_SONG:-none} (Id: ${FIRST_SONG_ID:-none})"
 else
     echo "✗ Status: $http_code"
     echo "Response: $body"
 fi
 
+# Test 13: Get single item (song)
+increment_test
+echo -e "\n[$TEST_NUM] GET /Items/{itemId} (get single song)"
+if [ -n "${FIRST_SONG_ID:-}" ]; then
+    response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+        -H "Authorization: $AUTH_HEADER" \
+        "$BASE_URL/Items/$FIRST_SONG_ID")
+    http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+    body=$(echo "$response" | sed '/HTTP_CODE:/d')
+
+    if [ "$http_code" = "200" ]; then
+        echo "✓ Status: $http_code"
+        ITEM_NAME=$(echo "$body" | grep -o '"Name":"[^"]*"' | head -1 | cut -d'"' -f4)
+        ITEM_TYPE=$(echo "$body" | grep -o '"Type":"[^"]*"' | head -1 | cut -d'"' -f4)
+        echo "  Item: $ITEM_NAME (Type: $ITEM_TYPE)"
+    else
+        echo "✗ Status: $http_code"
+        echo "Response: $body"
+    fi
+else
+    echo "⚠ Skipped (no song ID available)"
+fi
+
+# Test 14: Get PlaybackInfo
+increment_test
+echo -e "\n[$TEST_NUM] GET /Items/{itemId}/PlaybackInfo (get playback info)"
+if [ -n "${FIRST_SONG_ID:-}" ]; then
+    response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+        -H "Authorization: $AUTH_HEADER" \
+        "$BASE_URL/Items/$FIRST_SONG_ID/PlaybackInfo")
+    http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+    body=$(echo "$response" | sed '/HTTP_CODE:/d')
+
+    if [ "$http_code" = "200" ]; then
+        echo "✓ Status: $http_code"
+        HAS_MEDIA_SOURCES=$(echo "$body" | grep -c '"MediaSources"' || true)
+        echo "  Has MediaSources: $([ "$HAS_MEDIA_SOURCES" -gt 0 ] && echo "yes" || echo "no")"
+    else
+        echo "✗ Status: $http_code"
+        echo "Response: $body"
+    fi
+else
+    echo "⚠ Skipped (no song ID available)"
+fi
+
+# Test 15: Get item image
+increment_test
+echo -e "\n[$TEST_NUM] GET /Items/{itemId}/Images/Primary (get image)"
+if [ -n "${FIRST_SONG_ID:-}" ]; then
+    response=$(curl -s -w "\nHTTP_CODE:%{http_code}" -o /dev/null \
+        -H "Authorization: $AUTH_HEADER" \
+        "$BASE_URL/Items/$FIRST_SONG_ID/Images/Primary?fillHeight=200&fillWidth=200")
+    http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+
+    if [ "$http_code" = "200" ]; then
+        echo "✓ Status: $http_code (image returned)"
+    elif [ "$http_code" = "404" ]; then
+        echo "✓ Status: $http_code (no image - expected for some items)"
+    else
+        echo "✗ Status: $http_code"
+    fi
+else
+    echo "⚠ Skipped (no song ID available)"
+fi
+
+# Test 16: Get Lyrics
+increment_test
+echo -e "\n[$TEST_NUM] GET /Audio/{itemId}/Lyrics (get lyrics)"
+if [ -n "${FIRST_SONG_ID:-}" ]; then
+    response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+        -H "Authorization: $AUTH_HEADER" \
+        "$BASE_URL/Audio/$FIRST_SONG_ID/Lyrics")
+    http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+    body=$(echo "$response" | sed '/HTTP_CODE:/d')
+
+    if [ "$http_code" = "200" ]; then
+        echo "✓ Status: $http_code"
+        LYRICS_COUNT=$(echo "$body" | grep -o '"Text"' | wc -l || echo "0")
+        echo "  Lyrics lines: $LYRICS_COUNT"
+    else
+        echo "✗ Status: $http_code"
+        echo "Response: $body"
+    fi
+else
+    echo "⚠ Skipped (no song ID available)"
+fi
+
+# Test 17: Get playlists
+increment_test
+echo -e "\n[$TEST_NUM] GET /Items?includeItemTypes=Playlist (get playlists)"
+response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+    -H "Authorization: $AUTH_HEADER" \
+    "$BASE_URL/Items?includeItemTypes=Playlist&recursive=true")
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+body=$(echo "$response" | sed '/HTTP_CODE:/d')
+
+EXISTING_PLAYLIST_ID=""
+if [ "$http_code" = "200" ]; then
+    echo "✓ Status: $http_code"
+    TOTAL_PLAYLISTS=$(echo "$body" | grep -o '"TotalRecordCount":[0-9]*' | cut -d: -f2)
+    echo "  Total playlists: ${TOTAL_PLAYLISTS:-0}"
+    EXISTING_PLAYLIST_ID=$(echo "$body" | grep -o '"Id":"[^"]*"' | head -1 | cut -d'"' -f4)
+else
+    echo "✗ Status: $http_code"
+    echo "Response: $body"
+fi
+
+# Test 18: Create a playlist
+increment_test
+echo -e "\n[$TEST_NUM] POST /Playlists (create playlist)"
+PLAYLIST_NAME="Test Playlist $(date +%s)"
+response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+    -X POST "$BASE_URL/Playlists" \
+    -H "Authorization: $AUTH_HEADER" \
+    -H "Content-Type: application/json" \
+    -d "{\"Name\":\"$PLAYLIST_NAME\",\"Ids\":[],\"UserId\":\"$USER_ID\",\"MediaType\":\"Audio\",\"IsPublic\":false}")
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+body=$(echo "$response" | sed '/HTTP_CODE:/d')
+
+NEW_PLAYLIST_ID=""
+if [ "$http_code" = "200" ]; then
+    echo "✓ Status: $http_code"
+    NEW_PLAYLIST_ID=$(echo "$body" | grep -o '"Id":"[^"]*"' | cut -d'"' -f4)
+    echo "  Created playlist: $PLAYLIST_NAME (Id: $NEW_PLAYLIST_ID)"
+else
+    echo "✗ Status: $http_code"
+    echo "Response: $body"
+fi
+
+# Test 19: Add items to playlist
+increment_test
+echo -e "\n[$TEST_NUM] POST /Playlists/{id}/Items (add items to playlist)"
+if [ -n "${NEW_PLAYLIST_ID:-}" ] && [ -n "${FIRST_SONG_ID:-}" ]; then
+    response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+        -X POST "$BASE_URL/Playlists/$NEW_PLAYLIST_ID/Items?ids=$FIRST_SONG_ID&userId=$USER_ID" \
+        -H "Authorization: $AUTH_HEADER")
+    http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+
+    if [ "$http_code" = "204" ]; then
+        echo "✓ Status: $http_code (item added)"
+    else
+        echo "✗ Status: $http_code"
+        body=$(echo "$response" | sed '/HTTP_CODE:/d')
+        echo "Response: $body"
+    fi
+else
+    echo "⚠ Skipped (no playlist or song ID available)"
+fi
+
+# Test 20: Get playlist items
+increment_test
+echo -e "\n[$TEST_NUM] GET /Playlists/{id}/Items (get playlist items)"
+if [ -n "${NEW_PLAYLIST_ID:-}" ]; then
+    response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+        -H "Authorization: $AUTH_HEADER" \
+        "$BASE_URL/Playlists/$NEW_PLAYLIST_ID/Items")
+    http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+    body=$(echo "$response" | sed '/HTTP_CODE:/d')
+
+    if [ "$http_code" = "200" ]; then
+        echo "✓ Status: $http_code"
+        PLAYLIST_ITEM_COUNT=$(echo "$body" | grep -o '"TotalRecordCount":[0-9]*' | cut -d: -f2)
+        echo "  Items in playlist: ${PLAYLIST_ITEM_COUNT:-0}"
+    else
+        echo "✗ Status: $http_code"
+        echo "Response: $body"
+    fi
+else
+    echo "⚠ Skipped (no playlist ID available)"
+fi
+
+# Test 21: Move playlist item (if we have items)
+increment_test
+echo -e "\n[$TEST_NUM] POST /Playlists/{id}/Items/{itemId}/Move/{index} (move item)"
+if [ -n "${NEW_PLAYLIST_ID:-}" ] && [ -n "${FIRST_SONG_ID:-}" ]; then
+    response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+        -X POST "$BASE_URL/Playlists/$NEW_PLAYLIST_ID/Items/$FIRST_SONG_ID/Move/0" \
+        -H "Authorization: $AUTH_HEADER")
+    http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+
+    if [ "$http_code" = "204" ]; then
+        echo "✓ Status: $http_code (item moved)"
+    else
+        echo "✗ Status: $http_code"
+        body=$(echo "$response" | sed '/HTTP_CODE:/d')
+        echo "Response: $body"
+    fi
+else
+    echo "⚠ Skipped (no playlist or song ID available)"
+fi
+
+# Test 22: Remove items from playlist
+increment_test
+echo -e "\n[$TEST_NUM] DELETE /Playlists/{id}/Items (remove items from playlist)"
+if [ -n "${NEW_PLAYLIST_ID:-}" ] && [ -n "${FIRST_SONG_ID:-}" ]; then
+    response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+        -X DELETE "$BASE_URL/Playlists/$NEW_PLAYLIST_ID/Items?entryIds=$FIRST_SONG_ID" \
+        -H "Authorization: $AUTH_HEADER")
+    http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+
+    if [ "$http_code" = "204" ]; then
+        echo "✓ Status: $http_code (item removed)"
+    else
+        echo "✗ Status: $http_code"
+        body=$(echo "$response" | sed '/HTTP_CODE:/d')
+        echo "Response: $body"
+    fi
+else
+    echo "⚠ Skipped (no playlist or song ID available)"
+fi
+
+# Test 23: Delete playlist
+increment_test
+echo -e "\n[$TEST_NUM] DELETE /Playlists/{id} (delete playlist)"
+if [ -n "${NEW_PLAYLIST_ID:-}" ]; then
+    response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+        -X DELETE "$BASE_URL/Playlists/$NEW_PLAYLIST_ID" \
+        -H "Authorization: $AUTH_HEADER")
+    http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+
+    if [ "$http_code" = "204" ]; then
+        echo "✓ Status: $http_code (playlist deleted)"
+    else
+        echo "✗ Status: $http_code"
+        body=$(echo "$response" | sed '/HTTP_CODE:/d')
+        echo "Response: $body"
+    fi
+else
+    echo "⚠ Skipped (no playlist ID available)"
+fi
+
+# Test 24: Delete item via Items endpoint
+increment_test
+echo -e "\n[$TEST_NUM] DELETE /Items/{id} (delete item - playlist only)"
+# Create another playlist to delete via Items endpoint
+response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+    -X POST "$BASE_URL/Playlists" \
+    -H "Authorization: $AUTH_HEADER" \
+    -H "Content-Type: application/json" \
+    -d "{\"Name\":\"Delete Test $(date +%s)\",\"Ids\":[],\"UserId\":\"$USER_ID\",\"MediaType\":\"Audio\",\"IsPublic\":false}")
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+body=$(echo "$response" | sed '/HTTP_CODE:/d')
+DELETE_TEST_ID=$(echo "$body" | grep -o '"Id":"[^"]*"' | cut -d'"' -f4)
+
+if [ -n "${DELETE_TEST_ID:-}" ]; then
+    response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+        -X DELETE "$BASE_URL/Items/$DELETE_TEST_ID" \
+        -H "Authorization: $AUTH_HEADER")
+    http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+
+    if [ "$http_code" = "204" ]; then
+        echo "✓ Status: $http_code (item deleted via Items endpoint)"
+    else
+        echo "✗ Status: $http_code"
+        body=$(echo "$response" | sed '/HTTP_CODE:/d')
+        echo "Response: $body"
+    fi
+else
+    echo "⚠ Skipped (could not create test playlist)"
+fi
+
+# Test 25: Refresh item (library rescan request)
+increment_test
+echo -e "\n[$TEST_NUM] POST /Items/{id}/Refresh (refresh/rescan request)"
+if [ -n "${LIBRARY_ID:-}" ]; then
+    response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+        -X POST "$BASE_URL/Items/$LIBRARY_ID/Refresh?recursive=true" \
+        -H "Authorization: $AUTH_HEADER")
+    http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+
+    if [ "$http_code" = "204" ]; then
+        echo "✓ Status: $http_code (refresh requested)"
+    else
+        echo "✗ Status: $http_code"
+        body=$(echo "$response" | sed '/HTTP_CODE:/d')
+        echo "Response: $body"
+    fi
+else
+    echo "⚠ Skipped (no library ID available)"
+fi
+
+# Test 26: Sessions/Playing endpoints
+increment_test
+echo -e "\n[$TEST_NUM] POST /Sessions/Playing (report playback started)"
+if [ -n "${FIRST_SONG_ID:-}" ]; then
+    response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+        -X POST "$BASE_URL/Sessions/Playing" \
+        -H "Authorization: $AUTH_HEADER" \
+        -H "Content-Type: application/json" \
+        -d "{\"ItemId\":\"$FIRST_SONG_ID\",\"SessionId\":\"test-session-001\",\"PlaySessionId\":\"test-play-001\",\"CanSeek\":true,\"IsPaused\":false,\"IsMuted\":false,\"PositionTicks\":0}")
+    http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+
+    if [ "$http_code" = "204" ]; then
+        echo "✓ Status: $http_code (playback started reported)"
+    else
+        echo "✗ Status: $http_code"
+        body=$(echo "$response" | sed '/HTTP_CODE:/d')
+        echo "Response: $body"
+    fi
+else
+    echo "⚠ Skipped (no song ID available)"
+fi
+
+# Test 27: Sessions/Playing/Progress
+increment_test
+echo -e "\n[$TEST_NUM] POST /Sessions/Playing/Progress (report progress)"
+if [ -n "${FIRST_SONG_ID:-}" ]; then
+    response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+        -X POST "$BASE_URL/Sessions/Playing/Progress" \
+        -H "Authorization: $AUTH_HEADER" \
+        -H "Content-Type: application/json" \
+        -d "{\"ItemId\":\"$FIRST_SONG_ID\",\"SessionId\":\"test-session-001\",\"PlaySessionId\":\"test-play-001\",\"CanSeek\":true,\"IsPaused\":false,\"IsMuted\":false,\"PositionTicks\":10000000}")
+    http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+
+    if [ "$http_code" = "204" ]; then
+        echo "✓ Status: $http_code (progress reported)"
+    else
+        echo "✗ Status: $http_code"
+        body=$(echo "$response" | sed '/HTTP_CODE:/d')
+        echo "Response: $body"
+    fi
+else
+    echo "⚠ Skipped (no song ID available)"
+fi
+
+# Test 28: Sessions/Playing/Stopped
+increment_test
+echo -e "\n[$TEST_NUM] POST /Sessions/Playing/Stopped (report stopped)"
+if [ -n "${FIRST_SONG_ID:-}" ]; then
+    response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+        -X POST "$BASE_URL/Sessions/Playing/Stopped" \
+        -H "Authorization: $AUTH_HEADER" \
+        -H "Content-Type: application/json" \
+        -d "{\"ItemId\":\"$FIRST_SONG_ID\",\"SessionId\":\"test-session-001\",\"PlaySessionId\":\"test-play-001\",\"CanSeek\":true,\"IsPaused\":false,\"IsMuted\":false,\"PositionTicks\":50000000}")
+    http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+
+    if [ "$http_code" = "204" ]; then
+        echo "✓ Status: $http_code (stopped reported)"
+    else
+        echo "✗ Status: $http_code"
+        body=$(echo "$response" | sed '/HTTP_CODE:/d')
+        echo "Response: $body"
+    fi
+else
+    echo "⚠ Skipped (no song ID available)"
+fi
+
+# Test 29: Get Users/Me
+increment_test
+echo -e "\n[$TEST_NUM] GET /Users/Me (get current user)"
+response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+    -H "Authorization: $AUTH_HEADER" \
+    "$BASE_URL/Users/Me")
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+body=$(echo "$response" | sed '/HTTP_CODE:/d')
+
+if [ "$http_code" = "200" ]; then
+    echo "✓ Status: $http_code"
+    ME_NAME=$(echo "$body" | grep -o '"Name":"[^"]*"' | head -1 | cut -d'"' -f4)
+    echo "  Current user: $ME_NAME"
+else
+    echo "✗ Status: $http_code"
+    echo "Response: $body"
+fi
+
+# Test 30: Audio stream HEAD request
+increment_test
+echo -e "\n[$TEST_NUM] HEAD /Audio/{id}/universal (stream check)"
+if [ -n "${FIRST_SONG_ID:-}" ]; then
+    response=$(curl -s -w "\nHTTP_CODE:%{http_code}" -o /dev/null --max-time 10 \
+        -X HEAD \
+        -H "Authorization: $AUTH_HEADER" \
+        "$BASE_URL/Audio/$FIRST_SONG_ID/universal?api_key=$ACCESS_TOKEN&userId=$USER_ID&container=flac,mp3,aac&maxStreamingBitrate=999999999")
+    http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+
+    if [ "$http_code" = "200" ]; then
+        echo "✓ Status: $http_code (stream available)"
+    else
+        echo "✗ Status: $http_code"
+    fi
+else
+    echo "⚠ Skipped (no song ID available)"
+fi
+
 echo -e "\n============================================="
-echo "Test complete!"
+echo "Test complete! ($TEST_NUM tests executed)"
