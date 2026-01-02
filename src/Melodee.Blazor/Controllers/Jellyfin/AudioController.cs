@@ -200,10 +200,10 @@ public class AudioController(
                 var milliseconds = match.Groups[3].Value;
                 if (milliseconds.Length == 2) milliseconds += "0";
                 var ms = int.Parse(milliseconds);
-                
+
                 var startTicks = ((minutes * 60L + seconds) * 1000 + ms) * 10000;
                 var text = match.Groups[4].Value.Trim();
-                
+
                 if (!string.IsNullOrEmpty(text))
                 {
                     lyrics.Add(new { Text = text, Start = startTicks });

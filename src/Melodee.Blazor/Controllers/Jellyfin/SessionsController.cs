@@ -310,7 +310,7 @@ public class SessionsController(
         // For now, just acknowledge the capabilities - we don't need to store them
         // since Melodee doesn't support remote control features yet
         logger.LogDebug("JellyfinCapabilities UserId={UserId} PlayableMediaTypes={MediaTypes} SupportsMediaControl={SupportsMediaControl}",
-            user.Id, 
+            user.Id,
             request?.PlayableMediaTypes != null ? string.Join(",", request.PlayableMediaTypes) : "none",
             request?.SupportsMediaControl);
 

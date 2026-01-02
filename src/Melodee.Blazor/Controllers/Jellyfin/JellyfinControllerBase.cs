@@ -31,7 +31,7 @@ public abstract class JellyfinControllerBase(
     protected IMelodeeConfigurationFactory ConfigurationFactory { get; } = configurationFactory;
     protected IDbContextFactory<MelodeeDbContext> DbContextFactory { get; } = dbContextFactory;
     protected IClock Clock { get; } = clock;
-    
+
     private ILogger? _jellyfinLogger;
     protected ILogger JellyfinLogger => _jellyfinLogger ??= loggerFactory.CreateLogger("Melodee.Jellyfin");
 

@@ -350,7 +350,7 @@ public class UsersController(
         queryParams.Add($"userId={Uri.EscapeDataString(userId)}");
 
         var redirectUrl = "/Items" + (queryParams.Count > 0 ? "?" + string.Join("&", queryParams) : "");
-        
+
         // Use internal redirect by returning redirect result
         // Note: This preserves auth headers since it's same origin
         return RedirectPreserveMethod(redirectUrl);

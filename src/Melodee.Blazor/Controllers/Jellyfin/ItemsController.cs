@@ -50,7 +50,7 @@ public class ItemsController(
     {
         logger.LogDebug("GetItemsAsync: includeItemTypes={IncludeItemTypes} parentId={ParentId} searchTerm={SearchTerm} startIndex={StartIndex} limit={Limit} recursive={Recursive}",
             includeItemTypes, parentId, searchTerm, startIndex, limit, recursive);
-        
+
         var user = await AuthenticateJellyfinAsync(cancellationToken);
         if (user == null)
         {
@@ -208,7 +208,7 @@ public class ItemsController(
         }
 
         var mediaSource = CreateMediaSourceWithDetails(song);
-        
+
         return Ok(new JellyfinPlaybackInfoResult
         {
             MediaSources = [mediaSource],
@@ -234,7 +234,7 @@ public class ItemsController(
         }
 
         await using var dbContext = await DbContextFactory.CreateDbContextAsync(cancellationToken);
-        
+
         var playlist = await dbContext.Playlists
             .FirstOrDefaultAsync(p => p.ApiKey == apiKey && p.UserId == user.Id, cancellationToken);
 
@@ -270,7 +270,7 @@ public class ItemsController(
             return JellyfinBadRequest("Invalid item ID format.");
         }
 
-        logger.LogInformation("JellyfinRefreshRequest ItemId={ItemId} Recursive={Recursive} by User={UserId}", 
+        logger.LogInformation("JellyfinRefreshRequest ItemId={ItemId} Recursive={Recursive} by User={UserId}",
             itemId, recursive ?? false, user.Id);
 
         return NoContent();
@@ -480,7 +480,7 @@ public class ItemsController(
             // Prefer songs from the same artist or genre
             if (artistId.HasValue)
             {
-                mixQuery = mixQuery.Where(s => s.Album.ArtistId == artistId || 
+                mixQuery = mixQuery.Where(s => s.Album.ArtistId == artistId ||
                     (s.Album.Genres != null && genres.Any(g => s.Album.Genres.Contains(g))));
             }
         }
@@ -499,8 +499,8 @@ public class ItemsController(
                     .AsNoTracking()
                     .Include(s => s.Album)
                     .ThenInclude(a => a.Artist)
-                    .Where(s => !s.IsLocked && !s.Album.IsLocked && 
-                        (s.AlbumId == seedAlbum.Id || 
+                    .Where(s => !s.IsLocked && !s.Album.IsLocked &&
+                        (s.AlbumId == seedAlbum.Id ||
                          s.Album.ArtistId == seedAlbum.ArtistId ||
                          (s.Album.Genres != null && genres.Any(g => s.Album.Genres.Contains(g)))));
             }
@@ -768,7 +768,7 @@ public class ItemsController(
             var library = await dbContext.Libraries
                 .AsNoTracking()
                 .FirstOrDefaultAsync(l => l.ApiKey == parentApiKey, cancellationToken);
-            
+
             if (library != null)
             {
                 query = query.Where(s => s.Album.Artist.Library.ApiKey == parentApiKey);

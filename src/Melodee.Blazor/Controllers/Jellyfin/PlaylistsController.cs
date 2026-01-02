@@ -327,7 +327,7 @@ public class PlaylistsController(
         }
 
         var userInfo = user.ToUserInfo();
-        
+
         await using var dbContext = await DbContextFactory.CreateDbContextAsync(cancellationToken);
         var playlist = await dbContext.Playlists
             .Include(p => p.Songs)
@@ -347,7 +347,7 @@ public class PlaylistsController(
 
         var orderedSongs = playlist.Songs.OrderBy(ps => ps.PlaylistOrder).ToList();
         var currentIndex = orderedSongs.IndexOf(playlistSong);
-        
+
         if (currentIndex == newIndex || newIndex < 0 || newIndex >= orderedSongs.Count)
         {
             return NoContent();

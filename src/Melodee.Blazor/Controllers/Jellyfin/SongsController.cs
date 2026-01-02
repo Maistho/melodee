@@ -76,7 +76,7 @@ public class SongsController(
 
         if (artistId.HasValue)
         {
-            mixQuery = mixQuery.Where(s => s.Album.ArtistId == artistId || 
+            mixQuery = mixQuery.Where(s => s.Album.ArtistId == artistId ||
                 (s.Album.Genres != null && genres.Any(g => s.Album.Genres.Contains(g))));
         }
 
