@@ -55,7 +55,7 @@ public class Spotify(
     {
         if (IsCoolingDown)
         {
-            logger.Warning("[{DisplayName}] Spotify cooling down until [{Until}] for [{Operation}]",
+            logger.Debug("[{DisplayName}] Spotify cooling down until [{Until}] for [{Operation}]",
                 DisplayName,
                 _cooldownUntil,
                 operationName);

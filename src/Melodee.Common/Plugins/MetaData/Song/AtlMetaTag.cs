@@ -41,11 +41,19 @@ public sealed class AtlMetaTag(
         {
             foreach (var file in directoryInfo.AllMediaTypeFileInfos())
             {
-                var fileAtl = new Track(file.FullName);
-                var album = fileAtl.Album;
-                if (!string.IsNullOrWhiteSpace(album) && !result.Contains(album))
+                try
                 {
-                    result.Add(album);
+                    var fileAtl = new Track(file.FullName);
+                    var album = fileAtl.Album;
+                    if (!string.IsNullOrWhiteSpace(album) && !result.Contains(album))
+                    {
+                        result.Add(album);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.Warning(e, "[{Plugin}] Skipping unreadable file [{FileName}] while collecting album names.",
+                        DisplayName, file.FullName);
                 }
             }
         }
@@ -71,7 +79,7 @@ public sealed class AtlMetaTag(
         var songFileName = file.FullName(directoryInfo);
         if (!File.Exists(songFileName))
         {
-            Log.Error(new Exception($"File not found [{songFileName}]"),
+            Log.Warning(new Exception($"File not found [{songFileName}]"),
                 "[{PlugInName}] UpdateFileAsync called File [{FileName}] does not exist", nameof(AtlMetaTag),
                 songFileName);
             return new OperationResult<bool>
@@ -523,7 +531,7 @@ public sealed class AtlMetaTag(
             // Check file existence first before attempting any operations
             if (!File.Exists(songFileName))
             {
-                Log.Error(new Exception($"File not found [{songFileName}]"),
+                Log.Warning(new Exception($"File not found [{songFileName}]"),
                     "[{PlugInName}] UpdateSongAsync called File [{FileName}] does not exist", nameof(AtlMetaTag),
                     songFileName);
                 return new OperationResult<bool>([$"File not found: {songFileName}"])

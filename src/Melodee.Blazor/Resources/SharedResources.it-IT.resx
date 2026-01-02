@@ -4086,4 +4086,7 @@
   <data name="ArtistValidation.NoResults" xml:space="preserve">
     <value>[NEEDS TRANSLATION] No validation results available.</value>
   </data>
+  <data name="About.OpenSubsonicApiDocs" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] OpenSubsonic API Docs</value>
+  </data>
 </root>

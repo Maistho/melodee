@@ -35,10 +35,11 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server.Circuits;
 using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
+using Scalar.AspNetCore;
 using NodaTime;
 using Npgsql;
 using Quartz;
@@ -86,48 +87,20 @@ builder.Services.AddScoped<CircuitHandler, MelodeeCircuitHandler>();
 builder.Services.AddControllers(options => { options.Filters.Add<ETagFilter>(); });
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    options.SwaggerDoc("melodee", new OpenApiInfo
-    {
-        Title = "Melodee API",
-        Version = "v1",
-        Description = "REST API for the Melodee music server. Provides endpoints for browsing, searching, streaming, and managing your music library."
-    });
-    options.SwaggerDoc("opensubsonic", new OpenApiInfo
-    {
-        Title = "OpenSubsonic API",
-        Version = "v1",
-        Description = "OpenSubsonic-compatible API for third-party music player clients."
-    });
-    options.SwaggerDoc("jellyfin", new OpenApiInfo
-    {
-        Title = "Jellyfin API",
-        Version = "v1",
-        Description = "Jellyfin-compatible API for third-party Jellyfin music player clients."
-    });
-    options.DocInclusionPredicate((docName, desc) =>
-    {
-        var controllerActionDescriptor = desc.ActionDescriptor as ControllerActionDescriptor;
-        var ns = controllerActionDescriptor?.ControllerTypeInfo?.Namespace ?? string.Empty;
-        return docName switch
-        {
-            "melodee" => ns.Contains(".Controllers.Melodee", StringComparison.OrdinalIgnoreCase),
-            "opensubsonic" => ns.Contains(".Controllers.OpenSubsonic", StringComparison.OrdinalIgnoreCase),
-            "jellyfin" => ns.Contains(".Controllers.Jellyfin", StringComparison.OrdinalIgnoreCase),
-            _ => false
-        };
-    });
-    // Resolve conflicting actions by taking the first one (OpenSubsonic has .view and non-.view routes)
-    options.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
 
-    // Include XML comments for API documentation
-    var xmlFilename = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFilename);
-    if (File.Exists(xmlPath))
+// Register single OpenAPI document that contains all endpoints
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer((document, context, cancellationToken) =>
     {
-        options.IncludeXmlComments(xmlPath);
-    }
+        document.Info = new OpenApiInfo
+        {
+            Title = "Melodee API",
+            Version = "v1",
+            Description = "Complete API documentation for Melodee music server. This is for the native Melodee.API, not for the OpenSubsonic-compatible or Jellyfin-compatible API endpoints on Melodee, for those see the respective API documentation websites."
+        };
+        return Task.CompletedTask;
+    });
 });
 
 // Build connection string with optional pool-size overrides via environment variables
@@ -518,27 +491,17 @@ app.UseMiddleware<JellyfinRoutingMiddleware>();
 // Explicit routing - required so JellyfinRoutingMiddleware can rewrite paths BEFORE endpoint selection
 app.UseRouting();
 
-app.UseSwagger();
+// Map the default OpenAPI JSON endpoint (serves at /openapi/v1.json)
+app.MapOpenApi();
 
-// Get OpenSubsonic version from configuration before configuring SwaggerUI
-string openSubsonicVersion;
+// Configure Scalar API documentation UI for Melodee API
+app.MapScalarApiReference(options =>
 {
-    using var scope = app.Services.CreateScope();
-    var configFactory = scope.ServiceProvider.GetRequiredService<IMelodeeConfigurationFactory>();
-    // Use synchronous database access for startup configuration
-    var dbContextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<MelodeeDbContext>>();
-    using var dbContext = dbContextFactory.CreateDbContext();
-    var setting = dbContext.Settings.AsNoTracking()
-        .FirstOrDefault(s => s.Key == SettingRegistry.OpenSubsonicServerSupportedVersion);
-    openSubsonicVersion = setting?.Value ?? "1.16.1";
-}
-
-// Configure SwaggerUI with dynamic OpenSubsonic version from configuration
-app.UseSwaggerUI(c =>
-{
-    c.SwaggerEndpoint("/swagger/melodee/swagger.json", "Melodee API v1");
-    c.SwaggerEndpoint("/swagger/opensubsonic/swagger.json", $"OpenSubsonic API v{openSubsonicVersion}");
-    c.SwaggerEndpoint("/swagger/jellyfin/swagger.json", "Jellyfin API v1");
+    options
+        .WithTitle("Melodee API Documentation")
+        .WithTheme(ScalarTheme.DeepSpace)
+        .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient)
+        .HideClientButton = true;
 });
 
 // Configure static files with efficient caching - MUST be before UseStatusCodePages

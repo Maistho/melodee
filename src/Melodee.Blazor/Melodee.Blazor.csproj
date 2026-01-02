@@ -15,7 +15,9 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
     <!-- Auto-incrementing version -->
+
     <VersionPrefix>1.7.0</VersionPrefix>
+
     <VersionSuffix>build$([System.DateTime]::UtcNow.ToString("yyyyMMddHHmmss"))</VersionSuffix>
     <AssemblyVersion>$(VersionPrefix).0</AssemblyVersion>
     <FileVersion>$(VersionPrefix).0</FileVersion>
@@ -40,6 +42,13 @@
     <EnableTrimAnalyzer>false</EnableTrimAnalyzer>
   </PropertyGroup>
 
+  <!-- Disable OpenAPI XML comment source generator to fix generic type issues -->
+  <Target Name="DisableCompileTimeOpenApiXmlGenerator" BeforeTargets="CoreCompile">
+    <ItemGroup>
+      <Analyzer Remove="@(Analyzer)" Condition="'%(Filename)' == 'Microsoft.AspNetCore.OpenApi.SourceGenerators'" />
+    </ItemGroup>
+  </Target>
+
   <ItemGroup>
     <ProjectReference Include="..\Melodee.Common\Melodee.Common.csproj" />
   </ItemGroup>
@@ -51,7 +60,8 @@
     <PackageReference Include="HtmlSanitizer" />
     <PackageReference Include="MailKit" />
     <PackageReference Include="Markdig" />
-    <PackageReference Include="Microsoft.OpenApi" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Scalar.AspNetCore" />
     <PackageReference Include="PSC.Blazor.Components.MarkdownEditor" />
     <PackageReference Include="Radzen.Blazor" />
     <PackageReference Include="Asp.Versioning.Http" />
@@ -72,7 +82,6 @@
     <PackageReference Include="Rebus" />
     <PackageReference Include="Rebus.ServiceProvider" />
     <PackageReference Include="Serilog.Formatting.Compact" />
-    <PackageReference Include="Swashbuckle.AspNetCore" />
     <PackageReference Include="Serilog" />
     <PackageReference Include="Serilog.AspNetCore" />
     <PackageReference Include="Serilog.Settings.AppSettings" />

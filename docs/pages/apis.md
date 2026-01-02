@@ -64,16 +64,20 @@ Uses Subsonic's traditional authentication method:
 ## API Documentation and Exploration
 
 ### Interactive API Documentation
-Melodee provides interactive API documentation via Swagger UI where you can explore and test both APIs:
+Melodee provides interactive API documentation via Scalar where you can explore and test the native Melodee API:
 
-- **Swagger UI**: Available at `/swagger` when Melodee is running
-- **OpenAPI Specification**: Available at `/swagger/v1/swagger.json`
+- **Melodee API (Scalar UI)**: Available at `/scalar/v1` when Melodee is running
+- **OpenAPI Specification**: Available at `/openapi/v1.json` for download
 
-The Swagger UI allows you to:
+The Scalar UI allows you to:
 - View detailed endpoint documentation
 - Test API calls directly from the browser
 - See example requests and responses
 - Understand required parameters and authentication
+- Download the OpenAPI specification for use with code generators
+
+### OpenSubsonic API
+The OpenSubsonic API is compatible with the standard Subsonic/OpenSubsonic specification. For OpenSubsonic API documentation, refer to the [OpenSubsonic specification](https://opensubsonic.netlify.app/).
 
 ### API Reference
 - **Melodee API**: Documented in the `/api/` section of this documentation
@@ -123,10 +127,12 @@ The Swagger UI allows you to:
 
 ## Getting Started
 
-1. **Explore the APIs**: Visit `/swagger` on your Melodee instance to interactively explore both APIs
+1. **Explore the API**: Visit `/scalar/v1` on your Melodee instance to interactively explore the Melodee API
 2. **Get an API key**: Create an account and generate an API key in the web interface
 3. **Choose your API**: Select based on your use case and client requirements
-4. **Test endpoints**: Use the Swagger UI to test endpoints before implementing
-5. **Read detailed docs**: Check the `/api/` section for detailed Melodee API documentation
+4. **Test endpoints**: Use the Scalar UI to test endpoints before implementing
+5. **Download OpenAPI spec**: Get the specification at `/openapi/v1.json` for code generation
+6. **Read detailed docs**: Check the `/api/` section for detailed Melodee API documentation
+7. **OpenSubsonic API**: For OpenSubsonic-compatible clients, refer to the [OpenSubsonic specification](https://opensubsonic.netlify.app/)
 
 Both APIs provide access to Melodee's powerful music management features, so choose based on your specific needs and existing client ecosystem.

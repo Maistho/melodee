@@ -666,7 +666,7 @@
     <value>About {0}</value>
   </data>
   <data name="About.ApiDocs" xml:space="preserve">
-    <value>API Docs (Swagger OpenAPI)</value>
+    <value>Melodee API Docs</value>
   </data>
   <data name="About.ServerTime" xml:space="preserve">
     <value>Server Time</value>
@@ -4085,5 +4085,8 @@
   </data>
 <data name="ArtistValidation.NoResults" xml:space="preserve">
     <value>No validation results available.</value>
+  </data>
+<data name="About.OpenSubsonicApiDocs" xml:space="preserve">
+    <value>OpenSubsonic API Docs</value>
   </data>
 </root>
