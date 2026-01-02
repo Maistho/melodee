@@ -81,6 +81,8 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
 
     public DbSet<RequestParticipant> RequestParticipants { get; set; }
 
+    public DbSet<JellyfinAccessToken> JellyfinAccessTokens { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Use a fixed timestamp for seed data to prevent migration churn
@@ -1260,6 +1262,97 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
                     Description = "How long password reset links remain valid (default: 60 minutes)",
                     Value = "60",
                     CreatedAt = seedDataTimestamp
+                },
+                // Jellyfin API settings
+                new Setting
+                {
+                    Id = 1700,
+                    ApiKey = SeedGuid("Setting", 1700),
+                    Key = SettingRegistry.JellyfinEnabled,
+                    Comment = "Enable Jellyfin API compatibility",
+                    Description = "When enabled, Melodee exposes Jellyfin-compatible endpoints for third-party music players",
+                    Value = "true",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1701,
+                    ApiKey = SeedGuid("Setting", 1701),
+                    Key = SettingRegistry.JellyfinRoutePrefix,
+                    Comment = "Internal route prefix for Jellyfin API",
+                    Description = "The internal route prefix used for Jellyfin API endpoints (default: /api/jf)",
+                    Value = "/api/jf",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1702,
+                    ApiKey = SeedGuid("Setting", 1702),
+                    Key = SettingRegistry.JellyfinTokenExpiresAfterHours,
+                    Comment = "Jellyfin token expiry time in hours",
+                    Description = "How long Jellyfin access tokens remain valid (default: 168 hours / 7 days)",
+                    Value = "168",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1703,
+                    ApiKey = SeedGuid("Setting", 1703),
+                    Key = SettingRegistry.JellyfinTokenMaxActivePerUser,
+                    Comment = "Maximum active Jellyfin tokens per user",
+                    Description = "The maximum number of active Jellyfin tokens allowed per user (default: 10)",
+                    Value = "10",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1704,
+                    ApiKey = SeedGuid("Setting", 1704),
+                    Key = SettingRegistry.JellyfinTokenAllowLegacyHeaders,
+                    Comment = "Allow legacy Emby/MediaBrowser headers",
+                    Description = "Allow X-Emby-* and X-MediaBrowser-* headers for authentication (default: true)",
+                    Value = "true",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1705,
+                    ApiKey = SeedGuid("Setting", 1705),
+                    Key = SettingRegistry.JellyfinTokenPepper,
+                    Comment = "Secret pepper for Jellyfin token hashing",
+                    Description = "Server-side secret used in token hash computation. Change this value in production for added security.",
+                    Value = "ChangeThisPepperInProduction",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1706,
+                    ApiKey = SeedGuid("Setting", 1706),
+                    Key = SettingRegistry.JellyfinRateLimitApiRequestsPerPeriod,
+                    Comment = "API requests allowed per period",
+                    Description = "Maximum number of Jellyfin API requests allowed per rate limit period (default: 200)",
+                    Value = "200",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1707,
+                    ApiKey = SeedGuid("Setting", 1707),
+                    Key = SettingRegistry.JellyfinRateLimitApiPeriodSeconds,
+                    Comment = "Rate limit period in seconds",
+                    Description = "Duration of the rate limit period in seconds (default: 60)",
+                    Value = "60",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1708,
+                    ApiKey = SeedGuid("Setting", 1708),
+                    Key = SettingRegistry.JellyfinRateLimitStreamConcurrentPerUser,
+                    Comment = "Concurrent streams per user",
+                    Description = "Maximum number of concurrent audio streams allowed per user (default: 2)",
+                    Value = "2",
+                    CreatedAt = seedDataTimestamp
                 }
             );
         });
@@ -1388,16 +1481,24 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
             rp.HasIndex(x => new { x.UserId, x.RequestId });
         });
 
+        modelBuilder.Entity<JellyfinAccessToken>(jat =>
+        {
+            jat.HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
         // sph; left here for example of GIN FTS. More info here https://www.npgsql.org/efcore/mapping/full-text-search.html?tabs=pg12%2Cv5
         // modelBuilder.Entity<Song>()
         //     .HasIndex(s => new
         //     {
-        //         SongTitle= s.Title, 
-        //         AlbumTitle= s.AlbumDisc.Title, 
+        //         SongTitle= s.Title,
+        //         AlbumTitle= s.AlbumDisc.Title,
         //         ArtistName = s.AlbumDisc.Album.Name
         //     })
         //     .HasMethod("GIN")
-        //     .IsTsVectorExpressionIndex("english");          
+        //     .IsTsVectorExpressionIndex("english");
 
         // modelBuilder.Entity<User>()
         //     .HasGeneratedTsVectorColumn(u => u.SearchVector, "english", u => new { u.Email, u.UserName })

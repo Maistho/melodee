@@ -97,7 +97,7 @@ builder.Services.AddOpenApi(options =>
         {
             Title = "Melodee API",
             Version = "v1",
-            Description = "Complete API documentation for Melodee music server. This is for the native Melodee.API, not for the OpenSubsonic-compatible API endpoints on Melodee, for those see the OpenSubsonic website API documentation."
+            Description = "Complete API documentation for Melodee music server. This is for the native Melodee.API, not for the OpenSubsonic-compatible or Jellyfin-compatible API endpoints on Melodee, for those see the respective API documentation websites."
         };
         return Task.CompletedTask;
     });
@@ -307,6 +307,47 @@ builder.Services.AddRateLimiter(options =>
                 TokensPerPeriod = 10,
                 AutoReplenishment = true
             }));
+    options.AddPolicy("jellyfin-api", context =>
+    {
+        var apiTokenLimit = builder.Configuration.GetValue<int>("Jellyfin:RateLimit:ApiTokenLimit", 200);
+        var apiPeriodSeconds = builder.Configuration.GetValue<int>("Jellyfin:RateLimit:ApiPeriodSeconds", 60);
+        return RateLimitPartition.GetTokenBucketLimiter(context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new TokenBucketRateLimiterOptions
+            {
+                TokenLimit = apiTokenLimit,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 20,
+                ReplenishmentPeriod = TimeSpan.FromSeconds(apiPeriodSeconds),
+                TokensPerPeriod = apiTokenLimit,
+                AutoReplenishment = true
+            });
+    });
+    options.AddPolicy("jellyfin-auth", context =>
+    {
+        var authTokenLimit = builder.Configuration.GetValue<int>("Jellyfin:RateLimit:AuthTokenLimit", 10);
+        var authPeriodSeconds = builder.Configuration.GetValue<int>("Jellyfin:RateLimit:AuthPeriodSeconds", 60);
+        return RateLimitPartition.GetTokenBucketLimiter(context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new TokenBucketRateLimiterOptions
+            {
+                TokenLimit = authTokenLimit,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 5,
+                ReplenishmentPeriod = TimeSpan.FromSeconds(authPeriodSeconds),
+                TokensPerPeriod = authTokenLimit,
+                AutoReplenishment = true
+            });
+    });
+    options.AddPolicy("jellyfin-stream", context =>
+    {
+        var streamConcurrentLimit = builder.Configuration.GetValue<int>("Jellyfin:RateLimit:StreamConcurrentLimit", 10);
+        return RateLimitPartition.GetConcurrencyLimiter(context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new ConcurrencyLimiterOptions
+            {
+                PermitLimit = streamConcurrentLimit,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 5
+            });
+    });
 });
 
 builder.Services.AddSingleton<IAppVersionProvider, AppVersionProvider>();
@@ -442,6 +483,13 @@ if (useForwardedHeaders)
 
 // Enable response compression early in the pipeline
 app.UseResponseCompression();
+
+// Jellyfin API routing - MUST be before UseRouting() to rewrite paths before endpoint selection
+// This rewrites paths like /System/Info/Public to /api/jf/System/Info/Public
+app.UseMiddleware<JellyfinRoutingMiddleware>();
+
+// Explicit routing - required so JellyfinRoutingMiddleware can rewrite paths BEFORE endpoint selection
+app.UseRouting();
 
 // Map the default OpenAPI JSON endpoint (serves at /openapi/v1.json)
 app.MapOpenApi();
