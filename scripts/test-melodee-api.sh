@@ -36,13 +36,13 @@ else
     echo "? Status: $http_code (expected 401)"
 fi
 
-# Test 3: Login
-echo -e "\n[3] POST /api/v1/auth/login (authenticate)"
+# Test 3: Authenticate
+echo -e "\n[3] POST /api/v1/auth/authenticate"
 USERNAME="${MELODEE_USERNAME:-steven}"
 PASSWORD="${MELODEE_PASSWORD:-password}"
 
 login_response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
-    -X POST "$API_BASE/auth/login" \
+    -X POST "$API_BASE/auth/authenticate" \
     -H "Content-Type: application/json" \
     -d "{\"username\":\"$USERNAME\",\"password\":\"$PASSWORD\"}")
 
@@ -132,11 +132,14 @@ else
     echo "Response: $body"
 fi
 
-# Test 8: Search
-echo -e "\n[8] GET /api/v1/search (search for 'love')"
+# Test 8: Search (POST endpoint)
+echo -e "\n[8] POST /api/v1/search (search for 'love')"
 response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+    -X POST \
     -H "Authorization: $AUTH_HEADER" \
-    "$API_BASE/search?query=love&limit=5")
+    -H "Content-Type: application/json" \
+    -d '{"query":"love","maxResults":5}' \
+    "$API_BASE/search")
 http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
 body=$(echo "$response" | sed '/HTTP_CODE:/d')
 
@@ -152,7 +155,7 @@ fi
 echo -e "\n[9] GET /api/v1/playlists (get playlists)"
 response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
     -H "Authorization: $AUTH_HEADER" \
-    "$API_BASE/playlists")
+    "$API_BASE/playlists?page=1&pageSize=10")
 http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
 body=$(echo "$response" | sed '/HTTP_CODE:/d')
 

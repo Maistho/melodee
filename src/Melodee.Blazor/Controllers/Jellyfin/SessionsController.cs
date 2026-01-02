@@ -68,6 +68,8 @@ public class SessionsController(
 
         try
         {
+            var config = await GetConfigurationAsync(cancellationToken);
+            await scrobbleService.InitializeAsync(config, cancellationToken);
             await scrobbleService.NowPlaying(userInfo, apiKey, positionSeconds, clientName, userAgent, ipAddress, cancellationToken);
             logger.LogInformation("JellyfinPlaybackStart UserId={UserId} ItemId={ItemId} Position={Position}",
                 user.Id, request.ItemId, positionSeconds);
@@ -115,6 +117,8 @@ public class SessionsController(
 
         try
         {
+            var config = await GetConfigurationAsync(cancellationToken);
+            await scrobbleService.InitializeAsync(config, cancellationToken);
             await scrobbleService.NowPlaying(userInfo, apiKey, positionSeconds, clientName, userAgent, ipAddress, cancellationToken);
             logger.LogDebug("JellyfinPlaybackProgress UserId={UserId} ItemId={ItemId} Position={Position} IsPaused={IsPaused}",
                 user.Id, request.ItemId, positionSeconds, request.IsPaused);
@@ -162,6 +166,8 @@ public class SessionsController(
             // Only scrobble if playback was not failed
             if (request.Failed != true)
             {
+                var config = await GetConfigurationAsync(cancellationToken);
+                await scrobbleService.InitializeAsync(config, cancellationToken);
                 await scrobbleService.Scrobble(userInfo, apiKey, false, clientName, userAgent, ipAddress, cancellationToken);
                 logger.LogInformation("JellyfinPlaybackStopped UserId={UserId} ItemId={ItemId} PositionTicks={PositionTicks}",
                     user.Id, request.ItemId, request.PositionTicks);

@@ -15,7 +15,6 @@ public class JellyfinRoutingMiddleware(
 
     private static readonly HashSet<string> AllowlistedPreAuthPaths = new(StringComparer.OrdinalIgnoreCase)
     {
-        "/",
         "/System/Info/Public",
         "/System/Ping",
         "/Users/AuthenticateByName",

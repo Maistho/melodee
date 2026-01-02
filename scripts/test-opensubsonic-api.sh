@@ -19,8 +19,12 @@ PASSWORD="${SUBSONIC_PASSWORD:-password}"
 # 2. Token-based auth with 't' (token) and 's' (salt) parameters
 # Token = md5(password + salt)
 
-# Generate a random salt
-SALT=$(head -c 8 /dev/urandom | xxd -p)
+# Generate a random salt (use od as fallback if xxd not available)
+if command -v xxd &> /dev/null; then
+    SALT=$(head -c 8 /dev/urandom | xxd -p)
+else
+    SALT=$(head -c 8 /dev/urandom | od -An -tx1 | tr -d ' \n')
+fi
 
 # Calculate token: md5(password + salt)
 TOKEN=$(echo -n "${PASSWORD}${SALT}" | md5sum | cut -d' ' -f1)
