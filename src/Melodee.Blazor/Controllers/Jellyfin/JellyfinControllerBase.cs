@@ -74,26 +74,18 @@ public abstract class JellyfinControllerBase(
 
     protected async Task<User?> AuthenticateJellyfinAsync(CancellationToken cancellationToken = default)
     {
-        var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-        var requestPath = HttpContext.Request.Path.Value ?? "unknown";
-        
         if (HttpContext.Items.TryGetValue(UserCacheKey, out var cached) && cached is User cachedUser)
         {
-            JellyfinLogger.LogDebug("JellyfinAuth: Using cached user {UserId}:{UserName} for {Path}",
-                cachedUser.Id, cachedUser.UserName, requestPath);
             return cachedUser;
         }
 
         var tokenInfo = JellyfinTokenParser.ParseFromRequest(Request);
         if (string.IsNullOrWhiteSpace(tokenInfo.Token))
         {
-            JellyfinLogger.LogDebug("JellyfinAuth: No token found in request for {Path} from {ClientIp}. TokenSource={TokenSource}",
-                requestPath, clientIp, tokenInfo.Source);
+            JellyfinLogger.LogDebug("JellyfinAuth: No token in request. Client={Client} Device={Device}",
+                tokenInfo.Client ?? "none", tokenInfo.Device ?? "none");
             return null;
         }
-
-        JellyfinLogger.LogDebug("JellyfinAuth: Token found via {TokenSource} for {Path} from {ClientIp}, ClientName={ClientName} DeviceId={DeviceId}",
-            tokenInfo.Source, requestPath, clientIp, tokenInfo.Client ?? "unknown", tokenInfo.DeviceId ?? "unknown");
 
         var pepper = await GetTokenPepperAsync(cancellationToken);
         var now = Clock.GetCurrentInstant();
@@ -110,32 +102,28 @@ public abstract class JellyfinControllerBase(
             .OrderByDescending(t => t.LastUsedAt ?? t.CreatedAt)
             .ToListAsync(cancellationToken);
 
-        JellyfinLogger.LogDebug("JellyfinAuth: Found {CandidateCount} candidate tokens matching prefix for {Path}",
-            candidateTokens.Count, requestPath);
-
         foreach (var storedToken in candidateTokens)
         {
             if (JellyfinTokenParser.VerifyToken(tokenInfo.Token, storedToken.TokenSalt, pepper, storedToken.TokenHash))
             {
                 if (storedToken.User.IsLocked)
                 {
-                    JellyfinLogger.LogWarning("JellyfinAuth: Token valid but user {UserId}:{UserName} is locked. Path={Path} ClientIp={ClientIp}",
-                        storedToken.User.Id, storedToken.User.UserName, requestPath, clientIp);
+                    JellyfinLogger.LogWarning("JellyfinAuth: User {UserId}:{UserName} is locked",
+                        storedToken.User.Id, storedToken.User.UserName);
                     return null;
                 }
 
-                JellyfinLogger.LogDebug("JellyfinAuth: Authenticated user {UserId}:{UserName} via token {TokenId} for {Path}",
-                    storedToken.User.Id, storedToken.User.UserName, storedToken.Id, requestPath);
+                JellyfinLogger.LogDebug("JellyfinAuth: Authenticated {UserId}:{UserName} Client={Client}",
+                    storedToken.User.Id, storedToken.User.UserName, tokenInfo.Client ?? "unknown");
 
                 HttpContext.Items[UserCacheKey] = storedToken.User;
-
                 _ = UpdateTokenLastUsedAsync(storedToken.Id, now);
                 return storedToken.User;
             }
         }
 
-        JellyfinLogger.LogDebug("JellyfinAuth: No matching token found for {Path} from {ClientIp}. CandidatesChecked={CandidateCount}",
-            requestPath, clientIp, candidateTokens.Count);
+        JellyfinLogger.LogDebug("JellyfinAuth: Token not found or invalid. CandidatesChecked={Count}",
+            candidateTokens.Count);
         return null;
     }
 
