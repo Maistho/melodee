@@ -29,6 +29,7 @@ Designed with homelab enthusiasts in mind, Melodee runs efficiently on a wide ra
 - **🔄 Automated Jobs**: Cron-based scheduling with intelligent job chaining
 - **📝 User Requests**: Submit and track requests for missing albums/songs, with automatic completion when matches are detected
 - **🎵 OpenSubsonic API**: Compatible with popular Subsonic and OpenSubsonic clients
+- **🎬 Jellyfin API**: Compatible with Jellyfin music clients (Finamp, Feishin, Streamyfin)
 - **🌐 Melodee API**: Fast RESTful API for custom integrations
 - **🌐 Modern Web UI**: Blazor Server interface with Radzen UI components
 - **🐳 Container Ready**: Full Docker/Podman support with PostgreSQL
@@ -272,7 +273,7 @@ Full compatibility with Subsonic 1.16.1 and OpenSubsonic specifications:
 - Album art and metadata serving
 - Scrobbling support (Last.fm)
 
-#### Tested Clients
+#### Tested OpenSubsonic Clients
 
 - [MeloAmp (desktop)](https://github.com/melodee-project/meloamp)
 - [Melodee Player (Android Auto)](https://github.com/melodee-project/melodee-player)
@@ -283,6 +284,24 @@ Full compatibility with Subsonic 1.16.1 and OpenSubsonic specifications:
 - [Sublime Music](https://github.com/sublime-music/sublime-music)
 - [Supersonic](https://github.com/dweymouth/supersonic)
 - [Ultrasonic](https://gitlab.com/ultrasonic/ultrasonic)
+
+### 🎬 Jellyfin API
+
+Melodee provides a Jellyfin-compatible API that allows popular Jellyfin music clients to connect:
+
+- Full media browsing (artists, albums, songs)
+- Streaming with transcoding support
+- Playlist management
+- Favorites and play state tracking
+- Session and playback reporting
+- Instant mix generation
+
+#### Tested Jellyfin Clients
+
+- [Finamp](https://github.com/jmshrv/finamp) - iOS, Android, Desktop
+- [Feishin](https://github.com/jeffvli/feishin) - Desktop (Jellyfin mode)
+- [Streamyfin](https://github.com/streamyfin/streamyfin) - iOS, Android
+- [Gelli](https://github.com/dkanada/gelli) - Android
 
 ### 🔐 Authentication
 
