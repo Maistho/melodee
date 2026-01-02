@@ -292,6 +292,9 @@ public record JellyfinSessionInfo
     [JsonPropertyName("NowPlayingQueueFullItems")]
     public object[]? NowPlayingQueueFullItems { get; init; }
 
+    [JsonPropertyName("NowPlayingItem")]
+    public JellyfinNowPlayingItem? NowPlayingItem { get; init; }
+
     [JsonPropertyName("HasCustomDeviceName")]
     public bool HasCustomDeviceName { get; init; }
 
@@ -302,8 +305,29 @@ public record JellyfinSessionInfo
     public string[]? SupportedCommands { get; init; }
 }
 
+public record JellyfinNowPlayingItem
+{
+    [JsonPropertyName("Id")]
+    public required string Id { get; init; }
+
+    [JsonPropertyName("Name")]
+    public string? Name { get; init; }
+
+    [JsonPropertyName("Type")]
+    public string? Type { get; init; }
+
+    [JsonPropertyName("MediaType")]
+    public string? MediaType { get; init; }
+
+    [JsonPropertyName("RunTimeTicks")]
+    public long? RunTimeTicks { get; init; }
+}
+
 public record JellyfinPlayState
 {
+    [JsonPropertyName("PositionTicks")]
+    public long? PositionTicks { get; init; }
+
     [JsonPropertyName("CanSeek")]
     public bool CanSeek { get; init; }
 
@@ -312,6 +336,18 @@ public record JellyfinPlayState
 
     [JsonPropertyName("IsMuted")]
     public bool IsMuted { get; init; }
+
+    [JsonPropertyName("VolumeLevel")]
+    public int? VolumeLevel { get; init; }
+
+    [JsonPropertyName("AudioStreamIndex")]
+    public int? AudioStreamIndex { get; init; }
+
+    [JsonPropertyName("SubtitleStreamIndex")]
+    public int? SubtitleStreamIndex { get; init; }
+
+    [JsonPropertyName("PlayMethod")]
+    public string? PlayMethod { get; init; }
 
     [JsonPropertyName("RepeatMode")]
     public string RepeatMode { get; init; } = "RepeatNone";
