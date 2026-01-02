@@ -723,4 +723,100 @@ public sealed class StatisticsService(
             Data = ZeroFillDailySeries(points, startDay, endDay)
         };
     }
+
+    public async Task<OperationResult<TopItemStat[]>> GetAlbumsByYearAsync(CancellationToken cancellationToken = default)
+    {
+        await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var grouped = await context.Albums
+            .AsNoTracking()
+            .GroupBy(x => x.ReleaseDate.Year)
+            .Select(g => new { Year = g.Key, Count = g.Count() })
+            .OrderBy(x => x.Year)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var result = grouped
+            .Select(x => new TopItemStat(x.Year.ToString(), x.Count))
+            .ToArray();
+
+        return new OperationResult<TopItemStat[]>
+        {
+            Data = result
+        };
+    }
+
+    public async Task<OperationResult<TopItemStat[]>> GetAlbumsByGenreAsync(CancellationToken cancellationToken = default)
+    {
+        await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var albums = await context.Albums
+            .AsNoTracking()
+            .Select(a => a.Genres != null && a.Genres.Length > 0 ? a.Genres[0] : "Unknown")
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var grouped = albums
+            .GroupBy(g => g, StringComparer.OrdinalIgnoreCase)
+            .Select(g => new TopItemStat(g.Key, g.Count()))
+            .OrderByDescending(x => x.Value)
+            .ThenBy(x => x.Label)
+            .ToArray();
+
+        return new OperationResult<TopItemStat[]>
+        {
+            Data = grouped
+        };
+    }
+
+    public async Task<OperationResult<TopItemStat[]>> GetTopArtistsByAlbumCountAsync(
+        int topN = 10,
+        CancellationToken cancellationToken = default)
+    {
+        await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var artistAlbumCounts = await context.Artists
+            .AsNoTracking()
+            .Select(a => new { a.Name, a.AlbumCount })
+            .OrderByDescending(a => a.AlbumCount)
+            .ThenBy(a => a.Name)
+            .Take(topN)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var result = artistAlbumCounts
+            .Select(a => new TopItemStat(a.Name, a.AlbumCount))
+            .ToArray();
+
+        return new OperationResult<TopItemStat[]>
+        {
+            Data = result
+        };
+    }
+
+    public async Task<OperationResult<TopItemStat[]>> GetTopArtistsByPlaysAsync(
+        int topN = 10,
+        CancellationToken cancellationToken = default)
+    {
+        await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var artistNames = await context.UserSongPlayHistories
+            .AsNoTracking()
+            .Select(x => x.Song.Album.Artist.Name)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var artistPlayCounts = artistNames
+            .GroupBy(name => name, StringComparer.OrdinalIgnoreCase)
+            .Select(g => new TopItemStat(g.Key, g.Count()))
+            .OrderByDescending(x => x.Value)
+            .ThenBy(x => x.Label)
+            .Take(topN)
+            .ToArray();
+
+        return new OperationResult<TopItemStat[]>
+        {
+            Data = artistPlayCounts
+        };
+    }
 }
