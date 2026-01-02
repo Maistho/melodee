@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Install EF Core tools globally in the build stage where SDK is available
@@ -26,7 +26,7 @@ FROM build AS publish
 RUN dotnet publish "Melodee.Blazor.csproj" -c Release -o /app/publish --self-contained false -p:PublishTrimmed=false
 
 # Final image - use SDK instead of runtime to support EF migrations
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS final
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS final
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
