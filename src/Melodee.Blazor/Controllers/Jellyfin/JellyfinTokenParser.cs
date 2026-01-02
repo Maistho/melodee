@@ -74,6 +74,11 @@ public static partial class JellyfinTokenParser
             token = embyToken.ToString();
         }
 
+        if (token == null && request.Query.TryGetValue("api_key", out var apiKeyValue))
+        {
+            token = apiKeyValue.ToString();
+        }
+
         return new JellyfinTokenInfo(token, client, device, deviceId, version);
     }
 

@@ -28,6 +28,19 @@ public class JellyfinRoutingMiddleware(
         "/song/"
     };
 
+    private static readonly HashSet<string> JellyfinPathPrefixes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "/Audio/",
+        "/Items/",
+        "/Users/",
+        "/UserViews",
+        "/System/",
+        "/Sessions/",
+        "/Artists/",
+        "/Playlists/",
+        "/Images/"
+    };
+
     public async Task InvokeAsync(HttpContext context)
     {
         var path = context.Request.Path.Value ?? string.Empty;
@@ -128,7 +141,24 @@ public class JellyfinRoutingMiddleware(
             return (true, "X-Emby-Token");
         }
 
+        if (request.Query.ContainsKey("api_key") && IsJellyfinPath(path))
+        {
+            return (true, "QueryParam:api_key");
+        }
+
         return (false, "NoMatch");
+    }
+
+    private static bool IsJellyfinPath(string path)
+    {
+        foreach (var prefix in JellyfinPathPrefixes)
+        {
+            if (path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static bool IsJellyfinRequest(HttpRequest request, string path)

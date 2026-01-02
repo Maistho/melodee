@@ -178,6 +178,44 @@ public class ItemsController(
         return JellyfinNotFound("Item not found.");
     }
 
+    [HttpGet("{itemId}/PlaybackInfo")]
+    [HttpPost("{itemId}/PlaybackInfo")]
+    public async Task<IActionResult> GetPlaybackInfoAsync(string itemId, CancellationToken cancellationToken)
+    {
+        var user = await AuthenticateJellyfinAsync(cancellationToken);
+        if (user == null)
+        {
+            return JellyfinUnauthorized();
+        }
+
+        if (!TryParseJellyfinGuid(itemId, out var apiKey))
+        {
+            return JellyfinBadRequest("Invalid item ID format.");
+        }
+
+        await using var dbContext = await DbContextFactory.CreateDbContextAsync(cancellationToken);
+        var song = await dbContext.Songs
+            .AsNoTracking()
+            .Include(s => s.Album)
+            .ThenInclude(a => a.Artist)
+            .ThenInclude(ar => ar.Library)
+            .Where(s => s.ApiKey == apiKey && !s.IsLocked)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (song == null)
+        {
+            return JellyfinNotFound("Item not found.");
+        }
+
+        var mediaSource = CreateMediaSourceWithDetails(song);
+        
+        return Ok(new
+        {
+            MediaSources = new[] { mediaSource },
+            PlaySessionId = Guid.NewGuid().ToString("N")
+        });
+    }
+
     [HttpGet("{itemId}/File")]
     [HttpGet("{itemId}/Download")]
     [EnableRateLimiting("jellyfin-stream")]
@@ -518,6 +556,58 @@ public class ItemsController(
                 ]
             }
         ];
+    }
+
+    private JellyfinMediaSource CreateMediaSourceWithDetails(Common.Data.Models.Song song)
+    {
+        var container = Path.GetExtension(song.FileName)?.TrimStart('.') ?? "mp3";
+        var runTimeTicks = (long)(song.Duration * 10_000_000);
+        var codec = GetCodecFromContainer(container);
+
+        return new JellyfinMediaSource
+        {
+            Id = ToJellyfinId(song.ApiKey),
+            Protocol = "File",
+            Type = "Default",
+            Container = container,
+            Size = song.FileSize,
+            Name = song.Title,
+            RunTimeTicks = runTimeTicks > 0 ? runTimeTicks : null,
+            Bitrate = song.BitRate > 0 ? song.BitRate * 1000 : null,
+            SupportsDirectPlay = true,
+            SupportsDirectStream = true,
+            SupportsTranscoding = false,
+            MediaStreams =
+            [
+                new JellyfinMediaStream
+                {
+                    Codec = codec,
+                    Type = "Audio",
+                    Index = 0,
+                    IsDefault = true,
+                    BitRate = song.BitRate > 0 ? song.BitRate * 1000 : null,
+                    SampleRate = song.SamplingRate > 0 ? song.SamplingRate : null,
+                    Channels = song.ChannelCount > 0 ? song.ChannelCount : null,
+                    DisplayTitle = $"{codec.ToUpperInvariant()} - {(song.ChannelCount == 2 ? "Stereo" : song.ChannelCount == 1 ? "Mono" : $"{song.ChannelCount} channels")}"
+                }
+            ]
+        };
+    }
+
+    private static string GetCodecFromContainer(string container)
+    {
+        return container.ToLowerInvariant() switch
+        {
+            "mp3" => "mp3",
+            "flac" => "flac",
+            "m4a" => "aac",
+            "aac" => "aac",
+            "ogg" => "vorbis",
+            "opus" => "opus",
+            "wav" => "pcm",
+            "wma" => "wma",
+            _ => container
+        };
     }
 
     private static string GetSongFilePath(Common.Data.Models.Song song)

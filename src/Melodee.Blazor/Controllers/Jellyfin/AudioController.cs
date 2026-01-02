@@ -125,6 +125,22 @@ public class AudioController(
         return StreamAudioAsync(itemId, extension, @static, startTimeTicks, audioBitRate, cancellationToken);
     }
 
+    [HttpGet("{itemId}/universal")]
+    [HttpHead("{itemId}/universal")]
+    public Task<IActionResult> UniversalAudioAsync(
+        string itemId,
+        [FromQuery] string? container,
+        [FromQuery] string? audioCodec,
+        [FromQuery] string? transcodingContainer,
+        [FromQuery] string? transcodingProtocol,
+        [FromQuery] int? maxStreamingBitrate,
+        [FromQuery] string? userId,
+        [FromQuery(Name = "api_key")] string? apiKey,
+        CancellationToken cancellationToken)
+    {
+        return StreamAudioAsync(itemId, container, true, null, maxStreamingBitrate, cancellationToken);
+    }
+
     private async Task<IActionResult> HandleRangeRequestAsync(
         string filePath,
         long fileLength,
