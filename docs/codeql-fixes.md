@@ -22,6 +22,9 @@ This document tracks all CodeQL security alerts identified in the Melodee codeba
 | ✅ DOCUMENTED | PlaylistsController.cs | 506 | MD5 for ETag computation | Non-cryptographic ETag generation for HTTP caching |
 | ✅ DOCUMENTED | MusicGenresController.cs | 115, 122 | MD5 for genre GUID and ETags | Non-cryptographic ID generation for Jellyfin API |
 | ✅ DOCUMENTED | ArtistsController.cs | 299, 306 | MD5 for ETag computation | Non-cryptographic ETag generation for HTTP caching |
+| ✅ DOCUMENTED | UsersController.cs | 794 | MD5 for ETag computation | Non-cryptographic ETag generation for HTTP caching |
+| ✅ DOCUMENTED | GenresController.cs | 108, 115 | MD5 for genre GUID and ETags | Non-cryptographic ID generation for Jellyfin API |
+| ✅ DOCUMENTED | UserViewsController.cs | 104 | MD5 for ETag computation | Non-cryptographic ETag generation for HTTP caching |
 | ✅ DOCUMENTED | MelodeeDbContext.cs | 95 | MD5 for seed data GUIDs | Non-cryptographic deterministic GUID generation |
 
 **Note**: MD5 usages are either required by external API specifications or used for non-cryptographic purposes (GUID/ETag generation). All are properly documented with `// lgtm[cs/weak-crypto]` comments explaining the justification.
@@ -72,6 +75,9 @@ This document tracks all CodeQL security alerts identified in the Melodee codeba
 - `src/Melodee.Blazor/Controllers/Jellyfin/PlaylistsController.cs` - Added MD5 documentation for ETag computation
 - `src/Melodee.Blazor/Controllers/Jellyfin/MusicGenresController.cs` - Added MD5 documentation for genre GUID and ETag generation
 - `src/Melodee.Blazor/Controllers/Jellyfin/ArtistsController.cs` - Added MD5 documentation for ETag computation
+- `src/Melodee.Blazor/Controllers/Jellyfin/UsersController.cs` - Added MD5 documentation for ETag computation
+- `src/Melodee.Blazor/Controllers/Jellyfin/GenresController.cs` - Added MD5 documentation for genre GUID and ETag generation
+- `src/Melodee.Blazor/Controllers/Jellyfin/UserViewsController.cs` - Added MD5 documentation for ETag computation
 - `src/Melodee.Common/Data/MelodeeDbContext.cs` - Added MD5 documentation for seed data GUID generation
 - `docs/codeql-fixes.md` - Updated with 2026-01-02 fixes
 

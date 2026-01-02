@@ -101,6 +101,9 @@ public class UserViewsController(
     private static string ComputeEtag(Guid apiKey, Instant lastUpdated)
     {
         var input = $"{apiKey:N}-{lastUpdated.ToUnixTimeTicks()}";
+        // NOTE: MD5 is used here for generating ETag values for HTTP caching in Jellyfin API compatibility.
+        // This is NOT a cryptographic use - ETags are public cache identifiers, not security tokens.
+        // lgtm[cs/weak-crypto] MD5 used for non-cryptographic ETag generation, not for security
         var hash = MD5.HashData(Encoding.UTF8.GetBytes(input));
         return Convert.ToHexString(hash).ToLowerInvariant();
     }
