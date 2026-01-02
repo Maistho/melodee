@@ -203,6 +203,96 @@ public class ArtistsController(
         });
     }
 
+    /// <summary>
+    /// Gets similar artists based on shared genres. Used by Feishin for artist recommendations.
+    /// </summary>
+    [HttpGet("{artistId}/Similar")]
+    public async Task<IActionResult> GetSimilarArtistsAsync(
+        string artistId,
+        [FromQuery] int? limit,
+        [FromQuery] string? fields,
+        CancellationToken cancellationToken)
+    {
+        var user = await AuthenticateJellyfinAsync(cancellationToken);
+        if (user == null)
+        {
+            return JellyfinUnauthorized();
+        }
+
+        if (!TryParseJellyfinGuid(artistId, out var apiKey))
+        {
+            return JellyfinBadRequest("Invalid artist ID format.");
+        }
+
+        var maxItems = Math.Clamp(limit ?? 10, 1, 50);
+
+        await using var dbContext = await DbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        var seedArtist = await dbContext.Artists
+            .AsNoTracking()
+            .Include(a => a.Albums)
+            .Where(a => a.ApiKey == apiKey && !a.IsLocked)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (seedArtist == null)
+        {
+            return JellyfinNotFound("Artist not found.");
+        }
+
+        var artistGenres = seedArtist.Albums
+            .Where(a => !a.IsLocked && a.Genres != null)
+            .SelectMany(a => a.Genres!)
+            .Distinct()
+            .ToHashSet();
+
+        var similarArtists = await dbContext.Artists
+            .AsNoTracking()
+            .Include(a => a.Albums)
+            .Where(a => !a.IsLocked && a.Id != seedArtist.Id)
+            .ToListAsync(cancellationToken);
+
+        var scoredArtists = similarArtists
+            .Select(a => new
+            {
+                Artist = a,
+                GenreOverlap = a.Albums
+                    .Where(alb => !alb.IsLocked && alb.Genres != null)
+                    .SelectMany(alb => alb.Genres!)
+                    .Distinct()
+                    .Count(g => artistGenres.Contains(g))
+            })
+            .Where(x => x.GenreOverlap > 0)
+            .OrderByDescending(x => x.GenreOverlap)
+            .ThenBy(x => x.Artist.SortName ?? x.Artist.Name)
+            .Take(maxItems)
+            .ToList();
+
+        var items = scoredArtists.Select(x => new JellyfinBaseItem
+        {
+            Name = x.Artist.Name,
+            ServerId = GetServerId(),
+            Id = ToJellyfinId(x.Artist.ApiKey),
+            Etag = ComputeEtag(x.Artist.ApiKey, x.Artist.LastUpdatedAt ?? x.Artist.CreatedAt),
+            DateCreated = FormatInstantForJellyfin(x.Artist.CreatedAt),
+            SortName = x.Artist.SortName ?? x.Artist.Name,
+            Type = "MusicArtist",
+            IsFolder = true,
+            CanDownload = user.HasDownloadRole,
+            Overview = x.Artist.Description,
+            ChildCount = x.Artist.Albums.Count(alb => !alb.IsLocked),
+            ImageTags = new Dictionary<string, string>(),
+            BackdropImageTags = [],
+            MediaType = "Audio"
+        }).ToArray();
+
+        return Ok(new JellyfinArtistsResult
+        {
+            Items = items,
+            TotalRecordCount = items.Length,
+            StartIndex = 0
+        });
+    }
+
     private static string ComputeEtag(Guid apiKey, Instant lastUpdated)
     {
         var input = $"{apiKey:N}-{lastUpdated.ToUnixTimeTicks()}";

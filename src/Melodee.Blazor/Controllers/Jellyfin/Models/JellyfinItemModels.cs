@@ -538,3 +538,30 @@ public record JellyfinCreatePlaylistResponse
     [JsonPropertyName("Id")]
     public required string Id { get; init; }
 }
+
+public record JellyfinUpdatePlaylistRequest
+{
+    [JsonPropertyName("Name")]
+    public string? Name { get; init; }
+
+    [JsonPropertyName("IsPublic")]
+    public bool? IsPublic { get; init; }
+
+    [JsonPropertyName("MediaType")]
+    public string? MediaType { get; init; }
+
+    [JsonPropertyName("Genres")]
+    public JellyfinNameGuidPair[]? Genres { get; init; }
+
+    [JsonPropertyName("Tags")]
+    public JellyfinNameGuidPair[]? Tags { get; init; }
+
+    [JsonPropertyName("UserId")]
+    public string? UserId { get; init; }
+
+    [JsonPropertyName("PremiereDate")]
+    public string? PremiereDate { get; init; }
+
+    [JsonPropertyName("ProviderIds")]
+    public Dictionary<string, string>? ProviderIds { get; init; }
+}

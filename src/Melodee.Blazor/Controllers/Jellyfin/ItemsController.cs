@@ -277,6 +277,159 @@ public class ItemsController(
     }
 
     /// <summary>
+    /// Gets filter values (genres, tags, years) for filtering items. Used by Feishin for tag filtering.
+    /// </summary>
+    [HttpGet("Filters")]
+    public async Task<IActionResult> GetFiltersAsync(
+        [FromQuery] string? userId,
+        [FromQuery] string? parentId,
+        [FromQuery] string? includeItemTypes,
+        CancellationToken cancellationToken)
+    {
+        var user = await AuthenticateJellyfinAsync(cancellationToken);
+        if (user == null)
+        {
+            return JellyfinUnauthorized();
+        }
+
+        await using var dbContext = await DbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        var genres = await dbContext.Albums
+            .AsNoTracking()
+            .Where(a => !a.IsLocked && a.Genres != null && a.Genres.Any())
+            .SelectMany(a => a.Genres!)
+            .Distinct()
+            .OrderBy(g => g)
+            .ToListAsync(cancellationToken);
+
+        var years = await dbContext.Albums
+            .AsNoTracking()
+            .Where(a => !a.IsLocked && a.ReleaseDate.Year > 0)
+            .Select(a => a.ReleaseDate.Year)
+            .Distinct()
+            .OrderByDescending(y => y)
+            .ToListAsync(cancellationToken);
+
+        return Ok(new
+        {
+            Genres = genres,
+            Tags = Array.Empty<string>(),
+            Years = years
+        });
+    }
+
+    /// <summary>
+    /// Gets similar items for a given item. Used by Feishin for "Similar" recommendations.
+    /// </summary>
+    [HttpGet("{itemId}/Similar")]
+    public async Task<IActionResult> GetSimilarItemsAsync(
+        string itemId,
+        [FromQuery] string? userId,
+        [FromQuery] int? limit,
+        [FromQuery] string? fields,
+        CancellationToken cancellationToken)
+    {
+        var user = await AuthenticateJellyfinAsync(cancellationToken);
+        if (user == null)
+        {
+            return JellyfinUnauthorized();
+        }
+
+        if (!TryParseJellyfinGuid(itemId, out var apiKey))
+        {
+            return JellyfinBadRequest("Invalid item ID format.");
+        }
+
+        var maxItems = Math.Clamp(limit ?? 20, 1, 100);
+
+        await using var dbContext = await DbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        var seedSong = await dbContext.Songs
+            .AsNoTracking()
+            .Include(s => s.Album)
+            .Where(s => s.ApiKey == apiKey && !s.IsLocked)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (seedSong != null)
+        {
+            var genres = seedSong.Album?.Genres ?? [];
+            var seedArtistId = seedSong.Album?.ArtistId;
+            var similarSongs = await dbContext.Songs
+                .AsNoTracking()
+                .Include(s => s.Album)
+                .ThenInclude(a => a.Artist)
+                .Where(s => !s.IsLocked && !s.Album.IsLocked && s.Id != seedSong.Id &&
+                    (s.Album.ArtistId == seedArtistId ||
+                     (s.Album.Genres != null && genres.Any(g => s.Album.Genres.Contains(g)))))
+                .OrderBy(s => EF.Functions.Random())
+                .Take(maxItems)
+                .ToListAsync(cancellationToken);
+
+            var items = similarSongs.Select(s => MapSong(s, user.HasDownloadRole, true)).ToArray();
+
+            return Ok(new JellyfinItemsResult
+            {
+                Items = items,
+                TotalRecordCount = items.Length,
+                StartIndex = 0
+            });
+        }
+
+        var seedAlbum = await dbContext.Albums
+            .AsNoTracking()
+            .Include(a => a.Artist)
+            .Where(a => a.ApiKey == apiKey && !a.IsLocked)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (seedAlbum != null)
+        {
+            var genres = seedAlbum.Genres ?? [];
+            var similarAlbums = await dbContext.Albums
+                .AsNoTracking()
+                .Include(a => a.Artist)
+                .Where(a => !a.IsLocked && a.Id != seedAlbum.Id &&
+                    (a.ArtistId == seedAlbum.ArtistId ||
+                     (a.Genres != null && genres.Any(g => a.Genres.Contains(g)))))
+                .OrderBy(a => EF.Functions.Random())
+                .Take(maxItems)
+                .Select(a => new
+                {
+                    a.ApiKey,
+                    a.Name,
+                    a.SortName,
+                    a.Description,
+                    AlbumYear = a.ReleaseDate.Year,
+                    a.Duration,
+                    a.CreatedAt,
+                    a.LastUpdatedAt,
+                    a.Genres,
+                    ArtistName = a.Artist.Name,
+                    ArtistApiKey = a.Artist.ApiKey,
+                    SongCount = a.Songs.Count(s => !s.IsLocked)
+                })
+                .ToListAsync(cancellationToken);
+
+            var items = similarAlbums.Select(a =>
+                MapAlbum(a.ApiKey, a.Name, a.SortName, a.Description, a.AlbumYear, a.Duration,
+                    a.CreatedAt, a.LastUpdatedAt, a.Genres, a.ArtistName, a.ArtistApiKey, a.SongCount, user.HasDownloadRole, true)).ToArray();
+
+            return Ok(new JellyfinItemsResult
+            {
+                Items = items,
+                TotalRecordCount = items.Length,
+                StartIndex = 0
+            });
+        }
+
+        return Ok(new JellyfinItemsResult
+        {
+            Items = [],
+            TotalRecordCount = 0,
+            StartIndex = 0
+        });
+    }
+
+    /// <summary>
     /// Gets instant mix (radio) based on an item. Used by Finamp for the "Instant Mix" feature.
     /// Returns a shuffled selection of similar songs.
     /// </summary>

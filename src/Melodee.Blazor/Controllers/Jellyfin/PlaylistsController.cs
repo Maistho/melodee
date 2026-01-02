@@ -394,6 +394,51 @@ public class PlaylistsController(
         return NoContent();
     }
 
+    /// <summary>
+    /// Update a playlist. Used by Feishin.
+    /// </summary>
+    [HttpPost("{playlistId}")]
+    public async Task<IActionResult> UpdatePlaylistAsync(
+        string playlistId,
+        [FromBody] JellyfinUpdatePlaylistRequest request,
+        CancellationToken cancellationToken)
+    {
+        var user = await AuthenticateJellyfinAsync(cancellationToken);
+        if (user == null)
+        {
+            return JellyfinUnauthorized();
+        }
+
+        if (!TryParseJellyfinGuid(playlistId, out var playlistApiKey))
+        {
+            return JellyfinBadRequest("Invalid playlist ID format.");
+        }
+
+        await using var dbContext = await DbContextFactory.CreateDbContextAsync(cancellationToken);
+        var playlist = await dbContext.Playlists
+            .FirstOrDefaultAsync(p => p.ApiKey == playlistApiKey && p.UserId == user.Id, cancellationToken);
+
+        if (playlist == null)
+        {
+            return JellyfinNotFound("Playlist not found or access denied.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Name))
+        {
+            playlist.Name = request.Name;
+        }
+
+        if (request.IsPublic.HasValue)
+        {
+            playlist.IsPublic = request.IsPublic.Value;
+        }
+
+        playlist.LastUpdatedAt = Clock.GetCurrentInstant();
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return NoContent();
+    }
+
     private JellyfinBaseItem MapToJellyfinPlaylist(Common.Data.Models.Playlist playlist, bool canDownload)
     {
         return new JellyfinBaseItem

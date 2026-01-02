@@ -883,3 +883,165 @@ fi
 
 echo -e "\n============================================="
 echo "All Finamp/Streamyfin-specific tests complete!"
+
+# Continue with Feishin-specific endpoint tests
+echo -e "\n\n============================================="
+echo "FEISHIN-SPECIFIC ENDPOINT TESTS"
+echo "============================================="
+
+# Test: Items/Filters endpoint (tag filtering)
+increment_test
+echo -e "\n[$TEST_NUM] GET /Items/Filters (get filters - genres, years, tags)"
+response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+    -H "Authorization: $AUTH_HEADER" \
+    "$BASE_URL/Items/Filters?userId=$USER_ID")
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+body=$(echo "$response" | sed '/HTTP_CODE:/d')
+
+if [ "$http_code" = "200" ]; then
+    echo "✓ Status: $http_code"
+    GENRE_COUNT=$(echo "$body" | grep -o '"Genres":\[[^]]*\]' | grep -o '"[^"]*"' | wc -l || echo "0")
+    YEAR_COUNT=$(echo "$body" | grep -o '"Years":\[[^]]*\]' | grep -o '[0-9]\{4\}' | wc -l || echo "0")
+    echo "  Genres available: $GENRE_COUNT"
+    echo "  Years available: $YEAR_COUNT"
+else
+    echo "✗ Status: $http_code"
+    echo "Response: $body"
+fi
+
+# Test: Items/{id}/Similar endpoint (similar items)
+increment_test
+echo -e "\n[$TEST_NUM] GET /Items/{id}/Similar (get similar items)"
+if [ -n "${FIRST_SONG_ID:-}" ]; then
+    response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+        -H "Authorization: $AUTH_HEADER" \
+        "$BASE_URL/Items/$FIRST_SONG_ID/Similar?userId=$USER_ID&limit=10")
+    http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+    body=$(echo "$response" | sed '/HTTP_CODE:/d')
+
+    if [ "$http_code" = "200" ]; then
+        echo "✓ Status: $http_code"
+        SIMILAR_COUNT=$(echo "$body" | grep -o '"TotalRecordCount":[0-9]*' | cut -d: -f2)
+        echo "  Similar items: ${SIMILAR_COUNT:-0}"
+    else
+        echo "✗ Status: $http_code"
+        echo "Response: $body"
+    fi
+else
+    echo "⚠ Skipped (no song ID available)"
+fi
+
+# Test: Artists/{id}/Similar endpoint (similar artists)
+increment_test
+echo -e "\n[$TEST_NUM] GET /Artists/{id}/Similar (get similar artists)"
+# First get an artist ID
+ARTIST_ID=""
+response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+    -H "Authorization: $AUTH_HEADER" \
+    "$BASE_URL/Artists?limit=1")
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+body=$(echo "$response" | sed '/HTTP_CODE:/d')
+ARTIST_ID=$(echo "$body" | grep -o '"Id":"[^"]*"' | head -1 | cut -d'"' -f4)
+
+if [ -n "${ARTIST_ID:-}" ]; then
+    response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+        -H "Authorization: $AUTH_HEADER" \
+        "$BASE_URL/Artists/$ARTIST_ID/Similar?limit=5")
+    http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+    body=$(echo "$response" | sed '/HTTP_CODE:/d')
+
+    if [ "$http_code" = "200" ]; then
+        echo "✓ Status: $http_code"
+        SIMILAR_ARTISTS=$(echo "$body" | grep -o '"TotalRecordCount":[0-9]*' | cut -d: -f2)
+        echo "  Similar artists: ${SIMILAR_ARTISTS:-0}"
+    else
+        echo "✗ Status: $http_code"
+        echo "Response: $body"
+    fi
+else
+    echo "⚠ Skipped (no artist ID available)"
+fi
+
+# Test: Songs/{id}/InstantMix endpoint (Feishin-specific path)
+increment_test
+echo -e "\n[$TEST_NUM] GET /Songs/{id}/InstantMix (Feishin songs instant mix)"
+if [ -n "${FIRST_SONG_ID:-}" ]; then
+    response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+        -H "Authorization: $AUTH_HEADER" \
+        "$BASE_URL/Songs/$FIRST_SONG_ID/InstantMix?userId=$USER_ID&limit=20")
+    http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+    body=$(echo "$response" | sed '/HTTP_CODE:/d')
+
+    if [ "$http_code" = "200" ]; then
+        echo "✓ Status: $http_code"
+        MIX_COUNT=$(echo "$body" | grep -o '"TotalRecordCount":[0-9]*' | cut -d: -f2)
+        echo "  Mix contains: ${MIX_COUNT:-0} items"
+    else
+        echo "✗ Status: $http_code"
+        echo "Response: $body"
+    fi
+else
+    echo "⚠ Skipped (no song ID available)"
+fi
+
+# Test: MusicGenres endpoint (Feishin uses this)
+increment_test
+echo -e "\n[$TEST_NUM] GET /MusicGenres (Feishin music genres)"
+response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+    -H "Authorization: $AUTH_HEADER" \
+    "$BASE_URL/MusicGenres?startIndex=0&limit=10&userId=$USER_ID")
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+body=$(echo "$response" | sed '/HTTP_CODE:/d')
+
+if [ "$http_code" = "200" ]; then
+    echo "✓ Status: $http_code"
+    TOTAL_GENRES=$(echo "$body" | grep -o '"TotalRecordCount":[0-9]*' | cut -d: -f2)
+    FIRST_GENRE=$(echo "$body" | grep -o '"Name":"[^"]*"' | head -1 | cut -d'"' -f4)
+    echo "  Total music genres: ${TOTAL_GENRES:-0}"
+    echo "  First genre: ${FIRST_GENRE:-none}"
+else
+    echo "✗ Status: $http_code"
+    echo "Response: $body"
+fi
+
+# Test: Update playlist endpoint (Feishin uses POST /Playlists/{id})
+increment_test
+echo -e "\n[$TEST_NUM] POST /Playlists/{id} (update playlist - Feishin)"
+# Create a test playlist first
+PLAYLIST_NAME="Feishin Test $(date +%s)"
+response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+    -X POST "$BASE_URL/Playlists" \
+    -H "Authorization: $AUTH_HEADER" \
+    -H "Content-Type: application/json" \
+    -d "{\"Name\":\"$PLAYLIST_NAME\",\"Ids\":[],\"UserId\":\"$USER_ID\",\"MediaType\":\"Audio\",\"IsPublic\":false}")
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+body=$(echo "$response" | sed '/HTTP_CODE:/d')
+FEISHIN_PLAYLIST_ID=$(echo "$body" | grep -o '"Id":"[^"]*"' | cut -d'"' -f4)
+
+if [ -n "${FEISHIN_PLAYLIST_ID:-}" ]; then
+    # Now update the playlist
+    response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+        -X POST "$BASE_URL/Playlists/$FEISHIN_PLAYLIST_ID" \
+        -H "Authorization: $AUTH_HEADER" \
+        -H "Content-Type: application/json" \
+        -d "{\"Name\":\"Updated Feishin Test\",\"MediaType\":\"Audio\",\"IsPublic\":true,\"Genres\":[],\"Tags\":[],\"UserId\":\"$USER_ID\",\"PremiereDate\":null,\"ProviderIds\":{}}")
+    http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+
+    if [ "$http_code" = "204" ]; then
+        echo "✓ Status: $http_code (playlist updated)"
+    else
+        echo "✗ Status: $http_code"
+        body=$(echo "$response" | sed '/HTTP_CODE:/d')
+        echo "Response: $body"
+    fi
+
+    # Clean up - delete the test playlist
+    curl -s -X DELETE "$BASE_URL/Playlists/$FEISHIN_PLAYLIST_ID" -H "Authorization: $AUTH_HEADER" > /dev/null
+else
+    echo "⚠ Skipped (could not create test playlist)"
+fi
+
+echo -e "\n============================================="
+echo "All Feishin-specific tests complete!"
+echo "============================================="
+echo "Total tests executed: $TEST_NUM"
