@@ -274,7 +274,7 @@ public abstract class JellyfinControllerBase(
         {
             return string.Empty;
         }
-        return instant.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ", null);
+        return instant.Value.ToString("yyyy-MM-ddTHH:mm:ss.fffffff'Z'", null);
     }
 
     protected JellyfinUser MapUserToJellyfin(User user)

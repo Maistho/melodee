@@ -48,6 +48,9 @@ public class ItemsController(
         [FromQuery] string? userId,
         CancellationToken cancellationToken)
     {
+        logger.LogDebug("GetItemsAsync: includeItemTypes={IncludeItemTypes} parentId={ParentId} searchTerm={SearchTerm} startIndex={StartIndex} limit={Limit} recursive={Recursive}",
+            includeItemTypes, parentId, searchTerm, startIndex, limit, recursive);
+        
         var user = await AuthenticateJellyfinAsync(cancellationToken);
         if (user == null)
         {
@@ -355,9 +358,20 @@ public class ItemsController(
             .ThenInclude(ar => ar.Library)
             .Where(s => !s.IsLocked);
 
-        if (!string.IsNullOrWhiteSpace(parentId) && TryParseJellyfinGuid(parentId, out var albumApiKey))
+        if (!string.IsNullOrWhiteSpace(parentId) && TryParseJellyfinGuid(parentId, out var parentApiKey))
         {
-            query = query.Where(s => s.Album.ApiKey == albumApiKey);
+            var library = await dbContext.Libraries
+                .AsNoTracking()
+                .FirstOrDefaultAsync(l => l.ApiKey == parentApiKey, cancellationToken);
+            
+            if (library != null)
+            {
+                query = query.Where(s => s.Album.Artist.Library.ApiKey == parentApiKey);
+            }
+            else
+            {
+                query = query.Where(s => s.Album.ApiKey == parentApiKey);
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -457,19 +471,20 @@ public class ItemsController(
             IsFolder = false,
             CanDownload = canDownload,
             IndexNumber = song.SongNumber,
-            RunTimeTicks = runTimeTicks > 0 ? runTimeTicks : null,
-            Album = album?.Name,
-            AlbumId = album != null ? ToJellyfinId(album.ApiKey) : null,
+            RunTimeTicks = runTimeTicks > 0 ? runTimeTicks : 0,
+            Album = album?.Name ?? "Unknown Album",
+            AlbumId = album != null ? ToJellyfinId(album.ApiKey) : ToJellyfinId(Guid.Empty),
             AlbumArtist = artist?.Name,
-            AlbumArtists = artist != null ? [new JellyfinNameGuidPair { Name = artist.Name, Id = ToJellyfinId(artist.ApiKey) }] : null,
-            Artists = artist != null ? [artist.Name] : null,
-            ArtistItems = artist != null ? [new JellyfinNameGuidPair { Name = artist.Name, Id = ToJellyfinId(artist.ApiKey) }] : null,
+            AlbumArtists = artist != null ? [new JellyfinNameGuidPair { Name = artist.Name, Id = ToJellyfinId(artist.ApiKey) }] : [],
+            Artists = artist != null ? [artist.Name] : [],
+            ArtistItems = artist != null ? [new JellyfinNameGuidPair { Name = artist.Name, Id = ToJellyfinId(artist.ApiKey) }] : [],
             Container = Path.GetExtension(song.FileName)?.TrimStart('.'),
             MediaType = "Audio",
             ImageTags = new Dictionary<string, string>(),
             BackdropImageTags = [],
             MediaSources = CreateMediaSources(song),
-            UserData = enableUserData ? new JellyfinUserItemData { Key = song.ApiKey.ToString("N") } : null
+            UserData = new JellyfinUserItemData { Key = song.ApiKey.ToString("N") },
+            HasLyrics = false
         };
     }
 

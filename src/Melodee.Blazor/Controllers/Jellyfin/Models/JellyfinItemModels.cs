@@ -303,6 +303,9 @@ public record JellyfinBaseItem
 
     [JsonPropertyName("MediaType")]
     public string? MediaType { get; init; }
+
+    [JsonPropertyName("HasLyrics")]
+    public bool HasLyrics { get; init; }
 }
 
 public record JellyfinNameGuidPair

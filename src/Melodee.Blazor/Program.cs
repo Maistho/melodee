@@ -511,9 +511,12 @@ if (useForwardedHeaders)
 // Enable response compression early in the pipeline
 app.UseResponseCompression();
 
-// Jellyfin API routing - MUST be very early in pipeline before endpoint routing kicks in
+// Jellyfin API routing - MUST be before UseRouting() to rewrite paths before endpoint selection
 // This rewrites paths like /System/Info/Public to /api/jf/System/Info/Public
 app.UseMiddleware<JellyfinRoutingMiddleware>();
+
+// Explicit routing - required so JellyfinRoutingMiddleware can rewrite paths BEFORE endpoint selection
+app.UseRouting();
 
 app.UseSwagger();
 
