@@ -257,6 +257,88 @@ public class SessionsController(
 
         return Ok(sessions);
     }
+
+    /// <summary>
+    /// Reports that a session has ended / logout. Revokes the current access token.
+    /// </summary>
+    [HttpPost("Logout")]
+    public async Task<IActionResult> LogoutAsync(CancellationToken cancellationToken)
+    {
+        var user = await AuthenticateJellyfinAsync(cancellationToken);
+        if (user == null)
+        {
+            // Already logged out or invalid token - return success anyway
+            return NoContent();
+        }
+
+        // Revoke the current token
+        var tokenInfo = JellyfinTokenParser.ParseFromRequest(Request);
+        if (!string.IsNullOrEmpty(tokenInfo.Token))
+        {
+            await using var dbContext = await DbContextFactory.CreateDbContextAsync(cancellationToken);
+            var pepper = await GetTokenPepperAsync(cancellationToken);
+            var tokenPrefix = JellyfinTokenParser.GetTokenPrefix(tokenInfo.Token);
+
+            var accessToken = await dbContext.JellyfinAccessTokens
+                .Where(t => t.UserId == user.Id && t.TokenPrefixHash == tokenPrefix && t.RevokedAt == null)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (accessToken != null)
+            {
+                accessToken.RevokedAt = Clock.GetCurrentInstant();
+                await dbContext.SaveChangesAsync(cancellationToken);
+            }
+        }
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Reports full client capabilities for a session. Used by Streamyfin/Finamp to register device capabilities.
+    /// </summary>
+    [HttpPost("Capabilities/Full")]
+    public async Task<IActionResult> PostCapabilitiesFullAsync(
+        [FromBody] JellyfinClientCapabilitiesRequest? request,
+        CancellationToken cancellationToken)
+    {
+        var user = await AuthenticateJellyfinAsync(cancellationToken);
+        if (user == null)
+        {
+            return JellyfinUnauthorized();
+        }
+
+        // For now, just acknowledge the capabilities - we don't need to store them
+        // since Melodee doesn't support remote control features yet
+        logger.LogDebug("JellyfinCapabilities UserId={UserId} PlayableMediaTypes={MediaTypes} SupportsMediaControl={SupportsMediaControl}",
+            user.Id, 
+            request?.PlayableMediaTypes != null ? string.Join(",", request.PlayableMediaTypes) : "none",
+            request?.SupportsMediaControl);
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Reports client capabilities for a session (simplified version).
+    /// </summary>
+    [HttpPost("Capabilities")]
+    public async Task<IActionResult> PostCapabilitiesAsync(
+        [FromQuery] string? playableMediaTypes,
+        [FromQuery] string? supportedCommands,
+        [FromQuery] bool? supportsMediaControl,
+        [FromQuery] bool? supportsPersistentIdentifier,
+        CancellationToken cancellationToken)
+    {
+        var user = await AuthenticateJellyfinAsync(cancellationToken);
+        if (user == null)
+        {
+            return JellyfinUnauthorized();
+        }
+
+        logger.LogDebug("JellyfinCapabilities UserId={UserId} PlayableMediaTypes={MediaTypes} SupportsMediaControl={SupportsMediaControl}",
+            user.Id, playableMediaTypes ?? "none", supportsMediaControl);
+
+        return NoContent();
+    }
 }
 
 // Models for playback reporting
@@ -365,4 +447,30 @@ public record JellyfinPlaybackStopInfo
     public string? NextMediaType { get; init; }
 }
 
+public record JellyfinClientCapabilitiesRequest
+{
+    [JsonPropertyName("PlayableMediaTypes")]
+    public string[]? PlayableMediaTypes { get; init; }
+
+    [JsonPropertyName("SupportedCommands")]
+    public string[]? SupportedCommands { get; init; }
+
+    [JsonPropertyName("SupportsMediaControl")]
+    public bool? SupportsMediaControl { get; init; }
+
+    [JsonPropertyName("SupportsPersistentIdentifier")]
+    public bool? SupportsPersistentIdentifier { get; init; }
+
+    [JsonPropertyName("Id")]
+    public string? Id { get; init; }
+
+    [JsonPropertyName("DeviceProfile")]
+    public object? DeviceProfile { get; init; }
+
+    [JsonPropertyName("AppStoreUrl")]
+    public string? AppStoreUrl { get; init; }
+
+    [JsonPropertyName("IconUrl")]
+    public string? IconUrl { get; init; }
+}
 

@@ -120,6 +120,27 @@ public class ArtistsController(
         });
     }
 
+    /// <summary>
+    /// Gets album artists - Finamp uses this endpoint for browsing artists.
+    /// </summary>
+    [HttpGet("AlbumArtists")]
+    public async Task<IActionResult> GetAlbumArtistsAsync(
+        [FromQuery] string? searchTerm,
+        [FromQuery] int? startIndex,
+        [FromQuery] int? limit,
+        [FromQuery] string? parentId,
+        [FromQuery] string? fields,
+        [FromQuery] string? sortBy,
+        [FromQuery] string? sortOrder,
+        [FromQuery] string? filters,
+        [FromQuery] bool? enableUserData,
+        [FromQuery] string? userId,
+        CancellationToken cancellationToken)
+    {
+        // AlbumArtists is the same as Artists for Melodee - we return all artists that have albums
+        return await GetArtistsAsync(searchTerm, startIndex, limit, parentId, fields, enableUserData, cancellationToken);
+    }
+
     [HttpGet("{artistId}")]
     public async Task<IActionResult> GetArtistAsync(string artistId, CancellationToken cancellationToken)
     {

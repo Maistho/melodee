@@ -5,7 +5,7 @@ set -uo pipefail
 # Tests the pre-auth endpoints that Jellyfin clients call during server discovery
 
 BASE_URL="${1:-http://localhost:5157}"
-USERNAME="${JF_USERNAME:-steven}"
+USERNAME="${JF_USERNAME:-${MELODEE_USERNAME:-admin}}"
 PASSWORD="${JF_PASSWORD:-${MELODEE_PASSWORD:-password}}"
 
 echo "Testing Jellyfin API endpoints on: $BASE_URL"
@@ -619,3 +619,267 @@ fi
 
 echo -e "\n============================================="
 echo "Test complete! ($TEST_NUM tests executed)"
+
+# Continue with Finamp-specific endpoint tests
+echo -e "\n\n============================================="
+echo "FINAMP-SPECIFIC ENDPOINT TESTS"
+echo "============================================="
+
+# Test: Users/Public endpoint
+increment_test
+echo -e "\n[$TEST_NUM] GET /Users/Public (public users for login)"
+response=$(curl -s -w "\nHTTP_CODE:%{http_code}" "$BASE_URL/Users/Public")
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+body=$(echo "$response" | sed '/HTTP_CODE:/d')
+
+if [ "$http_code" = "200" ]; then
+    echo "✓ Status: $http_code"
+    echo "  Response: $body" | head -c 200
+else
+    echo "✗ Status: $http_code"
+    echo "Response: $body"
+fi
+
+# Test: AlbumArtists endpoint
+increment_test
+echo -e "\n[$TEST_NUM] GET /Artists/AlbumArtists (get album artists)"
+response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+    -H "Authorization: $AUTH_HEADER" \
+    "$BASE_URL/Artists/AlbumArtists?userId=$USER_ID&startIndex=0&limit=5")
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+body=$(echo "$response" | sed '/HTTP_CODE:/d')
+
+if [ "$http_code" = "200" ]; then
+    echo "✓ Status: $http_code"
+    TOTAL_ARTISTS=$(echo "$body" | grep -o '"TotalRecordCount":[0-9]*' | cut -d: -f2)
+    FIRST_ARTIST=$(echo "$body" | grep -o '"Name":"[^"]*"' | head -1 | cut -d'"' -f4)
+    echo "  Total album artists: ${TOTAL_ARTISTS:-0}"
+    echo "  First artist: ${FIRST_ARTIST:-none}"
+else
+    echo "✗ Status: $http_code"
+    echo "Response: $body"
+fi
+
+# Test: Genres endpoint
+increment_test
+echo -e "\n[$TEST_NUM] GET /Genres (get genres)"
+response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+    -H "Authorization: $AUTH_HEADER" \
+    "$BASE_URL/Genres?startIndex=0&limit=10")
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+body=$(echo "$response" | sed '/HTTP_CODE:/d')
+
+if [ "$http_code" = "200" ]; then
+    echo "✓ Status: $http_code"
+    TOTAL_GENRES=$(echo "$body" | grep -o '"TotalRecordCount":[0-9]*' | cut -d: -f2)
+    FIRST_GENRE=$(echo "$body" | grep -o '"Name":"[^"]*"' | head -1 | cut -d'"' -f4)
+    echo "  Total genres: ${TOTAL_GENRES:-0}"
+    echo "  First genre: ${FIRST_GENRE:-none}"
+else
+    echo "✗ Status: $http_code"
+    echo "Response: $body"
+fi
+
+# Test: InstantMix endpoint
+increment_test
+echo -e "\n[$TEST_NUM] GET /Items/{id}/InstantMix (get instant mix)"
+if [ -n "${FIRST_SONG_ID:-}" ]; then
+    response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+        -H "Authorization: $AUTH_HEADER" \
+        "$BASE_URL/Items/$FIRST_SONG_ID/InstantMix?userId=$USER_ID&limit=20")
+    http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+    body=$(echo "$response" | sed '/HTTP_CODE:/d')
+
+    if [ "$http_code" = "200" ]; then
+        echo "✓ Status: $http_code"
+        MIX_COUNT=$(echo "$body" | grep -o '"TotalRecordCount":[0-9]*' | cut -d: -f2)
+        echo "  Mix contains: ${MIX_COUNT:-0} items"
+    else
+        echo "✗ Status: $http_code"
+        echo "Response: $body"
+    fi
+else
+    echo "⚠ Skipped (no song ID available)"
+fi
+
+# Test: Add/Remove Favorite
+increment_test
+echo -e "\n[$TEST_NUM] POST /Users/{userId}/FavoriteItems/{itemId} (add favorite)"
+if [ -n "${FIRST_SONG_ID:-}" ]; then
+    response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+        -X POST \
+        -H "Authorization: $AUTH_HEADER" \
+        "$BASE_URL/Users/$USER_ID/FavoriteItems/$FIRST_SONG_ID")
+    http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+    body=$(echo "$response" | sed '/HTTP_CODE:/d')
+
+    if [ "$http_code" = "200" ]; then
+        echo "✓ Status: $http_code"
+        IS_FAV=$(echo "$body" | grep -o '"IsFavorite":true' || echo "")
+        echo "  IsFavorite: $([ -n "$IS_FAV" ] && echo "true" || echo "check response")"
+    else
+        echo "✗ Status: $http_code"
+        echo "Response: $body"
+    fi
+else
+    echo "⚠ Skipped (no song ID available)"
+fi
+
+increment_test
+echo -e "\n[$TEST_NUM] DELETE /Users/{userId}/FavoriteItems/{itemId} (remove favorite)"
+if [ -n "${FIRST_SONG_ID:-}" ]; then
+    response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+        -X DELETE \
+        -H "Authorization: $AUTH_HEADER" \
+        "$BASE_URL/Users/$USER_ID/FavoriteItems/$FIRST_SONG_ID")
+    http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+    body=$(echo "$response" | sed '/HTTP_CODE:/d')
+
+    if [ "$http_code" = "200" ]; then
+        echo "✓ Status: $http_code"
+        IS_FAV=$(echo "$body" | grep -o '"IsFavorite":false' || echo "")
+        echo "  IsFavorite: $([ -n "$IS_FAV" ] && echo "false" || echo "check response")"
+    else
+        echo "✗ Status: $http_code"
+        echo "Response: $body"
+    fi
+else
+    echo "⚠ Skipped (no song ID available)"
+fi
+
+# Test: Sessions/Logout
+increment_test
+echo -e "\n[$TEST_NUM] POST /Sessions/Logout (logout - revoke token)"
+# First get a fresh token we can safely revoke
+response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+    -X POST "$BASE_URL/Users/AuthenticateByName" \
+    -H "Content-Type: application/json" \
+    -H "X-Emby-Authorization: MediaBrowser Client=\"LogoutTest\", Device=\"TestDevice\", DeviceId=\"logout-test-$(date +%s)\", Version=\"1.0\"" \
+    -d "{\"Username\":\"$USERNAME\",\"Pw\":\"$PASSWORD\"}")
+body=$(echo "$response" | sed '/HTTP_CODE:/d')
+LOGOUT_TOKEN=$(echo "$body" | grep -o '"AccessToken":"[^"]*"' | cut -d'"' -f4)
+
+if [ -n "${LOGOUT_TOKEN:-}" ]; then
+    LOGOUT_AUTH="MediaBrowser Token=\"$LOGOUT_TOKEN\", Client=\"LogoutTest\", Device=\"TestDevice\", DeviceId=\"logout-test\", Version=\"1.0\""
+    response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+        -X POST \
+        -H "Authorization: $LOGOUT_AUTH" \
+        "$BASE_URL/Sessions/Logout")
+    http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+
+    if [ "$http_code" = "204" ]; then
+        echo "✓ Status: $http_code (logged out)"
+    else
+        echo "✗ Status: $http_code"
+        body=$(echo "$response" | sed '/HTTP_CODE:/d')
+        echo "Response: $body"
+    fi
+else
+    echo "⚠ Skipped (could not get logout test token)"
+fi
+
+# Test: Sessions/Capabilities/Full endpoint (Streamyfin uses this)
+increment_test
+echo -e "\n[$TEST_NUM] POST /Sessions/Capabilities/Full (register capabilities)"
+response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+    -X POST "$BASE_URL/Sessions/Capabilities/Full" \
+    -H "Authorization: $AUTH_HEADER" \
+    -H "Content-Type: application/json" \
+    -d '{"PlayableMediaTypes":["Audio"],"SupportedCommands":["PlayState","Play"],"SupportsMediaControl":true,"Id":"test-session-caps"}')
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+
+if [ "$http_code" = "204" ]; then
+    echo "✓ Status: $http_code (capabilities registered)"
+else
+    echo "✗ Status: $http_code"
+    body=$(echo "$response" | sed '/HTTP_CODE:/d')
+    echo "Response: $body"
+fi
+
+# Test: Sessions/Capabilities endpoint (query string version)
+increment_test
+echo -e "\n[$TEST_NUM] POST /Sessions/Capabilities (simple capabilities)"
+response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+    -X POST "$BASE_URL/Sessions/Capabilities?playableMediaTypes=Audio&supportsMediaControl=true" \
+    -H "Authorization: $AUTH_HEADER")
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+
+if [ "$http_code" = "204" ]; then
+    echo "✓ Status: $http_code (capabilities registered)"
+else
+    echo "✗ Status: $http_code"
+    body=$(echo "$response" | sed '/HTTP_CODE:/d')
+    echo "Response: $body"
+fi
+
+# Test: Mark as Played
+increment_test
+echo -e "\n[$TEST_NUM] POST /Users/{userId}/PlayedItems/{itemId} (mark as played)"
+if [ -n "${FIRST_SONG_ID:-}" ]; then
+    response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+        -X POST \
+        -H "Authorization: $AUTH_HEADER" \
+        "$BASE_URL/Users/$USER_ID/PlayedItems/$FIRST_SONG_ID")
+    http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+    body=$(echo "$response" | sed '/HTTP_CODE:/d')
+
+    if [ "$http_code" = "200" ]; then
+        echo "✓ Status: $http_code"
+        IS_PLAYED=$(echo "$body" | grep -o '"Played":true' || echo "")
+        PLAY_COUNT=$(echo "$body" | grep -o '"PlayCount":[0-9]*' | cut -d: -f2)
+        echo "  Played: $([ -n "$IS_PLAYED" ] && echo "true" || echo "check response")"
+        echo "  PlayCount: ${PLAY_COUNT:-unknown}"
+    else
+        echo "✗ Status: $http_code"
+        echo "Response: $body"
+    fi
+else
+    echo "⚠ Skipped (no song ID available)"
+fi
+
+# Test: Mark as Unplayed
+increment_test
+echo -e "\n[$TEST_NUM] DELETE /Users/{userId}/PlayedItems/{itemId} (mark as unplayed)"
+if [ -n "${FIRST_SONG_ID:-}" ]; then
+    response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+        -X DELETE \
+        -H "Authorization: $AUTH_HEADER" \
+        "$BASE_URL/Users/$USER_ID/PlayedItems/$FIRST_SONG_ID")
+    http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+    body=$(echo "$response" | sed '/HTTP_CODE:/d')
+
+    if [ "$http_code" = "200" ]; then
+        echo "✓ Status: $http_code"
+        IS_PLAYED=$(echo "$body" | grep -o '"Played":false' || echo "")
+        PLAY_COUNT=$(echo "$body" | grep -o '"PlayCount":[0-9]*' | cut -d: -f2)
+        echo "  Played: $([ -n "$IS_PLAYED" ] && echo "false" || echo "check response")"
+        echo "  PlayCount: ${PLAY_COUNT:-0}"
+    else
+        echo "✗ Status: $http_code"
+        echo "Response: $body"
+    fi
+else
+    echo "⚠ Skipped (no song ID available)"
+fi
+
+# Test: Get Sessions
+increment_test
+echo -e "\n[$TEST_NUM] GET /Sessions (get active sessions)"
+response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
+    -H "Authorization: $AUTH_HEADER" \
+    "$BASE_URL/Sessions?activeWithinSeconds=360")
+http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+body=$(echo "$response" | sed '/HTTP_CODE:/d')
+
+if [ "$http_code" = "200" ]; then
+    echo "✓ Status: $http_code"
+    # Count sessions (array length)
+    SESSION_COUNT=$(echo "$body" | grep -o '"Id"' | wc -l || echo "0")
+    echo "  Active sessions: $SESSION_COUNT"
+else
+    echo "✗ Status: $http_code"
+    echo "Response: $body"
+fi
+
+echo -e "\n============================================="
+echo "All Finamp/Streamyfin-specific tests complete!"

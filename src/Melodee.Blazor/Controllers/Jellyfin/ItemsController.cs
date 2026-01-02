@@ -276,6 +276,160 @@ public class ItemsController(
         return NoContent();
     }
 
+    /// <summary>
+    /// Gets instant mix (radio) based on an item. Used by Finamp for the "Instant Mix" feature.
+    /// Returns a shuffled selection of similar songs.
+    /// </summary>
+    [HttpGet("{itemId}/InstantMix")]
+    public async Task<IActionResult> GetInstantMixAsync(
+        string itemId,
+        [FromQuery] string? userId,
+        [FromQuery] int? limit,
+        CancellationToken cancellationToken)
+    {
+        var user = await AuthenticateJellyfinAsync(cancellationToken);
+        if (user == null)
+        {
+            return JellyfinUnauthorized();
+        }
+
+        if (!TryParseJellyfinGuid(itemId, out var apiKey))
+        {
+            return JellyfinBadRequest("Invalid item ID format.");
+        }
+
+        var maxItems = Math.Clamp(limit ?? 200, 1, 300);
+
+        await using var dbContext = await DbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        // First, try to find the seed item (could be a song, album, or artist)
+        var seedSong = await dbContext.Songs
+            .AsNoTracking()
+            .Include(s => s.Album)
+            .Where(s => s.ApiKey == apiKey && !s.IsLocked)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        IQueryable<Common.Data.Models.Song> mixQuery;
+
+        if (seedSong != null)
+        {
+            // Seed is a song - get songs from the same album and similar genres
+            var genres = seedSong.Album?.Genres ?? [];
+            var albumId = seedSong.AlbumId;
+            var artistId = seedSong.Album?.ArtistId;
+
+            mixQuery = dbContext.Songs
+                .AsNoTracking()
+                .Include(s => s.Album)
+                .ThenInclude(a => a.Artist)
+                .Where(s => !s.IsLocked && !s.Album.IsLocked && s.Id != seedSong.Id);
+
+            // Prefer songs from the same artist or genre
+            if (artistId.HasValue)
+            {
+                mixQuery = mixQuery.Where(s => s.Album.ArtistId == artistId || 
+                    (s.Album.Genres != null && genres.Any(g => s.Album.Genres.Contains(g))));
+            }
+        }
+        else
+        {
+            // Check if it's an album
+            var seedAlbum = await dbContext.Albums
+                .AsNoTracking()
+                .Where(a => a.ApiKey == apiKey && !a.IsLocked)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (seedAlbum != null)
+            {
+                var genres = seedAlbum.Genres ?? [];
+                mixQuery = dbContext.Songs
+                    .AsNoTracking()
+                    .Include(s => s.Album)
+                    .ThenInclude(a => a.Artist)
+                    .Where(s => !s.IsLocked && !s.Album.IsLocked && 
+                        (s.AlbumId == seedAlbum.Id || 
+                         s.Album.ArtistId == seedAlbum.ArtistId ||
+                         (s.Album.Genres != null && genres.Any(g => s.Album.Genres.Contains(g)))));
+            }
+            else
+            {
+                // Check if it's an artist
+                var seedArtist = await dbContext.Artists
+                    .AsNoTracking()
+                    .Where(a => a.ApiKey == apiKey && !a.IsLocked)
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                if (seedArtist != null)
+                {
+                    mixQuery = dbContext.Songs
+                        .AsNoTracking()
+                        .Include(s => s.Album)
+                        .ThenInclude(a => a.Artist)
+                        .Where(s => !s.IsLocked && !s.Album.IsLocked && s.Album.ArtistId == seedArtist.Id);
+                }
+                else
+                {
+                    return JellyfinNotFound("Item not found.");
+                }
+            }
+        }
+
+        // Get random songs for the mix
+        var random = new Random();
+        var songs = await mixQuery
+            .OrderBy(s => EF.Functions.Random())
+            .Take(maxItems)
+            .Select(s => new
+            {
+                s.Id,
+                s.ApiKey,
+                s.Title,
+                s.SongNumber,
+                s.Duration,
+                s.CreatedAt,
+                s.LastUpdatedAt,
+                AlbumApiKey = s.Album.ApiKey,
+                AlbumName = s.Album.Name,
+                AlbumYear = (int?)s.Album.ReleaseDate.Year,
+                ArtistApiKey = s.Album.Artist.ApiKey,
+                ArtistName = s.Album.Artist.Name,
+                s.Album.Genres
+            })
+            .ToListAsync(cancellationToken);
+
+        var items = songs.Select(s => new JellyfinBaseItem
+        {
+            Name = s.Title,
+            ServerId = GetServerId(),
+            Id = ToJellyfinId(s.ApiKey),
+            DateCreated = FormatInstantForJellyfin(s.CreatedAt),
+            SortName = s.Title,
+            Type = "Audio",
+            IsFolder = false,
+            CanDownload = user.HasDownloadRole,
+            RunTimeTicks = (long)(s.Duration * 10_000_000),
+            IndexNumber = s.SongNumber,
+            Album = s.AlbumName,
+            AlbumId = ToJellyfinId(s.AlbumApiKey),
+            AlbumArtist = s.ArtistName,
+            Artists = [s.ArtistName],
+            ArtistItems = [new JellyfinNameGuidPair { Name = s.ArtistName, Id = ToJellyfinId(s.ArtistApiKey) }],
+            AlbumArtists = [new JellyfinNameGuidPair { Name = s.ArtistName, Id = ToJellyfinId(s.ArtistApiKey) }],
+            ProductionYear = s.AlbumYear,
+            Genres = s.Genres?.ToArray(),
+            MediaType = "Audio",
+            ImageTags = new Dictionary<string, string> { ["Primary"] = ToJellyfinId(s.AlbumApiKey) },
+            BackdropImageTags = []
+        }).ToArray();
+
+        return Ok(new JellyfinItemsResult
+        {
+            Items = items,
+            TotalRecordCount = items.Length,
+            StartIndex = 0
+        });
+    }
+
     [HttpGet("{itemId}/File")]
     [HttpGet("{itemId}/Download")]
     [EnableRateLimiting("jellyfin-stream")]

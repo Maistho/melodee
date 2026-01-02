@@ -132,6 +132,9 @@ public record JellyfinUserItemData
 
     [JsonPropertyName("Key")]
     public string? Key { get; init; }
+
+    [JsonPropertyName("LastPlayedDate")]
+    public string? LastPlayedDate { get; init; }
 }
 
 public record JellyfinUserViewsResult

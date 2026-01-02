@@ -18,7 +18,8 @@ public class JellyfinRoutingMiddleware(
         "/",
         "/System/Info/Public",
         "/System/Ping",
-        "/Users/AuthenticateByName"
+        "/Users/AuthenticateByName",
+        "/Users/Public"
     };
 
     private static readonly HashSet<string> ExcludedPathPrefixes = new(StringComparer.OrdinalIgnoreCase)
