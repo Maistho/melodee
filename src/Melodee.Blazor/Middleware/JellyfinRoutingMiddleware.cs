@@ -116,20 +116,15 @@ public class JellyfinRoutingMiddleware(
             return (true, $"AllowlistedPath:{path}");
         }
 
-        if (request.Headers.TryGetValue("Authorization", out var authHeader))
+        if (request.Headers.TryGetValue("Authorization", out var authHeader) && HasMediaBrowserToken(authHeader))
         {
-            if (HasMediaBrowserToken(authHeader))
-            {
-                return (true, "AuthorizationHeader:MediaBrowser");
-            }
+            return (true, "AuthorizationHeader:MediaBrowser");
         }
 
-        if (request.Headers.TryGetValue("X-Emby-Authorization", out var embyAuthHeader))
+        if (request.Headers.TryGetValue("X-Emby-Authorization", out var embyAuthHeader) &&
+            embyAuthHeader.ToString().StartsWith(MediaBrowserSchema, StringComparison.OrdinalIgnoreCase))
         {
-            if (embyAuthHeader.ToString().StartsWith(MediaBrowserSchema, StringComparison.OrdinalIgnoreCase))
-            {
-                return (true, "X-Emby-Authorization");
-            }
+            return (true, "X-Emby-Authorization");
         }
 
         if (request.Headers.ContainsKey("X-MediaBrowser-Token"))

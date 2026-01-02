@@ -468,7 +468,6 @@ public class ItemsController(
         {
             // Seed is a song - get songs from the same album and similar genres
             var genres = seedSong.Album?.Genres ?? [];
-            var albumId = seedSong.AlbumId;
             var artistId = seedSong.Album?.ArtistId;
 
             mixQuery = dbContext.Songs
@@ -528,7 +527,6 @@ public class ItemsController(
         }
 
         // Get random songs for the mix
-        var random = new Random();
         var songs = await mixQuery
             .OrderBy(s => EF.Functions.Random())
             .Take(maxItems)
@@ -769,14 +767,9 @@ public class ItemsController(
                 .AsNoTracking()
                 .FirstOrDefaultAsync(l => l.ApiKey == parentApiKey, cancellationToken);
 
-            if (library != null)
-            {
-                query = query.Where(s => s.Album.Artist.Library.ApiKey == parentApiKey);
-            }
-            else
-            {
-                query = query.Where(s => s.Album.ApiKey == parentApiKey);
-            }
+            query = library != null
+                ? query.Where(s => s.Album.Artist.Library.ApiKey == parentApiKey)
+                : query.Where(s => s.Album.ApiKey == parentApiKey);
         }
 
         if (!string.IsNullOrWhiteSpace(searchTerm))

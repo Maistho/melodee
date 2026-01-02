@@ -276,7 +276,6 @@ public class SessionsController(
         if (!string.IsNullOrEmpty(tokenInfo.Token))
         {
             await using var dbContext = await DbContextFactory.CreateDbContextAsync(cancellationToken);
-            var pepper = await GetTokenPepperAsync(cancellationToken);
             var tokenPrefix = JellyfinTokenParser.GetTokenPrefix(tokenInfo.Token);
 
             var accessToken = await dbContext.JellyfinAccessTokens

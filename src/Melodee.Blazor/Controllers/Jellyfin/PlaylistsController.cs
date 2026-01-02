@@ -326,8 +326,6 @@ public class PlaylistsController(
             return JellyfinBadRequest("Invalid item ID format.");
         }
 
-        var userInfo = user.ToUserInfo();
-
         await using var dbContext = await DbContextFactory.CreateDbContextAsync(cancellationToken);
         var playlist = await dbContext.Playlists
             .Include(p => p.Songs)
