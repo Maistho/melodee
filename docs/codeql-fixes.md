@@ -1,6 +1,6 @@
 # CodeQL Security Fixes
 
-**Date**: 2025-12-21
+**Date**: 2026-01-02 (Updated)
 **Status**: ✅ COMPLETED
 
 ## Summary
@@ -17,8 +17,17 @@ This document tracks all CodeQL security alerts identified in the Melodee codeba
 | ✅ DOCUMENTED | HashHelper.cs | 44 | MD5 for external API compatibility | Required by OpenSubsonic/Last.fm APIs - cannot change |
 | ✅ DOCUMENTED | UserService.cs | ~1064 | MD5 for OpenSubsonic token auth | Required by protocol spec - cannot change |
 | ✅ DOCUMENTED | ScrobbleController.cs | ~291 | MD5 for Last.fm API signature | Required by Last.fm API - cannot change |
+| ✅ DOCUMENTED | JellyfinControllerBase.cs | 58 | MD5 for server ID generation | Non-cryptographic GUID generation for Jellyfin API |
+| ✅ DOCUMENTED | ItemsController.cs | 1084 | MD5 for ETag computation | Non-cryptographic ETag generation for HTTP caching |
+| ✅ DOCUMENTED | PlaylistsController.cs | 506 | MD5 for ETag computation | Non-cryptographic ETag generation for HTTP caching |
+| ✅ DOCUMENTED | MusicGenresController.cs | 115, 122 | MD5 for genre GUID and ETags | Non-cryptographic ID generation for Jellyfin API |
+| ✅ DOCUMENTED | ArtistsController.cs | 299, 306 | MD5 for ETag computation | Non-cryptographic ETag generation for HTTP caching |
+| ✅ DOCUMENTED | UsersController.cs | 794 | MD5 for ETag computation | Non-cryptographic ETag generation for HTTP caching |
+| ✅ DOCUMENTED | GenresController.cs | 108, 115 | MD5 for genre GUID and ETags | Non-cryptographic ID generation for Jellyfin API |
+| ✅ DOCUMENTED | UserViewsController.cs | 104 | MD5 for ETag computation | Non-cryptographic ETag generation for HTTP caching |
+| ✅ DOCUMENTED | MelodeeDbContext.cs | 95 | MD5 for seed data GUIDs | Non-cryptographic deterministic GUID generation |
 
-**Note**: MD5 usages are required by external API specifications and properly documented with `// lgtm[cs/weak-crypto]` comments explaining the justification. These are NOT suppressions - they are documented requirements.
+**Note**: MD5 usages are either required by external API specifications or used for non-cryptographic purposes (GUID/ETag generation). All are properly documented with `// lgtm[cs/weak-crypto]` comments explaining the justification.
 
 ### B. Regex DoS (cs/regex-injection)
 
@@ -26,6 +35,7 @@ This document tracks all CodeQL security alerts identified in the Melodee codeba
 |--------|------|------|------------|--------------|
 | ✅ FIXED | ITunesSearchEngine.cs | 319, 325 | `new Regex()` without timeout | Added `TimeSpan.FromSeconds(5)` timeout |
 | ✅ FIXED | StringExtensions.cs | 930 | `new Regex()` without timeout | Added `TimeSpan.FromSeconds(5)` timeout |
+| ✅ FIXED | ConfigurationListCommand.cs | 34 | `new Regex()` without timeout | Added `TimeSpan.FromSeconds(5)` timeout |
 
 ### C. Path Traversal (cs/path-traversal)
 
@@ -43,12 +53,14 @@ This document tracks all CodeQL security alerts identified in the Melodee codeba
 
 ### Completed Fixes
 
-1. **Regex DoS Prevention** - Added timeouts to all runtime-constructed Regex instances
-2. **Path Traversal Prevention** - Created SafePath utility and used it in file upload handler
-3. **XSS Prevention** - Integrated HtmlSanitizer for Markdown component
+1. **Regex DoS Prevention** - Added timeouts to all runtime-constructed Regex instances (2025-12-21, 2026-01-02)
+2. **Path Traversal Prevention** - Created SafePath utility and used it in file upload handler (2025-12-21)
+3. **XSS Prevention** - Integrated HtmlSanitizer for Markdown component (2025-12-21)
+4. **MD5 Documentation** - Added comprehensive documentation for all MD5 usages in Jellyfin API controllers and database seeding (2026-01-02)
 
 ### Files Modified
 
+**Original fixes (2025-12-21):**
 - `src/Melodee.Common/Plugins/SearchEngine/ITunes/ITunesSearchEngine.cs` - Added regex timeouts
 - `src/Melodee.Common/Extensions/StringExtensions.cs` - Added regex timeout
 - `src/Melodee.Blazor/Components/Pages/Data/AlbumDetail.razor` - Used SafePath for file uploads
@@ -56,7 +68,20 @@ This document tracks all CodeQL security alerts identified in the Melodee codeba
 - `src/Melodee.Blazor/Melodee.Blazor.csproj` - Added HtmlSanitizer package reference
 - `Directory.Packages.props` - Added HtmlSanitizer version
 
-### Files Created
+**Additional fixes (2026-01-02):**
+- `src/Melodee.Cli/Command/ConfigurationListCommand.cs` - Added regex timeout
+- `src/Melodee.Blazor/Controllers/Jellyfin/JellyfinControllerBase.cs` - Added MD5 documentation for server ID generation
+- `src/Melodee.Blazor/Controllers/Jellyfin/ItemsController.cs` - Added MD5 documentation for ETag computation
+- `src/Melodee.Blazor/Controllers/Jellyfin/PlaylistsController.cs` - Added MD5 documentation for ETag computation
+- `src/Melodee.Blazor/Controllers/Jellyfin/MusicGenresController.cs` - Added MD5 documentation for genre GUID and ETag generation
+- `src/Melodee.Blazor/Controllers/Jellyfin/ArtistsController.cs` - Added MD5 documentation for ETag computation
+- `src/Melodee.Blazor/Controllers/Jellyfin/UsersController.cs` - Added MD5 documentation for ETag computation
+- `src/Melodee.Blazor/Controllers/Jellyfin/GenresController.cs` - Added MD5 documentation for genre GUID and ETag generation
+- `src/Melodee.Blazor/Controllers/Jellyfin/UserViewsController.cs` - Added MD5 documentation for ETag computation
+- `src/Melodee.Common/Data/MelodeeDbContext.cs` - Added MD5 documentation for seed data GUID generation
+- `docs/codeql-fixes.md` - Updated with 2026-01-02 fixes
+
+### Files Created (2025-12-21)
 
 - `src/Melodee.Common/Utility/SafePath.cs` - New security utility for path validation
 - `tests/Melodee.Tests.Common/Utility/SafePathTests.cs` - Unit tests for SafePath

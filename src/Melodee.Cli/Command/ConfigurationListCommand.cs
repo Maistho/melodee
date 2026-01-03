@@ -31,7 +31,7 @@ public class ConfigurationListCommand : CommandBase<ConfigurationListSettings>
         if (!string.IsNullOrWhiteSpace(settings.Filter))
         {
             var pattern = "^" + Regex.Escape(settings.Filter).Replace("\\*", ".*") + "$";
-            var regex = new Regex(pattern, RegexOptions.IgnoreCase);
+            var regex = new Regex(pattern, RegexOptions.IgnoreCase, TimeSpan.FromSeconds(5));
             allSettings = allSettings.Where(s => regex.IsMatch(s.Key)).ToList();
         }
 

@@ -91,6 +91,9 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
 
         // Generate deterministic GUIDs for seed data based on entity type and ID
         // This prevents new GUIDs being generated on each migration
+        // NOTE: MD5 is used here for deterministic GUID generation from seed data identifiers.
+        // This is NOT a cryptographic use - it's purely for generating stable, reproducible GUIDs for database seeding.
+        // lgtm[cs/weak-crypto] MD5 used for non-cryptographic GUID generation, not for security
         Guid SeedGuid(string entityType, int id) =>
             new(MD5.HashData(Encoding.UTF8.GetBytes($"Melodee.Seed.{entityType}.{id}")));
 
