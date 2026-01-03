@@ -31,6 +31,18 @@ public class UsersController(
     UserService userService,
     ILogger<UsersController> logger) : JellyfinControllerBase(etagRepository, serializer, configuration, configurationFactory, dbContextFactory, clock, loggerFactory)
 {
+    private static string SanitizeForLog(string value)
+    {
+        if (value is null)
+        {
+            return string.Empty;
+        }
+
+        return value
+            .Replace("\r", string.Empty)
+            .Replace("\n", string.Empty);
+    }
+
     /// <summary>
     /// Gets public users for the login screen. Finamp calls this to show available users.
     /// </summary>
@@ -53,7 +65,7 @@ public class UsersController(
         if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Pw))
         {
             logger.LogWarning("JellyfinAuthFailed UserName={UserName} RemoteIp={RemoteIp} Reason={Reason}",
-                request.Username ?? "[empty]", GetClientBinding(), "Missing credentials");
+                SanitizeForLog(request.Username ?? "[empty]"), GetClientBinding(), "Missing credentials");
             return JellyfinBadRequest("Username and password are required.");
         }
 
@@ -61,7 +73,7 @@ public class UsersController(
         if (!authenticateResult.IsSuccess || authenticateResult.Data == null)
         {
             logger.LogWarning("JellyfinAuthFailed UserName={UserName} RemoteIp={RemoteIp} Reason={Reason}",
-                request.Username, GetClientBinding(), "Invalid credentials");
+                SanitizeForLog(request.Username), GetClientBinding(), "Invalid credentials");
             return JellyfinUnauthorized("Invalid username or password.");
         }
 
@@ -69,7 +81,7 @@ public class UsersController(
         if (user.IsLocked)
         {
             logger.LogWarning("JellyfinAuthFailed UserName={UserName} RemoteIp={RemoteIp} Reason={Reason}",
-                request.Username, GetClientBinding(), "User locked");
+                SanitizeForLog(request.Username), GetClientBinding(), "User locked");
             return JellyfinForbidden("User account is locked.");
         }
 
