@@ -116,8 +116,9 @@ public class StagingAutoMoveJob(
                     stagingLibrary.Name,
                     targetLibrary.Name);
 
-                // Chain to LibraryInsertJob if this was a scheduled run (not manual) and we moved something
-                if (!IsManualTrigger(context) && albumsMoved > 0)
+                // Chain to LibraryInsertJob if this was a scheduled run (not manual) and we moved something,
+                // or if ChainOnComplete flag is set (for programmatic triggers like after upload)
+                if (ShouldChainToNextJob(context) && albumsMoved > 0)
                 {
                     await TriggerNextJobAsync(context, JobKeyRegistry.LibraryProcessJobJobKey).ConfigureAwait(false);
                 }
@@ -138,9 +139,18 @@ public class StagingAutoMoveJob(
 
     private static bool IsManualTrigger(IJobExecutionContext context)
     {
-        // Manual triggers from the UI use TriggerJob which creates a trigger without a cron schedule
-        // Scheduled triggers have a CronTrigger type
         return context.Trigger is not ICronTrigger;
+    }
+
+    private static bool ShouldChainToNextJob(IJobExecutionContext context)
+    {
+        if (!IsManualTrigger(context))
+        {
+            return true;
+        }
+
+        var chainOnComplete = context.MergedJobDataMap.GetBoolean(MelodeeJobExecutionContext.ChainOnComplete);
+        return chainOnComplete;
     }
 
     private async Task TriggerNextJobAsync(IJobExecutionContext context, JobKey nextJobKey)
@@ -153,7 +163,14 @@ public class StagingAutoMoveJob(
             if (nextJobExists)
             {
                 Logger.Debug("[{JobName}] Triggering next job in chain: {NextJob}", nameof(StagingAutoMoveJob), nextJobKey.Name);
-                await scheduler.TriggerJob(nextJobKey, context.CancellationToken).ConfigureAwait(false);
+                
+                var jobDataMap = new JobDataMap();
+                if (context.MergedJobDataMap.GetBoolean(MelodeeJobExecutionContext.ChainOnComplete))
+                {
+                    jobDataMap.Put(MelodeeJobExecutionContext.ChainOnComplete, true);
+                }
+                
+                await scheduler.TriggerJob(nextJobKey, jobDataMap, context.CancellationToken).ConfigureAwait(false);
             }
             else
             {

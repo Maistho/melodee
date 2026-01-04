@@ -198,6 +198,7 @@ public class MelodeeJobExecutionContext(CancellationToken cancellation) : IJobEx
     public const string ForceMode = "ForceMode";
     public const string ScanJustDirectory = "ScanJustDirectory";
     public const string Verbose = "Verbose";
+    public const string ChainOnComplete = "ChainOnComplete";
 
     private readonly Dictionary<object, object> _dataMap = new();
 

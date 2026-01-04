@@ -1,11 +1,15 @@
 @inherits MelodeeComponentBase
 @using System.IO.Compression
+@using Melodee.Common.Constants
 @using Melodee.Common.Extensions
 @using Melodee.Common.Enums
+@using Melodee.Common.Jobs
+@using Quartz
 
 @inject DialogService DialogService
 @inject NotificationService NotificationService
 @inject LibraryService LibraryService
+@inject ISchedulerFactory SchedulerFactory
 @inject ILogger Logger
 @inject IJSRuntime JS
 
@@ -171,6 +175,9 @@
 
                 _result = new UploadResultInfo(true, folderName, extractedFiles.Length, extractedDirs.Length, null);
                 
+                // Trigger the inbound processing pipeline to automatically process the uploaded album
+                await TriggerInboundProcessingAsync();
+                
                 // Close dialog on success - parent will show toast notification
                 DialogService.Close(true);
                 return;
@@ -198,6 +205,34 @@
             _isProcessing = false;
             _isComplete = true;
             await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    async Task TriggerInboundProcessingAsync()
+    {
+        try
+        {
+            var scheduler = await SchedulerFactory.GetScheduler();
+            var jobExists = await scheduler.CheckExists(JobKeyRegistry.LibraryInboundProcessJobKey);
+            
+            if (jobExists)
+            {
+                var jobDataMap = new JobDataMap
+                {
+                    { MelodeeJobExecutionContext.ChainOnComplete, true }
+                };
+                
+                Logger.Information("Triggering inbound processing pipeline after upload with job chaining enabled");
+                await scheduler.TriggerJob(JobKeyRegistry.LibraryInboundProcessJobKey, jobDataMap);
+            }
+            else
+            {
+                Logger.Warning("LibraryInboundProcessJob is not scheduled, cannot trigger processing pipeline");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning(ex, "Failed to trigger inbound processing pipeline after upload");
         }
     }
 
