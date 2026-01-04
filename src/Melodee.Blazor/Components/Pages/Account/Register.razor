@@ -266,11 +266,15 @@
 
     async Task OnSubmit(ViewModels.Register model)
     {
-        string? errorMessage = null;
         _isLoading = true;
         try
         {
-            var result = await UserService.RegisterAsync(model.Username ?? string.Empty, model.EmailAddress ?? string.Empty, model.Password ?? string.Empty, _registerPrivateCode);
+            var result = await UserService.RegisterAsync(
+                model.Username ?? string.Empty,
+                model.EmailAddress ?? string.Empty,
+                model.Password ?? string.Empty,
+                _registerPrivateCode);
+
             if (result.IsSuccess)
             {
                 NotificationService.Notify(new NotificationMessage
@@ -286,16 +290,15 @@
                         </RadzenStack>
                 });
                 NavigationManager.NavigateTo("/account/login");
+                return;
             }
 
-            errorMessage = result.Messages?.FirstOrDefault();
+            ShowErrorMessage(result.Messages?.FirstOrDefault());
         }
         finally
         {
             _isLoading = false;
         }
-
-        ShowErrorMessage(errorMessage);
     }
 
     void OnInvalidSubmit(FormInvalidSubmitEventArgs args)
