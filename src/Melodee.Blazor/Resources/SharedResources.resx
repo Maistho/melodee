@@ -2831,9 +2831,6 @@
   <data name="AdminJobs.SchedulerName" xml:space="preserve">
     <value>Scheduler Name</value>
   </data>
-  <data name="AdminJobs.InstanceID" xml:space="preserve">
-    <value>Instance ID</value>
-  </data>
   <data name="AdminJobs.SchedulerStarted" xml:space="preserve">
     <value>Scheduler Started</value>
   </data>

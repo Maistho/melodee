@@ -1397,9 +1397,6 @@
   <data name="AdminJobs.HistoryRecords" xml:space="preserve">
     <value>Перевод отсутствует</value>
   </data>
-  <data name="AdminJobs.InstanceID" xml:space="preserve">
-    <value>Перевод отсутствует</value>
-  </data>
   <data name="AdminJobs.JobData" xml:space="preserve">
     <value>Перевод отсутствует</value>
   </data>
