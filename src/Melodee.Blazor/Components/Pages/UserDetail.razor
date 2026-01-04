@@ -117,7 +117,7 @@
                     <RadzenStack Gap="0.25rem">
                         <RadzenText TextStyle="TextStyle.Overline">@L("UserDetail.Preferences")</RadzenText>
                         <RadzenText TextStyle="TextStyle.Caption">@L("UserDetail.Stats.PinnedItems")</RadzenText>
-                        <RadzenText TextStyle="TextStyle.H6">@((_user?.Pins?.Count ?? 0)).ToString("N0")</RadzenText>
+                        <RadzenText TextStyle="TextStyle.H6">@((_user?.Pins?.Count ?? 0).ToString("N0"))</RadzenText>
                         <RadzenText TextStyle="TextStyle.Caption">@L("UserDetail.Stats.Bookmarks")</RadzenText>
                         <RadzenText TextStyle="TextStyle.H6">@_stats.BookmarksCount.ToString("N0")</RadzenText>
                     </RadzenStack>

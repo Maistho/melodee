@@ -30,6 +30,22 @@ public class LocalizationService : ILocalizationService
         new("ar-SA")  // Arabic (Saudi Arabia)
     ];
 
+    /// <summary>
+    /// Placeholder values used in resource files when translations are missing.
+    /// When these are detected, the system falls back to English.
+    /// </summary>
+    private static readonly HashSet<string> _placeholderValues = new(StringComparer.Ordinal)
+    {
+        "Falta traducción",      // Spanish
+        "Übersetzung fehlt",     // German
+        "Traduzione mancante",   // Italian
+        "Tradução ausente",      // Portuguese
+        "Перевод отсутствует",   // Russian
+        "未翻訳",                 // Japanese
+        "缺少翻译",              // Chinese
+        "ترجمة مفقودة",          // Arabic
+    };
+
     public LocalizationService(
         IStringLocalizer<SharedResources> localizer,
         ILocalStorageService localStorage,
@@ -47,6 +63,24 @@ public class LocalizationService : ILocalizationService
 
     public event Action<CultureInfo>? CultureChanged;
 
+    /// <summary>
+    /// Gets the English value for a key by temporarily switching culture.
+    /// </summary>
+    private string GetEnglishValue(string key)
+    {
+        var originalCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = new CultureInfo("en-US");
+            var englishString = _localizer[key];
+            return englishString.ResourceNotFound ? key : englishString.Value;
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = originalCulture;
+        }
+    }
+
     public string Localize(string key)
     {
         try
@@ -57,6 +91,13 @@ public class LocalizationService : ILocalizationService
                 _logger.LogWarning("Resource key not found: {Key}", key);
                 return key;
             }
+            
+            // Check if the value is a placeholder - fall back to English
+            if (_placeholderValues.Contains(localizedString.Value))
+            {
+                return GetEnglishValue(key);
+            }
+            
             return localizedString.Value;
         }
         catch (Exception ex)
@@ -71,7 +112,19 @@ public class LocalizationService : ILocalizationService
         try
         {
             var localizedString = _localizer[key];
-            return localizedString.ResourceNotFound ? fallback : localizedString.Value;
+            if (localizedString.ResourceNotFound)
+            {
+                return fallback;
+            }
+            
+            // Check if the value is a placeholder - fall back to English first, then fallback
+            if (_placeholderValues.Contains(localizedString.Value))
+            {
+                var englishValue = GetEnglishValue(key);
+                return englishValue == key ? fallback : englishValue;
+            }
+            
+            return localizedString.Value;
         }
         catch (Exception ex)
         {
@@ -92,21 +145,28 @@ public class LocalizationService : ILocalizationService
                 return string.Format(key, args);
             }
 
+            // Check if the value is a placeholder - fall back to English
+            var templateValue = template.Value;
+            if (_placeholderValues.Contains(templateValue))
+            {
+                templateValue = GetEnglishValue(key);
+            }
+
             // If we have arguments, explicitly format the template
             if (args != null && args.Length > 0)
             {
                 try
                 {
-                    return string.Format(template.Value, args);
+                    return string.Format(templateValue, args);
                 }
                 catch (FormatException ex)
                 {
-                    _logger.LogWarning(ex, "Failed to format localized string for key: {Key}, template: {Template}", key, template.Value);
-                    return template.Value;
+                    _logger.LogWarning(ex, "Failed to format localized string for key: {Key}, template: {Template}", key, templateValue);
+                    return templateValue;
                 }
             }
 
-            return template.Value;
+            return templateValue;
         }
         catch (Exception ex)
         {

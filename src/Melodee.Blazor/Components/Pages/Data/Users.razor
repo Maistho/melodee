@@ -97,7 +97,7 @@
                             TValue="bool"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(UserDataInfo.UserName)" Title="UserName">
+                <RadzenDataGridColumn Property="@nameof(UserDataInfo.UserName)" Title="@L("Common.UserName")">
                     <Template Context="data">
                         <RadzenButton Style="float:right;margin-top: 7px;"
                                       Size="ButtonSize.ExtraSmall"
@@ -105,31 +105,31 @@
                                       Click=@(_ => NavigationManager.NavigateTo($"/data/useredit/{data.ApiKey}"))
                                       Icon="edit"
                                       ButtonStyle="ButtonStyle.Secondary"/>
-                        <RadzenImage Path=@($"/images/{data.ToApiKey()}/{ ImageSize.Thumbnail }")
-                                     Style="float:left;margin-right: 5px;cursor:pointer;"
+                        <RadzenImage Path=@($"/images/{data.ToApiKey()}/{ ImageSize.Small }")
+                                     Style="float:left;margin-right: 5px;cursor:pointer;width:50px;height:50px;"
                                      AlternateText="@data.UserName"
                                      Click=@(_ => NavigationManager.NavigateTo($"/user/{data.ApiKey}"))/>
                         <RadzenLink Path=@($"/user/{data.ApiKey}") Text="@data.UserName"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(UserDataInfo.Email)" Title="Email"/>
-                <RadzenDataGridColumn Property="@nameof(UserDataInfo.LastLoginAt)" Title="Last Login" Width="120px">
+                <RadzenDataGridColumn Property="@nameof(UserDataInfo.Email)" Title="@L("Common.Email")"/>
+                <RadzenDataGridColumn Property="@nameof(UserDataInfo.LastLoginAt)" Title="@L("Common.LastLogin")" Width="120px">
                     <Template Context="data">
                         <RadzenText Text="@CurrentUser?.FormatInstant(data.LastLoginAt)"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(UserDataInfo.LastActivityAt)" Title="Last Activity" Width="120px">
+                <RadzenDataGridColumn Property="@nameof(UserDataInfo.LastActivityAt)" Title="@L("Common.LastActivity")" Width="120px">
                     <Template Context="data">
                         <RadzenText Text="@CurrentUser?.FormatInstant(data.LastActivityAt)"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(UserDataInfo.CreatedAt)" Title="Created" Filterable="false"
+                <RadzenDataGridColumn Property="@nameof(UserDataInfo.CreatedAt)" Title="@L("Common.Created")" Filterable="false"
                                       Width="120px">
                     <Template Context="data">
                         <RadzenText Text="@CurrentUser?.FormatInstant(data.CreatedAt)"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(UserDataInfo.Tags)" Title="Tags" Width="100px">
+                <RadzenDataGridColumn Property="@nameof(UserDataInfo.Tags)" Title="@L("Common.Tags")" Width="100px">
                     <Template Context="data">
                         <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="5px">
                             @foreach (var name in data.Tags?.ToTags() ?? [])

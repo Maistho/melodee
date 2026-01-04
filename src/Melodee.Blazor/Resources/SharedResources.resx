@@ -4400,4 +4400,73 @@
 <data name="AdminDoctor.MusicBrainzJobDescription" xml:space="preserve">
     <value>Downloads and updates the local MusicBrainz database for artist and album metadata lookups.</value>
   </data>
+<data name="Search.NoResultsFound" xml:space="preserve">
+    <value>No Results Found</value>
+  </data>
+<data name="Search.NoResultsDescription" xml:space="preserve">
+    <value>We couldn't find any artists, albums, or songs matching &quot;{0}&quot;. Try a different search term or request the music you're looking for.</value>
+  </data>
+<data name="Grid.NoRecordsToDisplay" xml:space="preserve">
+    <value>No records to display</value>
+  </data>
+<data name="Grid.PageSummary" xml:space="preserve">
+    <value>Displaying Page {0} of {1} (total {2} records)</value>
+  </data>
+<data name="Grid.ItemsPerPage" xml:space="preserve">
+    <value>items per page</value>
+  </data>
+<data name="Common.UserName" xml:space="preserve">
+    <value>Username</value>
+  </data>
+<data name="Common.Email" xml:space="preserve">
+    <value>Email</value>
+  </data>
+<data name="Common.LastLogin" xml:space="preserve">
+    <value>Last Login</value>
+  </data>
+<data name="Common.LastActivity" xml:space="preserve">
+    <value>Last Activity</value>
+  </data>
+<data name="Stats.TotalPlays" xml:space="preserve">
+    <value>Total Plays</value>
+  </data>
+<data name="Stats.FavoritesSongs" xml:space="preserve">
+    <value>Favorites: Songs</value>
+  </data>
+<data name="Stats.FavoritesAlbums" xml:space="preserve">
+    <value>Favorites: Albums</value>
+  </data>
+<data name="Stats.FavoritesArtists" xml:space="preserve">
+    <value>Favorites: Artists</value>
+  </data>
+<data name="Stats.Albums" xml:space="preserve">
+    <value>Albums</value>
+  </data>
+<data name="Stats.Artists" xml:space="preserve">
+    <value>Artists</value>
+  </data>
+<data name="Stats.Songs" xml:space="preserve">
+    <value>Songs</value>
+  </data>
+<data name="Stats.Users" xml:space="preserve">
+    <value>Users</value>
+  </data>
+<data name="Common.Normalized" xml:space="preserve">
+    <value>Normalized</value>
+  </data>
+<data name="Common.AlbumCount" xml:space="preserve">
+    <value>Album Count</value>
+  </data>
+<data name="Common.MusicBrainzId" xml:space="preserve">
+    <value>MusicBrainz ID</value>
+  </data>
+<data name="Common.SpotifyId" xml:space="preserve">
+    <value>Spotify ID</value>
+  </data>
+<data name="Common.StatusReasons" xml:space="preserve">
+    <value>Status Reasons</value>
+  </data>
+<data name="Common.Songs" xml:space="preserve">
+    <value>Songs</value>
+  </data>
 </root>

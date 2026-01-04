@@ -63,7 +63,7 @@ services:
       resources:
         limits:
           cpus: "1.00"
-          memory: 1g
+          memory: 2g
 
 volumes:
   db_data:

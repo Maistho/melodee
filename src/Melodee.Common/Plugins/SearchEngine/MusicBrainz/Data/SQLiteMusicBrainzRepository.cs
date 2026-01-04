@@ -532,10 +532,8 @@ public class SQLiteMusicBrainzRepository(
                 };
             }
 
-            // Phase 1: Load data from files
-            progressCallback?.Invoke("Loading Files", 0, 1, "Loading MusicBrainz data files...");
-            await LoadDataFromMusicBrainzFiles(cancellationToken).ConfigureAwait(false);
-            progressCallback?.Invoke("Loading Files", 1, 1, $"Loaded {LoadedMaterializedArtists.Count:N0} artists, {LoadedMaterializedAlbums.Count:N0} albums");
+            // Phase 1: Load data from files (with phased memory cleanup)
+            await LoadDataFromMusicBrainzFiles(progressCallback, cancellationToken).ConfigureAwait(false);
 
             // Phase 2: Create Lucene Index
             using (Operation.At(LogEventLevel.Debug).Time("MusicBrainzRepository: Created Lucene Index"))

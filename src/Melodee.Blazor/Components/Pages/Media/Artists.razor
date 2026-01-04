@@ -95,7 +95,7 @@
                             TValue="bool"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(Artist.Name)" Title="Name" Filterable="false">
+                <RadzenDataGridColumn Property="@nameof(Artist.Name)" Title="@L("Common.Name")" Filterable="false">
                     <Template Context="data">
                         <RadzenButton Style="float:right;margin-top: 7px;"
                                       Visible="@(CurrentUser?.IsEditor() ?? false)"
@@ -105,23 +105,23 @@
                         <RadzenText Text="@data.Name"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(Artist.NameNormalized)" Title="Normalized" Filterable="false">
+                <RadzenDataGridColumn Property="@nameof(Artist.NameNormalized)" Title="@L("Common.Normalized")" Filterable="false">
                     <Template Context="data">
                         <RadzenText Text="@data.NameNormalized"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(Artist.AlbumCount)" Title="AlbumCount" Width="90px"
+                <RadzenDataGridColumn Property="@nameof(Artist.AlbumCount)" Title="@L("Common.AlbumCount")" Width="90px"
                                       Filterable="false">
                     <Template Context="data">
                         <RadzenText Text="@CurrentUser?.FormatNumber(data.AlbumCount)"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(Artist.MusicBrainzId)" Title="MusicBrainzId" Filterable="false">
+                <RadzenDataGridColumn Property="@nameof(Artist.MusicBrainzId)" Title="@L("Common.MusicBrainzId")" Filterable="false">
                     <Template Context="data">
                         <RadzenText Text="@data.MusicBrainzId?.ToString()"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(Artist.SpotifyId)" Title="SpotifyId" Filterable="false">
+                <RadzenDataGridColumn Property="@nameof(Artist.SpotifyId)" Title="@L("Common.SpotifyId")" Filterable="false">
                     <Template Context="data">
                         <RadzenText Text="@data.SpotifyId"/>
                     </Template>

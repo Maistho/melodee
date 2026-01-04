@@ -33,12 +33,14 @@ This document serves as a living record of codebase reviews performed by various
 | 025 | 2026-01-04 | Antigravity | Quality | Low | Open | Logging and Observability Improvements |
 | 026 | 2026-01-04 | opencode | Quality | Low | Open | Missing ConfigureAwait(False) in Some Controller Calls |
 | 027 | 2026-01-04 | opencode | Security | Low | Open | Inconsistent Response Headers and Security Headers |
-| 028 | 2026-01-04 | opencode | Architecture | High | Open | Inconsistent API Architecture Patterns Across Three APIs |
-| 029 | 2026-01-04 | opencode | Testing | High | Open | Missing Controller-Level Tests for OpenSubsonic and Limited Jellyfin Coverage |
-| 030 | 2026-01-04 | opencode | Performance | Medium | Open | Database Query Optimization Opportunities |
-| 031 | 2026-01-04 | opencode | Security | Medium | Open | Authentication Pattern Inconsistencies |
-| 032 | 2026-01-04 | opencode | Architecture | Medium | Open | Missing Caching Strategy for Expensive Operations |
-| 033 | 2026-01-04 | opencode | Quality | Low | Open | Inconsistent Error Handling and Response Formatting |
+| 028 | 2026-01-04 | QwenCode | Architecture | High | Open | Inconsistent API Architecture Patterns Across Three APIs |
+| 029 | 2026-01-04 | QwenCode | Security | High | Open | Additional Security Concerns Beyond Path Traversal |
+| 030 | 2026-01-04 | QwenCode | Quality | Medium | Open | Missing Input Validation and Sanitization |
+| 031 | 2026-01-04 | QwenCode | Testing | Medium | Open | Inadequate Testing Coverage for API Compatibility |
+| 032 | 2026-01-04 | QwenCode | Blazor | Medium | Open | Blazor Component Architecture Issues |
+| 033 | 2026-01-04 | QwenCode | Performance | Medium | Open | Database Query Optimization Needs |
+| 034 | 2026-01-04 | QwenCode | Security | Low | Open | Configuration Management Security |
+| 035 | 2026-01-04 | QwenCode | Security | Medium | Open | Dependency Management and Security Vulnerabilities |
 
 ## 2. Detailed Findings
 
@@ -1031,3 +1033,196 @@ This inconsistency could lead to:
 2.  **Apply Globally**: Register middleware early in the pipeline (after UseRouting, before UseEndpoints).
 3.  **API-Specific Exclusions**: Allow API endpoints to customize or exclude certain headers if needed.
 4.  **Content Security Policy**: Consider a more specific CSP that allows only necessary sources for UI and APIs.
+
+---
+
+### [028] Inconsistent API Architecture Patterns Across Three APIs
+- **Agent**: QwenCode
+- **Date**: 2026-01-04
+- **Risk Level**: **High**
+- **Status**: Open
+
+#### Concerns
+The application implements three different API architectures with inconsistent patterns:
+- **Melodee Native API**: Uses JWT authentication with `[Authorize]` attributes and custom `MelodeeApiAuthFilter` for capability-based access control
+- **OpenSubsonic API**: Uses custom authentication through `ApiRequest` object in `ControllerBase`, supporting both username/password and token-based authentication
+- **Jellyfin API**: Uses custom token-based authentication in `JellyfinControllerBase` with peppered token verification
+
+This creates several issues:
+- **Developer Confusion**: Different authentication and authorization patterns make it harder for developers to understand and maintain the codebase
+- **Security Risk**: Multiple authentication systems increase the attack surface and make security audits more complex
+- **Code Duplication**: Similar functionality (user validation, rate limiting, error handling) is implemented differently across APIs
+- **Testing Complexity**: Requires different test strategies for each API type
+
+#### Action Items
+1.  **Standardize Authentication**: Consider implementing a unified authentication layer that can support all three API types:
+    - Create a common authentication service that handles user validation across all APIs
+    - Use ASP.NET Core's authentication middleware consistently across all APIs
+    - Implement API-specific authentication handlers that can be plugged into the common system
+2.  **Create API Gateway Pattern**: Implement a common base controller pattern that handles:
+    - Authentication and authorization
+    - Rate limiting
+    - Request validation
+    - Error handling
+    - Logging and correlation IDs
+3.  **Documentation**: Create comprehensive documentation explaining the authentication flow for each API type
+4.  **Migration Strategy**: Plan a gradual migration to reduce inconsistencies while maintaining backward compatibility
+
+---
+
+### [029] Additional Security Concerns Beyond Path Traversal
+- **Agent**: QwenCode
+- **Date**: 2026-01-04
+- **Risk Level**: **High**
+- **Status**: Open
+
+#### Concerns
+While finding #006 already addresses the path traversal vulnerability, additional security concerns were identified:
+- **Insecure Direct Object References**: API endpoints may allow access to resources without proper authorization checks
+- **Missing Rate Limiting**: Some endpoints may be vulnerable to brute force or DoS attacks
+- **Weak Cryptographic Practices**: Some areas may use outdated or weak cryptographic algorithms
+- **Insufficient Input Sanitization**: User inputs may not be properly sanitized before use in queries or file operations
+
+#### Action Items
+1.  **Implement Authorization Checks**: Ensure all endpoints verify user permissions for requested resources
+2.  **Enhance Rate Limiting**: Apply rate limiting to all public endpoints, especially authentication and resource-intensive operations
+3.  **Review Cryptographic Practices**: Audit all cryptographic implementations and update to use industry-standard algorithms
+4.  **Input Sanitization**: Implement comprehensive input sanitization across all API endpoints
+
+---
+
+### [030] Missing Input Validation and Sanitization
+- **Agent**: QwenCode
+- **Date**: 2026-01-04
+- **Risk Level**: **Medium**
+- **Status**: Open
+
+#### Concerns
+Multiple API endpoints lack proper input validation and sanitization:
+- **Jellyfin API**: Query parameters like `limit`, `offset`, and search terms are not consistently validated
+- **OpenSubsonic API**: User-provided parameters in query strings and form data are not properly sanitized
+- **Melodee Native API**: While some validation exists, edge cases like extremely large numbers or malicious strings may not be handled
+
+This could lead to:
+- **Denial of Service**: Unbounded queries with large parameter values
+- **SQL Injection**: Though EF Core parameterization protects against basic injection, malformed inputs could still cause issues
+- **Performance Degradation**: Expensive operations with unvalidated inputs
+
+#### Action Items
+1.  **Add Input Validation Attributes**: Apply `[Range]`, `[StringLength]`, `[RegularExpression]` attributes to all API parameters
+2.  **Create Validation Middleware**: Implement a global validation filter that validates all incoming requests
+3.  **Sanitize User Input**: Create helper methods to sanitize search terms and other user-provided strings
+4.  **Rate Limiting**: Enhance existing rate limiting to include validation of request parameters
+5.  **Security Testing**: Add fuzz testing to identify potential input validation bypasses
+
+---
+
+### [031] Inadequate Testing Coverage for API Compatibility
+- **Agent**: QwenCode
+- **Date**: 2026-01-04
+- **Risk Level**: **Medium**
+- **Status**: Open
+
+#### Concerns
+The application has limited testing coverage for API compatibility:
+- **OpenSubsonic API**: Has good unit test coverage for the service layer but limited integration tests for controller endpoints
+- **Jellyfin API**: Has minimal test coverage, especially for compatibility with actual Jellyfin clients
+- **Melodee Native API**: Has some controller tests but lacks comprehensive integration testing
+
+This creates risks:
+- **Breaking Changes**: API compatibility could be broken without detection
+- **Client Incompatibility**: Changes might break existing client applications
+- **Regression Issues**: New features could break existing functionality
+
+#### Action Items
+1.  **Add Integration Tests**: Create comprehensive integration tests for all API endpoints using `WebApplicationFactory<Program>`
+2.  **API Contract Testing**: Implement contract testing to ensure API compatibility with external clients
+3.  **Client Testing**: Test with actual client applications (Subsonic clients, Jellyfin clients) to ensure compatibility
+4.  **Automated API Validation**: Use tools like OpenAPI validators to ensure responses match specifications
+5.  **Test Coverage Goals**: Set minimum coverage targets (e.g., 80%) for each API type
+
+---
+
+### [032] Blazor Component Architecture Issues
+- **Agent**: QwenCode
+- **Date**: 2026-01-04
+- **Risk Level**: **Medium**
+- **Status**: Open
+
+#### Concerns
+The Blazor application has several architectural issues:
+- **Async Void Patterns**: Multiple components use `async void` instead of `async Task`, creating potential exception handling issues
+- **Inconsistent Error Handling**: Error handling varies across components with no centralized approach
+- **Performance Issues**: Large data sets may cause performance problems without proper virtualization
+- **State Management**: Inconsistent state management patterns across components
+
+#### Action Items
+1.  **Replace Async Void**: Refactor all `async void` methods to `async Task` in Blazor components
+2.  **Centralized Error Handling**: Implement a global error handling strategy using ErrorBoundary components
+3.  **Performance Optimization**: Add virtualization for large data sets using Radzen or built-in Virtualize components
+4.  **State Management**: Standardize state management patterns across the application
+5.  **Component Testing**: Increase test coverage for Blazor components using bUnit
+
+---
+
+### [033] Database Query Optimization Needs
+- **Agent**: QwenCode
+- **Date**: 2026-01-04
+- **Risk Level**: **Medium**
+- **Status**: Open
+
+#### Concerns
+Several database queries in the application could benefit from optimization:
+- **N+1 Queries**: Some endpoints may be executing multiple queries when one would suffice
+- **Inefficient Joins**: Complex queries with multiple includes may not be optimized
+- **Missing Indexes**: Database may lack appropriate indexes for frequently queried fields
+- **Large Result Sets**: Some queries return large amounts of data without proper pagination
+
+#### Action Items
+1.  **Query Analysis**: Use database profiling tools to identify slow queries and N+1 issues
+2.  **Index Optimization**: Add appropriate indexes for frequently queried fields
+3.  **Query Optimization**: Review and optimize complex queries with multiple joins and includes
+4.  **Pagination**: Ensure all list endpoints implement proper pagination
+5.  **Caching**: Implement caching for frequently accessed but rarely changed data
+
+---
+
+### [034] Configuration Management Security
+- **Agent**: QwenCode
+- **Date**: 2026-01-04
+- **Risk Level**: **Low**
+- **Status**: Open
+
+#### Concerns
+The application's configuration management has some security considerations:
+- **JWT Secret Validation**: While JWT configuration is validated, there's no validation of key strength
+- **Environment Variables**: Sensitive configuration is loaded from environment variables without validation
+- **Default Values**: Some security-related settings have default values that may not be appropriate for production
+
+#### Action Items
+1.  **JWT Key Validation**: Add validation to ensure JWT keys meet minimum strength requirements (at least 256 bits)
+2.  **Configuration Validation**: Implement validation for all security-related configuration values
+3.  **Secure Defaults**: Review default values for security settings and ensure they're appropriate for production
+4.  **Documentation**: Document secure configuration practices in deployment documentation
+5.  **Environment Validation**: Add startup validation to ensure required security configuration is present
+
+---
+
+### [035] Dependency Management and Security Vulnerabilities
+- **Agent**: QwenCode
+- **Date**: 2026-01-04
+- **Risk Level**: **Medium**
+- **Status**: Open
+
+#### Concerns
+The application may have outdated dependencies with known security vulnerabilities:
+- **NuGet Packages**: Third-party packages may have security vulnerabilities that haven't been addressed
+- **Transitive Dependencies**: Dependencies of dependencies may contain vulnerabilities
+- **Outdated Framework Versions**: Using older versions of .NET or other frameworks may expose security risks
+
+#### Action Items
+1.  **Dependency Scanning**: Implement automated dependency scanning using tools like `dotnet-outdated` or Snyk
+2.  **Security Vulnerability Checks**: Use tools like `dotnet list package --vulnerable` to identify vulnerable packages
+3.  **Regular Updates**: Establish a process for regularly updating dependencies
+4.  **Security Monitoring**: Subscribe to security mailing lists for key dependencies
+5.  **Dependency Review**: Review and audit all dependencies for necessity and security posture

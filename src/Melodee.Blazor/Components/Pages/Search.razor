@@ -21,6 +21,16 @@
         <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-m-0">@L("Search.ResultsFor", Query)</RadzenText>
         <RadzenButton Text="@L("Search.RequestMusic")" Icon="add" ButtonStyle="ButtonStyle.Primary" Click="@NavigateToRequestMusic" />
     </RadzenStack>
+    @if (!_searchResult.Artists.Any() && !_searchResult.Albums.Any() && !_searchResult.Songs.Any())
+    {
+        <RadzenCard class="rz-mt-4">
+            <RadzenStack AlignItems="AlignItems.Center" Gap="1rem" class="rz-p-4">
+                <RadzenIcon Icon="search_off" Style="font-size: 48px; color: var(--rz-text-tertiary-color);" />
+                <RadzenText TextStyle="TextStyle.H6">@L("Search.NoResultsFound")</RadzenText>
+                <RadzenText TextStyle="TextStyle.Body2" class="rz-text-align-center">@L("Search.NoResultsDescription", Query)</RadzenText>
+            </RadzenStack>
+        </RadzenCard>
+    }
     <RadzenPanel AllowCollapse="true" Visible="_searchResult.Artists.Any()">
         <HeaderTemplate>
             <RadzenText TextStyle="TextStyle.Subtitle2" class="rz-display-flex rz-m-0">

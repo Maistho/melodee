@@ -71,6 +71,38 @@ public abstract class MusicBrainzRepositoryBase(ILogger logger, IMelodeeConfigur
         return result.ToArray();
     }
 
+    /// <summary>
+    /// Clears intermediate data arrays to free memory after they've been processed into materialized forms.
+    /// Call this after processing artists to free memory before processing albums.
+    /// </summary>
+    protected void ClearArtistIntermediateData()
+    {
+        LoadedArtists = [];
+        LoadedArtistAliases = [];
+        LoadedLinkTypes = [];
+        LoadedLinks = [];
+        LoadedLinkArtistToArtists = [];
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+    }
+
+    /// <summary>
+    /// Clears intermediate data arrays for album/release data to free memory.
+    /// </summary>
+    protected void ClearAlbumIntermediateData()
+    {
+        LoadedReleases = [];
+        LoadedReleasesCountries = [];
+        LoadedReleaseTags = [];
+        LoadedTags = [];
+        LoadedReleaseGroups = [];
+        LoadedReleaseGroupMetas = [];
+        LoadedArtistCredits = [];
+        LoadedArtistCreditNames = [];
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+    }
+
     protected async Task<string> StoragePath(CancellationToken cancellationToken = default)
     {
         var configuration = await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
@@ -84,10 +116,13 @@ public abstract class MusicBrainzRepositoryBase(ILogger logger, IMelodeeConfigur
         return storagePath;
     }
 
-    protected async Task LoadDataFromMusicBrainzFiles(CancellationToken cancellationToken = default)
+    protected async Task LoadDataFromMusicBrainzFiles(ImportProgressCallback? progressCallback = null, CancellationToken cancellationToken = default)
     {
         var storagePath = await StoragePath(cancellationToken).ConfigureAwait(false);
 
+        // Phase 1: Load and process artist data (artists, aliases, links)
+        progressCallback?.Invoke("Loading Artist Data", 0, 6, "Loading artist file...");
+        
         using (Operation.At(LogEventLevel.Debug).Time("MusicBrainzRepository: Loaded artists"))
         {
             LoadedArtists = LoadDataFromFileAsync(Path.Combine(storagePath, "staging/mbdump/artist"), parts =>
@@ -101,31 +136,7 @@ public abstract class MusicBrainzRepositoryBase(ILogger logger, IMelodeeConfigur
                     SortName = parts[3].CleanString(true).TruncateLongString(MaxIndexSize) ?? parts[2]
                 }, cancellationToken);
         }
-
-        using (Operation.At(LogEventLevel.Debug).Time("MusicBrainzRepository: Loaded artist_credit"))
-        {
-            LoadedArtistCredits = LoadDataFromFileAsync(Path.Combine(storagePath, "staging/mbdump/artist_credit"),
-                parts => new ArtistCredit
-                {
-                    Id = SafeParser.ToNumber<long>(parts[0]),
-                    ArtistCount = SafeParser.ToNumber<int>(parts[2]),
-                    Name = parts[1],
-                    RefCount = SafeParser.ToNumber<int>(parts[3]),
-                    Gid = SafeParser.ToGuid(parts[6]) ?? Guid.Empty
-                }, cancellationToken);
-        }
-
-        using (Operation.At(LogEventLevel.Debug).Time("MusicBrainzRepository: Loaded artist_credit_name"))
-        {
-            LoadedArtistCreditNames = LoadDataFromFileAsync(
-                Path.Combine(storagePath, "staging/mbdump/artist_credit_name"), parts => new ArtistCreditName
-                {
-                    ArtistCreditId = SafeParser.ToNumber<long>(parts[0]),
-                    Position = SafeParser.ToNumber<int>(parts[1]),
-                    ArtistId = SafeParser.ToNumber<long>(parts[2]),
-                    Name = parts[3]
-                }, cancellationToken);
-        }
+        progressCallback?.Invoke("Loading Artist Data", 1, 6, $"Loaded {LoadedArtists.Length:N0} artists");
 
         using (Operation.At(LogEventLevel.Debug).Time("MusicBrainzRepository: Loaded artist_alias"))
         {
@@ -139,7 +150,7 @@ public abstract class MusicBrainzRepositoryBase(ILogger logger, IMelodeeConfigur
                     SortName = parts[7]
                 }, cancellationToken);
         }
-
+        progressCallback?.Invoke("Loading Artist Data", 2, 6, $"Loaded {LoadedArtistAliases.Length:N0} artist aliases");
 
         using (Operation.At(LogEventLevel.Debug).Time("MusicBrainzRepository: Loaded link_type"))
         {
@@ -161,6 +172,7 @@ public abstract class MusicBrainzRepositoryBase(ILogger logger, IMelodeeConfigur
                     Entity1Cardinality = SafeParser.ToNumber<int>(parts[15])
                 }, cancellationToken);
         }
+        progressCallback?.Invoke("Loading Artist Data", 3, 6, $"Loaded {LoadedLinkTypes.Length:N0} link types");
 
         using (Operation.At(LogEventLevel.Debug).Time("MusicBrainzRepository: Loaded link"))
         {
@@ -177,6 +189,7 @@ public abstract class MusicBrainzRepositoryBase(ILogger logger, IMelodeeConfigur
                 IsEnded = SafeParser.ToBoolean(parts[10])
             }, cancellationToken);
         }
+        progressCallback?.Invoke("Loading Artist Data", 4, 6, $"Loaded {LoadedLinks.Length:N0} links");
 
         using (Operation.At(LogEventLevel.Debug).Time("MusicBrainzRepository: Loaded artist link"))
         {
@@ -192,81 +205,10 @@ public abstract class MusicBrainzRepositoryBase(ILogger logger, IMelodeeConfigur
                     Artist1Credit = parts[8]
                 }, cancellationToken);
         }
+        progressCallback?.Invoke("Loading Artist Data", 5, 6, $"Loaded {LoadedLinkArtistToArtists.Length:N0} artist links");
 
-
-        using (Operation.At(LogEventLevel.Debug).Time("MusicBrainzRepository: Loaded release"))
-        {
-            LoadedReleases = LoadDataFromFileAsync(Path.Combine(storagePath, "staging/mbdump/release"), parts =>
-                new Release
-                {
-                    ArtistCreditId = SafeParser.ToNumber<long>(parts[3]),
-                    Id = SafeParser.ToNumber<long>(parts[0]),
-                    MusicBrainzId = parts[1],
-                    Name = parts[2].CleanString()!,
-                    NameNormalized = parts[2].CleanString().TruncateLongString(MaxIndexSize).ToNormalizedString() ??
-                                     parts[2],
-                    SortName = parts[2].CleanString(true).TruncateLongString(MaxIndexSize) ?? parts[2],
-                    ReleaseGroupId = SafeParser.ToNumber<long>(parts[4])
-                }, cancellationToken);
-        }
-
-        using (Operation.At(LogEventLevel.Debug).Time("MusicBrainzRepository: Loaded release_country"))
-        {
-            LoadedReleasesCountries = LoadDataFromFileAsync(Path.Combine(storagePath, "staging/mbdump/release_country"),
-                parts => new ReleaseCountry
-                {
-                    ReleaseId = SafeParser.ToNumber<long>(parts[0]),
-                    CountryId = SafeParser.ToNumber<long>(parts[1]),
-                    DateYear = SafeParser.ToNumber<int>(parts[2]),
-                    DateMonth = SafeParser.ToNumber<int>(parts[3]),
-                    DateDay = SafeParser.ToNumber<int>(parts[4])
-                }, cancellationToken);
-        }
-
-        using (Operation.At(LogEventLevel.Debug).Time("MusicBrainzRepository: Loaded tag"))
-        {
-            LoadedTags = LoadDataFromFileAsync(Path.Combine(storagePath, "staging/mbdump/tag"), parts => new Tag
-            {
-                Id = SafeParser.ToNumber<long>(parts[0]),
-                Name = parts[1]
-            }, cancellationToken);
-        }
-
-        using (Operation.At(LogEventLevel.Debug).Time("MusicBrainzRepository: Loaded release_tag"))
-        {
-            LoadedReleaseTags = LoadDataFromFileAsync(Path.Combine(storagePath, "staging/mbdump/release_tag"), parts =>
-                new ReleaseTag
-                {
-                    ReleaseId = SafeParser.ToNumber<long>(parts[0]),
-                    TagId = SafeParser.ToNumber<long>(parts[1])
-                }, cancellationToken);
-        }
-
-        using (Operation.At(LogEventLevel.Debug).Time("MusicBrainzRepository: Loaded release_group"))
-        {
-            LoadedReleaseGroups = LoadDataFromFileAsync(Path.Combine(storagePath, "staging/mbdump/release_group"),
-                parts => new ReleaseGroup
-                {
-                    Id = SafeParser.ToNumber<long>(parts[0]),
-                    MusicBrainzIdRaw = parts[1],
-                    Name = parts[2],
-                    ArtistCreditId = SafeParser.ToNumber<long>(parts[3]),
-                    ReleaseType = SafeParser.ToNumber<int>(parts[4])
-                }, cancellationToken);
-        }
-
-        using (Operation.At(LogEventLevel.Debug).Time("MusicBrainzRepository: Loaded release_group_meta"))
-        {
-            LoadedReleaseGroupMetas = LoadDataFromFileAsync(
-                Path.Combine(storagePath, "staging/mbdump/release_group_meta"), parts => new ReleaseGroupMeta
-                {
-                    ReleaseGroupId = SafeParser.ToNumber<long>(parts[0]),
-                    DateYear = SafeParser.ToNumber<int>(parts[2]),
-                    DateMonth = SafeParser.ToNumber<int>(parts[3]),
-                    DateDay = SafeParser.ToNumber<int>(parts[4])
-                }, cancellationToken);
-        }
-
+        // Materialize artists
+        progressCallback?.Invoke("Processing Artists", 0, 2, "Building materialized artists...");
         var artistAliasDictionary =
             LoadedArtistAliases.GroupBy(x => x.ArtistId).ToDictionary(x => x.Key, x => x.ToArray());
         using (Operation.At(LogEventLevel.Debug).Time("MusicBrainzRepository: LoadedMaterializedArtists"))
@@ -286,10 +228,13 @@ public abstract class MusicBrainzRepositoryBase(ILogger logger, IMelodeeConfigur
                 });
             });
         }
+        progressCallback?.Invoke("Processing Artists", 1, 2, $"Created {LoadedMaterializedArtists.Count:N0} materialized artists");
 
         var loadedMaterializedArtistsDictionary =
             LoadedMaterializedArtists.ToDictionary(x => x.MusicBrainzArtistId, x => x);
 
+        // Materialize artist relations
+        progressCallback?.Invoke("Processing Relations", 0, 1, "Building artist relations...");
         using (Operation.At(LogEventLevel.Debug).Time("MusicBrainzRepository: LoadedMaterializedArtistRelations"))
         {
             var loadedLinkDictionary = LoadedLinks.ToDictionary(x => x.Id, x => x);
@@ -328,7 +273,124 @@ public abstract class MusicBrainzRepositoryBase(ILogger logger, IMelodeeConfigur
                 }
             });
         }
+        progressCallback?.Invoke("Processing Relations", 1, 1, $"Created {LoadedMaterializedArtistRelations.Count:N0} artist relations");
 
+        // Clear artist intermediate data to free memory before loading release data
+        Logger.Debug("MusicBrainzRepository: Clearing artist intermediate data to free memory...");
+        ClearArtistIntermediateData();
+        progressCallback?.Invoke("Memory Cleanup", 1, 1, "Freed artist intermediate data");
+
+        // Phase 2: Load and process release/album data
+        progressCallback?.Invoke("Loading Album Data", 0, 8, "Loading artist credits...");
+        
+        using (Operation.At(LogEventLevel.Debug).Time("MusicBrainzRepository: Loaded artist_credit"))
+        {
+            LoadedArtistCredits = LoadDataFromFileAsync(Path.Combine(storagePath, "staging/mbdump/artist_credit"),
+                parts => new ArtistCredit
+                {
+                    Id = SafeParser.ToNumber<long>(parts[0]),
+                    ArtistCount = SafeParser.ToNumber<int>(parts[2]),
+                    Name = parts[1],
+                    RefCount = SafeParser.ToNumber<int>(parts[3]),
+                    Gid = SafeParser.ToGuid(parts[6]) ?? Guid.Empty
+                }, cancellationToken);
+        }
+        progressCallback?.Invoke("Loading Album Data", 1, 8, $"Loaded {LoadedArtistCredits.Length:N0} artist credits");
+
+        using (Operation.At(LogEventLevel.Debug).Time("MusicBrainzRepository: Loaded artist_credit_name"))
+        {
+            LoadedArtistCreditNames = LoadDataFromFileAsync(
+                Path.Combine(storagePath, "staging/mbdump/artist_credit_name"), parts => new ArtistCreditName
+                {
+                    ArtistCreditId = SafeParser.ToNumber<long>(parts[0]),
+                    Position = SafeParser.ToNumber<int>(parts[1]),
+                    ArtistId = SafeParser.ToNumber<long>(parts[2]),
+                    Name = parts[3]
+                }, cancellationToken);
+        }
+        progressCallback?.Invoke("Loading Album Data", 2, 8, $"Loaded {LoadedArtistCreditNames.Length:N0} artist credit names");
+
+        using (Operation.At(LogEventLevel.Debug).Time("MusicBrainzRepository: Loaded release"))
+        {
+            LoadedReleases = LoadDataFromFileAsync(Path.Combine(storagePath, "staging/mbdump/release"), parts =>
+                new Release
+                {
+                    ArtistCreditId = SafeParser.ToNumber<long>(parts[3]),
+                    Id = SafeParser.ToNumber<long>(parts[0]),
+                    MusicBrainzId = parts[1],
+                    Name = parts[2].CleanString()!,
+                    NameNormalized = parts[2].CleanString().TruncateLongString(MaxIndexSize).ToNormalizedString() ??
+                                     parts[2],
+                    SortName = parts[2].CleanString(true).TruncateLongString(MaxIndexSize) ?? parts[2],
+                    ReleaseGroupId = SafeParser.ToNumber<long>(parts[4])
+                }, cancellationToken);
+        }
+        progressCallback?.Invoke("Loading Album Data", 3, 8, $"Loaded {LoadedReleases.Length:N0} releases");
+
+        using (Operation.At(LogEventLevel.Debug).Time("MusicBrainzRepository: Loaded release_country"))
+        {
+            LoadedReleasesCountries = LoadDataFromFileAsync(Path.Combine(storagePath, "staging/mbdump/release_country"),
+                parts => new ReleaseCountry
+                {
+                    ReleaseId = SafeParser.ToNumber<long>(parts[0]),
+                    CountryId = SafeParser.ToNumber<long>(parts[1]),
+                    DateYear = SafeParser.ToNumber<int>(parts[2]),
+                    DateMonth = SafeParser.ToNumber<int>(parts[3]),
+                    DateDay = SafeParser.ToNumber<int>(parts[4])
+                }, cancellationToken);
+        }
+        progressCallback?.Invoke("Loading Album Data", 4, 8, $"Loaded {LoadedReleasesCountries.Length:N0} release countries");
+
+        using (Operation.At(LogEventLevel.Debug).Time("MusicBrainzRepository: Loaded tag"))
+        {
+            LoadedTags = LoadDataFromFileAsync(Path.Combine(storagePath, "staging/mbdump/tag"), parts => new Tag
+            {
+                Id = SafeParser.ToNumber<long>(parts[0]),
+                Name = parts[1]
+            }, cancellationToken);
+        }
+        progressCallback?.Invoke("Loading Album Data", 5, 8, $"Loaded {LoadedTags.Length:N0} tags");
+
+        using (Operation.At(LogEventLevel.Debug).Time("MusicBrainzRepository: Loaded release_tag"))
+        {
+            LoadedReleaseTags = LoadDataFromFileAsync(Path.Combine(storagePath, "staging/mbdump/release_tag"), parts =>
+                new ReleaseTag
+                {
+                    ReleaseId = SafeParser.ToNumber<long>(parts[0]),
+                    TagId = SafeParser.ToNumber<long>(parts[1])
+                }, cancellationToken);
+        }
+        progressCallback?.Invoke("Loading Album Data", 6, 8, $"Loaded {LoadedReleaseTags.Length:N0} release tags");
+
+        using (Operation.At(LogEventLevel.Debug).Time("MusicBrainzRepository: Loaded release_group"))
+        {
+            LoadedReleaseGroups = LoadDataFromFileAsync(Path.Combine(storagePath, "staging/mbdump/release_group"),
+                parts => new ReleaseGroup
+                {
+                    Id = SafeParser.ToNumber<long>(parts[0]),
+                    MusicBrainzIdRaw = parts[1],
+                    Name = parts[2],
+                    ArtistCreditId = SafeParser.ToNumber<long>(parts[3]),
+                    ReleaseType = SafeParser.ToNumber<int>(parts[4])
+                }, cancellationToken);
+        }
+        progressCallback?.Invoke("Loading Album Data", 7, 8, $"Loaded {LoadedReleaseGroups.Length:N0} release groups");
+
+        using (Operation.At(LogEventLevel.Debug).Time("MusicBrainzRepository: Loaded release_group_meta"))
+        {
+            LoadedReleaseGroupMetas = LoadDataFromFileAsync(
+                Path.Combine(storagePath, "staging/mbdump/release_group_meta"), parts => new ReleaseGroupMeta
+                {
+                    ReleaseGroupId = SafeParser.ToNumber<long>(parts[0]),
+                    DateYear = SafeParser.ToNumber<int>(parts[2]),
+                    DateMonth = SafeParser.ToNumber<int>(parts[3]),
+                    DateDay = SafeParser.ToNumber<int>(parts[4])
+                }, cancellationToken);
+        }
+        progressCallback?.Invoke("Loading Album Data", 8, 8, $"Loaded {LoadedReleaseGroupMetas.Length:N0} release group metadata");
+
+        // Materialize albums
+        progressCallback?.Invoke("Processing Albums", 0, 1, $"Building {LoadedReleases.Length:N0} materialized albums...");
         using (Operation.At(LogEventLevel.Debug).Time("MusicBrainzRepository: LoadedMaterializedAlbums"))
         {
             var releaseCountriesDictionary = LoadedReleasesCountries.GroupBy(x => x.ReleaseId)
@@ -377,9 +439,6 @@ public abstract class MusicBrainzRepositoryBase(ILogger logger, IMelodeeConfigur
                     var artistCreditName = releaseArtistCreditNames?.OrderBy(x => x.Position).FirstOrDefault();
                     if (artistCreditName != null)
                     {
-                        // Sometimes there are multiple artists on a release (see https://musicbrainz.org/release/519345af-b328-4d88-98cb-29f1a5d1fe2d) and the
-                        // ArtistCreditId doesn't point to an ArtistId it points to a ArtistCredit.Id when this is true then get ArtistCredit for
-                        // that Id then get the ArtistCreditNames and the first one is used for the artist for Melodee
                         loadedMaterializedArtistsDictionary.TryGetValue(artistCreditName.ArtistId, out releaseArtist);
                     }
 
@@ -411,6 +470,12 @@ public abstract class MusicBrainzRepositoryBase(ILogger logger, IMelodeeConfigur
                 }
             });
         }
+        progressCallback?.Invoke("Processing Albums", 1, 1, $"Created {LoadedMaterializedAlbums.Count:N0} materialized albums");
+
+        // Clear album intermediate data to free memory before SQLite import
+        Logger.Debug("MusicBrainzRepository: Clearing album intermediate data to free memory...");
+        ClearAlbumIntermediateData();
+        progressCallback?.Invoke("Memory Cleanup", 1, 1, "Freed album intermediate data");
     }
 
     /// <summary>

@@ -138,7 +138,7 @@
                             TValue="bool"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(AlbumDataInfo.Name)" Title="Name" Width="300px">
+                <RadzenDataGridColumn Property="@nameof(AlbumDataInfo.Name)" Title="@L("Common.Name")" Width="300px">
                     <Template Context="data">
                         <RadzenButton Style="float:right;margin-top: 7px;" Visible="@(CurrentUser?.IsEditor() ?? false)"
                                       Size="ButtonSize.ExtraSmall"
@@ -151,12 +151,12 @@
                                     Path="@($"/media/album/{_library.ApiKey}/{data.ApiKey}")"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(AlbumDataInfo.AlbumStatusValue)" Title="Status" Width="100px">
+                <RadzenDataGridColumn Property="@nameof(AlbumDataInfo.AlbumStatusValue)" Title="@L("Common.Status")" Width="100px">
                     <Template Context="data">
                         <RadzenText Text="@data.AlbumStatusValue.ToString()"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(AlbumDataInfo.ArtistName)" Title="Artist" Width="150px">
+                <RadzenDataGridColumn Property="@nameof(AlbumDataInfo.ArtistName)" Title="@L("Common.Artist")" Width="150px">
                     <Template Context="data">
                         @if (data.ArtistApiKey != Guid.Empty)
                         {
@@ -169,18 +169,18 @@
                     </Template>
                 </RadzenDataGridColumn>
                 <RadzenDataGridColumn Property="@nameof(AlbumDataInfo.NeedsAttentionReasonsValue)" Filterable="false"
-                                      Title="Status Reasons" Width="200px">
+                                      Title="@L("Common.StatusReasons")" Width="200px">
                     <Template Context="data">
                         <RadzenText Text="@data.NeedsAttentionReasonsValue.ToString()"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(AlbumDataInfo.SongCount)" Filterable="false" Title="Songs"
+                <RadzenDataGridColumn Property="@nameof(AlbumDataInfo.SongCount)" Filterable="false" Title="@L("Common.Songs")"
                                       Width="90px">
                     <Template Context="data">
                         <RadzenText Text="@CurrentUser?.FormatNumber(data.SongCount)"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(AlbumDataInfo.Duration)" Filterable="false" Title="Duration"
+                <RadzenDataGridColumn Property="@nameof(AlbumDataInfo.Duration)" Filterable="false" Title="@L("Common.Duration")"
                                       Width="120px">
                     <Template Context="data">
                         <RadzenText Text="@data.Duration.ToFormattedDateTimeOffset()"/>
@@ -188,7 +188,7 @@
                 </RadzenDataGridColumn>
                 <RadzenDataGridColumn
                     Property="@nameof(AlbumDataInfo.CreatedAt)"
-                    Title="Created"
+                    Title="@L("Common.Created")"
                     Filterable="false"
                     SortOrder="SortOrder.Descending"
                     Width="120px">
@@ -196,7 +196,7 @@
                         <RadzenText Text="@CurrentUser?.FormatInstant(data.CreatedAt)"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(AlbumDataInfo.Tags)" Filterable="false" Title="Tags"
+                <RadzenDataGridColumn Property="@nameof(AlbumDataInfo.Tags)" Filterable="false" Title="@L("Common.Tags")"
                                       Width="100px">
                     <Template Context="data">
                         <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="5px">

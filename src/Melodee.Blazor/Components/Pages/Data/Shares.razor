@@ -93,13 +93,13 @@
                             TValue="bool"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(Share.CreatedAt)" Title="Created" Filterable="false"
+                <RadzenDataGridColumn Property="@nameof(Share.CreatedAt)" Title="@L("Common.Created")" Filterable="false"
                                       Width="120px">
                     <Template Context="data">
                         <RadzenText Text="@CurrentUser?.FormatInstant(data.CreatedAt)"/>
                     </Template>
                 </RadzenDataGridColumn>
-                <RadzenDataGridColumn Property="@nameof(Share.Tags)" Title="Tags" Width="100px">
+                <RadzenDataGridColumn Property="@nameof(Share.Tags)" Title="@L("Common.Tags")" Width="100px">
                     <Template Context="data">
                         <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="5px">
                             @foreach (var name in data.Tags?.ToTags() ?? [])
