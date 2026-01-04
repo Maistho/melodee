@@ -150,7 +150,7 @@
     <value>Você é um Editor!</value>
   </data>
 
-  
+
   <data name="Actions.Save" xml:space="preserve">
     <value>Salvar</value>
   </data>
@@ -245,7 +245,7 @@
     <value>Não</value>
   </data>
 
-  
+
   <data name="Common.Name" xml:space="preserve">
     <value>Nome</value>
   </data>
@@ -310,7 +310,7 @@
     <value>Taxa de bits</value>
   </data>
 
-  
+
   <data name="Auth.Login" xml:space="preserve">
     <value>Entrar</value>
   </data>
@@ -486,7 +486,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="Messages.Loading" xml:space="preserve">
     <value>Carregando...</value>
   </data>
@@ -533,7 +533,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="Dashboard.Welcome" xml:space="preserve">
     <value>Tradução ausente</value>
   </data>
@@ -601,7 +601,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="Library.BrowseArtists" xml:space="preserve">
     <value>Tradução ausente</value>
   </data>
@@ -621,7 +621,7 @@
     <value>Ordenar por</value>
   </data>
 
-  
+
   <data name="Player.NowPlaying" xml:space="preserve">
     <value>Reproduzindo agora</value>
   </data>
@@ -641,7 +641,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="Settings.General" xml:space="preserve">
     <value>Geral</value>
   </data>
@@ -667,7 +667,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="About.Title" xml:space="preserve">
     <value>Tradução ausente</value>
   </data>
@@ -729,7 +729,7 @@
     <value>GitHub</value>
   </data>
 
-  
+
   <data name="Data.Statistics" xml:space="preserve">
     <value>Estatísticas</value>
   </data>
@@ -1022,7 +1022,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="RequestNew.PageTitle" xml:space="preserve">
     <value>Tradução ausente</value>
   </data>
@@ -1048,7 +1048,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="RequestDetail.PageTitle" xml:space="preserve">
     <value>Tradução ausente</value>
   </data>
@@ -1104,7 +1104,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="RequestEdit.PageTitle" xml:space="preserve">
     <value>Editar solicitação</value>
   </data>
@@ -1136,7 +1136,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="Validation.Required" xml:space="preserve">
     <value>Tradução ausente</value>
   </data>
@@ -1150,7 +1150,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="Stats.PageTitle" xml:space="preserve">
     <value>Estatísticas</value>
   </data>
@@ -1209,7 +1209,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="Search.PageTitle" xml:space="preserve">
     <value>Resultados da pesquisa</value>
   </data>
@@ -1244,7 +1244,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="NowPlaying.PageTitle" xml:space="preserve">
     <value>Reproduzindo agora</value>
   </data>
@@ -1255,7 +1255,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="Users.PageTitle" xml:space="preserve">
     <value>Usuários</value>
   </data>
@@ -1269,7 +1269,7 @@
     <value>Excluir</value>
   </data>
 
-  
+
   <data name="Shares.PageTitle" xml:space="preserve">
     <value>Compartilhamentos</value>
   </data>
@@ -1283,7 +1283,7 @@
     <value>Excluir</value>
   </data>
 
-  
+
   <data name="RadioStations.PageTitle" xml:space="preserve">
     <value>Estações de Rádio</value>
   </data>
@@ -1297,7 +1297,7 @@
     <value>Excluir</value>
   </data>
 
-  
+
   <data name="Nav.Back" xml:space="preserve">
     <value>Voltar</value>
   </data>
@@ -1344,7 +1344,7 @@
     <value>Bibliotecas</value>
   </data>
 
-  
+
   <data name="Actions.SelectAll" xml:space="preserve">
     <value>Tradução ausente</value>
   </data>
@@ -1481,7 +1481,7 @@
     <value>Ver tudo</value>
   </data>
 
-  
+
   <data name="Label.Name" xml:space="preserve">
     <value>Nome</value>
   </data>
@@ -1765,7 +1765,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="Dialog.AreYouSure" xml:space="preserve">
     <value>Tem certeza?</value>
   </data>
@@ -1791,7 +1791,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="TableHeader.Hash" xml:space="preserve">
     <value>#</value>
   </data>
@@ -1901,7 +1901,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="Message.DisplayingPage" xml:space="preserve">
     <value>Tradução ausente</value>
   </data>
@@ -1939,7 +1939,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="ArtistDetail.DeleteArtistWarning" xml:space="preserve">
     <value>Excluir o artista, todos os álbuns do artista e todos os arquivos do álbum. ATENÇÃO!</value>
   </data>
@@ -2055,7 +2055,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="AlbumDetail.DeleteAlbum" xml:space="preserve">
     <value>Excluir o álbum e todos os arquivos do álbum. ATENÇÃO!</value>
   </data>
@@ -2159,12 +2159,12 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="SongDetail.DetailsGoHere" xml:space="preserve">
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="Libraries.PageTitle" xml:space="preserve">
     <value>Bibliotecas</value>
   </data>
@@ -2178,7 +2178,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="LibraryDetail.CleanLibrary" xml:space="preserve">
     <value>Tradução ausente</value>
   </data>
@@ -2321,7 +2321,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="PlaylistDetail.UnlockPlaylist" xml:space="preserve">
     <value>Tradução ausente</value>
   </data>
@@ -2356,7 +2356,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="Requests.PageTitle" xml:space="preserve">
     <value>Solicitações</value>
   </data>
@@ -2388,12 +2388,12 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="RequestNew.HttpsPlaceholder" xml:space="preserve">
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="RequestDetail.DeleteRequestConfirm" xml:space="preserve">
     <value>Tem certeza de que deseja excluir esta solicitação?</value>
   </data>
@@ -2401,7 +2401,7 @@
     <value>Você só pode editar suas próprias solicitações</value>
   </data>
 
-  
+
   <data name="RequestCategory.AddAlbum" xml:space="preserve">
     <value>Tradução ausente</value>
   </data>
@@ -2418,7 +2418,7 @@
     <value>Geral</value>
   </data>
 
-  
+
   <data name="ArtistEdit.PageTitle" xml:space="preserve">
     <value>Adicionar/editar artista</value>
   </data>
@@ -2450,7 +2450,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="AlbumEdit.PageTitle" xml:space="preserve">
     <value>Adicionar/editar álbum</value>
   </data>
@@ -2464,7 +2464,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="LibraryEdit.PageTitle" xml:space="preserve">
     <value>Editar biblioteca</value>
   </data>
@@ -2529,7 +2529,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="UserEdit.PageTitle" xml:space="preserve">
     <value>Editar usuário</value>
   </data>
@@ -2564,7 +2564,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="Charts.PageTitle" xml:space="preserve">
     <value>Tradução ausente</value>
   </data>
@@ -2593,7 +2593,7 @@
     <value>Excluir rankings</value>
   </data>
 
-  
+
   <data name="ChartsRankedReport.PageTitle" xml:space="preserve">
     <value>Tradução ausente</value>
   </data>
@@ -2631,7 +2631,7 @@
     <value>Não encontrado</value>
   </data>
 
-  
+
   <data name="ChartsMissingReport.PageTitle" xml:space="preserve">
     <value>Tradução ausente</value>
   </data>
@@ -2651,7 +2651,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="AdminDashboard.PageTitle" xml:space="preserve">
     <value>Tradução ausente</value>
   </data>
@@ -2740,7 +2740,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="AdminJobs.PageTitle" xml:space="preserve">
     <value>Tradução ausente</value>
   </data>
@@ -2916,7 +2916,7 @@
     <value>Erro ao carregar tarefas</value>
   </data>
 
-  
+
   <data name="AdminSettings.PageTitle" xml:space="preserve">
     <value>Configurações</value>
   </data>
@@ -2936,7 +2936,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="ChartEditor.EditChart" xml:space="preserve">
     <value>Editar ranking: {0}</value>
   </data>
@@ -3115,7 +3115,7 @@
     <value>Confirmar Exclusão</value>
   </data>
 
-  
+
   <data name="ChartDetail.PageTitle" xml:space="preserve">
     <value>Tradução ausente</value>
   </data>
@@ -3156,7 +3156,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="ChartImportDialog.JSONImportSchema" xml:space="preserve">
     <value>Tradução ausente</value>
   </data>
@@ -3203,7 +3203,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="ChartItemResolveDialog.CurrentEntry" xml:space="preserve">
     <value>Tradução ausente</value>
   </data>
@@ -3223,12 +3223,12 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="MissingAlbumIdentifyDialog.TypeToFilter" xml:space="preserve">
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="MediaLibrary.PageTitle" xml:space="preserve">
     <value>Tradução ausente</value>
   </data>
@@ -3299,7 +3299,7 @@
     <value>Selecionar</value>
   </data>
 
-  
+
   <data name="MediaArtists.PageTitle" xml:space="preserve">
     <value>Artistas de Mídia</value>
   </data>
@@ -3310,7 +3310,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="MediaAlbumDetail.AddArtist" xml:space="preserve">
     <value>Tradução ausente</value>
   </data>
@@ -3372,7 +3372,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="MediaAlbumEdit.PageTitle" xml:space="preserve">
     <value>Adicionar/editar álbum de mídia</value>
   </data>
@@ -3380,7 +3380,7 @@
     <value>Pesquisa de imagens do álbum de mídia</value>
   </data>
 
-  
+
   <data name="MediaArtistEdit.PageTitle" xml:space="preserve">
     <value>Adicionar/editar artista de mídia</value>
   </data>
@@ -3388,7 +3388,7 @@
     <value>Artistas de Mídia</value>
   </data>
 
-  
+
   <data name="Notification.RequestNotFound" xml:space="preserve">
     <value>Tradução ausente</value>
   </data>
@@ -3525,7 +3525,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="Charts.SelectAllItems" xml:space="preserve">
     <value>Tradução ausente</value>
   </data>
@@ -3548,7 +3548,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="ChartsRankedReport.Header" xml:space="preserve">
     <value>Tradução ausente</value>
   </data>
@@ -3562,7 +3562,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="UserDetail.PageTitle" xml:space="preserve">
     <value>Tradução ausente</value>
   </data>
@@ -3624,7 +3624,7 @@
     <value>Descrição</value>
   </data>
 
-  
+
   <data name="UserDetail.Stats.ArtistsStarred" xml:space="preserve">
     <value>Tradução ausente</value>
   </data>
@@ -3659,7 +3659,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="UserRole.Admin" xml:space="preserve">
     <value>Administração</value>
   </data>
@@ -3702,8 +3702,8 @@
   <data name="UserRole.Share" xml:space="preserve">
     <value>Tradução ausente</value>
   </data>
-  
-  
+
+
   <data name="Message.ClearedCache" xml:space="preserve">
     <value>Tradução ausente</value>
   </data>
@@ -3711,7 +3711,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="ChartImportDialog.ValidationErrors" xml:space="preserve">
     <value>Tradução ausente</value>
   </data>
@@ -3785,7 +3785,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="ChartItemResolveDialog.SearchAndSelect" xml:space="preserve">
     <value>Pesquisar e selecionar álbum</value>
   </data>
@@ -3793,7 +3793,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="MissingAlbumIdentifyDialog.Artists" xml:space="preserve">
     <value>Artistas</value>
   </data>
@@ -3813,7 +3813,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="AlbumEdit.AddingAlbum" xml:space="preserve">
     <value>Tradução ausente</value>
   </data>
@@ -3830,7 +3830,7 @@
     <value>Tradução ausente</value>
   </data>
 
-  
+
   <data name="UploadAlbum.Title" xml:space="preserve">
     <value>Enviar álbum</value>
   </data>
@@ -4136,6 +4136,9 @@
   </data>
   <data name="AdminDoctor.Duration" xml:space="preserve">
     <value>Duração</value>
+  </data>
+  <data name="AdminDoctor.Exists" xml:space="preserve">
+    <value>Existe</value>
   </data>
   <data name="AdminDoctor.EnvironmentInfo" xml:space="preserve">
     <value>Informações do ambiente</value>

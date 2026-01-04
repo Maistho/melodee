@@ -3696,7 +3696,7 @@
     <value>太棒了！</value>
   </data>
 
-  
+
   <data name="UploadAlbum.Title" xml:space="preserve">
     <value>上传专辑</value>
   </data>
@@ -4002,6 +4002,9 @@
   </data>
   <data name="AdminDoctor.Duration" xml:space="preserve">
     <value>时长</value>
+  </data>
+  <data name="AdminDoctor.Exists" xml:space="preserve">
+    <value>存在</value>
   </data>
   <data name="AdminDoctor.EnvironmentInfo" xml:space="preserve">
     <value>环境信息</value>

@@ -150,7 +150,7 @@
     <value>あなたは編集者です！</value>
   </data>
 
-  
+
   <data name="Actions.Save" xml:space="preserve">
     <value>保存</value>
   </data>
@@ -245,7 +245,7 @@
     <value>いいえ</value>
   </data>
 
-  
+
   <data name="Common.Name" xml:space="preserve">
     <value>名前</value>
   </data>
@@ -310,7 +310,7 @@
     <value>ビットレート</value>
   </data>
 
-  
+
   <data name="Auth.Login" xml:space="preserve">
     <value>ログイン</value>
   </data>
@@ -486,7 +486,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="Messages.Loading" xml:space="preserve">
     <value>読み込み中...</value>
   </data>
@@ -533,7 +533,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="Dashboard.Welcome" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -601,7 +601,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="Library.BrowseArtists" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -621,7 +621,7 @@
     <value>並べ替え</value>
   </data>
 
-  
+
   <data name="Player.NowPlaying" xml:space="preserve">
     <value>再生中</value>
   </data>
@@ -641,7 +641,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="Settings.General" xml:space="preserve">
     <value>一般</value>
   </data>
@@ -667,7 +667,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="About.Title" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -729,7 +729,7 @@
     <value>GitHub</value>
   </data>
 
-  
+
   <data name="Data.Statistics" xml:space="preserve">
     <value>統計</value>
   </data>
@@ -1022,7 +1022,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="RequestNew.PageTitle" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -1048,7 +1048,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="RequestDetail.PageTitle" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -1104,7 +1104,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="RequestEdit.PageTitle" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -1136,7 +1136,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="Validation.Required" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -1150,7 +1150,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="Stats.PageTitle" xml:space="preserve">
     <value>統計</value>
   </data>
@@ -1209,7 +1209,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="Search.PageTitle" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -1244,7 +1244,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="NowPlaying.PageTitle" xml:space="preserve">
     <value>再生中</value>
   </data>
@@ -1255,7 +1255,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="Users.PageTitle" xml:space="preserve">
     <value>ユーザー</value>
   </data>
@@ -1269,7 +1269,7 @@
     <value>削除</value>
   </data>
 
-  
+
   <data name="Shares.PageTitle" xml:space="preserve">
     <value>共有</value>
   </data>
@@ -1283,7 +1283,7 @@
     <value>削除</value>
   </data>
 
-  
+
   <data name="RadioStations.PageTitle" xml:space="preserve">
     <value>ラジオ局</value>
   </data>
@@ -1297,7 +1297,7 @@
     <value>削除</value>
   </data>
 
-  
+
   <data name="Nav.Back" xml:space="preserve">
     <value>戻る</value>
   </data>
@@ -1344,7 +1344,7 @@
     <value>ライブラリ</value>
   </data>
 
-  
+
   <data name="Actions.SelectAll" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -1481,7 +1481,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="Label.Name" xml:space="preserve">
     <value>名前</value>
   </data>
@@ -1765,7 +1765,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="Dialog.AreYouSure" xml:space="preserve">
     <value>よろしいですか？</value>
   </data>
@@ -1791,7 +1791,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="TableHeader.Hash" xml:space="preserve">
     <value>#</value>
   </data>
@@ -1901,7 +1901,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="Message.DisplayingPage" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -1939,7 +1939,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="ArtistDetail.DeleteArtistWarning" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -2055,7 +2055,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="AlbumDetail.DeleteAlbum" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -2159,12 +2159,12 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="SongDetail.DetailsGoHere" xml:space="preserve">
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="Libraries.PageTitle" xml:space="preserve">
     <value>ライブラリ</value>
   </data>
@@ -2178,7 +2178,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="LibraryDetail.CleanLibrary" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -2321,7 +2321,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="PlaylistDetail.UnlockPlaylist" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -2356,7 +2356,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="Requests.PageTitle" xml:space="preserve">
     <value>リクエスト</value>
   </data>
@@ -2388,12 +2388,12 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="RequestNew.HttpsPlaceholder" xml:space="preserve">
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="RequestDetail.DeleteRequestConfirm" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -2401,7 +2401,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="RequestCategory.AddAlbum" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -2418,7 +2418,7 @@
     <value>一般</value>
   </data>
 
-  
+
   <data name="ArtistEdit.PageTitle" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -2450,7 +2450,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="AlbumEdit.PageTitle" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -2464,7 +2464,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="LibraryEdit.PageTitle" xml:space="preserve">
     <value>ライブラリを編集</value>
   </data>
@@ -2529,7 +2529,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="UserEdit.PageTitle" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -2564,7 +2564,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="Charts.PageTitle" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -2593,7 +2593,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="ChartsRankedReport.PageTitle" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -2631,7 +2631,7 @@
     <value>見つかりません</value>
   </data>
 
-  
+
   <data name="ChartsMissingReport.PageTitle" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -2651,7 +2651,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="AdminDashboard.PageTitle" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -2740,7 +2740,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="AdminJobs.PageTitle" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -2916,7 +2916,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="AdminSettings.PageTitle" xml:space="preserve">
     <value>設定</value>
   </data>
@@ -2936,7 +2936,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="ChartEditor.EditChart" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -3115,7 +3115,7 @@
     <value>削除の確認</value>
   </data>
 
-  
+
   <data name="ChartDetail.PageTitle" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -3156,7 +3156,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="ChartImportDialog.JSONImportSchema" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -3203,7 +3203,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="ChartItemResolveDialog.CurrentEntry" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -3223,12 +3223,12 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="MissingAlbumIdentifyDialog.TypeToFilter" xml:space="preserve">
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="MediaLibrary.PageTitle" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -3299,7 +3299,7 @@
     <value>選択</value>
   </data>
 
-  
+
   <data name="MediaArtists.PageTitle" xml:space="preserve">
     <value>メディアアーティスト</value>
   </data>
@@ -3310,7 +3310,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="MediaAlbumDetail.AddArtist" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -3372,7 +3372,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="MediaAlbumEdit.PageTitle" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -3380,7 +3380,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="MediaArtistEdit.PageTitle" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -3388,7 +3388,7 @@
     <value>メディアアーティスト</value>
   </data>
 
-  
+
   <data name="Notification.RequestNotFound" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -3525,7 +3525,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="Charts.SelectAllItems" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -3548,7 +3548,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="ChartsRankedReport.Header" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -3562,7 +3562,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="UserDetail.PageTitle" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -3624,7 +3624,7 @@
     <value>説明</value>
   </data>
 
-  
+
   <data name="UserDetail.Stats.ArtistsStarred" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -3659,7 +3659,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="UserRole.Admin" xml:space="preserve">
     <value>管理</value>
   </data>
@@ -3702,8 +3702,8 @@
   <data name="UserRole.Share" xml:space="preserve">
     <value>未翻訳</value>
   </data>
-  
-  
+
+
   <data name="Message.ClearedCache" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -3711,7 +3711,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="ChartImportDialog.ValidationErrors" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -3785,7 +3785,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="ChartItemResolveDialog.SearchAndSelect" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -3793,7 +3793,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="MissingAlbumIdentifyDialog.Artists" xml:space="preserve">
     <value>アーティスト</value>
   </data>
@@ -3813,7 +3813,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="AlbumEdit.AddingAlbum" xml:space="preserve">
     <value>未翻訳</value>
   </data>
@@ -3830,7 +3830,7 @@
     <value>未翻訳</value>
   </data>
 
-  
+
   <data name="UploadAlbum.Title" xml:space="preserve">
     <value>アルバムをアップロード</value>
   </data>
@@ -4136,6 +4136,9 @@
   </data>
   <data name="AdminDoctor.Duration" xml:space="preserve">
     <value>時間</value>
+  </data>
+  <data name="AdminDoctor.Exists" xml:space="preserve">
+    <value>存在</value>
   </data>
   <data name="AdminDoctor.EnvironmentInfo" xml:space="preserve">
     <value>環境情報</value>

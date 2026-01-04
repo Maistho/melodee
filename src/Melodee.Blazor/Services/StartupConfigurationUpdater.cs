@@ -87,7 +87,22 @@ public class StartupMelodeeConfigurationService(
                     var result = await libraryService.UpdateAsync(playlistLibrary.Data, cancellationToken).ConfigureAwait(false);
                     if (result.IsSuccess)
                     {
-                        logger.Information("Inbound path updated to {Path}", inboundPath);
+                        logger.Information("Playlist path updated to {Path}", playlistPath);
+                    }
+                }
+            }
+
+            var templatesPath = configuration.GetValue<string>("MELODEE_TEMPLATES_PATH");
+            if (templatesPath.Nullify() != null)
+            {
+                var templatesLibrary = await libraryService.GetTemplatesLibraryAsync(cancellationToken).ConfigureAwait(false);
+                if (templatesLibrary.IsSuccess)
+                {
+                    templatesLibrary.Data.Path = templatesPath!;
+                    var result = await libraryService.UpdateAsync(templatesLibrary.Data, cancellationToken).ConfigureAwait(false);
+                    if (result.IsSuccess)
+                    {
+                        logger.Information("Templates path updated to {Path}", templatesPath);
                     }
                 }
             }

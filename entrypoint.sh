@@ -8,6 +8,12 @@ echo "Fixing volume permissions..."
 chown -R melodee:melodee /app/storage /app/inbound /app/staging /app/user-images /app/playlists /app/templates /app/Logs 2>/dev/null || true
 chmod -R 755 /app/storage /app/inbound /app/staging /app/user-images /app/playlists /app/templates 2>/dev/null || true
 
+# Create required subdirectories for search engines
+echo "Creating search engine directories..."
+mkdir -p /app/storage/_search-engines/musicbrainz
+chown -R melodee:melodee /app/storage/_search-engines
+chmod -R 755 /app/storage/_search-engines
+
 # Wait for database to be ready
 echo "Waiting for database..."
 until pg_isready -h melodee-db -p 5432 -U melodeeuser -d melodeedb -q; do
