@@ -7,6 +7,31 @@ permalink: /homelab/
 
 This guide provides comprehensive instructions for deploying Melodee in a homelab environment, covering everything from basic setup to advanced configurations.
 
+## Quick Start
+
+For first-time setup, use the automated setup script:
+
+```bash
+# Clone the repository
+git clone https://github.com/sphildreth/melodee.git
+cd melodee
+
+# Run the setup script (detects podman or docker automatically)
+python3 scripts/run-container-setup.py
+
+# Or setup and start containers in one step
+python3 scripts/run-container-setup.py --start
+```
+
+The setup script will:
+- Detect your container runtime (podman or docker)
+- **Offer to install podman** if no container runtime is found (supports Debian/Ubuntu, Fedora, RHEL/CentOS, Arch, openSUSE, and macOS with Homebrew)
+- Generate secure passwords and JWT tokens
+- Create a properly configured `.env` file
+- Optionally start the containers
+
+After setup, access Melodee at `http://localhost:8080`
+
 ## System Requirements
 
 ### Minimum Requirements
@@ -215,9 +240,9 @@ Create a dedicated VM for Melodee:
    # Clone and deploy Melodee
    git clone https://github.com/sphildreth/melodee.git
    cd melodee
-   cp example.env .env
-   # Edit .env with your preferences
-   docker compose up -d
+   
+   # Run setup script to generate secure configuration
+   python3 scripts/run-container-setup.py --start
    ```
 
 #### Option C: Using Proxmox Backup Server (PBS)

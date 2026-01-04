@@ -34,6 +34,8 @@ services:
       - ConnectionStrings__ArtistSearchEngineConnection=Data Source=/app/storage/_search-engines/artistSearchEngine.db;Cache=Shared
       - DB_MIN_POOL_SIZE=${DB_MIN_POOL_SIZE:-10}
       - DB_MAX_POOL_SIZE=${DB_MAX_POOL_SIZE:-50}
+      - MelodeeAuthSettings__Token=${MELODEE_AUTH_TOKEN:-ChangeMeToASecureRandomString64CharsOrMore!}
+      - MelodeeAuthSettings__TokenHours=${MELODEE_AUTH_TOKEN_HOURS:-24}
     volumes:
       - storage:/app/storage
       - inbound:/app/inbound
@@ -42,6 +44,7 @@ services:
       - playlists:/app/playlists
       - templates:/app/templates
       - logs:/app/Logs
+      - data_protection_keys:/home/melodee/.aspnet/DataProtection-Keys
     ports:
       - "${MELODEE_PORT:-8080}:8080"
     restart: unless-stopped
@@ -76,3 +79,5 @@ volumes:
     name: melodee_templates
   logs:
     name: melodee_logs
+  data_protection_keys:
+    name: melodee_data_protection_keys

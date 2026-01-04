@@ -51,6 +51,7 @@ public sealed class DirectoryProcessorToStagingService(
     : ServiceBase(logger, cacheManager, contextFactory), IDisposable
 {
     private readonly SemaphoreSlim _processingThrottle = new(Environment.ProcessorCount);
+    private bool _disposed;
     private IAlbumNamesInDirectoryPlugin _albumNamesInDirectoryPlugin = null!;
     private IAlbumValidator _albumValidator = new AlbumValidator(new MelodeeConfiguration([]));
     private IMelodeeConfiguration _configuration = new MelodeeConfiguration([]);
@@ -87,6 +88,7 @@ public sealed class DirectoryProcessorToStagingService(
 
     public void Dispose()
     {
+        _disposed = true;
         _processingThrottle.Dispose();
     }
 
@@ -357,7 +359,17 @@ public sealed class DirectoryProcessorToStagingService(
                 }
                 finally
                 {
-                    _processingThrottle.Release();
+                    if (!_disposed)
+                    {
+                        try
+                        {
+                            _processingThrottle.Release();
+                        }
+                        catch (ObjectDisposedException)
+                        {
+                            // Semaphore was disposed during shutdown - ignore
+                        }
+                    }
                     OnDirectoryProcessed?.Invoke(this, directoryInfoToProcess);
                 }
             });

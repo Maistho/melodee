@@ -170,6 +170,10 @@
                     extractedDirs.Length);
 
                 _result = new UploadResultInfo(true, folderName, extractedFiles.Length, extractedDirs.Length, null);
+                
+                // Close dialog on success - parent will show toast notification
+                DialogService.Close(true);
+                return;
             }
             finally
             {
