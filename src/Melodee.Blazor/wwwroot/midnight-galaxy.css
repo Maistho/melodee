@@ -177,6 +177,131 @@ main,
     color: #C77DFF !important;
 }
 
+/* Nested panel menu items (Admin submenu) */
+.rz-panelmenu .rz-panelmenu-panel .rz-panelmenu-content,
+.rz-panelmenu-panel .rz-panelmenu-panel {
+    background-color: #0A0A12 !important;
+}
+
+.rz-panelmenu .rz-navigation-item,
+.rz-panelmenu .rz-navigation-item a,
+.rz-panelmenu .rz-navigation-item span,
+.rz-panelmenu .rz-navigation-item-text,
+.rz-panelmenu .rz-panelmenu-item,
+.rz-panelmenu .rz-panelmenu-item a,
+.rz-panelmenu .rz-menuitem-text,
+.rz-panelmenu-panel .rz-menuitem-link,
+.rz-panelmenu-panel .rz-menuitem-link span {
+    color: #E0AAFF !important;
+    background-color: transparent !important;
+}
+
+.rz-panelmenu .rz-navigation-item:hover,
+.rz-panelmenu .rz-navigation-item:hover a,
+.rz-panelmenu .rz-panelmenu-item:hover,
+.rz-panelmenu-panel .rz-menuitem-link:hover,
+.rz-panelmenu-panel .rz-menuitem-link:hover span {
+    color: #C77DFF !important;
+    background-color: rgba(157, 78, 221, 0.15) !important;
+}
+
+.rz-panelmenu .rz-navigation-item-active,
+.rz-panelmenu .rz-navigation-item-active a,
+.rz-panelmenu .rz-state-active,
+.rz-panelmenu .rz-state-active a {
+    color: #9D4EDD !important;
+    background-color: rgba(157, 78, 221, 0.2) !important;
+}
+
+.rz-panelmenu .rz-navigation-item .rzi,
+.rz-panelmenu .rz-menuitem .rzi {
+    color: #C77DFF !important;
+}
+
+/* Profile menu styling */
+.rz-profile-menu,
+.rz-profile-menu-button {
+    border: none !important;
+    background: transparent !important;
+}
+
+.rz-header .rzi,
+.rz-header .material-symbols-outlined,
+.rz-header .rz-profile-menu {
+    border-left: none !important;
+    border-right: none !important;
+    margin-left: 0.5rem;
+}
+
+.rz-profile-menu .rz-menu,
+.rz-profile-menu-dropdown {
+    background: #10101B !important;
+    border: 1px solid #3C096C !important;
+    box-shadow: 0 4px 20px rgba(157, 78, 221, 0.3) !important;
+}
+
+.rz-profile-menu .rz-menuitem,
+.rz-profile-menu .rz-menuitem a,
+.rz-profile-menu-dropdown .rz-menuitem {
+    color: #E0AAFF !important;
+    background: transparent !important;
+}
+
+.rz-profile-menu .rz-menuitem:hover,
+.rz-profile-menu .rz-menuitem a:hover {
+    background: rgba(157, 78, 221, 0.15) !important;
+    color: #C77DFF !important;
+}
+
+/* Input styling - comprehensive coverage */
+.rz-textbox,
+.rz-dropdown,
+.rz-textarea,
+.rz-inputtext,
+.rz-autocomplete input,
+.rz-autocomplete-panel,
+.rz-multiselect,
+.rz-numeric,
+.rz-password input,
+.rz-listbox,
+select,
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="number"],
+input[type="search"] {
+    background: #1A1A2E !important;
+    background-color: #1A1A2E !important;
+    border-color: #3C096C !important;
+    color: #F8ECFF !important;
+}
+
+.rz-dropdown-panel,
+.rz-dropdown-items,
+.rz-dropdown-item,
+.rz-listbox-list,
+.rz-autocomplete-items {
+    background: #1A1A2E !important;
+    color: #F8ECFF !important;
+}
+
+.rz-dropdown-item:hover,
+.rz-listbox-item:hover,
+.rz-autocomplete-item:hover {
+    background: #240046 !important;
+    color: #C77DFF !important;
+}
+
+.rz-dropdown-item.rz-state-highlight {
+    background: rgba(157, 78, 221, 0.2) !important;
+    color: #9D4EDD !important;
+}
+
+input::placeholder,
+.rz-textbox::placeholder {
+    color: #5A189A !important;
+}
+
 /* DataGrid */
 .rz-datatable {
     background: #10101B !important;

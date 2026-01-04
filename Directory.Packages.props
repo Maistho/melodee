@@ -135,5 +135,7 @@
     <PackageVersion Include="HtmlSanitizer" Version="9.1.891-beta" />
     <PackageVersion Include="AngleSharp" Version="1.4.0" />
     <PackageVersion Include="AngleSharp.Css" Version="1.0.0-beta.159" />
+    <PackageVersion Include="Microsoft.Playwright" Version="1.52.0" />
+    <PackageVersion Include="Microsoft.Playwright.Xunit" Version="1.52.0" />
   </ItemGroup>
 </Project>

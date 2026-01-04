@@ -140,6 +140,45 @@ header {
     color: #3D2945 !important;
 }
 
+/* Profile menu in header - consistent spacing */
+.rz-profile-menu,
+.rz-profile-menu-button {
+    border: none !important;
+    background: transparent !important;
+}
+
+/* Remove any vertical borders/lines between header elements */
+.rz-header .rzi,
+.rz-header .material-symbols-outlined,
+.rz-header .rz-profile-menu {
+    border-left: none !important;
+    border-right: none !important;
+    margin-left: 0.5rem;
+}
+
+/* Profile menu dropdown styling */
+.rz-profile-menu .rz-menu,
+.rz-profile-menu-dropdown {
+    background: #FFFBFE !important;
+    border: 1px solid #FFCCE8 !important;
+    box-shadow: 0 4px 12px rgba(224, 64, 251, 0.15) !important;
+}
+
+.rz-profile-menu .rz-menuitem,
+.rz-profile-menu .rz-menuitem a,
+.rz-profile-menu-dropdown .rz-menuitem,
+.rz-profile-menu-dropdown .rz-menuitem a {
+    color: #3D2945 !important;
+    background: transparent !important;
+}
+
+.rz-profile-menu .rz-menuitem:hover,
+.rz-profile-menu .rz-menuitem a:hover,
+.rz-profile-menu-dropdown .rz-menuitem:hover {
+    background: rgba(224, 64, 251, 0.1) !important;
+    color: #E040FB !important;
+}
+
 /* Main content */
 .rz-body,
 .rz-layout-body,
@@ -165,13 +204,70 @@ main,
 }
 
 .rz-panelmenu-content .rz-menuitem,
-.rz-panelmenu-content .rz-menuitem a {
+.rz-panelmenu-content .rz-menuitem a,
+.rz-panelmenu-content .rz-menuitem span {
     color: #3D2945 !important;
 }
 
 .rz-panelmenu-content .rz-menuitem:hover,
 .rz-panelmenu-content .rz-menuitem a:hover {
     background-color: rgba(224, 64, 251, 0.1) !important;
+    color: #E040FB !important;
+}
+
+/* Nested panel menu items (Admin submenu) */
+.rz-panelmenu .rz-panelmenu-panel .rz-panelmenu-content,
+.rz-panelmenu-panel .rz-panelmenu-panel {
+    background-color: #FFECF8 !important;
+}
+
+/* All nested menu items in panel menu */
+.rz-panelmenu .rz-navigation-item,
+.rz-panelmenu .rz-navigation-item a,
+.rz-panelmenu .rz-navigation-item span,
+.rz-panelmenu .rz-navigation-item-text,
+.rz-panelmenu .rz-panelmenu-item,
+.rz-panelmenu .rz-panelmenu-item a,
+.rz-panelmenu .rz-panelmenu-item span,
+.rz-panelmenu .rz-menuitem-text,
+.rz-panelmenu-panel .rz-menuitem-link,
+.rz-panelmenu-panel .rz-menuitem-link span {
+    color: #3D2945 !important;
+    background-color: transparent !important;
+}
+
+/* Nested items hover state */
+.rz-panelmenu .rz-navigation-item:hover,
+.rz-panelmenu .rz-navigation-item:hover a,
+.rz-panelmenu .rz-navigation-item:hover span,
+.rz-panelmenu .rz-panelmenu-item:hover,
+.rz-panelmenu .rz-panelmenu-item:hover a,
+.rz-panelmenu-panel .rz-menuitem-link:hover,
+.rz-panelmenu-panel .rz-menuitem-link:hover span {
+    color: #E040FB !important;
+    background-color: rgba(224, 64, 251, 0.1) !important;
+}
+
+/* Active/selected state for nested items */
+.rz-panelmenu .rz-navigation-item-active,
+.rz-panelmenu .rz-navigation-item-active a,
+.rz-panelmenu .rz-navigation-item-active span,
+.rz-panelmenu .rz-state-active,
+.rz-panelmenu .rz-state-active a {
+    color: #E040FB !important;
+    background-color: rgba(224, 64, 251, 0.15) !important;
+}
+
+/* Panel menu icons in nested items */
+.rz-panelmenu .rz-navigation-item .rzi,
+.rz-panelmenu .rz-panelmenu-item .rzi,
+.rz-panelmenu .rz-menuitem .rzi {
+    color: #6B4C7A !important;
+}
+
+.rz-panelmenu .rz-navigation-item:hover .rzi,
+.rz-panelmenu .rz-panelmenu-item:hover .rzi,
+.rz-panelmenu .rz-menuitem:hover .rzi {
     color: #E040FB !important;
 }
 

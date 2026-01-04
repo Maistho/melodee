@@ -4,6 +4,7 @@ using Melodee.Common.Models.SearchEngines.ArtistSearchEngineServiceData;
 using Melodee.Common.Plugins.SearchEngine.MusicBrainz.Data;
 using Melodee.Common.Services;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Moq;
@@ -21,6 +22,7 @@ public class DoctorServiceTests
     private readonly Mock<IDbContextFactory<ArtistSearchEngineServiceDbContext>> _artistSearchEngineDbContextFactory;
     private readonly Mock<LibraryService> _libraryService;
     private readonly Mock<IWebHostEnvironment> _webHostEnvironment;
+    private readonly Mock<IHttpContextAccessor> _httpContextAccessor;
 
     public DoctorServiceTests()
     {
@@ -31,6 +33,7 @@ public class DoctorServiceTests
         _webHostEnvironment = new Mock<IWebHostEnvironment>();
         _webHostEnvironment.Setup(x => x.EnvironmentName).Returns("Test");
         _webHostEnvironment.Setup(x => x.ContentRootPath).Returns("/test/path");
+        _httpContextAccessor = new Mock<IHttpContextAccessor>();
     }
 
     [Fact]
@@ -263,7 +266,8 @@ public class DoctorServiceTests
             _musicBrainzDbContextFactory.Object,
             _artistSearchEngineDbContextFactory.Object,
             _libraryService.Object,
-            _webHostEnvironment.Object);
+            _webHostEnvironment.Object,
+            _httpContextAccessor.Object);
     }
 
     private static IConfiguration CreateConfiguration(Dictionary<string, string?> values)

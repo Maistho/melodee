@@ -115,6 +115,45 @@ header * {
     color: #F5F5F5 !important;
 }
 
+/* Profile menu in header - remove any separator lines */
+.rz-profile-menu,
+.rz-profile-menu-button {
+    border: none !important;
+    background: transparent !important;
+}
+
+/* Remove any vertical borders/lines between header elements */
+.rz-header .rzi,
+.rz-header .material-symbols-outlined,
+.rz-header .rz-profile-menu {
+    border-left: none !important;
+    border-right: none !important;
+    margin-left: 0.5rem;
+}
+
+/* Profile menu dropdown styling */
+.rz-profile-menu .rz-menu,
+.rz-profile-menu-dropdown {
+    background: #323232 !important;
+    border: 1px solid #484848 !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+}
+
+.rz-profile-menu .rz-menuitem,
+.rz-profile-menu .rz-menuitem a,
+.rz-profile-menu-dropdown .rz-menuitem,
+.rz-profile-menu-dropdown .rz-menuitem a {
+    color: #E0E0E0 !important;
+    background: transparent !important;
+}
+
+.rz-profile-menu .rz-menuitem:hover,
+.rz-profile-menu .rz-menuitem a:hover,
+.rz-profile-menu-dropdown .rz-menuitem:hover {
+    background: rgba(224, 64, 251, 0.15) !important;
+    color: #F06EFF !important;
+}
+
 /* Header/Navigation styling */
 .rz-sidebar,
 .rz-panel-menu {
@@ -184,7 +223,8 @@ header * {
 }
 
 .rz-panelmenu-content .rz-menuitem,
-.rz-panelmenu-content .rz-menuitem a {
+.rz-panelmenu-content .rz-menuitem a,
+.rz-panelmenu-content .rz-menuitem span {
     color: #E0E0E0 !important;
     background-color: transparent !important;
 }
@@ -192,6 +232,62 @@ header * {
 .rz-panelmenu-content .rz-menuitem:hover,
 .rz-panelmenu-content .rz-menuitem a:hover {
     background-color: rgba(224, 64, 251, 0.15) !important;
+    color: #F06EFF !important;
+}
+
+/* Nested panel menu items (Admin submenu) - CRITICAL FOR READABILITY */
+.rz-panelmenu .rz-panelmenu-panel .rz-panelmenu-content,
+.rz-panelmenu-panel .rz-panelmenu-panel {
+    background-color: #2A2A2A !important;
+}
+
+/* All nested menu items in panel menu */
+.rz-panelmenu .rz-navigation-item,
+.rz-panelmenu .rz-navigation-item a,
+.rz-panelmenu .rz-navigation-item span,
+.rz-panelmenu .rz-navigation-item-text,
+.rz-panelmenu .rz-panelmenu-item,
+.rz-panelmenu .rz-panelmenu-item a,
+.rz-panelmenu .rz-panelmenu-item span,
+.rz-panelmenu .rz-menuitem-text,
+.rz-panelmenu-panel .rz-menuitem-link,
+.rz-panelmenu-panel .rz-menuitem-link span {
+    color: #E0E0E0 !important;
+    background-color: transparent !important;
+}
+
+/* Nested items hover state */
+.rz-panelmenu .rz-navigation-item:hover,
+.rz-panelmenu .rz-navigation-item:hover a,
+.rz-panelmenu .rz-navigation-item:hover span,
+.rz-panelmenu .rz-panelmenu-item:hover,
+.rz-panelmenu .rz-panelmenu-item:hover a,
+.rz-panelmenu-panel .rz-menuitem-link:hover,
+.rz-panelmenu-panel .rz-menuitem-link:hover span {
+    color: #F06EFF !important;
+    background-color: rgba(224, 64, 251, 0.15) !important;
+}
+
+/* Active/selected state for nested items */
+.rz-panelmenu .rz-navigation-item-active,
+.rz-panelmenu .rz-navigation-item-active a,
+.rz-panelmenu .rz-navigation-item-active span,
+.rz-panelmenu .rz-state-active,
+.rz-panelmenu .rz-state-active a {
+    color: #E040FB !important;
+    background-color: rgba(224, 64, 251, 0.2) !important;
+}
+
+/* Panel menu icons in nested items */
+.rz-panelmenu .rz-navigation-item .rzi,
+.rz-panelmenu .rz-panelmenu-item .rzi,
+.rz-panelmenu .rz-menuitem .rzi {
+    color: #9E9E9E !important;
+}
+
+.rz-panelmenu .rz-navigation-item:hover .rzi,
+.rz-panelmenu .rz-panelmenu-item:hover .rzi,
+.rz-panelmenu .rz-menuitem:hover .rzi {
     color: #F06EFF !important;
 }
 
@@ -220,21 +316,82 @@ header * {
     box-shadow: 0 4px 16px rgba(224, 64, 251, 0.15);
 }
 
-/* Input styling */
+/* Input styling - comprehensive coverage for all form elements */
 .rz-textbox,
 .rz-dropdown,
-.rz-textarea {
-    background: #3C3C3C;
-    border-color: #5C5C5C;
-    color: #F5F5F5;
+.rz-textarea,
+.rz-inputtext,
+.rz-autocomplete input,
+.rz-autocomplete-panel,
+.rz-multiselect,
+.rz-chips,
+.rz-chips ul,
+.rz-colorpicker-panel,
+.rz-datepicker,
+.rz-datepicker-panel,
+.rz-datepicker-calendar,
+.rz-timepicker,
+.rz-numeric,
+.rz-password input,
+.rz-listbox,
+.rz-picklist,
+select,
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="number"],
+input[type="search"],
+input[type="tel"],
+input[type="url"] {
+    background: #3C3C3C !important;
+    background-color: #3C3C3C !important;
+    border-color: #5C5C5C !important;
+    color: #F5F5F5 !important;
+}
+
+/* Dropdown panels and list styling */
+.rz-dropdown-panel,
+.rz-dropdown-items,
+.rz-dropdown-item,
+.rz-listbox-list,
+.rz-listbox-item,
+.rz-autocomplete-items,
+.rz-autocomplete-item,
+.rz-multiselect-panel,
+.rz-multiselect-items {
+    background: #3C3C3C !important;
+    background-color: #3C3C3C !important;
+    color: #F5F5F5 !important;
+}
+
+.rz-dropdown-item:hover,
+.rz-listbox-item:hover,
+.rz-autocomplete-item:hover,
+.rz-multiselect-item:hover {
+    background: #484848 !important;
+    background-color: #484848 !important;
+    color: #F06EFF !important;
+}
+
+.rz-dropdown-item.rz-state-highlight,
+.rz-listbox-item.rz-state-highlight {
+    background: rgba(224, 64, 251, 0.2) !important;
+    color: #E040FB !important;
+}
+
+/* Input placeholder text */
+.rz-textbox::placeholder,
+input::placeholder {
+    color: #9E9E9E !important;
 }
 
 /* Input focus states with gradient glow */
 .rz-textbox:focus,
 .rz-dropdown:focus,
-.rz-textarea:focus {
-    border-color: #E040FB;
-    box-shadow: 0 0 0 3px rgba(224, 64, 251, 0.25);
+.rz-textarea:focus,
+input:focus {
+    border-color: #E040FB !important;
+    box-shadow: 0 0 0 3px rgba(224, 64, 251, 0.25) !important;
 }
 
 /* DataGrid styling */
