@@ -151,22 +151,40 @@
                 </RadzenText>
                 <RadzenDataGrid Data="@_libraryPaths" TItem="LibraryPathResult" AllowSorting="true" class="rz-mt-2">
                     <Columns>
-                        <RadzenDataGridColumn Title="@L("AdminDoctor.Exists")" Width="80px">
+                        <RadzenDataGridColumn Title="@L("AdminDoctor.Exists")" Width="70px">
                             <Template Context="lib">
                                 <RadzenIcon Icon="@(lib.Exists ? "check_circle" : "cancel")"
                                            Style="@($"color: var(--rz-{(lib.Exists ? "success" : "danger")});")"/>
                             </Template>
                         </RadzenDataGridColumn>
-                        <RadzenDataGridColumn Title="@L("AdminDoctor.Writable")" Width="80px">
+                        <RadzenDataGridColumn Title="@L("AdminDoctor.Writable")" Width="70px">
                             <Template Context="lib">
                                 <RadzenIcon Icon="@(lib.Writable ? "check_circle" : "cancel")"
                                            Style="@($"color: var(--rz-{(lib.Writable ? "success" : "danger")});")"/>
                             </Template>
                         </RadzenDataGridColumn>
-                        <RadzenDataGridColumn Property="@nameof(LibraryPathResult.Name)" Title="@L("AdminDoctor.LibraryName")" Width="150px"/>
-                        <RadzenDataGridColumn Property="@nameof(LibraryPathResult.Type)" Title="@L("AdminDoctor.LibraryType")" Width="120px"/>
+                        <RadzenDataGridColumn Property="@nameof(LibraryPathResult.Name)" Title="@L("AdminDoctor.LibraryName")" Width="140px"/>
+                        <RadzenDataGridColumn Property="@nameof(LibraryPathResult.Type)" Title="@L("AdminDoctor.LibraryType")" Width="100px"/>
                         <RadzenDataGridColumn Property="@nameof(LibraryPathResult.Path)" Title="@L("AdminDoctor.Path")"/>
-                        <RadzenDataGridColumn Property="@nameof(LibraryPathResult.Details)" Title="@L("AdminDoctor.Details")" Width="200px"/>
+                        <RadzenDataGridColumn Title="@L("AdminDoctor.DiskSpace")" Width="220px">
+                            <Template Context="lib">
+                                @if (lib.TotalBytes > 0)
+                                {
+                                    <RadzenStack Gap="0.25rem">
+                                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                                            <RadzenIcon Icon="@GetDiskSpaceIcon(lib.DiskStatus)" Style="@lib.DiskStatusStyle" />
+                                            <RadzenText TextStyle="TextStyle.Caption">@FormatBytes(lib.AvailableBytes) @L("AdminDoctor.DiskAvailable").ToLower()</RadzenText>
+                                        </RadzenStack>
+                                        <RadzenProgressBar Value="@lib.UsedPercent" Max="100" ShowValue="false" Style="height: 6px;"
+                                                          ProgressBarStyle="@(lib.DiskStatus.Contains(L("AdminDoctor.Critical")) ? ProgressBarStyle.Danger : lib.DiskStatus.Contains(L("AdminDoctor.Warning")) ? ProgressBarStyle.Warning : ProgressBarStyle.Success)"/>
+                                    </RadzenStack>
+                                }
+                                else
+                                {
+                                    <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">—</RadzenText>
+                                }
+                            </Template>
+                        </RadzenDataGridColumn>
                     </Columns>
                 </RadzenDataGrid>
             </RadzenCard>
@@ -263,37 +281,6 @@
             </RadzenCard>
         }
 
-        @* Disk Space *@
-        @if (_diskSpaceInfo.Any())
-        {
-            <RadzenCard>
-                <RadzenText TextStyle="TextStyle.H6">
-                    <RadzenIcon Icon="storage" class="rz-me-1"/>
-                    @L("AdminDoctor.DiskSpace")
-                </RadzenText>
-                <RadzenStack Gap="0.5rem" class="rz-mt-2">
-                    @foreach (var disk in _diskSpaceInfo)
-                    {
-                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" class="rz-p-2 rz-border-radius-1" Style="background: var(--rz-base-background-color); border: 1px solid var(--rz-base-300);">
-                            <RadzenIcon Icon="@GetDiskSpaceIcon(disk.Status)" Style="@disk.StatusStyle"/>
-                            <RadzenStack Gap="0" Style="flex: 1;">
-                                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
-                                    <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-color);"><strong>@disk.Name</strong></RadzenText>
-                                    <RadzenBadge Text="@disk.Status" Style="@disk.StatusStyle"/>
-                                </RadzenStack>
-                                <RadzenText TextStyle="TextStyle.Caption" Style="font-family: monospace; color: var(--rz-text-secondary-color);">@disk.Path</RadzenText>
-                                <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" class="rz-mt-1">
-                                    <RadzenText TextStyle="TextStyle.Caption">@L("AdminDoctor.DiskTotal"): @FormatBytes(disk.TotalBytes)</RadzenText>
-                                    <RadzenText TextStyle="TextStyle.Caption">@L("AdminDoctor.DiskAvailable"): @FormatBytes(disk.AvailableBytes)</RadzenText>
-                                    <RadzenText TextStyle="TextStyle.Caption">@L("AdminDoctor.DiskUsed"): @disk.UsedPercent.ToString("F1")%</RadzenText>
-                                </RadzenStack>
-                            </RadzenStack>
-                        </RadzenStack>
-                    }
-                </RadzenStack>
-            </RadzenCard>
-        }
-
         @* Search Engine API Keys *@
         @if (_searchEngineApiKeys.Any())
         {
@@ -332,27 +319,30 @@
         }
 
         @* Environment Variables *@
-        <RadzenCard>
-            <RadzenText TextStyle="TextStyle.H6">
-                <RadzenIcon Icon="tune" class="rz-me-1"/>
-                @L("AdminDoctor.RelevantEnvVars")
-            </RadzenText>
-            <RadzenStack Gap="0.5rem" class="rz-mt-2">
-                @foreach (var envVar in _relevantEnvVars)
-                {
-                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" class="rz-p-2 rz-border-radius-1" Style="background: var(--rz-base-background-color); border: 1px solid var(--rz-base-300);">
-                        <RadzenIcon Icon="@(envVar.IsSet ? "check" : "remove")"
-                                   Style="@($"color: var(--rz-{(envVar.IsSet ? "success" : "secondary")});")"/>
-                        <RadzenStack Gap="0" Style="flex: 1;">
-                            <RadzenText TextStyle="TextStyle.Body2" Style="font-family: monospace; color: var(--rz-text-color);">@envVar.Name</RadzenText>
-                            <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
-                                @(envVar.IsSet ? envVar.MaskedValue : L("AdminDoctor.NotSet"))
-                            </RadzenText>
+        @if (_relevantEnvVars.Any())
+        {
+            <RadzenCard>
+                <RadzenText TextStyle="TextStyle.H6">
+                    <RadzenIcon Icon="tune" class="rz-me-1"/>
+                    @L("AdminDoctor.RelevantEnvVars")
+                </RadzenText>
+                <RadzenStack Gap="0.5rem" class="rz-mt-2">
+                    @foreach (var envVar in _relevantEnvVars)
+                    {
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" class="rz-p-2 rz-border-radius-1" Style="background: var(--rz-base-background-color); border: 1px solid var(--rz-base-300);">
+                            <RadzenIcon Icon="@(envVar.IsSet ? "check" : "remove")"
+                                       Style="@($"color: var(--rz-{(envVar.IsSet ? "success" : "secondary")});")"/>
+                            <RadzenStack Gap="0" Style="flex: 1;">
+                                <RadzenText TextStyle="TextStyle.Body2" Style="font-family: monospace; color: var(--rz-text-color);">@envVar.Name</RadzenText>
+                                <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
+                                    @(envVar.IsSet ? envVar.MaskedValue : L("AdminDoctor.NotSet"))
+                                </RadzenText>
+                            </RadzenStack>
                         </RadzenStack>
-                    </RadzenStack>
-                }
-            </RadzenStack>
-        </RadzenCard>
+                    }
+                </RadzenStack>
+            </RadzenCard>
+        }
     }
 </RadzenStack>
 
@@ -370,7 +360,6 @@
     private List<ConnectionStringInfo> _connectionStrings = [];
     private List<EnvironmentVariableInfo> _relevantEnvVars = [];
     private List<SerilogLogPathInfo> _serilogLogPaths = [];
-    private List<DiskSpaceInfoLocal> _diskSpaceInfo = [];
     private List<SearchEngineApiKeyInfoLocal> _searchEngineApiKeys = [];
 
     private static readonly DateTime StartTime = DateTime.UtcNow;
@@ -432,7 +421,6 @@
         _connectionStrings.Clear();
         _relevantEnvVars.Clear();
         _serilogLogPaths.Clear();
-        _diskSpaceInfo.Clear();
         _searchEngineApiKeys.Clear();
 
         // Environment Information (UI-specific, kept local)
@@ -449,11 +437,33 @@
             _checks.Add(new CheckResult(localizedName, check.Success, localizedDetails, check.Duration));
         }
         
-        // Map library paths with localized details
+        // Map library paths with localized details and disk space info
         foreach (var path in results.LibraryPaths)
         {
             var localizedDetails = GetLibraryPathDetails(path.Exists, path.Writable);
-            _libraryPaths.Add(new LibraryPathResult(path.Name, path.Type, path.Path, path.Exists, path.Writable, localizedDetails));
+            
+            // Find matching disk space info for this library path
+            var diskInfo = results.DiskSpaceInfo.FirstOrDefault(d => d.Name == path.Name);
+            var (diskStatus, diskStatusStyle) = diskInfo?.Status switch
+            {
+                Blazor.Services.DiskSpaceStatus.Critical => (L("AdminDoctor.Critical"), "color: var(--rz-danger);"),
+                Blazor.Services.DiskSpaceStatus.Warning => (L("AdminDoctor.Warning"), "color: var(--rz-warning);"),
+                Blazor.Services.DiskSpaceStatus.Ok => (L("AdminDoctor.Ok"), "color: var(--rz-success);"),
+                _ => (L("AdminDoctor.Unknown"), "color: var(--rz-secondary);")
+            };
+            
+            _libraryPaths.Add(new LibraryPathResult(
+                path.Name, 
+                path.Type, 
+                path.Path, 
+                path.Exists, 
+                path.Writable, 
+                localizedDetails,
+                diskInfo?.TotalBytes ?? 0,
+                diskInfo?.AvailableBytes ?? 0,
+                diskInfo?.UsedPercent ?? 0,
+                diskStatus,
+                diskStatusStyle));
         }
         
         // Map configurable services
@@ -478,19 +488,6 @@
         foreach (var envVar in results.EnvironmentVariables)
         {
             _relevantEnvVars.Add(new EnvironmentVariableInfo(envVar.Name, envVar.MaskedValue, envVar.IsSet));
-        }
-        
-        // Map disk space info
-        foreach (var disk in results.DiskSpaceInfo)
-        {
-            var (status, statusStyle) = disk.Status switch
-            {
-                Blazor.Services.DiskSpaceStatus.Critical => (L("AdminDoctor.Critical"), "color: var(--rz-danger);"),
-                Blazor.Services.DiskSpaceStatus.Warning => (L("AdminDoctor.Warning"), "color: var(--rz-warning);"),
-                Blazor.Services.DiskSpaceStatus.Ok => (L("AdminDoctor.Ok"), "color: var(--rz-success);"),
-                _ => (L("AdminDoctor.Unknown"), "color: var(--rz-secondary);")
-            };
-            _diskSpaceInfo.Add(new DiskSpaceInfoLocal(disk.Name, disk.Path, disk.TotalBytes, disk.AvailableBytes, disk.UsedBytes, disk.UsedPercent, status, statusStyle));
         }
         
         // Map search engine API keys
@@ -528,6 +525,10 @@
         "DiskSpace" => L("AdminDoctor.Check.DiskSpace"),
         "LibraryPathOverlap" => L("AdminDoctor.Check.LibraryPathOverlap"),
         "SearchEngineApiKeys" => L("AdminDoctor.Check.SearchEngineApiKeys"),
+        "SmtpConfiguration" => L("AdminDoctor.Check.SmtpConfiguration"),
+        "JwtTokenStrength" => L("AdminDoctor.Check.JwtTokenStrength"),
+        "HttpsSecurity" => L("AdminDoctor.Check.HttpsSecurity"),
+        "AdminPassword" => L("AdminDoctor.Check.AdminPassword"),
         _ => checkName
     };
     
@@ -637,15 +638,135 @@
     {
         var diagnosticData = new
         {
-            timestamp = DateTime.UtcNow.ToString("o"),
-            durationSeconds = _totalDuration.TotalSeconds,
-            allChecksPassed = _allChecksPassed,
-            environment = _environmentInfo.ToDictionary(e => e.Key, e => e.Value),
-            checks = _checks.Select(c => new { name = c.Name, success = c.Success, details = c.Details, durationMs = (int)c.Duration.TotalMilliseconds }),
-            libraryPaths = _libraryPaths.Select(l => new { name = l.Name, type = l.Type, path = l.Path, exists = l.Exists, details = l.Details }),
-            configurableServices = _configurableServices.Select(s => new { category = s.Category, name = s.Name, settingKey = s.SettingKey, enabled = s.Enabled }),
-            connectionStrings = _connectionStrings.Select(c => new { name = c.Name, isValid = c.IsValid }),
-            environmentVariables = _relevantEnvVars.Select(e => new { name = e.Name, isSet = e.IsSet })
+            // Metadata
+            exportedAt = DateTime.UtcNow.ToString("o"),
+            melodeeVersion = typeof(Program).Assembly.GetName().Version?.ToString() ?? "Unknown",
+            diagnosticDurationSeconds = _totalDuration.TotalSeconds,
+            overallStatus = _allChecksPassed ? "Passed" : "Issues Found",
+            
+            // System Environment
+            system = new
+            {
+                dotNetVersion = RuntimeInformation.FrameworkDescription,
+                osDescription = RuntimeInformation.OSDescription,
+                osArchitecture = RuntimeInformation.OSArchitecture.ToString(),
+                processArchitecture = RuntimeInformation.ProcessArchitecture.ToString(),
+                machineName = Environment.MachineName,
+                processId = Environment.ProcessId,
+                processorCount = Environment.ProcessorCount,
+                workingSetMb = Environment.WorkingSet / 1024 / 1024,
+                is64BitProcess = Environment.Is64BitProcess,
+                is64BitOperatingSystem = Environment.Is64BitOperatingSystem
+            },
+            
+            // Application Environment
+            application = new
+            {
+                environment = WebHostEnvironment.EnvironmentName,
+                contentRootPath = WebHostEnvironment.ContentRootPath,
+                webRootPath = WebHostEnvironment.WebRootPath,
+                serverTimeUtc = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"),
+                uptime = FormatUptime(DateTime.UtcNow - StartTime),
+                uptimeSeconds = (DateTime.UtcNow - StartTime).TotalSeconds
+            },
+            
+            // All System Checks
+            checks = _checks.Select(c => new 
+            { 
+                name = c.Name, 
+                success = c.Success, 
+                details = c.Details, 
+                durationMs = (int)c.Duration.TotalMilliseconds 
+            }),
+            
+            // Library Paths with Disk Space
+            libraryPaths = _libraryPaths.Select(l => new 
+            { 
+                name = l.Name, 
+                type = l.Type, 
+                path = l.Path, 
+                exists = l.Exists,
+                writable = l.Writable,
+                diskSpace = new
+                {
+                    totalBytes = l.TotalBytes,
+                    totalFormatted = FormatBytes(l.TotalBytes),
+                    availableBytes = l.AvailableBytes,
+                    availableFormatted = FormatBytes(l.AvailableBytes),
+                    usedPercent = l.UsedPercent,
+                    status = l.DiskStatus
+                }
+            }),
+            
+            // Configurable Services
+            configurableServices = _configurableServices
+                .OrderBy(s => s.Category)
+                .ThenBy(s => s.Name)
+                .Select(s => new 
+                { 
+                    category = s.Category, 
+                    name = s.Name, 
+                    settingKey = s.SettingKey, 
+                    enabled = s.Enabled 
+                }),
+            
+            // Connection Strings (masked)
+            connectionStrings = _connectionStrings.Select(c => new 
+            { 
+                name = c.Name, 
+                maskedValue = c.MaskedValue,
+                isValid = c.IsValid,
+                isFileBased = c.IsFileBased,
+                fileExists = c.FileExists,
+                fileWritable = c.FileWritable
+            }),
+            
+            // Serilog Log Paths
+            serilogLogPaths = _serilogLogPaths.Select(l => new
+            {
+                sinkName = l.SinkName,
+                path = l.Path,
+                directoryExists = l.DirectoryExists,
+                writable = l.Writable
+            }),
+            
+            // Search Engine API Keys
+            searchEngineApiKeys = _searchEngineApiKeys.Select(k => new
+            {
+                engineName = k.EngineName,
+                settingKey = k.SettingKey,
+                isEnabled = k.IsEnabled,
+                isConfigured = k.IsConfigured,
+                status = k.Status
+            }),
+            
+            // Environment Variables (if any)
+            environmentVariables = _relevantEnvVars.Select(e => new 
+            { 
+                name = e.Name, 
+                isSet = e.IsSet,
+                maskedValue = e.MaskedValue
+            }),
+            
+            // MusicBrainz Status
+            musicBrainz = new
+            {
+                isEmpty = _isMusicBrainzEmpty,
+                status = _isMusicBrainzEmpty ? "Empty - needs population" : "Populated"
+            },
+            
+            // Summary Statistics
+            summary = new
+            {
+                totalChecks = _checks.Count,
+                passedChecks = _checks.Count(c => c.Success),
+                failedChecks = _checks.Count(c => !c.Success),
+                totalLibraries = _libraryPaths.Count,
+                librariesWithIssues = _libraryPaths.Count(l => !l.Exists || !l.Writable),
+                enabledServices = _configurableServices.Count(s => s.Enabled),
+                totalServices = _configurableServices.Count,
+                searchEnginesWithIssues = _searchEngineApiKeys.Count(k => k.IsEnabled && !k.IsConfigured)
+            }
         };
 
         var json = JsonSerializer.Serialize(diagnosticData, new JsonSerializerOptions { WriteIndented = true });
@@ -673,12 +794,11 @@
     [Inject] private IJSRuntime JsRuntime { get; set; } = default!;
 
     private sealed record CheckResult(string Name, bool Success, string Details, TimeSpan Duration);
-    private sealed record LibraryPathResult(string Name, string Type, string Path, bool Exists, bool Writable, string Details);
+    private sealed record LibraryPathResult(string Name, string Type, string Path, bool Exists, bool Writable, string Details, long TotalBytes, long AvailableBytes, double UsedPercent, string DiskStatus, string DiskStatusStyle);
     private sealed record ConfigurableServiceResult(string Category, string Name, string SettingKey, bool Enabled);
     private sealed record ConnectionStringInfo(string Name, string MaskedValue, bool IsValid, bool IsFileBased, bool? FileExists, bool? FileWritable, string? FilePath);
     private sealed record EnvironmentVariableInfo(string Name, string MaskedValue, bool IsSet);
     private sealed record SerilogLogPathInfo(string SinkName, string Path, bool DirectoryExists, bool Writable);
-    private sealed record DiskSpaceInfoLocal(string Name, string Path, long TotalBytes, long AvailableBytes, long UsedBytes, double UsedPercent, string Status, string StatusStyle);
     private sealed record SearchEngineApiKeyInfoLocal(string EngineName, string SettingKey, bool IsEnabled, bool IsConfigured, string Status, string StatusStyle);
 
     private static string GetDiskSpaceIcon(string status) => status switch

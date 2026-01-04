@@ -4300,87 +4300,99 @@
     <value>Todos os caminhos de log estão acessíveis</value>
   </data>
   <data name="AdminDoctor.MusicBrainzDatabaseEmpty" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] MusicBrainz database is empty and needs to be populated</value>
+    <value>O banco de dados MusicBrainz está vazio e precisa ser populado</value>
   </data>
 <data name="AdminDoctor.GenerateMusicBrainzDatabase" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Generate MusicBrainz Local Database</value>
+    <value>Gerar banco de dados MusicBrainz local</value>
   </data>
 <data name="AdminDoctor.MusicBrainzJobRunning" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] MusicBrainz Database Update</value>
+    <value>Atualização do banco de dados MusicBrainz</value>
   </data>
 <data name="AdminDoctor.JobStarted" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Job started successfully</value>
+    <value>Tarefa iniciada com sucesso</value>
   </data>
 <data name="AdminDoctor.JobFailed" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Failed to start job</value>
+    <value>Falha ao iniciar a tarefa</value>
   </data>
   <data name="AdminDoctor.Check.DiskSpace" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Disk Space</value>
+    <value>Espaço em disco</value>
   </data>
   <data name="AdminDoctor.Check.LibraryPathOverlap" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Library Path Overlap</value>
+    <value>Sobreposição de caminhos da biblioteca</value>
   </data>
   <data name="AdminDoctor.Check.SearchEngineApiKeys" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Search Engine API Keys</value>
+    <value>Chaves API dos mecanismos de busca</value>
   </data>
   <data name="AdminDoctor.DiskSpace" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Disk Space</value>
+    <value>Espaço em disco</value>
   </data>
   <data name="AdminDoctor.DiskSpaceCritical" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Critical: Disk space critically low</value>
+    <value>Crítico: Espaço em disco criticamente baixo</value>
   </data>
   <data name="AdminDoctor.DiskSpaceWarning" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Warning: Disk space is running low</value>
+    <value>Aviso: Espaço em disco está acabando</value>
   </data>
   <data name="AdminDoctor.DiskSpaceOk" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] All disks have adequate space</value>
+    <value>Todos os discos têm espaço adequado</value>
   </data>
   <data name="AdminDoctor.DiskTotal" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Total</value>
+    <value>Total</value>
   </data>
   <data name="AdminDoctor.DiskAvailable" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Available</value>
+    <value>Disponível</value>
   </data>
   <data name="AdminDoctor.DiskUsed" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Used</value>
+    <value>Usado</value>
   </data>
   <data name="AdminDoctor.SearchEngineApiKeys" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Search Engine API Keys</value>
+    <value>Chaves API dos mecanismos de busca</value>
   </data>
   <data name="AdminDoctor.SearchEngineApiKeysMissing" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Some enabled search engines are missing API keys</value>
+    <value>Alguns mecanismos de busca habilitados não têm chaves API</value>
   </data>
   <data name="AdminDoctor.SearchEngineApiKeysOk" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] All enabled search engines have API keys configured</value>
+    <value>Todos os mecanismos de busca habilitados têm chaves API configuradas</value>
   </data>
   <data name="AdminDoctor.LibraryPathOverlapDetected" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Library path overlap detected - paths may conflict</value>
+    <value>Sobreposição de caminhos da biblioteca detectada - caminhos podem entrar em conflito</value>
   </data>
   <data name="AdminDoctor.NoLibraryPathOverlap" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] No library path overlaps</value>
+    <value>Sem sobreposição de caminhos da biblioteca</value>
   </data>
   <data name="AdminDoctor.MissingApiKey" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Missing API Key</value>
+    <value>Chave API ausente</value>
   </data>
   <data name="AdminDoctor.Enabled" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Enabled</value>
+    <value>Habilitado</value>
   </data>
   <data name="AdminDoctor.Disabled" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Disabled</value>
+    <value>Desabilitado</value>
   </data>
   <data name="AdminDoctor.Critical" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Critical</value>
+    <value>Crítico</value>
   </data>
   <data name="AdminDoctor.Warning" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Warning</value>
+    <value>Aviso</value>
   </data>
   <data name="AdminDoctor.Ok" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] OK</value>
+    <value>OK</value>
   </data>
   <data name="AdminDoctor.Unknown" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Unknown</value>
+    <value>Desconhecido</value>
   </data>
   <data name="Dashboard.IssuesDetected" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Issues detected. Review the Doctor page for details.</value>
+    <value>Problemas detectados. Revise a página de diagnóstico para detalhes.</value>
+  </data>
+  <data name="AdminDoctor.Check.SmtpConfiguration" xml:space="preserve">
+    <value>Configuração SMTP</value>
+  </data>
+  <data name="AdminDoctor.Check.JwtTokenStrength" xml:space="preserve">
+    <value>Força do token JWT</value>
+  </data>
+  <data name="AdminDoctor.Check.HttpsSecurity" xml:space="preserve">
+    <value>Segurança HTTPS</value>
+  </data>
+  <data name="AdminDoctor.Check.AdminPassword" xml:space="preserve">
+    <value>Senha do administrador</value>
   </data>
 </root>

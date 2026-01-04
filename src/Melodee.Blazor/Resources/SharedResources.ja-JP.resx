@@ -4300,87 +4300,99 @@
     <value>すべてのログ パスにアクセスできます</value>
   </data>
   <data name="AdminDoctor.MusicBrainzDatabaseEmpty" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] MusicBrainz database is empty and needs to be populated</value>
+    <value>MusicBrainzデータベースが空で、データを入力する必要があります</value>
   </data>
 <data name="AdminDoctor.GenerateMusicBrainzDatabase" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Generate MusicBrainz Local Database</value>
+    <value>ローカルMusicBrainzデータベースを生成</value>
   </data>
 <data name="AdminDoctor.MusicBrainzJobRunning" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] MusicBrainz Database Update</value>
+    <value>MusicBrainzデータベース更新</value>
   </data>
 <data name="AdminDoctor.JobStarted" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Job started successfully</value>
+    <value>ジョブが正常に開始されました</value>
   </data>
 <data name="AdminDoctor.JobFailed" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Failed to start job</value>
+    <value>ジョブの開始に失敗しました</value>
   </data>
   <data name="AdminDoctor.Check.DiskSpace" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Disk Space</value>
+    <value>ディスク容量</value>
   </data>
   <data name="AdminDoctor.Check.LibraryPathOverlap" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Library Path Overlap</value>
+    <value>ライブラリパスの重複</value>
   </data>
   <data name="AdminDoctor.Check.SearchEngineApiKeys" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Search Engine API Keys</value>
+    <value>検索エンジンAPIキー</value>
   </data>
   <data name="AdminDoctor.DiskSpace" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Disk Space</value>
+    <value>ディスク容量</value>
   </data>
   <data name="AdminDoctor.DiskSpaceCritical" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Critical: Disk space critically low</value>
+    <value>重大: ディスク容量が危機的に不足しています</value>
   </data>
   <data name="AdminDoctor.DiskSpaceWarning" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Warning: Disk space is running low</value>
+    <value>警告: ディスク容量が不足しています</value>
   </data>
   <data name="AdminDoctor.DiskSpaceOk" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] All disks have adequate space</value>
+    <value>すべてのディスクに十分な空き容量があります</value>
   </data>
   <data name="AdminDoctor.DiskTotal" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Total</value>
+    <value>合計</value>
   </data>
   <data name="AdminDoctor.DiskAvailable" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Available</value>
+    <value>利用可能</value>
   </data>
   <data name="AdminDoctor.DiskUsed" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Used</value>
+    <value>使用中</value>
   </data>
   <data name="AdminDoctor.SearchEngineApiKeys" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Search Engine API Keys</value>
+    <value>検索エンジンAPIキー</value>
   </data>
   <data name="AdminDoctor.SearchEngineApiKeysMissing" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Some enabled search engines are missing API keys</value>
+    <value>一部の有効な検索エンジンにAPIキーがありません</value>
   </data>
   <data name="AdminDoctor.SearchEngineApiKeysOk" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] All enabled search engines have API keys configured</value>
+    <value>すべての有効な検索エンジンにAPIキーが設定されています</value>
   </data>
   <data name="AdminDoctor.LibraryPathOverlapDetected" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Library path overlap detected - paths may conflict</value>
+    <value>ライブラリパスの重複が検出されました - パスが競合する可能性があります</value>
   </data>
   <data name="AdminDoctor.NoLibraryPathOverlap" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] No library path overlaps</value>
+    <value>ライブラリパスの重複はありません</value>
   </data>
   <data name="AdminDoctor.MissingApiKey" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Missing API Key</value>
+    <value>APIキーがありません</value>
   </data>
   <data name="AdminDoctor.Enabled" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Enabled</value>
+    <value>有効</value>
   </data>
   <data name="AdminDoctor.Disabled" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Disabled</value>
+    <value>無効</value>
   </data>
   <data name="AdminDoctor.Critical" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Critical</value>
+    <value>重大</value>
   </data>
   <data name="AdminDoctor.Warning" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Warning</value>
+    <value>警告</value>
   </data>
   <data name="AdminDoctor.Ok" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] OK</value>
+    <value>OK</value>
   </data>
   <data name="AdminDoctor.Unknown" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Unknown</value>
+    <value>不明</value>
   </data>
   <data name="Dashboard.IssuesDetected" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Issues detected. Review the Doctor page for details.</value>
+    <value>問題が検出されました。詳細は診断ページをご確認ください。</value>
+  </data>
+  <data name="AdminDoctor.Check.SmtpConfiguration" xml:space="preserve">
+    <value>SMTP設定</value>
+  </data>
+  <data name="AdminDoctor.Check.JwtTokenStrength" xml:space="preserve">
+    <value>JWTトークン強度</value>
+  </data>
+  <data name="AdminDoctor.Check.HttpsSecurity" xml:space="preserve">
+    <value>HTTPSセキュリティ</value>
+  </data>
+  <data name="AdminDoctor.Check.AdminPassword" xml:space="preserve">
+    <value>管理者パスワード</value>
   </data>
 </root>

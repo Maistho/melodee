@@ -4385,4 +4385,16 @@
 <data name="Dashboard.IssuesDetected" xml:space="preserve">
     <value>Issues detected. Review the Doctor page for details.</value>
   </data>
+<data name="AdminDoctor.Check.SmtpConfiguration" xml:space="preserve">
+    <value>SMTP Configuration</value>
+  </data>
+<data name="AdminDoctor.Check.JwtTokenStrength" xml:space="preserve">
+    <value>JWT Token Strength</value>
+  </data>
+<data name="AdminDoctor.Check.HttpsSecurity" xml:space="preserve">
+    <value>HTTPS Security</value>
+  </data>
+<data name="AdminDoctor.Check.AdminPassword" xml:space="preserve">
+    <value>Admin Password</value>
+  </data>
 </root>

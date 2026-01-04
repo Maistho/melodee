@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Net.Sockets;
 using Melodee.Common.Constants;
 using Melodee.Common.Data;
 using Melodee.Common.Models;
@@ -19,7 +20,8 @@ public sealed class DoctorService(
     IDbContextFactory<MusicBrainzDbContext> musicBrainzDbContextFactory,
     IDbContextFactory<ArtistSearchEngineServiceDbContext> artistSearchEngineDbContextFactory,
     LibraryService libraryService,
-    IWebHostEnvironment webHostEnvironment) : IDoctorService
+    IWebHostEnvironment webHostEnvironment,
+    IHttpContextAccessor httpContextAccessor) : IDoctorService
 {
     private static readonly string[] RequiredConnectionStrings =
     [
@@ -35,6 +37,7 @@ public sealed class DoctorService(
 
     private const long DiskSpaceWarningThresholdBytes = 10L * 1024 * 1024 * 1024; // 10 GB
     private const long DiskSpaceCriticalThresholdBytes = 1L * 1024 * 1024 * 1024; // 1 GB
+    private const int MinJwtKeyLength = 64; // For HMAC-SHA512
 
     public async Task<bool> NeedsAttentionAsync(CancellationToken cancellationToken = default)
     {
@@ -84,6 +87,30 @@ public sealed class DoctorService(
 
         // Check search engine API keys
         if (await HasSearchEngineApiKeyIssuesAsync(cancellationToken))
+        {
+            return true;
+        }
+
+        // Check SMTP configuration if email is enabled
+        if (await HasSmtpConfigurationIssuesAsync(cancellationToken))
+        {
+            return true;
+        }
+
+        // Check JWT token strength
+        if (HasJwtTokenStrengthIssues())
+        {
+            return true;
+        }
+
+        // Check HTTPS in production
+        if (HasHttpsIssues())
+        {
+            return true;
+        }
+
+        // Check for default admin password
+        if (await HasDefaultAdminPasswordAsync(cancellationToken))
         {
             return true;
         }
@@ -174,7 +201,7 @@ public sealed class DoctorService(
         checks.Add(servicesCheck);
         configurableServices.AddRange(services);
 
-        // New checks
+        // Disk space and path checks
         var (diskSpaceCheck, diskInfo) = await RunDiskSpaceCheckAsync(cancellationToken);
         checks.Add(diskSpaceCheck);
         diskSpaceInfo.AddRange(diskInfo);
@@ -185,6 +212,12 @@ public sealed class DoctorService(
         var (apiKeysCheck, apiKeys) = await RunSearchEngineApiKeysCheckAsync(cancellationToken);
         checks.Add(apiKeysCheck);
         searchEngineApiKeys.AddRange(apiKeys);
+
+        // Security and configuration checks
+        checks.Add(await RunSmtpConfigurationCheckAsync(cancellationToken));
+        checks.Add(RunJwtTokenStrengthCheck());
+        checks.Add(RunHttpsCheck());
+        checks.Add(await RunDefaultAdminPasswordCheckAsync(cancellationToken));
 
         // Gather connection string info
         connectionStrings.AddRange(GatherConnectionStringInfo());
@@ -970,5 +1003,229 @@ public sealed class DoctorService(
     private static bool IsPathOverlap(string path1, string path2)
     {
         return path1.StartsWith(path2) || path2.StartsWith(path1);
+    }
+
+    private async Task<bool> HasSmtpConfigurationIssuesAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await using var db = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+            
+            var relevantKeys = new[]
+            {
+                SettingRegistry.EmailEnabled,
+                SettingRegistry.EmailSmtpHost,
+                SettingRegistry.EmailSmtpPort
+            };
+
+            var settings = await db.Settings
+                .Where(s => relevantKeys.Contains(s.Key))
+                .ToDictionaryAsync(s => s.Key, s => s.Value, cancellationToken);
+
+            var emailEnabled = settings.TryGetValue(SettingRegistry.EmailEnabled, out var ee) 
+                && bool.TryParse(ee, out var eeb) && eeb;
+
+            if (!emailEnabled)
+            {
+                return false;
+            }
+
+            var smtpHost = settings.TryGetValue(SettingRegistry.EmailSmtpHost, out var host) ? host : "";
+            var smtpPort = settings.TryGetValue(SettingRegistry.EmailSmtpPort, out var port) ? port : "";
+
+            return string.IsNullOrWhiteSpace(smtpHost) || string.IsNullOrWhiteSpace(smtpPort);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private async Task<DoctorCheckResult> RunSmtpConfigurationCheckAsync(CancellationToken cancellationToken)
+    {
+        var sw = Stopwatch.StartNew();
+
+        try
+        {
+            await using var db = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+            var relevantKeys = new[]
+            {
+                SettingRegistry.EmailEnabled,
+                SettingRegistry.EmailSmtpHost,
+                SettingRegistry.EmailSmtpPort,
+                SettingRegistry.EmailFromEmail
+            };
+
+            var settings = await db.Settings
+                .Where(s => relevantKeys.Contains(s.Key))
+                .ToDictionaryAsync(s => s.Key, s => s.Value, cancellationToken);
+
+            var emailEnabled = settings.TryGetValue(SettingRegistry.EmailEnabled, out var ee) 
+                && bool.TryParse(ee, out var eeb) && eeb;
+
+            if (!emailEnabled)
+            {
+                return new DoctorCheckResult("SmtpConfiguration", true, "Email is disabled", sw.Elapsed);
+            }
+
+            var smtpHost = settings.TryGetValue(SettingRegistry.EmailSmtpHost, out var host) ? host : "";
+            var smtpPort = settings.TryGetValue(SettingRegistry.EmailSmtpPort, out var port) ? port : "";
+            var fromEmail = settings.TryGetValue(SettingRegistry.EmailFromEmail, out var from) ? from : "";
+
+            var issues = new List<string>();
+
+            if (string.IsNullOrWhiteSpace(smtpHost))
+            {
+                issues.Add("SMTP host not configured");
+            }
+
+            if (string.IsNullOrWhiteSpace(smtpPort) || !int.TryParse(smtpPort, out _))
+            {
+                issues.Add("SMTP port not configured");
+            }
+
+            if (string.IsNullOrWhiteSpace(fromEmail))
+            {
+                issues.Add("From email not configured");
+            }
+
+            if (issues.Count > 0)
+            {
+                return new DoctorCheckResult("SmtpConfiguration", false, $"Email enabled but: {string.Join(", ", issues)}", sw.Elapsed);
+            }
+
+            return new DoctorCheckResult("SmtpConfiguration", true, $"SMTP configured: {smtpHost}:{smtpPort}", sw.Elapsed);
+        }
+        catch (Exception ex)
+        {
+            return new DoctorCheckResult("SmtpConfiguration", false, ex.Message, sw.Elapsed);
+        }
+    }
+
+    private bool HasJwtTokenStrengthIssues()
+    {
+        var jwtKey = configuration.GetValue<string>("Jwt:Key") ?? "";
+        return jwtKey.Length < MinJwtKeyLength;
+    }
+
+    private DoctorCheckResult RunJwtTokenStrengthCheck()
+    {
+        var sw = Stopwatch.StartNew();
+
+        try
+        {
+            var jwtKey = configuration.GetValue<string>("Jwt:Key") ?? "";
+
+            if (string.IsNullOrWhiteSpace(jwtKey))
+            {
+                return new DoctorCheckResult("JwtTokenStrength", false, "JWT key is not configured", sw.Elapsed);
+            }
+
+            if (jwtKey.Length < MinJwtKeyLength)
+            {
+                return new DoctorCheckResult("JwtTokenStrength", false, 
+                    $"JWT key too short ({jwtKey.Length} chars). Minimum {MinJwtKeyLength} chars required for HMAC-SHA512", sw.Elapsed);
+            }
+
+            return new DoctorCheckResult("JwtTokenStrength", true, $"JWT key length: {jwtKey.Length} chars (OK)", sw.Elapsed);
+        }
+        catch (Exception ex)
+        {
+            return new DoctorCheckResult("JwtTokenStrength", false, ex.Message, sw.Elapsed);
+        }
+    }
+
+    private bool HasHttpsIssues()
+    {
+        if (!webHostEnvironment.IsProduction())
+        {
+            return false;
+        }
+
+        var httpContext = httpContextAccessor.HttpContext;
+        return httpContext is { Request.IsHttps: false };
+    }
+
+    private DoctorCheckResult RunHttpsCheck()
+    {
+        var sw = Stopwatch.StartNew();
+
+        try
+        {
+            var isProduction = webHostEnvironment.IsProduction();
+            var httpContext = httpContextAccessor.HttpContext;
+            var isHttps = httpContext?.Request.IsHttps ?? true;
+
+            if (!isProduction)
+            {
+                return new DoctorCheckResult("HttpsSecurity", true, $"Non-production environment ({webHostEnvironment.EnvironmentName})", sw.Elapsed);
+            }
+
+            if (isHttps)
+            {
+                return new DoctorCheckResult("HttpsSecurity", true, "HTTPS is enabled in production", sw.Elapsed);
+            }
+
+            return new DoctorCheckResult("HttpsSecurity", false, "⚠️ Running in production without HTTPS", sw.Elapsed);
+        }
+        catch (Exception ex)
+        {
+            return new DoctorCheckResult("HttpsSecurity", false, ex.Message, sw.Elapsed);
+        }
+    }
+
+    private async Task<bool> HasDefaultAdminPasswordAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await using var db = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+            
+            var adminUser = await db.Users
+                .Where(u => u.IsAdmin && u.UserNameNormalized == "ADMIN")
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (adminUser == null)
+            {
+                return false;
+            }
+
+            return adminUser.LastLoginAt == null && adminUser.LastActivityAt == null;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private async Task<DoctorCheckResult> RunDefaultAdminPasswordCheckAsync(CancellationToken cancellationToken)
+    {
+        var sw = Stopwatch.StartNew();
+
+        try
+        {
+            await using var db = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+            var adminUser = await db.Users
+                .Where(u => u.IsAdmin && u.UserNameNormalized == "ADMIN")
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (adminUser == null)
+            {
+                return new DoctorCheckResult("AdminPassword", true, "No default 'admin' user found", sw.Elapsed);
+            }
+
+            if (adminUser.LastLoginAt == null && adminUser.LastActivityAt == null)
+            {
+                return new DoctorCheckResult("AdminPassword", false, 
+                    "⚠️ Default admin account has never logged in - consider changing the password", sw.Elapsed);
+            }
+
+            return new DoctorCheckResult("AdminPassword", true, "Admin account has been used", sw.Elapsed);
+        }
+        catch (Exception ex)
+        {
+            return new DoctorCheckResult("AdminPassword", false, ex.Message, sw.Elapsed);
+        }
     }
 }
