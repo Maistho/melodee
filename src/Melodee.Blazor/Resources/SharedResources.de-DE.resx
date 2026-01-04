@@ -2816,6 +2816,9 @@
   <data name="AdminJobs.JobName" xml:space="preserve">
     <value>Aufgabenname</value>
   </data>
+  <data name="AdminJobs.InstanceId" xml:space="preserve">
+    <value>Instanz-ID</value>
+  </data>
   <data name="AdminJobs.Runs" xml:space="preserve">
     <value>Übersetzung fehlt</value>
   </data>

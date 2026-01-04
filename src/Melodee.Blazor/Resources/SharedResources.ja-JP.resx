@@ -2816,6 +2816,9 @@
   <data name="AdminJobs.JobName" xml:space="preserve">
     <value>ジョブ名</value>
   </data>
+  <data name="AdminJobs.InstanceId" xml:space="preserve">
+    <value>インスタンスID</value>
+  </data>
   <data name="AdminJobs.Runs" xml:space="preserve">
     <value>未翻訳</value>
   </data>

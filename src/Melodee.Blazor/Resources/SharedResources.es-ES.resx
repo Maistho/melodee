@@ -1412,6 +1412,9 @@
   <data name="AdminJobs.JobName" xml:space="preserve">
     <value>Falta traducción</value>
   </data>
+  <data name="AdminJobs.InstanceId" xml:space="preserve">
+    <value>ID de instancia</value>
+  </data>
   <data name="AdminJobs.JobsDisabled" xml:space="preserve">
     <value>Falta traducción</value>
   </data>

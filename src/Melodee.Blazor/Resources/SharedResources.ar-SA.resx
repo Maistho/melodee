@@ -1412,6 +1412,9 @@
   <data name="AdminJobs.JobName" xml:space="preserve">
     <value>ترجمة مفقودة</value>
   </data>
+  <data name="AdminJobs.InstanceId" xml:space="preserve">
+    <value>معرف المثيل</value>
+  </data>
   <data name="AdminJobs.JobsDisabled" xml:space="preserve">
     <value>ترجمة مفقودة</value>
   </data>

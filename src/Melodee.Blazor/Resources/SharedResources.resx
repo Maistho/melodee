@@ -2813,6 +2813,9 @@
   <data name="AdminJobs.JobName" xml:space="preserve">
     <value>Job Name</value>
   </data>
+  <data name="AdminJobs.InstanceId" xml:space="preserve">
+    <value>Instance ID</value>
+  </data>
   <data name="AdminJobs.Runs" xml:space="preserve">
     <value>Runs</value>
   </data>

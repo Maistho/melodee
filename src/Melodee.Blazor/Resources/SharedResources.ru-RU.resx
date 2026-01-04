@@ -1412,6 +1412,9 @@
   <data name="AdminJobs.JobName" xml:space="preserve">
     <value>Перевод отсутствует</value>
   </data>
+  <data name="AdminJobs.InstanceId" xml:space="preserve">
+    <value>ID экземпляра</value>
+  </data>
   <data name="AdminJobs.JobsDisabled" xml:space="preserve">
     <value>Перевод отсутствует</value>
   </data>

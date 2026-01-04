@@ -1412,6 +1412,9 @@
   <data name="AdminJobs.JobName" xml:space="preserve">
     <value>缺少翻译</value>
   </data>
+  <data name="AdminJobs.InstanceId" xml:space="preserve">
+    <value>实例ID</value>
+  </data>
   <data name="AdminJobs.JobsDisabled" xml:space="preserve">
     <value>缺少翻译</value>
   </data>
