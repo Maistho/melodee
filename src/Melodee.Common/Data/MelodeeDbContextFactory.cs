@@ -8,13 +8,28 @@ public class MelodeeDbContextFactory : IDesignTimeDbContextFactory<MelodeeDbCont
 {
     public MelodeeDbContext CreateDbContext(string[] args)
     {
-        var configuration = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json")
-            .AddJsonFile("appsettings.Development.json", true)
-            .Build();
+        // First try environment variable (for Docker/container scenarios)
+        var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection");
+
+        // Fall back to appsettings.json for local development
+        if (string.IsNullOrEmpty(connectionString))
+        {
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: true)
+                .AddJsonFile("appsettings.Development.json", optional: true)
+                .Build();
+            connectionString = configuration.GetConnectionString("DefaultConnection");
+        }
+
+        if (string.IsNullOrEmpty(connectionString))
+        {
+            throw new InvalidOperationException(
+                "Connection string not found. Set the 'ConnectionStrings__DefaultConnection' environment variable " +
+                "or provide a connection string in appsettings.json.");
+        }
+
         var builder = new DbContextOptionsBuilder<MelodeeDbContext>();
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
         builder.UseNpgsql(connectionString, o => o.UseNodaTime().UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));
         return new MelodeeDbContext(builder.Options);
     }

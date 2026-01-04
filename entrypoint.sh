@@ -9,4 +9,34 @@ chown melodee:melodee /app/Logs
 echo "Permissions fixed!"
 
 echo "Starting application as melodee user..."
-exec su melodee -c 'sh -c "export PATH=\"\$PATH:/home/melodee/.dotnet/tools\" && echo \"Starting container...\" && echo \"Container environment:\" && env | grep -E \"(DB|CONNECTION)\" || true && echo \"Testing database connectivity...\" && until pg_isready -h melodee-db -p 5432 -U melodeeuser -d melodeedb; do echo \"Waiting for database...\"; sleep 2; done && echo \"Database is ready!\" && echo \"Running database migrations...\" && cd /app/src/Melodee.Blazor && dotnet restore && /home/melodee/.dotnet/tools/dotnet-ef database update --context MelodeeDbContext --connection \"\$ConnectionStrings__DefaultConnection\" && echo \"Migrations completed!\" && echo \"Starting application...\" && cd /app && dotnet server.dll"'
+
+# Create a script that melodee user will execute
+cat > /tmp/run-melodee.sh << 'EOFSCRIPT'
+#!/bin/bash
+set -e
+export PATH="$PATH:/home/melodee/.dotnet/tools"
+
+echo "Starting container..."
+echo "Container environment:"
+env | grep -E "(DB|CONNECTION)" | grep -v PASSWORD || true
+
+echo "Testing database connectivity..."
+until pg_isready -h melodee-db -p 5432 -U melodeeuser -d melodeedb; do
+    echo "Waiting for database..."
+    sleep 2
+done
+echo "Database is ready!"
+
+echo "Running database migrations..."
+cd /app/src/Melodee.Blazor
+dotnet restore
+dotnet-ef database update --context MelodeeDbContext
+echo "Migrations completed!"
+
+echo "Starting application..."
+cd /app
+exec dotnet server.dll
+EOFSCRIPT
+
+chmod +x /tmp/run-melodee.sh
+exec su melodee -c '/tmp/run-melodee.sh'
