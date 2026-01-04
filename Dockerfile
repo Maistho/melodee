@@ -3,6 +3,7 @@ WORKDIR /src
 
 # Copy Directory.Packages.props first for central package management
 COPY ["Directory.Packages.props", "./"]
+COPY ["Directory.Build.props", "./"]
 
 # Copy project files
 COPY ["src/Melodee.Blazor/Melodee.Blazor.csproj", "src/Melodee.Blazor/"]
@@ -49,6 +50,7 @@ RUN chmod +x /entrypoint.sh
 COPY --from=build /src/src/Melodee.Common/ /app/src/Melodee.Common/
 COPY --from=build /src/src/Melodee.Blazor/ /app/src/Melodee.Blazor/
 COPY --from=build /src/Directory.Packages.props /app/
+COPY --from=build /src/Directory.Build.props /app/
 
 # Create a non-root user and switch to it
 RUN groupadd -r melodee && useradd -r -g melodee -m melodee
