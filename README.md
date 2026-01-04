@@ -6,8 +6,8 @@
   **A music system designed to manage and stream music libraries with tens of millions of songs**
 
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-  [![.NET](https://github.com/sphildreth/melodee/actions/workflows/dotnet.yml/badge.svg)](https://github.com/sphildreth/melodee/actions/workflows/dotnet.yml)
-  [![CodeQL](https://github.com/sphildreth/melodee/actions/workflows/codeql.yml/badge.svg)](https://github.com/sphildreth/melodee/actions/workflows/codeql.yml)
+  [![.NET](https://github.com/melodee-project/melodee/actions/workflows/dotnet.yml/badge.svg)](https://github.com/melodee-project/melodee/actions/workflows/dotnet.yml)
+  [![CodeQL](https://github.com/melodee-project/melodee/actions/workflows/codeql.yml/badge.svg)](https://github.com/melodee-project/melodee/actions/workflows/codeql.yml)
   [![Discord](https://img.shields.io/discord/1337921126210211943)](https://discord.gg/bfMnEUrvbp)
 
   [Features](#features) • [Quick Start](#quick-start) • [Documentation](#documentation) • [Contributing](#contributing) • [Support](#support)
@@ -177,14 +177,17 @@ For detailed homelab deployment guides, check out our [documentation](https://me
 
 Melodee uses several persistent volumes for data storage:
 
-| Volume | Purpose | Description                                 |
-|--------|---------|---------------------------------------------|
-| `melodee_storage` | Music Library | Processed and organized music files         |
-| `melodee_inbound` | Incoming Media | New media files to be processed             |
-| `melodee_staging` | Staging Area | Media ready for manual review               |
-| `melodee_user_images` | User Content | User-uploaded avatars            |
-| `melodee_playlists` | Playlists | Admin defined (json based) dynamic playlists |
-| `melodee_db_data` | Database | PostgreSQL data                             |
+| Volume | Purpose | Description |
+|--------|---------|-------------|
+| `melodee_db_data` | Database | PostgreSQL data |
+| `melodee_storage` | Music Library | Processed and organized music files |
+| `melodee_inbound` | Incoming Media | New media files to be processed |
+| `melodee_staging` | Staging Area | Media ready for manual review |
+| `melodee_user_images` | User Content | User-uploaded avatars |
+| `melodee_playlists` | Playlists | Admin-defined (JSON-based) dynamic playlists |
+| `melodee_templates` | Templates | Email and notification templates |
+| `melodee_logs` | Logs | Application log files |
+| `melodee_data_protection_keys` | Security | ASP.NET Core data protection keys |
 
 To backup your data:
 ```bash
@@ -246,22 +249,37 @@ Jobs can be manually triggered, paused, or monitored from the admin UI at `/admi
 
 Melodee features comprehensive localization with support for 10 languages:
 
-| Language | Code | RTL Support |
-|----------|------|-------------|
-| English (US) | en-US | - |
-| Arabic | ar-SA | ✅ |
-| Chinese (Simplified) | zh-CN | - |
-| French | fr-FR | - |
-| German | de-DE | - |
-| Italian | it-IT | - |
-| Japanese | ja-JP | - |
-| Portuguese (Brazil) | pt-BR | - |
-| Russian | ru-RU | - |
-| Spanish | es-ES | - |
+| Language | Code | Status | RTL |
+|----------|------|--------|-----|
+| English (US) | en-US | ✅ 100% | - |
+| Arabic | ar-SA | 🔄 31% | ✅ |
+| Chinese (Simplified) | zh-CN | 🔄 38% | - |
+| French | fr-FR | 🔄 37% | - |
+| German | de-DE | 🔄 41% | - |
+| Italian | it-IT | 🔄 41% | - |
+| Japanese | ja-JP | 🔄 37% | - |
+| Portuguese (Brazil) | pt-BR | 🔄 42% | - |
+| Russian | ru-RU | 🔄 38% | - |
+| Spanish | es-ES | 🔄 38% | - |
 
-- **Language Selector**: Easy switching via dropdown in the header
-- **Preference Persistence**: Your language choice is saved in browser storage
+- **Language Selector**: Available in the header for quick switching
+- **User Preference**: Language choice is saved to your user profile and persists across sessions
 - **RTL Support**: Full right-to-left layout support for Arabic
+
+#### 🌐 Help Translate Melodee!
+
+We welcome translation contributions from the community! Strings marked with `[NEEDS TRANSLATION]` in the resource files need native speaker review.
+
+**How to contribute translations:**
+
+1. Find your language file in `src/Melodee.Blazor/Resources/SharedResources.<code>.resx`
+2. Search for `[NEEDS TRANSLATION]` entries
+3. Replace the placeholder with your native translation
+4. Submit a pull request
+
+Resource files are standard .NET `.resx` XML format. You can edit them with any text editor or Visual Studio's resource editor.
+
+**Current translation needs:** ~850-1000 strings per language need native translations. See [Contributing Guide](CONTRIBUTING.md) for details.
 
 ### 🌐 OpenSubsonic API
 
@@ -287,7 +305,7 @@ Full compatibility with Subsonic 1.16.1 and OpenSubsonic specifications:
 
 ### 🎬 Jellyfin API
 
-Melodee provides a Jellyfin-compatible API that allows popular Jellyfin music clients to connect:
+Melodee provides a Jellyfin-compatible API wit that allows popular Jellyfin music clients to connect:
 
 - Full media browsing (artists, albums, songs)
 - Streaming with transcoding support
@@ -395,8 +413,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Melodee Music System**: [Home](https://melodee.org)
 - **Discord**: [Join our community](https://discord.gg/bfMnEUrvbp)
-- **Issues**: [GitHub Issues](https://github.com/sphildreth/melodee/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/sphildreth/melodee/discussions)
+- **Issues**: [GitHub Issues](https://github.com/melodee-project/melodee/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/melodee-project/melodee/discussions)
 
 ## 📚 Documentation
 
