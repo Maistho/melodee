@@ -1,3 +1,4 @@
+# Build stage
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
@@ -5,7 +6,7 @@ WORKDIR /src
 COPY ["Directory.Packages.props", "./"]
 COPY ["Directory.Build.props", "./"]
 
-# Copy project files
+# Copy project files for restore
 COPY ["src/Melodee.Blazor/Melodee.Blazor.csproj", "src/Melodee.Blazor/"]
 COPY ["src/Melodee.Common/Melodee.Common.csproj", "src/Melodee.Common/"]
 
@@ -19,65 +20,66 @@ COPY ["src/Melodee.Common/", "src/Melodee.Common/"]
 WORKDIR "/src/src/Melodee.Blazor"
 RUN dotnet build "Melodee.Blazor.csproj" -c Release -o /app/build
 
-# Publish
+# Publish stage
 FROM build AS publish
 RUN dotnet publish "Melodee.Blazor.csproj" -c Release -o /app/publish --self-contained false -p:PublishTrimmed=false
 
-# Final image - use SDK instead of runtime to support EF migrations
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS final
+# Migration bundle stage - create a self-contained migration bundle
+FROM build AS migrations
+WORKDIR /src/src/Melodee.Blazor
+RUN dotnet tool install --global dotnet-ef --version 10.0.1
+ENV PATH="$PATH:/root/.dotnet/tools"
+RUN dotnet ef migrations bundle --context MelodeeDbContext --output /app/efbundle --self-contained --force
+
+# Final runtime image - using aspnet for smaller image size
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 EXPOSE 8080
-EXPOSE 8081
 
-# Install PostgreSQL client tools, network debugging tools, and nano editor
+# Install required runtime dependencies
 RUN apt-get update && \
-    apt-get install -y \
+    apt-get install -y --no-install-recommends \
         ffmpeg \
         postgresql-client \
-        iputils-ping \
-        netcat-openbsd \
-        nano \
+        curl \
         && rm -rf /var/lib/apt/lists/*
 
 # Copy the published application
 COPY --from=publish /app/publish .
 
+# Copy the EF migration bundle
+COPY --from=migrations /app/efbundle /app/efbundle
+RUN chmod +x /app/efbundle
+
 # Copy the entrypoint script
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# Copy the source code needed for migrations (EF Core needs the project files)
-COPY --from=build /src/src/Melodee.Common/ /app/src/Melodee.Common/
-COPY --from=build /src/src/Melodee.Blazor/ /app/src/Melodee.Blazor/
-COPY --from=build /src/Directory.Packages.props /app/
-COPY --from=build /src/Directory.Build.props /app/
-
-# Create a non-root user and switch to it
+# Create a non-root user
 RUN groupadd -r melodee && useradd -r -g melodee -m melodee
 
-# Change ownership of the app directory to melodee user
-RUN chown -R melodee:melodee /app
+# Create volume directories
+RUN mkdir -p /app/storage /app/inbound /app/staging /app/user-images /app/playlists /app/templates /app/Logs \
+    && chown -R melodee:melodee /app
 
-# Set dotnet environment variables to avoid permission issues
-ENV DOTNET_CLI_HOME="/home/melodee"
+# Set environment variables
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
-ENV HOME="/home/melodee"
-
-# Set volume path environment variables for the .NET application
 ENV MELODEE_STORAGE_PATH="/app/storage"
 ENV SEARCHENGINE_MUSICBRAINZ_STORAGEPATH="/app/storage/_search-engines/musicbrainz"
 ENV MELODEE_INBOUND_PATH="/app/inbound"
 ENV MELODEE_STAGING_PATH="/app/staging"
 ENV MELODEE_USER_IMAGES_PATH="/app/user-images"
 ENV MELODEE_PLAYLISTS_PATH="/app/playlists"
+ENV MELODEE_TEMPLATES_PATH="/app/templates"
 
-USER melodee
+# Use entrypoint script for proper startup
+ENTRYPOINT ["/entrypoint.sh"]
 
-# Install EF Core tools globally for the melodee user with specific version matching EF Core 10.0.1
-RUN dotnet tool install --global dotnet-ef --version 10.0.1
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+    CMD curl -fsS http://localhost:8080/health || exit 1
 
-# Add tools to PATH
-ENV PATH="$PATH:/home/melodee/.dotnet/tools"
-
-# Run database migration and start the application
-CMD ["sh", "-c", "export PATH=\"$PATH:/home/melodee/.dotnet/tools\" && echo 'Starting container...' && echo 'Container environment:' && env | grep -E '(DB|CONNECTION)' || true && echo 'Testing database connectivity...' && until pg_isready -h melodee-db -p 5432 -U melodeeuser -d melodeedb; do echo 'Waiting for database...'; sleep 2; done && echo 'Database is ready!' && echo 'Running database migrations...' && cd /app/src/Melodee.Blazor && dotnet restore && dotnet-ef database update --context MelodeeDbContext && echo 'Migrations completed!' && echo 'Starting application...' && cd /app && dotnet server.dll"]
+# OCI Labels
+LABEL org.opencontainers.image.source="https://github.com/sphildreth/melodee"
+LABEL org.opencontainers.image.description="Melodee music server"
+LABEL org.opencontainers.image.licenses="MIT"

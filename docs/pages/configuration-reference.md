@@ -28,6 +28,7 @@ This page provides a comprehensive reference of all configuration options availa
 | `MELODEE_STAGING_PATH` | /app/staging | Path for music files awaiting review |
 | `MELODEE_USER_IMAGES_PATH` | /app/user-images | Path for user avatars and images |
 | `MELODEE_PLAYLISTS_PATH` | /app/playlists | Path for playlist definitions |
+| `MELODEE_TEMPLATES_PATH` | /app/templates | Path for email templates organized by language |
 | `SEARCHENGINE_MUSICBRAINZ_STORAGEPATH` | /app/storage/_search-engines/musicbrainz | Path for MusicBrainz database |
 
 ### Authentication Configuration

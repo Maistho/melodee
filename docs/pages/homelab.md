@@ -115,6 +115,7 @@ services:
       melodee-db:
         condition: service_healthy
     environment:
+      - DB_PASSWORD=${DB_PASSWORD}
       - ConnectionStrings__DefaultConnection=Host=melodee-db;Port=5432;Database=melodeedb;Username=melodeeuser;Password=${DB_PASSWORD};Pooling=true;MinPoolSize=${DB_MIN_POOL_SIZE:-10};MaxPoolSize=${DB_MAX_POOL_SIZE:-50};SSL Mode=Disable;Include Error Detail=true
       - ConnectionStrings__MusicBrainzConnection=Data Source=/app/storage/_search-engines/musicbrainz/musicbrainz.db
       - ConnectionStrings__ArtistSearchEngineConnection=Data Source=/app/storage/_search-engines/artistSearchEngine.db;Cache=Shared
@@ -128,6 +129,7 @@ services:
       - staging:/app/staging
       - user_images:/app/user-images
       - playlists:/app/playlists
+      - templates:/app/templates
       - logs:/app/Logs
     restart: unless-stopped
     user: "0:0"
@@ -136,7 +138,8 @@ services:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8080/health || exit 1"]
       interval: 30s
       timeout: 5s
-      retries: 5
+      start_period: 60s
+      retries: 3
     deploy:
       resources:
         limits:
@@ -156,6 +159,8 @@ volumes:
     name: melodee_user_images
   playlists:
     name: melodee_playlists
+  templates:
+    name: melodee_templates
   logs:
     name: melodee_logs
   conf:
@@ -180,7 +185,7 @@ Deploy Melodee using an LXC container with Docker support:
 
 2. **Install Docker in the container**:
    ```bash
-   apt update && apt install docker.io docker-compose
+   apt update && apt install -y docker.io docker-compose-plugin
    ```
 
 3. **Deploy Melodee**:
@@ -212,7 +217,7 @@ Create a dedicated VM for Melodee:
    cd melodee
    cp example.env .env
    # Edit .env with your preferences
-   docker-compose up -d
+   docker compose up -d
    ```
 
 #### Option C: Using Proxmox Backup Server (PBS)
@@ -289,6 +294,8 @@ docker volume create melodee_storage
 | `melodee_staging` | Media awaiting approval | Periodic backup |
 | `melodee_user_images` | User avatars | Backup with media |
 | `melodee_playlists` | User playlists | Backup with media |
+| `melodee_templates` | Email templates | Backup with configuration |
+| `melodee_logs` | Application logs | Rotate and archive |
 
 ## Monitoring & Maintenance
 
@@ -297,7 +304,7 @@ docker volume create melodee_storage
 **Disk Usage:**
 ```bash
 # Monitor storage volumes
-docker exec -it melodee-blazor df -h
+docker exec -it melodee.blazor df -h
 # Check database size
 docker exec -it melodee-db psql -U melodeeuser -d melodeedb -c "SELECT pg_size_pretty(pg_database_size('melodeedb'));"
 ```
@@ -305,7 +312,7 @@ docker exec -it melodee-db psql -U melodeeuser -d melodeedb -c "SELECT pg_size_p
 **Resource Usage:**
 ```bash
 # Monitor container resources
-docker stats melodee-blazor melodee-db
+docker stats melodee.blazor melodee-db
 ```
 
 ### Automated Maintenance
@@ -326,7 +333,7 @@ echo "Disk usage:"
 docker system df
 
 # Optional: Rotate logs
-docker exec melodee-blazor logrotate -f /etc/logrotate.d/melodee
+docker exec melodee.blazor logrotate -f /etc/logrotate.d/melodee
 ```
 
 **Schedule with cron:**
@@ -340,7 +347,7 @@ docker exec melodee-blazor logrotate -f /etc/logrotate.d/melodee
 **System Status:**
 ```bash
 # Check service health
-docker-compose ps
+docker compose ps
 # Check application health endpoint
 curl http://localhost:8080/health
 ```
@@ -358,7 +365,7 @@ BACKUP_DIR="/backup/melodee/$(date +%Y-%m-%d)"
 mkdir -p "$BACKUP_DIR"
 
 # Stop services to ensure consistency
-docker-compose down
+docker compose down
 
 # Export volumes
 docker run --rm -v melodee_db_data:/volume -v "$BACKUP_DIR:/backup" alpine tar czf /backup/db_backup.tar.gz -C /volume .
@@ -367,7 +374,7 @@ docker run --rm -v melodee_db_data:/volume -v "$BACKUP_DIR:/backup" alpine tar c
 docker run --rm -v melodee_storage:/volume -v "$BACKUP_DIR:/backup" alpine tar czf /backup/storage_backup.tar.gz -C /volume .
 
 # Start services
-docker-compose up -d
+docker compose up -d
 
 echo "Backup completed: $BACKUP_DIR"
 ```
@@ -380,7 +387,7 @@ docker exec melodee-db pg_dump -U melodeeuser -d melodeedb > /backup/melodee_db_
 
 ### Recovery Process
 
-1. **Stop services:** `docker-compose down`
+1. **Stop services:** `docker compose down`
 2. **Restore database:** 
    ```bash
    docker run --rm -v /backup:/backup -v melodee_db_data:/volume alpine tar xzf /backup/db_backup.tar.gz -C /volume
@@ -389,7 +396,7 @@ docker exec melodee-db pg_dump -U melodeeuser -d melodeedb > /backup/melodee_db_
    ```bash
    docker run --rm -v /backup:/backup -v melodee_storage:/volume alpine tar xzf /backup/storage_backup.tar.gz -C /volume
    ```
-4. **Start services:** `docker-compose up -d`
+4. **Start services:** `docker compose up -d`
 
 ## Troubleshooting
 
@@ -399,7 +406,7 @@ docker exec melodee-db pg_dump -U melodeeuser -d melodeedb > /backup/melodee_db_
 |-------|----------|
 | High CPU during initial scan | This is normal; scans run in background |
 | Database connection errors | Check `DB_PASSWORD` in .env file |
-| Container won't start | Run `docker logs melodee-blazor` for details |
+| Container won't start | Run `docker logs melodee.blazor` for details |
 | Slow streaming | Check network bandwidth and proxy buffer settings |
 | Missing artwork | Ensure metadata providers are configured with API keys |
 

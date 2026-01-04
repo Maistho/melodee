@@ -1,0 +1,52 @@
+# Build output
+**/bin/
+**/obj/
+**/out/
+
+# IDE and editor files
+.idea/
+.vs/
+.vscode/
+*.sln.DotSettings.user
+*.user
+
+# Test results and coverage
+**/TestResults/
+coverage.runsettings
+
+# Logs
+**/Logs/
+**/*.log
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+compose*.yml
+.dockerignore
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Scripts and tools
+scripts/
+tools/
+benchmarks/
+integration/
+monitoring/
+prompts/
+graphics/
+
+# Tests (not needed in runtime)
+tests/
+
+# Environment files (should use docker-compose env)
+*.env
+!example.env
+

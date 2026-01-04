@@ -1,42 +1,30 @@
 #!/bin/bash
 set -e
 
-echo "Fixing volume permissions for melodee user..."
-chown -R melodee:melodee /app/storage /app/inbound /app/staging /app/user-images /app/playlists /app/Logs
-chmod -R 755 /app/storage /app/inbound /app/staging /app/user-images /app/playlists
-mkdir -p /app/Logs
-chown melodee:melodee /app/Logs
-echo "Permissions fixed!"
+echo "=== Melodee Container Startup ==="
 
-echo "Starting application as melodee user..."
+# Fix volume permissions (runs as root initially)
+echo "Fixing volume permissions..."
+chown -R melodee:melodee /app/storage /app/inbound /app/staging /app/user-images /app/playlists /app/templates /app/Logs 2>/dev/null || true
+chmod -R 755 /app/storage /app/inbound /app/staging /app/user-images /app/playlists /app/templates 2>/dev/null || true
 
-# Create a script that melodee user will execute
-cat > /tmp/run-melodee.sh << 'EOFSCRIPT'
-#!/bin/bash
-set -e
-export PATH="$PATH:/home/melodee/.dotnet/tools"
-
-echo "Starting container..."
-echo "Container environment:"
-env | grep -E "(DB|CONNECTION)" | grep -v PASSWORD || true
-
-echo "Testing database connectivity..."
-until pg_isready -h melodee-db -p 5432 -U melodeeuser -d melodeedb; do
-    echo "Waiting for database..."
+# Wait for database to be ready
+echo "Waiting for database..."
+until pg_isready -h melodee-db -p 5432 -U melodeeuser -d melodeedb -q; do
+    echo "Database not ready, retrying in 2 seconds..."
     sleep 2
 done
 echo "Database is ready!"
 
+# Run database migrations using the pre-built bundle
 echo "Running database migrations..."
-cd /app/src/Melodee.Blazor
-dotnet restore
-dotnet-ef database update --context MelodeeDbContext
-echo "Migrations completed!"
+if [ -f /app/efbundle ]; then
+    /app/efbundle --connection "Host=melodee-db;Port=5432;Database=melodeedb;Username=melodeeuser;Password=${DB_PASSWORD};SSL Mode=Disable"
+    echo "Migrations completed!"
+else
+    echo "Warning: Migration bundle not found, skipping migrations"
+fi
 
-echo "Starting application..."
-cd /app
-exec dotnet server.dll
-EOFSCRIPT
-
-chmod +x /tmp/run-melodee.sh
-exec su melodee -c '/tmp/run-melodee.sh'
+# Switch to melodee user and start the application
+echo "Starting Melodee server..."
+exec su melodee -c 'cd /app && exec dotnet server.dll'
