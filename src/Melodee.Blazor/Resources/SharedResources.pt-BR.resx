@@ -4249,51 +4249,51 @@
     <value>{0}/{1} serviços habilitados</value>
   </data>
   <data name="AdminDoctor.Writable" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Writable</value>
+    <value>Gravável</value>
   </data>
   <data name="AdminDoctor.PathNotWritable" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Path is not writable</value>
+    <value>O caminho não é gravável</value>
   </data>
   <data name="AdminDoctor.PathOk" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] OK</value>
+    <value>OK</value>
   </data>
   <data name="AdminDoctor.LibraryPathsNotWritable" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Some library paths are not writable</value>
+    <value>Alguns caminhos da biblioteca não são graváveis</value>
   </data>
   <data name="AdminDoctor.LibraryPathsMissingAndNotWritable" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Some library paths are missing or not writable</value>
+    <value>Alguns caminhos da biblioteca estão ausentes ou não são graváveis</value>
   </data>
   <data name="AdminDoctor.AllLibraryPathsOk" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] All library paths exist and are writable</value>
+    <value>Todos os caminhos da biblioteca existem e são graváveis</value>
   </data>
   <data name="AdminDoctor.FileExists" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] File Exists</value>
+    <value>Arquivo existe</value>
   </data>
   <data name="AdminDoctor.FileMissing" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] File Missing</value>
+    <value>Arquivo ausente</value>
   </data>
   <data name="AdminDoctor.NotWritable" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Not Writable</value>
+    <value>Não gravável</value>
   </data>
   <data name="AdminDoctor.Check.SerilogLogging" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Serilog Logging</value>
+    <value>Log do Serilog</value>
   </data>
   <data name="AdminDoctor.SerilogLogPaths" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Serilog Log Paths</value>
+    <value>Caminhos de log do Serilog</value>
   </data>
   <data name="AdminDoctor.DirectoryExists" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Directory Exists</value>
+    <value>Diretório existe</value>
   </data>
   <data name="AdminDoctor.DirectoryMissing" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Directory Missing</value>
+    <value>Diretório ausente</value>
   </data>
   <data name="AdminDoctor.NoFileLoggingConfigured" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] No file logging configured</value>
+    <value>Nenhum log em arquivo configurado</value>
   </data>
   <data name="AdminDoctor.SerilogPathIssues" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Some log paths have issues</value>
+    <value>Alguns caminhos de log têm problemas</value>
   </data>
   <data name="AdminDoctor.SerilogPathsOk" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] All log paths are accessible</value>
+    <value>Todos os caminhos de log estão acessíveis</value>
   </data>
 </root>

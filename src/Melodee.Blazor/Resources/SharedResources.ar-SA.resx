@@ -4115,51 +4115,51 @@
     <value>تم تمكين {0}/{1} من الخدمات</value>
   </data>
   <data name="AdminDoctor.Writable" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Writable</value>
+    <value>قابل للكتابة</value>
   </data>
   <data name="AdminDoctor.PathNotWritable" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Path is not writable</value>
+    <value>المسار غير قابل للكتابة</value>
   </data>
   <data name="AdminDoctor.PathOk" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] OK</value>
+    <value>موافق</value>
   </data>
   <data name="AdminDoctor.LibraryPathsNotWritable" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Some library paths are not writable</value>
+    <value>بعض مسارات المكتبة غير قابلة للكتابة</value>
   </data>
   <data name="AdminDoctor.LibraryPathsMissingAndNotWritable" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Some library paths are missing or not writable</value>
+    <value>بعض مسارات المكتبة مفقودة أو غير قابلة للكتابة</value>
   </data>
   <data name="AdminDoctor.AllLibraryPathsOk" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] All library paths exist and are writable</value>
+    <value>جميع مسارات المكتبة موجودة وقابلة للكتابة</value>
   </data>
   <data name="AdminDoctor.FileExists" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] File Exists</value>
+    <value>الملف موجود</value>
   </data>
   <data name="AdminDoctor.FileMissing" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] File Missing</value>
+    <value>الملف مفقود</value>
   </data>
   <data name="AdminDoctor.NotWritable" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Not Writable</value>
+    <value>غير قابل للكتابة</value>
   </data>
   <data name="AdminDoctor.Check.SerilogLogging" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Serilog Logging</value>
+    <value>تسجيل Serilog</value>
   </data>
   <data name="AdminDoctor.SerilogLogPaths" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Serilog Log Paths</value>
+    <value>مسارات سجل Serilog</value>
   </data>
   <data name="AdminDoctor.DirectoryExists" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Directory Exists</value>
+    <value>الدليل موجود</value>
   </data>
   <data name="AdminDoctor.DirectoryMissing" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Directory Missing</value>
+    <value>الدليل مفقود</value>
   </data>
   <data name="AdminDoctor.NoFileLoggingConfigured" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] No file logging configured</value>
+    <value>لم يتم تكوين تسجيل الملفات</value>
   </data>
   <data name="AdminDoctor.SerilogPathIssues" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Some log paths have issues</value>
+    <value>توجد مشكلات في بعض مسارات السجل</value>
   </data>
   <data name="AdminDoctor.SerilogPathsOk" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] All log paths are accessible</value>
+    <value>جميع مسارات السجل قابلة للوصول</value>
   </data>
 </root>

@@ -4115,51 +4115,51 @@
     <value>{0}/{1} 个服务已启用</value>
   </data>
   <data name="AdminDoctor.Writable" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Writable</value>
+    <value>可写</value>
   </data>
   <data name="AdminDoctor.PathNotWritable" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Path is not writable</value>
+    <value>路径不可写</value>
   </data>
   <data name="AdminDoctor.PathOk" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] OK</value>
+    <value>确定</value>
   </data>
   <data name="AdminDoctor.LibraryPathsNotWritable" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Some library paths are not writable</value>
+    <value>部分库路径不可写</value>
   </data>
   <data name="AdminDoctor.LibraryPathsMissingAndNotWritable" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Some library paths are missing or not writable</value>
+    <value>部分库路径缺失或不可写</value>
   </data>
   <data name="AdminDoctor.AllLibraryPathsOk" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] All library paths exist and are writable</value>
+    <value>所有库路径均存在且可写</value>
   </data>
   <data name="AdminDoctor.FileExists" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] File Exists</value>
+    <value>文件存在</value>
   </data>
   <data name="AdminDoctor.FileMissing" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] File Missing</value>
+    <value>文件缺失</value>
   </data>
   <data name="AdminDoctor.NotWritable" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Not Writable</value>
+    <value>不可写</value>
   </data>
   <data name="AdminDoctor.Check.SerilogLogging" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Serilog Logging</value>
+    <value>Serilog 日志</value>
   </data>
   <data name="AdminDoctor.SerilogLogPaths" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Serilog Log Paths</value>
+    <value>Serilog 日志路径</value>
   </data>
   <data name="AdminDoctor.DirectoryExists" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Directory Exists</value>
+    <value>目录存在</value>
   </data>
   <data name="AdminDoctor.DirectoryMissing" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Directory Missing</value>
+    <value>目录缺失</value>
   </data>
   <data name="AdminDoctor.NoFileLoggingConfigured" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] No file logging configured</value>
+    <value>未配置文件日志</value>
   </data>
   <data name="AdminDoctor.SerilogPathIssues" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Some log paths have issues</value>
+    <value>部分日志路径有问题</value>
   </data>
   <data name="AdminDoctor.SerilogPathsOk" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] All log paths are accessible</value>
+    <value>所有日志路径均可访问</value>
   </data>
 </root>
