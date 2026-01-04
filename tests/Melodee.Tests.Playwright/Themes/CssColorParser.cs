@@ -239,7 +239,11 @@ public partial class CssColorParser
     private static string? ExtractProperty(string properties, string propertyName)
     {
         // Match property: value; or property: value}
-        var pattern = $@"{Regex.Escape(propertyName)}\s*:\s*([^;}}]+)";
+        // Use word boundary to avoid matching "background-color" when looking for "color"
+        // For "color", we need negative lookbehind to exclude "background-color"
+        var pattern = propertyName == "color"
+            ? @"(?<!background-)(?<!-)color\s*:\s*([^;}\s]+)"
+            : $@"(?:^|[;\s]){Regex.Escape(propertyName)}\s*:\s*([^;}}]+)";
         var match = Regex.Match(properties, pattern, RegexOptions.IgnoreCase);
         
         if (match.Success)
