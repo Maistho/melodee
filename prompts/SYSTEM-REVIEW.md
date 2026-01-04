@@ -43,8 +43,8 @@ This document serves as a living record of codebase reviews performed by various
 | 035 | 2026-01-04 | QwenCode | Security | Low | Open | Configuration Management Security |
 
 ## 2. Detailed Findings
-
-### [001] Refactor `OpenSubsonicApiService` (God Class)
+---
+### [01] Refactor `OpenSubsonicApiService` (God Class)
 - **Agent**: Antigravity
 - **Date**: 2026-01-04
 - **Risk Level**: **High**
@@ -69,8 +69,8 @@ This violation of the Single Responsibility Principle (SRP) makes the service fr
 2.  **Refactor Controllers**: Update `Melodee.Blazor.Controllers.OpenSubsonic` to inject these granular services instead of the monolithic one.
 
 ---
-
-### [002] JWT Secret Key Validation and Security Hardening
+---
+### [02] JWT Secret Key Validation and Security Hardening
 - **Agent**: Antigravity
 - **Date**: 2026-01-04
 - **Risk Level**: **High**
@@ -95,8 +95,8 @@ In `Program.cs` (lines 246-269), the application validates that JWT configuratio
 5.  **ClockSkew Adjustment**: Consider allowing a small ClockSkew (e.g., 5 seconds) to handle minor time synchronization issues while still maintaining security.
 
 ---
-
-### [003] Missing OpenSubsonic Controller Tests
+---
+### [03] Missing OpenSubsonic Controller Tests
 - **Agent**: Antigravity
 - **Date**: 2026-01-04
 - **Risk Level**: **High**
@@ -136,8 +136,8 @@ This is particularly concerning given that:
 6.  **Test Coverage Metrics**: Add test coverage reporting to CI/CD pipeline with a minimum threshold (e.g., 70%) for controller coverage.
 
 ---
-
-### [004] Blazor Component Tests
+---
+### [04] Blazor Component Tests
 - **Agent**: opencode
 - **Date**: 2026-01-04
 - **Risk Level**: **High**
@@ -153,8 +153,8 @@ No bUnit/XUnit tests for Blazor components/Pages found (e.g., tests/Melodee.Test
 4.  **CI Coverage**: Extend coverage.runsettings to 80% for Blazor; run `dotnet test --collect:"XPlat Code Coverage"`.
 
 ---
-
-### [005] Async Void in Blazor Components (Critical Exception Handling Issue)
+---
+### [05] Async Void in Blazor Components (Critical Exception Handling Issue)
 - **Agent**: opencode
 - **Date**: 2026-01-04
 - **Risk Level**: **High**
@@ -212,8 +212,8 @@ Multiple Blazor components use `async void` event handlers which is a critical a
 4.  **Code Review**: Audit all 80 Razor components to ensure no `async void` patterns exist.
 
 ---
-
-### [006] File Path Traversal Risk in Audio Streaming
+---
+### [06] File Path Traversal Risk in Audio Streaming
 - **Agent**: opencode
 - **Date**: 2026-01-04
 - **Risk Level**: **High**
@@ -269,8 +269,8 @@ While the database query filters by `Library.Path`, an attacker could:
     ```
 
 ---
-
-### [007] Extract Manual Object Mapping in Jellyfin Controllers
+---
+### [07] Extract Manual Object Mapping in Jellyfin Controllers
 - **Agent**: Antigravity
 - **Date**: 2026-01-04
 - **Risk Level**: **Medium**
@@ -288,8 +288,8 @@ The controllers in `Melodee.Blazor.Controllers.Jellyfin` (e.g., `ItemsController
 3.  **Simplify Operators**: Refactor controllers to simple call `_mapper.Map<BaseItemDto>(song)` or `_jellyfinMapper.ToDto(song)`.
 
 ---
-
-### [008] Increase Unit/Integration Test Coverage for Jellyfin
+---
+### [08] Increase Unit/Integration Test Coverage for Jellyfin
 - **Agent**: Antigravity
 - **Date**: 2026-01-04
 - **Risk Level**: **Medium**
@@ -309,8 +309,8 @@ While `OpenSubsonicApiService` has a dedicated test suite in `Melodee.Tests.Comm
     -   "Similar Items" algorithm correctness.
 
 ---
-
-### [009] Standardize API Patterns (Service vs Controller)
+---
+### [09] Standardize API Patterns (Service vs Controller)
 - **Agent**: Antigravity
 - **Date**: 2026-01-04
 - **Risk Level**: **Medium**
@@ -331,8 +331,8 @@ This inconsistency increases cognitive load for developers switching between the
     -   Decoupling of business logic from the ASP.NET Core hosting layer.
 
 ---
-
-### [010] Inconsistent Authentication Across APIs
+---
+### [10] Inconsistent Authentication Across APIs
 - **Agent**: Antigravity
 - **Date**: 2026-01-04
 - **Risk Level**: **Medium**
@@ -360,8 +360,8 @@ This creates several issues:
 4.  **Consider Unified Auth**: Evaluate whether Jellyfin and OpenSubsonic APIs could optionally support JWT authentication as an alternative to their native auth schemes for easier integration.
 
 ---
-
-### [011] Missing Input Validation and Error Handling
+---
+### [11] Missing Input Validation and Error Handling
 - **Agent**: Antigravity
 - **Date**: 2026-01-04
 - **Risk Level**: **Medium**
@@ -404,8 +404,8 @@ While EF Core protects against SQL injection via parameterization, there are sti
 6.  **Add Rate Limiting**: While rate limiting exists for APIs, consider adding more granular limits on expensive operations like search and instant mix.
 
 ---
-
-### [012] Database Connection Pool Configuration
+---
+### [12] Database Connection Pool Configuration
 - **Agent**: Antigravity
 - **Date**: 2026-01-04
 - **Risk Level**: **Medium**
@@ -444,8 +444,8 @@ In `Program.cs` (lines 105-128), database connection pooling is configured with 
 5.  **Health Checks**: Add database connectivity health checks for all three database contexts to expose in `/health` endpoint.
 
 ---
-
-### [013] Jellyfin InstantMix/Similar Items Performance
+---
+### [13] Jellyfin InstantMix/Similar Items Performance
 - **Agent**: Antigravity
 - **Date**: 2026-01-04
 - **Risk Level**: **Medium**
@@ -507,8 +507,8 @@ Additionally:
     -   Index on `Genres` column if supported by PostgreSQL (GIN index for array columns)
 
 ---
-
-### [014] Error Handling in Razor Components
+---
+### [14] Error Handling in Razor Components
 - **Agent**: opencode
 - **Date**: 2026-01-04
 - **Risk Level**: **Medium**
@@ -524,8 +524,8 @@ Blazor components (e.g., AlbumDetail.razor, Login.razor) use injected HttpClient
 4.  **Test Coverage**: Add bUnit tests simulating HttpClient failures for key pages (Dashboard, Search).
 
 ---
-
-### [015] Blazor Performance Optimizations
+---
+### [15] Blazor Performance Optimizations
 - **Agent**: opencode
 - **Date**: 2026-01-04
 - **Risk Level**: **Medium**
@@ -541,8 +541,8 @@ Blazor Server mode risks SignalR overload for large libraries/charts (no virtual
 4.  **Profiling**: Add `dotnet-trace` scripts for UI perf; monitor SignalR connections in DoctorService.
 
 ---
-
-### [016] Jellyfin Phase 6 Completion
+---
+### [16] Jellyfin Phase 6 Completion
 - **Agent**: opencode
 - **Date**: 2026-01-04
 - **Risk Level**: **Medium**
@@ -558,8 +558,8 @@ Per prompts/JELLYFIN-SPEC.md, Phase 6 (Token Mgmt/Admin) partial: No `/Auth/Keys
 4.  **Verify**: Contract tests vs. jellyfin-10.11.5-openapi.json using OpenAPI validator.
 
 ---
-
-### [017] Partitioned Rate Limiting per API
+---
+### [17] Partitioned Rate Limiting per API
 - **Agent**: opencode
 - **Date**: 2026-01-04
 - **Risk Level**: **Medium**
@@ -575,8 +575,8 @@ RateLimiterService shared across APIs; Jellyfin has dedicated config but overloa
 4.  **Metrics**: Expose limits in DoctorService; alert on 429 spikes.
 
 ---
-
-### [018] Missing ConfigureAwait(False) in Blazor Components
+---
+### [18] Missing ConfigureAwait(False) in Blazor Components
 - **Agent**: opencode
 - **Date**: 2026-01-04
 - **Risk Level**: **Medium**
@@ -604,8 +604,8 @@ The inconsistency suggests different developers may be unaware of async best pra
 4.  **Static Analysis**: Consider adding a Roslyn analyzer to detect missing `ConfigureAwait(false)` in appropriate contexts.
 
 ---
-
-### [019] Large Jellyfin ItemsController Violates SRP
+---
+### [19] Large Jellyfin ItemsController Violates SRP
 - **Agent**: opencode
 - **Date**: 2026-01-04
 - **Risk Level**: **Medium**
@@ -647,8 +647,8 @@ This is similar to OpenSubsonicApiService god class issue (Finding #001).
 4.  **Test Coverage**: With extracted services, unit tests can target business logic without requiring full HTTP context.
 
 ---
-
-### [020] Incomplete Error Handling in Blazor Components
+---
+### [20] Incomplete Error Handling in Blazor Components
 - **Agent**: opencode
 - **Date**: 2026-01-04
 - **Risk Level**: **Medium**
@@ -711,8 +711,8 @@ Building on Finding #014 (Error Handling in Razor Components), additional analys
 4.  **Error Logging**: Ensure all caught exceptions are logged to Serilog with context (page, user, operation).
 
 ---
-
-### [021] Missing Anti-Forgery Validation on State-Changing Endpoints
+---
+### [21] Missing Anti-Forgery Validation on State-Changing Endpoints
 - **Agent**: opencode
 - **Date**: 2026-01-04
 - **Risk Level**: **Medium**
@@ -747,8 +747,8 @@ While anti-forgery is configured in Program.cs (lines 185-189), there's no visib
 4.  **Testing**: Add CSRF tests to verify endpoints reject requests without valid anti-forgery tokens.
 
 ---
-
-### [022] Missing Request Validation for Jellyfin InstantMix Parameters
+---
+### [22] Missing Request Validation for Jellyfin InstantMix Parameters
 - **Agent**: opencode
 - **Date**: 2026-01-04
 - **Risk Level**: **Medium**
@@ -800,8 +800,8 @@ This could lead to:
 3.  **Test Edge Cases**: Add tests for boundary conditions and invalid parameters.
 
 ---
-
-### [023] CORS Configuration Too Permissive
+---
+### [23] CORS Configuration Too Permissive
 - **Agent**: Antigravity
 - **Date**: 2026-01-04
 - **Risk Level**: **Low**
@@ -843,8 +843,8 @@ While this simplifies development and allows browser-based clients from any orig
 4.  **CSRF Protection**: Verify that the antiforgery configuration (lines 185-189) is properly applied to state-changing endpoints that use cookie authentication.
 
 ---
-
-### [024] API Documentation and OpenAPI Specification
+---
+### [24] API Documentation and OpenAPI Specification
 - **Agent**: Antigravity
 - **Date**: 2026-01-04
 - **Risk Level**: **Low**
@@ -885,8 +885,8 @@ This makes it difficult for:
 5.  **Postman/Insomnia Collections**: Generate and maintain Postman/Insomnia collections for common API workflows to help developers get started quickly.
 
 ---
-
-### [025] Logging and Observability Improvements
+---
+### [25] Logging and Observability Improvements
 - **Agent**: Antigravity
 - **Date**: 2026-01-04
 - **Risk Level**: **Low**
@@ -970,8 +970,8 @@ The Jellyfin API has `GetCorrelationId()` method in the base controller, but it'
 6.  **Distributed Tracing**: For complex requests that span multiple services, consider adding support for OpenTelemetry distributed tracing.
 
 ---
-
-### [026] Missing ConfigureAwait(False) in Some Controller Async Calls
+---
+### [26] Missing ConfigureAwait(False) in Some Controller Async Calls
 - **Agent**: opencode
 - **Date**: 2026-01-04
 - **Risk Level**: **Low**
@@ -994,8 +994,8 @@ Examples found with 100+ uses in controllers, but gaps exist in some areas.
 3.  **Consider Analyzer**: Add a Roslyn analyzer like `Microsoft.CodeAnalysis.NetAnalyzers` to detect missing ConfigureAwait calls.
 
 ---
-
-### [027] Inconsistent Response Headers and Security Headers
+---
+### [27] Inconsistent Response Headers and Security Headers
 - **Agent**: opencode
 - **Date**: 2026-01-04
 - **Risk Level**: **Low**
@@ -1035,8 +1035,8 @@ This inconsistency could lead to:
 4.  **Content Security Policy**: Consider a more specific CSP that allows only necessary sources for UI and APIs.
 
 ---
-
-### [028] Inconsistent API Architecture Patterns Across Three APIs
+---
+### [28] Inconsistent API Architecture Patterns Across Three APIs
 - **Agent**: QwenCode
 - **Date**: 2026-01-04
 - **Risk Level**: **High**
@@ -1069,8 +1069,8 @@ This creates several issues:
 4.  **Migration Strategy**: Plan a gradual migration to reduce inconsistencies while maintaining backward compatibility
 
 ---
-
-### [029] Additional Security Concerns Beyond Path Traversal
+---
+### [29] Additional Security Concerns Beyond Path Traversal
 - **Agent**: QwenCode
 - **Date**: 2026-01-04
 - **Risk Level**: **High**
@@ -1090,8 +1090,8 @@ While finding #006 already addresses the path traversal vulnerability, additiona
 4.  **Input Sanitization**: Implement comprehensive input sanitization across all API endpoints
 
 ---
-
-### [030] Missing Input Validation and Sanitization
+---
+### [30] Missing Input Validation and Sanitization
 - **Agent**: QwenCode
 - **Date**: 2026-01-04
 - **Risk Level**: **Medium**
@@ -1116,8 +1116,8 @@ This could lead to:
 5.  **Security Testing**: Add fuzz testing to identify potential input validation bypasses
 
 ---
-
-### [031] Inadequate Testing Coverage for API Compatibility
+---
+### [31] Inadequate Testing Coverage for API Compatibility
 - **Agent**: QwenCode
 - **Date**: 2026-01-04
 - **Risk Level**: **Medium**
@@ -1142,8 +1142,8 @@ This creates risks:
 5.  **Test Coverage Goals**: Set minimum coverage targets (e.g., 80%) for each API type
 
 ---
-
-### [032] Blazor Component Architecture Issues
+---
+### [32] Blazor Component Architecture Issues
 - **Agent**: QwenCode
 - **Date**: 2026-01-04
 - **Risk Level**: **Medium**
@@ -1164,8 +1164,8 @@ The Blazor application has several architectural issues:
 5.  **Component Testing**: Increase test coverage for Blazor components using bUnit
 
 ---
-
-### [033] Database Query Optimization Needs
+---
+### [33] Database Query Optimization Needs
 - **Agent**: QwenCode
 - **Date**: 2026-01-04
 - **Risk Level**: **Medium**
@@ -1186,8 +1186,8 @@ Several database queries in the application could benefit from optimization:
 5.  **Caching**: Implement caching for frequently accessed but rarely changed data
 
 ---
-
-### [034] Configuration Management Security
+---
+### [34] Configuration Management Security
 - **Agent**: QwenCode
 - **Date**: 2026-01-04
 - **Risk Level**: **Low**
@@ -1207,8 +1207,8 @@ The application's configuration management has some security considerations:
 5.  **Environment Validation**: Add startup validation to ensure required security configuration is present
 
 ---
-
-### [035] Dependency Management and Security Vulnerabilities
+---
+### [35] Dependency Management and Security Vulnerabilities
 - **Agent**: QwenCode
 - **Date**: 2026-01-04
 - **Risk Level**: **Medium**
