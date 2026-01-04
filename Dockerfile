@@ -1,9 +1,6 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-# Install EF Core tools globally in the build stage where SDK is available
-RUN dotnet tool install --global dotnet-ef
-
 # Copy Directory.Packages.props first for central package management
 COPY ["Directory.Packages.props", "./"]
 
@@ -74,8 +71,8 @@ ENV MELODEE_PLAYLISTS_PATH="/app/playlists"
 
 USER melodee
 
-# Install EF Core tools globally for the melodee user
-RUN dotnet tool install --global dotnet-ef
+# Install EF Core tools globally for the melodee user with specific version matching EF Core 10.0.1
+RUN dotnet tool install --global dotnet-ef --version 10.0.1
 
 # Add tools to PATH
 ENV PATH="$PATH:/home/melodee/.dotnet/tools"
