@@ -53,6 +53,7 @@
       </RadzenText>
       <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap" class="rz-mt-2">
         <RadzenButton Text="@L("Navigation.Settings")" Icon="settings" Click="@(() => NavigationManager.NavigateTo("/admin/settings"))" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary"/>
+        <RadzenButton Text="@L("Navigation.Doctor")" Icon="health_and_safety" Click="@(() => NavigationManager.NavigateTo("/admin/doctor"))" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary"/>
         <RadzenButton Text="@L("Navigation.Users")" Icon="group" Click="@(() => NavigationManager.NavigateTo("/data/users"))" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary"/>
         <RadzenButton Text="@L("Navigation.Libraries")" Icon="library_music" Click="@(() => NavigationManager.NavigateTo("/data/libraries"))" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary"/>
         <RadzenButton Text="@L("Navigation.Artists")" Icon="person" Click="@(() => NavigationManager.NavigateTo("/data/artists"))" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary"/>

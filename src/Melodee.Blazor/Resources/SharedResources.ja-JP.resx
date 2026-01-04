@@ -3892,213 +3892,408 @@
     <value>アップロードされたファイルは有効なZIPアーカイブではありません。</value>
   </data>
     <data name="AdminSettings.AddNew" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Add New Setting</value>
+    <value>新しい設定を追加</value>
   </data>
   <data name="AdminSettings.AddNewSetting" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Add New Setting</value>
+    <value>新しい設定を追加</value>
   </data>
   <data name="AdminSettings.AllKeysExist" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] All settings from SettingRegistry already have records in the database.</value>
+    <value>SettingRegistry のすべての設定は、データベースに既にレコードがあります。</value>
   </data>
   <data name="AdminSettings.Category" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Category</value>
+    <value>カテゴリ</value>
   </data>
   <data name="AdminSettings.Description" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Description</value>
+    <value>説明</value>
   </data>
   <data name="AdminSettings.EnterComment" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Enter comment (optional)</value>
+    <value>コメントを入力（任意）</value>
   </data>
   <data name="AdminSettings.EnterDescription" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Enter description (optional)</value>
+    <value>説明を入力（任意）</value>
   </data>
   <data name="AdminSettings.EnterValue" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Enter setting value</value>
+    <value>設定値を入力</value>
   </data>
   <data name="AdminSettings.FailedToAdd" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Failed to add setting</value>
+    <value>設定の追加に失敗しました</value>
   </data>
   <data name="AdminSettings.KeyRequired" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Setting key is required</value>
+    <value>設定キーは必須です</value>
   </data>
   <data name="AdminSettings.NoAvailableKeys" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] No Available Settings</value>
+    <value>利用可能な設定はありません</value>
   </data>
   <data name="AdminSettings.SelectKey" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Select a setting key...</value>
+    <value>設定キーを選択...</value>
   </data>
   <data name="AdminSettings.SortOrder" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Sort Order</value>
+    <value>並び順</value>
   </data>
   <data name="AdminSettings.SuccessfullyAdded" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Successfully added new setting!</value>
+    <value>新しい設定を追加しました！</value>
   </data>
   <data name="Auth.BackToLogin" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Back to Login</value>
+    <value>ログインに戻る</value>
   </data>
   <data name="Auth.CheckEmailForResetLink" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] If an account with that email exists, you will receive a password reset link shortly.</value>
+    <value>そのメールアドレスのアカウントが存在する場合、まもなくパスワード リセット リンクが送信されます。</value>
   </data>
   <data name="Auth.ConfirmNewPassword" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Confirm new password</value>
+    <value>新しいパスワードを確認</value>
   </data>
   <data name="Auth.ConfirmPasswordRequired" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Please confirm your password</value>
+    <value>パスワードを確認してください</value>
   </data>
   <data name="Auth.EmailInvalid" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Please enter a valid email address</value>
+    <value>有効なメールアドレスを入力してください</value>
   </data>
   <data name="Auth.EmailRequired" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Email is required</value>
+    <value>メールアドレスは必須です</value>
   </data>
   <data name="Auth.EnterNewPassword" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Enter new password</value>
+    <value>新しいパスワードを入力</value>
   </data>
   <data name="Auth.ForgotPasswordSubtitle" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Enter your email to receive a password reset link</value>
+    <value>パスワード リセット リンクを受け取るにはメールアドレスを入力してください</value>
   </data>
   <data name="Auth.ForgotPasswordTitle" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Forgot Password</value>
+    <value>パスワードを忘れた</value>
   </data>
   <data name="Auth.InvalidOrExpiredToken" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Invalid or expired reset link</value>
+    <value>リセット リンクが無効または期限切れです</value>
   </data>
   <data name="Auth.InvalidToken" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Invalid reset token</value>
+    <value>リセット トークンが無効です</value>
   </data>
   <data name="Auth.NewPassword" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] New Password</value>
+    <value>新しいパスワード</value>
   </data>
   <data name="Auth.PasswordMinLength" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Password must be at least 8 characters</value>
+    <value>パスワードは 8 文字以上である必要があります</value>
   </data>
   <data name="Auth.PasswordResetEmailSent" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Password reset link sent!</value>
+    <value>パスワード リセット リンクを送信しました！</value>
   </data>
   <data name="Auth.PasswordResetSuccess" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Password reset successfully!</value>
+    <value>パスワードをリセットしました！</value>
   </data>
   <data name="Auth.PasswordResetUnavailable" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Password reset is currently unavailable. Please contact your system administrator.</value>
+    <value>現在、パスワードのリセットは利用できません。システム管理者に連絡してください。</value>
   </data>
   <data name="Auth.PasswordsMustMatch" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Passwords must match</value>
+    <value>パスワードが一致する必要があります</value>
   </data>
   <data name="Auth.RedirectingToLogin" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Redirecting to login page...</value>
+    <value>ログイン ページにリダイレクトしています...</value>
   </data>
   <data name="Auth.ResetPasswordError" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] An error occurred while resetting your password</value>
+    <value>パスワードのリセット中にエラーが発生しました</value>
   </data>
   <data name="Auth.ResetPasswordFailed" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Failed to reset password</value>
+    <value>パスワードのリセットに失敗しました</value>
   </data>
   <data name="Auth.ResetPasswordSubtitle" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Enter your new password</value>
+    <value>新しいパスワードを入力してください</value>
   </data>
   <data name="Auth.ResetPasswordTitle" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Reset Password</value>
+    <value>パスワードをリセット</value>
   </data>
   <data name="Auth.Resetting" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Resetting...</value>
+    <value>リセット中...</value>
   </data>
   <data name="Auth.SendResetLink" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Send Reset Link</value>
+    <value>リセット リンクを送信</value>
   </data>
   <data name="Auth.Sending" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Sending...</value>
+    <value>送信中...</value>
   </data>
   <data name="Auth.TokenExpiredMessage" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] This password reset link has expired or is invalid. Please request a new one.</value>
+    <value>このパスワード リセット リンクは期限切れまたは無効です。新しいリンクをリクエストしてください。</value>
   </data>
   <data name="Auth.TooManyAttempts" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Too many attempts. Please try again later.</value>
+    <value>試行回数が多すぎます。後でもう一度お試しください。</value>
   </data>
   <data name="Auth.ValidatingToken" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Validating reset link...</value>
+    <value>リセット リンクを検証中...</value>
   </data>
   <data name="About.DocumentationSite" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Melodee Documentation Site</value>
+    <value>Melodee ドキュメント サイト</value>
   </data>
   <data name="Actions.BackToChart" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Back to Chart</value>
+    <value>チャートに戻る</value>
   </data>
   <data name="ChartsMissingReport.HeaderForChart" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Missing Albums for {0}</value>
+    <value>{0} の不足アルバム</value>
   </data>
   <data name="ArtistDetail.ValidateAlbums" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Validate all albums for this artist</value>
+    <value>このアーティストのすべてのアルバムを検証</value>
   </data>
   <data name="ArtistDetail.ValidateAlbumsTitle" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Album Validation: {0}</value>
+    <value>アルバム検証: {0}</value>
   </data>
   <data name="ArtistValidation.ValidatingAlbums" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Validating albums...</value>
+    <value>アルバムを検証中...</value>
   </data>
   <data name="ArtistValidation.TotalAlbums" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Total Albums</value>
+    <value>アルバム合計</value>
   </data>
   <data name="ArtistValidation.ValidAlbums" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Valid</value>
+    <value>有効</value>
   </data>
   <data name="ArtistValidation.InvalidAlbums" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Invalid</value>
+    <value>無効</value>
   </data>
   <data name="ArtistValidation.AllValid" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] All Valid</value>
+    <value>すべて有効</value>
   </data>
   <data name="ArtistValidation.IssuesFound" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Issues Found</value>
+    <value>問題が見つかりました</value>
   </data>
   <data name="ArtistValidation.AlbumDetails" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Album Details</value>
+    <value>アルバムの詳細</value>
   </data>
   <data name="ArtistValidation.Directory" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Directory</value>
+    <value>ディレクトリ</value>
   </data>
   <data name="ArtistValidation.Cover" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Cover</value>
+    <value>カバー</value>
   </data>
   <data name="ArtistValidation.Issues" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Issues</value>
+    <value>問題</value>
   </data>
   <data name="ArtistValidation.Valid" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Valid</value>
+    <value>有効</value>
   </data>
   <data name="ArtistValidation.Invalid" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Invalid</value>
+    <value>無効</value>
   </data>
   <data name="ArtistValidation.DirectoryExists" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Directory exists</value>
+    <value>ディレクトリは存在します</value>
   </data>
   <data name="ArtistValidation.DirectoryMissing" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Directory missing</value>
+    <value>ディレクトリが見つかりません</value>
   </data>
   <data name="ArtistValidation.HasCoverImage" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Has cover image</value>
+    <value>カバー画像あり</value>
   </data>
   <data name="ArtistValidation.NoCoverImage" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] No cover image</value>
+    <value>カバー画像なし</value>
   </data>
   <data name="ArtistValidation.MoreIssues" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] +{0} more issues</value>
+    <value>さらに {0} 件の問題</value>
   </data>
   <data name="ArtistValidation.NoResults" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] No validation results available.</value>
+    <value>検証結果がありません。</value>
   </data>
   <data name="About.OpenSubsonicApiDocs" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] OpenSubsonic API Docs</value>
+    <value>OpenSubsonic API ドキュメント</value>
   </data>
   <data name="Stats.ReleasesByYear" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Releases by Year</value>
+    <value>年別リリース</value>
   </data>
   <data name="Stats.TopArtistsByPlays" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Top 10 Most Played Artists</value>
+    <value>再生回数が多いアーティスト トップ 10</value>
   </data>
   <data name="Stats.TopArtistsByAlbumCount" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Top 10 Artists by Album Count</value>
+    <value>アルバム数が多いアーティスト トップ 10</value>
   </data>
   <data name="Stats.ReleasesByGenre" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Releases by Genre</value>
+    <value>ジャンル別リリース</value>
+  </data>
+  <data name="Navigation.Doctor" xml:space="preserve">
+    <value>診断</value>
+  </data>
+  <data name="AdminDoctor.PageTitle" xml:space="preserve">
+    <value>システム診断</value>
+  </data>
+  <data name="AdminDoctor.Description" xml:space="preserve">
+    <value>インストール、構成、環境の問題を診断します</value>
+  </data>
+  <data name="AdminDoctor.RunningDiagnostics" xml:space="preserve">
+    <value>診断を実行中...</value>
+  </data>
+  <data name="AdminDoctor.AllChecksPassed" xml:space="preserve">
+    <value>すべてのチェックに合格しました</value>
+  </data>
+  <data name="AdminDoctor.IssuesFound" xml:space="preserve">
+    <value>問題が見つかりました</value>
+  </data>
+  <data name="AdminDoctor.CompletedIn" xml:space="preserve">
+    <value>{0} 秒で完了</value>
+  </data>
+  <data name="AdminDoctor.SystemChecks" xml:space="preserve">
+    <value>システム チェック</value>
+  </data>
+  <data name="AdminDoctor.Status" xml:space="preserve">
+    <value>状態</value>
+  </data>
+  <data name="AdminDoctor.Check" xml:space="preserve">
+    <value>チェック</value>
+  </data>
+  <data name="AdminDoctor.Details" xml:space="preserve">
+    <value>詳細</value>
+  </data>
+  <data name="AdminDoctor.Duration" xml:space="preserve">
+    <value>時間</value>
+  </data>
+  <data name="AdminDoctor.EnvironmentInfo" xml:space="preserve">
+    <value>環境情報</value>
+  </data>
+  <data name="AdminDoctor.LibraryPaths" xml:space="preserve">
+    <value>ライブラリ パス</value>
+  </data>
+  <data name="AdminDoctor.LibraryName" xml:space="preserve">
+    <value>ライブラリ</value>
+  </data>
+  <data name="AdminDoctor.LibraryType" xml:space="preserve">
+    <value>種類</value>
+  </data>
+  <data name="AdminDoctor.Path" xml:space="preserve">
+    <value>パス</value>
+  </data>
+  <data name="AdminDoctor.ConfigurableServices" xml:space="preserve">
+    <value>構成可能なサービス</value>
+  </data>
+  <data name="AdminDoctor.Category" xml:space="preserve">
+    <value>カテゴリ</value>
+  </data>
+  <data name="AdminDoctor.ServiceName" xml:space="preserve">
+    <value>サービス</value>
+  </data>
+  <data name="AdminDoctor.SettingKey" xml:space="preserve">
+    <value>設定キー</value>
+  </data>
+  <data name="AdminDoctor.ConnectionStrings" xml:space="preserve">
+    <value>接続文字列</value>
+  </data>
+  <data name="AdminDoctor.RelevantEnvVars" xml:space="preserve">
+    <value>関連する環境変数</value>
+  </data>
+  <data name="AdminDoctor.NotSet" xml:space="preserve">
+    <value>(未設定)</value>
+  </data>
+  <data name="AdminDoctor.CopyJson" xml:space="preserve">
+    <value>JSON をコピー</value>
+  </data>
+  <data name="AdminDoctor.JsonCopied" xml:space="preserve">
+    <value>診断データをクリップボードにコピーしました</value>
+  </data>
+  <data name="AdminDoctor.DotNetVersion" xml:space="preserve">
+    <value>.NET バージョン</value>
+  </data>
+  <data name="AdminDoctor.OSDescription" xml:space="preserve">
+    <value>オペレーティング システム</value>
+  </data>
+  <data name="AdminDoctor.OSArchitecture" xml:space="preserve">
+    <value>OS アーキテクチャ</value>
+  </data>
+  <data name="AdminDoctor.ProcessArchitecture" xml:space="preserve">
+    <value>プロセス アーキテクチャ</value>
+  </data>
+  <data name="AdminDoctor.MelodeeVersion" xml:space="preserve">
+    <value>Melodee バージョン</value>
+  </data>
+  <data name="AdminDoctor.Environment" xml:space="preserve">
+    <value>環境</value>
+  </data>
+  <data name="AdminDoctor.ContentRootPath" xml:space="preserve">
+    <value>コンテンツ ルート パス</value>
+  </data>
+  <data name="AdminDoctor.WebRootPath" xml:space="preserve">
+    <value>Web ルート パス</value>
+  </data>
+  <data name="AdminDoctor.ServerTimeUtc" xml:space="preserve">
+    <value>サーバー時刻 (UTC)</value>
+  </data>
+  <data name="AdminDoctor.Uptime" xml:space="preserve">
+    <value>稼働時間</value>
+  </data>
+  <data name="AdminDoctor.ProcessId" xml:space="preserve">
+    <value>プロセス ID</value>
+  </data>
+  <data name="AdminDoctor.MachineName" xml:space="preserve">
+    <value>マシン名</value>
+  </data>
+  <data name="AdminDoctor.Check.Configuration" xml:space="preserve">
+    <value>構成</value>
+  </data>
+  <data name="AdminDoctor.Check.PostgresDatabase" xml:space="preserve">
+    <value>データベース: PostgreSQL</value>
+  </data>
+  <data name="AdminDoctor.Check.MusicBrainzDatabase" xml:space="preserve">
+    <value>データベース: MusicBrainz (SQLite)</value>
+  </data>
+  <data name="AdminDoctor.Check.ArtistSearchEngineDatabase" xml:space="preserve">
+    <value>データベース: ArtistSearchEngine (SQLite)</value>
+  </data>
+  <data name="AdminDoctor.Check.LibraryPaths" xml:space="preserve">
+    <value>ライブラリ パス</value>
+  </data>
+  <data name="AdminDoctor.Check.ConfigurableServices" xml:space="preserve">
+    <value>構成可能なサービス</value>
+  </data>
+  <data name="AdminDoctor.PathExists" xml:space="preserve">
+    <value>パスは存在します</value>
+  </data>
+  <data name="AdminDoctor.PathMissing" xml:space="preserve">
+    <value>パスが見つかりません</value>
+  </data>
+  <data name="AdminDoctor.LibraryPathsMissing" xml:space="preserve">
+    <value>1 つ以上のライブラリ パスが見つかりません</value>
+  </data>
+  <data name="AdminDoctor.AllLibraryPathsExist" xml:space="preserve">
+    <value>すべてのライブラリ パスが存在します</value>
+  </data>
+  <data name="AdminDoctor.ServicesEnabled" xml:space="preserve">
+    <value>{0}/{1} 個のサービスが有効</value>
+  </data>
+  <data name="AdminDoctor.Writable" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Writable</value>
+  </data>
+  <data name="AdminDoctor.PathNotWritable" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Path is not writable</value>
+  </data>
+  <data name="AdminDoctor.PathOk" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] OK</value>
+  </data>
+  <data name="AdminDoctor.LibraryPathsNotWritable" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Some library paths are not writable</value>
+  </data>
+  <data name="AdminDoctor.LibraryPathsMissingAndNotWritable" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Some library paths are missing or not writable</value>
+  </data>
+  <data name="AdminDoctor.AllLibraryPathsOk" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] All library paths exist and are writable</value>
+  </data>
+  <data name="AdminDoctor.FileExists" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] File Exists</value>
+  </data>
+  <data name="AdminDoctor.FileMissing" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] File Missing</value>
+  </data>
+  <data name="AdminDoctor.NotWritable" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Not Writable</value>
+  </data>
+  <data name="AdminDoctor.Check.SerilogLogging" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Serilog Logging</value>
+  </data>
+  <data name="AdminDoctor.SerilogLogPaths" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Serilog Log Paths</value>
+  </data>
+  <data name="AdminDoctor.DirectoryExists" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Directory Exists</value>
+  </data>
+  <data name="AdminDoctor.DirectoryMissing" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Directory Missing</value>
+  </data>
+  <data name="AdminDoctor.NoFileLoggingConfigured" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No file logging configured</value>
+  </data>
+  <data name="AdminDoctor.SerilogPathIssues" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Some log paths have issues</value>
+  </data>
+  <data name="AdminDoctor.SerilogPathsOk" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] All log paths are accessible</value>
   </data>
 </root>

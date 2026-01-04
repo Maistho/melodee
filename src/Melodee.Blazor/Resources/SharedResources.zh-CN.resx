@@ -3758,213 +3758,408 @@
     <value>上传的文件不是有效的ZIP压缩包。</value>
   </data>
   <data name="AdminSettings.AddNew" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Add New Setting</value>
+    <value>添加新设置</value>
   </data>
   <data name="AdminSettings.AddNewSetting" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Add New Setting</value>
+    <value>添加新设置</value>
   </data>
   <data name="AdminSettings.AllKeysExist" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] All settings from SettingRegistry already have records in the database.</value>
+    <value>SettingRegistry 中的所有设置在数据库中都已有记录。</value>
   </data>
   <data name="AdminSettings.Category" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Category</value>
+    <value>类别</value>
   </data>
   <data name="AdminSettings.Description" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Description</value>
+    <value>描述</value>
   </data>
   <data name="AdminSettings.EnterComment" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Enter comment (optional)</value>
+    <value>输入备注（可选）</value>
   </data>
   <data name="AdminSettings.EnterDescription" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Enter description (optional)</value>
+    <value>输入描述（可选）</value>
   </data>
   <data name="AdminSettings.EnterValue" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Enter setting value</value>
+    <value>输入设置值</value>
   </data>
   <data name="AdminSettings.FailedToAdd" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Failed to add setting</value>
+    <value>添加设置失败</value>
   </data>
   <data name="AdminSettings.KeyRequired" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Setting key is required</value>
+    <value>设置键为必填项</value>
   </data>
   <data name="AdminSettings.NoAvailableKeys" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] No Available Settings</value>
+    <value>没有可用的设置</value>
   </data>
   <data name="AdminSettings.SelectKey" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Select a setting key...</value>
+    <value>选择设置键...</value>
   </data>
   <data name="AdminSettings.SortOrder" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Sort Order</value>
+    <value>排序</value>
   </data>
   <data name="AdminSettings.SuccessfullyAdded" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Successfully added new setting!</value>
+    <value>成功添加新设置！</value>
   </data>
   <data name="Auth.BackToLogin" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Back to Login</value>
+    <value>返回登录</value>
   </data>
   <data name="Auth.CheckEmailForResetLink" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] If an account with that email exists, you will receive a password reset link shortly.</value>
+    <value>如果该邮箱对应的账户存在，你将很快收到密码重置链接。</value>
   </data>
   <data name="Auth.ConfirmNewPassword" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Confirm new password</value>
+    <value>确认新密码</value>
   </data>
   <data name="Auth.ConfirmPasswordRequired" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Please confirm your password</value>
+    <value>请确认你的密码</value>
   </data>
   <data name="Auth.EmailInvalid" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Please enter a valid email address</value>
+    <value>请输入有效的邮箱地址</value>
   </data>
   <data name="Auth.EmailRequired" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Email is required</value>
+    <value>邮箱为必填项</value>
   </data>
   <data name="Auth.EnterNewPassword" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Enter new password</value>
+    <value>输入新密码</value>
   </data>
   <data name="Auth.ForgotPasswordSubtitle" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Enter your email to receive a password reset link</value>
+    <value>输入邮箱以接收密码重置链接</value>
   </data>
   <data name="Auth.ForgotPasswordTitle" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Forgot Password</value>
+    <value>忘记密码</value>
   </data>
   <data name="Auth.InvalidOrExpiredToken" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Invalid or expired reset link</value>
+    <value>重置链接无效或已过期</value>
   </data>
   <data name="Auth.InvalidToken" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Invalid reset token</value>
+    <value>重置令牌无效</value>
   </data>
   <data name="Auth.NewPassword" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] New Password</value>
+    <value>新密码</value>
   </data>
   <data name="Auth.PasswordMinLength" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Password must be at least 8 characters</value>
+    <value>密码至少需要 8 个字符</value>
   </data>
   <data name="Auth.PasswordResetEmailSent" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Password reset link sent!</value>
+    <value>密码重置链接已发送！</value>
   </data>
   <data name="Auth.PasswordResetSuccess" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Password reset successfully!</value>
+    <value>密码重置成功！</value>
   </data>
   <data name="Auth.PasswordResetUnavailable" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Password reset is currently unavailable. Please contact your system administrator.</value>
+    <value>当前无法重置密码。请联系系统管理员。</value>
   </data>
   <data name="Auth.PasswordsMustMatch" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Passwords must match</value>
+    <value>两次输入的密码必须一致</value>
   </data>
   <data name="Auth.RedirectingToLogin" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Redirecting to login page...</value>
+    <value>正在跳转到登录页面...</value>
   </data>
   <data name="Auth.ResetPasswordError" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] An error occurred while resetting your password</value>
+    <value>重置密码时发生错误</value>
   </data>
   <data name="Auth.ResetPasswordFailed" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Failed to reset password</value>
+    <value>重置密码失败</value>
   </data>
   <data name="Auth.ResetPasswordSubtitle" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Enter your new password</value>
+    <value>输入你的新密码</value>
   </data>
   <data name="Auth.ResetPasswordTitle" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Reset Password</value>
+    <value>重置密码</value>
   </data>
   <data name="Auth.Resetting" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Resetting...</value>
+    <value>正在重置...</value>
   </data>
   <data name="Auth.SendResetLink" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Send Reset Link</value>
+    <value>发送重置链接</value>
   </data>
   <data name="Auth.Sending" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Sending...</value>
+    <value>正在发送...</value>
   </data>
   <data name="Auth.TokenExpiredMessage" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] This password reset link has expired or is invalid. Please request a new one.</value>
+    <value>该密码重置链接已过期或无效。请重新申请。</value>
   </data>
   <data name="Auth.TooManyAttempts" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Too many attempts. Please try again later.</value>
+    <value>尝试次数过多。请稍后再试。</value>
   </data>
   <data name="Auth.ValidatingToken" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Validating reset link...</value>
+    <value>正在验证重置链接...</value>
   </data>
   <data name="About.DocumentationSite" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Melodee Documentation Site</value>
+    <value>Melodee 文档站点</value>
   </data>
   <data name="Actions.BackToChart" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Back to Chart</value>
+    <value>返回排行榜</value>
   </data>
   <data name="ChartsMissingReport.HeaderForChart" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Missing Albums for {0}</value>
+    <value>{0} 缺失的专辑</value>
   </data>
   <data name="ArtistDetail.ValidateAlbums" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Validate all albums for this artist</value>
+    <value>验证此艺术家的所有专辑</value>
   </data>
   <data name="ArtistDetail.ValidateAlbumsTitle" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Album Validation: {0}</value>
+    <value>专辑验证：{0}</value>
   </data>
   <data name="ArtistValidation.ValidatingAlbums" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Validating albums...</value>
+    <value>正在验证专辑...</value>
   </data>
   <data name="ArtistValidation.TotalAlbums" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Total Albums</value>
+    <value>专辑总数</value>
   </data>
   <data name="ArtistValidation.ValidAlbums" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Valid</value>
+    <value>有效</value>
   </data>
   <data name="ArtistValidation.InvalidAlbums" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Invalid</value>
+    <value>无效</value>
   </data>
   <data name="ArtistValidation.AllValid" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] All Valid</value>
+    <value>全部有效</value>
   </data>
   <data name="ArtistValidation.IssuesFound" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Issues Found</value>
+    <value>发现问题</value>
   </data>
   <data name="ArtistValidation.AlbumDetails" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Album Details</value>
+    <value>专辑详情</value>
   </data>
   <data name="ArtistValidation.Directory" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Directory</value>
+    <value>目录</value>
   </data>
   <data name="ArtistValidation.Cover" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Cover</value>
+    <value>封面</value>
   </data>
   <data name="ArtistValidation.Issues" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Issues</value>
+    <value>问题</value>
   </data>
   <data name="ArtistValidation.Valid" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Valid</value>
+    <value>有效</value>
   </data>
   <data name="ArtistValidation.Invalid" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Invalid</value>
+    <value>无效</value>
   </data>
   <data name="ArtistValidation.DirectoryExists" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Directory exists</value>
+    <value>目录存在</value>
   </data>
   <data name="ArtistValidation.DirectoryMissing" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Directory missing</value>
+    <value>目录缺失</value>
   </data>
   <data name="ArtistValidation.HasCoverImage" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Has cover image</value>
+    <value>有封面图片</value>
   </data>
   <data name="ArtistValidation.NoCoverImage" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] No cover image</value>
+    <value>没有封面图片</value>
   </data>
   <data name="ArtistValidation.MoreIssues" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] +{0} more issues</value>
+    <value>还有 {0} 个问题</value>
   </data>
   <data name="ArtistValidation.NoResults" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] No validation results available.</value>
+    <value>没有可用的验证结果。</value>
   </data>
   <data name="About.OpenSubsonicApiDocs" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] OpenSubsonic API Docs</value>
+    <value>OpenSubsonic API 文档</value>
   </data>
   <data name="Stats.ReleasesByGenre" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Releases by Genre</value>
+    <value>按流派发布</value>
   </data>
   <data name="Stats.ReleasesByYear" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Releases by Year</value>
+    <value>按年份发布</value>
   </data>
   <data name="Stats.TopArtistsByPlays" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Top 10 Most Played Artists</value>
+    <value>播放次数最多的前 10 位艺术家</value>
   </data>
   <data name="Stats.TopArtistsByAlbumCount" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Top 10 Artists by Album Count</value>
+    <value>按专辑数量排行的前 10 位艺术家</value>
+  </data>
+  <data name="Navigation.Doctor" xml:space="preserve">
+    <value>诊断</value>
+  </data>
+  <data name="AdminDoctor.PageTitle" xml:space="preserve">
+    <value>系统诊断</value>
+  </data>
+  <data name="AdminDoctor.Description" xml:space="preserve">
+    <value>诊断安装、配置和环境问题</value>
+  </data>
+  <data name="AdminDoctor.RunningDiagnostics" xml:space="preserve">
+    <value>正在运行诊断...</value>
+  </data>
+  <data name="AdminDoctor.AllChecksPassed" xml:space="preserve">
+    <value>所有检查均已通过</value>
+  </data>
+  <data name="AdminDoctor.IssuesFound" xml:space="preserve">
+    <value>发现问题</value>
+  </data>
+  <data name="AdminDoctor.CompletedIn" xml:space="preserve">
+    <value>{0} 秒内完成</value>
+  </data>
+  <data name="AdminDoctor.SystemChecks" xml:space="preserve">
+    <value>系统检查</value>
+  </data>
+  <data name="AdminDoctor.Status" xml:space="preserve">
+    <value>状态</value>
+  </data>
+  <data name="AdminDoctor.Check" xml:space="preserve">
+    <value>检查</value>
+  </data>
+  <data name="AdminDoctor.Details" xml:space="preserve">
+    <value>详情</value>
+  </data>
+  <data name="AdminDoctor.Duration" xml:space="preserve">
+    <value>时长</value>
+  </data>
+  <data name="AdminDoctor.EnvironmentInfo" xml:space="preserve">
+    <value>环境信息</value>
+  </data>
+  <data name="AdminDoctor.LibraryPaths" xml:space="preserve">
+    <value>库路径</value>
+  </data>
+  <data name="AdminDoctor.LibraryName" xml:space="preserve">
+    <value>媒体库</value>
+  </data>
+  <data name="AdminDoctor.LibraryType" xml:space="preserve">
+    <value>类型</value>
+  </data>
+  <data name="AdminDoctor.Path" xml:space="preserve">
+    <value>路径</value>
+  </data>
+  <data name="AdminDoctor.ConfigurableServices" xml:space="preserve">
+    <value>可配置的服务</value>
+  </data>
+  <data name="AdminDoctor.Category" xml:space="preserve">
+    <value>类别</value>
+  </data>
+  <data name="AdminDoctor.ServiceName" xml:space="preserve">
+    <value>服务</value>
+  </data>
+  <data name="AdminDoctor.SettingKey" xml:space="preserve">
+    <value>设置键</value>
+  </data>
+  <data name="AdminDoctor.ConnectionStrings" xml:space="preserve">
+    <value>连接字符串</value>
+  </data>
+  <data name="AdminDoctor.RelevantEnvVars" xml:space="preserve">
+    <value>相关环境变量</value>
+  </data>
+  <data name="AdminDoctor.NotSet" xml:space="preserve">
+    <value>（未设置）</value>
+  </data>
+  <data name="AdminDoctor.CopyJson" xml:space="preserve">
+    <value>复制 JSON</value>
+  </data>
+  <data name="AdminDoctor.JsonCopied" xml:space="preserve">
+    <value>诊断数据已复制到剪贴板</value>
+  </data>
+  <data name="AdminDoctor.DotNetVersion" xml:space="preserve">
+    <value>.NET 版本</value>
+  </data>
+  <data name="AdminDoctor.OSDescription" xml:space="preserve">
+    <value>操作系统</value>
+  </data>
+  <data name="AdminDoctor.OSArchitecture" xml:space="preserve">
+    <value>操作系统架构</value>
+  </data>
+  <data name="AdminDoctor.ProcessArchitecture" xml:space="preserve">
+    <value>进程架构</value>
+  </data>
+  <data name="AdminDoctor.MelodeeVersion" xml:space="preserve">
+    <value>Melodee 版本</value>
+  </data>
+  <data name="AdminDoctor.Environment" xml:space="preserve">
+    <value>环境</value>
+  </data>
+  <data name="AdminDoctor.ContentRootPath" xml:space="preserve">
+    <value>内容根路径</value>
+  </data>
+  <data name="AdminDoctor.WebRootPath" xml:space="preserve">
+    <value>Web 根路径</value>
+  </data>
+  <data name="AdminDoctor.ServerTimeUtc" xml:space="preserve">
+    <value>服务器时间（UTC）</value>
+  </data>
+  <data name="AdminDoctor.Uptime" xml:space="preserve">
+    <value>运行时间</value>
+  </data>
+  <data name="AdminDoctor.ProcessId" xml:space="preserve">
+    <value>进程 ID</value>
+  </data>
+  <data name="AdminDoctor.MachineName" xml:space="preserve">
+    <value>机器名称</value>
+  </data>
+  <data name="AdminDoctor.Check.Configuration" xml:space="preserve">
+    <value>配置</value>
+  </data>
+  <data name="AdminDoctor.Check.PostgresDatabase" xml:space="preserve">
+    <value>数据库：PostgreSQL</value>
+  </data>
+  <data name="AdminDoctor.Check.MusicBrainzDatabase" xml:space="preserve">
+    <value>数据库：MusicBrainz（SQLite）</value>
+  </data>
+  <data name="AdminDoctor.Check.ArtistSearchEngineDatabase" xml:space="preserve">
+    <value>数据库：ArtistSearchEngine（SQLite）</value>
+  </data>
+  <data name="AdminDoctor.Check.LibraryPaths" xml:space="preserve">
+    <value>库路径</value>
+  </data>
+  <data name="AdminDoctor.Check.ConfigurableServices" xml:space="preserve">
+    <value>可配置的服务</value>
+  </data>
+  <data name="AdminDoctor.PathExists" xml:space="preserve">
+    <value>路径存在</value>
+  </data>
+  <data name="AdminDoctor.PathMissing" xml:space="preserve">
+    <value>路径缺失</value>
+  </data>
+  <data name="AdminDoctor.LibraryPathsMissing" xml:space="preserve">
+    <value>一个或多个库路径缺失</value>
+  </data>
+  <data name="AdminDoctor.AllLibraryPathsExist" xml:space="preserve">
+    <value>所有库路径均存在</value>
+  </data>
+  <data name="AdminDoctor.ServicesEnabled" xml:space="preserve">
+    <value>{0}/{1} 个服务已启用</value>
+  </data>
+  <data name="AdminDoctor.Writable" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Writable</value>
+  </data>
+  <data name="AdminDoctor.PathNotWritable" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Path is not writable</value>
+  </data>
+  <data name="AdminDoctor.PathOk" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] OK</value>
+  </data>
+  <data name="AdminDoctor.LibraryPathsNotWritable" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Some library paths are not writable</value>
+  </data>
+  <data name="AdminDoctor.LibraryPathsMissingAndNotWritable" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Some library paths are missing or not writable</value>
+  </data>
+  <data name="AdminDoctor.AllLibraryPathsOk" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] All library paths exist and are writable</value>
+  </data>
+  <data name="AdminDoctor.FileExists" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] File Exists</value>
+  </data>
+  <data name="AdminDoctor.FileMissing" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] File Missing</value>
+  </data>
+  <data name="AdminDoctor.NotWritable" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Not Writable</value>
+  </data>
+  <data name="AdminDoctor.Check.SerilogLogging" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Serilog Logging</value>
+  </data>
+  <data name="AdminDoctor.SerilogLogPaths" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Serilog Log Paths</value>
+  </data>
+  <data name="AdminDoctor.DirectoryExists" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Directory Exists</value>
+  </data>
+  <data name="AdminDoctor.DirectoryMissing" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Directory Missing</value>
+  </data>
+  <data name="AdminDoctor.NoFileLoggingConfigured" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No file logging configured</value>
+  </data>
+  <data name="AdminDoctor.SerilogPathIssues" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Some log paths have issues</value>
+  </data>
+  <data name="AdminDoctor.SerilogPathsOk" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] All log paths are accessible</value>
   </data>
 </root>

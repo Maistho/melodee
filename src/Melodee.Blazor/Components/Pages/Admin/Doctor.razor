@@ -1,0 +1,1022 @@
+@page "/admin/doctor"
+@using System.Diagnostics
+@using System.Reflection
+@using System.Runtime.InteropServices
+@using System.Text.Json
+@using Melodee.Common.Constants
+@using Melodee.Common.Data
+@using Melodee.Common.Models.SearchEngines.ArtistSearchEngineServiceData
+@using Melodee.Common.Plugins.SearchEngine.MusicBrainz.Data
+@using Microsoft.Data.Sqlite
+@using Microsoft.EntityFrameworkCore
+@using Serilog
+@using Serilog.Core
+@inherits MelodeeComponentBase
+
+@inject IMelodeeConfigurationFactory MelodeeConfigurationFactory
+@inject LibraryService LibraryService
+@inject IDbContextFactory<MelodeeDbContext> DbContextFactory
+@inject IDbContextFactory<MusicBrainzDbContext> MusicBrainzDbContextFactory
+@inject IDbContextFactory<ArtistSearchEngineServiceDbContext> ArtistSearchEngineDbContextFactory
+@inject IConfiguration AppConfiguration
+@inject NotificationService NotificationService
+@inject IWebHostEnvironment WebHostEnvironment
+
+@attribute [Authorize(Roles = "Administrator")]
+
+<PageTitle>@L("AdminDoctor.PageTitle")</PageTitle>
+
+<RadzenStack Gap="1rem">
+    <RadzenRow AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenText TextStyle="TextStyle.H4">
+                <RadzenIcon Icon="health_and_safety" class="rz-me-1"/>
+                @L("AdminDoctor.PageTitle")
+            </RadzenText>
+            <RadzenText TextStyle="TextStyle.Body2" class="rz-color-secondary">
+                @L("AdminDoctor.Description")
+            </RadzenText>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.End" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                <RadzenButton Icon="refresh" Text="@L("Actions.Refresh")" Click="@RunDiagnosticsAsync" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Primary" IsBusy="@_isLoading"/>
+                <RadzenButton Icon="content_copy" Text="@L("AdminDoctor.CopyJson")" Click="@CopyJsonToClipboard" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary" Disabled="@_isLoading"/>
+            </RadzenStack>
+        </RadzenColumn>
+    </RadzenRow>
+
+    @if (_isLoading)
+    {
+        <RadzenCard>
+            <RadzenStack AlignItems="AlignItems.Center" Gap="1rem">
+                <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" Style="width: 100%;"/>
+                <RadzenText TextStyle="TextStyle.Body1">@L("AdminDoctor.RunningDiagnostics")</RadzenText>
+            </RadzenStack>
+        </RadzenCard>
+    }
+    else
+    {
+        @* Overall Status *@
+        <RadzenCard class="@(_allChecksPassed ? "rz-background-color-success-lighter" : "rz-background-color-danger-lighter")">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem">
+                <RadzenIcon Icon="@(_allChecksPassed ? "check_circle" : "error")" Style="@($"font-size: 2rem; color: var(--rz-{(_allChecksPassed ? "success" : "danger")});")"/>
+                <RadzenStack Gap="0">
+                    <RadzenText TextStyle="TextStyle.H6" Style="@($"color: var(--rz-{(_allChecksPassed ? "success" : "danger")});")">
+                        @(_allChecksPassed ? L("AdminDoctor.AllChecksPassed") : L("AdminDoctor.IssuesFound"))
+                    </RadzenText>
+                    <RadzenText TextStyle="TextStyle.Caption">
+                        @L("AdminDoctor.CompletedIn", $"{_totalDuration.TotalSeconds:F2}")
+                    </RadzenText>
+                </RadzenStack>
+            </RadzenStack>
+        </RadzenCard>
+
+        @* System Checks *@
+        <RadzenCard>
+            <RadzenText TextStyle="TextStyle.H6">
+                <RadzenIcon Icon="checklist" class="rz-me-1"/>
+                @L("AdminDoctor.SystemChecks")
+            </RadzenText>
+            <RadzenDataGrid Data="@_checks" TItem="CheckResult" AllowSorting="false" class="rz-mt-2">
+                <Columns>
+                    <RadzenDataGridColumn Title="@L("AdminDoctor.Status")" Width="80px">
+                        <Template Context="check">
+                            <RadzenIcon Icon="@(check.Success ? "check_circle" : "cancel")"
+                                       Style="@($"color: var(--rz-{(check.Success ? "success" : "danger")});")"/>
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn Property="@nameof(CheckResult.Name)" Title="@L("AdminDoctor.Check")" Width="200px"/>
+                    <RadzenDataGridColumn Property="@nameof(CheckResult.Details)" Title="@L("AdminDoctor.Details")"/>
+                    <RadzenDataGridColumn Title="@L("AdminDoctor.Duration")" Width="100px" TextAlign="TextAlign.Right">
+                        <Template Context="check">
+                            @($"{check.Duration.TotalMilliseconds:F0}ms")
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+        </RadzenCard>
+
+        @* Environment Information *@
+        <RadzenCard>
+            <RadzenText TextStyle="TextStyle.H6">
+                <RadzenIcon Icon="computer" class="rz-me-1"/>
+                @L("AdminDoctor.EnvironmentInfo")
+            </RadzenText>
+            <RadzenRow Gap="1rem" class="rz-mt-2">
+                @foreach (var env in _environmentInfo)
+                {
+                    <RadzenColumn Size="12" SizeMD="6" SizeLG="4">
+                        <RadzenStack Gap="0.25rem" class="rz-p-2 rz-border-radius-1" Style="background: var(--rz-base-background-color); border: 1px solid var(--rz-base-300);">
+                            <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">@env.Key</RadzenText>
+                            <RadzenText TextStyle="TextStyle.Body2" Style="word-break: break-all; color: var(--rz-text-color);">@env.Value</RadzenText>
+                        </RadzenStack>
+                    </RadzenColumn>
+                }
+            </RadzenRow>
+        </RadzenCard>
+
+        @* Library Paths *@
+        @if (_libraryPaths.Any())
+        {
+            <RadzenCard>
+                <RadzenText TextStyle="TextStyle.H6">
+                    <RadzenIcon Icon="folder" class="rz-me-1"/>
+                    @L("AdminDoctor.LibraryPaths")
+                </RadzenText>
+                <RadzenDataGrid Data="@_libraryPaths" TItem="LibraryPathResult" AllowSorting="true" class="rz-mt-2">
+                    <Columns>
+                        <RadzenDataGridColumn Title="@L("AdminDoctor.Exists")" Width="80px">
+                            <Template Context="lib">
+                                <RadzenIcon Icon="@(lib.Exists ? "check_circle" : "cancel")"
+                                           Style="@($"color: var(--rz-{(lib.Exists ? "success" : "danger")});")"/>
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn Title="@L("AdminDoctor.Writable")" Width="80px">
+                            <Template Context="lib">
+                                <RadzenIcon Icon="@(lib.Writable ? "check_circle" : "cancel")"
+                                           Style="@($"color: var(--rz-{(lib.Writable ? "success" : "danger")});")"/>
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn Property="@nameof(LibraryPathResult.Name)" Title="@L("AdminDoctor.LibraryName")" Width="150px"/>
+                        <RadzenDataGridColumn Property="@nameof(LibraryPathResult.Type)" Title="@L("AdminDoctor.LibraryType")" Width="120px"/>
+                        <RadzenDataGridColumn Property="@nameof(LibraryPathResult.Path)" Title="@L("AdminDoctor.Path")"/>
+                        <RadzenDataGridColumn Property="@nameof(LibraryPathResult.Details)" Title="@L("AdminDoctor.Details")" Width="200px"/>
+                    </Columns>
+                </RadzenDataGrid>
+            </RadzenCard>
+        }
+
+        @* Configurable Services *@
+        @if (_configurableServices.Any())
+        {
+            <RadzenCard>
+                <RadzenText TextStyle="TextStyle.H6">
+                    <RadzenIcon Icon="extension" class="rz-me-1"/>
+                    @L("AdminDoctor.ConfigurableServices")
+                </RadzenText>
+                <RadzenDataGrid Data="@_configurableServices.OrderBy(s => s.Category).ThenBy(s => s.Name)" TItem="ConfigurableServiceResult" AllowSorting="true" class="rz-mt-2">
+                    <Columns>
+                        <RadzenDataGridColumn Title="@L("AdminDoctor.Status")" Width="80px">
+                            <Template Context="service">
+                                <RadzenBadge BadgeStyle="@(service.Enabled ? BadgeStyle.Success : BadgeStyle.Light)"
+                                            Text="@(service.Enabled ? L("Status.Enabled") : L("Status.Disabled"))"/>
+                            </Template>
+                        </RadzenDataGridColumn>
+                        <RadzenDataGridColumn Property="@nameof(ConfigurableServiceResult.Category)" Title="@L("AdminDoctor.Category")" Width="150px"/>
+                        <RadzenDataGridColumn Property="@nameof(ConfigurableServiceResult.Name)" Title="@L("AdminDoctor.ServiceName")" Width="150px"/>
+                        <RadzenDataGridColumn Property="@nameof(ConfigurableServiceResult.SettingKey)" Title="@L("AdminDoctor.SettingKey")"/>
+                    </Columns>
+                </RadzenDataGrid>
+            </RadzenCard>
+        }
+
+        @* Connection Strings (Masked) *@
+        <RadzenCard>
+            <RadzenText TextStyle="TextStyle.H6">
+                <RadzenIcon Icon="link" class="rz-me-1"/>
+                @L("AdminDoctor.ConnectionStrings")
+            </RadzenText>
+            <RadzenStack Gap="0.5rem" class="rz-mt-2">
+                @foreach (var cs in _connectionStrings)
+                {
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" class="rz-p-2 rz-border-radius-1" Style="background: var(--rz-base-background-color); border: 1px solid var(--rz-base-300);">
+                        <RadzenIcon Icon="@(cs.IsValid ? "check_circle" : "cancel")"
+                                   Style="@($"color: var(--rz-{(cs.IsValid ? "success" : "danger")});")"/>
+                        <RadzenStack Gap="0" Style="flex: 1;">
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                                <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-color);"><strong>@cs.Name</strong></RadzenText>
+                                @if (cs.IsFileBased && cs.FileExists.HasValue)
+                                {
+                                    <RadzenBadge BadgeStyle="@(cs.FileExists.Value ? BadgeStyle.Success : BadgeStyle.Danger)"
+                                                Text="@(cs.FileExists.Value ? L("AdminDoctor.FileExists") : L("AdminDoctor.FileMissing"))"
+                                                title="@cs.FilePath"/>
+                                    @if (cs.FileWritable.HasValue)
+                                    {
+                                        <RadzenBadge BadgeStyle="@(cs.FileWritable.Value ? BadgeStyle.Success : BadgeStyle.Warning)"
+                                                    Text="@(cs.FileWritable.Value ? L("AdminDoctor.Writable") : L("AdminDoctor.NotWritable"))"/>
+                                    }
+                                }
+                            </RadzenStack>
+                            <RadzenText TextStyle="TextStyle.Caption" Style="word-break: break-all; font-family: monospace; color: var(--rz-text-secondary-color);">@cs.MaskedValue</RadzenText>
+                        </RadzenStack>
+                    </RadzenStack>
+                }
+            </RadzenStack>
+        </RadzenCard>
+
+        @* Serilog Log Paths *@
+        @if (_serilogLogPaths.Any())
+        {
+            <RadzenCard>
+                <RadzenText TextStyle="TextStyle.H6">
+                    <RadzenIcon Icon="description" class="rz-me-1"/>
+                    @L("AdminDoctor.SerilogLogPaths")
+                </RadzenText>
+                <RadzenStack Gap="0.5rem" class="rz-mt-2">
+                    @foreach (var logPath in _serilogLogPaths)
+                    {
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" class="rz-p-2 rz-border-radius-1" Style="background: var(--rz-base-background-color); border: 1px solid var(--rz-base-300);">
+                            <RadzenIcon Icon="@(logPath.DirectoryExists && logPath.Writable ? "check_circle" : "cancel")"
+                                       Style="@($"color: var(--rz-{(logPath.DirectoryExists && logPath.Writable ? "success" : "danger")});")"/>
+                            <RadzenStack Gap="0" Style="flex: 1;">
+                                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                                    <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-color);"><strong>@logPath.SinkName</strong></RadzenText>
+                                    <RadzenBadge BadgeStyle="@(logPath.DirectoryExists ? BadgeStyle.Success : BadgeStyle.Danger)"
+                                                Text="@(logPath.DirectoryExists ? L("AdminDoctor.DirectoryExists") : L("AdminDoctor.DirectoryMissing"))"/>
+                                    @if (logPath.DirectoryExists)
+                                    {
+                                        <RadzenBadge BadgeStyle="@(logPath.Writable ? BadgeStyle.Success : BadgeStyle.Warning)"
+                                                    Text="@(logPath.Writable ? L("AdminDoctor.Writable") : L("AdminDoctor.NotWritable"))"/>
+                                    }
+                                </RadzenStack>
+                                <RadzenText TextStyle="TextStyle.Caption" Style="word-break: break-all; font-family: monospace; color: var(--rz-text-secondary-color);">@logPath.Path</RadzenText>
+                            </RadzenStack>
+                        </RadzenStack>
+                    }
+                </RadzenStack>
+            </RadzenCard>
+        }
+
+        @* Environment Variables *@
+        <RadzenCard>
+            <RadzenText TextStyle="TextStyle.H6">
+                <RadzenIcon Icon="tune" class="rz-me-1"/>
+                @L("AdminDoctor.RelevantEnvVars")
+            </RadzenText>
+            <RadzenStack Gap="0.5rem" class="rz-mt-2">
+                @foreach (var envVar in _relevantEnvVars)
+                {
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" class="rz-p-2 rz-border-radius-1" Style="background: var(--rz-base-background-color); border: 1px solid var(--rz-base-300);">
+                        <RadzenIcon Icon="@(envVar.IsSet ? "check" : "remove")"
+                                   Style="@($"color: var(--rz-{(envVar.IsSet ? "success" : "secondary")});")"/>
+                        <RadzenStack Gap="0" Style="flex: 1;">
+                            <RadzenText TextStyle="TextStyle.Body2" Style="font-family: monospace; color: var(--rz-text-color);">@envVar.Name</RadzenText>
+                            <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">
+                                @(envVar.IsSet ? envVar.MaskedValue : L("AdminDoctor.NotSet"))
+                            </RadzenText>
+                        </RadzenStack>
+                    </RadzenStack>
+                }
+            </RadzenStack>
+        </RadzenCard>
+    }
+</RadzenStack>
+
+@code {
+    private bool _isLoading = true;
+    private bool _allChecksPassed;
+    private TimeSpan _totalDuration;
+
+    private List<CheckResult> _checks = [];
+    private List<LibraryPathResult> _libraryPaths = [];
+    private List<ConfigurableServiceResult> _configurableServices = [];
+    private List<KeyValuePair<string, string>> _environmentInfo = [];
+    private List<ConnectionStringInfo> _connectionStrings = [];
+    private List<EnvironmentVariableInfo> _relevantEnvVars = [];
+    private List<SerilogLogPathInfo> _serilogLogPaths = [];
+
+    private static readonly DateTime StartTime = DateTime.UtcNow;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await RunDiagnosticsAsync();
+    }
+
+    private async Task RunDiagnosticsAsync()
+    {
+        _isLoading = true;
+        StateHasChanged();
+
+        var stopwatch = Stopwatch.StartNew();
+
+        _checks.Clear();
+        _libraryPaths.Clear();
+        _configurableServices.Clear();
+        _environmentInfo.Clear();
+        _connectionStrings.Clear();
+        _relevantEnvVars.Clear();
+        _serilogLogPaths.Clear();
+
+        // Environment Information
+        LoadEnvironmentInfo();
+
+        // Connection Strings
+        LoadConnectionStrings();
+
+        // Environment Variables
+        LoadRelevantEnvironmentVariables();
+
+        // Run checks
+        await RunConfigurationCheckAsync();
+        await RunDatabaseCheckAsync();
+        await RunMusicBrainzDbCheckAsync();
+        await RunArtistSearchEngineDbCheckAsync();
+        await RunLibraryPathsCheckAsync();
+        await RunSerilogCheckAsync();
+        await RunConfigurableServicesCheckAsync();
+
+        stopwatch.Stop();
+        _totalDuration = stopwatch.Elapsed;
+        _allChecksPassed = _checks.All(c => c.Success);
+
+        _isLoading = false;
+        StateHasChanged();
+    }
+
+    private void LoadEnvironmentInfo()
+    {
+        _environmentInfo =
+        [
+            new KeyValuePair<string, string>(L("AdminDoctor.DotNetVersion"), RuntimeInformation.FrameworkDescription),
+            new KeyValuePair<string, string>(L("AdminDoctor.OSDescription"), RuntimeInformation.OSDescription),
+            new KeyValuePair<string, string>(L("AdminDoctor.OSArchitecture"), RuntimeInformation.OSArchitecture.ToString()),
+            new KeyValuePair<string, string>(L("AdminDoctor.ProcessArchitecture"), RuntimeInformation.ProcessArchitecture.ToString()),
+            new KeyValuePair<string, string>(L("AdminDoctor.MelodeeVersion"), typeof(Program).Assembly.GetName().Version?.ToString() ?? "Unknown"),
+            new KeyValuePair<string, string>(L("AdminDoctor.Environment"), WebHostEnvironment.EnvironmentName),
+            new KeyValuePair<string, string>(L("AdminDoctor.ContentRootPath"), WebHostEnvironment.ContentRootPath),
+            new KeyValuePair<string, string>(L("AdminDoctor.WebRootPath"), WebHostEnvironment.WebRootPath),
+            new KeyValuePair<string, string>(L("AdminDoctor.ServerTimeUtc"), DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss")),
+            new KeyValuePair<string, string>(L("AdminDoctor.Uptime"), FormatUptime(DateTime.UtcNow - StartTime)),
+            new KeyValuePair<string, string>(L("AdminDoctor.ProcessId"), Environment.ProcessId.ToString()),
+            new KeyValuePair<string, string>(L("AdminDoctor.MachineName"), Environment.MachineName)
+        ];
+    }
+
+    private void LoadConnectionStrings()
+    {
+        var defaultConnection = AppConfiguration.GetConnectionString("DefaultConnection");
+        var musicBrainzConnection = AppConfiguration.GetConnectionString("MusicBrainzConnection");
+        var artistSearchEngineConnection = AppConfiguration.GetConnectionString("ArtistSearchEngineConnection");
+
+        _connectionStrings =
+        [
+            new ConnectionStringInfo(
+                "DefaultConnection",
+                MaskConnectionString(defaultConnection),
+                !string.IsNullOrWhiteSpace(defaultConnection),
+                false, null, null, null),
+            CreateSqliteConnectionInfo("MusicBrainzConnection", musicBrainzConnection),
+            CreateSqliteConnectionInfo("ArtistSearchEngineConnection", artistSearchEngineConnection)
+        ];
+    }
+
+    private ConnectionStringInfo CreateSqliteConnectionInfo(string name, string? connectionString)
+    {
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            return new ConnectionStringInfo(name, "(not configured)", false, true, null, null, null);
+        }
+
+        try
+        {
+            var builder = new SqliteConnectionStringBuilder(connectionString);
+            var dataSource = builder.DataSource;
+
+            if (string.IsNullOrWhiteSpace(dataSource))
+            {
+                return new ConnectionStringInfo(name, connectionString, false, true, null, null, null);
+            }
+
+            var fileExists = File.Exists(dataSource);
+            var directoryPath = Path.GetDirectoryName(dataSource);
+            var directoryExists = !string.IsNullOrEmpty(directoryPath) && Directory.Exists(directoryPath);
+
+            // Check writability: if file exists, check file; otherwise check directory
+            bool? writable = null;
+            if (fileExists)
+            {
+                writable = IsFileWritable(dataSource);
+            }
+            else if (directoryExists)
+            {
+                writable = IsDirectoryWritable(directoryPath!);
+            }
+
+            return new ConnectionStringInfo(
+                name,
+                MaskSqliteConnectionString(connectionString),
+                !string.IsNullOrWhiteSpace(connectionString),
+                true,
+                fileExists,
+                writable,
+                dataSource);
+        }
+        catch
+        {
+            return new ConnectionStringInfo(name, connectionString, false, true, null, null, null);
+        }
+    }
+
+    private static bool IsFileWritable(string path)
+    {
+        try
+        {
+            using var fs = File.Open(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private void LoadRelevantEnvironmentVariables()
+    {
+        var relevantVars = new[]
+        {
+            "ASPNETCORE_ENVIRONMENT",
+            "DOTNET_ENVIRONMENT",
+            "ConnectionStrings__DefaultConnection",
+            "ConnectionStrings__MusicBrainzConnection",
+            "ConnectionStrings__ArtistSearchEngineConnection",
+            "MELODEE_STORAGE_PATH",
+            "MELODEE_INBOUND_PATH",
+            "MELODEE_STAGING_PATH",
+            "MELODEE_USER_IMAGES_PATH",
+            "MELODEE_PLAYLISTS_PATH",
+            "SEARCHENGINE_MUSICBRAINZ_STORAGEPATH",
+            "DOTNET_CLI_HOME",
+            "HOME"
+        };
+
+        foreach (var varName in relevantVars)
+        {
+            var value = Environment.GetEnvironmentVariable(varName);
+            var isSet = !string.IsNullOrEmpty(value);
+            var maskedValue = varName.Contains("Connection", StringComparison.OrdinalIgnoreCase)
+                ? MaskConnectionString(value)
+                : value ?? "";
+
+            _relevantEnvVars.Add(new EnvironmentVariableInfo(varName, maskedValue, isSet));
+        }
+    }
+
+    private async Task RunConfigurationCheckAsync()
+    {
+        var sw = Stopwatch.StartNew();
+        try
+        {
+            var missing = new List<string>();
+
+            if (string.IsNullOrWhiteSpace(AppConfiguration.GetConnectionString("DefaultConnection")))
+                missing.Add("DefaultConnection");
+            if (string.IsNullOrWhiteSpace(AppConfiguration.GetConnectionString("MusicBrainzConnection")))
+                missing.Add("MusicBrainzConnection");
+            if (string.IsNullOrWhiteSpace(AppConfiguration.GetConnectionString("ArtistSearchEngineConnection")))
+                missing.Add("ArtistSearchEngineConnection");
+
+            var success = missing.Count == 0;
+            var details = success
+                ? $"Environment={WebHostEnvironment.EnvironmentName}"
+                : $"Missing: {string.Join(", ", missing)}";
+
+            _checks.Add(new CheckResult(L("AdminDoctor.Check.Configuration"), success, details, sw.Elapsed));
+        }
+        catch (Exception ex)
+        {
+            _checks.Add(new CheckResult(L("AdminDoctor.Check.Configuration"), false, ex.Message, sw.Elapsed));
+        }
+    }
+
+    private async Task RunDatabaseCheckAsync()
+    {
+        var sw = Stopwatch.StartNew();
+        try
+        {
+            await using var db = await DbContextFactory.CreateDbContextAsync();
+            var canConnect = await db.Database.CanConnectAsync();
+            var details = canConnect
+                ? $"OK ({db.Database.ProviderName})"
+                : "Unable to connect";
+
+            _checks.Add(new CheckResult(L("AdminDoctor.Check.PostgresDatabase"), canConnect, details, sw.Elapsed));
+        }
+        catch (Exception ex)
+        {
+            _checks.Add(new CheckResult(L("AdminDoctor.Check.PostgresDatabase"), false, ex.Message, sw.Elapsed));
+        }
+    }
+
+    private async Task RunMusicBrainzDbCheckAsync()
+    {
+        var sw = Stopwatch.StartNew();
+        try
+        {
+            var connectionString = AppConfiguration.GetConnectionString("MusicBrainzConnection") ?? "";
+            var fileInfo = DescribeSqlitePath(connectionString);
+
+            await using var db = await MusicBrainzDbContextFactory.CreateDbContextAsync();
+            var canConnect = await db.Database.CanConnectAsync();
+            var details = canConnect ? $"OK; {fileInfo}" : $"Unable to connect; {fileInfo}";
+
+            _checks.Add(new CheckResult(L("AdminDoctor.Check.MusicBrainzDatabase"), canConnect, details, sw.Elapsed));
+        }
+        catch (Exception ex)
+        {
+            _checks.Add(new CheckResult(L("AdminDoctor.Check.MusicBrainzDatabase"), false, ex.Message, sw.Elapsed));
+        }
+    }
+
+    private async Task RunArtistSearchEngineDbCheckAsync()
+    {
+        var sw = Stopwatch.StartNew();
+        try
+        {
+            var connectionString = AppConfiguration.GetConnectionString("ArtistSearchEngineConnection") ?? "";
+            var fileInfo = DescribeSqlitePath(connectionString);
+
+            await using var db = await ArtistSearchEngineDbContextFactory.CreateDbContextAsync();
+            var canConnect = await db.Database.CanConnectAsync();
+            var details = canConnect ? $"OK; {fileInfo}" : $"Unable to connect; {fileInfo}";
+
+            _checks.Add(new CheckResult(L("AdminDoctor.Check.ArtistSearchEngineDatabase"), canConnect, details, sw.Elapsed));
+        }
+        catch (Exception ex)
+        {
+            _checks.Add(new CheckResult(L("AdminDoctor.Check.ArtistSearchEngineDatabase"), false, ex.Message, sw.Elapsed));
+        }
+    }
+
+    private async Task RunLibraryPathsCheckAsync()
+    {
+        var sw = Stopwatch.StartNew();
+        try
+        {
+            var libs = await LibraryService.ListAsync(new PagedRequest { PageSize = short.MaxValue });
+            if (!libs.IsSuccess)
+            {
+                _checks.Add(new CheckResult(L("AdminDoctor.Check.LibraryPaths"), false, libs.Messages?.FirstOrDefault() ?? "Failed to list libraries", sw.Elapsed));
+                return;
+            }
+
+            foreach (var lib in libs.Data)
+            {
+                var exists = Directory.Exists(lib.Path);
+                var writable = exists && IsDirectoryWritable(lib.Path);
+                var details = GetLibraryPathDetails(exists, writable);
+
+                _libraryPaths.Add(new LibraryPathResult(
+                    lib.Name,
+                    lib.TypeValue.ToString(),
+                    lib.Path,
+                    exists,
+                    writable,
+                    details));
+            }
+
+            var anyMissing = _libraryPaths.Any(l => !l.Exists);
+            var anyNotWritable = _libraryPaths.Any(l => l.Exists && !l.Writable);
+            var hasIssues = anyMissing || anyNotWritable;
+
+            var detailMessage = (anyMissing, anyNotWritable) switch
+            {
+                (true, true) => L("AdminDoctor.LibraryPathsMissingAndNotWritable"),
+                (true, false) => L("AdminDoctor.LibraryPathsMissing"),
+                (false, true) => L("AdminDoctor.LibraryPathsNotWritable"),
+                _ => L("AdminDoctor.AllLibraryPathsOk")
+            };
+
+            _checks.Add(new CheckResult(
+                L("AdminDoctor.Check.LibraryPaths"),
+                !hasIssues,
+                detailMessage,
+                sw.Elapsed));
+        }
+        catch (Exception ex)
+        {
+            _checks.Add(new CheckResult(L("AdminDoctor.Check.LibraryPaths"), false, ex.Message, sw.Elapsed));
+        }
+    }
+
+    private static bool IsDirectoryWritable(string path)
+    {
+        try
+        {
+            var testFile = Path.Combine(path, $".melodee-write-test-{Guid.NewGuid():N}");
+            File.WriteAllText(testFile, "test");
+            File.Delete(testFile);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private string GetLibraryPathDetails(bool exists, bool writable)
+    {
+        return (exists, writable) switch
+        {
+            (false, _) => L("AdminDoctor.PathMissing"),
+            (true, false) => L("AdminDoctor.PathNotWritable"),
+            (true, true) => L("AdminDoctor.PathOk")
+        };
+    }
+
+    private Task RunSerilogCheckAsync()
+    {
+        var sw = Stopwatch.StartNew();
+        try
+        {
+            // Try reflection first to get actual configured sinks
+            var filePaths = GetSerilogFilePathsViaReflection();
+
+            // Fall back to config parsing if reflection doesn't find anything
+            if (filePaths.Count == 0)
+            {
+                filePaths = GetSerilogFilePathsFromConfig();
+            }
+
+            foreach (var (sinkName, path) in filePaths)
+            {
+                // The path might be the full file path pattern, get the directory
+                var directoryPath = Path.GetDirectoryName(path);
+
+                // If GetDirectoryName returns empty (e.g., path is just "Logs/log-.clef"),
+                // extract directory from the path directly
+                if (string.IsNullOrEmpty(directoryPath))
+                {
+                    var lastSeparator = path.LastIndexOfAny(['/', '\\']);
+                    if (lastSeparator > 0)
+                    {
+                        directoryPath = path[..lastSeparator];
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(directoryPath))
+                {
+                    // Resolve relative paths
+                    if (!Path.IsPathRooted(directoryPath))
+                    {
+                        directoryPath = Path.GetFullPath(Path.Combine(WebHostEnvironment.ContentRootPath, directoryPath));
+                    }
+
+                    var dirExists = Directory.Exists(directoryPath);
+                    var writable = dirExists && IsDirectoryWritable(directoryPath);
+
+                    _serilogLogPaths.Add(new SerilogLogPathInfo(
+                        sinkName,
+                        directoryPath,
+                        dirExists,
+                        writable));
+                }
+            }
+
+            var hasIssues = _serilogLogPaths.Any(p => !p.DirectoryExists || !p.Writable);
+            var detailMessage = _serilogLogPaths.Count == 0
+                ? L("AdminDoctor.NoFileLoggingConfigured")
+                : hasIssues
+                    ? L("AdminDoctor.SerilogPathIssues")
+                    : L("AdminDoctor.SerilogPathsOk");
+
+            _checks.Add(new CheckResult(
+                L("AdminDoctor.Check.SerilogLogging"),
+                !hasIssues,
+                detailMessage,
+                sw.Elapsed));
+        }
+        catch (Exception ex)
+        {
+            _checks.Add(new CheckResult(L("AdminDoctor.Check.SerilogLogging"), false, ex.Message, sw.Elapsed));
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private List<(string SinkName, string Path)> GetSerilogFilePathsFromConfig()
+    {
+        var results = new List<(string SinkName, string Path)>();
+
+        try
+        {
+            var writeToSection = AppConfiguration.GetSection("Serilog:WriteTo");
+            var sinks = writeToSection.GetChildren().ToList();
+
+            foreach (var sink in sinks)
+            {
+                var sinkName = sink.GetValue<string>("Name") ?? "Unknown";
+
+                // Check for File sink
+                if (sinkName.Equals("File", StringComparison.OrdinalIgnoreCase))
+                {
+                    var path = sink.GetValue<string>("Args:path");
+                    if (!string.IsNullOrWhiteSpace(path))
+                    {
+                        results.Add((sinkName, path));
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // Ignore config parsing errors
+        }
+
+        return results;
+    }
+
+    private static List<(string SinkName, string Path)> GetSerilogFilePathsViaReflection()
+    {
+        var results = new List<(string SinkName, string Path)>();
+
+        try
+        {
+            var logger = Log.Logger;
+            if (logger == null)
+            {
+                return results;
+            }
+
+            // Serilog's Logger wraps sinks in various ways - we need to drill down
+            // The static Log.Logger is typically a Serilog.Core.Logger
+            var sinks = GetSinksFromLogger(logger);
+
+            foreach (var sink in sinks)
+            {
+                var sinkType = sink.GetType();
+                var sinkTypeName = sinkType.Name;
+
+                // Look for file-related sinks (FileSink, RollingFileSink, etc.)
+                if (sinkTypeName.Contains("File", StringComparison.OrdinalIgnoreCase))
+                {
+                    var path = ExtractPathFromSink(sink);
+                    if (!string.IsNullOrEmpty(path))
+                    {
+                        results.Add((sinkTypeName.Replace("Sink", ""), path));
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // If reflection fails, return empty list - we'll show "no file logging configured"
+        }
+
+        return results;
+    }
+
+    private static IEnumerable<ILogEventSink> GetSinksFromLogger(ILogger logger)
+    {
+        var sinks = new List<ILogEventSink>();
+
+        try
+        {
+            var loggerType = logger.GetType();
+
+            // Try to get the _sink field from Logger
+            var sinkField = loggerType.GetField("_sink", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (sinkField?.GetValue(logger) is ILogEventSink rootSink)
+            {
+                CollectSinks(rootSink, sinks);
+            }
+        }
+        catch
+        {
+            // Ignore reflection errors
+        }
+
+        return sinks;
+    }
+
+    private static void CollectSinks(ILogEventSink sink, List<ILogEventSink> collected)
+    {
+        if (sink == null) return;
+
+        var sinkType = sink.GetType();
+        var sinkTypeName = sinkType.Name;
+
+        // Handle aggregate sinks that wrap multiple sinks
+        if (sinkTypeName == "AggregateSink" || sinkTypeName == "SafeAggregateSink")
+        {
+            var sinksField = sinkType.GetField("_sinks", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (sinksField?.GetValue(sink) is IEnumerable<ILogEventSink> innerSinks)
+            {
+                foreach (var innerSink in innerSinks)
+                {
+                    CollectSinks(innerSink, collected);
+                }
+            }
+            return;
+        }
+
+        // Handle SecondaryLoggerSink which wraps another logger
+        if (sinkTypeName == "SecondaryLoggerSink")
+        {
+            var loggerField = sinkType.GetField("_logger", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (loggerField?.GetValue(sink) is ILogger innerLogger)
+            {
+                foreach (var innerSink in GetSinksFromLogger(innerLogger))
+                {
+                    CollectSinks(innerSink, collected);
+                }
+            }
+            return;
+        }
+
+        // Handle RestrictedSink (filtering sink)
+        if (sinkTypeName == "RestrictedSink")
+        {
+            var wrappedField = sinkType.GetField("_sink", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (wrappedField?.GetValue(sink) is ILogEventSink wrappedSink)
+            {
+                CollectSinks(wrappedSink, collected);
+            }
+            return;
+        }
+
+        // This is a leaf sink - add it
+        collected.Add(sink);
+    }
+
+    private static string? ExtractPathFromSink(ILogEventSink sink)
+    {
+        var sinkType = sink.GetType();
+
+        // Common field names for file paths in Serilog file sinks
+        string[] pathFieldNames = ["_path", "_basePath", "_pathRoller", "_roller"];
+
+        foreach (var fieldName in pathFieldNames)
+        {
+            var field = sinkType.GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance);
+            if (field != null)
+            {
+                var value = field.GetValue(sink);
+                if (value is string path)
+                {
+                    return path;
+                }
+
+                // PathRoller contains the path
+                if (value != null && fieldName == "_roller")
+                {
+                    var rollerType = value.GetType();
+                    var logFilePathField = rollerType.GetField("_directory", BindingFlags.NonPublic | BindingFlags.Instance)
+                                          ?? rollerType.GetField("_pathFormat", BindingFlags.NonPublic | BindingFlags.Instance);
+                    if (rollerType.GetProperty("LogFileDirectory") is { } dirProp)
+                    {
+                        if (dirProp.GetValue(value) is string dir)
+                        {
+                            return dir;
+                        }
+                    }
+
+                    if (logFilePathField?.GetValue(value) is string rollerPath)
+                    {
+                        return rollerPath;
+                    }
+                }
+            }
+        }
+
+        // Try properties as well
+        var pathProperty = sinkType.GetProperty("Path", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+        if (pathProperty?.GetValue(sink) is string propPath)
+        {
+            return propPath;
+        }
+
+        return null;
+    }
+
+    private async Task RunConfigurableServicesCheckAsync()
+    {
+        var sw = Stopwatch.StartNew();
+        try
+        {
+            await using var db = await DbContextFactory.CreateDbContextAsync();
+            var settingsDict = await db.Settings
+                .Where(s => s.Key.Contains(".enabled"))
+                .ToDictionaryAsync(s => s.Key, s => s.Value);
+
+            var serviceDefinitions = new (string Category, string Name, string SettingKey)[]
+            {
+                ("Search Engine", "Brave", SettingRegistry.SearchEngineBraveEnabled),
+                ("Search Engine", "Deezer", SettingRegistry.SearchEngineDeezerEnabled),
+                ("Search Engine", "iTunes", SettingRegistry.SearchEngineITunesEnabled),
+                ("Search Engine", "Last.fm", SettingRegistry.SearchEngineLastFmEnabled),
+                ("Search Engine", "MusicBrainz", SettingRegistry.SearchEngineMusicBrainzEnabled),
+                ("Search Engine", "Spotify", SettingRegistry.SearchEngineSpotifyEnabled),
+                ("Search Engine", "Metal API", SettingRegistry.SearchEngineMetalApiEnabled),
+                ("Scrobbling", "Scrobbling", SettingRegistry.ScrobblingEnabled),
+                ("Scrobbling", "Last.fm", SettingRegistry.ScrobblingLastFmEnabled),
+                ("Processing", "Conversion", SettingRegistry.ConversionEnabled),
+                ("Processing", "Magic", SettingRegistry.MagicEnabled),
+                ("Processing", "Scripting", SettingRegistry.ScriptingEnabled),
+                ("Plugins", "CueSheet", SettingRegistry.PluginEnabledCueSheet),
+                ("Plugins", "M3U", SettingRegistry.PluginEnabledM3u),
+                ("Plugins", "NFO", SettingRegistry.PluginEnabledNfo),
+                ("Plugins", "Simple File Verification", SettingRegistry.PluginEnabledSimpleFileVerification),
+                ("System", "Email", SettingRegistry.EmailEnabled),
+            };
+
+            foreach (var (category, name, settingKey) in serviceDefinitions)
+            {
+                var enabled = settingsDict.TryGetValue(settingKey, out var value)
+                    && bool.TryParse(value, out var b) && b;
+                _configurableServices.Add(new ConfigurableServiceResult(category, name, settingKey, enabled));
+            }
+
+            var enabledCount = _configurableServices.Count(s => s.Enabled);
+            _checks.Add(new CheckResult(
+                L("AdminDoctor.Check.ConfigurableServices"),
+                true,
+                L("AdminDoctor.ServicesEnabled", enabledCount, _configurableServices.Count),
+                sw.Elapsed));
+        }
+        catch (Exception ex)
+        {
+            _checks.Add(new CheckResult(L("AdminDoctor.Check.ConfigurableServices"), false, ex.Message, sw.Elapsed));
+        }
+    }
+
+    private async Task CopyJsonToClipboard()
+    {
+        var diagnosticData = new
+        {
+            timestamp = DateTime.UtcNow.ToString("o"),
+            durationSeconds = _totalDuration.TotalSeconds,
+            allChecksPassed = _allChecksPassed,
+            environment = _environmentInfo.ToDictionary(e => e.Key, e => e.Value),
+            checks = _checks.Select(c => new { name = c.Name, success = c.Success, details = c.Details, durationMs = (int)c.Duration.TotalMilliseconds }),
+            libraryPaths = _libraryPaths.Select(l => new { name = l.Name, type = l.Type, path = l.Path, exists = l.Exists, details = l.Details }),
+            configurableServices = _configurableServices.Select(s => new { category = s.Category, name = s.Name, settingKey = s.SettingKey, enabled = s.Enabled }),
+            connectionStrings = _connectionStrings.Select(c => new { name = c.Name, isValid = c.IsValid }),
+            environmentVariables = _relevantEnvVars.Select(e => new { name = e.Name, isSet = e.IsSet })
+        };
+
+        var json = JsonSerializer.Serialize(diagnosticData, new JsonSerializerOptions { WriteIndented = true });
+
+        // Use JavaScript interop to copy to clipboard
+        await JsRuntime.InvokeVoidAsync("navigator.clipboard.writeText", json);
+
+        NotificationService.Notify(new NotificationMessage
+        {
+            Severity = NotificationSeverity.Success,
+            Summary = L("AdminDoctor.JsonCopied"),
+            Duration = ToastTime
+        });
+    }
+
+    private static string MaskConnectionString(string? connectionString)
+    {
+        if (string.IsNullOrWhiteSpace(connectionString))
+            return "(not configured)";
+
+        // Mask password in connection string
+        var masked = System.Text.RegularExpressions.Regex.Replace(
+            connectionString,
+            @"(Password|Pwd)\s*=\s*[^;]+",
+            "$1=*****",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+        return masked;
+    }
+
+    private static string MaskSqliteConnectionString(string? connectionString)
+    {
+        if (string.IsNullOrWhiteSpace(connectionString))
+            return "(not configured)";
+
+        return connectionString;
+    }
+
+    private static string DescribeSqlitePath(string connectionString)
+    {
+        try
+        {
+            var builder = new SqliteConnectionStringBuilder(connectionString);
+            if (string.IsNullOrWhiteSpace(builder.DataSource))
+            {
+                return "DataSource=(empty)";
+            }
+
+            var fullPath = builder.DataSource;
+            var exists = File.Exists(fullPath);
+            return $"DataSource={fullPath}; Exists={exists}";
+        }
+        catch
+        {
+            return "DataSource=(unparseable)";
+        }
+    }
+
+    private static string FormatUptime(TimeSpan uptime)
+    {
+        if (uptime.TotalDays >= 1)
+            return $"{(int)uptime.TotalDays}d {uptime.Hours}h";
+        if (uptime.TotalHours >= 1)
+            return $"{(int)uptime.TotalHours}h {uptime.Minutes}m";
+        return $"{uptime.Minutes}m {uptime.Seconds}s";
+    }
+
+    [Inject] private IJSRuntime JsRuntime { get; set; } = default!;
+
+    private sealed record CheckResult(string Name, bool Success, string Details, TimeSpan Duration);
+    private sealed record LibraryPathResult(string Name, string Type, string Path, bool Exists, bool Writable, string Details);
+    private sealed record ConfigurableServiceResult(string Category, string Name, string SettingKey, bool Enabled);
+    private sealed record ConnectionStringInfo(string Name, string MaskedValue, bool IsValid, bool IsFileBased, bool? FileExists, bool? FileWritable, string? FilePath);
+    private sealed record EnvironmentVariableInfo(string Name, string MaskedValue, bool IsSet);
+    private sealed record SerilogLogPathInfo(string SinkName, string Path, bool DirectoryExists, bool Writable);
+}
+

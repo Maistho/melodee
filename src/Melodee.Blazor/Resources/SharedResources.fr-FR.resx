@@ -3758,213 +3758,408 @@
     <value>Le fichier téléversé n'est pas une archive ZIP valide.</value>
   </data>
   <data name="AdminSettings.AddNew" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Add New Setting</value>
+    <value>Ajouter un nouveau paramètre</value>
   </data>
   <data name="AdminSettings.AddNewSetting" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Add New Setting</value>
+    <value>Ajouter un nouveau paramètre</value>
   </data>
   <data name="AdminSettings.AllKeysExist" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] All settings from SettingRegistry already have records in the database.</value>
+    <value>Tous les paramètres de SettingRegistry ont déjà des enregistrements dans la base de données.</value>
   </data>
   <data name="AdminSettings.Category" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Category</value>
+    <value>Catégorie</value>
   </data>
   <data name="AdminSettings.Description" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Description</value>
+    <value>Description</value>
   </data>
   <data name="AdminSettings.EnterComment" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Enter comment (optional)</value>
+    <value>Saisissez un commentaire (facultatif)</value>
   </data>
   <data name="AdminSettings.EnterDescription" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Enter description (optional)</value>
+    <value>Saisissez une description (facultatif)</value>
   </data>
   <data name="AdminSettings.EnterValue" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Enter setting value</value>
+    <value>Saisissez la valeur du paramètre</value>
   </data>
   <data name="AdminSettings.FailedToAdd" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Failed to add setting</value>
+    <value>Échec de l’ajout du paramètre</value>
   </data>
   <data name="AdminSettings.KeyRequired" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Setting key is required</value>
+    <value>La clé de paramètre est requise</value>
   </data>
   <data name="AdminSettings.NoAvailableKeys" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] No Available Settings</value>
+    <value>Aucun paramètre disponible</value>
   </data>
   <data name="AdminSettings.SelectKey" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Select a setting key...</value>
+    <value>Sélectionnez une clé de paramètre...</value>
   </data>
   <data name="AdminSettings.SortOrder" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Sort Order</value>
+    <value>Ordre de tri</value>
   </data>
   <data name="AdminSettings.SuccessfullyAdded" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Successfully added new setting!</value>
+    <value>Nouveau paramètre ajouté avec succès !</value>
   </data>
   <data name="Auth.BackToLogin" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Back to Login</value>
+    <value>Retour à la connexion</value>
   </data>
   <data name="Auth.CheckEmailForResetLink" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] If an account with that email exists, you will receive a password reset link shortly.</value>
+    <value>Si un compte existe avec cette adresse e-mail, vous recevrez bientôt un lien de réinitialisation du mot de passe.</value>
   </data>
   <data name="Auth.ConfirmNewPassword" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Confirm new password</value>
+    <value>Confirmer le nouveau mot de passe</value>
   </data>
   <data name="Auth.ConfirmPasswordRequired" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Please confirm your password</value>
+    <value>Veuillez confirmer votre mot de passe</value>
   </data>
   <data name="Auth.EmailInvalid" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Please enter a valid email address</value>
+    <value>Veuillez saisir une adresse e-mail valide</value>
   </data>
   <data name="Auth.EmailRequired" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Email is required</value>
+    <value>L’adresse e-mail est requise</value>
   </data>
   <data name="Auth.EnterNewPassword" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Enter new password</value>
+    <value>Saisissez un nouveau mot de passe</value>
   </data>
   <data name="Auth.ForgotPasswordSubtitle" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Enter your email to receive a password reset link</value>
+    <value>Saisissez votre e-mail pour recevoir un lien de réinitialisation du mot de passe</value>
   </data>
   <data name="Auth.ForgotPasswordTitle" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Forgot Password</value>
+    <value>Mot de passe oublié</value>
   </data>
   <data name="Auth.InvalidOrExpiredToken" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Invalid or expired reset link</value>
+    <value>Lien de réinitialisation invalide ou expiré</value>
   </data>
   <data name="Auth.InvalidToken" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Invalid reset token</value>
+    <value>Jeton de réinitialisation invalide</value>
   </data>
   <data name="Auth.NewPassword" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] New Password</value>
+    <value>Nouveau mot de passe</value>
   </data>
   <data name="Auth.PasswordMinLength" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Password must be at least 8 characters</value>
+    <value>Le mot de passe doit contenir au moins 8 caractères</value>
   </data>
   <data name="Auth.PasswordResetEmailSent" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Password reset link sent!</value>
+    <value>Lien de réinitialisation du mot de passe envoyé !</value>
   </data>
   <data name="Auth.PasswordResetSuccess" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Password reset successfully!</value>
+    <value>Mot de passe réinitialisé avec succès !</value>
   </data>
   <data name="Auth.PasswordResetUnavailable" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Password reset is currently unavailable. Please contact your system administrator.</value>
+    <value>La réinitialisation du mot de passe est actuellement indisponible. Veuillez contacter votre administrateur système.</value>
   </data>
   <data name="Auth.PasswordsMustMatch" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Passwords must match</value>
+    <value>Les mots de passe doivent correspondre</value>
   </data>
   <data name="Auth.RedirectingToLogin" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Redirecting to login page...</value>
+    <value>Redirection vers la page de connexion...</value>
   </data>
   <data name="Auth.ResetPasswordError" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] An error occurred while resetting your password</value>
+    <value>Une erreur s’est produite lors de la réinitialisation de votre mot de passe</value>
   </data>
   <data name="Auth.ResetPasswordFailed" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Failed to reset password</value>
+    <value>Échec de la réinitialisation du mot de passe</value>
   </data>
   <data name="Auth.ResetPasswordSubtitle" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Enter your new password</value>
+    <value>Saisissez votre nouveau mot de passe</value>
   </data>
   <data name="Auth.ResetPasswordTitle" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Reset Password</value>
+    <value>Réinitialiser le mot de passe</value>
   </data>
   <data name="Auth.Resetting" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Resetting...</value>
+    <value>Réinitialisation...</value>
   </data>
   <data name="Auth.SendResetLink" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Send Reset Link</value>
+    <value>Envoyer le lien de réinitialisation</value>
   </data>
   <data name="Auth.Sending" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Sending...</value>
+    <value>Envoi...</value>
   </data>
   <data name="Auth.TokenExpiredMessage" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] This password reset link has expired or is invalid. Please request a new one.</value>
+    <value>Ce lien de réinitialisation du mot de passe a expiré ou est invalide. Veuillez en demander un nouveau.</value>
   </data>
   <data name="Auth.TooManyAttempts" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Too many attempts. Please try again later.</value>
+    <value>Trop de tentatives. Veuillez réessayer plus tard.</value>
   </data>
   <data name="Auth.ValidatingToken" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Validating reset link...</value>
+    <value>Validation du lien de réinitialisation...</value>
   </data>
   <data name="About.DocumentationSite" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Melodee Documentation Site</value>
+    <value>Site de documentation Melodee</value>
   </data>
   <data name="Actions.BackToChart" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Back to Chart</value>
+    <value>Retour au classement</value>
   </data>
   <data name="ChartsMissingReport.HeaderForChart" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Missing Albums for {0}</value>
+    <value>Albums manquants pour {0}</value>
   </data>
   <data name="ArtistDetail.ValidateAlbums" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Validate all albums for this artist</value>
+    <value>Valider tous les albums de cet artiste</value>
   </data>
   <data name="ArtistDetail.ValidateAlbumsTitle" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Album Validation: {0}</value>
+    <value>Validation de l’album : {0}</value>
   </data>
   <data name="ArtistValidation.ValidatingAlbums" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Validating albums...</value>
+    <value>Validation des albums...</value>
   </data>
   <data name="ArtistValidation.TotalAlbums" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Total Albums</value>
+    <value>Total des albums</value>
   </data>
   <data name="ArtistValidation.ValidAlbums" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Valid</value>
+    <value>Valide</value>
   </data>
   <data name="ArtistValidation.InvalidAlbums" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Invalid</value>
+    <value>Invalide</value>
   </data>
   <data name="ArtistValidation.AllValid" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] All Valid</value>
+    <value>Tout est valide</value>
   </data>
   <data name="ArtistValidation.IssuesFound" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Issues Found</value>
+    <value>Problèmes trouvés</value>
   </data>
   <data name="ArtistValidation.AlbumDetails" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Album Details</value>
+    <value>Détails de l’album</value>
   </data>
   <data name="ArtistValidation.Directory" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Directory</value>
+    <value>Répertoire</value>
   </data>
   <data name="ArtistValidation.Cover" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Cover</value>
+    <value>Pochette</value>
   </data>
   <data name="ArtistValidation.Issues" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Issues</value>
+    <value>Problèmes</value>
   </data>
   <data name="ArtistValidation.Valid" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Valid</value>
+    <value>Valide</value>
   </data>
   <data name="ArtistValidation.Invalid" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Invalid</value>
+    <value>Invalide</value>
   </data>
   <data name="ArtistValidation.DirectoryExists" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Directory exists</value>
+    <value>Le répertoire existe</value>
   </data>
   <data name="ArtistValidation.DirectoryMissing" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Directory missing</value>
+    <value>Répertoire manquant</value>
   </data>
   <data name="ArtistValidation.HasCoverImage" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Has cover image</value>
+    <value>A une image de pochette</value>
   </data>
   <data name="ArtistValidation.NoCoverImage" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] No cover image</value>
+    <value>Aucune image de pochette</value>
   </data>
   <data name="ArtistValidation.MoreIssues" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] +{0} more issues</value>
+    <value>+{0} problèmes supplémentaires</value>
   </data>
   <data name="ArtistValidation.NoResults" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] No validation results available.</value>
+    <value>Aucun résultat de validation disponible.</value>
   </data>
   <data name="About.OpenSubsonicApiDocs" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] OpenSubsonic API Docs</value>
+    <value>Documentation de l’API OpenSubsonic</value>
   </data>
   <data name="Stats.ReleasesByYear" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Releases by Year</value>
+    <value>Sorties par année</value>
   </data>
   <data name="Stats.TopArtistsByPlays" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Top 10 Most Played Artists</value>
+    <value>Top 10 des artistes les plus écoutés</value>
   </data>
   <data name="Stats.TopArtistsByAlbumCount" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Top 10 Artists by Album Count</value>
+    <value>Top 10 des artistes par nombre d’albums</value>
   </data>
   <data name="Stats.ReleasesByGenre" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Releases by Genre</value>
+    <value>Sorties par genre</value>
+  </data>
+  <data name="Navigation.Doctor" xml:space="preserve">
+    <value>Diagnostic</value>
+  </data>
+  <data name="AdminDoctor.PageTitle" xml:space="preserve">
+    <value>Diagnostic système</value>
+  </data>
+  <data name="AdminDoctor.Description" xml:space="preserve">
+    <value>Diagnostiquer les problèmes d’installation, de configuration et d’environnement</value>
+  </data>
+  <data name="AdminDoctor.RunningDiagnostics" xml:space="preserve">
+    <value>Exécution des diagnostics...</value>
+  </data>
+  <data name="AdminDoctor.AllChecksPassed" xml:space="preserve">
+    <value>Toutes les vérifications ont réussi</value>
+  </data>
+  <data name="AdminDoctor.IssuesFound" xml:space="preserve">
+    <value>Problèmes trouvés</value>
+  </data>
+  <data name="AdminDoctor.CompletedIn" xml:space="preserve">
+    <value>Terminé en {0}s</value>
+  </data>
+  <data name="AdminDoctor.SystemChecks" xml:space="preserve">
+    <value>Vérifications système</value>
+  </data>
+  <data name="AdminDoctor.Status" xml:space="preserve">
+    <value>Statut</value>
+  </data>
+  <data name="AdminDoctor.Check" xml:space="preserve">
+    <value>Vérification</value>
+  </data>
+  <data name="AdminDoctor.Details" xml:space="preserve">
+    <value>Détails</value>
+  </data>
+  <data name="AdminDoctor.Duration" xml:space="preserve">
+    <value>Durée</value>
+  </data>
+  <data name="AdminDoctor.EnvironmentInfo" xml:space="preserve">
+    <value>Informations sur l’environnement</value>
+  </data>
+  <data name="AdminDoctor.LibraryPaths" xml:space="preserve">
+    <value>Chemins de la bibliothèque</value>
+  </data>
+  <data name="AdminDoctor.LibraryName" xml:space="preserve">
+    <value>Bibliothèque</value>
+  </data>
+  <data name="AdminDoctor.LibraryType" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="AdminDoctor.Path" xml:space="preserve">
+    <value>Chemin</value>
+  </data>
+  <data name="AdminDoctor.ConfigurableServices" xml:space="preserve">
+    <value>Services configurables</value>
+  </data>
+  <data name="AdminDoctor.Category" xml:space="preserve">
+    <value>Catégorie</value>
+  </data>
+  <data name="AdminDoctor.ServiceName" xml:space="preserve">
+    <value>Service</value>
+  </data>
+  <data name="AdminDoctor.SettingKey" xml:space="preserve">
+    <value>Clé de paramètre</value>
+  </data>
+  <data name="AdminDoctor.ConnectionStrings" xml:space="preserve">
+    <value>Chaînes de connexion</value>
+  </data>
+  <data name="AdminDoctor.RelevantEnvVars" xml:space="preserve">
+    <value>Variables d’environnement pertinentes</value>
+  </data>
+  <data name="AdminDoctor.NotSet" xml:space="preserve">
+    <value>(non défini)</value>
+  </data>
+  <data name="AdminDoctor.CopyJson" xml:space="preserve">
+    <value>Copier le JSON</value>
+  </data>
+  <data name="AdminDoctor.JsonCopied" xml:space="preserve">
+    <value>Données de diagnostic copiées dans le presse-papiers</value>
+  </data>
+  <data name="AdminDoctor.DotNetVersion" xml:space="preserve">
+    <value>Version .NET</value>
+  </data>
+  <data name="AdminDoctor.OSDescription" xml:space="preserve">
+    <value>Système d’exploitation</value>
+  </data>
+  <data name="AdminDoctor.OSArchitecture" xml:space="preserve">
+    <value>Architecture du système</value>
+  </data>
+  <data name="AdminDoctor.ProcessArchitecture" xml:space="preserve">
+    <value>Architecture du processus</value>
+  </data>
+  <data name="AdminDoctor.MelodeeVersion" xml:space="preserve">
+    <value>Version de Melodee</value>
+  </data>
+  <data name="AdminDoctor.Environment" xml:space="preserve">
+    <value>Environnement</value>
+  </data>
+  <data name="AdminDoctor.ContentRootPath" xml:space="preserve">
+    <value>Chemin racine du contenu</value>
+  </data>
+  <data name="AdminDoctor.WebRootPath" xml:space="preserve">
+    <value>Chemin racine web</value>
+  </data>
+  <data name="AdminDoctor.ServerTimeUtc" xml:space="preserve">
+    <value>Heure du serveur (UTC)</value>
+  </data>
+  <data name="AdminDoctor.Uptime" xml:space="preserve">
+    <value>Temps de fonctionnement</value>
+  </data>
+  <data name="AdminDoctor.ProcessId" xml:space="preserve">
+    <value>ID de processus</value>
+  </data>
+  <data name="AdminDoctor.MachineName" xml:space="preserve">
+    <value>Nom de la machine</value>
+  </data>
+  <data name="AdminDoctor.Check.Configuration" xml:space="preserve">
+    <value>Configuration</value>
+  </data>
+  <data name="AdminDoctor.Check.PostgresDatabase" xml:space="preserve">
+    <value>Base de données : PostgreSQL</value>
+  </data>
+  <data name="AdminDoctor.Check.MusicBrainzDatabase" xml:space="preserve">
+    <value>Base de données : MusicBrainz (SQLite)</value>
+  </data>
+  <data name="AdminDoctor.Check.ArtistSearchEngineDatabase" xml:space="preserve">
+    <value>Base de données : ArtistSearchEngine (SQLite)</value>
+  </data>
+  <data name="AdminDoctor.Check.LibraryPaths" xml:space="preserve">
+    <value>Chemins de la bibliothèque</value>
+  </data>
+  <data name="AdminDoctor.Check.ConfigurableServices" xml:space="preserve">
+    <value>Services configurables</value>
+  </data>
+  <data name="AdminDoctor.PathExists" xml:space="preserve">
+    <value>Le chemin existe</value>
+  </data>
+  <data name="AdminDoctor.PathMissing" xml:space="preserve">
+    <value>Chemin manquant</value>
+  </data>
+  <data name="AdminDoctor.LibraryPathsMissing" xml:space="preserve">
+    <value>Un ou plusieurs chemins de la bibliothèque sont manquants</value>
+  </data>
+  <data name="AdminDoctor.AllLibraryPathsExist" xml:space="preserve">
+    <value>Tous les chemins de la bibliothèque existent</value>
+  </data>
+  <data name="AdminDoctor.ServicesEnabled" xml:space="preserve">
+    <value>{0}/{1} services activés</value>
+  </data>
+  <data name="AdminDoctor.Writable" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Writable</value>
+  </data>
+  <data name="AdminDoctor.PathNotWritable" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Path is not writable</value>
+  </data>
+  <data name="AdminDoctor.PathOk" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] OK</value>
+  </data>
+  <data name="AdminDoctor.LibraryPathsNotWritable" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Some library paths are not writable</value>
+  </data>
+  <data name="AdminDoctor.LibraryPathsMissingAndNotWritable" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Some library paths are missing or not writable</value>
+  </data>
+  <data name="AdminDoctor.AllLibraryPathsOk" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] All library paths exist and are writable</value>
+  </data>
+  <data name="AdminDoctor.FileExists" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] File Exists</value>
+  </data>
+  <data name="AdminDoctor.FileMissing" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] File Missing</value>
+  </data>
+  <data name="AdminDoctor.NotWritable" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Not Writable</value>
+  </data>
+  <data name="AdminDoctor.Check.SerilogLogging" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Serilog Logging</value>
+  </data>
+  <data name="AdminDoctor.SerilogLogPaths" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Serilog Log Paths</value>
+  </data>
+  <data name="AdminDoctor.DirectoryExists" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Directory Exists</value>
+  </data>
+  <data name="AdminDoctor.DirectoryMissing" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Directory Missing</value>
+  </data>
+  <data name="AdminDoctor.NoFileLoggingConfigured" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No file logging configured</value>
+  </data>
+  <data name="AdminDoctor.SerilogPathIssues" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Some log paths have issues</value>
+  </data>
+  <data name="AdminDoctor.SerilogPathsOk" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] All log paths are accessible</value>
   </data>
 </root>

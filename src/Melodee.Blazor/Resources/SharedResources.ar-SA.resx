@@ -3758,213 +3758,408 @@
     <value>الملف المرفوع ليس أرشيف ZIP صالحًا.</value>
   </data>
   <data name="AdminSettings.AddNew" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Add New Setting</value>
+    <value>إضافة إعداد جديد</value>
   </data>
   <data name="AdminSettings.AddNewSetting" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Add New Setting</value>
+    <value>إضافة إعداد جديد</value>
   </data>
   <data name="AdminSettings.AllKeysExist" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] All settings from SettingRegistry already have records in the database.</value>
+    <value>جميع الإعدادات من SettingRegistry لديها سجلات موجودة بالفعل في قاعدة البيانات.</value>
   </data>
   <data name="AdminSettings.Category" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Category</value>
+    <value>الفئة</value>
   </data>
   <data name="AdminSettings.Description" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Description</value>
+    <value>الوصف</value>
   </data>
   <data name="AdminSettings.EnterComment" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Enter comment (optional)</value>
+    <value>أدخل تعليقًا (اختياري)</value>
   </data>
   <data name="AdminSettings.EnterDescription" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Enter description (optional)</value>
+    <value>أدخل وصفًا (اختياري)</value>
   </data>
   <data name="AdminSettings.EnterValue" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Enter setting value</value>
+    <value>أدخل قيمة الإعداد</value>
   </data>
   <data name="AdminSettings.FailedToAdd" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Failed to add setting</value>
+    <value>فشل في إضافة الإعداد</value>
   </data>
   <data name="AdminSettings.KeyRequired" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Setting key is required</value>
+    <value>مفتاح الإعداد مطلوب</value>
   </data>
   <data name="AdminSettings.NoAvailableKeys" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] No Available Settings</value>
+    <value>لا توجد إعدادات متاحة</value>
   </data>
   <data name="AdminSettings.SelectKey" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Select a setting key...</value>
+    <value>اختر مفتاح إعداد...</value>
   </data>
   <data name="AdminSettings.SortOrder" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Sort Order</value>
+    <value>ترتيب الفرز</value>
   </data>
   <data name="AdminSettings.SuccessfullyAdded" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Successfully added new setting!</value>
+    <value>تمت إضافة إعداد جديد بنجاح!</value>
   </data>
   <data name="Auth.BackToLogin" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Back to Login</value>
+    <value>العودة إلى تسجيل الدخول</value>
   </data>
   <data name="Auth.CheckEmailForResetLink" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] If an account with that email exists, you will receive a password reset link shortly.</value>
+    <value>إذا كان هناك حساب بهذا البريد الإلكتروني، فستتلقى قريبًا رابط إعادة تعيين كلمة المرور.</value>
   </data>
   <data name="Auth.ConfirmNewPassword" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Confirm new password</value>
+    <value>تأكيد كلمة المرور الجديدة</value>
   </data>
   <data name="Auth.ConfirmPasswordRequired" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Please confirm your password</value>
+    <value>يرجى تأكيد كلمة المرور</value>
   </data>
   <data name="Auth.EmailInvalid" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Please enter a valid email address</value>
+    <value>يرجى إدخال عنوان بريد إلكتروني صالح</value>
   </data>
   <data name="Auth.EmailRequired" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Email is required</value>
+    <value>البريد الإلكتروني مطلوب</value>
   </data>
   <data name="Auth.EnterNewPassword" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Enter new password</value>
+    <value>أدخل كلمة المرور الجديدة</value>
   </data>
   <data name="Auth.ForgotPasswordSubtitle" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Enter your email to receive a password reset link</value>
+    <value>أدخل بريدك الإلكتروني لتلقي رابط إعادة تعيين كلمة المرور</value>
   </data>
   <data name="Auth.ForgotPasswordTitle" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Forgot Password</value>
+    <value>نسيت كلمة المرور</value>
   </data>
   <data name="Auth.InvalidOrExpiredToken" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Invalid or expired reset link</value>
+    <value>رابط إعادة التعيين غير صالح أو منتهي الصلاحية</value>
   </data>
   <data name="Auth.InvalidToken" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Invalid reset token</value>
+    <value>رمز إعادة التعيين غير صالح</value>
   </data>
   <data name="Auth.NewPassword" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] New Password</value>
+    <value>كلمة مرور جديدة</value>
   </data>
   <data name="Auth.PasswordMinLength" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Password must be at least 8 characters</value>
+    <value>يجب أن تتكون كلمة المرور من 8 أحرف على الأقل</value>
   </data>
   <data name="Auth.PasswordResetEmailSent" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Password reset link sent!</value>
+    <value>تم إرسال رابط إعادة تعيين كلمة المرور!</value>
   </data>
   <data name="Auth.PasswordResetSuccess" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Password reset successfully!</value>
+    <value>تمت إعادة تعيين كلمة المرور بنجاح!</value>
   </data>
   <data name="Auth.PasswordResetUnavailable" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Password reset is currently unavailable. Please contact your system administrator.</value>
+    <value>إعادة تعيين كلمة المرور غير متاحة حاليًا. يرجى الاتصال بمسؤول النظام.</value>
   </data>
   <data name="Auth.PasswordsMustMatch" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Passwords must match</value>
+    <value>يجب أن تتطابق كلمات المرور</value>
   </data>
   <data name="Auth.RedirectingToLogin" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Redirecting to login page...</value>
+    <value>جارٍ إعادة التوجيه إلى صفحة تسجيل الدخول...</value>
   </data>
   <data name="Auth.ResetPasswordError" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] An error occurred while resetting your password</value>
+    <value>حدث خطأ أثناء إعادة تعيين كلمة المرور</value>
   </data>
   <data name="Auth.ResetPasswordFailed" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Failed to reset password</value>
+    <value>فشل في إعادة تعيين كلمة المرور</value>
   </data>
   <data name="Auth.ResetPasswordSubtitle" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Enter your new password</value>
+    <value>أدخل كلمة المرور الجديدة</value>
   </data>
   <data name="Auth.ResetPasswordTitle" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Reset Password</value>
+    <value>إعادة تعيين كلمة المرور</value>
   </data>
   <data name="Auth.Resetting" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Resetting...</value>
+    <value>جارٍ إعادة التعيين...</value>
   </data>
   <data name="Auth.SendResetLink" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Send Reset Link</value>
+    <value>إرسال رابط إعادة التعيين</value>
   </data>
   <data name="Auth.Sending" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Sending...</value>
+    <value>جارٍ الإرسال...</value>
   </data>
   <data name="Auth.TokenExpiredMessage" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] This password reset link has expired or is invalid. Please request a new one.</value>
+    <value>انتهت صلاحية رابط إعادة تعيين كلمة المرور هذا أو أنه غير صالح. يرجى طلب رابط جديد.</value>
   </data>
   <data name="Auth.TooManyAttempts" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Too many attempts. Please try again later.</value>
+    <value>عدد محاولات كبير جدًا. يرجى المحاولة لاحقًا.</value>
   </data>
   <data name="Auth.ValidatingToken" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Validating reset link...</value>
+    <value>جارٍ التحقق من رابط إعادة التعيين...</value>
   </data>
   <data name="About.DocumentationSite" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Melodee Documentation Site</value>
+    <value>موقع توثيق Melodee</value>
   </data>
   <data name="Actions.BackToChart" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Back to Chart</value>
+    <value>العودة إلى المخطط</value>
   </data>
   <data name="ChartsMissingReport.HeaderForChart" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Missing Albums for {0}</value>
+    <value>ألبومات مفقودة لـ {0}</value>
   </data>
   <data name="ArtistDetail.ValidateAlbums" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Validate all albums for this artist</value>
+    <value>التحقق من جميع ألبومات هذا الفنان</value>
   </data>
   <data name="ArtistDetail.ValidateAlbumsTitle" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Album Validation: {0}</value>
+    <value>التحقق من الألبوم: {0}</value>
   </data>
   <data name="ArtistValidation.ValidatingAlbums" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Validating albums...</value>
+    <value>جارٍ التحقق من الألبومات...</value>
   </data>
   <data name="ArtistValidation.TotalAlbums" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Total Albums</value>
+    <value>إجمالي الألبومات</value>
   </data>
   <data name="ArtistValidation.ValidAlbums" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Valid</value>
+    <value>صالح</value>
   </data>
   <data name="ArtistValidation.InvalidAlbums" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Invalid</value>
+    <value>غير صالح</value>
   </data>
   <data name="ArtistValidation.AllValid" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] All Valid</value>
+    <value>الكل صالح</value>
   </data>
   <data name="ArtistValidation.IssuesFound" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Issues Found</value>
+    <value>تم العثور على مشكلات</value>
   </data>
   <data name="ArtistValidation.AlbumDetails" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Album Details</value>
+    <value>تفاصيل الألبوم</value>
   </data>
   <data name="ArtistValidation.Directory" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Directory</value>
+    <value>الدليل</value>
   </data>
   <data name="ArtistValidation.Cover" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Cover</value>
+    <value>الغلاف</value>
   </data>
   <data name="ArtistValidation.Issues" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Issues</value>
+    <value>مشكلات</value>
   </data>
   <data name="ArtistValidation.Valid" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Valid</value>
+    <value>صالح</value>
   </data>
   <data name="ArtistValidation.Invalid" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Invalid</value>
+    <value>غير صالح</value>
   </data>
   <data name="ArtistValidation.DirectoryExists" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Directory exists</value>
+    <value>الدليل موجود</value>
   </data>
   <data name="ArtistValidation.DirectoryMissing" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Directory missing</value>
+    <value>الدليل مفقود</value>
   </data>
   <data name="ArtistValidation.HasCoverImage" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Has cover image</value>
+    <value>يوجد صورة غلاف</value>
   </data>
   <data name="ArtistValidation.NoCoverImage" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] No cover image</value>
+    <value>لا توجد صورة غلاف</value>
   </data>
   <data name="ArtistValidation.MoreIssues" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] +{0} more issues</value>
+    <value>+{0} مشكلات إضافية</value>
   </data>
   <data name="ArtistValidation.NoResults" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] No validation results available.</value>
+    <value>لا توجد نتائج تحقق متاحة.</value>
   </data>
   <data name="About.OpenSubsonicApiDocs" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] OpenSubsonic API Docs</value>
+    <value>توثيق واجهة OpenSubsonic API</value>
   </data>
   <data name="Stats.ReleasesByGenre" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Releases by Genre</value>
+    <value>الإصدارات حسب النوع</value>
   </data>
   <data name="Stats.ReleasesByYear" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Releases by Year</value>
+    <value>الإصدارات حسب السنة</value>
   </data>
   <data name="Stats.TopArtistsByPlays" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Top 10 Most Played Artists</value>
+    <value>أفضل 10 فنانين الأكثر تشغيلًا</value>
   </data>
   <data name="Stats.TopArtistsByAlbumCount" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Top 10 Artists by Album Count</value>
+    <value>أفضل 10 فنانين حسب عدد الألبومات</value>
+  </data>
+  <data name="Navigation.Doctor" xml:space="preserve">
+    <value>التشخيص</value>
+  </data>
+  <data name="AdminDoctor.PageTitle" xml:space="preserve">
+    <value>تشخيص النظام</value>
+  </data>
+  <data name="AdminDoctor.Description" xml:space="preserve">
+    <value>تشخيص مشكلات التثبيت والتهيئة والبيئة</value>
+  </data>
+  <data name="AdminDoctor.RunningDiagnostics" xml:space="preserve">
+    <value>جارٍ تشغيل التشخيص...</value>
+  </data>
+  <data name="AdminDoctor.AllChecksPassed" xml:space="preserve">
+    <value>تم اجتياز جميع الفحوصات</value>
+  </data>
+  <data name="AdminDoctor.IssuesFound" xml:space="preserve">
+    <value>تم العثور على مشكلات</value>
+  </data>
+  <data name="AdminDoctor.CompletedIn" xml:space="preserve">
+    <value>اكتمل خلال {0} ث</value>
+  </data>
+  <data name="AdminDoctor.SystemChecks" xml:space="preserve">
+    <value>فحوصات النظام</value>
+  </data>
+  <data name="AdminDoctor.Status" xml:space="preserve">
+    <value>الحالة</value>
+  </data>
+  <data name="AdminDoctor.Check" xml:space="preserve">
+    <value>فحص</value>
+  </data>
+  <data name="AdminDoctor.Details" xml:space="preserve">
+    <value>التفاصيل</value>
+  </data>
+  <data name="AdminDoctor.Duration" xml:space="preserve">
+    <value>المدة</value>
+  </data>
+  <data name="AdminDoctor.EnvironmentInfo" xml:space="preserve">
+    <value>معلومات البيئة</value>
+  </data>
+  <data name="AdminDoctor.LibraryPaths" xml:space="preserve">
+    <value>مسارات المكتبة</value>
+  </data>
+  <data name="AdminDoctor.LibraryName" xml:space="preserve">
+    <value>المكتبة</value>
+  </data>
+  <data name="AdminDoctor.LibraryType" xml:space="preserve">
+    <value>النوع</value>
+  </data>
+  <data name="AdminDoctor.Path" xml:space="preserve">
+    <value>المسار</value>
+  </data>
+  <data name="AdminDoctor.ConfigurableServices" xml:space="preserve">
+    <value>الخدمات القابلة للتهيئة</value>
+  </data>
+  <data name="AdminDoctor.Category" xml:space="preserve">
+    <value>الفئة</value>
+  </data>
+  <data name="AdminDoctor.ServiceName" xml:space="preserve">
+    <value>خدمة</value>
+  </data>
+  <data name="AdminDoctor.SettingKey" xml:space="preserve">
+    <value>مفتاح الإعداد</value>
+  </data>
+  <data name="AdminDoctor.ConnectionStrings" xml:space="preserve">
+    <value>سلاسل الاتصال</value>
+  </data>
+  <data name="AdminDoctor.RelevantEnvVars" xml:space="preserve">
+    <value>متغيرات البيئة ذات الصلة</value>
+  </data>
+  <data name="AdminDoctor.NotSet" xml:space="preserve">
+    <value>(غير محدد)</value>
+  </data>
+  <data name="AdminDoctor.CopyJson" xml:space="preserve">
+    <value>نسخ JSON</value>
+  </data>
+  <data name="AdminDoctor.JsonCopied" xml:space="preserve">
+    <value>تم نسخ بيانات التشخيص إلى الحافظة</value>
+  </data>
+  <data name="AdminDoctor.DotNetVersion" xml:space="preserve">
+    <value>إصدار .NET</value>
+  </data>
+  <data name="AdminDoctor.OSDescription" xml:space="preserve">
+    <value>نظام التشغيل</value>
+  </data>
+  <data name="AdminDoctor.OSArchitecture" xml:space="preserve">
+    <value>معمارية نظام التشغيل</value>
+  </data>
+  <data name="AdminDoctor.ProcessArchitecture" xml:space="preserve">
+    <value>معمارية العملية</value>
+  </data>
+  <data name="AdminDoctor.MelodeeVersion" xml:space="preserve">
+    <value>إصدار Melodee</value>
+  </data>
+  <data name="AdminDoctor.Environment" xml:space="preserve">
+    <value>البيئة</value>
+  </data>
+  <data name="AdminDoctor.ContentRootPath" xml:space="preserve">
+    <value>مسار جذر المحتوى</value>
+  </data>
+  <data name="AdminDoctor.WebRootPath" xml:space="preserve">
+    <value>مسار جذر الويب</value>
+  </data>
+  <data name="AdminDoctor.ServerTimeUtc" xml:space="preserve">
+    <value>وقت الخادم (UTC)</value>
+  </data>
+  <data name="AdminDoctor.Uptime" xml:space="preserve">
+    <value>مدة التشغيل</value>
+  </data>
+  <data name="AdminDoctor.ProcessId" xml:space="preserve">
+    <value>معرّف العملية</value>
+  </data>
+  <data name="AdminDoctor.MachineName" xml:space="preserve">
+    <value>اسم الجهاز</value>
+  </data>
+  <data name="AdminDoctor.Check.Configuration" xml:space="preserve">
+    <value>التهيئة</value>
+  </data>
+  <data name="AdminDoctor.Check.PostgresDatabase" xml:space="preserve">
+    <value>قاعدة البيانات: PostgreSQL</value>
+  </data>
+  <data name="AdminDoctor.Check.MusicBrainzDatabase" xml:space="preserve">
+    <value>قاعدة البيانات: MusicBrainz (SQLite)</value>
+  </data>
+  <data name="AdminDoctor.Check.ArtistSearchEngineDatabase" xml:space="preserve">
+    <value>قاعدة البيانات: ArtistSearchEngine (SQLite)</value>
+  </data>
+  <data name="AdminDoctor.Check.LibraryPaths" xml:space="preserve">
+    <value>مسارات المكتبة</value>
+  </data>
+  <data name="AdminDoctor.Check.ConfigurableServices" xml:space="preserve">
+    <value>الخدمات القابلة للتهيئة</value>
+  </data>
+  <data name="AdminDoctor.PathExists" xml:space="preserve">
+    <value>المسار موجود</value>
+  </data>
+  <data name="AdminDoctor.PathMissing" xml:space="preserve">
+    <value>المسار مفقود</value>
+  </data>
+  <data name="AdminDoctor.LibraryPathsMissing" xml:space="preserve">
+    <value>مسار واحد أو أكثر من مسارات المكتبة مفقود</value>
+  </data>
+  <data name="AdminDoctor.AllLibraryPathsExist" xml:space="preserve">
+    <value>جميع مسارات المكتبة موجودة</value>
+  </data>
+  <data name="AdminDoctor.ServicesEnabled" xml:space="preserve">
+    <value>تم تمكين {0}/{1} من الخدمات</value>
+  </data>
+  <data name="AdminDoctor.Writable" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Writable</value>
+  </data>
+  <data name="AdminDoctor.PathNotWritable" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Path is not writable</value>
+  </data>
+  <data name="AdminDoctor.PathOk" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] OK</value>
+  </data>
+  <data name="AdminDoctor.LibraryPathsNotWritable" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Some library paths are not writable</value>
+  </data>
+  <data name="AdminDoctor.LibraryPathsMissingAndNotWritable" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Some library paths are missing or not writable</value>
+  </data>
+  <data name="AdminDoctor.AllLibraryPathsOk" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] All library paths exist and are writable</value>
+  </data>
+  <data name="AdminDoctor.FileExists" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] File Exists</value>
+  </data>
+  <data name="AdminDoctor.FileMissing" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] File Missing</value>
+  </data>
+  <data name="AdminDoctor.NotWritable" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Not Writable</value>
+  </data>
+  <data name="AdminDoctor.Check.SerilogLogging" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Serilog Logging</value>
+  </data>
+  <data name="AdminDoctor.SerilogLogPaths" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Serilog Log Paths</value>
+  </data>
+  <data name="AdminDoctor.DirectoryExists" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Directory Exists</value>
+  </data>
+  <data name="AdminDoctor.DirectoryMissing" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Directory Missing</value>
+  </data>
+  <data name="AdminDoctor.NoFileLoggingConfigured" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No file logging configured</value>
+  </data>
+  <data name="AdminDoctor.SerilogPathIssues" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Some log paths have issues</value>
+  </data>
+  <data name="AdminDoctor.SerilogPathsOk" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] All log paths are accessible</value>
   </data>
 </root>
