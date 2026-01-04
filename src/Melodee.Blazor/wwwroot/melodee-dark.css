@@ -98,6 +98,17 @@ main,
 .content {
     background-color: #2A2A2A !important;
     color: #F5F5F5;
+    border: none !important;
+}
+
+/* Remove any white borders on panels and content areas */
+.rz-panel,
+.rz-card,
+.rz-content,
+.rz-layout,
+.rz-layout > *,
+.rz-body > * {
+    border-color: #484848 !important;
 }
 
 /* Header/Top bar styling */
@@ -220,6 +231,31 @@ header * {
 
 .rz-panelmenu-content {
     background-color: #323232 !important;
+}
+
+/* CRITICAL: Override Radzen menu base styles that cause white backgrounds */
+.rz-menu,
+.rz-menu-list,
+.rz-submenu,
+.rz-submenu-list,
+.rz-menu-item,
+.rz-submenu-item,
+.rz-panelmenu .rz-menu,
+.rz-panelmenu .rz-menu-list,
+.rz-sidebar .rz-menu,
+.rz-sidebar .rz-menu-list {
+    background-color: #323232 !important;
+    background: #323232 !important;
+}
+
+/* All submenu content areas */
+.rz-panelmenu ul,
+.rz-panelmenu li,
+.rz-panelmenu .rz-panelmenu-root-list,
+.rz-sidebar ul,
+.rz-sidebar li {
+    background-color: transparent !important;
+    background: transparent !important;
 }
 
 .rz-panelmenu-content .rz-menuitem,

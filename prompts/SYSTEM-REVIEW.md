@@ -19,6 +19,20 @@ This document serves as a living record of codebase reviews performed by various
 | 011 | 2026-01-04 | Antigravity | Quality | Low | Open | API Documentation and OpenAPI Specification |
 | 012 | 2026-01-04 | Antigravity | Performance | Medium | Open | Jellyfin InstantMix/Similar Items Performance |
 | 013 | 2026-01-04 | Antigravity | Quality | Low | Open | Logging and Observability Improvements |
+| 014 | 2026-01-04 | opencode | Blazor | Medium | Open | Error Handling in Razor Components |
+| 015 | 2026-01-04 | opencode | Blazor | Medium | Open | Performance Optimizations |
+| 016 | 2026-01-04 | opencode | Testing | High | Open | Blazor Component Tests |
+| 017 | 2026-01-04 | opencode | API | Medium | Open | Jellyfin Phase 6 Completion |
+| 018 | 2026-01-04 | opencode | Performance | Medium | Open | Partitioned Rate Limiting per API |
+| 019 | 2026-01-04 | opencode | Blazor | High | Open | Async Void in Blazor Components (Critical Exception Handling) |
+| 020 | 2026-01-04 | opencode | Blazor | Medium | Open | Missing ConfigureAwait(False) in Blazor Components |
+| 021 | 2026-01-04 | opencode | Security | High | Open | File Path Traversal Risk in Audio Streaming |
+| 022 | 2026-01-04 | opencode | Architecture | Medium | Open | Large Jellyfin ItemsController Violates SRP |
+| 023 | 2026-01-04 | opencode | Quality | Low | Open | Missing ConfigureAwait(False) in Some Controller Calls |
+| 024 | 2026-01-04 | opencode | Blazor | Medium | Open | Incomplete Error Handling in Blazor Components |
+| 025 | 2026-01-04 | opencode | Security | Medium | Open | Missing Anti-Forgery Validation on State-Changing Endpoints |
+| 026 | 2026-01-04 | opencode | Security | Low | Open | Inconsistent Response Headers and Security Headers |
+| 027 | 2026-01-04 | opencode | API | Medium | Open | Missing Request Validation for Jellyfin InstantMix Parameters |
 
 ## 2. Detailed Findings
 
@@ -520,4 +534,495 @@ The Jellyfin API has `GetCorrelationId()` method in the base controller, but it'
     -   Cache hit/miss rates
     -   Authentication failures
 6.  **Distributed Tracing**: For complex requests that span multiple services, consider adding support for OpenTelemetry distributed tracing.
+
+---
+
+### [014] Error Handling in Razor Components
+- **Agent**: opencode
+- **Date**: 2026-01-04
+- **Risk Level**: **Medium**
+- **Status**: Open
+
+#### Concerns
+Blazor components (e.g., AlbumDetail.razor, Login.razor) use injected HttpClient for API calls without explicit try-catch blocks. Unhandled exceptions (network errors, 4xx/5xx) can crash individual components or propagate, degrading UX without user feedback. No global ErrorBoundary observed wrapping pages; relies on NotificationService/DialogService inconsistently.
+
+#### Action Items
+1. **Add ErrorBoundary Components**: Wrap main layout/pages with `<ErrorBoundary>@childContent</ErrorBoundary>` using Radzen or custom, logging exceptions to Serilog.
+2. **Component-Level Handling**: In `@code` blocks, wrap API calls: `try { var response = await http.Get... } catch (HttpRequestException ex) { notificationService.Notify(NotificationSeverity.Error, "Network error", ex.Message); }`.
+3. **Global Handler**: In Program.cs, add `builder.Services.AddScoped<ErrorBoundaryBase>();` and route unhandled to DoctorService or centralized logger.
+4. **Test Coverage**: Add bUnit tests simulating HttpClient failures for key pages (Dashboard, Search).
+
+---
+
+### [015] Blazor Performance Optimizations
+- **Agent**: opencode
+- **Date**: 2026-01-04
+- **Risk Level**: **Medium**
+- **Status**: Open
+
+#### Concerns
+Blazor Server mode risks SignalR overload for large libraries/charts (no virtualization in Radzen grids visible). Bundle size high (~300 DLLs in bin); no pagination/debouncing in some lists (charts). Themes/CSS per-file bloats transfers; no AOT/WASM hints.
+
+#### Action Items
+1. **Virtualization**: Add `Virtualize` or Radzen DataGrid `Virtualization="true"` to Artist/Album/Song lists; paginate charts.
+2. **Bundle Optimization**: Use `IlcPublishAot` or trim unused assemblies; minify CSS/JS (melodee.css + themes).
+3. **Circuit Handling**: Enhance MelodeeCircuitHandler with disconnect logging; consider Blazor WebAssembly for heavy clients.
+4. **Profiling**: Add `dotnet-trace` scripts for UI perf; monitor SignalR connections in DoctorService.
+
+---
+
+### [016] Blazor Component Tests
+- **Agent**: opencode
+- **Date**: 2026-01-04
+- **Risk Level**: **High**
+- **Status**: Open
+
+#### Concerns
+No bUnit/XUnit tests for Blazor components/Pages found (e.g., tests/Melodee.Tests.Blazor/Components empty-ish). Controllers have some (JellyfinRouting), but UI logic (image upload, theme switch, search filters) untested. Breaks isolation from API changes.
+
+#### Action Items
+1. **Setup bUnit**: Add `bunit` NuGet to Melodee.Tests.Blazor; create Components/DashboardTests.razor for rendering/interactions.
+2. **Key Tests**: `AlbumDetailTests`: Render, mock HttpClient, assert data binding/ETags. `ThemeSelectorTests`: Toggle themes, verify CSS classes.
+3. **Integration**: Playwright for E2E (existing); snapshot testing for themes/UI states.
+4. **CI Coverage**: Extend coverage.runsettings to 80% for Blazor; run `dotnet test --collect:"XPlat Code Coverage"`.
+
+---
+
+### [017] Jellyfin Phase 6 Completion
+- **Agent**: opencode
+- **Date**: 2026-01-04
+- **Risk Level**: **Medium**
+- **Status**: Open
+
+#### Concerns
+Per prompts/JELLYFIN-SPEC.md, Phase 6 (Token Mgmt/Admin) partial: No `/Auth/Keys` for admin token create/revoke; mobile clients (Finamp) pending testing; no WS sessions or transcoding stubs. Breaks full Jellyfin compat.
+
+#### Action Items
+1. **Admin Endpoints**: Add `JellyfinUsersController.PostNamedKeysAsync()` mirroring Jellyfin OpenAPI; DB ops on JellyfinAccessToken.
+2. **Mobile Testing**: Run scripts/test-jellyfin-api.sh with Finamp/Streamyfin; stub `/Audio/{id}/universal` if needed.
+3. **Enhance**: Add WS `/WebSocket` forwarder; transcoding flags (FFMpeg integration).
+4. **Verify**: Contract tests vs. jellyfin-10.11.5-openapi.json using OpenAPI validator.
+
+---
+
+### [018] Partitioned Rate Limiting per API
+- **Agent**: opencode
+- **Date**: 2026-01-04
+- **Risk Level**: **Medium**
+- **Status**: Open
+
+#### Concerns
+RateLimiterService shared across APIs; Jellyfin has dedicated config but overload (e.g., Subsonic floods) impacts native. No per-IP/endpoint bytes/sec for streams.
+
+#### Action Items
+1. **Named Limiters**: In Program.cs, `AddRateLimiter("melodee", opts => ...); "jellyfin", "opensubsonic"`.
+2. **Partitioning**: Use `PartitionedRateLimiter` by path prefix or client ID (X-Forwarded-For).
+3. **Stream Limits**: Add bandwidth quotas (e.g., 10MB/s per stream) via middleware.
+4. **Metrics**: Expose limits in DoctorService; alert on 429 spikes.
+
+---
+
+### [019] Async Void in Blazor Components (Critical Exception Handling Issue)
+- **Agent**: opencode
+- **Date**: 2026-01-04
+- **Risk Level**: **High**
+- **Status**: Open
+
+#### Concerns
+Multiple Blazor components use `async void` event handlers which is a critical anti-pattern:
+- **AlbumDetail.razor:668**: `private async void OnShowItemChange(TreeEventArgs arg)`
+- **ArtistDetail.razor:725**: `private async void OnShowItemChange(TreeEventArgs arg)`
+- **MainLayout.razor:171**: `private async void OnConfigurationChanged(object? sender, EventArgs e)`
+- **Songs.razor:332**: `private async void MergeSelectedButtonClick()`
+- **Albums.razor:342**: `private async void MergeSelectedButtonClick()`
+
+**Why this is dangerous:**
+- Exceptions thrown in `async void` methods cannot be caught by standard try-catch blocks
+- Exceptions propagate to the synchronization context and can crash the entire Blazor circuit
+- No way to properly log or handle errors, leading to silent failures
+- Creates unpredictable application state when failures occur
+
+#### Action Items
+1. **Refactor All Async Void Methods**: Replace all `async void` with `async Task` in Blazor components:
+   ```csharp
+   // Before (DANGEROUS)
+   private async void OnShowItemChange(TreeEventArgs arg)
+   {
+       await someOperation();
+   }
+
+   // After (CORRECT)
+   private async Task OnShowItemChange(TreeEventArgs arg)
+   {
+       await someOperation();
+   }
+   ```
+2. **Update Event Handler Bindings**: Ensure all event handler bindings in Razor markup use `await` appropriately:
+   ```razor
+   <!-- For methods that return Task -->
+   <RadzenTree ... OnChange="@(args => OnShowItemChange(args))" />
+   ```
+3. **Add Exception Handling**: Wrap async operations in try-catch blocks to handle errors gracefully:
+   ```csharp
+   private async Task OnShowItemChange(TreeEventArgs arg)
+   {
+       try
+       {
+           await someOperation();
+       }
+       catch (Exception ex)
+       {
+           Logger.LogError(ex, "Error in OnShowItemChange");
+           NotificationService.Notify(NotificationSeverity.Error, "Error", "Operation failed");
+       }
+   }
+   ```
+4. **Code Review**: Audit all 80 Razor components to ensure no `async void` patterns exist.
+
+---
+
+### [020] Missing ConfigureAwait(False) in Blazor Components
+- **Agent**: opencode
+- **Date**: 2026-01-04
+- **Risk Level**: **Medium**
+- **Status**: Open
+
+#### Concerns
+Only 15 instances of `ConfigureAwait(false)` found in Blazor component pages across 80 Razor files. While `ConfigureAwait(false)` is less critical in Blazor Server mode (already on a synchronization context), it's still important for:
+- Performance optimization by avoiding unnecessary thread marshalling
+- Reducing potential for deadlocks in complex async scenarios
+- Consistency with the backend API code which uses ConfigureAwait(false) extensively (100+ instances)
+
+The inconsistency suggests different developers may be unaware of async best practices.
+
+#### Action Items
+1. **Audit Async Calls**: Review all async method calls in Razor components and identify where `ConfigureAwait(false)` should be added
+2. **Add ConfigureAwait(false)** to non-UI-critical async operations:
+   ```csharp
+   // In @code blocks
+   private async Task LoadDataAsync()
+   {
+       _data = await _service.GetDataAsync(cancellationToken).ConfigureAwait(false);
+   }
+   ```
+3. **Documentation**: Create team guidelines for async/await patterns in Blazor components vs. backend code
+4. **Static Analysis**: Consider adding a Roslyn analyzer to detect missing `ConfigureAwait(false)` in appropriate contexts
+
+---
+
+### [021] File Path Traversal Risk in Audio Streaming
+- **Agent**: opencode
+- **Date**: 2026-01-04
+- **Risk Level**: **High**
+- **Status**: Open
+
+#### Concerns
+In `Jellyfin/AudioController.cs:78`, file paths are constructed from database values without proper validation:
+```csharp
+var filePath = Path.Combine(song.LibraryPath, song.ArtistDirectory, song.AlbumDirectory, song.FileName);
+if (!System.IO.File.Exists(filePath))
+{
+    return JellyfinNotFound("Audio file not found.");
+}
+```
+
+**Vulnerabilities:**
+- No validation that the constructed path stays within the expected library directory
+- If database values contain path traversal sequences (e.g., `..\..\..\etc\passwd`), files outside the library could be accessed
+- Melodee/OpenSubsonic streaming endpoints likely have the same issue
+
+While the database query filters by `Library.Path`, an attacker could:
+- Inject malicious data directly into the database (SQL injection or compromised admin account)
+- Exploit a data migration or import vulnerability to modify path fields
+- Use social engineering to convince an admin to upload malformed library paths
+
+#### Action Items
+1. **Add Path Validation**: Implement path validation before serving files:
+   ```csharp
+   var filePath = Path.Combine(song.LibraryPath, song.ArtistDirectory, song.AlbumDirectory, song.FileName);
+   var fullPath = Path.GetFullPath(filePath);
+
+   // Verify the file is within the expected library directory
+   if (!fullPath.StartsWith(Path.GetFullPath(song.LibraryPath), StringComparison.OrdinalIgnoreCase))
+   {
+       Logger.LogWarning("Path traversal attempt detected: {FilePath} from Library: {LibraryPath}", fullPath, song.LibraryPath);
+       return JellyfinForbidden("Invalid file path.");
+   }
+   ```
+2. **Apply to All Streaming Endpoints**: Update all audio streaming endpoints:
+   - `Jellyfin/AudioController.cs`
+   - `OpenSubsonic/MediaRetrievalController.cs` (stream/download methods)
+   - Any Melodee native API streaming endpoints
+3. **Database Constraints**: Add database constraints or validation to prevent path traversal sequences in Artist/Album/FileName fields:
+   - Validate on insert/update that paths don't contain `..`, `//`, or other suspicious patterns
+   - Consider storing paths as relative to library root and validating at access time
+4. **Security Testing**: Add security tests to verify path traversal attempts are blocked:
+   ```csharp
+   [Fact]
+   public async Task StreamAudioWithPathTraversal_ShouldReturn403()
+   {
+       // Test with malicious path data
+   }
+   ```
+
+---
+
+### [022] Large Jellyfin ItemsController Violates SRP
+- **Agent**: opencode
+- **Date**: 2026-01-04
+- **Risk Level**: **Medium**
+- **Status**: Open
+
+#### Concerns
+`Jellyfin/ItemsController.cs` is 1,090 lines of code, making it difficult to maintain and test. The controller handles multiple responsibilities:
+- Item retrieval by ID and query parameters
+- InstantMix and SimilarItems generation
+- Complex mapping logic for Artist/Album/Song to Jellyfin DTOs
+- Multiple endpoint variations (search, browse, recommendations)
+
+This is similar to the OpenSubsonicApiService god class issue (Finding #001).
+
+#### Action Items
+1. **Extract Mapping Logic**: Move all mapping methods (MapArtist, MapAlbum, MapSong) to a dedicated `JellyfinMapper` class or use AutoMapper
+2. **Create Specialized Services**: Extract business logic into services:
+   - `JellyfinItemsQueryService`: Handle search, filtering, and pagination
+   - `JellyfinRecommendationsService`: Handle InstantMix and SimilarItems algorithms
+   - `JellyfinItemMapperService`: Handle DTO transformation
+3. **Controller Simplification**: Reduce controller to thin API layer:
+   ```csharp
+   [HttpGet("{itemId}")]
+   public async Task<IActionResult> GetItemAsync(string itemId, CancellationToken cancellationToken)
+   {
+       var user = await AuthenticateJellyfinAsync(cancellationToken);
+       if (user == null) return JellyfinUnauthorized();
+
+       var result = await _itemsQueryService.GetItemAsync(itemId, user, cancellationToken);
+       return result.Match<IActionResult>(
+           data => Ok(data),
+           error => error switch
+           {
+               NotFoundError => JellyfinNotFound(error.Message),
+               _ => JellyfinBadRequest(error.Message)
+           });
+   }
+   ```
+4. **Test Coverage**: With extracted services, unit tests can target business logic without requiring full HTTP context
+
+---
+
+### [023] Missing ConfigureAwait(false) in Some Controller Async Calls
+- **Agent**: opencode
+- **Date**: 2026-01-04
+- **Risk Level**: **Low**
+- **Status**: Open
+
+#### Concerns
+Inconsistency in async patterns across controllers. Most controller code properly uses `ConfigureAwait(false)`, but some methods don't. While ASP.NET Core controller execution is always on a synchronization context, consistent use of `ConfigureAwait(false)` is a best practice for:
+- Performance (avoids unnecessary thread marshalling)
+- Clarity (indicates the method doesn't need the synchronization context)
+- Future-proofing (if code is moved to background services)
+
+Examples found with 100+ uses in controllers, but gaps exist in some areas.
+
+#### Action Items
+1. **Audit and Standardize**: Review all controller methods and ensure all `await` calls use `.ConfigureAwait(false)` where appropriate
+2. **Code Style Guide**: Document the async/await pattern for the team:
+   - Controllers/API: Always use `ConfigureAwait(false)` (already on sync context, but for consistency)
+   - Blazor Components: Use `ConfigureAwait(false)` for non-UI-critical operations
+   - Background Services: Always use `ConfigureAwait(false)`
+3. **Consider Analyzer**: Add a Roslyn analyzer like `Microsoft.CodeAnalysis.NetAnalyzers` to detect missing ConfigureAwait calls
+
+---
+
+### [024] Incomplete Error Handling in Blazor Components
+- **Agent**: opencode
+- **Date**: 2026-01-04
+- **Risk Level**: **Medium**
+- **Status**: Open
+
+#### Concerns
+Building on Finding #014 (Error Handling in Razor Components), additional analysis reveals:
+- **Login.razor** has extensive error handling (good example)
+- **AlbumDetail.razor**, **ArtistDetail.razor**, and other data pages lack comprehensive error handling
+- API calls in `@code` blocks often lack try-catch
+- No global error boundary for unhandled component exceptions
+- Exception information may not be logged when components fail silently
+
+#### Action Items
+1. **Wrap All API Calls**: Ensure all service calls in `@code` blocks have try-catch:
+   ```csharp
+   private async Task LoadAlbumDataAsync()
+   {
+       try
+       {
+           _isLoading = true;
+           var result = await AlbumService.GetByApiKeyAsync(_apiKey);
+           if (!result.IsSuccess || result.Data == null)
+           {
+               NotificationService.Notify(NotificationSeverity.Error, "Error", "Album not found");
+               NavigationManager.NavigateTo("/data/albums");
+               return;
+           }
+           _album = result.Data;
+       }
+       catch (Exception ex)
+       {
+           Logger.LogError(ex, "Failed to load album {ApiKey}", _apiKey);
+           NotificationService.Notify(NotificationSeverity.Error, "Error", "Failed to load album data");
+       }
+       finally
+       {
+           _isLoading = false;
+       }
+   }
+   ```
+2. **Add Global Error Boundary**: Implement a custom ErrorBoundary component at the application root:
+   ```razor
+   <ErrorBoundary OnErrorAsync="HandleErrorAsync">
+       <ChildContent>
+           <Router AppAssembly="@typeof(App).Assembly">
+               ...
+           </Router>
+       </ChildContent>
+       <ErrorContent>
+           <div class="error-fallback">
+               <h3>Something went wrong</h3>
+               <p>@_errorMessage</p>
+               <button @onclick="Reload">Reload</button>
+           </div>
+       </ErrorContent>
+   </ErrorBoundary>
+   ```
+3. **User-Friendly Messages**: Translate technical errors to user-friendly messages using LocalizationService
+4. **Error Logging**: Ensure all caught exceptions are logged to Serilog with context (page, user, operation)
+
+---
+
+### [025] Missing Anti-Forgery Validation on State-Changing Endpoints
+- **Agent**: opencode
+- **Date**: 2026-01-04
+- **Risk Level**: **Medium**
+- **Status**: Open
+
+#### Concerns
+While anti-forgery is configured in Program.cs (lines 185-189), there's no visible application of `[AutoValidateAntiforgeryToken]` or `[ValidateAntiForgeryToken]` on state-changing API endpoints. This could expose:
+- POST/PUT/DELETE requests to CSRF attacks
+- OpenSubsonic endpoints (which use query params for auth) may be particularly vulnerable
+- API endpoints called from Blazor UI might bypass CSRF checks if using cookie authentication
+
+#### Action Items
+1. **Apply Anti-Forgery Attributes**: Add validation to all state-changing endpoints:
+   ```csharp
+   [HttpPost]
+   [ValidateAntiForgeryToken] // or [AutoValidateAntiforgeryToken] at controller level
+   public async Task<IActionResult> CreateAlbum([FromBody] CreateAlbumRequest request)
+   {
+       // ...
+   }
+   ```
+2. **Exclude Stateless APIs**: Configure anti-forgery to exclude stateless APIs:
+   ```csharp
+   builder.Services.AddAntiforgery(options =>
+   {
+       options.HeaderName = "X-CSRF-TOKEN";
+       // Exclude APIs that don't use cookie auth
+       options.SuppressXFrameOptionsHeader = false;
+   });
+   ```
+3. **Configure for OpenSubsonic/Jellyfin**: These APIs use custom authentication, so anti-forgery doesn't apply. Ensure they're excluded from validation.
+4. **Testing**: Add CSRF tests to verify endpoints reject requests without valid anti-forgery tokens
+
+---
+
+### [026] Inconsistent Response Headers and Security Headers
+- **Agent**: opencode
+- **Date**: 2026-01-04
+- **Risk Level**: **Low**
+- **Status**: Open
+
+#### Concerns
+Security headers are applied inconsistently across the application:
+- **Static files** (Program.cs:527): Full CSP, X-Content-Type-Options, X-Frame-Options
+- **API responses**: Applied via middleware (Program.cs:766-772), but may not cover all paths
+- **OpenSubsonic responses**: Headers set in Controller.OnActionExecuting (lines 60-64), but may be incomplete
+- **Jellyfin responses**: No global header configuration visible
+
+This inconsistency could lead to:
+- Some endpoints missing important security headers
+- Different security postures across APIs
+- Confusion for security audits
+
+#### Action Items
+1. **Centralized Header Middleware**: Create a dedicated middleware for security headers:
+   ```csharp
+   public class SecurityHeadersMiddleware
+   {
+       public async Task InvokeAsync(HttpContext context, RequestDelegate next)
+       {
+           context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+           context.Response.Headers["X-Frame-Options"] = "SAMEORIGIN";
+           context.Response.Headers["X-XSS-Protection"] = "1; mode=block";
+           context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+           context.Response.Headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
+
+           await next(context);
+       }
+   }
+   ```
+2. **Apply Globally**: Register middleware early in the pipeline (after UseRouting, before UseEndpoints)
+3. **API-Specific Exclusions**: Allow API endpoints to customize or exclude certain headers if needed
+4. **Content Security Policy**: Consider a more specific CSP that allows only necessary sources for the UI and APIs
+
+---
+
+### [027] Missing Request Validation for Jellyfin InstantMix Parameters
+- **Agent**: opencode
+- **Date**: 2026-01-04
+- **Risk Level**: **Medium**
+- **Status**: Open
+
+#### Concerns
+In `Jellyfin/ItemsController.cs`, the `GetInstantMixAsync` method accepts parameters like `limit`, `userId`, etc. with minimal validation:
+- `limit` is clamped but may still accept extreme values before clamping
+- No validation on `userId` format or existence
+- Missing validation on other query parameters
+
+This could lead to:
+- Performance issues with unbounded queries
+- Inconsistent error responses
+- Potential DoS through parameter manipulation
+
+#### Action Items
+1. **Add Parameter Validation**: Apply validation attributes to action parameters:
+   ```csharp
+   [HttpGet("{itemId}/instantmix")]
+   public async Task<IActionResult> GetInstantMixAsync(
+       string itemId,
+       [FromQuery] [Range(1, 100)] int? limit = null,
+       [FromQuery] [Range(1, 100)] int? userId = null,
+       CancellationToken cancellationToken)
+   ```
+2. **Custom Validation Filter**: Create a validation filter that returns JellyfinProblemDetails for validation errors:
+   ```csharp
+   public class JellyfinValidationFilter : IActionFilter
+   {
+       public void OnActionExecuting(ActionExecutingContext context)
+       {
+           if (!context.ModelState.IsValid)
+           {
+               var errors = context.ModelState
+                   .Where(x => x.Value?.Errors.Count > 0)
+                   .ToDictionary(x => x.Key, x => x.Value!.Errors[0].ErrorMessage);
+
+               context.Result = new BadRequestObjectResult(new JellyfinProblemDetails
+               {
+                   Title = "Validation Error",
+                   Detail = string.Join(", ", errors.Values),
+                   ErrorCode = "VALIDATION_ERROR"
+               });
+           }
+       }
+   }
+   ```
+3. **Test Edge Cases**: Add tests for boundary conditions and invalid parameters
 
