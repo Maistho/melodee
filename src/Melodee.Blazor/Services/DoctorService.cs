@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Net.Sockets;
 using Melodee.Common.Constants;
 using Melodee.Common.Data;
 using Melodee.Common.Models;
@@ -183,12 +182,12 @@ public sealed class DoctorService(
         // Run all checks
         checks.Add(await RunConfigurationCheckAsync(cancellationToken));
         checks.Add(await RunDatabaseCheckAsync(cancellationToken));
-        
+
         var (musicBrainzCheck, isMusicBrainzEmpty) = await RunMusicBrainzDbCheckAsync(cancellationToken);
         checks.Add(musicBrainzCheck);
-        
+
         checks.Add(await RunArtistSearchEngineDbCheckAsync(cancellationToken));
-        
+
         var (libraryCheck, libPaths) = await RunLibraryPathsCheckAsync(cancellationToken);
         checks.Add(libraryCheck);
         libraryPaths.AddRange(libPaths);
@@ -763,7 +762,7 @@ public sealed class DoctorService(
         try
         {
             await using var db = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-            
+
             var relevantKeys = new[]
             {
                 SettingRegistry.SearchEngineSpotifyEnabled,
@@ -775,7 +774,7 @@ public sealed class DoctorService(
                 .Where(s => relevantKeys.Contains(s.Key))
                 .ToDictionaryAsync(s => s.Key, s => s.Value, cancellationToken);
 
-            var spotifyEnabled = settings.TryGetValue(SettingRegistry.SearchEngineSpotifyEnabled, out var se) 
+            var spotifyEnabled = settings.TryGetValue(SettingRegistry.SearchEngineSpotifyEnabled, out var se)
                 && bool.TryParse(se, out var seb) && seb;
             var spotifyApiKey = settings.TryGetValue(SettingRegistry.SearchEngineSpotifyApiKey, out var sak) ? sak : "";
             var spotifySecret = settings.TryGetValue(SettingRegistry.SearchEngineSpotifyClientSecret, out var ss) ? ss : "";
@@ -818,7 +817,7 @@ public sealed class DoctorService(
                 try
                 {
                     var root = Path.GetPathRoot(lib.Path) ?? lib.Path;
-                    
+
                     if (checkedRoots.Contains(root))
                     {
                         continue;
@@ -948,15 +947,15 @@ public sealed class DoctorService(
 
             foreach (var (name, enabledKey, apiKeyKey, secretKey) in searchEngineDefinitions)
             {
-                var isEnabled = settings.TryGetValue(enabledKey, out var enabledValue) 
+                var isEnabled = settings.TryGetValue(enabledKey, out var enabledValue)
                     && bool.TryParse(enabledValue, out var eb) && eb;
 
-                var hasApiKey = apiKeyKey != null 
-                    && settings.TryGetValue(apiKeyKey, out var apiKeyValue) 
+                var hasApiKey = apiKeyKey != null
+                    && settings.TryGetValue(apiKeyKey, out var apiKeyValue)
                     && !string.IsNullOrWhiteSpace(apiKeyValue);
 
-                var hasSecret = secretKey == null 
-                    || (settings.TryGetValue(secretKey, out var secretValue) 
+                var hasSecret = secretKey == null
+                    || (settings.TryGetValue(secretKey, out var secretValue)
                         && !string.IsNullOrWhiteSpace(secretValue));
 
                 var isConfigured = hasApiKey && hasSecret;
@@ -1010,7 +1009,7 @@ public sealed class DoctorService(
         try
         {
             await using var db = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-            
+
             var relevantKeys = new[]
             {
                 SettingRegistry.EmailEnabled,
@@ -1022,7 +1021,7 @@ public sealed class DoctorService(
                 .Where(s => relevantKeys.Contains(s.Key))
                 .ToDictionaryAsync(s => s.Key, s => s.Value, cancellationToken);
 
-            var emailEnabled = settings.TryGetValue(SettingRegistry.EmailEnabled, out var ee) 
+            var emailEnabled = settings.TryGetValue(SettingRegistry.EmailEnabled, out var ee)
                 && bool.TryParse(ee, out var eeb) && eeb;
 
             if (!emailEnabled)
@@ -1061,7 +1060,7 @@ public sealed class DoctorService(
                 .Where(s => relevantKeys.Contains(s.Key))
                 .ToDictionaryAsync(s => s.Key, s => s.Value, cancellationToken);
 
-            var emailEnabled = settings.TryGetValue(SettingRegistry.EmailEnabled, out var ee) 
+            var emailEnabled = settings.TryGetValue(SettingRegistry.EmailEnabled, out var ee)
                 && bool.TryParse(ee, out var eeb) && eeb;
 
             if (!emailEnabled)
@@ -1118,12 +1117,12 @@ public sealed class DoctorService(
             // Check multiple configuration sources (supports container, non-container, and .env environments)
             // Priority order: Jwt:Key (appsettings/env) -> MelodeeAuthSettings:Token (appsettings/env) -> MELODEE_AUTH_TOKEN (env/.env)
             var jwtKey = configuration.GetValue<string>("Jwt:Key");
-            
+
             if (string.IsNullOrWhiteSpace(jwtKey))
             {
                 jwtKey = configuration.GetValue<string>("MelodeeAuthSettings:Token");
             }
-            
+
             if (string.IsNullOrWhiteSpace(jwtKey))
             {
                 jwtKey = Environment.GetEnvironmentVariable("MELODEE_AUTH_TOKEN");
@@ -1131,13 +1130,13 @@ public sealed class DoctorService(
 
             if (string.IsNullOrWhiteSpace(jwtKey))
             {
-                return new DoctorCheckResult("JwtTokenStrength", false, 
+                return new DoctorCheckResult("JwtTokenStrength", false,
                     "JWT key is not configured (checked Jwt:Key, MelodeeAuthSettings:Token, and MELODEE_AUTH_TOKEN environment variable)", sw.Elapsed);
             }
 
             if (jwtKey.Length < MinJwtKeyLength)
             {
-                return new DoctorCheckResult("JwtTokenStrength", false, 
+                return new DoctorCheckResult("JwtTokenStrength", false,
                     $"JWT key too short ({jwtKey.Length} chars). Minimum {MinJwtKeyLength} chars required for HMAC-SHA512", sw.Elapsed);
             }
 
@@ -1193,7 +1192,7 @@ public sealed class DoctorService(
         try
         {
             await using var db = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-            
+
             var adminUser = await db.Users
                 .Where(u => u.IsAdmin && u.UserNameNormalized == "ADMIN")
                 .FirstOrDefaultAsync(cancellationToken);
@@ -1230,7 +1229,7 @@ public sealed class DoctorService(
 
             if (adminUser.LastLoginAt == null && adminUser.LastActivityAt == null)
             {
-                return new DoctorCheckResult("AdminPassword", false, 
+                return new DoctorCheckResult("AdminPassword", false,
                     "⚠️ Default admin account has never logged in - consider changing the password", sw.Elapsed);
             }
 

@@ -36,7 +36,7 @@ public sealed record DoctorCheckResults
     public required IReadOnlyList<EnvironmentVariableInfo> EnvironmentVariables { get; init; }
     public required IReadOnlyList<DiskSpaceInfo> DiskSpaceInfo { get; init; }
     public required IReadOnlyList<SearchEngineApiKeyInfo> SearchEngineApiKeys { get; init; }
-    
+
     public bool HasIssues => Checks.Any(c => !c.Success);
     public bool IsMusicBrainzEmpty { get; init; }
 }

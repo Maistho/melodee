@@ -72,6 +72,75 @@
     /// </summary>
     protected string FormatNumber(decimal number, string? format = null) => LocalizationService.FormatNumber(number, format);
 
+    /// <summary>
+    /// Mapping of statistic titles to localization keys.
+    /// Used by LocalizeStatisticTitle to translate StatisticsService results.
+    /// </summary>
+    private static readonly Dictionary<string, string> StatisticTitleToKeyMap = new(StringComparer.OrdinalIgnoreCase)
+    {
+        { "Albums", "Statistic.Albums" },
+        { "Artists", "Statistic.Artists" },
+        { "Contributors", "Statistic.Contributors" },
+        { "Genres", "Statistic.Genres" },
+        { "Libraries", "Statistic.Libraries" },
+        { "Playlists", "Statistic.Playlists" },
+        { "Radio Stations", "Statistic.RadioStations" },
+        { "Shares", "Statistic.Shares" },
+        { "Songs", "Statistic.Songs" },
+        { "Songs: Played count", "Statistic.SongsPlayedCount" },
+        { "Users", "Statistic.Users" },
+        { "Users: Favorited artists", "Statistic.UsersFavoritedArtists" },
+        { "Users: Favorited albums", "Statistic.UsersFavoritedAlbums" },
+        { "Users: Favorited songs", "Statistic.UsersFavoritedSongs" },
+        { "Users: Rated songs", "Statistic.UsersRatedSongs" },
+        { "Total: Song Mb", "Statistic.TotalSongMb" },
+        { "Total: Song Duration", "Statistic.TotalSongDuration" },
+        { "Your Favorite songs", "Statistic.YourFavoriteSongs" },
+        { "Your Rated songs", "Statistic.YourRatedSongs" },
+        { "Your Favorite albums", "Statistic.YourFavoriteAlbums" },
+        { "Your Favorite artists", "Statistic.YourFavoriteArtists" },
+        { "Total plays", "Statistic.TotalPlays" },
+        { "Favorites: Songs", "Statistic.FavoritesSongs" },
+        { "Favorites: Albums", "Statistic.FavoritesAlbums" },
+        { "Favorites: Artists", "Statistic.FavoritesArtists" },
+        { "Rated Songs", "Statistic.RatedSongs" },
+        { "Artists missing images", "Statistic.ArtistsMissingImages" },
+        { "Albums missing images", "Statistic.AlbumsMissingImages" },
+        { "Songs missing images", "Statistic.SongsMissingImages" }
+    };
+
+    /// <summary>
+    /// Localize a statistic title from StatisticsService.
+    /// Maps English statistic titles to localized versions.
+    /// </summary>
+    /// <param name="title">The English statistic title from StatisticsService</param>
+    /// <returns>Localized statistic title, or the original title if no mapping exists</returns>
+    protected string LocalizeStatisticTitle(string title)
+    {
+        if (StatisticTitleToKeyMap.TryGetValue(title, out var key))
+        {
+            return L(key);
+        }
+        return title;
+    }
+
+    /// <summary>
+    /// Localized text for RadzenDataGrid when there are no records.
+    /// Use: EmptyText="@GridEmptyText"
+    /// </summary>
+    protected string GridEmptyText => L("Grid.NoRecordsToDisplay");
+
+    /// <summary>
+    /// Localized paging summary format for RadzenDataGrid.
+    /// Use: PagingSummaryFormat="@GridPagingSummaryFormat"
+    /// </summary>
+    protected string GridPagingSummaryFormat => L("Message.DisplayingPage");
+
+    /// <summary>
+    /// Localized page size text for RadzenDataGrid.
+    /// Use: PageSizeText="@GridPageSizeText"
+    /// </summary>
+    protected string GridPageSizeText => L("Grid.ItemsPerPage");
 
     protected async Task PlayAction(string dialogTitle, List<SongDataInfo> songs)
     {

@@ -116,7 +116,7 @@
                     <RadzenStack Gap="0.25rem">
                         <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem">
                             <RadzenIcon Icon="@stat.Icon" Style="font-size: 1.25rem;"/>
-                            <RadzenText TextStyle="TextStyle.Caption">@stat.Title</RadzenText>
+                            <RadzenText TextStyle="TextStyle.Caption">@LocalizeStatisticTitle(stat.Title)</RadzenText>
                         </RadzenStack>
                         <RadzenText TextStyle="TextStyle.H5">
                             @if (stat.Type == StatisticType.Count)
@@ -372,7 +372,7 @@
                         {
                             <RadzenCard Variant="Variant.Outlined" Style="min-width: 140px; flex: 1;">
                                 <RadzenStack Gap="0.25rem" AlignItems="AlignItems.Center">
-                                    <RadzenText TextStyle="TextStyle.Caption">@stat.Title</RadzenText>
+                                    <RadzenText TextStyle="TextStyle.Caption">@LocalizeStatisticTitle(stat.Title)</RadzenText>
                                     <RadzenText TextStyle="TextStyle.H6">@stat.Data</RadzenText>
                                 </RadzenStack>
                             </RadzenCard>

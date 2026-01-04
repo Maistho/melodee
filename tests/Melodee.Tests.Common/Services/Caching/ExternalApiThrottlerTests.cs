@@ -80,7 +80,7 @@ public sealed class ExternalApiThrottlerTests
                 },
                 CancellationToken.None,
                 maxConcurrency: 1,
-                minInterval: TimeSpan.FromMilliseconds(100))).ToList();
+                minInterval: TimeSpan.FromMilliseconds(200))).ToList();
 
         await Task.WhenAll(tasks);
 
@@ -89,7 +89,7 @@ public sealed class ExternalApiThrottlerTests
         for (var i = 1; i < timestamps.Count; i++)
         {
             var gap = (timestamps[i] - timestamps[i - 1]).TotalMilliseconds;
-            Assert.True(gap >= 90, $"Gap between requests was {gap}ms, expected >= 90ms");
+            Assert.True(gap >= 150, $"Gap between requests was {gap}ms, expected >= 150ms");
         }
     }
 

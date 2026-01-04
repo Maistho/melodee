@@ -20,7 +20,7 @@
             <RadzenColumn Size="12" SizeMD="3" SizeLG="2">
                 <RadzenCard>
                     <RadzenStack Gap="0.25rem">
-                        <RadzenText TextStyle="TextStyle.Overline">@kpi.Title</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Overline">@LocalizeStatisticTitle(kpi.Title)</RadzenText>
                         <RadzenText TextStyle="TextStyle.H5">@kpi.Data</RadzenText>
                     </RadzenStack>
                 </RadzenCard>
@@ -37,7 +37,7 @@
                     <RadzenBadge BadgeStyle="BadgeStyle.Info" Shade="Shade.Dark" Style="min-width: 200px;">
                         <RadzenIcon Icon="@statistic.Icon"/>
                         <div style="width:120px;display:inline-block;text-transform:none;text-align:left;">
-                            @($"{statistic.Title}")
+                            @LocalizeStatisticTitle(statistic.Title)
                         </div>
                         <div style="width:100px;display:inline-block;text-align:right;" title="@statistic.Message">
                             @if (statistic.Type == StatisticType.Count)

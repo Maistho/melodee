@@ -62,7 +62,9 @@
             PagerHorizontalAlign="HorizontalAlign.Center"
             ShowPagingSummary="true"
             PageSizeOptions="@PageSizeOptions"
-            PagingSummaryFormat="@ViewConstants.PagingSummaryFormat"
+            PagingSummaryFormat="@GridPagingSummaryFormat"
+            PageSizeText="@GridPageSizeText"
+            EmptyText="@GridEmptyText"
             ColumnWidth="200px"
             SelectionMode="@(AuthService.IsAdmin ? DataGridSelectionMode.Multiple : DataGridSelectionMode.Single)"
             @bind-Value="@_selectedCharts">

@@ -47,7 +47,7 @@
                             <RadzenIcon Icon="@statistic.Icon"/>
                             <RadzenIcon Icon="filter_alt"/>
                             <div style="width:120px;display:inline-block;text-transform:none;text-align:left;">
-                                @($"{statistic.Title}")
+                                @LocalizeStatisticTitle(statistic.Title)
                             </div>
                             <div style="width:100px;display:inline-block;text-align:right;" title="@statistic.Message">
                                 @if (statistic.Type == StatisticType.Count)
@@ -108,14 +108,16 @@
             PagerHorizontalAlign="HorizontalAlign.Center"
             ShowPagingSummary="true"
             PageSizeOptions="@PageSizeOptions"
+            PageSizeText="@GridPageSizeText"
+            EmptyText="@GridEmptyText"
             ColumnWidth="200px"
             SelectionMode="DataGridSelectionMode.Multiple"
             @bind-Value="@_selectedSongs">
             <PagingSummaryTemplate>
                 <RadzenIcon Icon="database"
                             Style="color: var(--rz-primary); font-size: var(--rz-pager-summary-font-size);"/>
-                Displaying
-                page @context.CurrentPage of @context.NumberOfPages <b>(total @context.TotalCount records)</b>
+                @L("Grid.DisplayingPage")
+                @context.CurrentPage @L("Grid.OfPages") @context.NumberOfPages <b>(@L("Grid.TotalRecords", context.TotalCount))</b>
             </PagingSummaryTemplate>
             <Columns>
                 <RadzenDataGridColumn Width="60px" Sortable="false" Filterable="false">

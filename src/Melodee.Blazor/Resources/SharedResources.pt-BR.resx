@@ -4467,4 +4467,100 @@
   <data name="Common.Songs" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Songs</value>
   </data>
+  <data name="Statistic.Albums" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Albums</value>
+  </data>
+  <data name="Statistic.Artists" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Artists</value>
+  </data>
+  <data name="Statistic.Contributors" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Contributors</value>
+  </data>
+  <data name="Statistic.Genres" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Genres</value>
+  </data>
+  <data name="Statistic.Libraries" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Libraries</value>
+  </data>
+  <data name="Statistic.Playlists" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Playlists</value>
+  </data>
+  <data name="Statistic.RadioStations" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Radio Stations</value>
+  </data>
+  <data name="Statistic.Shares" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Shares</value>
+  </data>
+  <data name="Statistic.Songs" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Songs</value>
+  </data>
+  <data name="Statistic.SongsPlayedCount" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Songs: Played count</value>
+  </data>
+  <data name="Statistic.Users" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Users</value>
+  </data>
+  <data name="Statistic.UsersFavoritedArtists" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Users: Favorited artists</value>
+  </data>
+  <data name="Statistic.UsersFavoritedAlbums" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Users: Favorited albums</value>
+  </data>
+  <data name="Statistic.UsersFavoritedSongs" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Users: Favorited songs</value>
+  </data>
+  <data name="Statistic.UsersRatedSongs" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Users: Rated songs</value>
+  </data>
+  <data name="Statistic.TotalSongMb" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Total: Song Mb</value>
+  </data>
+  <data name="Statistic.TotalSongDuration" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Total: Song Duration</value>
+  </data>
+  <data name="Statistic.YourFavoriteSongs" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Your Favorite songs</value>
+  </data>
+  <data name="Statistic.YourRatedSongs" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Your Rated songs</value>
+  </data>
+  <data name="Statistic.YourFavoriteAlbums" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Your Favorite albums</value>
+  </data>
+  <data name="Statistic.YourFavoriteArtists" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Your Favorite artists</value>
+  </data>
+  <data name="Statistic.TotalPlays" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Total plays</value>
+  </data>
+  <data name="Statistic.FavoritesSongs" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Favorites: Songs</value>
+  </data>
+  <data name="Statistic.FavoritesAlbums" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Favorites: Albums</value>
+  </data>
+  <data name="Statistic.FavoritesArtists" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Favorites: Artists</value>
+  </data>
+  <data name="Statistic.RatedSongs" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Rated Songs</value>
+  </data>
+  <data name="Statistic.ArtistsMissingImages" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Artists missing images</value>
+  </data>
+  <data name="Statistic.AlbumsMissingImages" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Albums missing images</value>
+  </data>
+  <data name="Statistic.SongsMissingImages" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Songs missing images</value>
+  </data>
+  <data name="Grid.DisplayingPage" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Displaying page</value>
+  </data>
+  <data name="Grid.OfPages" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] of</value>
+  </data>
+  <data name="Grid.TotalRecords" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] total {0} records</value>
+  </data>
 </root>

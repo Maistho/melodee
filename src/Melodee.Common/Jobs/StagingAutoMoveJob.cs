@@ -163,13 +163,13 @@ public class StagingAutoMoveJob(
             if (nextJobExists)
             {
                 Logger.Debug("[{JobName}] Triggering next job in chain: {NextJob}", nameof(StagingAutoMoveJob), nextJobKey.Name);
-                
+
                 var jobDataMap = new JobDataMap();
                 if (context.MergedJobDataMap.GetBoolean(MelodeeJobExecutionContext.ChainOnComplete))
                 {
                     jobDataMap.Put(MelodeeJobExecutionContext.ChainOnComplete, true);
                 }
-                
+
                 await scheduler.TriggerJob(nextJobKey, jobDataMap, context.CancellationToken).ConfigureAwait(false);
             }
             else

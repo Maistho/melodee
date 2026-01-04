@@ -122,7 +122,7 @@ public abstract class MusicBrainzRepositoryBase(ILogger logger, IMelodeeConfigur
 
         // Phase 1: Load and process artist data (artists, aliases, links)
         progressCallback?.Invoke("Loading Artist Data", 0, 6, "Loading artist file...");
-        
+
         using (Operation.At(LogEventLevel.Debug).Time("MusicBrainzRepository: Loaded artists"))
         {
             LoadedArtists = LoadDataFromFileAsync(Path.Combine(storagePath, "staging/mbdump/artist"), parts =>
@@ -282,7 +282,7 @@ public abstract class MusicBrainzRepositoryBase(ILogger logger, IMelodeeConfigur
 
         // Phase 2: Load and process release/album data
         progressCallback?.Invoke("Loading Album Data", 0, 8, "Loading artist credits...");
-        
+
         using (Operation.At(LogEventLevel.Debug).Time("MusicBrainzRepository: Loaded artist_credit"))
         {
             LoadedArtistCredits = LoadDataFromFileAsync(Path.Combine(storagePath, "staging/mbdump/artist_credit"),

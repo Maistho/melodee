@@ -91,13 +91,13 @@ public class LocalizationService : ILocalizationService
                 _logger.LogWarning("Resource key not found: {Key}", key);
                 return key;
             }
-            
+
             // Check if the value is a placeholder - fall back to English
             if (_placeholderValues.Contains(localizedString.Value))
             {
                 return GetEnglishValue(key);
             }
-            
+
             return localizedString.Value;
         }
         catch (Exception ex)
@@ -116,14 +116,14 @@ public class LocalizationService : ILocalizationService
             {
                 return fallback;
             }
-            
+
             // Check if the value is a placeholder - fall back to English first, then fallback
             if (_placeholderValues.Contains(localizedString.Value))
             {
                 var englishValue = GetEnglishValue(key);
                 return englishValue == key ? fallback : englishValue;
             }
-            
+
             return localizedString.Value;
         }
         catch (Exception ex)
