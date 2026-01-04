@@ -142,6 +142,10 @@ public class LocalizationService : ILocalizationService
         {
             // Expected during prerendering - localStorage not available yet
         }
+        catch (Microsoft.JSInterop.JSDisconnectedException)
+        {
+            // Circuit disconnected - culture will be re-read on reconnect
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error saving culture to local storage");

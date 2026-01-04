@@ -33,6 +33,12 @@ This document serves as a living record of codebase reviews performed by various
 | 025 | 2026-01-04 | Antigravity | Quality | Low | Open | Logging and Observability Improvements |
 | 026 | 2026-01-04 | opencode | Quality | Low | Open | Missing ConfigureAwait(False) in Some Controller Calls |
 | 027 | 2026-01-04 | opencode | Security | Low | Open | Inconsistent Response Headers and Security Headers |
+| 028 | 2026-01-04 | opencode | Architecture | High | Open | Inconsistent API Architecture Patterns Across Three APIs |
+| 029 | 2026-01-04 | opencode | Testing | High | Open | Missing Controller-Level Tests for OpenSubsonic and Limited Jellyfin Coverage |
+| 030 | 2026-01-04 | opencode | Performance | Medium | Open | Database Query Optimization Opportunities |
+| 031 | 2026-01-04 | opencode | Security | Medium | Open | Authentication Pattern Inconsistencies |
+| 032 | 2026-01-04 | opencode | Architecture | Medium | Open | Missing Caching Strategy for Expensive Operations |
+| 033 | 2026-01-04 | opencode | Quality | Low | Open | Inconsistent Error Handling and Response Formatting |
 
 ## 2. Detailed Findings
 

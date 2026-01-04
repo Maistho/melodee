@@ -1115,11 +1115,24 @@ public sealed class DoctorService(
 
         try
         {
-            var jwtKey = configuration.GetValue<string>("Jwt:Key") ?? "";
+            // Check multiple configuration sources (supports container, non-container, and .env environments)
+            // Priority order: Jwt:Key (appsettings/env) -> MelodeeAuthSettings:Token (appsettings/env) -> MELODEE_AUTH_TOKEN (env/.env)
+            var jwtKey = configuration.GetValue<string>("Jwt:Key");
+            
+            if (string.IsNullOrWhiteSpace(jwtKey))
+            {
+                jwtKey = configuration.GetValue<string>("MelodeeAuthSettings:Token");
+            }
+            
+            if (string.IsNullOrWhiteSpace(jwtKey))
+            {
+                jwtKey = Environment.GetEnvironmentVariable("MELODEE_AUTH_TOKEN");
+            }
 
             if (string.IsNullOrWhiteSpace(jwtKey))
             {
-                return new DoctorCheckResult("JwtTokenStrength", false, "JWT key is not configured", sw.Elapsed);
+                return new DoctorCheckResult("JwtTokenStrength", false, 
+                    "JWT key is not configured (checked Jwt:Key, MelodeeAuthSettings:Token, and MELODEE_AUTH_TOKEN environment variable)", sw.Elapsed);
             }
 
             if (jwtKey.Length < MinJwtKeyLength)

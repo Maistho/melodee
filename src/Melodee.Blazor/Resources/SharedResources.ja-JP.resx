@@ -4395,4 +4395,7 @@
   <data name="AdminDoctor.Check.AdminPassword" xml:space="preserve">
     <value>管理者パスワード</value>
   </data>
+  <data name="AdminDoctor.MusicBrainzJobDescription" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Downloads and updates the local MusicBrainz database for artist and album metadata lookups.</value>
+  </data>
 </root>
