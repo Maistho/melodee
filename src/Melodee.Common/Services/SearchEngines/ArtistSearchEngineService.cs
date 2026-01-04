@@ -892,8 +892,12 @@ public class ArtistSearchEngineService(
             var now = DateTime.UtcNow;
             foreach (var artist in selectedArtists)
             {
-                await DoSearchAsync(new ArtistQuery { Name = artist.Name }, null, cancellationToken)
-                    .ConfigureAwait(false);
+                await DoSearchAsync(new ArtistQuery
+                {
+                    Name = artist.Name,
+                    MusicBrainzId = artist.MusicBrainzId?.ToString(),
+                    SpotifyId = artist.SpotifyId
+                }, null, cancellationToken).ConfigureAwait(false);
                 var dbArtist = await scopedContext
                     .Artists
                     .FirstOrDefaultAsync(x => x.Id == artist.Id, cancellationToken)

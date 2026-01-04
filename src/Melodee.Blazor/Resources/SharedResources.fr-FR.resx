@@ -4165,4 +4165,88 @@
   <data name="AdminDoctor.SerilogPathsOk" xml:space="preserve">
     <value>Tous les chemins de journaux sont accessibles</value>
   </data>
+  <data name="AdminDoctor.MusicBrainzDatabaseEmpty" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] MusicBrainz database is empty and needs to be populated</value>
+  </data>
+<data name="AdminDoctor.GenerateMusicBrainzDatabase" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Generate MusicBrainz Local Database</value>
+  </data>
+<data name="AdminDoctor.MusicBrainzJobRunning" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] MusicBrainz Database Update</value>
+  </data>
+<data name="AdminDoctor.JobStarted" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Job started successfully</value>
+  </data>
+<data name="AdminDoctor.JobFailed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to start job</value>
+  </data>
+  <data name="AdminDoctor.Check.DiskSpace" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Disk Space</value>
+  </data>
+  <data name="AdminDoctor.Check.LibraryPathOverlap" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Library Path Overlap</value>
+  </data>
+  <data name="AdminDoctor.Check.SearchEngineApiKeys" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Search Engine API Keys</value>
+  </data>
+  <data name="AdminDoctor.DiskSpace" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Disk Space</value>
+  </data>
+  <data name="AdminDoctor.DiskSpaceCritical" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Critical: Disk space critically low</value>
+  </data>
+  <data name="AdminDoctor.DiskSpaceWarning" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Warning: Disk space is running low</value>
+  </data>
+  <data name="AdminDoctor.DiskSpaceOk" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] All disks have adequate space</value>
+  </data>
+  <data name="AdminDoctor.DiskTotal" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Total</value>
+  </data>
+  <data name="AdminDoctor.DiskAvailable" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Available</value>
+  </data>
+  <data name="AdminDoctor.DiskUsed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Used</value>
+  </data>
+  <data name="AdminDoctor.SearchEngineApiKeys" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Search Engine API Keys</value>
+  </data>
+  <data name="AdminDoctor.SearchEngineApiKeysMissing" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Some enabled search engines are missing API keys</value>
+  </data>
+  <data name="AdminDoctor.SearchEngineApiKeysOk" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] All enabled search engines have API keys configured</value>
+  </data>
+  <data name="AdminDoctor.LibraryPathOverlapDetected" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Library path overlap detected - paths may conflict</value>
+  </data>
+  <data name="AdminDoctor.NoLibraryPathOverlap" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No library path overlaps</value>
+  </data>
+  <data name="AdminDoctor.MissingApiKey" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Missing API Key</value>
+  </data>
+  <data name="AdminDoctor.Enabled" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Enabled</value>
+  </data>
+  <data name="AdminDoctor.Disabled" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Disabled</value>
+  </data>
+  <data name="AdminDoctor.Critical" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Critical</value>
+  </data>
+  <data name="AdminDoctor.Warning" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Warning</value>
+  </data>
+  <data name="AdminDoctor.Ok" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] OK</value>
+  </data>
+  <data name="AdminDoctor.Unknown" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Unknown</value>
+  </data>
+  <data name="Dashboard.IssuesDetected" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Issues detected. Review the Doctor page for details.</value>
+  </data>
 </root>

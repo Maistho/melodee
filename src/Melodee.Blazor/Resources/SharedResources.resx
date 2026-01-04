@@ -4301,4 +4301,88 @@
 <data name="AdminDoctor.SerilogPathsOk" xml:space="preserve">
     <value>All log paths are accessible</value>
   </data>
+<data name="AdminDoctor.MusicBrainzDatabaseEmpty" xml:space="preserve">
+    <value>MusicBrainz database is empty and needs to be populated</value>
+  </data>
+<data name="AdminDoctor.GenerateMusicBrainzDatabase" xml:space="preserve">
+    <value>Generate MusicBrainz Local Database</value>
+  </data>
+<data name="AdminDoctor.MusicBrainzJobRunning" xml:space="preserve">
+    <value>MusicBrainz Database Update</value>
+  </data>
+<data name="AdminDoctor.JobStarted" xml:space="preserve">
+    <value>Job started successfully</value>
+  </data>
+<data name="AdminDoctor.JobFailed" xml:space="preserve">
+    <value>Failed to start job</value>
+  </data>
+<data name="AdminDoctor.Check.DiskSpace" xml:space="preserve">
+    <value>Disk Space</value>
+  </data>
+<data name="AdminDoctor.Check.LibraryPathOverlap" xml:space="preserve">
+    <value>Library Path Overlap</value>
+  </data>
+<data name="AdminDoctor.Check.SearchEngineApiKeys" xml:space="preserve">
+    <value>Search Engine API Keys</value>
+  </data>
+<data name="AdminDoctor.DiskSpace" xml:space="preserve">
+    <value>Disk Space</value>
+  </data>
+<data name="AdminDoctor.DiskSpaceCritical" xml:space="preserve">
+    <value>Critical: Disk space critically low</value>
+  </data>
+<data name="AdminDoctor.DiskSpaceWarning" xml:space="preserve">
+    <value>Warning: Disk space is running low</value>
+  </data>
+<data name="AdminDoctor.DiskSpaceOk" xml:space="preserve">
+    <value>All disks have adequate space</value>
+  </data>
+<data name="AdminDoctor.DiskTotal" xml:space="preserve">
+    <value>Total</value>
+  </data>
+<data name="AdminDoctor.DiskAvailable" xml:space="preserve">
+    <value>Available</value>
+  </data>
+<data name="AdminDoctor.DiskUsed" xml:space="preserve">
+    <value>Used</value>
+  </data>
+<data name="AdminDoctor.SearchEngineApiKeys" xml:space="preserve">
+    <value>Search Engine API Keys</value>
+  </data>
+<data name="AdminDoctor.SearchEngineApiKeysMissing" xml:space="preserve">
+    <value>Some enabled search engines are missing API keys</value>
+  </data>
+<data name="AdminDoctor.SearchEngineApiKeysOk" xml:space="preserve">
+    <value>All enabled search engines have API keys configured</value>
+  </data>
+<data name="AdminDoctor.LibraryPathOverlapDetected" xml:space="preserve">
+    <value>Library path overlap detected - paths may conflict</value>
+  </data>
+<data name="AdminDoctor.NoLibraryPathOverlap" xml:space="preserve">
+    <value>No library path overlaps</value>
+  </data>
+<data name="AdminDoctor.MissingApiKey" xml:space="preserve">
+    <value>Missing API Key</value>
+  </data>
+<data name="AdminDoctor.Enabled" xml:space="preserve">
+    <value>Enabled</value>
+  </data>
+<data name="AdminDoctor.Disabled" xml:space="preserve">
+    <value>Disabled</value>
+  </data>
+<data name="AdminDoctor.Critical" xml:space="preserve">
+    <value>Critical</value>
+  </data>
+<data name="AdminDoctor.Warning" xml:space="preserve">
+    <value>Warning</value>
+  </data>
+<data name="AdminDoctor.Ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
+<data name="AdminDoctor.Unknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+<data name="Dashboard.IssuesDetected" xml:space="preserve">
+    <value>Issues detected. Review the Doctor page for details.</value>
+  </data>
 </root>

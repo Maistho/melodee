@@ -1,5 +1,6 @@
 @page "/"
 
+@using Melodee.Blazor.Security.Extensions
 @using Melodee.Common.Data.Models
 @using Melodee.Common.Enums
 @using Melodee.Common.Models
@@ -17,11 +18,28 @@
 @inject RequestActivityService RequestActivityService
 @inject IMelodeeConfigurationFactory ConfigurationFactory
 @inject NavigationManager NavigationManager
+@inject IDoctorService DoctorService
 
 <PageTitle>@L("Navigation.Dashboard")</PageTitle>
 
 
 <RadzenStack Gap="1rem">
+
+  @* Admin Health Warning Banner *@
+  @if (_showHealthWarning && CurrentUser?.IsAdmin() == true)
+  {
+    <RadzenCard class="rz-background-color-danger-lighter" Style="cursor: pointer;" @onclick="@(() => NavigationManager.NavigateTo("/admin/doctor"))">
+      <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem">
+        <RadzenIcon Icon="health_and_safety" Style="font-size: 2rem; color: var(--rz-danger);"/>
+        <RadzenStack Gap="0" Style="flex: 1;">
+          <RadzenText TextStyle="TextStyle.H6" Style="color: var(--rz-danger-darker); margin: 0;">
+            @L("Dashboard.IssuesDetected")
+          </RadzenText>
+        </RadzenStack>
+        <RadzenIcon Icon="arrow_forward" Style="font-size: 1.5rem; color: var(--rz-danger);"/>
+      </RadzenStack>
+    </RadzenCard>
+  }
 
   @if (_userPins.Length > 0)
   {
@@ -240,6 +258,7 @@
     private TopItemStat[] _recentlyPlayed = [];
     private SongDataInfo[] _recentlyPlayedSongs = [];
     private Request[] _unreadRequests = [];
+    private bool _showHealthWarning;
 
     private short _latestPageSize;
     private LocalDate _rangeStart;
@@ -309,7 +328,19 @@
         var recentlyPlayedTask = StatisticsService.GetUserRecentlyPlayedSongsAsync(userApiKey, 10);
         var unreadRequestsTask = RequestActivityService.GetUnreadRequestsAsync(CurrentUser?.UserId() ?? 0, new PagedRequest { PageSize = 10 });
 
-        await Task.WhenAll(albumLatestTask, artistLatestTask, userTask, kpiTask, playsTask, topSongsTask, recentlyPlayedTask, unreadRequestsTask);
+        // Check system health for admin users
+        Task<bool>? healthCheckTask = null;
+        if (CurrentUser?.IsAdmin() == true)
+        {
+            healthCheckTask = DoctorService.NeedsAttentionAsync();
+        }
+
+        var tasksToAwait = new List<Task> { albumLatestTask, artistLatestTask, userTask, kpiTask, playsTask, topSongsTask, recentlyPlayedTask, unreadRequestsTask };
+        if (healthCheckTask != null)
+        {
+            tasksToAwait.Add(healthCheckTask);
+        }
+        await Task.WhenAll(tasksToAwait);
 
         _latestAlbums = albumLatestTask.Result.Data.ToArray();
         _latestArtists = artistLatestTask.Result.Data.ToArray();
@@ -318,6 +349,7 @@
         _topSongs = topSongsTask.Result.Data ?? [];
         _recentlyPlayed = recentlyPlayedTask.Result.Data ?? [];
         _unreadRequests = unreadRequestsTask.Result.Data.ToArray();
+        _showHealthWarning = healthCheckTask?.Result ?? false;
 
         if (userTask.Result is { IsSuccess: true, Data: not null })
         {

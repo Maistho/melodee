@@ -9,18 +9,19 @@
 @using Melodee.Common.Plugins.SearchEngine.MusicBrainz.Data
 @using Microsoft.Data.Sqlite
 @using Microsoft.EntityFrameworkCore
+@using Quartz
 @using Serilog
 @using Serilog.Core
 @inherits MelodeeComponentBase
 
 @inject IMelodeeConfigurationFactory MelodeeConfigurationFactory
-@inject LibraryService LibraryService
 @inject IDbContextFactory<MelodeeDbContext> DbContextFactory
 @inject IDbContextFactory<MusicBrainzDbContext> MusicBrainzDbContextFactory
-@inject IDbContextFactory<ArtistSearchEngineServiceDbContext> ArtistSearchEngineDbContextFactory
 @inject IConfiguration AppConfiguration
 @inject NotificationService NotificationService
 @inject IWebHostEnvironment WebHostEnvironment
+@inject ISchedulerFactory SchedulerFactory
+@inject IDoctorService DoctorService
 
 @attribute [Authorize(Roles = "Administrator")]
 
@@ -70,6 +71,31 @@
                 </RadzenStack>
             </RadzenStack>
         </RadzenCard>
+
+        @* MusicBrainz Database Action Card - shown when DB is empty *@
+        @if (_isMusicBrainzEmpty)
+        {
+            <RadzenCard class="rz-background-color-warning-lighter">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween" Gap="1rem">
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem">
+                        <RadzenIcon Icon="warning" Style="font-size: 2rem; color: var(--rz-warning);"/>
+                        <RadzenStack Gap="0">
+                            <RadzenText TextStyle="TextStyle.H6" Style="color: var(--rz-warning-darker);">
+                                @L("AdminDoctor.Check.MusicBrainzDatabase")
+                            </RadzenText>
+                            <RadzenText TextStyle="TextStyle.Body2">
+                                @L("AdminDoctor.MusicBrainzDatabaseEmpty")
+                            </RadzenText>
+                        </RadzenStack>
+                    </RadzenStack>
+                    <RadzenButton Icon="download" 
+                                  Text="@L("AdminDoctor.GenerateMusicBrainzDatabase")" 
+                                  ButtonStyle="ButtonStyle.Warning"
+                                  IsBusy="@_isMusicBrainzJobRunning"
+                                  Click="@TriggerMusicBrainzJobAsync"/>
+                </RadzenStack>
+            </RadzenCard>
+        }
 
         @* System Checks *@
         <RadzenCard>
@@ -237,6 +263,74 @@
             </RadzenCard>
         }
 
+        @* Disk Space *@
+        @if (_diskSpaceInfo.Any())
+        {
+            <RadzenCard>
+                <RadzenText TextStyle="TextStyle.H6">
+                    <RadzenIcon Icon="storage" class="rz-me-1"/>
+                    @L("AdminDoctor.DiskSpace")
+                </RadzenText>
+                <RadzenStack Gap="0.5rem" class="rz-mt-2">
+                    @foreach (var disk in _diskSpaceInfo)
+                    {
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" class="rz-p-2 rz-border-radius-1" Style="background: var(--rz-base-background-color); border: 1px solid var(--rz-base-300);">
+                            <RadzenIcon Icon="@GetDiskSpaceIcon(disk.Status)" Style="@disk.StatusStyle"/>
+                            <RadzenStack Gap="0" Style="flex: 1;">
+                                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                                    <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-color);"><strong>@disk.Name</strong></RadzenText>
+                                    <RadzenBadge Text="@disk.Status" Style="@disk.StatusStyle"/>
+                                </RadzenStack>
+                                <RadzenText TextStyle="TextStyle.Caption" Style="font-family: monospace; color: var(--rz-text-secondary-color);">@disk.Path</RadzenText>
+                                <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" class="rz-mt-1">
+                                    <RadzenText TextStyle="TextStyle.Caption">@L("AdminDoctor.DiskTotal"): @FormatBytes(disk.TotalBytes)</RadzenText>
+                                    <RadzenText TextStyle="TextStyle.Caption">@L("AdminDoctor.DiskAvailable"): @FormatBytes(disk.AvailableBytes)</RadzenText>
+                                    <RadzenText TextStyle="TextStyle.Caption">@L("AdminDoctor.DiskUsed"): @disk.UsedPercent.ToString("F1")%</RadzenText>
+                                </RadzenStack>
+                            </RadzenStack>
+                        </RadzenStack>
+                    }
+                </RadzenStack>
+            </RadzenCard>
+        }
+
+        @* Search Engine API Keys *@
+        @if (_searchEngineApiKeys.Any())
+        {
+            <RadzenCard>
+                <RadzenText TextStyle="TextStyle.H6">
+                    <RadzenIcon Icon="vpn_key" class="rz-me-1"/>
+                    @L("AdminDoctor.SearchEngineApiKeys")
+                </RadzenText>
+                <RadzenStack Gap="0.5rem" class="rz-mt-2">
+                    @foreach (var apiKey in _searchEngineApiKeys)
+                    {
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" class="rz-p-2 rz-border-radius-1" Style="background: var(--rz-base-background-color); border: 1px solid var(--rz-base-300);">
+                            <RadzenIcon Icon="@GetApiKeyIcon(apiKey.IsEnabled, apiKey.IsConfigured)" Style="@apiKey.StatusStyle"/>
+                            <RadzenStack Gap="0" Style="flex: 1;">
+                                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                                    <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-color);"><strong>@apiKey.EngineName</strong></RadzenText>
+                                    @if (apiKey.IsEnabled && !apiKey.IsConfigured)
+                                    {
+                                        <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="@L("AdminDoctor.MissingApiKey")"/>
+                                    }
+                                    else if (apiKey.IsEnabled)
+                                    {
+                                        <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="@L("AdminDoctor.Enabled")"/>
+                                    }
+                                    else
+                                    {
+                                        <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="@L("AdminDoctor.Disabled")"/>
+                                    }
+                                </RadzenStack>
+                                <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-secondary-color);">@apiKey.Status</RadzenText>
+                            </RadzenStack>
+                        </RadzenStack>
+                    }
+                </RadzenStack>
+            </RadzenCard>
+        }
+
         @* Environment Variables *@
         <RadzenCard>
             <RadzenText TextStyle="TextStyle.H6">
@@ -266,6 +360,8 @@
     private bool _isLoading = true;
     private bool _allChecksPassed;
     private TimeSpan _totalDuration;
+    private bool _isMusicBrainzEmpty;
+    private bool _isMusicBrainzJobRunning;
 
     private List<CheckResult> _checks = [];
     private List<LibraryPathResult> _libraryPaths = [];
@@ -274,6 +370,8 @@
     private List<ConnectionStringInfo> _connectionStrings = [];
     private List<EnvironmentVariableInfo> _relevantEnvVars = [];
     private List<SerilogLogPathInfo> _serilogLogPaths = [];
+    private List<DiskSpaceInfoLocal> _diskSpaceInfo = [];
+    private List<SearchEngineApiKeyInfoLocal> _searchEngineApiKeys = [];
 
     private static readonly DateTime StartTime = DateTime.UtcNow;
 
@@ -283,9 +381,46 @@
         await RunDiagnosticsAsync();
     }
 
+    private async Task TriggerMusicBrainzJobAsync()
+    {
+        try
+        {
+            _isMusicBrainzJobRunning = true;
+            StateHasChanged();
+
+            var scheduler = await SchedulerFactory.GetScheduler();
+            await scheduler.TriggerJob(JobKeyRegistry.MusicBrainzUpdateDatabaseJobKey);
+
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = L("AdminDoctor.JobStarted"),
+                Detail = L("AdminDoctor.MusicBrainzJobDescription"),
+                Duration = ToastTime * 3
+            });
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "[Doctor] Failed to trigger MusicBrainz update job");
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = L("AdminDoctor.JobFailed"),
+                Detail = ex.Message,
+                Duration = ToastTime
+            });
+        }
+        finally
+        {
+            _isMusicBrainzJobRunning = false;
+            StateHasChanged();
+        }
+    }
+
     private async Task RunDiagnosticsAsync()
     {
         _isLoading = true;
+        _isMusicBrainzEmpty = false;
         StateHasChanged();
 
         var stopwatch = Stopwatch.StartNew();
@@ -297,24 +432,81 @@
         _connectionStrings.Clear();
         _relevantEnvVars.Clear();
         _serilogLogPaths.Clear();
+        _diskSpaceInfo.Clear();
+        _searchEngineApiKeys.Clear();
 
-        // Environment Information
+        // Environment Information (UI-specific, kept local)
         LoadEnvironmentInfo();
 
-        // Connection Strings
-        LoadConnectionStrings();
-
-        // Environment Variables
-        LoadRelevantEnvironmentVariables();
-
-        // Run checks
-        await RunConfigurationCheckAsync();
-        await RunDatabaseCheckAsync();
-        await RunMusicBrainzDbCheckAsync();
-        await RunArtistSearchEngineDbCheckAsync();
-        await RunLibraryPathsCheckAsync();
-        await RunSerilogCheckAsync();
-        await RunConfigurableServicesCheckAsync();
+        // Run all checks via DoctorService
+        var results = await DoctorService.RunAllChecksAsync();
+        
+        // Map results to local types with localized names
+        foreach (var check in results.Checks)
+        {
+            var localizedName = GetLocalizedCheckName(check.Name);
+            var localizedDetails = GetLocalizedCheckDetails(check.Name, check.Details, check.Success);
+            _checks.Add(new CheckResult(localizedName, check.Success, localizedDetails, check.Duration));
+        }
+        
+        // Map library paths with localized details
+        foreach (var path in results.LibraryPaths)
+        {
+            var localizedDetails = GetLibraryPathDetails(path.Exists, path.Writable);
+            _libraryPaths.Add(new LibraryPathResult(path.Name, path.Type, path.Path, path.Exists, path.Writable, localizedDetails));
+        }
+        
+        // Map configurable services
+        foreach (var service in results.ConfigurableServices)
+        {
+            _configurableServices.Add(new ConfigurableServiceResult(service.Category, service.Name, service.SettingKey, service.Enabled));
+        }
+        
+        // Map Serilog log paths
+        foreach (var logPath in results.SerilogLogPaths)
+        {
+            _serilogLogPaths.Add(new SerilogLogPathInfo(logPath.SinkName, logPath.Path, logPath.DirectoryExists, logPath.Writable));
+        }
+        
+        // Map connection strings
+        foreach (var connStr in results.ConnectionStrings)
+        {
+            _connectionStrings.Add(new ConnectionStringInfo(connStr.Name, connStr.MaskedValue, connStr.IsValid, connStr.IsFileBased, connStr.FileExists, connStr.FileWritable, connStr.FilePath));
+        }
+        
+        // Map environment variables
+        foreach (var envVar in results.EnvironmentVariables)
+        {
+            _relevantEnvVars.Add(new EnvironmentVariableInfo(envVar.Name, envVar.MaskedValue, envVar.IsSet));
+        }
+        
+        // Map disk space info
+        foreach (var disk in results.DiskSpaceInfo)
+        {
+            var (status, statusStyle) = disk.Status switch
+            {
+                Blazor.Services.DiskSpaceStatus.Critical => (L("AdminDoctor.Critical"), "color: var(--rz-danger);"),
+                Blazor.Services.DiskSpaceStatus.Warning => (L("AdminDoctor.Warning"), "color: var(--rz-warning);"),
+                Blazor.Services.DiskSpaceStatus.Ok => (L("AdminDoctor.Ok"), "color: var(--rz-success);"),
+                _ => (L("AdminDoctor.Unknown"), "color: var(--rz-secondary);")
+            };
+            _diskSpaceInfo.Add(new DiskSpaceInfoLocal(disk.Name, disk.Path, disk.TotalBytes, disk.AvailableBytes, disk.UsedBytes, disk.UsedPercent, status, statusStyle));
+        }
+        
+        // Map search engine API keys
+        foreach (var apiKey in results.SearchEngineApiKeys)
+        {
+            var statusStyle = (apiKey.IsEnabled, apiKey.IsConfigured) switch
+            {
+                (true, true) => "color: var(--rz-success);",
+                (true, false) => "color: var(--rz-warning);",
+                (false, true) => "color: var(--rz-secondary);",
+                (false, false) => "color: var(--rz-secondary);"
+            };
+            _searchEngineApiKeys.Add(new SearchEngineApiKeyInfoLocal(apiKey.EngineName, apiKey.SettingKey, apiKey.IsEnabled, apiKey.IsConfigured, apiKey.Status, statusStyle));
+        }
+        
+        _isMusicBrainzEmpty = results.IsMusicBrainzEmpty;
 
         stopwatch.Stop();
         _totalDuration = stopwatch.Elapsed;
@@ -322,6 +514,104 @@
 
         _isLoading = false;
         StateHasChanged();
+    }
+    
+    private string GetLocalizedCheckName(string checkName) => checkName switch
+    {
+        "Configuration" => L("AdminDoctor.Check.Configuration"),
+        "PostgresDatabase" => L("AdminDoctor.Check.PostgresDatabase"),
+        "MusicBrainzDatabase" => L("AdminDoctor.Check.MusicBrainzDatabase"),
+        "ArtistSearchEngineDatabase" => L("AdminDoctor.Check.ArtistSearchEngineDatabase"),
+        "LibraryPaths" => L("AdminDoctor.Check.LibraryPaths"),
+        "SerilogLogging" => L("AdminDoctor.Check.SerilogLogging"),
+        "ConfigurableServices" => L("AdminDoctor.Check.ConfigurableServices"),
+        "DiskSpace" => L("AdminDoctor.Check.DiskSpace"),
+        "LibraryPathOverlap" => L("AdminDoctor.Check.LibraryPathOverlap"),
+        "SearchEngineApiKeys" => L("AdminDoctor.Check.SearchEngineApiKeys"),
+        _ => checkName
+    };
+    
+    private string GetLocalizedCheckDetails(string checkName, string details, bool success)
+    {
+        // For MusicBrainz empty state, use localized message
+        if (checkName == "MusicBrainzDatabase" && !success && details.Contains("empty"))
+        {
+            return L("AdminDoctor.MusicBrainzDatabaseEmpty");
+        }
+        
+        // For library path issues
+        if (checkName == "LibraryPaths" && !success)
+        {
+            if (details.Contains("missing") && details.Contains("writable"))
+                return L("AdminDoctor.LibraryPathsMissingAndNotWritable");
+            if (details.Contains("missing"))
+                return L("AdminDoctor.LibraryPathsMissing");
+            if (details.Contains("writable"))
+                return L("AdminDoctor.LibraryPathsNotWritable");
+        }
+        
+        if (checkName == "LibraryPaths" && success)
+        {
+            return L("AdminDoctor.AllLibraryPathsOk");
+        }
+        
+        // For Serilog
+        if (checkName == "SerilogLogging")
+        {
+            if (details.Contains("No file logging"))
+                return L("AdminDoctor.NoFileLoggingConfigured");
+            if (!success)
+                return L("AdminDoctor.SerilogPathIssues");
+            return L("AdminDoctor.SerilogPathsOk");
+        }
+        
+        // For configurable services, format the message
+        if (checkName == "ConfigurableServices" && details.Contains(" of "))
+        {
+            var parts = details.Split(' ');
+            if (parts.Length >= 4 && int.TryParse(parts[0], out var enabled) && int.TryParse(parts[2], out var total))
+            {
+                return L("AdminDoctor.ServicesEnabled", enabled, total);
+            }
+        }
+        
+        // For disk space
+        if (checkName == "DiskSpace")
+        {
+            if (details.Contains("Critical"))
+                return L("AdminDoctor.DiskSpaceCritical");
+            if (details.Contains("Warning"))
+                return L("AdminDoctor.DiskSpaceWarning");
+            return L("AdminDoctor.DiskSpaceOk");
+        }
+        
+        // For library path overlap
+        if (checkName == "LibraryPathOverlap")
+        {
+            if (!success)
+                return L("AdminDoctor.LibraryPathOverlapDetected");
+            return L("AdminDoctor.NoLibraryPathOverlap");
+        }
+        
+        // For search engine API keys
+        if (checkName == "SearchEngineApiKeys")
+        {
+            if (!success)
+                return L("AdminDoctor.SearchEngineApiKeysMissing");
+            return L("AdminDoctor.SearchEngineApiKeysOk");
+        }
+        
+        return details;
+    }
+    
+    private string GetLibraryPathDetails(bool exists, bool writable)
+    {
+        return (exists, writable) switch
+        {
+            (false, _) => L("AdminDoctor.PathMissing"),
+            (true, false) => L("AdminDoctor.PathNotWritable"),
+            (true, true) => L("AdminDoctor.PathOk")
+        };
     }
 
     private void LoadEnvironmentInfo()
@@ -341,594 +631,6 @@
             new KeyValuePair<string, string>(L("AdminDoctor.ProcessId"), Environment.ProcessId.ToString()),
             new KeyValuePair<string, string>(L("AdminDoctor.MachineName"), Environment.MachineName)
         ];
-    }
-
-    private void LoadConnectionStrings()
-    {
-        var defaultConnection = AppConfiguration.GetConnectionString("DefaultConnection");
-        var musicBrainzConnection = AppConfiguration.GetConnectionString("MusicBrainzConnection");
-        var artistSearchEngineConnection = AppConfiguration.GetConnectionString("ArtistSearchEngineConnection");
-
-        _connectionStrings =
-        [
-            new ConnectionStringInfo(
-                "DefaultConnection",
-                MaskConnectionString(defaultConnection),
-                !string.IsNullOrWhiteSpace(defaultConnection),
-                false, null, null, null),
-            CreateSqliteConnectionInfo("MusicBrainzConnection", musicBrainzConnection),
-            CreateSqliteConnectionInfo("ArtistSearchEngineConnection", artistSearchEngineConnection)
-        ];
-    }
-
-    private ConnectionStringInfo CreateSqliteConnectionInfo(string name, string? connectionString)
-    {
-        if (string.IsNullOrWhiteSpace(connectionString))
-        {
-            return new ConnectionStringInfo(name, "(not configured)", false, true, null, null, null);
-        }
-
-        try
-        {
-            var builder = new SqliteConnectionStringBuilder(connectionString);
-            var dataSource = builder.DataSource;
-
-            if (string.IsNullOrWhiteSpace(dataSource))
-            {
-                return new ConnectionStringInfo(name, connectionString, false, true, null, null, null);
-            }
-
-            var fileExists = File.Exists(dataSource);
-            var directoryPath = Path.GetDirectoryName(dataSource);
-            var directoryExists = !string.IsNullOrEmpty(directoryPath) && Directory.Exists(directoryPath);
-
-            // Check writability: if file exists, check file; otherwise check directory
-            bool? writable = null;
-            if (fileExists)
-            {
-                writable = IsFileWritable(dataSource);
-            }
-            else if (directoryExists)
-            {
-                writable = IsDirectoryWritable(directoryPath!);
-            }
-
-            return new ConnectionStringInfo(
-                name,
-                MaskSqliteConnectionString(connectionString),
-                !string.IsNullOrWhiteSpace(connectionString),
-                true,
-                fileExists,
-                writable,
-                dataSource);
-        }
-        catch
-        {
-            return new ConnectionStringInfo(name, connectionString, false, true, null, null, null);
-        }
-    }
-
-    private static bool IsFileWritable(string path)
-    {
-        try
-        {
-            using var fs = File.Open(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    private void LoadRelevantEnvironmentVariables()
-    {
-        var relevantVars = new[]
-        {
-            "ASPNETCORE_ENVIRONMENT",
-            "DOTNET_ENVIRONMENT",
-            "ConnectionStrings__DefaultConnection",
-            "ConnectionStrings__MusicBrainzConnection",
-            "ConnectionStrings__ArtistSearchEngineConnection",
-            "MELODEE_STORAGE_PATH",
-            "MELODEE_INBOUND_PATH",
-            "MELODEE_STAGING_PATH",
-            "MELODEE_USER_IMAGES_PATH",
-            "MELODEE_PLAYLISTS_PATH",
-            "MELODEE_TEMPLATES_PATH",
-            "SEARCHENGINE_MUSICBRAINZ_STORAGEPATH",
-            "DOTNET_CLI_HOME",
-            "HOME"
-        };
-
-        foreach (var varName in relevantVars)
-        {
-            var value = Environment.GetEnvironmentVariable(varName);
-            var isSet = !string.IsNullOrEmpty(value);
-            var maskedValue = varName.Contains("Connection", StringComparison.OrdinalIgnoreCase)
-                ? MaskConnectionString(value)
-                : value ?? "";
-
-            _relevantEnvVars.Add(new EnvironmentVariableInfo(varName, maskedValue, isSet));
-        }
-    }
-
-    private async Task RunConfigurationCheckAsync()
-    {
-        var sw = Stopwatch.StartNew();
-        try
-        {
-            var missing = new List<string>();
-
-            if (string.IsNullOrWhiteSpace(AppConfiguration.GetConnectionString("DefaultConnection")))
-                missing.Add("DefaultConnection");
-            if (string.IsNullOrWhiteSpace(AppConfiguration.GetConnectionString("MusicBrainzConnection")))
-                missing.Add("MusicBrainzConnection");
-            if (string.IsNullOrWhiteSpace(AppConfiguration.GetConnectionString("ArtistSearchEngineConnection")))
-                missing.Add("ArtistSearchEngineConnection");
-
-            var success = missing.Count == 0;
-            var details = success
-                ? $"Environment={WebHostEnvironment.EnvironmentName}"
-                : $"Missing: {string.Join(", ", missing)}";
-
-            _checks.Add(new CheckResult(L("AdminDoctor.Check.Configuration"), success, details, sw.Elapsed));
-        }
-        catch (Exception ex)
-        {
-            _checks.Add(new CheckResult(L("AdminDoctor.Check.Configuration"), false, ex.Message, sw.Elapsed));
-        }
-    }
-
-    private async Task RunDatabaseCheckAsync()
-    {
-        var sw = Stopwatch.StartNew();
-        try
-        {
-            await using var db = await DbContextFactory.CreateDbContextAsync();
-            var canConnect = await db.Database.CanConnectAsync();
-            var details = canConnect
-                ? $"OK ({db.Database.ProviderName})"
-                : "Unable to connect";
-
-            _checks.Add(new CheckResult(L("AdminDoctor.Check.PostgresDatabase"), canConnect, details, sw.Elapsed));
-        }
-        catch (Exception ex)
-        {
-            _checks.Add(new CheckResult(L("AdminDoctor.Check.PostgresDatabase"), false, ex.Message, sw.Elapsed));
-        }
-    }
-
-    private async Task RunMusicBrainzDbCheckAsync()
-    {
-        var sw = Stopwatch.StartNew();
-        try
-        {
-            var connectionString = AppConfiguration.GetConnectionString("MusicBrainzConnection") ?? "";
-            var fileInfo = DescribeSqlitePath(connectionString);
-
-            await using var db = await MusicBrainzDbContextFactory.CreateDbContextAsync();
-            var canConnect = await db.Database.CanConnectAsync();
-            var details = canConnect ? $"OK; {fileInfo}" : $"Unable to connect; {fileInfo}";
-
-            _checks.Add(new CheckResult(L("AdminDoctor.Check.MusicBrainzDatabase"), canConnect, details, sw.Elapsed));
-        }
-        catch (Exception ex)
-        {
-            _checks.Add(new CheckResult(L("AdminDoctor.Check.MusicBrainzDatabase"), false, ex.Message, sw.Elapsed));
-        }
-    }
-
-    private async Task RunArtistSearchEngineDbCheckAsync()
-    {
-        var sw = Stopwatch.StartNew();
-        try
-        {
-            var connectionString = AppConfiguration.GetConnectionString("ArtistSearchEngineConnection") ?? "";
-            var fileInfo = DescribeSqlitePath(connectionString);
-
-            await using var db = await ArtistSearchEngineDbContextFactory.CreateDbContextAsync();
-            var canConnect = await db.Database.CanConnectAsync();
-            var details = canConnect ? $"OK; {fileInfo}" : $"Unable to connect; {fileInfo}";
-
-            _checks.Add(new CheckResult(L("AdminDoctor.Check.ArtistSearchEngineDatabase"), canConnect, details, sw.Elapsed));
-        }
-        catch (Exception ex)
-        {
-            _checks.Add(new CheckResult(L("AdminDoctor.Check.ArtistSearchEngineDatabase"), false, ex.Message, sw.Elapsed));
-        }
-    }
-
-    private async Task RunLibraryPathsCheckAsync()
-    {
-        var sw = Stopwatch.StartNew();
-        try
-        {
-            var libs = await LibraryService.ListAsync(new PagedRequest { PageSize = short.MaxValue });
-            if (!libs.IsSuccess)
-            {
-                _checks.Add(new CheckResult(L("AdminDoctor.Check.LibraryPaths"), false, libs.Messages?.FirstOrDefault() ?? "Failed to list libraries", sw.Elapsed));
-                return;
-            }
-
-            foreach (var lib in libs.Data)
-            {
-                var exists = Directory.Exists(lib.Path);
-                var writable = exists && IsDirectoryWritable(lib.Path);
-                var details = GetLibraryPathDetails(exists, writable);
-
-                _libraryPaths.Add(new LibraryPathResult(
-                    lib.Name,
-                    lib.TypeValue.ToString(),
-                    lib.Path,
-                    exists,
-                    writable,
-                    details));
-            }
-
-            var anyMissing = _libraryPaths.Any(l => !l.Exists);
-            var anyNotWritable = _libraryPaths.Any(l => l.Exists && !l.Writable);
-            var hasIssues = anyMissing || anyNotWritable;
-
-            var detailMessage = (anyMissing, anyNotWritable) switch
-            {
-                (true, true) => L("AdminDoctor.LibraryPathsMissingAndNotWritable"),
-                (true, false) => L("AdminDoctor.LibraryPathsMissing"),
-                (false, true) => L("AdminDoctor.LibraryPathsNotWritable"),
-                _ => L("AdminDoctor.AllLibraryPathsOk")
-            };
-
-            _checks.Add(new CheckResult(
-                L("AdminDoctor.Check.LibraryPaths"),
-                !hasIssues,
-                detailMessage,
-                sw.Elapsed));
-        }
-        catch (Exception ex)
-        {
-            _checks.Add(new CheckResult(L("AdminDoctor.Check.LibraryPaths"), false, ex.Message, sw.Elapsed));
-        }
-    }
-
-    private static bool IsDirectoryWritable(string path)
-    {
-        try
-        {
-            var testFile = Path.Combine(path, $".melodee-write-test-{Guid.NewGuid():N}");
-            File.WriteAllText(testFile, "test");
-            File.Delete(testFile);
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    private string GetLibraryPathDetails(bool exists, bool writable)
-    {
-        return (exists, writable) switch
-        {
-            (false, _) => L("AdminDoctor.PathMissing"),
-            (true, false) => L("AdminDoctor.PathNotWritable"),
-            (true, true) => L("AdminDoctor.PathOk")
-        };
-    }
-
-    private Task RunSerilogCheckAsync()
-    {
-        var sw = Stopwatch.StartNew();
-        try
-        {
-            // Try reflection first to get actual configured sinks
-            var filePaths = GetSerilogFilePathsViaReflection();
-
-            // Fall back to config parsing if reflection doesn't find anything
-            if (filePaths.Count == 0)
-            {
-                filePaths = GetSerilogFilePathsFromConfig();
-            }
-
-            foreach (var (sinkName, path) in filePaths)
-            {
-                // The path might be the full file path pattern, get the directory
-                var directoryPath = Path.GetDirectoryName(path);
-
-                // If GetDirectoryName returns empty (e.g., path is just "Logs/log-.clef"),
-                // extract directory from the path directly
-                if (string.IsNullOrEmpty(directoryPath))
-                {
-                    var lastSeparator = path.LastIndexOfAny(['/', '\\']);
-                    if (lastSeparator > 0)
-                    {
-                        directoryPath = path[..lastSeparator];
-                    }
-                }
-
-                if (!string.IsNullOrEmpty(directoryPath))
-                {
-                    // Resolve relative paths
-                    if (!Path.IsPathRooted(directoryPath))
-                    {
-                        directoryPath = Path.GetFullPath(Path.Combine(WebHostEnvironment.ContentRootPath, directoryPath));
-                    }
-
-                    var dirExists = Directory.Exists(directoryPath);
-                    var writable = dirExists && IsDirectoryWritable(directoryPath);
-
-                    _serilogLogPaths.Add(new SerilogLogPathInfo(
-                        sinkName,
-                        directoryPath,
-                        dirExists,
-                        writable));
-                }
-            }
-
-            var hasIssues = _serilogLogPaths.Any(p => !p.DirectoryExists || !p.Writable);
-            var detailMessage = _serilogLogPaths.Count == 0
-                ? L("AdminDoctor.NoFileLoggingConfigured")
-                : hasIssues
-                    ? L("AdminDoctor.SerilogPathIssues")
-                    : L("AdminDoctor.SerilogPathsOk");
-
-            _checks.Add(new CheckResult(
-                L("AdminDoctor.Check.SerilogLogging"),
-                !hasIssues,
-                detailMessage,
-                sw.Elapsed));
-        }
-        catch (Exception ex)
-        {
-            _checks.Add(new CheckResult(L("AdminDoctor.Check.SerilogLogging"), false, ex.Message, sw.Elapsed));
-        }
-
-        return Task.CompletedTask;
-    }
-
-    private List<(string SinkName, string Path)> GetSerilogFilePathsFromConfig()
-    {
-        var results = new List<(string SinkName, string Path)>();
-
-        try
-        {
-            var writeToSection = AppConfiguration.GetSection("Serilog:WriteTo");
-            var sinks = writeToSection.GetChildren().ToList();
-
-            foreach (var sink in sinks)
-            {
-                var sinkName = sink.GetValue<string>("Name") ?? "Unknown";
-
-                // Check for File sink
-                if (sinkName.Equals("File", StringComparison.OrdinalIgnoreCase))
-                {
-                    var path = sink.GetValue<string>("Args:path");
-                    if (!string.IsNullOrWhiteSpace(path))
-                    {
-                        results.Add((sinkName, path));
-                    }
-                }
-            }
-        }
-        catch
-        {
-            // Ignore config parsing errors
-        }
-
-        return results;
-    }
-
-    private static List<(string SinkName, string Path)> GetSerilogFilePathsViaReflection()
-    {
-        var results = new List<(string SinkName, string Path)>();
-
-        try
-        {
-            var logger = Log.Logger;
-            if (logger == null)
-            {
-                return results;
-            }
-
-            // Serilog's Logger wraps sinks in various ways - we need to drill down
-            // The static Log.Logger is typically a Serilog.Core.Logger
-            var sinks = GetSinksFromLogger(logger);
-
-            foreach (var sink in sinks)
-            {
-                var sinkType = sink.GetType();
-                var sinkTypeName = sinkType.Name;
-
-                // Look for file-related sinks (FileSink, RollingFileSink, etc.)
-                if (sinkTypeName.Contains("File", StringComparison.OrdinalIgnoreCase))
-                {
-                    var path = ExtractPathFromSink(sink);
-                    if (!string.IsNullOrEmpty(path))
-                    {
-                        results.Add((sinkTypeName.Replace("Sink", ""), path));
-                    }
-                }
-            }
-        }
-        catch
-        {
-            // If reflection fails, return empty list - we'll show "no file logging configured"
-        }
-
-        return results;
-    }
-
-    private static IEnumerable<ILogEventSink> GetSinksFromLogger(ILogger logger)
-    {
-        var sinks = new List<ILogEventSink>();
-
-        try
-        {
-            var loggerType = logger.GetType();
-
-            // Try to get the _sink field from Logger
-            var sinkField = loggerType.GetField("_sink", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (sinkField?.GetValue(logger) is ILogEventSink rootSink)
-            {
-                CollectSinks(rootSink, sinks);
-            }
-        }
-        catch
-        {
-            // Ignore reflection errors
-        }
-
-        return sinks;
-    }
-
-    private static void CollectSinks(ILogEventSink sink, List<ILogEventSink> collected)
-    {
-        if (sink == null) return;
-
-        var sinkType = sink.GetType();
-        var sinkTypeName = sinkType.Name;
-
-        // Handle aggregate sinks that wrap multiple sinks
-        if (sinkTypeName == "AggregateSink" || sinkTypeName == "SafeAggregateSink")
-        {
-            var sinksField = sinkType.GetField("_sinks", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (sinksField?.GetValue(sink) is IEnumerable<ILogEventSink> innerSinks)
-            {
-                foreach (var innerSink in innerSinks)
-                {
-                    CollectSinks(innerSink, collected);
-                }
-            }
-            return;
-        }
-
-        // Handle SecondaryLoggerSink which wraps another logger
-        if (sinkTypeName == "SecondaryLoggerSink")
-        {
-            var loggerField = sinkType.GetField("_logger", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (loggerField?.GetValue(sink) is ILogger innerLogger)
-            {
-                foreach (var innerSink in GetSinksFromLogger(innerLogger))
-                {
-                    CollectSinks(innerSink, collected);
-                }
-            }
-            return;
-        }
-
-        // Handle RestrictedSink (filtering sink)
-        if (sinkTypeName == "RestrictedSink")
-        {
-            var wrappedField = sinkType.GetField("_sink", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (wrappedField?.GetValue(sink) is ILogEventSink wrappedSink)
-            {
-                CollectSinks(wrappedSink, collected);
-            }
-            return;
-        }
-
-        // This is a leaf sink - add it
-        collected.Add(sink);
-    }
-
-    private static string? ExtractPathFromSink(ILogEventSink sink)
-    {
-        var sinkType = sink.GetType();
-
-        // Common field names for file paths in Serilog file sinks
-        string[] pathFieldNames = ["_path", "_basePath", "_pathRoller", "_roller"];
-
-        foreach (var fieldName in pathFieldNames)
-        {
-            var field = sinkType.GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance);
-            if (field != null)
-            {
-                var value = field.GetValue(sink);
-                if (value is string path)
-                {
-                    return path;
-                }
-
-                // PathRoller contains the path
-                if (value != null && fieldName == "_roller")
-                {
-                    var rollerType = value.GetType();
-                    var logFilePathField = rollerType.GetField("_directory", BindingFlags.NonPublic | BindingFlags.Instance)
-                                          ?? rollerType.GetField("_pathFormat", BindingFlags.NonPublic | BindingFlags.Instance);
-                    if (rollerType.GetProperty("LogFileDirectory") is { } dirProp)
-                    {
-                        if (dirProp.GetValue(value) is string dir)
-                        {
-                            return dir;
-                        }
-                    }
-
-                    if (logFilePathField?.GetValue(value) is string rollerPath)
-                    {
-                        return rollerPath;
-                    }
-                }
-            }
-        }
-
-        // Try properties as well
-        var pathProperty = sinkType.GetProperty("Path", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-        if (pathProperty?.GetValue(sink) is string propPath)
-        {
-            return propPath;
-        }
-
-        return null;
-    }
-
-    private async Task RunConfigurableServicesCheckAsync()
-    {
-        var sw = Stopwatch.StartNew();
-        try
-        {
-            await using var db = await DbContextFactory.CreateDbContextAsync();
-            var settingsDict = await db.Settings
-                .Where(s => s.Key.Contains(".enabled"))
-                .ToDictionaryAsync(s => s.Key, s => s.Value);
-
-            var serviceDefinitions = new (string Category, string Name, string SettingKey)[]
-            {
-                ("Search Engine", "Brave", SettingRegistry.SearchEngineBraveEnabled),
-                ("Search Engine", "Deezer", SettingRegistry.SearchEngineDeezerEnabled),
-                ("Search Engine", "iTunes", SettingRegistry.SearchEngineITunesEnabled),
-                ("Search Engine", "Last.fm", SettingRegistry.SearchEngineLastFmEnabled),
-                ("Search Engine", "MusicBrainz", SettingRegistry.SearchEngineMusicBrainzEnabled),
-                ("Search Engine", "Spotify", SettingRegistry.SearchEngineSpotifyEnabled),
-                ("Search Engine", "Metal API", SettingRegistry.SearchEngineMetalApiEnabled),
-                ("Scrobbling", "Scrobbling", SettingRegistry.ScrobblingEnabled),
-                ("Scrobbling", "Last.fm", SettingRegistry.ScrobblingLastFmEnabled),
-                ("Processing", "Conversion", SettingRegistry.ConversionEnabled),
-                ("Processing", "Magic", SettingRegistry.MagicEnabled),
-                ("Processing", "Scripting", SettingRegistry.ScriptingEnabled),
-                ("Plugins", "CueSheet", SettingRegistry.PluginEnabledCueSheet),
-                ("Plugins", "M3U", SettingRegistry.PluginEnabledM3u),
-                ("Plugins", "NFO", SettingRegistry.PluginEnabledNfo),
-                ("Plugins", "Simple File Verification", SettingRegistry.PluginEnabledSimpleFileVerification),
-                ("System", "Email", SettingRegistry.EmailEnabled),
-            };
-
-            foreach (var (category, name, settingKey) in serviceDefinitions)
-            {
-                var enabled = settingsDict.TryGetValue(settingKey, out var value)
-                    && bool.TryParse(value, out var b) && b;
-                _configurableServices.Add(new ConfigurableServiceResult(category, name, settingKey, enabled));
-            }
-
-            var enabledCount = _configurableServices.Count(s => s.Enabled);
-            _checks.Add(new CheckResult(
-                L("AdminDoctor.Check.ConfigurableServices"),
-                true,
-                L("AdminDoctor.ServicesEnabled", enabledCount, _configurableServices.Count),
-                sw.Elapsed));
-        }
-        catch (Exception ex)
-        {
-            _checks.Add(new CheckResult(L("AdminDoctor.Check.ConfigurableServices"), false, ex.Message, sw.Elapsed));
-        }
     }
 
     private async Task CopyJsonToClipboard()
@@ -959,49 +661,6 @@
         });
     }
 
-    private static string MaskConnectionString(string? connectionString)
-    {
-        if (string.IsNullOrWhiteSpace(connectionString))
-            return "(not configured)";
-
-        // Mask password in connection string
-        var masked = System.Text.RegularExpressions.Regex.Replace(
-            connectionString,
-            @"(Password|Pwd)\s*=\s*[^;]+",
-            "$1=*****",
-            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-
-        return masked;
-    }
-
-    private static string MaskSqliteConnectionString(string? connectionString)
-    {
-        if (string.IsNullOrWhiteSpace(connectionString))
-            return "(not configured)";
-
-        return connectionString;
-    }
-
-    private static string DescribeSqlitePath(string connectionString)
-    {
-        try
-        {
-            var builder = new SqliteConnectionStringBuilder(connectionString);
-            if (string.IsNullOrWhiteSpace(builder.DataSource))
-            {
-                return "DataSource=(empty)";
-            }
-
-            var fullPath = builder.DataSource;
-            var exists = File.Exists(fullPath);
-            return $"DataSource={fullPath}; Exists={exists}";
-        }
-        catch
-        {
-            return "DataSource=(unparseable)";
-        }
-    }
-
     private static string FormatUptime(TimeSpan uptime)
     {
         if (uptime.TotalDays >= 1)
@@ -1019,5 +678,35 @@
     private sealed record ConnectionStringInfo(string Name, string MaskedValue, bool IsValid, bool IsFileBased, bool? FileExists, bool? FileWritable, string? FilePath);
     private sealed record EnvironmentVariableInfo(string Name, string MaskedValue, bool IsSet);
     private sealed record SerilogLogPathInfo(string SinkName, string Path, bool DirectoryExists, bool Writable);
+    private sealed record DiskSpaceInfoLocal(string Name, string Path, long TotalBytes, long AvailableBytes, long UsedBytes, double UsedPercent, string Status, string StatusStyle);
+    private sealed record SearchEngineApiKeyInfoLocal(string EngineName, string SettingKey, bool IsEnabled, bool IsConfigured, string Status, string StatusStyle);
+
+    private static string GetDiskSpaceIcon(string status) => status switch
+    {
+        _ when status.Contains("Critical", StringComparison.OrdinalIgnoreCase) => "error",
+        _ when status.Contains("Warning", StringComparison.OrdinalIgnoreCase) => "warning",
+        _ when status.Contains("Ok", StringComparison.OrdinalIgnoreCase) => "check_circle",
+        _ => "help"
+    };
+    
+    private static string GetApiKeyIcon(bool isEnabled, bool isConfigured) => (isEnabled, isConfigured) switch
+    {
+        (true, true) => "check_circle",
+        (true, false) => "warning",
+        (false, _) => "radio_button_unchecked"
+    };
+    
+    private static string FormatBytes(long bytes)
+    {
+        string[] suffixes = ["B", "KB", "MB", "GB", "TB", "PB"];
+        var counter = 0;
+        var number = (double)bytes;
+        while (Math.Round(number / 1024) >= 1)
+        {
+            number /= 1024;
+            counter++;
+        }
+        return $"{number:F2} {suffixes[counter]}";
+    }
 }
 

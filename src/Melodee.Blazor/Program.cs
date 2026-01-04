@@ -277,6 +277,9 @@ builder.Services.AddScoped<ILocalizationService, LocalizationService>();
 builder.Services.AddScoped<Melodee.Blazor.Services.Email.IEmailSender, Melodee.Blazor.Services.Email.SmtpEmailSender>();
 builder.Services.AddScoped<Melodee.Blazor.Services.Email.IEmailTemplateService, Melodee.Blazor.Services.Email.EmailTemplateService>();
 
+// Doctor service for health checks and diagnostics
+builder.Services.AddScoped<IDoctorService, DoctorService>();
+
 // Rate limiting service for Blazor UI
 builder.Services.AddSingleton<IRateLimiterService, RateLimiterService>();
 builder.Services.AddMemoryCache();

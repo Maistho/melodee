@@ -8,6 +8,12 @@ echo "Fixing volume permissions..."
 chown -R melodee:melodee /app/storage /app/inbound /app/staging /app/user-images /app/playlists /app/templates /app/Logs 2>/dev/null || true
 chmod -R 755 /app/storage /app/inbound /app/staging /app/user-images /app/playlists /app/templates 2>/dev/null || true
 
+# Fix DataProtection keys directory permissions
+echo "Fixing DataProtection keys directory permissions..."
+mkdir -p /home/melodee/.aspnet/DataProtection-Keys
+chown -R melodee:melodee /home/melodee/.aspnet
+chmod -R 755 /home/melodee/.aspnet
+
 # Create required subdirectories for search engines
 echo "Creating search engine directories..."
 mkdir -p /app/storage/_search-engines/musicbrainz
