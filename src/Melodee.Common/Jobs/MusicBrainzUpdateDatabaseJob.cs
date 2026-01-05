@@ -400,10 +400,10 @@ public class MusicBrainzUpdateDatabaseJob(
                 var progressMessage = message ?? $"{phase}: {current:N0} / {total:N0} ({percentComplete:F1}%)";
                 progress?.UpdateProgress(progressMessage);
 
-                // Log at debug level periodically
-                if (current % 10000 == 0 || current == total)
+                // Log at info level periodically to be visible in production logs
+                if (current % 50000 == 0 || current == total)
                 {
-                    Logger.Debug("[{JobName}] Import progress - {Phase}: {Current:N0}/{Total:N0} ({Percent:F1}%)",
+                    Logger.Information("[{JobName}] Import progress - {Phase}: {Current:N0}/{Total:N0} ({Percent:F1}%)",
                         nameof(MusicBrainzUpdateDatabaseJob), phase, current, total, percentComplete);
                 }
             }
