@@ -16,11 +16,12 @@ public class Program
             Console.WriteLine("==================");
             Console.WriteLine();
             Console.WriteLine("Available benchmark categories:");
-            Console.WriteLine("  streaming  - API streaming performance benchmarks");
-            Console.WriteLine("  database   - Database query performance benchmarks");
-            Console.WriteLine("  cache      - Cache performance benchmarks");
-            Console.WriteLine("  collection - Collection operation benchmarks");
-            Console.WriteLine("  all        - Run all benchmarks");
+            Console.WriteLine("  streaming    - API streaming performance benchmarks");
+            Console.WriteLine("  database     - Database query performance benchmarks");
+            Console.WriteLine("  cache        - Cache performance benchmarks");
+            Console.WriteLine("  collection   - Collection operation benchmarks");
+            Console.WriteLine("  musicbrainz  - MusicBrainz import performance benchmarks");
+            Console.WriteLine("  all          - Run all benchmarks");
             Console.WriteLine();
             Console.WriteLine("Usage: dotnet run -c Release --project benchmarks/Melodee.Benchmarks [category] [-- BenchmarkDotNet args]");
             Console.WriteLine("Example: dotnet run -c Release --project benchmarks/Melodee.Benchmarks streaming");
@@ -48,15 +49,19 @@ public class Program
             case "collection":
                 BenchmarkRunner.Run<CollectionOperationBenchmarks>(config);
                 break;
+            case "musicbrainz":
+                BenchmarkRunner.Run<MusicBrainzImportBenchmarks>(config);
+                break;
             case "all":
                 BenchmarkRunner.Run<StreamingBenchmarks>(config);
                 BenchmarkRunner.Run<DatabaseQueryBenchmarks>(config);
                 BenchmarkRunner.Run<CacheBenchmarks>(config);
                 BenchmarkRunner.Run<CollectionOperationBenchmarks>(config);
+                BenchmarkRunner.Run<MusicBrainzImportBenchmarks>(config);
                 break;
             default:
                 Console.WriteLine($"Unknown benchmark category: {category}");
-                Console.WriteLine("Available categories: streaming, database, cache, collection, all");
+                Console.WriteLine("Available categories: streaming, database, cache, collection, musicbrainz, all");
                 break;
         }
     }

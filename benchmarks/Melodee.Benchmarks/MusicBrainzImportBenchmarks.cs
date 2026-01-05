@@ -10,10 +10,10 @@ namespace Melodee.Benchmarks;
 /// <summary>
 /// BenchmarkDotNet benchmarks for MusicBrainz import performance.
 /// Measures import time, memory allocation, and throughput for different data sizes.
-/// 
-/// Run with: dotnet run -c Release -- --filter "*MusicBrainzImport*"
+///
+/// Run with: dotnet run -c Release --project benchmarks/Melodee.Benchmarks/Melodee.Benchmarks.csproj musicbrainz
 /// </summary>
-[SimpleJob(RuntimeMoniker.Net90)]
+[SimpleJob(RuntimeMoniker.Net10_0)]
 [MemoryDiagnoser]
 [ThreadingDiagnoser]
 public class MusicBrainzImportBenchmarks

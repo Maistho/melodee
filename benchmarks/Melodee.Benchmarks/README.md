@@ -161,7 +161,7 @@ Benchmark results should be compared against baseline measurements. The project 
 ## Adding New Benchmarks
 
 1. Create a new benchmark class implementing the appropriate patterns
-2. Add the `[SimpleJob(RuntimeMoniker.Net90)]`, `[MemoryDiagnoser]`, and `[ThreadingDiagnoser]` attributes
+2. Add the `[SimpleJob(RuntimeMoniker.Net10_0)]`, `[MemoryDiagnoser]`, and `[ThreadingDiagnoser]` attributes
 3. Include setup/cleanup methods for proper resource management
 4. Add meaningful parameter variations with `[Params()]`
 5. Update the Program.cs switch statement to include the new benchmark category
