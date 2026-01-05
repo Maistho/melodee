@@ -4447,4 +4447,52 @@
   <data name="AdminDoctor.Storage" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Storage</value>
   </data>
+  <data name="AdminJobs.QuartzVersion" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Quartz Version</value>
+  </data>
+  <data name="AdminJobs.ThreadPool" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Thread Pool</value>
+  </data>
+  <data name="AdminJobs.Threads" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Threads</value>
+  </data>
+  <data name="AdminJobs.JobStore" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Job Store</value>
+  </data>
+  <data name="AdminJobs.Persistent" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Persistent</value>
+  </data>
+  <data name="AdminJobs.Clustered" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Clustered</value>
+  </data>
+  <data name="AdminJobs.JobsExecutedSession" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Jobs Executed (Session)</value>
+  </data>
+  <data name="AdminJobs.StandbyMode" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Standby Mode</value>
+  </data>
+  <data name="Status.Issues" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Issues Detected</value>
+  </data>
+  <data name="Status.Checking" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Checking...</value>
+  </data>
+  <data name="AdminDoctor.Check.Scheduler" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Background Job Scheduler</value>
+  </data>
+  <data name="AdminDoctor.Scheduler" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Scheduler</value>
+  </data>
+  <data name="AdminDoctor.Check.FFmpeg" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Media Conversion (FFmpeg)</value>
+  </data>
+  <data name="AdminDoctor.Check.Memory" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] System Memory</value>
+  </data>
+  <data name="AdminDoctor.Check.TempDirectory" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Temporary Directory</value>
+  </data>
+  <data name="AdminDoctor.Check.DatabaseLatency" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Database Latency</value>
+  </data>
 </root>

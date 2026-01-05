@@ -7,6 +7,7 @@ using Melodee.Common.Plugins.SearchEngine.MusicBrainz.Data;
 using Melodee.Common.Services;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Quartz;
 
 namespace Melodee.Blazor.Services;
 
@@ -20,7 +21,8 @@ public sealed class DoctorService(
     IDbContextFactory<ArtistSearchEngineServiceDbContext> artistSearchEngineDbContextFactory,
     LibraryService libraryService,
     IWebHostEnvironment webHostEnvironment,
-    IHttpContextAccessor httpContextAccessor) : IDoctorService
+    IHttpContextAccessor httpContextAccessor,
+    ISchedulerFactory schedulerFactory) : IDoctorService
 {
     private static readonly string[] RequiredConnectionStrings =
     [
@@ -37,6 +39,9 @@ public sealed class DoctorService(
     private const long DiskSpaceWarningThresholdBytes = 10L * 1024 * 1024 * 1024; // 10 GB
     private const long DiskSpaceCriticalThresholdBytes = 1L * 1024 * 1024 * 1024; // 1 GB
     private const int MinJwtKeyLength = 64; // For HMAC-SHA512
+    private const long MemoryPressureWarningBytes = 500L * 1024 * 1024; // 500 MB
+    private const long MemoryPressureCriticalBytes = 100L * 1024 * 1024; // 100 MB available
+    private const int JobStalenessHours = 48; // Jobs should run within this period
 
     public async Task<bool> NeedsAttentionAsync(CancellationToken cancellationToken = default)
     {
@@ -110,6 +115,24 @@ public sealed class DoctorService(
 
         // Check for default admin password
         if (await HasDefaultAdminPasswordAsync(cancellationToken))
+        {
+            return true;
+        }
+
+        // Check scheduler status
+        if (await HasSchedulerIssuesAsync(cancellationToken))
+        {
+            return true;
+        }
+
+        // Check FFmpeg availability (critical for media conversion)
+        if (HasFFmpegIssues())
+        {
+            return true;
+        }
+
+        // Check memory pressure
+        if (HasMemoryPressureIssues())
         {
             return true;
         }
@@ -217,6 +240,15 @@ public sealed class DoctorService(
         checks.Add(RunJwtTokenStrengthCheck());
         checks.Add(RunHttpsCheck());
         checks.Add(await RunDefaultAdminPasswordCheckAsync(cancellationToken));
+
+        // Scheduler and background jobs check
+        checks.Add(await RunSchedulerCheckAsync(cancellationToken));
+
+        // Infrastructure checks
+        checks.Add(RunFFmpegCheck());
+        checks.Add(RunMemoryCheck());
+        checks.Add(RunTempDirectoryCheck());
+        checks.Add(await RunDatabaseLatencyCheckAsync(cancellationToken));
 
         // Gather connection string info
         connectionStrings.AddRange(GatherConnectionStringInfo());
@@ -805,28 +837,25 @@ public sealed class DoctorService(
                 return (new DoctorCheckResult("DiskSpace", false, "Failed to list libraries", sw.Elapsed), diskInfo);
             }
 
-            var checkedRoots = new HashSet<string>();
-
             foreach (var lib in libs.Data)
             {
                 if (!Directory.Exists(lib.Path))
                 {
+                    diskInfo.Add(new DiskSpaceInfo(
+                        lib.Name,
+                        lib.Path,
+                        0,
+                        0,
+                        0,
+                        0,
+                        DiskSpaceStatus.Unknown));
                     continue;
                 }
 
                 try
                 {
-                    var root = Path.GetPathRoot(lib.Path) ?? lib.Path;
-
-                    if (checkedRoots.Contains(root))
-                    {
-                        continue;
-                    }
-                    checkedRoots.Add(root);
-
-                    var driveInfo = new DriveInfo(root);
-                    var availableBytes = driveInfo.AvailableFreeSpace;
-                    var totalBytes = driveInfo.TotalSize;
+                    // Get disk space for the actual path (handles symlinks correctly)
+                    var (totalBytes, availableBytes) = GetDiskSpaceForPath(lib.Path);
                     var usedBytes = totalBytes - availableBytes;
                     var usedPercent = totalBytes > 0 ? (double)usedBytes / totalBytes * 100 : 0;
 
@@ -839,7 +868,7 @@ public sealed class DoctorService(
 
                     diskInfo.Add(new DiskSpaceInfo(
                         lib.Name,
-                        root,
+                        lib.Path,
                         totalBytes,
                         availableBytes,
                         usedBytes,
@@ -875,6 +904,72 @@ public sealed class DoctorService(
         {
             return (new DoctorCheckResult("DiskSpace", false, ex.Message, sw.Elapsed), diskInfo);
         }
+    }
+
+    private static (long TotalBytes, long AvailableBytes) GetDiskSpaceForPath(string path)
+    {
+        // Resolve the actual path (follows symlinks)
+        var resolvedPath = Path.GetFullPath(path);
+        
+        if (OperatingSystem.IsWindows())
+        {
+            var root = Path.GetPathRoot(resolvedPath);
+            if (!string.IsNullOrEmpty(root))
+            {
+                var driveInfo = new DriveInfo(root);
+                return (driveInfo.TotalSize, driveInfo.AvailableFreeSpace);
+            }
+        }
+        else
+        {
+            // On Linux/macOS, use statfs via DriveInfo on the actual mount point
+            // DriveInfo works with any path, not just mount points
+            try
+            {
+                // Find the drive that contains this path
+                var drives = DriveInfo.GetDrives();
+                DriveInfo? bestMatch = null;
+                var bestMatchLength = 0;
+                
+                foreach (var drive in drives)
+                {
+                    try
+                    {
+                        if (!drive.IsReady)
+                        {
+                            continue;
+                        }
+                        
+                        var mountPoint = drive.Name;
+                        if (resolvedPath.StartsWith(mountPoint, StringComparison.Ordinal) && mountPoint.Length > bestMatchLength)
+                        {
+                            bestMatch = drive;
+                            bestMatchLength = mountPoint.Length;
+                        }
+                    }
+                    catch
+                    {
+                        // Skip inaccessible drives
+                    }
+                }
+                
+                if (bestMatch != null)
+                {
+                    return (bestMatch.TotalSize, bestMatch.AvailableFreeSpace);
+                }
+            }
+            catch
+            {
+                // Fall through to simple approach
+            }
+            
+            // Fallback: use root
+            var rootPath = Path.GetPathRoot(resolvedPath) ?? "/";
+            var rootDrive = new DriveInfo(rootPath);
+            return (rootDrive.TotalSize, rootDrive.AvailableFreeSpace);
+        }
+        
+        return (0, 0);
     }
 
     private async Task<(DoctorCheckResult Check, List<string> Overlaps)> RunLibraryPathOverlapCheckAsync(CancellationToken cancellationToken)
@@ -1238,6 +1333,309 @@ public sealed class DoctorService(
         catch (Exception ex)
         {
             return new DoctorCheckResult("AdminPassword", false, ex.Message, sw.Elapsed);
+        }
+    }
+
+    private async Task<bool> HasSchedulerIssuesAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var scheduler = await schedulerFactory.GetScheduler(cancellationToken);
+
+            if (scheduler.IsShutdown)
+            {
+                return true;
+            }
+
+            if (!scheduler.IsStarted)
+            {
+                return true;
+            }
+
+            return false;
+        }
+        catch
+        {
+            return true;
+        }
+    }
+
+    private async Task<DoctorCheckResult> RunSchedulerCheckAsync(CancellationToken cancellationToken)
+    {
+        var sw = Stopwatch.StartNew();
+
+        try
+        {
+            var scheduler = await schedulerFactory.GetScheduler(cancellationToken);
+            var metadata = await scheduler.GetMetaData(cancellationToken);
+
+            if (scheduler.IsShutdown)
+            {
+                return new DoctorCheckResult("Scheduler", false, "Scheduler is shut down", sw.Elapsed);
+            }
+
+            if (!scheduler.IsStarted)
+            {
+                return new DoctorCheckResult("Scheduler", false, "Scheduler is not started", sw.Elapsed);
+            }
+
+            if (scheduler.InStandbyMode)
+            {
+                return new DoctorCheckResult("Scheduler", false, "Scheduler is in standby mode (paused)", sw.Elapsed);
+            }
+
+            var jobGroups = await scheduler.GetJobGroupNames(cancellationToken);
+            var totalJobs = 0;
+
+            foreach (var group in jobGroups)
+            {
+                var jobKeys = await scheduler.GetJobKeys(Quartz.Impl.Matchers.GroupMatcher<JobKey>.GroupEquals(group), cancellationToken);
+                totalJobs += jobKeys.Count;
+            }
+
+            var runningSince = metadata.RunningSince?.LocalDateTime.ToString("yyyy-MM-dd HH:mm") ?? "Unknown";
+            var jobsExecuted = metadata.NumberOfJobsExecuted;
+
+            var details = $"Running since {runningSince}; {totalJobs} jobs registered; {jobsExecuted} executions this session";
+
+            return new DoctorCheckResult("Scheduler", true, details, sw.Elapsed);
+        }
+        catch (Exception ex)
+        {
+            return new DoctorCheckResult("Scheduler", false, $"Scheduler error: {ex.Message}", sw.Elapsed);
+        }
+    }
+
+    private static bool HasFFmpegIssues()
+    {
+        try
+        {
+            var ffmpegPath = FindExecutable("ffmpeg");
+            return string.IsNullOrEmpty(ffmpegPath);
+        }
+        catch
+        {
+            return true;
+        }
+    }
+
+    private DoctorCheckResult RunFFmpegCheck()
+    {
+        var sw = Stopwatch.StartNew();
+
+        try
+        {
+            var ffmpegPath = FindExecutable("ffmpeg");
+            var ffprobePath = FindExecutable("ffprobe");
+
+            if (string.IsNullOrEmpty(ffmpegPath))
+            {
+                return new DoctorCheckResult("FFmpeg", false, "FFmpeg not found in PATH", sw.Elapsed);
+            }
+
+            string? version = null;
+            try
+            {
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = ffmpegPath,
+                    Arguments = "-version",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                using var process = Process.Start(startInfo);
+                if (process != null)
+                {
+                    var output = process.StandardOutput.ReadLine();
+                    process.WaitForExit(5000);
+
+                    if (!string.IsNullOrEmpty(output) && output.StartsWith("ffmpeg version"))
+                    {
+                        var parts = output.Split(' ');
+                        if (parts.Length >= 3)
+                        {
+                            version = parts[2];
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Version detection failed, but FFmpeg exists
+            }
+
+            var hasFFprobe = !string.IsNullOrEmpty(ffprobePath);
+            var details = version != null
+                ? $"FFmpeg {version}; FFprobe: {(hasFFprobe ? "OK" : "Missing")}"
+                : $"FFmpeg found; FFprobe: {(hasFFprobe ? "OK" : "Missing")}";
+
+            return new DoctorCheckResult("FFmpeg", true, details, sw.Elapsed);
+        }
+        catch (Exception ex)
+        {
+            return new DoctorCheckResult("FFmpeg", false, $"FFmpeg check failed: {ex.Message}", sw.Elapsed);
+        }
+    }
+
+    private static string? FindExecutable(string name)
+    {
+        var isWindows = OperatingSystem.IsWindows();
+        var pathVar = Environment.GetEnvironmentVariable("PATH") ?? "";
+        var pathSeparator = isWindows ? ';' : ':';
+        var extensions = isWindows ? new[] { ".exe", ".cmd", ".bat", "" } : new[] { "" };
+
+        foreach (var dir in pathVar.Split(pathSeparator))
+        {
+            if (string.IsNullOrEmpty(dir))
+            {
+                continue;
+            }
+
+            foreach (var ext in extensions)
+            {
+                var fullPath = Path.Combine(dir, name + ext);
+                if (File.Exists(fullPath))
+                {
+                    return fullPath;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private static bool HasMemoryPressureIssues()
+    {
+        try
+        {
+            var gcInfo = GC.GetGCMemoryInfo();
+            var availableMemory = gcInfo.TotalAvailableMemoryBytes - gcInfo.MemoryLoadBytes;
+            return availableMemory < MemoryPressureCriticalBytes;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private DoctorCheckResult RunMemoryCheck()
+    {
+        var sw = Stopwatch.StartNew();
+
+        try
+        {
+            var gcInfo = GC.GetGCMemoryInfo();
+            var totalMemory = gcInfo.TotalAvailableMemoryBytes;
+            var usedMemory = gcInfo.MemoryLoadBytes;
+            var availableMemory = totalMemory - usedMemory;
+            var usedPercent = totalMemory > 0 ? (double)usedMemory / totalMemory * 100 : 0;
+
+            var processMemory = Process.GetCurrentProcess().WorkingSet64;
+            var gen0Collections = GC.CollectionCount(0);
+            var gen1Collections = GC.CollectionCount(1);
+            var gen2Collections = GC.CollectionCount(2);
+
+            var status = availableMemory switch
+            {
+                < MemoryPressureCriticalBytes => "Critical",
+                < MemoryPressureWarningBytes => "Warning",
+                _ => "OK"
+            };
+
+            var isHealthy = availableMemory >= MemoryPressureCriticalBytes;
+
+            var details = $"Process: {FormatFileSize(processMemory)}; " +
+                         $"System: {usedPercent:F1}% used ({FormatFileSize(availableMemory)} available); " +
+                         $"GC: {gen0Collections}/{gen1Collections}/{gen2Collections} (Gen0/1/2)";
+
+            return new DoctorCheckResult("Memory", isHealthy, details, sw.Elapsed);
+        }
+        catch (Exception ex)
+        {
+            return new DoctorCheckResult("Memory", true, $"Memory check unavailable: {ex.Message}", sw.Elapsed);
+        }
+    }
+
+    private DoctorCheckResult RunTempDirectoryCheck()
+    {
+        var sw = Stopwatch.StartNew();
+
+        try
+        {
+            var tempPath = Path.GetTempPath();
+            var exists = Directory.Exists(tempPath);
+
+            if (!exists)
+            {
+                return new DoctorCheckResult("TempDirectory", false, $"Temp directory does not exist: {tempPath}", sw.Elapsed);
+            }
+
+            var writable = IsDirectoryWritable(tempPath);
+            if (!writable)
+            {
+                return new DoctorCheckResult("TempDirectory", false, $"Temp directory not writable: {tempPath}", sw.Elapsed);
+            }
+
+            long? availableSpace = null;
+            try
+            {
+                var root = Path.GetPathRoot(tempPath);
+                if (!string.IsNullOrEmpty(root))
+                {
+                    var driveInfo = new DriveInfo(root);
+                    availableSpace = driveInfo.AvailableFreeSpace;
+                }
+            }
+            catch
+            {
+                // Ignore drive info errors
+            }
+
+            var spaceInfo = availableSpace.HasValue
+                ? $"; {FormatFileSize(availableSpace.Value)} available"
+                : "";
+
+            return new DoctorCheckResult("TempDirectory", true, $"OK: {tempPath}{spaceInfo}", sw.Elapsed);
+        }
+        catch (Exception ex)
+        {
+            return new DoctorCheckResult("TempDirectory", false, $"Temp directory check failed: {ex.Message}", sw.Elapsed);
+        }
+    }
+
+    private async Task<DoctorCheckResult> RunDatabaseLatencyCheckAsync(CancellationToken cancellationToken)
+    {
+        var sw = Stopwatch.StartNew();
+
+        try
+        {
+            var queryStart = Stopwatch.StartNew();
+
+            await using var db = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+            // Simple query to measure latency
+            _ = await db.Settings.Take(1).CountAsync(cancellationToken);
+
+            queryStart.Stop();
+            var latencyMs = queryStart.Elapsed.TotalMilliseconds;
+
+            var status = latencyMs switch
+            {
+                > 1000 => "Slow",
+                > 500 => "Warning",
+                _ => "OK"
+            };
+
+            var isHealthy = latencyMs <= 1000;
+
+            return new DoctorCheckResult("DatabaseLatency", isHealthy, $"Query latency: {latencyMs:F1}ms ({status})", sw.Elapsed);
+        }
+        catch (Exception ex)
+        {
+            return new DoctorCheckResult("DatabaseLatency", false, $"Latency check failed: {ex.Message}", sw.Elapsed);
         }
     }
 }

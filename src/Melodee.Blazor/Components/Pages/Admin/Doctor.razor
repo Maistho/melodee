@@ -114,7 +114,7 @@
                 <RadzenIcon Icon="checklist" class="rz-me-1"/>
                 @L("AdminDoctor.SystemChecks")
             </RadzenText>
-            <RadzenDataGrid Data="@_checks" TItem="CheckResult" AllowSorting="false" class="rz-mt-2">
+            <RadzenDataGrid Data="@_checks.OrderBy(c => GetLocalizedCheckName(c.Name))" TItem="CheckResult" AllowSorting="false" class="rz-mt-2">
                 <Columns>
                     <RadzenDataGridColumn Title="@L("AdminDoctor.Status")" Width="80px">
                         <Template Context="check">
@@ -140,7 +140,7 @@
                 @L("AdminDoctor.EnvironmentInfo")
             </RadzenText>
             <RadzenRow Gap="1rem" class="rz-mt-2">
-                @foreach (var env in _environmentInfo)
+                @foreach (var env in _environmentInfo.OrderBy(e => e.Key))
                 {
                     <RadzenColumn Size="12" SizeMD="6" SizeLG="4">
                         <RadzenStack Gap="0.25rem" class="rz-p-2 rz-border-radius-1" Style="background: var(--rz-base-background-color); border: 1px solid var(--rz-base-300);">
@@ -160,7 +160,7 @@
                     <RadzenIcon Icon="folder" class="rz-me-1"/>
                     @L("AdminDoctor.LibraryPaths")
                 </RadzenText>
-                <RadzenDataGrid Data="@_libraryPaths" TItem="LibraryPathResult" AllowSorting="true" class="rz-mt-2">
+                <RadzenDataGrid Data="@_libraryPaths.OrderBy(l => l.Name)" TItem="LibraryPathResult" AllowSorting="true" class="rz-mt-2">
                     <Columns>
                         <RadzenDataGridColumn Title="@L("AdminDoctor.Exists")" Width="70px">
                             <Template Context="lib">
@@ -232,7 +232,7 @@
                 @L("AdminDoctor.ConnectionStrings")
             </RadzenText>
             <RadzenStack Gap="0.5rem" class="rz-mt-2">
-                @foreach (var cs in _connectionStrings)
+                @foreach (var cs in _connectionStrings.OrderBy(c => c.Name))
                 {
                     <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" class="rz-p-2 rz-border-radius-1" Style="background: var(--rz-base-background-color); border: 1px solid var(--rz-base-300);">
                         <RadzenIcon Icon="@(cs.IsValid ? "check_circle" : "cancel")"
@@ -268,7 +268,7 @@
                     @L("AdminDoctor.SerilogLogPaths")
                 </RadzenText>
                 <RadzenStack Gap="0.5rem" class="rz-mt-2">
-                    @foreach (var logPath in _serilogLogPaths)
+                    @foreach (var logPath in _serilogLogPaths.OrderBy(l => l.SinkName))
                     {
                         <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" class="rz-p-2 rz-border-radius-1" Style="background: var(--rz-base-background-color); border: 1px solid var(--rz-base-300);">
                             <RadzenIcon Icon="@(logPath.DirectoryExists && logPath.Writable ? "check_circle" : "cancel")"
@@ -301,7 +301,7 @@
                     @L("AdminDoctor.SearchEngineApiKeys")
                 </RadzenText>
                 <RadzenStack Gap="0.5rem" class="rz-mt-2">
-                    @foreach (var apiKey in _searchEngineApiKeys)
+                    @foreach (var apiKey in _searchEngineApiKeys.OrderBy(k => k.EngineName))
                     {
                         <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center" class="rz-p-2 rz-border-radius-1" Style="background: var(--rz-base-background-color); border: 1px solid var(--rz-base-300);">
                             <RadzenIcon Icon="@GetApiKeyIcon(apiKey.IsEnabled, apiKey.IsConfigured)" Style="@apiKey.StatusStyle"/>
@@ -338,7 +338,7 @@
                     @L("AdminDoctor.RelevantEnvVars")
                 </RadzenText>
                 <RadzenStack Gap="0.5rem" class="rz-mt-2">
-                    @foreach (var envVar in _relevantEnvVars)
+                    @foreach (var envVar in _relevantEnvVars.OrderBy(e => e.Name))
                     {
                         <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" class="rz-p-2 rz-border-radius-1" Style="background: var(--rz-base-background-color); border: 1px solid var(--rz-base-300);">
                             <RadzenIcon Icon="@(envVar.IsSet ? "check" : "remove")"
@@ -548,6 +548,16 @@
                 diskCheck.Success ? BadgeStyle.Success : BadgeStyle.Warning,
                 diskCheck.Details));
         }
+        
+        var schedulerCheck = _checks.FirstOrDefault(c => c.Name == L("AdminDoctor.Check.Scheduler"));
+        if (schedulerCheck != null)
+        {
+            _quickStatusBadges.Add(new QuickStatusBadge(
+                L("AdminDoctor.Scheduler"),
+                schedulerCheck.Success ? "schedule" : "schedule_send",
+                schedulerCheck.Success ? BadgeStyle.Success : BadgeStyle.Danger,
+                schedulerCheck.Details));
+        }
 
         stopwatch.Stop();
         _totalDuration = stopwatch.Elapsed;
@@ -573,6 +583,11 @@
         "JwtTokenStrength" => L("AdminDoctor.Check.JwtTokenStrength"),
         "HttpsSecurity" => L("AdminDoctor.Check.HttpsSecurity"),
         "AdminPassword" => L("AdminDoctor.Check.AdminPassword"),
+        "Scheduler" => L("AdminDoctor.Check.Scheduler"),
+        "FFmpeg" => L("AdminDoctor.Check.FFmpeg"),
+        "Memory" => L("AdminDoctor.Check.Memory"),
+        "TempDirectory" => L("AdminDoctor.Check.TempDirectory"),
+        "DatabaseLatency" => L("AdminDoctor.Check.DatabaseLatency"),
         _ => checkName
     };
     

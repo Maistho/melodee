@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Moq;
+using Quartz;
 
 namespace Melodee.Tests.Blazor.Services;
 
@@ -21,6 +22,7 @@ public class DoctorServiceTests
     private readonly Mock<LibraryService> _libraryService;
     private readonly Mock<IWebHostEnvironment> _webHostEnvironment;
     private readonly Mock<IHttpContextAccessor> _httpContextAccessor;
+    private readonly Mock<ISchedulerFactory> _schedulerFactory;
 
     public DoctorServiceTests()
     {
@@ -32,6 +34,17 @@ public class DoctorServiceTests
         _webHostEnvironment.Setup(x => x.EnvironmentName).Returns("Test");
         _webHostEnvironment.Setup(x => x.ContentRootPath).Returns("/test/path");
         _httpContextAccessor = new Mock<IHttpContextAccessor>();
+        _schedulerFactory = new Mock<ISchedulerFactory>();
+        
+        var mockScheduler = new Mock<IScheduler>();
+        mockScheduler.Setup(x => x.IsStarted).Returns(true);
+        mockScheduler.Setup(x => x.IsShutdown).Returns(false);
+        mockScheduler.Setup(x => x.InStandbyMode).Returns(false);
+        mockScheduler.Setup(x => x.GetJobGroupNames(It.IsAny<CancellationToken>())).ReturnsAsync(Array.Empty<string>());
+        mockScheduler.Setup(x => x.GetMetaData(It.IsAny<CancellationToken>())).ReturnsAsync(new SchedulerMetaData(
+            "TestScheduler", "test-instance", typeof(IScheduler), false, true, false, false,
+            DateTimeOffset.UtcNow, 0, typeof(object), false, false, typeof(object), 10, "1.0"));
+        _schedulerFactory.Setup(x => x.GetScheduler(It.IsAny<CancellationToken>())).ReturnsAsync(mockScheduler.Object);
     }
 
     [Fact]
@@ -265,7 +278,8 @@ public class DoctorServiceTests
             _artistSearchEngineDbContextFactory.Object,
             _libraryService.Object,
             _webHostEnvironment.Object,
-            _httpContextAccessor.Object);
+            _httpContextAccessor.Object,
+            _schedulerFactory.Object);
     }
 
     private static IConfiguration CreateConfiguration(Dictionary<string, string?> values)

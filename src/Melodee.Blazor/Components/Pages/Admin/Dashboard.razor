@@ -1,6 +1,7 @@
 @page "/admin/dashboard"
 @using System.Runtime.InteropServices
 @using Melodee.Blazor.Constants
+@using Melodee.Blazor.Services
 @using Melodee.Common.Data
 @using Melodee.Common.Enums
 @using Melodee.Common.Models
@@ -22,6 +23,7 @@
 @inject IDbContextFactory<MelodeeDbContext> DbContextFactory
 @inject ISchedulerFactory SchedulerFactory
 @inject NavigationManager NavigationManager
+@inject IDoctorService DoctorService
 
 @attribute [Authorize(Roles = "Administrator")]
 
@@ -66,11 +68,24 @@
     @* System Health Overview *@
     <RadzenRow Gap="1rem">
         <RadzenColumn Size="12" SizeMD="3">
-            <RadzenCard class="rz-background-color-success-lighter" Style="height: 100%;">
+            <RadzenCard class="@(_systemHealthy ? "rz-background-color-success-lighter" : "rz-background-color-danger-lighter")" 
+                        Style="height: 100%; cursor: pointer;" 
+                        @onclick="@(() => NavigationManager.NavigateTo("/admin/doctor"))">
                 <RadzenStack Gap="0.25rem" AlignItems="AlignItems.Center">
-                    <RadzenIcon Icon="check_circle" Style="font-size: 2rem; color: var(--rz-success);"/>
-                    <RadzenText TextStyle="TextStyle.Overline">@L("AdminDashboard.SystemStatus")</RadzenText>
-                    <RadzenText TextStyle="TextStyle.H5" Style="color: var(--rz-success);">@L("Status.Online")</RadzenText>
+                    @if (_isCheckingHealth)
+                    {
+                        <RadzenIcon Icon="sync" class="rz-spin" Style="font-size: 2rem; color: var(--rz-info);"/>
+                        <RadzenText TextStyle="TextStyle.Overline">@L("AdminDashboard.SystemStatus")</RadzenText>
+                        <RadzenText TextStyle="TextStyle.H5" Style="color: var(--rz-info);">@L("Status.Checking")</RadzenText>
+                    }
+                    else
+                    {
+                        <RadzenIcon Icon="@(_systemHealthy ? "check_circle" : "error")" Style="@($"font-size: 2rem; color: var(--rz-{(_systemHealthy ? "success" : "danger")});")"/>
+                        <RadzenText TextStyle="TextStyle.Overline">@L("AdminDashboard.SystemStatus")</RadzenText>
+                        <RadzenText TextStyle="TextStyle.H5" Style="@($"color: var(--rz-{(_systemHealthy ? "success" : "danger")});")">
+                            @(_systemHealthy ? L("Status.Online") : L("Status.Issues"))
+                        </RadzenText>
+                    }
                 </RadzenStack>
             </RadzenCard>
         </RadzenColumn>
@@ -406,6 +421,8 @@
     private string _melodeeVersion = "---";
     private string _apiVersion = "---";
     private string _osDescription = "---";
+    private bool _systemHealthy = true;
+    private bool _isCheckingHealth = true;
 
     private LocalDate _rangeStart;
     private LocalDate _rangeEnd;
@@ -415,12 +432,21 @@
     {
         await base.OnInitializedAsync();
         await LoadDashboardDataAsync();
+        
+        // Fire and forget health check - don't block dashboard rendering
+        _ = CheckSystemHealthAsync();
     }
 
     private async Task RefreshDashboard()
     {
-        await LoadDashboardDataAsync();
+        _isCheckingHealth = true;
         StateHasChanged();
+        
+        await LoadDashboardDataAsync();
+        
+        // Fire and forget health check
+        _ = CheckSystemHealthAsync();
+        
         NotificationService.Notify(new NotificationMessage
         {
             Severity = NotificationSeverity.Info,
@@ -449,7 +475,7 @@
         // Load cache statistics
         _cacheStatistics = CacheManager.CacheStatistics();
 
-        // Load all data in parallel
+        // Load all data in parallel (excluding health check which runs separately)
         var statsTask = StatisticsService.GetStatisticsAsync();
         var missingImagesTask = StatisticsService.GetMissingImagesAsync();
         var songsAddedTask = StatisticsService.GetSongsAddedPerDayAsync(_rangeStart, _rangeEnd, "UTC");
@@ -534,6 +560,24 @@
         if (uptime.TotalHours >= 1)
             return $"{(int)uptime.TotalHours}h {uptime.Minutes}m";
         return $"{uptime.Minutes}m {uptime.Seconds}s";
+    }
+
+    private async Task CheckSystemHealthAsync()
+    {
+        try
+        {
+            var results = await DoctorService.RunAllChecksAsync();
+            _systemHealthy = results.Checks.All(c => c.Success);
+        }
+        catch
+        {
+            _systemHealthy = false;
+        }
+        finally
+        {
+            _isCheckingHealth = false;
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     private void ClearCacheClicked()

@@ -4583,4 +4583,52 @@
 <data name="AdminDoctor.Storage" xml:space="preserve">
     <value>Storage</value>
   </data>
+<data name="AdminJobs.QuartzVersion" xml:space="preserve">
+    <value>Quartz Version</value>
+  </data>
+<data name="AdminJobs.ThreadPool" xml:space="preserve">
+    <value>Thread Pool</value>
+  </data>
+<data name="AdminJobs.Threads" xml:space="preserve">
+    <value>Threads</value>
+  </data>
+<data name="AdminJobs.JobStore" xml:space="preserve">
+    <value>Job Store</value>
+  </data>
+<data name="AdminJobs.Persistent" xml:space="preserve">
+    <value>Persistent</value>
+  </data>
+<data name="AdminJobs.Clustered" xml:space="preserve">
+    <value>Clustered</value>
+  </data>
+<data name="AdminJobs.JobsExecutedSession" xml:space="preserve">
+    <value>Jobs Executed (Session)</value>
+  </data>
+<data name="AdminJobs.StandbyMode" xml:space="preserve">
+    <value>Standby Mode</value>
+  </data>
+<data name="Status.Issues" xml:space="preserve">
+    <value>Issues Detected</value>
+  </data>
+<data name="Status.Checking" xml:space="preserve">
+    <value>Checking...</value>
+  </data>
+<data name="AdminDoctor.Check.Scheduler" xml:space="preserve">
+    <value>Background Job Scheduler</value>
+  </data>
+<data name="AdminDoctor.Scheduler" xml:space="preserve">
+    <value>Scheduler</value>
+  </data>
+<data name="AdminDoctor.Check.FFmpeg" xml:space="preserve">
+    <value>Media Conversion (FFmpeg)</value>
+  </data>
+<data name="AdminDoctor.Check.Memory" xml:space="preserve">
+    <value>System Memory</value>
+  </data>
+<data name="AdminDoctor.Check.TempDirectory" xml:space="preserve">
+    <value>Temporary Directory</value>
+  </data>
+<data name="AdminDoctor.Check.DatabaseLatency" xml:space="preserve">
+    <value>Database Latency</value>
+  </data>
 </root>

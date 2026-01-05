@@ -406,8 +406,37 @@
                     <RadzenText>@_schedulerStartTimeDisplay</RadzenText>
                 </RadzenColumn>
                 <RadzenColumn Size="6" SizeMD="3">
-                    <RadzenText TextStyle="TextStyle.Caption">@L("AdminJobs.ThreadPoolSize")</RadzenText>
-                    <RadzenText>@_threadPoolSize</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Caption">@L("AdminJobs.QuartzVersion")</RadzenText>
+                    <RadzenText>@_quartzVersion</RadzenText>
+                </RadzenColumn>
+            </RadzenRow>
+            <RadzenRow Gap="1rem" class="rz-mt-2">
+                <RadzenColumn Size="6" SizeMD="3">
+                    <RadzenText TextStyle="TextStyle.Caption">@L("AdminJobs.ThreadPool")</RadzenText>
+                    <RadzenText>@_threadPoolType (@_threadPoolSize @L("AdminJobs.Threads").ToLower())</RadzenText>
+                </RadzenColumn>
+                <RadzenColumn Size="6" SizeMD="3">
+                    <RadzenText TextStyle="TextStyle.Caption">@L("AdminJobs.JobStore")</RadzenText>
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem" AlignItems="AlignItems.Center">
+                        <RadzenText>@_jobStoreType</RadzenText>
+                        @if (_jobStorePersistent)
+                        {
+                            <RadzenBadge BadgeStyle="BadgeStyle.Info" Text="@L("AdminJobs.Persistent")" Shade="Shade.Light" Style="font-size: 0.7rem;"/>
+                        }
+                        @if (_jobStoreClustered)
+                        {
+                            <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="@L("AdminJobs.Clustered")" Shade="Shade.Light" Style="font-size: 0.7rem;"/>
+                        }
+                    </RadzenStack>
+                </RadzenColumn>
+                <RadzenColumn Size="6" SizeMD="3">
+                    <RadzenText TextStyle="TextStyle.Caption">@L("AdminJobs.JobsExecutedSession")</RadzenText>
+                    <RadzenText>@_numberOfJobsExecuted.ToString("N0")</RadzenText>
+                </RadzenColumn>
+                <RadzenColumn Size="6" SizeMD="3">
+                    <RadzenText TextStyle="TextStyle.Caption">@L("AdminJobs.StandbyMode")</RadzenText>
+                    <RadzenBadge BadgeStyle="@(_schedulerInStandby ? BadgeStyle.Warning : BadgeStyle.Success)" 
+                                 Text="@(_schedulerInStandby ? L("Actions.Yes") : L("Actions.No"))" Shade="Shade.Light"/>
                 </RadzenColumn>
             </RadzenRow>
         </RadzenCard>
@@ -425,6 +454,7 @@
     private readonly List<JobStatusDetail> _jobs = [];
     private bool _isLoading;
     private bool _schedulerStarted;
+    private bool _schedulerInStandby;
     private string _schedulerName = "---";
     private string _schedulerInstanceId = "---";
     private string _schedulerStartTimeDisplay = "---";
@@ -433,6 +463,12 @@
     private int _pausedJobsCount;
     private int _totalHistoryRecords;
     private int _totalFailures24h;
+    private string _quartzVersion = "---";
+    private string _jobStoreType = "---";
+    private bool _jobStorePersistent;
+    private bool _jobStoreClustered;
+    private int _numberOfJobsExecuted;
+    private string _threadPoolType = "---";
 
     protected override async Task OnInitializedAsync()
     {
@@ -452,11 +488,18 @@
             var scheduler = await SchedulerFactory.GetScheduler();
             var metadata = await scheduler.GetMetaData();
             
-            _schedulerStarted = scheduler.IsStarted && !scheduler.IsShutdown;
+            _schedulerStarted = metadata.Started && !metadata.Shutdown;
+            _schedulerInStandby = metadata.InStandbyMode;
             _schedulerName = metadata.SchedulerName;
             _schedulerInstanceId = metadata.SchedulerInstanceId;
-            _schedulerStartTimeDisplay = metadata.RunningSince?.LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss") ?? "Not started";
+            _schedulerStartTimeDisplay = metadata.RunningSince?.LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss") ?? L("AdminJobs.NotStarted");
             _threadPoolSize = metadata.ThreadPoolSize;
+            _quartzVersion = metadata.Version;
+            _jobStoreType = metadata.JobStoreType?.Name ?? "---";
+            _jobStorePersistent = metadata.JobStoreSupportsPersistence;
+            _jobStoreClustered = metadata.JobStoreClustered;
+            _numberOfJobsExecuted = metadata.NumberOfJobsExecuted;
+            _threadPoolType = metadata.ThreadPoolType?.Name ?? "---";
 
             var currentlyExecuting = await scheduler.GetCurrentlyExecutingJobs();
             var currentlyExecutingKeys = currentlyExecuting.Select(j => j.JobDetail.Key).ToHashSet();
