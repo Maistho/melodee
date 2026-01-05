@@ -7,7 +7,6 @@ using Lucene.Net.Util;
 using Melodee.Common.Extensions;
 using Melodee.Common.Plugins.SearchEngine.MusicBrainz.Data.Models.Materialized;
 using Melodee.Common.Plugins.SearchEngine.MusicBrainz.Data.Models.Staging;
-using Melodee.Common.Utility;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Events;
@@ -39,7 +38,7 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
         CancellationToken cancellationToken = default)
     {
         var mbDumpPath = Path.Combine(storagePath, "staging/mbdump");
-        
+
         // Configure SQLite for lower memory usage during bulk operations
         await context.Database.ExecuteSqlRawAsync("PRAGMA temp_store = FILE", cancellationToken);
         await context.Database.ExecuteSqlRawAsync("PRAGMA cache_size = -500000", cancellationToken);
@@ -75,7 +74,7 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
         // Phase 8: Drop album staging tables
         await DropAlbumStagingTablesAsync(context, progressCallback, cancellationToken);
     }
-    
+
 
 
     #region Phase 1: Artist Staging Data
@@ -95,17 +94,17 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
                 Path.Combine(mbDumpPath, "artist"),
                 nameof(ArtistStaging),
                 new[] { "ArtistId", "MusicBrainzIdRaw", "Name", "NameNormalized", "SortName" },
-                span => 
+                span =>
                 {
                     var p0 = GetColumn(span, 0); // id
                     var p1 = GetColumn(span, 1); // gid
                     var p2 = GetColumn(span, 2); // name
                     var p3 = GetColumn(span, 3); // sort_name
-                    
+
                     var name = ToString(p2);
                     var sortName = ToString(p3);
-                    
-                    return new object?[] 
+
+                    return new object?[]
                     {
                         ToLong(p0),
                         (Guid.TryParse(p1, out var g) ? g : Guid.Empty).ToString(),
@@ -129,7 +128,7 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
                     var p1 = GetColumn(span, 1); // artist_id
                     var p2 = GetColumn(span, 2); // name
                     var name = ToString(p2);
-                    
+
                     return new object?[]
                     {
                         ToLong(p1),
@@ -149,12 +148,12 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
                 span =>
                 {
                     var p0 = GetColumn(span, 0); // id
-                    
+
                     // index 2,3,4 = begin date
                     var pBeginY = GetColumn(span, 2);
                     var pBeginM = GetColumn(span, 3);
                     var pBeginD = GetColumn(span, 4);
-                    
+
                     // index 5,6,7 = end date
                     var pEndY = GetColumn(span, 5);
                     var pEndM = GetColumn(span, 6);
@@ -195,7 +194,7 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
                 },
                 cancellationToken);
             progressCallback?.Invoke("Loading Artists", 4, 4, $"Streamed {artistLinkCount:N0} artist links to staging");
-            
+
             // Add indices to staging tables
             progressCallback?.Invoke("Loading Artists", 4, 4, "Creating staging indices...");
             await context.Database.ExecuteSqlRawAsync("CREATE INDEX IF NOT EXISTS IX_ArtistStaging_ArtistId ON ArtistStaging(ArtistId)", cancellationToken);
@@ -238,7 +237,7 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
 
             var rowsAffected = await context.Database.ExecuteSqlRawAsync(sql, cancellationToken);
             logger.Debug("StreamingImporter: Materialized {Count} artists", rowsAffected);
-            
+
             progressCallback?.Invoke("Materializing Artists", 1, 1, $"Materialized {rowsAffected:N0} artists");
         }
     }
@@ -306,20 +305,20 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
                 batch.Clear();
                 skip += luceneBatchSize;
                 batchCount++;
-                
+
                 // Periodic flush and GC to manage memory
                 if (batchCount % 20 == 0)
                 {
                     writer.Flush(triggerMerge: false, applyAllDeletes: false);
                 }
 
-                progressCallback?.Invoke("Creating Index", indexed, totalArtists, 
+                progressCallback?.Invoke("Creating Index", indexed, totalArtists,
                     $"Indexed {indexed:N0} / {totalArtists:N0} artists");
             }
 
             writer.Commit();
             logger.Debug("StreamingImporter: Created Lucene index with {Count} artists", indexed);
-            progressCallback?.Invoke("Creating Index", totalArtists, totalArtists, 
+            progressCallback?.Invoke("Creating Index", totalArtists, totalArtists,
                 $"Completed Lucene index with {indexed:N0} artists");
         }
     }
@@ -355,7 +354,7 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
 
             var rowsAffected = await context.Database.ExecuteSqlRawAsync(sql, cancellationToken);
             logger.Debug("StreamingImporter: Materialized {Count} artist relations", rowsAffected);
-            
+
             progressCallback?.Invoke("Materializing Relations", 1, 1, $"Materialized {rowsAffected:N0} artist relations");
         }
     }
@@ -440,12 +439,12 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
                 new[] { "ReleaseId", "DateYear", "DateMonth", "DateDay" },
                 span =>
                 {
-                     // release=0, country=1, date_year=2, date_month=3, date_day=4
-                     var p0 = GetColumn(span, 0);
-                     var p2 = GetColumn(span, 2);
-                     var p3 = GetColumn(span, 3);
-                     var p4 = GetColumn(span, 4);
-                     return new object?[] { ToLong(p0), ToInt(p2), ToInt(p3), ToInt(p4) };
+                    // release=0, country=1, date_year=2, date_month=3, date_day=4
+                    var p0 = GetColumn(span, 0);
+                    var p2 = GetColumn(span, 2);
+                    var p3 = GetColumn(span, 3);
+                    var p4 = GetColumn(span, 4);
+                    return new object?[] { ToLong(p0), ToInt(p2), ToInt(p3), ToInt(p4) };
                 },
                 cancellationToken);
             progressCallback?.Invoke("Loading Albums", 3, 6, $"Streamed {countryCount:N0} release countries");
@@ -503,37 +502,37 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
                     var p2 = GetColumn(span, 2);
                     var p3 = GetColumn(span, 3);
                     var p4 = GetColumn(span, 4);
-                    
+
                     var name = ToString(p2);
-                    
-                    return new object?[] 
-                    { 
-                        ToLong(p0), 
-                        ToString(p1), 
+
+                    return new object?[]
+                    {
+                        ToLong(p0),
+                        ToString(p1),
                         name.CleanString().TruncateLongString(MaxIndexSize) ?? string.Empty,
                         name.CleanString().TruncateLongString(MaxIndexSize)?.ToNormalizedString() ?? name, // NameNormalized
                         name.CleanString(true).TruncateLongString(MaxIndexSize) ?? name, // SortName
                         ToLong(p4),
                         ToLong(p3)
-                    }; 
+                    };
                 },
                 cancellationToken);
-             progressCallback?.Invoke("Loading Albums", 6, 6, $"Streamed {releaseCount:N0} releases");
-             
-             // Add indices to staging tables
-             progressCallback?.Invoke("Loading Albums", 6, 6, "Creating staging indices...");
-             await context.Database.ExecuteSqlRawAsync("CREATE INDEX IF NOT EXISTS IX_ReleaseStaging_ReleaseGroupId ON ReleaseStaging(ReleaseGroupId)", cancellationToken);
-             await context.Database.ExecuteSqlRawAsync("CREATE INDEX IF NOT EXISTS IX_ReleaseStaging_ReleaseId ON ReleaseStaging(ReleaseId)", cancellationToken);
-             await context.Database.ExecuteSqlRawAsync("CREATE INDEX IF NOT EXISTS IX_ReleaseStaging_ArtistCreditId ON ReleaseStaging(ArtistCreditId)", cancellationToken);
-             
-             await context.Database.ExecuteSqlRawAsync("CREATE INDEX IF NOT EXISTS IX_ReleaseGroupStaging_ReleaseGroupId ON ReleaseGroupStaging(ReleaseGroupId)", cancellationToken);
-             await context.Database.ExecuteSqlRawAsync("CREATE INDEX IF NOT EXISTS IX_ReleaseGroupMetaStaging_ReleaseGroupId ON ReleaseGroupMetaStaging(ReleaseGroupId)", cancellationToken);
-             await context.Database.ExecuteSqlRawAsync("CREATE INDEX IF NOT EXISTS IX_ReleaseCountryStaging_ReleaseId ON ReleaseCountryStaging(ReleaseId)", cancellationToken);
-             
-             await context.Database.ExecuteSqlRawAsync("CREATE INDEX IF NOT EXISTS IX_ArtistCreditStaging_ArtistCreditId ON ArtistCreditStaging(ArtistCreditId)", cancellationToken);
-             await context.Database.ExecuteSqlRawAsync("CREATE INDEX IF NOT EXISTS IX_ArtistCreditNameStaging_ArtistCreditId ON ArtistCreditNameStaging(ArtistCreditId)", cancellationToken);
-             await context.Database.ExecuteSqlRawAsync("CREATE INDEX IF NOT EXISTS IX_ArtistCreditNameStaging_ArtistId ON ArtistCreditNameStaging(ArtistId)", cancellationToken);
-             progressCallback?.Invoke("Loading Albums", 6, 6, "Staging indices created");
+            progressCallback?.Invoke("Loading Albums", 6, 6, $"Streamed {releaseCount:N0} releases");
+
+            // Add indices to staging tables
+            progressCallback?.Invoke("Loading Albums", 6, 6, "Creating staging indices...");
+            await context.Database.ExecuteSqlRawAsync("CREATE INDEX IF NOT EXISTS IX_ReleaseStaging_ReleaseGroupId ON ReleaseStaging(ReleaseGroupId)", cancellationToken);
+            await context.Database.ExecuteSqlRawAsync("CREATE INDEX IF NOT EXISTS IX_ReleaseStaging_ReleaseId ON ReleaseStaging(ReleaseId)", cancellationToken);
+            await context.Database.ExecuteSqlRawAsync("CREATE INDEX IF NOT EXISTS IX_ReleaseStaging_ArtistCreditId ON ReleaseStaging(ArtistCreditId)", cancellationToken);
+
+            await context.Database.ExecuteSqlRawAsync("CREATE INDEX IF NOT EXISTS IX_ReleaseGroupStaging_ReleaseGroupId ON ReleaseGroupStaging(ReleaseGroupId)", cancellationToken);
+            await context.Database.ExecuteSqlRawAsync("CREATE INDEX IF NOT EXISTS IX_ReleaseGroupMetaStaging_ReleaseGroupId ON ReleaseGroupMetaStaging(ReleaseGroupId)", cancellationToken);
+            await context.Database.ExecuteSqlRawAsync("CREATE INDEX IF NOT EXISTS IX_ReleaseCountryStaging_ReleaseId ON ReleaseCountryStaging(ReleaseId)", cancellationToken);
+
+            await context.Database.ExecuteSqlRawAsync("CREATE INDEX IF NOT EXISTS IX_ArtistCreditStaging_ArtistCreditId ON ArtistCreditStaging(ArtistCreditId)", cancellationToken);
+            await context.Database.ExecuteSqlRawAsync("CREATE INDEX IF NOT EXISTS IX_ArtistCreditNameStaging_ArtistCreditId ON ArtistCreditNameStaging(ArtistCreditId)", cancellationToken);
+            await context.Database.ExecuteSqlRawAsync("CREATE INDEX IF NOT EXISTS IX_ArtistCreditNameStaging_ArtistId ON ArtistCreditNameStaging(ArtistId)", cancellationToken);
+            progressCallback?.Invoke("Loading Albums", 6, 6, "Staging indices created");
         }
     }
 
@@ -599,7 +598,7 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
 
             var rowsAffected = await context.Database.ExecuteSqlRawAsync(sql, cancellationToken);
             logger.Debug("StreamingImporter: Materialized {Count} albums", rowsAffected);
-            
+
             progressCallback?.Invoke("Materializing Albums", 1, 1, $"Materialized {rowsAffected:N0} albums");
         }
     }
@@ -670,7 +669,7 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
 
         var totalCount = 0;
         var batchCount = 0;
-        
+
         // Build the INSERT command once
         // INSERT INTO TableName (Col1, Col2) VALUES ($p0, $p1)
         var commandText = new StringBuilder();
@@ -707,7 +706,7 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
                 try
                 {
                     var values = parser(line.AsSpan());
-                    
+
                     // Assign values to parameters
                     for (var i = 0; i < values.Length; i++)
                     {
@@ -730,22 +729,22 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
                     // But checking 25000 gives us a sweet spot.
                     if (totalCount % BatchSize == 0)
                     {
-                         // For pure raw import, actually keeping the transaction open is faster, 
-                         // but let's commit periodically to be safe with memory
-                         transaction.Commit();
-                         transaction.Dispose();
-                         transaction = connection.BeginTransaction();
-                         command.Transaction = transaction;
-                         batchCount++;
+                        // For pure raw import, actually keeping the transaction open is faster, 
+                        // but let's commit periodically to be safe with memory
+                        transaction.Commit();
+                        transaction.Dispose();
+                        transaction = connection.BeginTransaction();
+                        command.Transaction = transaction;
+                        batchCount++;
                     }
                 }
                 catch (Exception ex)
                 {
-                    logger.Debug("StreamingImporter: Skipped malformed line in {File}: {Error}", 
+                    logger.Debug("StreamingImporter: Skipped malformed line in {File}: {Error}",
                         Path.GetFileName(filePath), ex.Message);
                 }
             }
-            
+
             transaction.Commit();
         }
         catch (Exception)
@@ -764,7 +763,7 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
     #endregion
 
     #region Span Helpers
-    
+
     // Helper to extract a column from a tab-separated line by index without allocating an array
     private static ReadOnlySpan<char> GetColumn(ReadOnlySpan<char> line, int index)
     {
@@ -779,16 +778,16 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
         var nextTab = slice.IndexOf('\t');
         return nextTab == -1 ? slice : slice.Slice(0, nextTab);
     }
-    
+
     // Parsing helpers that work with Spans and return objects for SqliteParameters
-    private static long ToLong(ReadOnlySpan<char> span) => 
+    private static long ToLong(ReadOnlySpan<char> span) =>
         long.TryParse(span, out var result) ? result : 0;
 
-    private static int ToInt(ReadOnlySpan<char> span) => 
+    private static int ToInt(ReadOnlySpan<char> span) =>
         int.TryParse(span, out var result) ? result : 0;
-        
-    private static string ToString(ReadOnlySpan<char> span) => 
-        span.ToString(); 
+
+    private static string ToString(ReadOnlySpan<char> span) =>
+        span.ToString();
 
     private static object? ToDate(ReadOnlySpan<char> year, ReadOnlySpan<char> month, ReadOnlySpan<char> day)
     {
@@ -798,13 +797,13 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
 
         if (y is > 0 and < 9999)
         {
-             // return string format for SQLite
-             var actualMonth = m is > 0 and <= 12 ? m.Value : 1;
-             var actualDay = d is > 0 and <= 31 ? d.Value : 1;
-             return $"{y:0000}-{actualMonth:00}-{actualDay:00} 00:00:00";
+            // return string format for SQLite
+            var actualMonth = m is > 0 and <= 12 ? m.Value : 1;
+            var actualDay = d is > 0 and <= 31 ? d.Value : 1;
+            return $"{y:0000}-{actualMonth:00}-{actualDay:00} 00:00:00";
         }
         return DBNull.Value;
     }
-    
+
     #endregion
 }

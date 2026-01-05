@@ -635,7 +635,7 @@ public class SQLiteMusicBrainzRepositoryTests : IDisposable, IAsyncDisposable
 
             Console.WriteLine($"Found {albums.Count} albums for Men At Work");
             var cargoAlbums = albums.Where(a => a.Name.Contains("Cargo", StringComparison.OrdinalIgnoreCase)).OrderBy(x => x.ReleaseDate).ToList();
-            
+
             Console.WriteLine($"Found {cargoAlbums.Count} 'Cargo' releases:");
             foreach (var c in cargoAlbums)
             {
