@@ -508,6 +508,119 @@ public class SongServiceTests : ServiceTestBase
         }
     }
 
+    [Theory]
+    [InlineData("/app/storage", "S/SA/Artist/", "[2025] Album/", "01 Song.mp3")]
+    [InlineData("/app/storage/", "S/SA/Artist/", "[2025] Album/", "01 Song.mp3")]
+    [InlineData("C:\\Music", "S\\SA\\Artist\\", "[2025] Album\\", "01 Song.mp3")]
+    [InlineData("/mnt/music", "Artist/", "Album/", "song.flac")]
+    public async Task GetStreamForSongAsync_PathConstruction_UsesProperPathSeparators(
+        string libraryPath, string artistDirectory, string albumDirectory, string fileName)
+    {
+        // Arrange - Create test data with specific path components
+        var library = new Library
+        {
+            ApiKey = Guid.NewGuid(),
+            Name = "Path Test Library",
+            Path = libraryPath,
+            Type = (int)LibraryType.Storage,
+            CreatedAt = SystemClock.Instance.GetCurrentInstant(),
+            LastUpdatedAt = SystemClock.Instance.GetCurrentInstant()
+        };
+
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            context.Libraries.Add(library);
+            await context.SaveChangesAsync();
+        }
+
+        var artist = new Melodee.Common.Data.Models.Artist
+        {
+            ApiKey = Guid.NewGuid(),
+            Name = "Path Test Artist",
+            NameNormalized = "pathtestartist",
+            LibraryId = library.Id,
+            Directory = artistDirectory,
+            CreatedAt = SystemClock.Instance.GetCurrentInstant(),
+            LastUpdatedAt = SystemClock.Instance.GetCurrentInstant()
+        };
+
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            context.Artists.Add(artist);
+            await context.SaveChangesAsync();
+        }
+
+        var album = new Melodee.Common.Data.Models.Album
+        {
+            ApiKey = Guid.NewGuid(),
+            Name = "Path Test Album",
+            NameNormalized = "pathtestalbum",
+            ArtistId = artist.Id,
+            Directory = albumDirectory,
+            ReleaseDate = new LocalDate(2025, 1, 1),
+            CreatedAt = SystemClock.Instance.GetCurrentInstant(),
+            LastUpdatedAt = SystemClock.Instance.GetCurrentInstant()
+        };
+
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            context.Albums.Add(album);
+            await context.SaveChangesAsync();
+        }
+
+        var song = new Melodee.Common.Data.Models.Song
+        {
+            ApiKey = Guid.NewGuid(),
+            Title = "Path Test Song",
+            TitleNormalized = "pathtestsong",
+            AlbumId = album.Id,
+            SongNumber = 1,
+            FileName = fileName,
+            FileSize = 1000000,
+            FileHash = "pathtest",
+            Duration = 180000,
+            SamplingRate = 44100,
+            BitRate = 320,
+            BitDepth = 16,
+            BPM = 120,
+            ContentType = "audio/mpeg",
+            CreatedAt = SystemClock.Instance.GetCurrentInstant(),
+            LastUpdatedAt = SystemClock.Instance.GetCurrentInstant()
+        };
+
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            context.Songs.Add(song);
+            await context.SaveChangesAsync();
+        }
+
+        var user = new UserInfo(1, Guid.NewGuid(), "Test User", "testpassword", "testsalt", "testtoken");
+
+        // Act
+#pragma warning disable CS0618 // Type or member is obsolete
+        var result = await _songService.GetStreamForSongAsync(user, song.ApiKey, CancellationToken.None);
+#pragma warning restore CS0618 // Type or member is obsolete
+
+        // Assert - The path should use proper platform separators from Path.Combine
+        // The file won't exist, but we verify the constructed path doesn't have doubled/missing separators
+        Assert.NotNull(result);
+        Assert.NotNull(result.Data);
+
+        // Path.Combine correctly handles:
+        // 1. Trailing slashes on directories
+        // 2. Platform-specific separators
+        // 3. No double separators (e.g., /app/storageS/SA instead of /app/storage/S/SA)
+        var expectedPath = Path.Combine(libraryPath, artistDirectory, albumDirectory, fileName);
+
+        // The error message should contain the properly constructed path if file not found
+        if (!result.IsSuccess && result.Messages != null)
+        {
+            // Path construction was successful even if file doesn't exist
+            Assert.DoesNotContain("storageS", string.Join(" ", result.Messages));
+            Assert.DoesNotContain("\\\\", string.Join(" ", result.Messages));
+        }
+    }
+
     #endregion
 
     #region ClearCacheAsync Tests

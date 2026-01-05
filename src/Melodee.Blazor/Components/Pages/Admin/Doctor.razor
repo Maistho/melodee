@@ -69,6 +69,17 @@
                         @L("AdminDoctor.CompletedIn", $"{_totalDuration.TotalSeconds:F2}")
                     </RadzenText>
                 </RadzenStack>
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Style="margin-left: auto;" AlignItems="AlignItems.Center">
+                    @foreach (var status in _quickStatusBadges)
+                    {
+                        <RadzenBadge BadgeStyle="@status.BadgeStyle" 
+                                     IsPill="true"
+                                     title="@status.Details">
+                            <RadzenIcon Icon="@status.Icon" Style="font-size: 14px; margin-right: 4px;"/>
+                            @status.Name
+                        </RadzenBadge>
+                    }
+                </RadzenStack>
             </RadzenStack>
         </RadzenCard>
 
@@ -361,6 +372,7 @@
     private List<EnvironmentVariableInfo> _relevantEnvVars = [];
     private List<SerilogLogPathInfo> _serilogLogPaths = [];
     private List<SearchEngineApiKeyInfoLocal> _searchEngineApiKeys = [];
+    private List<QuickStatusBadge> _quickStatusBadges = [];
 
     private static readonly DateTime StartTime = DateTime.UtcNow;
 
@@ -504,6 +516,38 @@
         }
         
         _isMusicBrainzEmpty = results.IsMusicBrainzEmpty;
+
+        // Build quick status badges for key services
+        _quickStatusBadges.Clear();
+        var dbCheck = _checks.FirstOrDefault(c => c.Name == L("AdminDoctor.Check.PostgresDatabase"));
+        if (dbCheck != null)
+        {
+            _quickStatusBadges.Add(new QuickStatusBadge(
+                L("AdminDoctor.Database"),
+                dbCheck.Success ? "storage" : "error",
+                dbCheck.Success ? BadgeStyle.Success : BadgeStyle.Danger,
+                dbCheck.Details));
+        }
+        
+        var mbCheck = _checks.FirstOrDefault(c => c.Name == L("AdminDoctor.Check.MusicBrainzDatabase"));
+        if (mbCheck != null)
+        {
+            _quickStatusBadges.Add(new QuickStatusBadge(
+                "MusicBrainz",
+                mbCheck.Success ? "album" : (_isMusicBrainzEmpty ? "warning" : "error"),
+                mbCheck.Success ? BadgeStyle.Success : (_isMusicBrainzEmpty ? BadgeStyle.Warning : BadgeStyle.Danger),
+                mbCheck.Details));
+        }
+        
+        var diskCheck = _checks.FirstOrDefault(c => c.Name == L("AdminDoctor.Check.DiskSpace"));
+        if (diskCheck != null)
+        {
+            _quickStatusBadges.Add(new QuickStatusBadge(
+                L("AdminDoctor.Storage"),
+                diskCheck.Success ? "folder" : "folder_off",
+                diskCheck.Success ? BadgeStyle.Success : BadgeStyle.Warning,
+                diskCheck.Details));
+        }
 
         stopwatch.Stop();
         _totalDuration = stopwatch.Elapsed;
@@ -800,6 +844,7 @@
     private sealed record EnvironmentVariableInfo(string Name, string MaskedValue, bool IsSet);
     private sealed record SerilogLogPathInfo(string SinkName, string Path, bool DirectoryExists, bool Writable);
     private sealed record SearchEngineApiKeyInfoLocal(string EngineName, string SettingKey, bool IsEnabled, bool IsConfigured, string Status, string StatusStyle);
+    private sealed record QuickStatusBadge(string Name, string Icon, BadgeStyle BadgeStyle, string Details);
 
     private static string GetDiskSpaceIcon(string status) => status switch
     {

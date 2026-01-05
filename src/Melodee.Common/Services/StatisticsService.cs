@@ -433,9 +433,10 @@ public sealed class StatisticsService(
             return new OperationResult<TopItemStat[]> { Data = [] };
         }
 
+        // Only include completed plays (IsNowPlaying = false), not songs that were just started
         var histories = await context.UserSongPlayHistories
             .AsNoTracking()
-            .Where(x => x.UserId == userId.Value)
+            .Where(x => x.UserId == userId.Value && !x.IsNowPlaying)
             .OrderByDescending(x => x.PlayedAt)
             .Take(topN)
             .ToListAsync(cancellationToken)

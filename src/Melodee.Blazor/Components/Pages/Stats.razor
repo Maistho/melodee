@@ -14,6 +14,18 @@
 <RadzenStack Gap="1rem">
     <RadzenText TextStyle="TextStyle.H4">@L("Stats.Statistics")</RadzenText>
 
+    @if (_hasNoData)
+    {
+        <RadzenCard>
+            <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Gap="1rem" Style="padding: 2rem;">
+                <RadzenIcon Icon="library_music" Style="font-size: 4rem; color: var(--rz-text-disabled-color);"/>
+                <RadzenText TextStyle="TextStyle.H6" Style="color: var(--rz-text-disabled-color);">@L("Stats.NoDataMessage")</RadzenText>
+                <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-disabled-color);">@L("Stats.NoDataHint")</RadzenText>
+            </RadzenStack>
+        </RadzenCard>
+    }
+    else
+    {
     <RadzenRow>
         @foreach (var kpi in _userKpis)
         {
@@ -224,6 +236,7 @@
             </RadzenStack>
         </RadzenCard>
     }
+    }
 </RadzenStack>
 
 @code {
@@ -240,6 +253,7 @@
     TopItemStat[] _albumsByGenre = [];
     TopItemStat[] _topArtistsByAlbumCount = [];
     TopItemStat[] _topArtistsByPlays = [];
+    bool _hasNoData;
 
     private LocalDate _rangeStart;
     private LocalDate _rangeEnd;
@@ -318,5 +332,9 @@
         _searchesPerDay = searchesTask?.Result.Data ?? [];
         _shareViewsPerDay = sharesTask?.Result.Data ?? [];
         _libraryScansPerDay = scansTask?.Result.Data ?? [];
+
+        // Check if there's no data to display (no albums means no meaningful stats)
+        var albumStat = _statistics.FirstOrDefault(s => s.Category == StatisticCategory.CountAlbum);
+        _hasNoData = albumStat == null || (albumStat.Data is int count && count == 0);
     }
 }

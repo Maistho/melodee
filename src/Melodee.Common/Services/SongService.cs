@@ -494,22 +494,35 @@ public class SongService(
 
         await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
 
-        // Get song file information
-        var songStreamInfo = await scopedContext.Songs
+        // Get song file information - fetch path components separately for cross-platform Path.Combine
+        var songData = await scopedContext.Songs
             .Where(s => s.ApiKey == apiKey)
             .Include(s => s.Album)
             .ThenInclude(a => a.Artist)
             .ThenInclude(ar => ar.Library)
             .AsNoTracking()
-            .Select(s => new SongStreamInfo(
-                s.Album.Artist.Library.Path + s.Album.Artist.Directory + s.Album.Directory + s.FileName,
+            .Select(s => new
+            {
+                LibraryPath = s.Album.Artist.Library.Path,
+                ArtistDirectory = s.Album.Artist.Directory,
+                AlbumDirectory = s.Album.Directory,
+                s.FileName,
                 s.FileSize,
-                s.Duration / 1000.0,
+                s.Duration,
                 s.BitRate,
                 s.ContentType
-            ))
+            })
             .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
+
+        var songStreamInfo = songData == null
+            ? null
+            : new SongStreamInfo(
+                Path.Combine(songData.LibraryPath, songData.ArtistDirectory, songData.AlbumDirectory, songData.FileName),
+                songData.FileSize,
+                songData.Duration / 1000.0,
+                songData.BitRate,
+                songData.ContentType);
 
         if (!(songStreamInfo?.TrackFileInfo.Exists ?? false))
         {
@@ -596,22 +609,35 @@ public class SongService(
 
         await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
 
-        // Use EF Core query instead of raw SQL
-        var songStreamInfo = await scopedContext.Songs
+        // Use EF Core query instead of raw SQL - fetch path components separately for cross-platform Path.Combine
+        var songData = await scopedContext.Songs
             .Where(s => s.ApiKey == apiKey)
             .Include(s => s.Album)
             .ThenInclude(a => a.Artist)
             .ThenInclude(ar => ar.Library)
             .AsNoTracking()
-            .Select(s => new SongStreamInfo(
-                s.Album.Artist.Library.Path + s.Album.Artist.Directory + s.Album.Directory + s.FileName,
+            .Select(s => new
+            {
+                LibraryPath = s.Album.Artist.Library.Path,
+                ArtistDirectory = s.Album.Artist.Directory,
+                AlbumDirectory = s.Album.Directory,
+                s.FileName,
                 s.FileSize,
-                s.Duration / 1000.0,
+                s.Duration,
                 s.BitRate,
                 s.ContentType
-            ))
+            })
             .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
+
+        var songStreamInfo = songData == null
+            ? null
+            : new SongStreamInfo(
+                Path.Combine(songData.LibraryPath, songData.ArtistDirectory, songData.AlbumDirectory, songData.FileName),
+                songData.FileSize,
+                songData.Duration / 1000.0,
+                songData.BitRate,
+                songData.ContentType);
 
         if (!(songStreamInfo?.TrackFileInfo.Exists ?? false))
         {
@@ -697,22 +723,35 @@ public class SongService(
 
         await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
 
-        // Use EF Core query instead of raw SQL
-        var songStreamInfo = await scopedContext.Songs
+        // Use EF Core query instead of raw SQL - fetch path components separately for cross-platform Path.Combine
+        var songData = await scopedContext.Songs
             .Where(s => s.ApiKey == apiKey)
             .Include(s => s.Album)
             .ThenInclude(a => a.Artist)
             .ThenInclude(ar => ar.Library)
             .AsNoTracking()
-            .Select(s => new SongStreamInfo(
-                s.Album.Artist.Library.Path + s.Album.Artist.Directory + s.Album.Directory + s.FileName,
+            .Select(s => new
+            {
+                LibraryPath = s.Album.Artist.Library.Path,
+                ArtistDirectory = s.Album.Artist.Directory,
+                AlbumDirectory = s.Album.Directory,
+                s.FileName,
                 s.FileSize,
-                s.Duration / 1000.0,
+                s.Duration,
                 s.BitRate,
                 s.ContentType
-            ))
+            })
             .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
+
+        var songStreamInfo = songData == null
+            ? null
+            : new SongStreamInfo(
+                Path.Combine(songData.LibraryPath, songData.ArtistDirectory, songData.AlbumDirectory, songData.FileName),
+                songData.FileSize,
+                songData.Duration / 1000.0,
+                songData.BitRate,
+                songData.ContentType);
 
         if (!(songStreamInfo?.TrackFileInfo.Exists ?? false))
         {

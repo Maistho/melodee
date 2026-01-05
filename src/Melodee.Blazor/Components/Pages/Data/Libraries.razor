@@ -129,7 +129,11 @@
                 <RadzenDataGridColumn Property="@nameof(Library.AlbumCount)" Title="@L("Navigation.Albums")" Width="90px"/>
                 <RadzenDataGridColumn Property="@nameof(Library.SongCount)" Title="@L("Navigation.Songs")" Width="90px"/>
                 <RadzenDataGridColumn Property="@nameof(Library.CreatedAt)" Title="@L("Label.Created")" Filterable="false"
-                                      Width="120px"/>
+                                      Width="120px">
+                    <Template Context="data">
+                        @(CurrentUser?.FormatInstant(data.CreatedAt))
+                    </Template>
+                </RadzenDataGridColumn>
                 <RadzenDataGridColumn Property="@nameof(Library.Tags)" Title="@L("Label.Tags")" Width="100px">
                     <Template Context="data">
                         <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="5px">

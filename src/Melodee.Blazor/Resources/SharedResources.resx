@@ -4571,4 +4571,16 @@
 <data name="Dashboard.NoAlbumsFound" xml:space="preserve">
     <value>No albums found. Start by scanning your library.</value>
   </data>
+<data name="Stats.NoDataMessage" xml:space="preserve">
+    <value>Add albums to see statistics</value>
+  </data>
+<data name="Stats.NoDataHint" xml:space="preserve">
+    <value>Upload or scan music to get started</value>
+  </data>
+<data name="AdminDoctor.Database" xml:space="preserve">
+    <value>Database</value>
+  </data>
+<data name="AdminDoctor.Storage" xml:space="preserve">
+    <value>Storage</value>
+  </data>
 </root>

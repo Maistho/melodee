@@ -41,14 +41,14 @@
         <RadzenBreadCrumbItem Icon="folder" Text="@_library.Name"/>
     </RadzenBreadCrumb>
     <RadzenMenu>
-        <RadzenMenuItem Text="Clean" Disabled="_library.IsLocked" Click="CleanButtonClick"
+        <RadzenMenuItem Text="Clean" Disabled="@(_library.IsLocked || _count == 0)" Click="CleanButtonClick"
                         title="Clean this media library directory." IconColor="@Colors.Warning"
                         Icon="mop"></RadzenMenuItem>
         <RadzenMenuItem Text="Delete Albums" Disabled="@(!_library.IsLocked && _selectedAlbums.Count == 0)"
                         Click="DeleteSelectedButtonClick"
                         title="Delete selected media albums, including album files. BEWARE!" IconColor="@Colors.Warning"
                         Icon="remove"></RadzenMenuItem>
-        <RadzenMenuItem Text="Delete" Disabled="_library.IsLocked" conColor="@Colors.Warning" Icon="delete">
+        <RadzenMenuItem Text="Delete" Disabled="@(_library.IsLocked || _count == 0)" IconColor="@Colors.Warning" Icon="delete">
             <RadzenMenuItem Text="Delete not Ok" Click="DeleteNotOkSelectedButtonClick"
                             title="Delete all not Ok status albums in library. BEWARE!" IconColor="@Colors.Warning"
                             Icon="delete_sweep"></RadzenMenuItem>
@@ -66,11 +66,11 @@
                                 IconColor="@Colors.Warning" Icon="delete_sweep"></RadzenMenuItem>
             }
         </RadzenMenuItem>
-        <RadzenMenuItem Text="Process" Disabled="_library.IsLocked" Click="ProcessButtonClick"
+        <RadzenMenuItem Text="Process" Disabled="@(_library.IsLocked || _count == 0)" Click="ProcessButtonClick"
                         title="Run process job on this library." Icon="memory"></RadzenMenuItem>
-        <RadzenMenuItem Text="Find Missing Images" Disabled="_library.IsLocked" Click="FindMissingImagesButtonClick"
+        <RadzenMenuItem Text="Find Missing Images" Disabled="@(_library.IsLocked || _count == 0)" Click="FindMissingImagesButtonClick"
                         title="Find missing images for albums with no images." Icon="image_search"></RadzenMenuItem>
-        <RadzenMenuItem Text="@($"Move Ok [{ _numberOfAlbumsWithStatusOk }]")" Disabled="_library.IsLocked" Click="MoveOkButtonClick"
+        <RadzenMenuItem Text="@($"Move Ok [{ _numberOfAlbumsWithStatusOk }]")" Disabled="@(_library.IsLocked || _numberOfAlbumsWithStatusOk == 0)" Click="MoveOkButtonClick"
                         title="Move Ok media albums to Library." Icon="move_group"></RadzenMenuItem>
         <RadzenMenuItem Text="@L("Actions.Upload")" Disabled="_library.IsLocked" Click="UploadButtonClick"
                         Visible="@(_library.TypeValue == LibraryType.Inbound)"
