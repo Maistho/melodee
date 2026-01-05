@@ -111,8 +111,8 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
         // Disable journaling entirely during bulk import
         await context.Database.ExecuteSqlRawAsync("PRAGMA journal_mode = OFF", cancellationToken);
 
-        // Increase cache size to 64MB for better buffering
-        await context.Database.ExecuteSqlRawAsync("PRAGMA cache_size = -65536", cancellationToken);
+        // Increase cache size to 256MB for better buffering during large imports
+        await context.Database.ExecuteSqlRawAsync("PRAGMA cache_size = -262144", cancellationToken);
 
         // Use memory for temp storage (faster than disk)
         await context.Database.ExecuteSqlRawAsync("PRAGMA temp_store = MEMORY", cancellationToken);
@@ -209,6 +209,9 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
             "CREATE INDEX IF NOT EXISTS IX_ReleaseStaging_Composite ON ReleaseStaging(ReleaseGroupId, ArtistCreditId)", cancellationToken);
         await context.Database.ExecuteSqlRawAsync(
             "CREATE INDEX IF NOT EXISTS IX_ReleaseStaging_ReleaseId ON ReleaseStaging(ReleaseId)", cancellationToken);
+
+        // Update query planner statistics for optimal JOIN performance
+        await context.Database.ExecuteSqlRawAsync("ANALYZE", cancellationToken);
     }
 
     private static void ForceGarbageCollection()
@@ -730,7 +733,7 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
                     {
                         sb.Clear();
                         sb.Append("INSERT INTO ArtistStaging (ArtistId, MusicBrainzIdRaw, Name, NameNormalized, SortName) VALUES ");
-                        sb.Append(string.Join(",", valuesList));
+                        AppendValues(sb, valuesList);
 #pragma warning disable EF1002
                         await context.Database.ExecuteSqlRawAsync(sb.ToString(), cancellationToken);
 #pragma warning restore EF1002
@@ -743,12 +746,11 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
                 }
             }
 
-            // Save remaining batch
             if (valuesList.Count > 0)
             {
                 sb.Clear();
                 sb.Append("INSERT INTO ArtistStaging (ArtistId, MusicBrainzIdRaw, Name, NameNormalized, SortName) VALUES ");
-                sb.Append(string.Join(",", valuesList));
+                AppendValues(sb, valuesList);
 #pragma warning disable EF1002
                 await context.Database.ExecuteSqlRawAsync(sb.ToString(), cancellationToken);
 #pragma warning restore EF1002
@@ -802,7 +804,7 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
                     {
                         sb.Clear();
                         sb.Append("INSERT INTO ArtistAliasStaging (ArtistId, NameNormalized) VALUES ");
-                        sb.Append(string.Join(",", valuesList));
+                        AppendValues(sb, valuesList);
 #pragma warning disable EF1002
                         await context.Database.ExecuteSqlRawAsync(sb.ToString(), cancellationToken);
 #pragma warning restore EF1002
@@ -819,7 +821,7 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
             {
                 sb.Clear();
                 sb.Append("INSERT INTO ArtistAliasStaging (ArtistId, NameNormalized) VALUES ");
-                sb.Append(string.Join(",", valuesList));
+                AppendValues(sb, valuesList);
 #pragma warning disable EF1002
                 await context.Database.ExecuteSqlRawAsync(sb.ToString(), cancellationToken);
 #pragma warning restore EF1002
@@ -878,7 +880,7 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
                     {
                         sb.Clear();
                         sb.Append("INSERT INTO ReleaseStaging (ReleaseId, MusicBrainzIdRaw, Name, NameNormalized, SortName, ReleaseGroupId, ArtistCreditId) VALUES ");
-                        sb.Append(string.Join(",", valuesList));
+                        AppendValues(sb, valuesList);
 #pragma warning disable EF1002
                         await context.Database.ExecuteSqlRawAsync(sb.ToString(), cancellationToken);
 #pragma warning restore EF1002
@@ -895,7 +897,7 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
             {
                 sb.Clear();
                 sb.Append("INSERT INTO ReleaseStaging (ReleaseId, MusicBrainzIdRaw, Name, NameNormalized, SortName, ReleaseGroupId, ArtistCreditId) VALUES ");
-                sb.Append(string.Join(",", valuesList));
+                AppendValues(sb, valuesList);
 #pragma warning disable EF1002
                 await context.Database.ExecuteSqlRawAsync(sb.ToString(), cancellationToken);
 #pragma warning restore EF1002
@@ -949,7 +951,7 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
                     {
                         sb.Clear();
                         sb.Append("INSERT INTO ArtistCreditStaging (ArtistCreditId, ArtistCount) VALUES ");
-                        sb.Append(string.Join(",", valuesList));
+                        AppendValues(sb, valuesList);
 #pragma warning disable EF1002
                         await context.Database.ExecuteSqlRawAsync(sb.ToString(), cancellationToken);
 #pragma warning restore EF1002
@@ -966,7 +968,7 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
             {
                 sb.Clear();
                 sb.Append("INSERT INTO ArtistCreditStaging (ArtistCreditId, ArtistCount) VALUES ");
-                sb.Append(string.Join(",", valuesList));
+                AppendValues(sb, valuesList);
 #pragma warning disable EF1002
                 await context.Database.ExecuteSqlRawAsync(sb.ToString(), cancellationToken);
 #pragma warning restore EF1002
@@ -1021,7 +1023,7 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
                     {
                         sb.Clear();
                         sb.Append("INSERT INTO ArtistCreditNameStaging (ArtistCreditId, Position, ArtistId) VALUES ");
-                        sb.Append(string.Join(",", valuesList));
+                        AppendValues(sb, valuesList);
 #pragma warning disable EF1002
                         await context.Database.ExecuteSqlRawAsync(sb.ToString(), cancellationToken);
 #pragma warning restore EF1002
@@ -1038,7 +1040,7 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
             {
                 sb.Clear();
                 sb.Append("INSERT INTO ArtistCreditNameStaging (ArtistCreditId, Position, ArtistId) VALUES ");
-                sb.Append(string.Join(",", valuesList));
+                AppendValues(sb, valuesList);
 #pragma warning disable EF1002
                 await context.Database.ExecuteSqlRawAsync(sb.ToString(), cancellationToken);
 #pragma warning restore EF1002
@@ -1094,7 +1096,7 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
                     {
                         sb.Clear();
                         sb.Append("INSERT INTO ReleaseCountryStaging (ReleaseId, DateYear, DateMonth, DateDay) VALUES ");
-                        sb.Append(string.Join(",", valuesList));
+                        AppendValues(sb, valuesList);
 #pragma warning disable EF1002
                         await context.Database.ExecuteSqlRawAsync(sb.ToString(), cancellationToken);
 #pragma warning restore EF1002
@@ -1111,7 +1113,7 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
             {
                 sb.Clear();
                 sb.Append("INSERT INTO ReleaseCountryStaging (ReleaseId, DateYear, DateMonth, DateDay) VALUES ");
-                sb.Append(string.Join(",", valuesList));
+                AppendValues(sb, valuesList);
 #pragma warning disable EF1002
                 await context.Database.ExecuteSqlRawAsync(sb.ToString(), cancellationToken);
 #pragma warning restore EF1002
@@ -1167,7 +1169,7 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
                     {
                         sb.Clear();
                         sb.Append("INSERT INTO ReleaseGroupStaging (ReleaseGroupId, MusicBrainzIdRaw, ArtistCreditId, ReleaseType) VALUES ");
-                        sb.Append(string.Join(",", valuesList));
+                        AppendValues(sb, valuesList);
 #pragma warning disable EF1002
                         await context.Database.ExecuteSqlRawAsync(sb.ToString(), cancellationToken);
 #pragma warning restore EF1002
@@ -1184,7 +1186,7 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
             {
                 sb.Clear();
                 sb.Append("INSERT INTO ReleaseGroupStaging (ReleaseGroupId, MusicBrainzIdRaw, ArtistCreditId, ReleaseType) VALUES ");
-                sb.Append(string.Join(",", valuesList));
+                AppendValues(sb, valuesList);
 #pragma warning disable EF1002
                 await context.Database.ExecuteSqlRawAsync(sb.ToString(), cancellationToken);
 #pragma warning restore EF1002
@@ -1240,7 +1242,7 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
                     {
                         sb.Clear();
                         sb.Append("INSERT INTO ReleaseGroupMetaStaging (ReleaseGroupId, DateYear, DateMonth, DateDay) VALUES ");
-                        sb.Append(string.Join(",", valuesList));
+                        AppendValues(sb, valuesList);
 #pragma warning disable EF1002
                         await context.Database.ExecuteSqlRawAsync(sb.ToString(), cancellationToken);
 #pragma warning restore EF1002
@@ -1257,7 +1259,7 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
             {
                 sb.Clear();
                 sb.Append("INSERT INTO ReleaseGroupMetaStaging (ReleaseGroupId, DateYear, DateMonth, DateDay) VALUES ");
-                sb.Append(string.Join(",", valuesList));
+                AppendValues(sb, valuesList);
 #pragma warning disable EF1002
                 await context.Database.ExecuteSqlRawAsync(sb.ToString(), cancellationToken);
 #pragma warning restore EF1002
@@ -1279,6 +1281,43 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
         if (string.IsNullOrEmpty(value))
             return string.Empty;
         return value.Replace("'", "''");
+    }
+
+    /// <summary>
+    /// Appends a list of values to a StringBuilder with comma separators.
+    /// Avoids the intermediate string allocation of string.Join().
+    /// </summary>
+    private static void AppendValues(StringBuilder sb, List<string> values)
+    {
+        for (var i = 0; i < values.Count; i++)
+        {
+            if (i > 0) sb.Append(',');
+            sb.Append(values[i]);
+        }
+    }
+
+    /// <summary>
+    /// Appends a cleaned and escaped string directly to StringBuilder.
+    /// Avoids intermediate string allocations from CleanString + EscapeSqlString chain.
+    /// </summary>
+    private static void AppendCleanedEscaped(StringBuilder sb, string? value, int maxLength = MaxIndexSize)
+    {
+        if (string.IsNullOrEmpty(value))
+            return;
+
+        var length = Math.Min(value.Length, maxLength);
+        for (var i = 0; i < length; i++)
+        {
+            var c = value[i];
+            if (c == '\'')
+            {
+                sb.Append("''");
+            }
+            else if (!char.IsControl(c))
+            {
+                sb.Append(c);
+            }
+        }
     }
 
     private static DateTime? ParseMusicBrainzDate(string? year, string? month, string? day)
