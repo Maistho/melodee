@@ -634,9 +634,29 @@ public class SQLiteMusicBrainzRepositoryTests : IDisposable, IAsyncDisposable
                 .ToListAsync();
 
             Console.WriteLine($"Found {albums.Count} albums for Men At Work");
-            var cargo = albums.FirstOrDefault(a => a.Name.Contains("Cargo", StringComparison.OrdinalIgnoreCase));
-            Assert.NotNull(cargo);
-            Console.WriteLine($"Found album: {cargo.Name} ({cargo.ReleaseDate.Year})");
+            var cargoAlbums = albums.Where(a => a.Name.Contains("Cargo", StringComparison.OrdinalIgnoreCase)).OrderBy(x => x.ReleaseDate).ToList();
+            
+            Console.WriteLine($"Found {cargoAlbums.Count} 'Cargo' releases:");
+            foreach (var c in cargoAlbums)
+            {
+                Console.WriteLine($" - {c.Name} ({c.ReleaseDate.Year}) [ID: {c.MusicBrainzIdRaw}]");
+            }
+
+            // Verify the specific release from 1983
+            var cargoId = Guid.Parse("517346ce-cd49-4cfa-831e-0546b871708a");
+            var cargo = cargoAlbums.FirstOrDefault(a => a.MusicBrainzIdRaw == cargoId.ToString());
+
+            if (cargo != null)
+            {
+                Console.WriteLine($"Matched 1983 Cargo by ID: {cargo.Name} ({cargo.ReleaseDate.Year})");
+                Assert.Equal(1983, cargo.ReleaseDate.Year);
+            }
+            else
+            {
+                Console.WriteLine("Could not find Cargo (1983) by ID.");
+                // Fail if we didn't find the specific ID we were looking for
+                Assert.NotNull(cargo);
+            }
             Console.WriteLine("\n*** ALL TESTS PASSED ***");
         }
         finally
