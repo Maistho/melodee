@@ -29,7 +29,9 @@ FROM build AS migrations
 WORKDIR /src/src/Melodee.Blazor
 RUN dotnet tool install --global dotnet-ef --version 10.0.1
 ENV PATH="$PATH:/root/.dotnet/tools"
-RUN dotnet ef migrations bundle --context MelodeeDbContext --output /app/efbundle --self-contained --force
+# Provide a dummy connection string for design-time DbContext creation
+ENV ConnectionStrings__DefaultConnection="Host=localhost;Database=melodee;Username=melodee;Password=melodee"
+RUN dotnet ef migrations bundle --context MelodeeDbContext --output /app/efbundle --self-contained --force --project ../Melodee.Common/Melodee.Common.csproj
 
 # Final runtime image - using aspnet for smaller image size
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
