@@ -14,12 +14,14 @@ It will:
 8. Verify containers are healthy after startup
 
 Usage:
-    python scripts/run-container-setup.py [--start] [--check-only] [--force]
+    python scripts/run-container-setup.py [--start] [--check-only] [--force] [--update] [--yes]
     
 Options:
     --start       Start containers after setup
     --check-only  Only run checks, don't create .env or start containers
     --force       Overwrite existing .env file without prompting
+    --update      Safely update running containers to latest code (preserves volumes)
+    --yes, -y     Skip confirmation prompts (for automated deployments)
 """
 
 import os
@@ -711,6 +713,154 @@ def check_existing_containers(runtime: str, project_root: Path) -> tuple[bool, s
         return False, ""
 
 
+def update_containers(runtime: str, project_root: Path, skip_confirm: bool = False) -> bool:
+    """
+    Safely update running containers to latest code.
+    
+    This will:
+    1. Verify containers are currently running
+    2. Pull latest git changes (optional, user may have already done this)
+    3. Build new image
+    4. Recreate containers with new image (volumes preserved)
+    5. Wait for healthy status
+    
+    Args:
+        runtime: Container runtime (podman or docker)
+        project_root: Path to project root
+        skip_confirm: If True, skip confirmation prompts (for automated deployments)
+    """
+    compose_cmd = get_compose_command(runtime)
+    
+    print("\n" + "=" * 60)
+    print("  Melodee Container Update")
+    print("=" * 60 + "\n")
+    
+    # Check if containers exist
+    exists, status = check_existing_containers(runtime, project_root)
+    if not exists:
+        print_error("No existing Melodee containers found")
+        print_info("Use --start to start containers for the first time")
+        return False
+    
+    print_info("Current container status:")
+    print(status)
+    
+    # Confirm update
+    if not skip_confirm:
+        print_warning("\nThis will rebuild and restart the Melodee containers.")
+        print_info("Your data volumes will be preserved.")
+        response = input("\n  Proceed with update? (y/N): ").strip().lower()
+        if response != 'y':
+            print_info("Update cancelled")
+            return False
+    else:
+        print_info("\nProceeding with update (--yes flag specified)")
+    
+    # Check for uncommitted changes that might affect build
+    try:
+        result = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=project_root,
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            print_warning("\nUncommitted changes detected in repository:")
+            # Show only relevant files
+            for line in result.stdout.strip().split('\n')[:10]:
+                print(f"    {line}")
+            if result.stdout.strip().count('\n') > 10:
+                print(f"    ... and more")
+            print_info("These changes will be included in the build")
+    except (subprocess.TimeoutExpired, OSError, FileNotFoundError):
+        pass  # Git not available or not a git repo, skip check
+    
+    # Show current git commit
+    try:
+        result = subprocess.run(
+            ["git", "log", "-1", "--oneline"],
+            cwd=project_root,
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        if result.returncode == 0:
+            print_info(f"\nBuilding from commit: {result.stdout.strip()}")
+    except (subprocess.TimeoutExpired, OSError, FileNotFoundError):
+        pass
+    
+    print()
+    
+    # Build new image
+    print_info("Step 1/3: Building new container image...")
+    try:
+        result = subprocess.run(
+            [*compose_cmd, "build", "--no-cache"],
+            cwd=project_root,
+            timeout=900  # 15 minute timeout
+        )
+        if result.returncode != 0:
+            print_error("Failed to build new image")
+            print_info("Check the build output above for errors")
+            return False
+        print_success("New image built successfully")
+    except subprocess.TimeoutExpired:
+        print_error("Build timed out (15 minutes)")
+        return False
+    except OSError as e:
+        print_error(f"Build failed: {e}")
+        return False
+    
+    # Stop and recreate containers (preserves volumes)
+    print_info("\nStep 2/3: Updating containers...")
+    try:
+        # Use 'up -d' which will recreate containers if image changed
+        result = subprocess.run(
+            [*compose_cmd, "up", "-d"],
+            cwd=project_root,
+            timeout=120
+        )
+        if result.returncode != 0:
+            print_error("Failed to update containers")
+            return False
+        print_success("Containers updated")
+    except subprocess.TimeoutExpired:
+        print_error("Container update timed out")
+        return False
+    except OSError as e:
+        print_error(f"Update failed: {e}")
+        return False
+    
+    # Wait for healthy
+    print_info("\nStep 3/3: Waiting for containers to become healthy...")
+    healthy = wait_for_healthy(runtime, project_root, timeout=180)
+    
+    if healthy:
+        print_success("\nUpdate completed successfully!")
+        
+        # Show new version info
+        try:
+            result = subprocess.run(
+                ["git", "log", "-1", "--format=%h %s (%cr)"],
+                cwd=project_root,
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+            if result.returncode == 0:
+                print_info(f"Now running: {result.stdout.strip()}")
+        except (subprocess.TimeoutExpired, OSError, FileNotFoundError):
+            pass
+        
+        return True
+    else:
+        print_warning("\nContainers updated but may not be fully healthy")
+        print_info("Showing recent logs:")
+        show_container_logs(runtime, project_root, lines=50)
+        return False
+
+
 def print_next_steps(runtime: str, started: bool, healthy: bool = False):
     """Print next steps for the user."""
     compose_cmd = " ".join(get_compose_command(runtime))
@@ -758,6 +908,8 @@ def main():
     start_after_setup = "--start" in sys.argv
     check_only = "--check-only" in sys.argv
     force_overwrite = "--force" in sys.argv
+    update_mode = "--update" in sys.argv
+    skip_confirm = "--yes" in sys.argv or "-y" in sys.argv
     
     # Get project root first for preflight checks
     project_root = get_project_root()
@@ -803,16 +955,32 @@ def main():
             print_info("Install Docker Compose: https://docs.docker.com/compose/install/")
         sys.exit(1)
     
+    # Handle update mode separately
+    if update_mode:
+        success = update_containers(runtime, project_root, skip_confirm=skip_confirm)
+        sys.exit(0 if success else 1)
+    
     # Check for existing containers
     exists, status = check_existing_containers(runtime, project_root)
     if exists:
         print_warning("\nExisting Melodee containers found:")
         print(status)
+        print_info("\nOptions:")
+        print_info("  1. Use --update to safely update to latest code (preserves data)")
+        print_info("  2. Continue below to remove and start fresh")
+        print()
         response = input("  Stop and remove existing containers? (y/N): ").strip().lower()
         if response == 'y':
             compose_cmd = get_compose_command(runtime)
-            subprocess.run([*compose_cmd, "down", "-v"], cwd=project_root, timeout=60)
-            print_success("Existing containers removed")
+            # Don't use -v flag here to preserve volumes by default
+            print_warning("Remove volumes too? This will DELETE ALL DATA!")
+            remove_volumes = input("  Remove volumes? (y/N): ").strip().lower()
+            if remove_volumes == 'y':
+                subprocess.run([*compose_cmd, "down", "-v"], cwd=project_root, timeout=60)
+                print_success("Existing containers and volumes removed")
+            else:
+                subprocess.run([*compose_cmd, "down"], cwd=project_root, timeout=60)
+                print_success("Existing containers removed (volumes preserved)")
     
     # Create .env file
     print("\nSetting up environment...")

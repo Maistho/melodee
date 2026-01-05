@@ -86,30 +86,41 @@ Albums that don't pass validation (missing tags, artwork issues, etc.) stay in s
 
 - [Podman](https://podman.io/) or Docker
 - [Podman Compose](https://github.com/containers/podman-compose) (for Podman users)
+- Python 3 (for setup script)
 
 ### 🐍 Automated Setup (Recommended)
 
-For a fully automated setup, run our Python setup script:
-
 ```bash
-# Download and run the setup script
-curl -O https://raw.githubusercontent.com/melodee-project/melodee/main/scripts/setup_melodee.py
-python3 scripts/setup_melodee.py
+# Clone the repository
+git clone https://github.com/sphildreth/melodee.git
+cd melodee
+
+# Run the setup script with auto-start
+python3 scripts/run-container-setup.py --start
 ```
 
 The script will:
-- Check for required dependencies (Git, Docker/Podman)
-- Clone the Melodee repository (if not already present)
-- Generate a secure environment configuration
-- Build and start the containers automatically
-- Wait for the service to be healthy
-- Provide you with the URL to access the Blazor Admin UI
+- Run preflight checks (disk space, memory, ports, required files)
+- Detect your container runtime (Podman or Docker)
+- Generate a secure `.env` file with random passwords and JWT tokens
+- Build the container image
+- Start the containers and wait for health checks
+- Provide you with the URL to access Melodee
+
+#### Setup Script Options
+
+```bash
+python3 scripts/run-container-setup.py --check-only  # Just run checks
+python3 scripts/run-container-setup.py --start       # Setup and start containers
+python3 scripts/run-container-setup.py --update      # Update existing deployment
+python3 scripts/run-container-setup.py --update -y   # Update without prompts (CI/CD)
+```
 
 ### 🐳 Manual Deploy with Podman
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/melodee-project/melodee.git
+   git clone https://github.com/sphildreth/melodee.git
    cd melodee
    ```
 
@@ -129,13 +140,14 @@ The script will:
    MELODEE_PORT=8080
    ```
 
-3. **Deploy the application**
+3. **Build and deploy**
    ```bash
-   # Using Podman Compose
-   podman-compose up -d
+   # Using Podman (build first, then start)
+   podman compose build
+   podman compose up -d
 
    # Or using Docker Compose
-   docker compose up -d
+   docker compose up -d --build
    ```
 
 4. **Access the application**
@@ -147,20 +159,28 @@ The script will:
 
 ### 📦 Updating Melodee
 
-To update to the latest version:
+The safest way to update is using the setup script:
 
 ```bash
-# Stop the current deployment
-podman-compose down
-
-# Pull the latest changes
-git pull origin main
-
-# Rebuild and restart
-podman-compose up -d --build
+cd melodee
+git pull
+python3 scripts/run-container-setup.py --update
 ```
 
-> **Note**: Database migrations are handled automatically during container startup.
+This preserves all your data volumes while updating the application code. For automated/CI deployments:
+
+```bash
+git pull && python3 scripts/run-container-setup.py --update --yes
+```
+
+**Manual update:**
+```bash
+git pull origin main
+podman compose build      # Rebuild with new code
+podman compose up -d      # Recreate containers (volumes preserved)
+```
+
+> **Note**: Database migrations run automatically during container startup. Your data (database, music library, playlists) is preserved during updates.
 
 ## 🏠 Homelab Deployment
 

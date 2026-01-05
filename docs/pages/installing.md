@@ -13,25 +13,50 @@ This guide covers getting Melodee running quickly using containers, plus optiona
 
 - Docker or Podman (with podman‑compose if using Podman)
 - At least 2GB RAM (4GB recommended for large scans)
+- At least 5GB free disk space
 - Persistent storage volumes or bound host directories
 
 ### Automated Setup (Easiest)
 
-For a fully automated setup, run our Python setup script:
+For a fully automated setup, use our container setup script:
 
 ```bash
-# Download and run the setup script
-curl -O https://raw.githubusercontent.com/melodee-project/melodee/main/scripts/setup_melodee.py
-python3 scripts/setup_melodee.py
+# Clone the repository
+git clone https://github.com/sphildreth/melodee.git
+cd melodee
+
+# Run the setup script (checks prerequisites, creates .env, optionally starts containers)
+python3 scripts/run-container-setup.py --start
 ```
 
 The script will:
-- Check for required dependencies (Git, Docker/Podman)
-- Clone the Melodee repository (if not already present)
-- Generate a secure environment configuration
-- Build and start the containers automatically
-- Wait for the service to be healthy
-- Provide you with the URL to access the Blazor Admin UI
+- Run preflight checks (disk space, memory, port availability, required files)
+- Detect your container runtime (Podman or Docker)
+- Offer to install Podman if no runtime is found
+- Generate a secure `.env` file with random passwords and JWT tokens
+- Build the container image
+- Start the containers
+- Wait for health checks to pass
+- Provide you with the URL to access Melodee
+
+#### Setup Script Options
+
+```bash
+# Just run checks without making changes
+python3 scripts/run-container-setup.py --check-only
+
+# Start containers after setup
+python3 scripts/run-container-setup.py --start
+
+# Overwrite existing .env without prompting
+python3 scripts/run-container-setup.py --force
+
+# Update existing containers to latest code (see Upgrading section)
+python3 scripts/run-container-setup.py --update
+
+# Skip confirmation prompts (for automated/CI deployments)
+python3 scripts/run-container-setup.py --update --yes
+```
 
 ### Manual Setup
 
@@ -48,20 +73,20 @@ cp example.env .env
 Edit `.env` values:
 
 ```bash
-DB_PASSWORD=change_me
+DB_PASSWORD=change_me_to_a_secure_password
 MELODEE_PORT=8080
+MELODEE_AUTH_TOKEN=change_me_to_a_64_character_random_string
 ```
 
-Additional optional env vars will be documented soon (streaming tweaks, concurrency limits, etc.).
-
-#### 2. Launch
+#### 2. Build and Launch
 
 ```bash
-# Podman
-podman-compose up -d
+# Podman (build first, then start)
+podman compose build
+podman compose up -d
 
 # Or Docker
-docker compose up -d
+docker compose up -d --build
 ```
 
 Access: http://localhost:8080 — create the first user (becomes admin).
@@ -78,13 +103,50 @@ Mount or copy your music appropriately. The job engine will pick up changes on s
 
 ### 4. Upgrading
 
+The safest way to upgrade is using the setup script's `--update` flag:
+
 ```bash
-podman-compose pull
-git pull origin main
-podman-compose up -d --build
+cd /path/to/melodee
+git pull
+python3 scripts/run-container-setup.py --update
 ```
 
-Database migrations run automatically on startup.
+This will:
+- Show current container status
+- Build a fresh image with the latest code
+- Recreate containers (preserving all data volumes)
+- Run any new database migrations automatically
+- Wait for health checks to pass
+
+For automated/CI deployments, add `--yes` to skip confirmation:
+
+```bash
+git pull && python3 scripts/run-container-setup.py --update --yes
+```
+
+#### Manual Upgrade
+
+If you prefer manual commands:
+
+```bash
+git pull origin main
+podman compose build      # Rebuild with new code
+podman compose up -d      # Recreate containers (volumes preserved)
+```
+
+**Important:** Your data volumes (database, media, playlists, etc.) are preserved during upgrades. Only the container images are replaced.
+
+#### What Gets Preserved During Upgrades
+
+| Component | Preserved? | Notes |
+|-----------|------------|-------|
+| Database (PostgreSQL) | ✅ Yes | `melodee_db_data` volume |
+| Media library | ✅ Yes | `melodee_storage` volume |
+| User images | ✅ Yes | `melodee_user_images` volume |
+| Playlists | ✅ Yes | `melodee_playlists` volume |
+| Logs | ✅ Yes | `melodee_logs` volume |
+| `.env` configuration | ✅ Yes | On host filesystem |
+| Container image | ❌ Replaced | New code deployed |
 
 ## Homelab Deployment Options
 
@@ -95,9 +157,7 @@ For basic homelab setups, the default `compose.yml` is sufficient. Simply run:
 ```bash
 git clone https://github.com/sphildreth/melodee.git
 cd melodee
-cp example.env .env
-# Edit .env with your preferences (especially DB_PASSWORD)
-docker-compose up -d
+python3 scripts/run-container-setup.py --start
 ```
 
 ### Option B: Reverse Proxy with HTTPS
@@ -232,10 +292,32 @@ Schedule with cron:
 
 | Symptom | Suggestion |
 |---------|------------|
+| "short-name did not resolve" error | Run `podman compose build` before `up`, or ensure image is built |
 | High CPU during first run | Normal while initial scan & metadata enrichment proceeds. | 
 | Streams 429 Too Many Requests | Reduce concurrent streams or adjust limiter settings (coming soon to config). |
 | Client fails auth | Verify first user created; rotate API key if compromised. |
 | Missing artwork | Ensure metadata jobs ran; trigger artwork refresh job. |
+| Container not healthy | Run `podman compose logs -f` to see application logs |
+| Port already in use | Change `MELODEE_PORT` in `.env` file |
+
+### Container Diagnostics
+
+```bash
+# Check container status
+podman compose ps
+
+# View live logs
+podman compose logs -f
+
+# View logs for specific service
+podman compose logs melodee.blazor
+
+# Check container health
+podman inspect melodee_melodee.blazor_1 --format='{{.State.Health.Status}}'
+
+# Run preflight checks
+python3 scripts/run-container-setup.py --check-only
+```
 
 ## Next Steps
 
