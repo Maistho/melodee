@@ -357,15 +357,59 @@ def ensure_gitignore_has_env(project_root: Path):
         print_success("Updated .gitignore")
 
 
+def get_compose_command(runtime: str) -> list[str]:
+    """Get the appropriate compose command for the runtime."""
+    # Check if 'podman compose' (plugin) works
+    if runtime == "podman":
+        try:
+            result = subprocess.run(
+                ["podman", "compose", "version"],
+                capture_output=True,
+                timeout=10
+            )
+            if result.returncode == 0:
+                return ["podman", "compose"]
+        except (subprocess.TimeoutExpired, OSError):
+            pass
+        
+        # Fall back to podman-compose (standalone)
+        if shutil.which("podman-compose"):
+            return ["podman-compose"]
+    
+    # Docker uses 'docker compose'
+    return [runtime, "compose"]
+
+
 def start_containers(runtime: str, project_root: Path) -> bool:
     """Start the containers using the detected runtime."""
-    print_info("Starting containers (this may take a while on first run)...")
+    compose_cmd = get_compose_command(runtime)
     
+    # Build the image first (required for podman with local images)
+    print_info("Building container image (this may take a while on first run)...")
     try:
         result = subprocess.run(
-            [runtime, "compose", "up", "-d", "--build"],
+            [*compose_cmd, "build"],
             cwd=project_root,
             timeout=600  # 10 minute timeout for build
+        )
+        if result.returncode != 0:
+            print_error("Failed to build container image")
+            return False
+        print_success("Container image built successfully")
+    except subprocess.TimeoutExpired:
+        print_error("Container build timed out")
+        return False
+    except OSError as e:
+        print_error(f"Failed to build container: {e}")
+        return False
+    
+    # Start the containers
+    print_info("Starting containers...")
+    try:
+        result = subprocess.run(
+            [*compose_cmd, "up", "-d"],
+            cwd=project_root,
+            timeout=120  # 2 minute timeout for start
         )
         return result.returncode == 0
     except subprocess.TimeoutExpired:
@@ -378,6 +422,8 @@ def start_containers(runtime: str, project_root: Path) -> bool:
 
 def print_next_steps(runtime: str, started: bool):
     """Print next steps for the user."""
+    compose_cmd = " ".join(get_compose_command(runtime))
+    
     print("\n" + "-" * 60)
     print("  Next Steps")
     print("-" * 60 + "\n")
@@ -387,13 +433,15 @@ def print_next_steps(runtime: str, started: bool):
         print_info("Once ready, access Melodee at: http://localhost:8080")
         print()
         print_info(f"Useful commands:")
-        print(f"    {runtime} compose logs -f        # View logs")
-        print(f"    {runtime} compose ps             # Check status")
-        print(f"    {runtime} compose down           # Stop containers")
-        print(f"    {runtime} compose up -d --build  # Rebuild and start")
+        print(f"    {compose_cmd} logs -f        # View logs")
+        print(f"    {compose_cmd} ps             # Check status")
+        print(f"    {compose_cmd} down           # Stop containers")
+        print(f"    {compose_cmd} build          # Rebuild image")
+        print(f"    {compose_cmd} up -d          # Start containers")
     else:
         print_info("To start Melodee, run:")
-        print(f"    {runtime} compose up -d --build")
+        print(f"    {compose_cmd} build")
+        print(f"    {compose_cmd} up -d")
         print()
         print_info("Then access Melodee at: http://localhost:8080")
     
