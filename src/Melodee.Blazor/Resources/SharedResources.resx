@@ -4565,4 +4565,10 @@
 <data name="Grid.TotalRecords" xml:space="preserve">
     <value>total {0} records</value>
   </data>
+<data name="Dashboard.NoArtistsFound" xml:space="preserve">
+    <value>No artists found. Start by scanning your library.</value>
+  </data>
+<data name="Dashboard.NoAlbumsFound" xml:space="preserve">
+    <value>No albums found. Start by scanning your library.</value>
+  </data>
 </root>

@@ -1,5 +1,10 @@
 using System.Collections.Concurrent;
 using System.Globalization;
+using Lucene.Net.Analysis.Standard;
+using Lucene.Net.Documents;
+using Lucene.Net.Index;
+using Lucene.Net.Store;
+using Lucene.Net.Util;
 using Melodee.Common.Configuration;
 using Melodee.Common.Constants;
 using Melodee.Common.Enums;
@@ -17,10 +22,22 @@ using Artist = Melodee.Common.Plugins.SearchEngine.MusicBrainz.Data.Models.Mater
 
 namespace Melodee.Common.Plugins.SearchEngine.MusicBrainz.Data;
 
+/// <summary>
+/// Callback to persist artists and relations to SQLite. Returns a function to lookup artist by MusicBrainzArtistId.
+/// The Lucene index is created by the base class before this callback is invoked.
+/// </summary>
+public delegate Task<Func<long, Artist?>> ArtistPersistCallback(
+    IReadOnlyCollection<Artist> artists,
+    IReadOnlyCollection<ArtistRelation> relations,
+    ImportProgressCallback? progressCallback,
+    CancellationToken cancellationToken);
+
 public abstract class MusicBrainzRepositoryBase(ILogger logger, IMelodeeConfigurationFactory configurationFactory)
     : IMusicBrainzRepository
 {
     public const int MaxIndexSize = 255;
+    private const LuceneVersion AppLuceneVersion = LuceneVersion.LUCENE_48;
+    
     protected readonly ConcurrentBag<Album> LoadedMaterializedAlbums = [];
     protected readonly ConcurrentBag<ArtistRelation> LoadedMaterializedArtistRelations = [];
 
@@ -107,7 +124,7 @@ public abstract class MusicBrainzRepositoryBase(ILogger logger, IMelodeeConfigur
     {
         var configuration = await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
         var storagePath = configuration.GetValue<string>(SettingRegistry.SearchEngineMusicBrainzStoragePath);
-        if (storagePath == null || !Directory.Exists(storagePath))
+        if (storagePath == null || !System.IO.Directory.Exists(storagePath))
         {
             throw new Exception(
                 "MusicBrainz storage path is invalid [{SettingRegistry.SearchEngineMusicBrainzStoragePath}]");
@@ -116,7 +133,73 @@ public abstract class MusicBrainzRepositoryBase(ILogger logger, IMelodeeConfigur
         return storagePath;
     }
 
-    protected async Task LoadDataFromMusicBrainzFiles(ImportProgressCallback? progressCallback = null, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Clears all materialized data collections to free memory.
+    /// </summary>
+    protected void ClearAllMaterializedData()
+    {
+        LoadedMaterializedArtists.Clear();
+        LoadedMaterializedArtistRelations.Clear();
+        LoadedMaterializedAlbums.Clear();
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+    }
+
+    /// <summary>
+    /// Creates a Lucene search index from the materialized artists.
+    /// Should be called after artists are materialized but before they are cleared from memory.
+    /// </summary>
+    protected void CreateLuceneIndex(string luceneIndexPath, IReadOnlyCollection<Artist> artists, ImportProgressCallback? progressCallback)
+    {
+        using (Operation.At(LogEventLevel.Debug).Time("MusicBrainzRepository: Created Lucene Index"))
+        {
+            if (System.IO.Directory.Exists(luceneIndexPath))
+            {
+                System.IO.Directory.Delete(luceneIndexPath, true);
+            }
+
+            progressCallback?.Invoke("Creating Index", 0, artists.Count, "Building Lucene search index...");
+
+            using var dir = FSDirectory.Open(luceneIndexPath);
+            var analyzer = new StandardAnalyzer(AppLuceneVersion);
+            var indexConfig = new IndexWriterConfig(AppLuceneVersion, analyzer);
+            using var writer = new IndexWriter(dir, indexConfig);
+            
+            var indexCount = 0;
+            foreach (var artist in artists)
+            {
+                var artistDoc = new Document
+                {
+                    new StringField(nameof(Artist.MusicBrainzIdRaw), artist.MusicBrainzIdRaw, Field.Store.YES),
+                    new StringField(nameof(Artist.NameNormalized), artist.NameNormalized, Field.Store.YES),
+                    new TextField(nameof(Artist.AlternateNames), artist.AlternateNames ?? string.Empty, Field.Store.YES)
+                };
+                writer.AddDocument(artistDoc);
+
+                indexCount++;
+                if (indexCount % 50000 == 0)
+                {
+                    progressCallback?.Invoke("Creating Index", indexCount, artists.Count,
+                        $"Indexed {indexCount:N0} / {artists.Count:N0} artists");
+                }
+            }
+
+            writer.Flush(false, false);
+            progressCallback?.Invoke("Creating Index", artists.Count, artists.Count, "Lucene index complete");
+        }
+    }
+
+    /// <summary>
+    /// Load and process MusicBrainz data files with memory-efficient phased processing.
+    /// Artists are persisted via callback before album processing to minimize memory usage.
+    /// </summary>
+    /// <param name="artistPersistCallback">Callback to persist artists and get lookup function</param>
+    /// <param name="progressCallback">Progress reporting callback</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    protected async Task LoadDataFromMusicBrainzFiles(
+        ArtistPersistCallback? artistPersistCallback,
+        ImportProgressCallback? progressCallback = null, 
+        CancellationToken cancellationToken = default)
     {
         var storagePath = await StoragePath(cancellationToken).ConfigureAwait(false);
 
@@ -230,13 +313,12 @@ public abstract class MusicBrainzRepositoryBase(ILogger logger, IMelodeeConfigur
         }
         progressCallback?.Invoke("Processing Artists", 1, 2, $"Created {LoadedMaterializedArtists.Count:N0} materialized artists");
 
-        var loadedMaterializedArtistsDictionary =
-            LoadedMaterializedArtists.ToDictionary(x => x.MusicBrainzArtistId, x => x);
-
-        // Materialize artist relations
+        // Materialize artist relations (needs temporary dictionary)
         progressCallback?.Invoke("Processing Relations", 0, 1, "Building artist relations...");
         using (Operation.At(LogEventLevel.Debug).Time("MusicBrainzRepository: LoadedMaterializedArtistRelations"))
         {
+            // Temporary dictionary for artist relation processing only
+            var tempArtistDictionary = LoadedMaterializedArtists.ToDictionary(x => x.MusicBrainzArtistId, x => x);
             var loadedLinkDictionary = LoadedLinks.ToDictionary(x => x.Id, x => x);
 
             var artistLinks = LoadedLinkArtistToArtists.GroupBy(x => x.Artist0)
@@ -244,14 +326,14 @@ public abstract class MusicBrainzRepositoryBase(ILogger logger, IMelodeeConfigur
             var associatedArtistRelationType = SafeParser.ToNumber<int>(ArtistRelationType.Associated);
             Parallel.ForEach(artistLinks, artistLink =>
             {
-                if (!loadedMaterializedArtistsDictionary.TryGetValue(artistLink.Key, out var dbArtist))
+                if (!tempArtistDictionary.TryGetValue(artistLink.Key, out var dbArtist))
                 {
                     return;
                 }
 
                 foreach (var artistLinkRelation in artistLink.Value)
                 {
-                    if (!loadedMaterializedArtistsDictionary.TryGetValue(artistLinkRelation.Artist1,
+                    if (!tempArtistDictionary.TryGetValue(artistLinkRelation.Artist1,
                             out var dbLinkedArtist))
                     {
                         continue;
@@ -272,13 +354,57 @@ public abstract class MusicBrainzRepositoryBase(ILogger logger, IMelodeeConfigur
                     }
                 }
             });
+            // tempArtistDictionary goes out of scope here
         }
         progressCallback?.Invoke("Processing Relations", 1, 1, $"Created {LoadedMaterializedArtistRelations.Count:N0} artist relations");
 
-        // Clear artist intermediate data to free memory before loading release data
+        // Convert to lists for efficient iteration (ConcurrentBag iteration is slow)
+        // This is the ONLY copy we make - used for Lucene index, SQLite import, then discarded
+        var artistsList = LoadedMaterializedArtists.ToList();
+        var relationsList = LoadedMaterializedArtistRelations.ToList();
+        
+        // Clear the ConcurrentBags immediately - we have the lists now
+        LoadedMaterializedArtists.Clear();
+        LoadedMaterializedArtistRelations.Clear();
+
+        // Create Lucene index FIRST while we still have artist data
+        var luceneIndexPath = Path.Combine(storagePath, "lucene");
+        CreateLuceneIndex(luceneIndexPath, artistsList, progressCallback);
+
+        // Clear raw artist intermediate data - no longer needed after Lucene indexing
         Logger.Debug("MusicBrainzRepository: Clearing artist intermediate data to free memory...");
         ClearArtistIntermediateData();
         progressCallback?.Invoke("Memory Cleanup", 1, 1, "Freed artist intermediate data");
+        
+        // Force GC after clearing raw data
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+
+        // Now persist artists to SQLite and get lookup function
+        Func<long, Artist?>? artistLookup = null;
+        if (artistPersistCallback != null)
+        {
+            Logger.Debug("MusicBrainzRepository: Persisting artists to SQLite...");
+            artistLookup = await artistPersistCallback(
+                artistsList, 
+                relationsList, 
+                progressCallback, 
+                cancellationToken).ConfigureAwait(false);
+            
+            // Clear the lists - SQLite has the data now, we have the lookup function
+            Logger.Debug("MusicBrainzRepository: Clearing artist lists from memory...");
+            artistsList.Clear();
+            relationsList.Clear();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            progressCallback?.Invoke("Memory Cleanup", 1, 1, "Freed artist data after SQLite import");
+        }
+        else
+        {
+            // Fallback: create in-memory dictionary (high memory usage)
+            var loadedMaterializedArtistsDictionary = artistsList.ToDictionary(x => x.MusicBrainzArtistId, x => x);
+            artistLookup = id => loadedMaterializedArtistsDictionary.GetValueOrDefault(id);
+        }
 
         // Phase 2: Load and process release/album data
         progressCallback?.Invoke("Loading Album Data", 0, 8, "Loading artist credits...");
@@ -411,7 +537,7 @@ public abstract class MusicBrainzRepositoryBase(ILogger logger, IMelodeeConfigur
                 var releaseCountry = releaseCountries?.OrderBy(x => x.ReleaseDate).FirstOrDefault();
                 var releaseGroup = releaseReleaseGroups?.FirstOrDefault();
 
-                loadedMaterializedArtistsDictionary.TryGetValue(release.ArtistCreditId, out var releaseArtist);
+                var releaseArtist = artistLookup(release.ArtistCreditId);
 
                 if (releaseGroup != null && !(releaseCountry?.IsValid ?? false))
                 {
@@ -439,7 +565,7 @@ public abstract class MusicBrainzRepositoryBase(ILogger logger, IMelodeeConfigur
                     var artistCreditName = releaseArtistCreditNames?.OrderBy(x => x.Position).FirstOrDefault();
                     if (artistCreditName != null)
                     {
-                        loadedMaterializedArtistsDictionary.TryGetValue(artistCreditName.ArtistId, out releaseArtist);
+                        releaseArtist = artistLookup(artistCreditName.ArtistId);
                     }
 
                     var artistCreditNameArtistId = artistCreditName?.ArtistId ?? 0;

@@ -4563,4 +4563,10 @@
   <data name="Grid.TotalRecords" xml:space="preserve">
     <value>[NEEDS TRANSLATION] total {0} records</value>
   </data>
+  <data name="Dashboard.NoArtistsFound" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No artists found. Start by scanning your library.</value>
+  </data>
+  <data name="Dashboard.NoAlbumsFound" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No albums found. Start by scanning your library.</value>
+  </data>
 </root>

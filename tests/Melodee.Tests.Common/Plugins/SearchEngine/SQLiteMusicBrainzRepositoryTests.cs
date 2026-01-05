@@ -1,4 +1,5 @@
 using Melodee.Common.Configuration;
+using Melodee.Common.Constants;
 using Melodee.Common.Extensions;
 using Melodee.Common.Models;
 using Melodee.Common.Models.SearchEngines;
@@ -526,6 +527,126 @@ public class SQLiteMusicBrainzRepositoryTests : IDisposable, IAsyncDisposable
         context.Artists.Add(testArtist);
         context.Albums.Add(testAlbum);
         context.SaveChanges();
+    }
+
+    /// <summary>
+    /// Integration test: Import real MusicBrainz data and verify we can find "Men At Work" and album "Cargo".
+    /// MusicBrainz IDs:
+    /// - Artist "Men At Work": 395cc503-63b5-4a0b-a20a-604e3fcacea2
+    /// - Release "Cargo": 517346ce-cd49-4cfa-831e-0546b871708a
+    /// - Release Group "Cargo": c9618aa9-fcca-3661-bf12-6c651fc8c84d
+    /// 
+    /// Run with: dotnet test --filter "ImportData_WithRealData_FindsMenAtWorkAndCargo" -v n -l "console;verbosity=detailed"
+    /// </summary>
+    [Fact]
+    public async Task ImportData_WithRealData_FindsMenAtWorkAndCargo()
+    {
+        // Arrange
+        const string musicBrainzDataPath = "/mnt/incoming/melodee_test/search-engine-storage/musicbrainz";
+        const string stagingPath = musicBrainzDataPath + "/staging/mbdump";
+        var menAtWorkId = Guid.Parse("395cc503-63b5-4a0b-a20a-604e3fcacea2");
+        
+        if (!Directory.Exists(stagingPath))
+        {
+            Console.WriteLine($"Skipping - MusicBrainz data not found at {stagingPath}");
+            return;
+        }
+
+        // Create a file-based SQLite database for this test (not in-memory)
+        var testDbPath = Path.Combine(Path.GetTempPath(), $"mb-test-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(testDbPath);
+        var dbFile = Path.Combine(testDbPath, "musicbrainz.db");
+        Console.WriteLine($"Test database: {dbFile}");
+        
+        try
+        {
+            var fileDbOptions = new DbContextOptionsBuilder<MusicBrainzDbContext>()
+                .UseSqlite($"Data Source={dbFile}")
+                .Options;
+
+            var mockDbFactory = new Mock<IDbContextFactory<MusicBrainzDbContext>>();
+            mockDbFactory.Setup(f => f.CreateDbContextAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(() => new MusicBrainzDbContext(fileDbOptions));
+            mockDbFactory.Setup(f => f.CreateDbContext())
+                .Returns(() => new MusicBrainzDbContext(fileDbOptions));
+
+            // Configure for real data path
+            var configDict = new Dictionary<string, object?>
+            {
+                [SettingRegistry.SearchEngineMusicBrainzStoragePath] = musicBrainzDataPath,
+                [SettingRegistry.SearchEngineMusicBrainzImportBatchSize] = 10000,
+                [SettingRegistry.SearchEngineMusicBrainzImportMaximumToProcess] = 0
+            };
+            var config = new MelodeeConfiguration(MelodeeConfiguration.AllSettings(configDict));
+            var mockConfigFactory = new Mock<IMelodeeConfigurationFactory>();
+            mockConfigFactory.Setup(f => f.GetConfigurationAsync(It.IsAny<CancellationToken>())).ReturnsAsync(config);
+
+            using var repo = new SQLiteMusicBrainzRepository(_logger, mockConfigFactory.Object, mockDbFactory.Object);
+
+            // Act - Import with progress logging
+            var peakMemoryMb = 0L;
+            var lastPhase = "";
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            
+            var importResult = await repo.ImportData(
+                (phase, current, total, msg) =>
+                {
+                    var memMb = System.Diagnostics.Process.GetCurrentProcess().WorkingSet64 / (1024 * 1024);
+                    if (memMb > peakMemoryMb) peakMemoryMb = memMb;
+                    
+                    if (phase != lastPhase)
+                    {
+                        Console.WriteLine($"\n[{sw.Elapsed:mm\\:ss}] Starting: {phase}");
+                        lastPhase = phase;
+                    }
+                    
+                    if (total > 0 && current % 50000 == 0)
+                        Console.WriteLine($"  [{sw.Elapsed:mm\\:ss}] {phase}: {current:N0}/{total:N0} - Memory: {memMb:N0}MB");
+                },
+                CancellationToken.None);
+
+            // Assert - Import succeeded
+            Console.WriteLine($"\n[{sw.Elapsed:mm\\:ss}] Import complete. Peak memory: {peakMemoryMb:N0}MB");
+            Assert.True(importResult.IsSuccess, $"Import failed: {string.Join(", ", importResult.Errors ?? [])}");
+            
+            // Assert - Memory stayed under 2GB
+            Console.WriteLine($"Memory check: {peakMemoryMb:N0}MB (limit: 2048MB) - {(peakMemoryMb < 2048 ? "PASS" : "FAIL")}");
+            Assert.True(peakMemoryMb < 2048, $"Memory exceeded 2GB limit. Peak was {peakMemoryMb}MB");
+
+            // Assert - Can find Men At Work
+            Console.WriteLine("\nSearching for 'Men At Work'...");
+            var artistQuery = new ArtistQuery { Name = "Men At Work" };
+            var artistResult = await repo.SearchArtist(artistQuery, 10);
+            
+            Assert.True(artistResult.IsSuccess);
+            var menAtWork = artistResult.Data.FirstOrDefault(a => a.MusicBrainzId == menAtWorkId);
+            Assert.NotNull(menAtWork);
+            Console.WriteLine($"Found artist: {menAtWork.Name} (ID: {menAtWork.MusicBrainzId})");
+
+            // Assert - Can find Cargo album in database
+            Console.WriteLine("\nSearching for 'Cargo' album...");
+            await using var context = mockDbFactory.Object.CreateDbContext();
+            var artist = await context.Artists.FirstOrDefaultAsync(a => a.MusicBrainzIdRaw == menAtWorkId.ToString());
+            Assert.NotNull(artist);
+            
+            var albums = await context.Albums
+                .Where(a => a.MusicBrainzArtistId == artist.MusicBrainzArtistId)
+                .ToListAsync();
+            
+            Console.WriteLine($"Found {albums.Count} albums for Men At Work");
+            var cargo = albums.FirstOrDefault(a => a.Name.Contains("Cargo", StringComparison.OrdinalIgnoreCase));
+            Assert.NotNull(cargo);
+            Console.WriteLine($"Found album: {cargo.Name} ({cargo.ReleaseDate.Year})");
+            Console.WriteLine("\n*** ALL TESTS PASSED ***");
+        }
+        finally
+        {
+            // Cleanup
+            if (Directory.Exists(testDbPath))
+            {
+                try { Directory.Delete(testDbPath, true); } catch { }
+            }
+        }
     }
 
     public void Dispose()

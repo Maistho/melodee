@@ -211,17 +211,24 @@
       </RadzenText>
     </HeaderTemplate>
     <ChildContent>
-      <RadzenStack
-        Orientation="Orientation.Horizontal"
-        Wrap="FlexWrap.Wrap"
-        JustifyContent="JustifyContent.Left"
-        class="rz-p-1"
-        Gap="10px">
-        @foreach (var artist in _latestArtists)
-        {
-          <ArtistDataInfoCardComponent Artist="@artist"/>
-        }
-      </RadzenStack>
+      @if (_latestArtists.Length > 0)
+      {
+        <RadzenStack
+          Orientation="Orientation.Horizontal"
+          Wrap="FlexWrap.Wrap"
+          JustifyContent="JustifyContent.Left"
+          class="rz-p-1"
+          Gap="10px">
+          @foreach (var artist in _latestArtists)
+          {
+            <ArtistDataInfoCardComponent Artist="@artist"/>
+          }
+        </RadzenStack>
+      }
+      else
+      {
+        <RadzenText TextStyle="TextStyle.Body2" Style="opacity: 0.7; padding: 1rem;">@L("Dashboard.NoArtistsFound")</RadzenText>
+      }
     </ChildContent>
   </RadzenPanel>
   <RadzenPanel AllowCollapse="true">
@@ -232,17 +239,24 @@
       </RadzenText>
     </HeaderTemplate>
     <ChildContent>
-      <RadzenStack
-        Orientation="Orientation.Horizontal"
-        Wrap="FlexWrap.Wrap"
-        JustifyContent="JustifyContent.Left"
-        class="rz-p-1"
-        Gap="10px">
-        @foreach (var album in _latestAlbums)
-        {
-          <AlbumDataInfoCardComponent Album="@album"/>
-        }
-      </RadzenStack>
+      @if (_latestAlbums.Length > 0)
+      {
+        <RadzenStack
+          Orientation="Orientation.Horizontal"
+          Wrap="FlexWrap.Wrap"
+          JustifyContent="JustifyContent.Left"
+          class="rz-p-1"
+          Gap="10px">
+          @foreach (var album in _latestAlbums)
+          {
+            <AlbumDataInfoCardComponent Album="@album"/>
+          }
+        </RadzenStack>
+      }
+      else
+      {
+        <RadzenText TextStyle="TextStyle.Body2" Style="opacity: 0.7; padding: 1rem;">@L("Dashboard.NoAlbumsFound")</RadzenText>
+      }
     </ChildContent>
   </RadzenPanel>
 </RadzenStack>
