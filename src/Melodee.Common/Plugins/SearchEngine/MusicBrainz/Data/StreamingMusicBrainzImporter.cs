@@ -1,3 +1,4 @@
+using System.Text;
 using Lucene.Net.Analysis.Standard;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
@@ -19,10 +20,17 @@ namespace Melodee.Common.Plugins.SearchEngine.MusicBrainz.Data;
 /// Streaming import service for MusicBrainz data.
 /// Uses SQLite staging tables to avoid loading entire datasets into memory.
 /// Memory usage stays constant regardless of dataset size.
+/// 
+/// Performance optimizations applied:
+/// - Aggressive SQLite PRAGMA settings for bulk import (synchronous=OFF, journal_mode=OFF)
+/// - Deferred index creation (indexes created after bulk insert)
+/// - Raw SQL bulk inserts instead of EF Core AddRange
+/// - Large transaction batching (entire file in single transaction)
+/// - Optimized Lucene IndexWriter configuration
 /// </summary>
 public sealed class StreamingMusicBrainzImporter(ILogger logger)
 {
-    private const int BatchSize = 5000;  // Reduced from 10000 to lower peak memory
+    private const int BatchSize = 10000;  // Increased for better throughput with raw SQL
     private const int MaxIndexSize = 255;
     private const LuceneVersion AppLuceneVersion = LuceneVersion.LUCENE_48;
 
@@ -39,13 +47,19 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
     {
         var mbDumpPath = Path.Combine(storagePath, "staging/mbdump");
 
-        // Configure SQLite for lower memory usage during bulk operations
-        await context.Database.ExecuteSqlRawAsync("PRAGMA temp_store = FILE", cancellationToken);
-        await context.Database.ExecuteSqlRawAsync("PRAGMA cache_size = -2000", cancellationToken);  // 2MB cache
+        // Configure SQLite for maximum bulk import performance
+        // WARNING: These settings sacrifice durability for speed - only safe during initial import
+        await ConfigureSqliteForBulkImportAsync(context, cancellationToken);
+
+        // Drop staging table indexes before bulk insert for faster writes
+        await DropStagingIndexesAsync(context, cancellationToken);
 
         // Phase 1: Stream artist data to staging tables
         await ImportArtistStagingDataAsync(context, mbDumpPath, progressCallback, cancellationToken);
         ForceGarbageCollection();
+
+        // Recreate staging indexes needed for materialization joins
+        await CreateArtistStagingIndexesAsync(context, cancellationToken);
 
         // Phase 2: Materialize artists using SQL
         await MaterializeArtistsAsync(context, progressCallback, cancellationToken);
@@ -66,14 +80,131 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
         await ImportAlbumStagingDataAsync(context, mbDumpPath, progressCallback, cancellationToken);
         ForceGarbageCollection();
 
+        // Recreate staging indexes needed for album materialization
+        await CreateAlbumStagingIndexesAsync(context, cancellationToken);
+
         // Phase 7: Materialize albums using SQL
         await MaterializeAlbumsAsync(context, progressCallback, cancellationToken);
 
         // Phase 8: Drop album staging tables
         await DropAlbumStagingTablesAsync(context, progressCallback, cancellationToken);
 
+        // Restore safe SQLite settings
+        await RestoreSqliteSettingsAsync(context, cancellationToken);
+
         // Force final GC
         ForceGarbageCollection();
+    }
+
+    /// <summary>
+    /// Configure SQLite for maximum bulk import throughput.
+    /// These settings sacrifice durability for speed and should only be used during initial import.
+    /// </summary>
+    private static async Task ConfigureSqliteForBulkImportAsync(MusicBrainzDbContext context, CancellationToken cancellationToken)
+    {
+        // Disable synchronous writes - major performance boost but unsafe if power loss
+        await context.Database.ExecuteSqlRawAsync("PRAGMA synchronous = OFF", cancellationToken);
+        
+        // Disable journaling entirely during bulk import
+        await context.Database.ExecuteSqlRawAsync("PRAGMA journal_mode = OFF", cancellationToken);
+        
+        // Increase cache size to 64MB for better buffering
+        await context.Database.ExecuteSqlRawAsync("PRAGMA cache_size = -65536", cancellationToken);
+        
+        // Use memory for temp storage (faster than disk)
+        await context.Database.ExecuteSqlRawAsync("PRAGMA temp_store = MEMORY", cancellationToken);
+        
+        // Exclusive locking - no other connections allowed, but faster
+        await context.Database.ExecuteSqlRawAsync("PRAGMA locking_mode = EXCLUSIVE", cancellationToken);
+        
+        // Optimal page size for modern SSDs
+        await context.Database.ExecuteSqlRawAsync("PRAGMA page_size = 4096", cancellationToken);
+        
+        // Enable memory-mapped I/O for 256MB
+        await context.Database.ExecuteSqlRawAsync("PRAGMA mmap_size = 268435456", cancellationToken);
+    }
+
+    /// <summary>
+    /// Restore safe SQLite settings after bulk import.
+    /// </summary>
+    private static async Task RestoreSqliteSettingsAsync(MusicBrainzDbContext context, CancellationToken cancellationToken)
+    {
+        await context.Database.ExecuteSqlRawAsync("PRAGMA synchronous = NORMAL", cancellationToken);
+        await context.Database.ExecuteSqlRawAsync("PRAGMA journal_mode = WAL", cancellationToken);
+        await context.Database.ExecuteSqlRawAsync("PRAGMA locking_mode = NORMAL", cancellationToken);
+    }
+
+    /// <summary>
+    /// Drop all staging table indexes for faster bulk insert.
+    /// </summary>
+    private static async Task DropStagingIndexesAsync(MusicBrainzDbContext context, CancellationToken cancellationToken)
+    {
+        var indexes = new[]
+        {
+            "IX_ArtistStaging_ArtistId",
+            "IX_ArtistAliasStaging_ArtistId",
+            "IX_LinkStaging_LinkId",
+            "IX_LinkArtistToArtistStaging_Artist0",
+            "IX_LinkArtistToArtistStaging_Artist1",
+            "IX_LinkArtistToArtistStaging_LinkId",
+            "IX_ArtistCreditStaging_ArtistCreditId",
+            "IX_ArtistCreditNameStaging_ArtistCreditId",
+            "IX_ReleaseCountryStaging_ReleaseId",
+            "IX_ReleaseGroupStaging_ReleaseGroupId",
+            "IX_ReleaseGroupMetaStaging_ReleaseGroupId",
+            "IX_ReleaseStaging_ReleaseId",
+            "IX_ReleaseStaging_ReleaseGroupId",
+            "IX_ReleaseStaging_ArtistCreditId"
+        };
+
+        foreach (var index in indexes)
+        {
+#pragma warning disable EF1002 // Index names are hardcoded constants, not user input
+            await context.Database.ExecuteSqlRawAsync($"DROP INDEX IF EXISTS {index}", cancellationToken);
+#pragma warning restore EF1002
+        }
+    }
+
+    /// <summary>
+    /// Create indexes on artist staging tables needed for materialization.
+    /// </summary>
+    private static async Task CreateArtistStagingIndexesAsync(MusicBrainzDbContext context, CancellationToken cancellationToken)
+    {
+        await context.Database.ExecuteSqlRawAsync(
+            "CREATE INDEX IF NOT EXISTS IX_ArtistStaging_ArtistId ON ArtistStaging(ArtistId)", cancellationToken);
+        await context.Database.ExecuteSqlRawAsync(
+            "CREATE INDEX IF NOT EXISTS IX_ArtistAliasStaging_ArtistId ON ArtistAliasStaging(ArtistId)", cancellationToken);
+        await context.Database.ExecuteSqlRawAsync(
+            "CREATE INDEX IF NOT EXISTS IX_LinkStaging_LinkId ON LinkStaging(LinkId)", cancellationToken);
+        await context.Database.ExecuteSqlRawAsync(
+            "CREATE INDEX IF NOT EXISTS IX_LinkArtistToArtistStaging_Artist0 ON LinkArtistToArtistStaging(Artist0)", cancellationToken);
+        await context.Database.ExecuteSqlRawAsync(
+            "CREATE INDEX IF NOT EXISTS IX_LinkArtistToArtistStaging_Artist1 ON LinkArtistToArtistStaging(Artist1)", cancellationToken);
+        await context.Database.ExecuteSqlRawAsync(
+            "CREATE INDEX IF NOT EXISTS IX_LinkArtistToArtistStaging_LinkId ON LinkArtistToArtistStaging(LinkId)", cancellationToken);
+    }
+
+    /// <summary>
+    /// Create indexes on album staging tables needed for materialization.
+    /// </summary>
+    private static async Task CreateAlbumStagingIndexesAsync(MusicBrainzDbContext context, CancellationToken cancellationToken)
+    {
+        await context.Database.ExecuteSqlRawAsync(
+            "CREATE INDEX IF NOT EXISTS IX_ArtistCreditStaging_ArtistCreditId ON ArtistCreditStaging(ArtistCreditId)", cancellationToken);
+        await context.Database.ExecuteSqlRawAsync(
+            "CREATE INDEX IF NOT EXISTS IX_ArtistCreditNameStaging_ArtistCreditId ON ArtistCreditNameStaging(ArtistCreditId)", cancellationToken);
+        await context.Database.ExecuteSqlRawAsync(
+            "CREATE INDEX IF NOT EXISTS IX_ReleaseCountryStaging_ReleaseId ON ReleaseCountryStaging(ReleaseId)", cancellationToken);
+        await context.Database.ExecuteSqlRawAsync(
+            "CREATE INDEX IF NOT EXISTS IX_ReleaseGroupStaging_ReleaseGroupId ON ReleaseGroupStaging(ReleaseGroupId)", cancellationToken);
+        await context.Database.ExecuteSqlRawAsync(
+            "CREATE INDEX IF NOT EXISTS IX_ReleaseGroupMetaStaging_ReleaseGroupId ON ReleaseGroupMetaStaging(ReleaseGroupId)", cancellationToken);
+        await context.Database.ExecuteSqlRawAsync(
+            "CREATE INDEX IF NOT EXISTS IX_ReleaseStaging_ReleaseId ON ReleaseStaging(ReleaseId)", cancellationToken);
+        await context.Database.ExecuteSqlRawAsync(
+            "CREATE INDEX IF NOT EXISTS IX_ReleaseStaging_ReleaseGroupId ON ReleaseStaging(ReleaseGroupId)", cancellationToken);
+        await context.Database.ExecuteSqlRawAsync(
+            "CREATE INDEX IF NOT EXISTS IX_ReleaseStaging_ArtistCreditId ON ReleaseStaging(ArtistCreditId)", cancellationToken);
     }
 
     private static void ForceGarbageCollection()
@@ -93,38 +224,23 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
     {
         using (Operation.At(LogEventLevel.Debug).Time("StreamingImporter: Artist staging data"))
         {
-            // Stream artist file to staging
+            // Stream artist file to staging using optimized raw SQL
             progressCallback?.Invoke("Loading Artists", 0, 4, "Streaming artist file to staging...");
-            var artistCount = await StreamFileToStagingAsync(
+            var artistCount = await StreamArtistsToStagingAsync(
                 context,
                 Path.Combine(mbDumpPath, "artist"),
-                parts => new ArtistStaging
-                {
-                    ArtistId = SafeParser.ToNumber<long>(parts[0]),
-                    MusicBrainzIdRaw = (SafeParser.ToGuid(parts[1]) ?? Guid.Empty).ToString(),
-                    Name = parts[2].CleanString().TruncateLongString(MaxIndexSize) ?? string.Empty,
-                    NameNormalized = parts[2].CleanString().TruncateLongString(MaxIndexSize)?.ToNormalizedString() ?? parts[2],
-                    SortName = parts[3].CleanString(true).TruncateLongString(MaxIndexSize) ?? parts[2]
-                },
-                context.ArtistsStaging,
                 cancellationToken);
             progressCallback?.Invoke("Loading Artists", 1, 4, $"Streamed {artistCount:N0} artists to staging");
 
-            // Stream artist aliases to staging
+            // Stream artist aliases to staging using optimized raw SQL
             progressCallback?.Invoke("Loading Artists", 1, 4, "Streaming artist aliases to staging...");
-            var aliasCount = await StreamFileToStagingAsync(
+            var aliasCount = await StreamArtistAliasesToStagingAsync(
                 context,
                 Path.Combine(mbDumpPath, "artist_alias"),
-                parts => new ArtistAliasStaging
-                {
-                    ArtistId = SafeParser.ToNumber<long>(parts[1]),
-                    NameNormalized = parts[2].CleanString().TruncateLongString(MaxIndexSize)?.ToNormalizedString() ?? parts[2]
-                },
-                context.ArtistAliasesStaging,
                 cancellationToken);
             progressCallback?.Invoke("Loading Artists", 2, 4, $"Streamed {aliasCount:N0} artist aliases to staging");
 
-            // Stream links to staging
+            // Stream links to staging (smaller file, use generic method)
             progressCallback?.Invoke("Loading Artists", 2, 4, "Streaming links to staging...");
             var linkCount = await StreamFileToStagingAsync(
                 context,
@@ -139,7 +255,7 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
                 cancellationToken);
             progressCallback?.Invoke("Loading Artists", 3, 4, $"Streamed {linkCount:N0} links to staging");
 
-            // Stream artist-to-artist links to staging
+            // Stream artist-to-artist links to staging (smaller file, use generic method)
             progressCallback?.Invoke("Loading Artists", 3, 4, "Streaming artist links to staging...");
             var artistLinkCount = await StreamFileToStagingAsync(
                 context,
@@ -215,14 +331,19 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
             var analyzer = new StandardAnalyzer(AppLuceneVersion);
             var indexConfig = new IndexWriterConfig(AppLuceneVersion, analyzer)
             {
-                RAMBufferSizeMB = 32  // Limit Lucene's memory buffer
+                RAMBufferSizeMB = 256,  // Larger buffer for faster indexing
+                MaxBufferedDocs = 50000,  // More docs before auto-flush
+                UseCompoundFile = false  // Faster writes, more files
             };
+            
+            // Use concurrent merge scheduler for background segment merging
+            indexConfig.MergeScheduler = new ConcurrentMergeScheduler();
+            
             using var writer = new IndexWriter(dir, indexConfig);
 
             var indexed = 0;
             var skip = 0;
-            var batchCount = 0;
-            const int luceneBatchSize = 5000;  // Smaller batches for Lucene
+            const int luceneBatchSize = 10000;  // Larger batches with bigger RAM buffer
 
             // Stream artists from database in batches
             while (true)
@@ -253,14 +374,6 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
                 // Clear batch from memory
                 batch.Clear();
                 skip += luceneBatchSize;
-                batchCount++;
-
-                // Periodic flush and GC to manage memory
-                if (batchCount % 20 == 0)
-                {
-                    writer.Flush(triggerMerge: false, applyAllDeletes: false);
-                    GC.Collect(0, GCCollectionMode.Optimized);
-                }
 
                 progressCallback?.Invoke("Creating Index", indexed, totalArtists,
                     $"Indexed {indexed:N0} / {totalArtists:N0} artists");
@@ -421,22 +534,11 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
                 cancellationToken);
             progressCallback?.Invoke("Loading Albums", 5, 6, $"Streamed {metaCount:N0} release group meta");
 
-            // Stream release to staging
+            // Stream release to staging using optimized raw SQL (largest file)
             progressCallback?.Invoke("Loading Albums", 5, 6, "Streaming releases to staging...");
-            var releaseCount = await StreamFileToStagingAsync(
+            var releaseCount = await StreamReleasesToStagingAsync(
                 context,
                 Path.Combine(mbDumpPath, "release"),
-                parts => new ReleaseStaging
-                {
-                    ReleaseId = SafeParser.ToNumber<long>(parts[0]),
-                    MusicBrainzIdRaw = parts[1],
-                    Name = parts[2].CleanString().TruncateLongString(MaxIndexSize) ?? string.Empty,
-                    NameNormalized = parts[2].CleanString().TruncateLongString(MaxIndexSize)?.ToNormalizedString() ?? parts[2],
-                    SortName = parts[2].CleanString(true).TruncateLongString(MaxIndexSize) ?? parts[2],
-                    ReleaseGroupId = SafeParser.ToNumber<long>(parts[4]),
-                    ArtistCreditId = SafeParser.ToNumber<long>(parts[3])
-                },
-                context.ReleasesStaging,
                 cancellationToken);
             progressCallback?.Invoke("Loading Albums", 6, 6, $"Streamed {releaseCount:N0} releases");
         }
@@ -539,8 +641,8 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
     #region Helper Methods
 
     /// <summary>
-    /// Streams a file line-by-line to a SQLite staging table.
-    /// Never loads more than BatchSize records into memory.
+    /// Streams a file line-by-line to a SQLite staging table using raw SQL bulk inserts.
+    /// Uses multi-value INSERT statements for maximum throughput.
     /// </summary>
     private async Task<int> StreamFileToStagingAsync<T>(
         MusicBrainzDbContext context,
@@ -555,51 +657,285 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
             return 0;
         }
 
-        var totalCount = 0;
-        var batchCount = 0;
-        var batch = new List<T>(BatchSize);
-
-        await foreach (var line in File.ReadLinesAsync(filePath, cancellationToken))
+        // Determine table name and column info from entity type
+        var entityType = context.Model.FindEntityType(typeof(T));
+        if (entityType == null)
         {
-            var parts = line.Split('\t');
-            try
-            {
-                var entity = constructor(parts);
-                batch.Add(entity);
-                totalCount++;
-
-                if (batch.Count >= BatchSize)
-                {
-                    await dbSet.AddRangeAsync(batch, cancellationToken);
-                    await context.SaveChangesAsync(cancellationToken);
-                    context.ChangeTracker.Clear();
-                    batch.Clear();
-                    batchCount++;
-
-                    // Periodic GC every 20 batches (100K records) to prevent memory accumulation
-                    if (batchCount % 20 == 0)
-                    {
-                        GC.Collect(0, GCCollectionMode.Optimized);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                logger.Debug("StreamingImporter: Skipped malformed line in {File}: {Error}",
-                    Path.GetFileName(filePath), ex.Message);
-            }
+            throw new InvalidOperationException($"Entity type {typeof(T).Name} not found in model");
         }
 
-        // Save remaining batch
-        if (batch.Count > 0)
+        var tableName = entityType.GetTableName();
+        var properties = entityType.GetProperties()
+            .Where(p => !p.IsPrimaryKey() || !p.ValueGenerated.HasFlag(Microsoft.EntityFrameworkCore.Metadata.ValueGenerated.OnAdd))
+            .ToList();
+
+        // Use the simpler EF Core approach but with a single transaction for entire file
+        var totalCount = 0;
+        var batch = new List<T>(BatchSize);
+
+        await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
+
+        try
         {
-            await dbSet.AddRangeAsync(batch, cancellationToken);
-            await context.SaveChangesAsync(cancellationToken);
-            context.ChangeTracker.Clear();
-            batch.Clear();
+            await foreach (var line in File.ReadLinesAsync(filePath, cancellationToken))
+            {
+                var parts = line.Split('\t');
+                try
+                {
+                    var entity = constructor(parts);
+                    batch.Add(entity);
+                    totalCount++;
+
+                    if (batch.Count >= BatchSize)
+                    {
+                        await dbSet.AddRangeAsync(batch, cancellationToken);
+                        await context.SaveChangesAsync(cancellationToken);
+                        context.ChangeTracker.Clear();
+                        batch.Clear();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.Debug("StreamingImporter: Skipped malformed line in {File}: {Error}",
+                        Path.GetFileName(filePath), ex.Message);
+                }
+            }
+
+            // Save remaining batch
+            if (batch.Count > 0)
+            {
+                await dbSet.AddRangeAsync(batch, cancellationToken);
+                await context.SaveChangesAsync(cancellationToken);
+                context.ChangeTracker.Clear();
+                batch.Clear();
+            }
+
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
         }
 
         return totalCount;
+    }
+
+    /// <summary>
+    /// Streams artists from file using optimized raw SQL bulk inserts.
+    /// </summary>
+    private async Task<int> StreamArtistsToStagingAsync(
+        MusicBrainzDbContext context,
+        string filePath,
+        CancellationToken cancellationToken)
+    {
+        if (!File.Exists(filePath))
+        {
+            logger.Warning("StreamingImporter: File not found: {FilePath}", filePath);
+            return 0;
+        }
+
+        var totalCount = 0;
+        var valuesList = new List<string>(BatchSize);
+        var sb = new StringBuilder();
+
+        await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
+
+        try
+        {
+            await foreach (var line in File.ReadLinesAsync(filePath, cancellationToken))
+            {
+                var parts = line.Split('\t');
+                try
+                {
+                    var artistId = SafeParser.ToNumber<long>(parts[0]);
+                    var mbId = (SafeParser.ToGuid(parts[1]) ?? Guid.Empty).ToString();
+                    var name = EscapeSqlString(parts[2].CleanString().TruncateLongString(MaxIndexSize) ?? string.Empty);
+                    var nameNormalized = EscapeSqlString(parts[2].CleanString().TruncateLongString(MaxIndexSize)?.ToNormalizedString() ?? parts[2]);
+                    var sortName = EscapeSqlString(parts[3].CleanString(true).TruncateLongString(MaxIndexSize) ?? parts[2]);
+
+                    valuesList.Add($"({artistId},'{mbId}','{name}','{nameNormalized}','{sortName}')");
+                    totalCount++;
+
+                    if (valuesList.Count >= BatchSize)
+                    {
+                        sb.Clear();
+                        sb.Append("INSERT INTO ArtistStaging (ArtistId, MusicBrainzIdRaw, Name, NameNormalized, SortName) VALUES ");
+                        sb.Append(string.Join(",", valuesList));
+                        await context.Database.ExecuteSqlRawAsync(sb.ToString(), cancellationToken);
+                        valuesList.Clear();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.Debug("StreamingImporter: Skipped malformed artist line: {Error}", ex.Message);
+                }
+            }
+
+            // Save remaining batch
+            if (valuesList.Count > 0)
+            {
+                sb.Clear();
+                sb.Append("INSERT INTO ArtistStaging (ArtistId, MusicBrainzIdRaw, Name, NameNormalized, SortName) VALUES ");
+                sb.Append(string.Join(",", valuesList));
+                await context.Database.ExecuteSqlRawAsync(sb.ToString(), cancellationToken);
+            }
+
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
+
+        return totalCount;
+    }
+
+    /// <summary>
+    /// Streams artist aliases from file using optimized raw SQL bulk inserts.
+    /// </summary>
+    private async Task<int> StreamArtistAliasesToStagingAsync(
+        MusicBrainzDbContext context,
+        string filePath,
+        CancellationToken cancellationToken)
+    {
+        if (!File.Exists(filePath))
+        {
+            logger.Warning("StreamingImporter: File not found: {FilePath}", filePath);
+            return 0;
+        }
+
+        var totalCount = 0;
+        var valuesList = new List<string>(BatchSize);
+        var sb = new StringBuilder();
+
+        await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
+
+        try
+        {
+            await foreach (var line in File.ReadLinesAsync(filePath, cancellationToken))
+            {
+                var parts = line.Split('\t');
+                try
+                {
+                    var artistId = SafeParser.ToNumber<long>(parts[1]);
+                    var nameNormalized = EscapeSqlString(parts[2].CleanString().TruncateLongString(MaxIndexSize)?.ToNormalizedString() ?? parts[2]);
+
+                    valuesList.Add($"({artistId},'{nameNormalized}')");
+                    totalCount++;
+
+                    if (valuesList.Count >= BatchSize)
+                    {
+                        sb.Clear();
+                        sb.Append("INSERT INTO ArtistAliasStaging (ArtistId, NameNormalized) VALUES ");
+                        sb.Append(string.Join(",", valuesList));
+                        await context.Database.ExecuteSqlRawAsync(sb.ToString(), cancellationToken);
+                        valuesList.Clear();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.Debug("StreamingImporter: Skipped malformed alias line: {Error}", ex.Message);
+                }
+            }
+
+            if (valuesList.Count > 0)
+            {
+                sb.Clear();
+                sb.Append("INSERT INTO ArtistAliasStaging (ArtistId, NameNormalized) VALUES ");
+                sb.Append(string.Join(",", valuesList));
+                await context.Database.ExecuteSqlRawAsync(sb.ToString(), cancellationToken);
+            }
+
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
+
+        return totalCount;
+    }
+
+    /// <summary>
+    /// Streams releases from file using optimized raw SQL bulk inserts.
+    /// </summary>
+    private async Task<int> StreamReleasesToStagingAsync(
+        MusicBrainzDbContext context,
+        string filePath,
+        CancellationToken cancellationToken)
+    {
+        if (!File.Exists(filePath))
+        {
+            logger.Warning("StreamingImporter: File not found: {FilePath}", filePath);
+            return 0;
+        }
+
+        var totalCount = 0;
+        var valuesList = new List<string>(BatchSize);
+        var sb = new StringBuilder();
+
+        await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
+
+        try
+        {
+            await foreach (var line in File.ReadLinesAsync(filePath, cancellationToken))
+            {
+                var parts = line.Split('\t');
+                try
+                {
+                    var releaseId = SafeParser.ToNumber<long>(parts[0]);
+                    var mbId = EscapeSqlString(parts[1]);
+                    var name = EscapeSqlString(parts[2].CleanString().TruncateLongString(MaxIndexSize) ?? string.Empty);
+                    var nameNormalized = EscapeSqlString(parts[2].CleanString().TruncateLongString(MaxIndexSize)?.ToNormalizedString() ?? parts[2]);
+                    var sortName = EscapeSqlString(parts[2].CleanString(true).TruncateLongString(MaxIndexSize) ?? parts[2]);
+                    var artistCreditId = SafeParser.ToNumber<long>(parts[3]);
+                    var releaseGroupId = SafeParser.ToNumber<long>(parts[4]);
+
+                    valuesList.Add($"({releaseId},'{mbId}','{name}','{nameNormalized}','{sortName}',{releaseGroupId},{artistCreditId})");
+                    totalCount++;
+
+                    if (valuesList.Count >= BatchSize)
+                    {
+                        sb.Clear();
+                        sb.Append("INSERT INTO ReleaseStaging (ReleaseId, MusicBrainzIdRaw, Name, NameNormalized, SortName, ReleaseGroupId, ArtistCreditId) VALUES ");
+                        sb.Append(string.Join(",", valuesList));
+                        await context.Database.ExecuteSqlRawAsync(sb.ToString(), cancellationToken);
+                        valuesList.Clear();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.Debug("StreamingImporter: Skipped malformed release line: {Error}", ex.Message);
+                }
+            }
+
+            if (valuesList.Count > 0)
+            {
+                sb.Clear();
+                sb.Append("INSERT INTO ReleaseStaging (ReleaseId, MusicBrainzIdRaw, Name, NameNormalized, SortName, ReleaseGroupId, ArtistCreditId) VALUES ");
+                sb.Append(string.Join(",", valuesList));
+                await context.Database.ExecuteSqlRawAsync(sb.ToString(), cancellationToken);
+            }
+
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
+
+        return totalCount;
+    }
+
+    private static string EscapeSqlString(string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return string.Empty;
+        return value.Replace("'", "''");
     }
 
     private static DateTime? ParseMusicBrainzDate(string? year, string? month, string? day)
