@@ -16,8 +16,8 @@ public sealed record LinkStaging
     public long Id { get; set; }
 
     public long LinkId { get; init; }
-    
+
     public DateTime? BeginDate { get; init; }
-    
+
     public DateTime? EndDate { get; init; }
 }

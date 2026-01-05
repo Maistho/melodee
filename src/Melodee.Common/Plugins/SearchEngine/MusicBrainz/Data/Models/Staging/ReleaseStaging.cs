@@ -19,20 +19,20 @@ public sealed record ReleaseStaging
     public long Id { get; set; }
 
     public long ReleaseId { get; init; }
-    
+
     public long ReleaseGroupId { get; init; }
-    
+
     public long ArtistCreditId { get; init; }
-    
+
     [MaxLength(MusicBrainzRepositoryBase.MaxIndexSize)]
     public required string MusicBrainzIdRaw { get; init; }
-    
+
     [MaxLength(MusicBrainzRepositoryBase.MaxIndexSize)]
     public required string Name { get; init; }
-    
+
     [MaxLength(MusicBrainzRepositoryBase.MaxIndexSize)]
     public required string NameNormalized { get; init; }
-    
+
     [MaxLength(MusicBrainzRepositoryBase.MaxIndexSize)]
     public required string SortName { get; init; }
 }

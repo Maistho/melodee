@@ -17,11 +17,11 @@ public sealed record ReleaseGroupStaging
     public long Id { get; set; }
 
     public long ReleaseGroupId { get; init; }
-    
+
     public long ArtistCreditId { get; init; }
-    
+
     public int ReleaseType { get; init; }
-    
+
     [MaxLength(MusicBrainzRepositoryBase.MaxIndexSize)]
     public required string MusicBrainzIdRaw { get; init; }
 }

@@ -17,13 +17,13 @@ public class MusicBrainzDbContext : DbContext
     public DbSet<Artist> Artists { get; set; } = null!;
     public DbSet<Album> Albums { get; set; } = null!;
     public DbSet<ArtistRelation> ArtistRelations { get; set; } = null!;
-    
+
     // Staging tables for streaming artist import
     public DbSet<ArtistStaging> ArtistsStaging { get; set; } = null!;
     public DbSet<ArtistAliasStaging> ArtistAliasesStaging { get; set; } = null!;
     public DbSet<LinkStaging> LinksStaging { get; set; } = null!;
     public DbSet<LinkArtistToArtistStaging> LinkArtistToArtistsStaging { get; set; } = null!;
-    
+
     // Staging tables for streaming album import
     public DbSet<ArtistCreditStaging> ArtistCreditsStaging { get; set; } = null!;
     public DbSet<ArtistCreditNameStaging> ArtistCreditNamesStaging { get; set; } = null!;

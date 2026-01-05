@@ -18,13 +18,13 @@ public sealed record ReleaseGroupMetaStaging
     public long Id { get; set; }
 
     public long ReleaseGroupId { get; init; }
-    
+
     public int DateYear { get; init; }
-    
+
     public int DateMonth { get; init; }
-    
+
     public int DateDay { get; init; }
-    
+
     public int DateYearValue => DateYear > DateTime.MinValue.Year && DateYear < DateTime.MaxValue.Year
         ? DateYear
         : DateTime.MinValue.Year;
@@ -32,7 +32,7 @@ public sealed record ReleaseGroupMetaStaging
     public int DateMonthValue => DateMonth is > 0 and < 12 ? DateMonth : 1;
 
     public int DateDayValue => DateDay is > 0 and < 31 ? DateDay : 1;
-    
+
     public bool IsValid => ReleaseGroupId > 0 && DateDayValue > 0 && DateMonthValue > 0 && DateYearValue > 0;
 
     [NotMapped]

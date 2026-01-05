@@ -1,4 +1,3 @@
-using System.Text;
 using Lucene.Net.Analysis.Standard;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
@@ -39,7 +38,7 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
         CancellationToken cancellationToken = default)
     {
         var mbDumpPath = Path.Combine(storagePath, "staging/mbdump");
-        
+
         // Configure SQLite for lower memory usage during bulk operations
         await context.Database.ExecuteSqlRawAsync("PRAGMA temp_store = FILE", cancellationToken);
         await context.Database.ExecuteSqlRawAsync("PRAGMA cache_size = -2000", cancellationToken);  // 2MB cache
@@ -76,7 +75,7 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
         // Force final GC
         ForceGarbageCollection();
     }
-    
+
     private static void ForceGarbageCollection()
     {
         GC.Collect(2, GCCollectionMode.Forced, true);
@@ -187,7 +186,7 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
 
             var rowsAffected = await context.Database.ExecuteSqlRawAsync(sql, cancellationToken);
             logger.Debug("StreamingImporter: Materialized {Count} artists", rowsAffected);
-            
+
             progressCallback?.Invoke("Materializing Artists", 1, 1, $"Materialized {rowsAffected:N0} artists");
         }
     }
@@ -255,7 +254,7 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
                 batch.Clear();
                 skip += luceneBatchSize;
                 batchCount++;
-                
+
                 // Periodic flush and GC to manage memory
                 if (batchCount % 20 == 0)
                 {
@@ -263,13 +262,13 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
                     GC.Collect(0, GCCollectionMode.Optimized);
                 }
 
-                progressCallback?.Invoke("Creating Index", indexed, totalArtists, 
+                progressCallback?.Invoke("Creating Index", indexed, totalArtists,
                     $"Indexed {indexed:N0} / {totalArtists:N0} artists");
             }
 
             writer.Commit();
             logger.Debug("StreamingImporter: Created Lucene index with {Count} artists", indexed);
-            progressCallback?.Invoke("Creating Index", totalArtists, totalArtists, 
+            progressCallback?.Invoke("Creating Index", totalArtists, totalArtists,
                 $"Completed Lucene index with {indexed:N0} artists");
         }
     }
@@ -305,7 +304,7 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
 
             var rowsAffected = await context.Database.ExecuteSqlRawAsync(sql, cancellationToken);
             logger.Debug("StreamingImporter: Materialized {Count} artist relations", rowsAffected);
-            
+
             progressCallback?.Invoke("Materializing Relations", 1, 1, $"Materialized {rowsAffected:N0} artist relations");
         }
     }
@@ -505,7 +504,7 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
 
             var rowsAffected = await context.Database.ExecuteSqlRawAsync(sql, cancellationToken);
             logger.Debug("StreamingImporter: Materialized {Count} albums", rowsAffected);
-            
+
             progressCallback?.Invoke("Materializing Albums", 1, 1, $"Materialized {rowsAffected:N0} albums");
         }
     }
@@ -576,7 +575,7 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
                     context.ChangeTracker.Clear();
                     batch.Clear();
                     batchCount++;
-                    
+
                     // Periodic GC every 20 batches (100K records) to prevent memory accumulation
                     if (batchCount % 20 == 0)
                     {
@@ -586,7 +585,7 @@ public sealed class StreamingMusicBrainzImporter(ILogger logger)
             }
             catch (Exception ex)
             {
-                logger.Debug("StreamingImporter: Skipped malformed line in {File}: {Error}", 
+                logger.Debug("StreamingImporter: Skipped malformed line in {File}: {Error}",
                     Path.GetFileName(filePath), ex.Message);
             }
         }

@@ -18,10 +18,10 @@ public sealed record LinkArtistToArtistStaging
     public long Id { get; set; }
 
     public long LinkId { get; init; }
-    
+
     public long Artist0 { get; init; }
-    
+
     public long Artist1 { get; init; }
-    
+
     public int LinkOrder { get; init; }
 }

@@ -1,8 +1,6 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Globalization;
-using Lucene.Net.Analysis.Standard;
-using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
@@ -20,7 +18,6 @@ using Serilog.Events;
 using SerilogTimings;
 using Album = Melodee.Common.Plugins.SearchEngine.MusicBrainz.Data.Models.Materialized.Album;
 using Artist = Melodee.Common.Plugins.SearchEngine.MusicBrainz.Data.Models.Materialized.Artist;
-using ArtistRelation = Melodee.Common.Plugins.SearchEngine.MusicBrainz.Data.Models.Materialized.ArtistRelation;
 using Directory = System.IO.Directory;
 
 
@@ -528,7 +525,7 @@ public class SQLiteMusicBrainzRepository(
             // Prepare database context and optimizations
             await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
             await context.Database.EnsureCreatedAsync(cancellationToken);
-            
+
             // SQLite performance optimizations for bulk insert
             await context.Database.ExecuteSqlRawAsync("PRAGMA synchronous = OFF", cancellationToken);
             await context.Database.ExecuteSqlRawAsync("PRAGMA journal_mode = MEMORY", cancellationToken);
@@ -541,7 +538,7 @@ public class SQLiteMusicBrainzRepository(
                 // Use the new streaming importer that never loads full datasets into memory
                 var importer = new StreamingMusicBrainzImporter(Logger);
                 var luceneIndexPath = Path.Combine(storagePath, "lucene");
-                
+
                 await importer.ImportAsync(
                     context,
                     storagePath,
@@ -552,7 +549,7 @@ public class SQLiteMusicBrainzRepository(
                 // Verify import results
                 var artistCount = await context.Artists.CountAsync(cancellationToken);
                 var albumCount = await context.Albums.CountAsync(cancellationToken);
-                
+
                 Logger.Information(
                     "MusicBrainzRepository: Streaming import complete. Artists: {ArtistCount:N0}, Albums: {AlbumCount:N0}",
                     artistCount, albumCount);

@@ -16,7 +16,7 @@ public sealed record ArtistAliasStaging
     public long Id { get; set; }
 
     public long ArtistId { get; init; }
-    
+
     [MaxLength(MusicBrainzRepositoryBase.MaxIndexSize)]
     public required string NameNormalized { get; init; }
 }

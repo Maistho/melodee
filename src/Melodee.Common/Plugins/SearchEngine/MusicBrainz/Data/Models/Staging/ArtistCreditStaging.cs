@@ -17,6 +17,6 @@ public sealed record ArtistCreditStaging
     public long Id { get; set; }
 
     public long ArtistCreditId { get; init; }
-    
+
     public int ArtistCount { get; init; }
 }

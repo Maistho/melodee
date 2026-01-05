@@ -37,7 +37,7 @@ public abstract class MusicBrainzRepositoryBase(ILogger logger, IMelodeeConfigur
 {
     public const int MaxIndexSize = 255;
     private const LuceneVersion AppLuceneVersion = LuceneVersion.LUCENE_48;
-    
+
     protected readonly ConcurrentBag<Album> LoadedMaterializedAlbums = [];
     protected readonly ConcurrentBag<ArtistRelation> LoadedMaterializedArtistRelations = [];
 
@@ -164,7 +164,7 @@ public abstract class MusicBrainzRepositoryBase(ILogger logger, IMelodeeConfigur
             var analyzer = new StandardAnalyzer(AppLuceneVersion);
             var indexConfig = new IndexWriterConfig(AppLuceneVersion, analyzer);
             using var writer = new IndexWriter(dir, indexConfig);
-            
+
             var indexCount = 0;
             foreach (var artist in artists)
             {
@@ -198,7 +198,7 @@ public abstract class MusicBrainzRepositoryBase(ILogger logger, IMelodeeConfigur
     /// <param name="cancellationToken">Cancellation token</param>
     protected async Task LoadDataFromMusicBrainzFiles(
         ArtistPersistCallback? artistPersistCallback,
-        ImportProgressCallback? progressCallback = null, 
+        ImportProgressCallback? progressCallback = null,
         CancellationToken cancellationToken = default)
     {
         var storagePath = await StoragePath(cancellationToken).ConfigureAwait(false);
@@ -362,7 +362,7 @@ public abstract class MusicBrainzRepositoryBase(ILogger logger, IMelodeeConfigur
         // This is the ONLY copy we make - used for Lucene index, SQLite import, then discarded
         var artistsList = LoadedMaterializedArtists.ToList();
         var relationsList = LoadedMaterializedArtistRelations.ToList();
-        
+
         // Clear the ConcurrentBags immediately - we have the lists now
         LoadedMaterializedArtists.Clear();
         LoadedMaterializedArtistRelations.Clear();
@@ -375,7 +375,7 @@ public abstract class MusicBrainzRepositoryBase(ILogger logger, IMelodeeConfigur
         Logger.Debug("MusicBrainzRepository: Clearing artist intermediate data to free memory...");
         ClearArtistIntermediateData();
         progressCallback?.Invoke("Memory Cleanup", 1, 1, "Freed artist intermediate data");
-        
+
         // Force GC after clearing raw data
         GC.Collect();
         GC.WaitForPendingFinalizers();
@@ -386,11 +386,11 @@ public abstract class MusicBrainzRepositoryBase(ILogger logger, IMelodeeConfigur
         {
             Logger.Debug("MusicBrainzRepository: Persisting artists to SQLite...");
             artistLookup = await artistPersistCallback(
-                artistsList, 
-                relationsList, 
-                progressCallback, 
+                artistsList,
+                relationsList,
+                progressCallback,
                 cancellationToken).ConfigureAwait(false);
-            
+
             // Clear the lists - SQLite has the data now, we have the lookup function
             Logger.Debug("MusicBrainzRepository: Clearing artist lists from memory...");
             artistsList.Clear();
