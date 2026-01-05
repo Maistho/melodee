@@ -206,6 +206,15 @@
         }
     }
 
+    [JSInvokable]
+    public Task OnAudioError(int errorCode)
+    {
+        Logger.Warning("[MusicPlayer] Audio error occurred for song [{SongId}] with error code [{ErrorCode}]",
+            CurrentSong?.ApiKey, errorCode);
+        IsPlaying = false;
+        return InvokeAsync(StateHasChanged);
+    }
+
     private async Task LoadSong()
     {
         if (_module != null)

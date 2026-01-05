@@ -156,8 +156,8 @@ public sealed class LibraryInboundProcessJob(
             return true;
         }
 
-        var chainOnComplete = context.MergedJobDataMap.GetBoolean(MelodeeJobExecutionContext.ChainOnComplete);
-        return chainOnComplete;
+        return context.MergedJobDataMap.ContainsKey(MelodeeJobExecutionContext.ChainOnComplete) &&
+               context.MergedJobDataMap.GetBoolean(MelodeeJobExecutionContext.ChainOnComplete);
     }
 
     private async Task TriggerNextJobAsync(IJobExecutionContext context, JobKey nextJobKey)
@@ -172,7 +172,8 @@ public sealed class LibraryInboundProcessJob(
                 Logger.Debug("[{JobName}] Triggering next job in chain: {NextJob}", nameof(LibraryInboundProcessJob), nextJobKey.Name);
 
                 var jobDataMap = new JobDataMap();
-                if (context.MergedJobDataMap.GetBoolean(MelodeeJobExecutionContext.ChainOnComplete))
+                if (context.MergedJobDataMap.ContainsKey(MelodeeJobExecutionContext.ChainOnComplete) &&
+                    context.MergedJobDataMap.GetBoolean(MelodeeJobExecutionContext.ChainOnComplete))
                 {
                     jobDataMap.Put(MelodeeJobExecutionContext.ChainOnComplete, true);
                 }

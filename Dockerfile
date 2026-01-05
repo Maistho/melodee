@@ -42,6 +42,7 @@ RUN apt-get update && \
         ffmpeg \
         postgresql-client \
         curl \
+        lbzip2 \
         && rm -rf /var/lib/apt/lists/*
 
 # Copy the published application

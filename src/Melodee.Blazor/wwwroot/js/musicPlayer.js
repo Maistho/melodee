@@ -97,7 +97,7 @@ export function pauseSong() {
 }
 
 export function forwardTenSec() {
-    if (audio) {
+    if (audio && !isNaN(audio.duration) && isFinite(audio.duration)) {
         audio.currentTime = Math.min(audio.duration, audio.currentTime + 10);
         return true;
     }
@@ -105,7 +105,7 @@ export function forwardTenSec() {
 }
 
 export function backwardTenSec() {
-    if (audio) {
+    if (audio && !isNaN(audio.currentTime) && isFinite(audio.currentTime)) {
         audio.currentTime = Math.max(0, audio.currentTime - 10);
         return true;
     }

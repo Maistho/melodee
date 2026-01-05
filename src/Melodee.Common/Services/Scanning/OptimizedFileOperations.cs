@@ -303,7 +303,7 @@ public static class OptimizedFileOperations
         var parallelOptions = new ParallelOptions
         {
             CancellationToken = cancellationToken,
-            MaxDegreeOfParallelism = Environment.ProcessorCount / 2 // I/O bound, use fewer threads
+            MaxDegreeOfParallelism = Math.Max(1, Environment.ProcessorCount / 2) // I/O bound, use fewer threads (minimum 1)
         };
 
         await Task.Run(() =>

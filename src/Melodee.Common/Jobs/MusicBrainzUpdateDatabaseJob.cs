@@ -533,6 +533,18 @@ public class MusicBrainzUpdateDatabaseJob(
         Logger.Debug("[{JobName}] Extracting [{FileName}]...", nameof(MusicBrainzUpdateDatabaseJob), archivePath);
         var sw = Stopwatch.GetTimestamp();
 
+        // Try native extraction first (much faster with lbzip2/pbzip2)
+        if (TryNativeExtraction(archivePath, destinationPath))
+        {
+            Logger.Information("[{JobName}] Extracted [{FileName}] using native tools in {Elapsed:F1} seconds.",
+                nameof(MusicBrainzUpdateDatabaseJob),
+                Path.GetFileName(archivePath),
+                Stopwatch.GetElapsedTime(sw).TotalSeconds);
+            return;
+        }
+
+        // Fallback to managed extraction
+        Logger.Debug("[{JobName}] Native extraction not available, using managed extraction", nameof(MusicBrainzUpdateDatabaseJob));
         using var fileStream = File.OpenRead(archivePath);
         using var bzipStream = new BZip2InputStream(fileStream);
         var tarArchive = TarArchive.CreateInputTarArchive(bzipStream, Encoding.UTF8);
@@ -543,6 +555,91 @@ public class MusicBrainzUpdateDatabaseJob(
             nameof(MusicBrainzUpdateDatabaseJob),
             Path.GetFileName(archivePath),
             Stopwatch.GetElapsedTime(sw).TotalSeconds);
+    }
+
+    private bool TryNativeExtraction(string archivePath, string destinationPath)
+    {
+        // Only attempt native extraction on Unix-like systems (Linux, macOS)
+        // Windows doesn't have these tools natively and the shell syntax differs
+        if (!OperatingSystem.IsLinux() && !OperatingSystem.IsMacOS())
+        {
+            return false;
+        }
+
+        // Check for parallel bzip2 decompressors (much faster than single-threaded)
+        string? decompressor = null;
+        foreach (var tool in new[] { "lbzip2", "pbzip2", "bzip2" })
+        {
+            try
+            {
+                var whichProcess = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "which",
+                    Arguments = tool,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                });
+                whichProcess?.WaitForExit(1000);
+                if (whichProcess?.ExitCode == 0)
+                {
+                    decompressor = tool;
+                    break;
+                }
+            }
+            catch
+            {
+                // Tool not found, continue to next
+            }
+        }
+
+        if (decompressor == null)
+        {
+            return false;
+        }
+
+        try
+        {
+            // Use pipe: decompressor | tar
+            // lbzip2/pbzip2 use multiple cores for decompression
+            var processInfo = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "/bin/sh",
+                Arguments = $"-c \"{decompressor} -dc '{archivePath}' | tar -xf - -C '{destinationPath}'\"",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            Logger.Debug("[{JobName}] Running native extraction: {Command}", nameof(MusicBrainzUpdateDatabaseJob), processInfo.Arguments);
+
+            using var process = System.Diagnostics.Process.Start(processInfo);
+            if (process == null)
+            {
+                return false;
+            }
+
+            // Wait for completion (these files are large, give it plenty of time)
+            process.WaitForExit();
+
+            if (process.ExitCode != 0)
+            {
+                var error = process.StandardError.ReadToEnd();
+                Logger.Warning("[{JobName}] Native extraction failed with exit code {ExitCode}: {Error}",
+                    nameof(MusicBrainzUpdateDatabaseJob), process.ExitCode, error);
+                return false;
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Warning(ex, "[{JobName}] Native extraction threw exception, falling back to managed extraction",
+                nameof(MusicBrainzUpdateDatabaseJob));
+            return false;
+        }
     }
 
     private static string FormatBytes(long bytes)
