@@ -96,7 +96,7 @@ public class MusicBrainzImportBenchmark : IDisposable
         var currentPhase = "";
         var phaseStopwatch = new Stopwatch();
 
-        void ProgressCallback(string phase, int current, int total, string message)
+        void ProgressCallback(string phase, int current, int total, string? message)
         {
             if (phase != currentPhase)
             {
@@ -267,7 +267,13 @@ public class MusicBrainzImportBenchmark : IDisposable
         sw.Stop();
 
         cts.Cancel();
-        await memoryTracker.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+        try
+        {
+            await memoryTracker;
+        }
+        catch (OperationCanceledException)
+        {
+        }
 
         var endMemory = GC.GetTotalMemory(true);
         var memoryIncrease = endMemory - startMemory;
