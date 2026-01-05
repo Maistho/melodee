@@ -538,7 +538,7 @@ public class SQLiteMusicBrainzRepositoryTests : IDisposable, IAsyncDisposable
     ///
     /// Run with: dotnet test --filter "ImportData_WithRealData_FindsMenAtWorkAndCargo" -v n -l "console;verbosity=detailed"
     /// </summary>
-    [Fact]
+    [Fact(Skip = "Requires real MusicBrainz data dump to run")]
     public async Task ImportData_WithRealData_FindsMenAtWorkAndCargo()
     {
         // Arrange
