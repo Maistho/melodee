@@ -509,18 +509,10 @@ public class SQLiteMusicBrainzRepository(
         ImportProgressCallback? progressCallback = null,
         CancellationToken cancellationToken = default)
     {
-        using (Operation.At(LogEventLevel.Debug).Time("MusicBrainzRepository: ImportData"))
+        using (Operation.At(LogEventLevel.Debug).Time("MusicBrainzRepository: ImportData (Streaming)"))
         {
             var configuration =
                 await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
-
-            var batchSize = configuration.GetValue<int>(SettingRegistry.SearchEngineMusicBrainzImportBatchSize);
-            var maxToProcess =
-                configuration.GetValue<int>(SettingRegistry.SearchEngineMusicBrainzImportMaximumToProcess);
-            if (maxToProcess == 0)
-            {
-                maxToProcess = int.MaxValue;
-            }
 
             var storagePath = configuration.GetValue<string>(SettingRegistry.SearchEngineMusicBrainzStoragePath);
             if (storagePath == null || !Directory.Exists(storagePath))
@@ -544,158 +536,31 @@ public class SQLiteMusicBrainzRepository(
             await context.Database.ExecuteSqlRawAsync("PRAGMA cache_size = -64000", cancellationToken);
             await context.Database.ExecuteSqlRawAsync("PRAGMA auto_vacuum = NONE", cancellationToken);
 
-            var artistCount = 0;
-
             try
             {
-                // Create artist persist callback that:
-                // 1. Imports artists to SQLite (Lucene index already created by base class)
-                // 2. Returns a lookup function for album processing
-                ArtistPersistCallback artistPersistCallback = async (artists, relations, progressCb, ct) =>
+                // Use the new streaming importer that never loads full datasets into memory
+                var importer = new StreamingMusicBrainzImporter(Logger);
+                var luceneIndexPath = Path.Combine(storagePath, "lucene");
+                
+                await importer.ImportAsync(
+                    context,
+                    storagePath,
+                    luceneIndexPath,
+                    progressCallback,
+                    cancellationToken);
+
+                // Verify import results
+                var artistCount = await context.Artists.CountAsync(cancellationToken);
+                var albumCount = await context.Albums.CountAsync(cancellationToken);
+                
+                Logger.Information(
+                    "MusicBrainzRepository: Streaming import complete. Artists: {ArtistCount:N0}, Albums: {AlbumCount:N0}",
+                    artistCount, albumCount);
+
+                return new OperationResult<bool>
                 {
-                    // artists and relations are IReadOnlyCollection - already materialized as lists by base class
-                    artistCount = artists.Count;
-
-                    // Import artists to SQLite
-                    using (Operation.At(LogEventLevel.Debug).Time("MusicBrainzRepository: Inserted loaded artists"))
-                    {
-                        var batches = batchSize > 0 && artists.Count > 0 ? (artists.Count + batchSize - 1) / batchSize : 0;
-                        Logger.Debug("MusicBrainzRepository: Importing [{BatchCount}] Artist batches ({TotalCount} artists)...",
-                            batches, artists.Count);
-
-                        progressCb?.Invoke("Importing Artists", 0, artists.Count,
-                            $"Importing {artists.Count:N0} artists in {batches:N0} batches...");
-
-                        var artistsProcessed = 0;
-                        var artistArray = artists as IList<Artist> ?? artists.ToList();
-                        
-                        for (var batch = 0; batch < batches; batch++)
-                        {
-                            var batchItems = artistArray.Skip(batch * batchSize).Take(batchSize).ToList();
-
-                            await context.Artists.AddRangeAsync(batchItems, ct);
-                            await context.SaveChangesAsync(ct);
-                            context.ChangeTracker.Clear();
-
-                            artistsProcessed += batchItems.Count;
-
-                            if (batch % 5 == 0 || batch == batches - 1)
-                            {
-                                progressCb?.Invoke("Importing Artists", artistsProcessed, artists.Count,
-                                    $"Imported {artistsProcessed:N0} / {artists.Count:N0} artists");
-                            }
-
-                            if (batch * batchSize > maxToProcess)
-                            {
-                                break;
-                            }
-                        }
-
-                        var dbArtistCount = await context.Artists.CountAsync(ct);
-                        Logger.Information(
-                            "MusicBrainzRepository: Imported [{Count}] artists of [{Loaded}] in [{BatchCount}] batches.",
-                            dbArtistCount, artists.Count, batches);
-                    }
-
-                    // Import artist relations to SQLite
-                    using (Operation.At(LogEventLevel.Debug)
-                               .Time("MusicBrainzRepository: Inserted loaded artist relations"))
-                    {
-                        var batches = batchSize > 0 && relations.Count > 0 ? (relations.Count + batchSize - 1) / batchSize : 0;
-                        Logger.Debug("MusicBrainzRepository: Importing [{BatchCount}] Artist Relations batches ({TotalCount} relations)...",
-                            batches, relations.Count);
-
-                        progressCb?.Invoke("Importing Relations", 0, relations.Count,
-                            $"Importing {relations.Count:N0} artist relations...");
-
-                        var relationsProcessed = 0;
-                        var relationArray = relations as IList<ArtistRelation> ?? relations.ToList();
-                        
-                        for (var batch = 0; batch < batches; batch++)
-                        {
-                            var batchItems = relationArray.Skip(batch * batchSize).Take(batchSize).ToList();
-
-                            await context.ArtistRelations.AddRangeAsync(batchItems, ct);
-                            await context.SaveChangesAsync(ct);
-                            context.ChangeTracker.Clear();
-
-                            relationsProcessed += batchItems.Count;
-
-                            if (batch % 10 == 0 || batch == batches - 1)
-                            {
-                                progressCb?.Invoke("Importing Relations", relationsProcessed, relations.Count,
-                                    $"Imported {relationsProcessed:N0} / {relations.Count:N0} relations");
-                            }
-
-                            if (batch * batchSize > maxToProcess)
-                            {
-                                break;
-                            }
-                        }
-
-                        var relationCount = await context.ArtistRelations.CountAsync(ct);
-                        Logger.Information(
-                            "MusicBrainzRepository: Imported [{Count}] artist relations of [{Loaded}] in [{BatchCount}] batches.",
-                            relationCount, relations.Count, batches);
-                    }
-
-                    // Build a lookup cache from SQLite for album processing
-                    // Use a dictionary cache to avoid repeated DB queries
-                    Logger.Debug("MusicBrainzRepository: Building artist lookup cache from SQLite...");
-                    progressCb?.Invoke("Building Cache", 0, 1, "Loading artist lookup cache from SQLite...");
-                    
-                    var artistLookupCache = await context.Artists
-                        .AsNoTracking()
-                        .ToDictionaryAsync(a => a.MusicBrainzArtistId, a => a, ct);
-                    
-                    progressCb?.Invoke("Building Cache", 1, 1, $"Built artist lookup cache with {artistLookupCache.Count:N0} entries");
-
-                    // Return lookup function
-                    return (long musicBrainzArtistId) => 
-                        artistLookupCache.GetValueOrDefault(musicBrainzArtistId);
+                    Data = artistCount > 0 && albumCount > 0
                 };
-
-                // Phase 1: Load data from files with artist persistence callback
-                await LoadDataFromMusicBrainzFiles(artistPersistCallback, progressCallback, cancellationToken).ConfigureAwait(false);
-
-                // Phase 2: Import Albums (artists already imported via callback)
-                using (Operation.At(LogEventLevel.Debug).Time("MusicBrainzRepository: Inserted loaded albums"))
-                {
-                    var batches = batchSize > 0 && LoadedMaterializedAlbums.Count > 0 ? (LoadedMaterializedAlbums.Count + batchSize - 1) / batchSize : 0;
-                    Logger.Debug("MusicBrainzRepository: Importing [{BatchCount}] Album batches ({TotalCount} albums)...",
-                        batches, LoadedMaterializedAlbums.Count);
-
-                    progressCallback?.Invoke("Importing Albums", 0, LoadedMaterializedAlbums.Count,
-                        $"Importing {LoadedMaterializedAlbums.Count:N0} albums in {batches:N0} batches...");
-
-                    var albumsProcessed = 0;
-                    for (var batch = 0; batch < batches; batch++)
-                    {
-                        var batchItems = LoadedMaterializedAlbums.Skip(batch * batchSize).Take(batchSize).ToList();
-
-                        await context.Albums.AddRangeAsync(batchItems, cancellationToken);
-                        await context.SaveChangesAsync(cancellationToken);
-                        context.ChangeTracker.Clear();
-
-                        albumsProcessed += batchItems.Count;
-
-                        if (batch % 5 == 0 || batch == batches - 1)
-                        {
-                            progressCallback?.Invoke("Importing Albums", albumsProcessed, LoadedMaterializedAlbums.Count,
-                                $"Imported {albumsProcessed:N0} / {LoadedMaterializedAlbums.Count:N0} albums");
-                        }
-
-                        if (batch * batchSize > maxToProcess)
-                        {
-                            break;
-                        }
-                    }
-
-                    var albumCount = await context.Albums.CountAsync(cancellationToken);
-                    Logger.Information(
-                        "MusicBrainzRepository: Imported [{Count}] albums of [{Loaded}] in [{BatchCount}] batches.",
-                        albumCount, LoadedMaterializedAlbums.Count, batches);
-                }
             }
             finally
             {
@@ -703,12 +568,6 @@ public class SQLiteMusicBrainzRepository(
                 await context.Database.ExecuteSqlRawAsync("PRAGMA synchronous = NORMAL", cancellationToken);
                 await context.Database.ExecuteSqlRawAsync("PRAGMA journal_mode = WAL", cancellationToken);
             }
-
-            return new OperationResult<bool>
-            {
-                Data = artistCount > 0 &&
-                       LoadedMaterializedAlbums.Count > 0
-            };
         }
     }
 
