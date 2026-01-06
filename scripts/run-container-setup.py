@@ -832,36 +832,7 @@ def wait_for_healthy(runtime: str, project_root: Path, timeout: int = 600) -> bo
 
     while time.time() - start_time < timeout:
         try:
-            # Check container status
-            result = subprocess.run(
-                [*compose_cmd, "ps", "--format", "json"],
-                cwd=project_root,
-                capture_output=True,
-                text=True,
-                timeout=10
-            )
-
-            if result.returncode == 0:
-                output = result.stdout.strip()
-
-                # Check for health status in output
-                if "healthy" in output.lower():
-                    # Parse JSON if available, otherwise check text
-                    if "melodee-db" in output and "healthy" in output:
-                        if not db_healthy:
-                            print_success("Database container is healthy")
-                            db_healthy = True
-
-                    if "melodee.blazor" in output or "melodee_melodee.blazor" in output:
-                        if "healthy" in output:
-                            if not app_healthy:
-                                print_success("Application container is healthy")
-                                app_healthy = True
-
-                if db_healthy and app_healthy:
-                    return True
-
-            # Also try a direct health check
+            # Try direct health check first (most reliable)
             if not app_healthy:
                 try:
                     health_result = subprocess.run(
@@ -870,20 +841,57 @@ def wait_for_healthy(runtime: str, project_root: Path, timeout: int = 600) -> bo
                         timeout=5
                     )
                     if health_result.returncode == 0:
-                        print_success("Application health check passed")
+                        if not app_healthy:
+                            print_success("Application health check passed")
                         app_healthy = True
-                        if db_healthy:
-                            return True
                 except (subprocess.TimeoutExpired, OSError, FileNotFoundError):
                     pass
+            
+            # Check database health via podman/docker inspect
+            if not db_healthy:
+                try:
+                    # Get container name
+                    ps_result = subprocess.run(
+                        [*compose_cmd, "ps", "-q", "melodee-db"],
+                        cwd=project_root,
+                        capture_output=True,
+                        text=True,
+                        timeout=10
+                    )
+                    if ps_result.returncode == 0 and ps_result.stdout.strip():
+                        container_id = ps_result.stdout.strip().split('\n')[0]
+                        
+                        # Check health status with podman/docker inspect
+                        inspect_cmd = [compose_cmd[0], "inspect", "--format", "{{.State.Health.Status}}", container_id]
+                        inspect_result = subprocess.run(
+                            inspect_cmd,
+                            capture_output=True,
+                            text=True,
+                            timeout=10
+                        )
+                        if inspect_result.returncode == 0:
+                            health_status = inspect_result.stdout.strip()
+                            if health_status == "healthy":
+                                if not db_healthy:
+                                    print_success("Database container is healthy")
+                                db_healthy = True
+                except (subprocess.TimeoutExpired, OSError):
+                    pass
+            
+            # If both are healthy, we're done
+            if db_healthy and app_healthy:
+                return True
 
         except (subprocess.TimeoutExpired, OSError):
             pass
 
-        # Show progress
+        # Show progress every 10 seconds
         elapsed = int(time.time() - start_time)
-        if elapsed % 10 == 0 and elapsed > 0:
-            print_info(f"  Still waiting... ({elapsed}s)")
+        if elapsed > 0 and elapsed % 10 == 0:
+            # Only print if we just hit a 10-second mark
+            current_elapsed = int(time.time() - start_time)
+            if current_elapsed == elapsed:
+                print_info(f"  Still waiting... ({elapsed}s)")
 
         time.sleep(2)
 
