@@ -922,6 +922,85 @@ def show_container_logs(runtime: str, project_root: Path, lines: int = 50):
         print_error(f"Failed to retrieve logs: {e}")
 
 
+def get_expected_version(project_root: Path) -> str | None:
+    """Extract the version from Melodee.Blazor.csproj file."""
+    csproj_path = project_root / "src" / "Melodee.Blazor" / "Melodee.Blazor.csproj"
+    
+    if not csproj_path.exists():
+        return None
+    
+    try:
+        import xml.etree.ElementTree as ET
+        tree = ET.parse(csproj_path)
+        root = tree.getroot()
+        
+        # Find VersionPrefix element
+        for prop_group in root.findall('.//PropertyGroup'):
+            version_prefix = prop_group.find('VersionPrefix')
+            if version_prefix is not None and version_prefix.text:
+                return version_prefix.text.strip()
+        
+        return None
+    except Exception:
+        return None
+
+
+def get_container_version(runtime: str, container_name: str) -> str | None:
+    """Get the version from a running container by checking the deps.json file."""
+    try:
+        result = subprocess.run(
+            [runtime, "exec", container_name, "cat", "/app/Melodee.Blazor.deps.json"],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        
+        if result.returncode != 0:
+            return None
+        
+        import json
+        deps = json.loads(result.stdout)
+        
+        if 'targets' not in deps:
+            return None
+        
+        # Find the Melodee.Blazor version in the targets
+        for target_value in deps['targets'].values():
+            for lib_key in target_value.keys():
+                if 'Melodee.Blazor/' in lib_key:
+                    # Extract version from "Melodee.Blazor/1.7.2+build..." format
+                    version_with_build = lib_key.split('/')[1]
+                    # Remove the build timestamp part (everything after +)
+                    version = version_with_build.split('+')[0]
+                    return version
+        
+        return None
+    except Exception:
+        return None
+
+
+def find_melodee_container(runtime: str) -> str | None:
+    """Find the name of the running Melodee Blazor container."""
+    try:
+        result = subprocess.run(
+            [runtime, "ps", "--filter", "name=melodee", "--format", "{{.Names}}"],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        
+        if result.returncode != 0 or not result.stdout.strip():
+            return None
+        
+        for name in result.stdout.strip().split('\n'):
+            if 'blazor' in name.lower() or 'melodee' in name.lower():
+                return name
+        
+        return None
+    except Exception:
+        return None
+
+
 def check_existing_containers(runtime: str, project_root: Path) -> tuple[bool, str]:
     """Check if containers already exist from a previous run."""
     compose_cmd = get_compose_command(runtime)
@@ -989,41 +1068,25 @@ def update_containers(runtime: str, project_root: Path, skip_confirm: bool = Fal
     print_info("Current container status:")
     print(status)
 
-    # Show current running version
-    print_info("\nCurrent version:")
-    try:
-        container_name = None
-        ps_result = subprocess.run(
-            [runtime, "ps", "--filter", "name=melodee", "--format", "{{.Names}}"],
-            capture_output=True,
-            text=True,
-            timeout=10
-        )
-        if ps_result.returncode == 0 and ps_result.stdout.strip():
-            for name in ps_result.stdout.strip().split('\n'):
-                if 'blazor' in name.lower() or 'melodee' in name.lower():
-                    container_name = name
-                    break
+    # Show current and expected versions
+    expected_version = get_expected_version(project_root)
+    container_name = find_melodee_container(runtime)
+    current_version = get_container_version(runtime, container_name) if container_name else None
+    
+    print_info("\nVersion information:")
+    if expected_version:
+        print_info(f"  Expected (from source): {expected_version}")
+    if current_version:
+        print_info(f"  Current (in container): {current_version}")
         
-        if container_name:
-            version_result = subprocess.run(
-                [runtime, "exec", container_name, "cat", "/app/Melodee.Blazor.deps.json"],
-                capture_output=True,
-                text=True,
-                timeout=10
-            )
-            if version_result.returncode == 0:
-                import json
-                deps = json.loads(version_result.stdout)
-                if 'targets' in deps:
-                    for target_key, target_value in deps['targets'].items():
-                        for lib_key in target_value.keys():
-                            if 'Melodee.Blazor/' in lib_key:
-                                version = lib_key.split('/')[1]
-                                print_info(f"  Running: {version}")
-                                break
-    except Exception:
-        pass  # Version detection is optional
+        # Compare versions if both are available
+        if expected_version and current_version:
+            if expected_version == current_version:
+                print_success("  ✓ Container is running the expected version")
+            else:
+                print_warning(f"  ⚠ Version mismatch! Update will upgrade {current_version} → {expected_version}")
+    else:
+        print_warning("  Could not determine current container version")
 
     # Confirm update
     if not skip_confirm:
@@ -1135,44 +1198,29 @@ def update_containers(runtime: str, project_root: Path, skip_confirm: bool = Fal
 
         # Verify actual running version in container
         print_info("\nVerifying running version...")
-        try:
-            # Get container name
-            container_name = None
-            ps_result = subprocess.run(
-                [runtime, "ps", "--filter", "name=melodee", "--format", "{{.Names}}"],
-                capture_output=True,
-                text=True,
-                timeout=10
-            )
-            if ps_result.returncode == 0 and ps_result.stdout.strip():
-                for name in ps_result.stdout.strip().split('\n'):
-                    if 'blazor' in name.lower() or 'melodee' in name.lower():
-                        container_name = name
-                        break
+        expected_version = get_expected_version(project_root)
+        container_name = find_melodee_container(runtime)
+        
+        if container_name:
+            # Give the app a moment to fully start
+            time.sleep(2)
+            actual_version = get_container_version(runtime, container_name)
             
-            if container_name:
-                # Check version via HTTP endpoint
-                import time
-                time.sleep(2)  # Give the app a moment to fully start
-                version_result = subprocess.run(
-                    [runtime, "exec", container_name, "cat", "/app/Melodee.Blazor.deps.json"],
-                    capture_output=True,
-                    text=True,
-                    timeout=10
-                )
-                if version_result.returncode == 0:
-                    import json
-                    deps = json.loads(version_result.stdout)
-                    if 'targets' in deps:
-                        # Find the Melodee.Blazor version in the targets
-                        for target_key, target_value in deps['targets'].items():
-                            for lib_key in target_value.keys():
-                                if 'Melodee.Blazor/' in lib_key:
-                                    version = lib_key.split('/')[1]
-                                    print_success(f"Container version: {version}")
-                                    break
-        except Exception as e:
-            print_info(f"Could not verify container version: {e}")
+            if actual_version:
+                print_success(f"Container is now running: {actual_version}")
+                
+                # Verify it matches expected version
+                if expected_version and actual_version == expected_version:
+                    print_success(f"✓ Successfully updated to version {expected_version}")
+                elif expected_version and actual_version != expected_version:
+                    print_error(f"✗ Version mismatch! Expected {expected_version} but container is running {actual_version}")
+                    print_warning("The container image may not have been rebuilt properly.")
+                    print_info("Try running: podman compose build --no-cache && podman compose up -d")
+                    return False
+            else:
+                print_warning("Could not verify container version")
+        else:
+            print_warning("Could not find Melodee container to verify version")
 
         return True
     else:
