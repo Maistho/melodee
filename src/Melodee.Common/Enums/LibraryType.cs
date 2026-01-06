@@ -35,7 +35,7 @@ public enum LibraryType
     Chart,
 
     /// <summary>
-    ///     Holds email templates organized by language (e.g., en-US, fr-FR), should be 1
+    ///     Holds templates (email, custom blocks, etc.) organized by language (e.g., en-US, fr-FR), should be 1
     /// </summary>
     Templates
 }

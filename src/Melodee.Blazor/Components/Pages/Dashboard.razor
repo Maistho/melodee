@@ -1,5 +1,6 @@
 @page "/"
 
+@using Melodee.Blazor.Components
 @using Melodee.Blazor.Security.Extensions
 @using Melodee.Common.Data.Models
 @using Melodee.Common.Enums
@@ -22,6 +23,7 @@
 
 <PageTitle>@L("Navigation.Dashboard")</PageTitle>
 
+<CustomBlock Key="dashboard.top" />
 
 <RadzenStack Gap="1rem">
 

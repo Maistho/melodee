@@ -1,4 +1,5 @@
 @page "/account/register"
+@using Melodee.Blazor.Components
 
 @attribute [AllowAnonymous]
 
@@ -163,6 +164,8 @@
         else
         {
             <div class="register-body">
+                <CustomBlock Key="register.top" />
+                
                 <RadzenTemplateForm TItem="ViewModels.Register" Data="@_model" Submit="@OnSubmit" InvalidSubmit="@OnInvalidSubmit">
                     <div class="register-form-field">
                         <label for="username">@L("Auth.Username")</label>
@@ -219,6 +222,8 @@
                 <div class="language-selector-wrapper">
                     <LanguageSelector Style="width: 100%;" />
                 </div>
+                
+                <CustomBlock Key="register.bottom" />
             </div>
         }
         

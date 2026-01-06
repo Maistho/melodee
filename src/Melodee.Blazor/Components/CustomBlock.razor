@@ -1,0 +1,58 @@
+@using Melodee.Blazor.Services.CustomBlocks
+@inject ICustomBlockService CustomBlockService
+@inject ILogger<CustomBlock> Logger
+
+@if (_result?.Found == true && !string.IsNullOrEmpty(_wrapperClass))
+{
+    <div class="@_wrapperClass @CssClass">
+        @_result.Content
+    </div>
+}
+
+@code {
+    /// <summary>
+    /// The custom block key (e.g., "login.top").
+    /// </summary>
+    [Parameter, EditorRequired]
+    public string Key { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Optional additional CSS classes to apply to the wrapper.
+    /// </summary>
+    [Parameter]
+    public string? CssClass { get; set; }
+
+    /// <summary>
+    /// Whether to wrap the content in a card. Currently unused but reserved for future styling.
+    /// </summary>
+    [Parameter]
+    public bool WrapInCard { get; set; }
+
+    private CustomBlockResult? _result;
+    private string _wrapperClass = string.Empty;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Key))
+        {
+            return;
+        }
+
+        try
+        {
+            _result = await CustomBlockService.GetAsync(Key, CancellationToken.None);
+            
+            if (_result.Found)
+            {
+                // Generate wrapper class based on key (e.g., "custom-block custom-block--login-top")
+                var modifier = Key.Replace(".", "-");
+                _wrapperClass = $"custom-block custom-block--{modifier}";
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Unexpected error loading custom block {Key}", Key);
+            _result = CustomBlockResult.NotFound(Key);
+        }
+    }
+}

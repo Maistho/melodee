@@ -276,7 +276,7 @@ export security_passwordResetTokenExpiryMinutes=60
 
 ### Future Enhancements
 1. **Localization** - Translate 30 Auth.* keys to 9 other languages (de-DE, es-ES, fr-FR, it-IT, ja-JP, pt-BR, ru-RU, zh-CN, ar-SA)
-2. **Email Templates UI** - Admin page to customize email templates without editing settings
+2. **Templates UI** - Admin page to customize templates (email, custom blocks) without editing settings
 3. **Email Preview** - Test button to send preview email before enabling
 4. **Distributed Rate Limiting** - Replace `IMemoryCache` with `IDistributedCache` (Redis) for multi-instance deployments
 5. **Email Queue** - Use background job queue (Hangfire/Quartz) for email sending to avoid blocking requests

@@ -1,4 +1,4 @@
-# Email Templates
+# Templates
 
 Email templates are stored in the Templates library, organized by language code.
 

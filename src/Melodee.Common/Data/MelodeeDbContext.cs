@@ -161,8 +161,8 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
                 {
                     Id = 6,
                     ApiKey = SeedGuid("Library", 6),
-                    Name = "Email Templates",
-                    Description = "Library where email templates are stored, organized by language code.",
+                    Name = "Templates",
+                    Description = "Library where templates are stored, organized by language code.",
                     Path = "/storage/templates/",
                     Type = (int)LibraryType.Templates,
                     CreatedAt = seedDataTimestamp

@@ -341,6 +341,18 @@ Melodee provides a Jellyfin-compatible API wit that allows popular Jellyfin musi
 - [Streamyfin](https://github.com/streamyfin/streamyfin) - iOS, Android
 - [Gelli](https://github.com/dkanada/gelli) - Android
 
+### 📝 Custom Blocks
+
+Add custom Markdown content to pages for branding, announcements, or policies:
+
+- **Flexible Placement**: Top and bottom slots on login, register, forgot-password, and reset-password pages
+- **Markdown Support**: Write content in Markdown with automatic HTML rendering
+- **Security First**: Strict HTML sanitization prevents XSS attacks and injection
+- **Auto-Caching**: File-based caching with automatic invalidation on changes
+- **Zero Configuration**: Drop `.md` files in `${MELODEE_DATA_DIR}/custom-blocks/{page}/{slot}.md` and they appear instantly
+
+Perfect for terms of service links, support contact information, or custom branding messages.
+
 ### 🔐 Authentication
 
 Melodee supports multiple authentication methods:

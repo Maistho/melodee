@@ -331,7 +331,7 @@ public sealed class LibraryServiceTests : ServiceTestBase
         // Arrange
         await CleanupTestLibraries();
         var libraryService = GetLibraryService();
-        await CreateLibraryInDb(1, "Email Templates", LibraryType.Templates);
+        await CreateLibraryInDb(1, "Templates", LibraryType.Templates);
 
         // Act
         var result = await libraryService.GetTemplatesLibraryAsync();
@@ -341,7 +341,7 @@ public sealed class LibraryServiceTests : ServiceTestBase
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Data);
         Assert.Equal(1, result.Data.Id);
-        Assert.Equal("Email Templates", result.Data.Name);
+        Assert.Equal("Templates", result.Data.Name);
         Assert.Equal((int)LibraryType.Templates, result.Data.Type);
     }
 

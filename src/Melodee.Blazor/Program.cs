@@ -284,6 +284,13 @@ builder.Services.AddScoped<IDoctorService, DoctorService>();
 builder.Services.AddSingleton<IRateLimiterService, RateLimiterService>();
 builder.Services.AddMemoryCache();
 
+// Custom blocks for page customization (uses Templates library)
+builder.Services.Configure<Melodee.Blazor.Services.CustomBlocks.CustomBlocksOptions>(
+    builder.Configuration.GetSection(Melodee.Blazor.Services.CustomBlocks.CustomBlocksOptions.SectionName));
+builder.Services.AddScoped<Melodee.Blazor.Services.CustomBlocks.ICustomBlockService, Melodee.Blazor.Services.CustomBlocks.FileCustomBlockService>();
+builder.Services.AddSingleton<Melodee.Blazor.Services.CustomBlocks.IMarkdownRenderer, Melodee.Blazor.Services.CustomBlocks.MarkdownRenderer>();
+builder.Services.AddSingleton<Melodee.Blazor.Services.CustomBlocks.IHtmlSanitizerService, Melodee.Blazor.Services.CustomBlocks.HtmlSanitizerService>();
+
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;

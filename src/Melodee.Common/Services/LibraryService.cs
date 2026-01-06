@@ -170,7 +170,7 @@ public class LibraryService : ServiceBase
         };
     }
 
-    public async Task<MelodeeModels.OperationResult<Library>> GetTemplatesLibraryAsync(CancellationToken cancellationToken = default)
+    public virtual async Task<MelodeeModels.OperationResult<Library>> GetTemplatesLibraryAsync(CancellationToken cancellationToken = default)
     {
         const int libraryType = (int)LibraryType.Templates;
         var result = await CacheManager.GetAsync(CacheKeyDetailLibraryByType.FormatSmart(libraryType), async () =>

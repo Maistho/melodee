@@ -970,7 +970,7 @@ namespace Melodee.Common.Migrations
                             CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
                             Description = "Library where email templates are stored, organized by language code.",
                             IsLocked = false,
-                            Name = "Email Templates",
+                            Name = "Templates",
                             Path = "/storage/templates/",
                             SortOrder = 0,
                             Type = 7
