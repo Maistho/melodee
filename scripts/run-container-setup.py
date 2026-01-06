@@ -12,13 +12,14 @@ It will:
 6. Verify required files exist (Dockerfile, compose.yml, entrypoint.sh)
 7. Optionally start the containers
 8. Verify containers are healthy after startup
+9. Check volume permissions (when using --start with rootless podman)
 
 Usage:
     python scripts/run-container-setup.py [OPTIONS]
     
 Options:
     --help, -h              Show this help message and exit
-    --start                 Start containers after setup
+    --start                 Start containers after setup and verify permissions
     --check-only            Only run checks, don't create .env or start containers
     --check-permissions     Check volume permissions for rootless podman issues
     --force                 Overwrite existing .env file without prompting
@@ -32,10 +33,10 @@ Examples:
     # Run preflight checks only
     python scripts/run-container-setup.py --check-only
     
-    # Setup and start containers
+    # Setup and start containers (auto-checks permissions on rootless podman)
     python scripts/run-container-setup.py --start
     
-    # Check for permission issues
+    # Check for permission issues on existing installation
     python scripts/run-container-setup.py --check-permissions
     
     # Update running containers
@@ -1163,18 +1164,21 @@ def check_volume_permissions(runtime: str, project_root: Path) -> bool:
     print()
     
     # Volume names to check
-    volume_names = [
+    # Note: melodee_db_data is expected to have sub-UID ownership (database internals)
+    user_volumes = [
         "melodee_inbound",
         "melodee_staging", 
         "melodee_storage",
-        "melodee_db_data",
         "melodee_logs"
     ]
+    
+    db_volumes = ["melodee_db_data"]
     
     issues_found = False
     current_uid = os.getuid()
     
-    for vol_name in volume_names:
+    # Check user-accessible volumes (should be owned by host user)
+    for vol_name in user_volumes:
         vol_path = volume_base / vol_name / "_data"
         
         if not vol_path.exists():
@@ -1209,6 +1213,36 @@ def check_volume_permissions(runtime: str, project_root: Path) -> bool:
         except OSError as e:
             print_error(f"{vol_name}: Error checking permissions: {e}")
             issues_found = True
+    
+    print()
+    
+    # Check database volumes (these SHOULD have sub-UID ownership in rootless mode)
+    for vol_name in db_volumes:
+        vol_path = volume_base / vol_name / "_data"
+        
+        if not vol_path.exists():
+            print_warning(f"{vol_name}: Volume not found")
+            continue
+        
+        try:
+            stat_info = vol_path.stat()
+            owner_uid = stat_info.st_uid
+            owner_gid = stat_info.st_gid
+            
+            if owner_uid > 65536:
+                print_info(f"{vol_name}: Owned by sub-UID {owner_uid}:{owner_gid} (expected for database)")
+                print_info(f"  ↳ PostgreSQL uses default namespace mapping (this is correct)")
+            elif owner_uid == current_uid:
+                print_info(f"{vol_name}: Owned by current user ({owner_uid}:{owner_gid})")
+            else:
+                try:
+                    import pwd
+                    user_info = pwd.getpwuid(owner_uid)
+                    print_info(f"{vol_name}: Owned by {user_info.pw_name} ({owner_uid}:{owner_gid})")
+                except KeyError:
+                    print_info(f"{vol_name}: Owned by UID {owner_uid}:{owner_gid}")
+        except (PermissionError, OSError) as e:
+            print_warning(f"{vol_name}: Cannot check permissions: {e}")
     
     print()
     
@@ -1398,6 +1432,18 @@ def main():
                 print_warning("Containers may not be fully healthy")
                 print_info("Showing recent logs for debugging:")
                 show_container_logs(runtime, project_root, lines=30)
+            else:
+                # Run permission check after successful startup
+                print("\nVerifying volume permissions...")
+                print_info("Waiting a moment for containers to create initial files...")
+                time.sleep(3)  # Give containers time to create files in volumes
+                
+                permissions_ok = check_volume_permissions(runtime, project_root)
+                if not permissions_ok:
+                    print_warning("\nPermission issues detected but containers are running")
+                    print_info("Review the recommendations above to fix permission issues")
+                else:
+                    print_success("\nVolume permissions verified - setup complete!")
         else:
             print_error("Failed to start containers")
             print_info("Showing recent logs for debugging:")

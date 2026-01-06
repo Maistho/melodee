@@ -337,25 +337,33 @@ Schedule with cron:
 If you're using **rootless podman** and encounter permission errors when accessing files in volumes (e.g., uploaded media in the inbound directory), the setup script automatically creates a `compose.override.yml` file to fix this.
 
 **How it works:**
-- Rootless podman uses user namespace mapping where container UIDs don't match host UIDs
-- The override file runs the container as your host user (e.g., UID 1000) instead of the default UID 0
-- Files created in volumes are then owned by your host user
+- Rootless podman uses user namespace mapping where container UIDs don't match host UIDs by default
+- The override file configures the Melodee app container to use `userns_mode: keep-id`, which disables UID remapping
+- Files created in app volumes (inbound, storage, staging, etc.) are then owned by your host user
 
-**If you see permission errors:**
+**Database volumes:**
+- The PostgreSQL container (`melodee-db`) intentionally uses default namespace mapping (sub-UIDs)
+- This is **correct and expected** - you don't need direct host access to database internal files
+- Use PostgreSQL tools (`pg_dump`, `pg_restore`) or the app's backup features for database backups
+- Trying to "fix" database volume permissions can break PostgreSQL
 
-1. Re-run the setup script: `python3 scripts/run-container-setup.py`
-2. Or manually create `compose.override.yml` with your UID/GID:
+**If you see permission errors on app volumes:**
+
+1. Check current permissions: `python3 scripts/run-container-setup.py --check-permissions`
+2. Re-run the setup script: `python3 scripts/run-container-setup.py`
+3. Or manually create `compose.override.yml` with your UID/GID:
 
 ```yaml
 # compose.override.yml (for rootless podman only)
 services:
   melodee.blazor:
     user: "1000:1000"  # Replace with your UID:GID from 'id' command
+    userns_mode: "keep-id:uid=1000,gid=1000"  # Critical: prevents UID remapping
     environment:
       - MELODEE_RUNNING_AS_USER=true
 ```
 
-3. Restart containers: `podman compose down && podman compose up -d`
+4. Restart containers: `podman compose down && podman compose up -d`
 
 **To check if you're affected:**
 - Run `podman info --format='{{.Host.Security.Rootless}}'`
