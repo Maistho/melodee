@@ -679,6 +679,8 @@ services:
   melodee.blazor:
     # Run as {user_desc} to avoid UID mapping issues in rootless podman
     user: "{uid}:{gid}"
+    # Disable user namespace remapping - UID inside container = UID on host
+    userns_mode: "keep-id:uid={uid},gid={gid}"
     environment:
       # Let the container know it's running as non-root
       - MELODEE_RUNNING_AS_USER=true
