@@ -989,6 +989,42 @@ def update_containers(runtime: str, project_root: Path, skip_confirm: bool = Fal
     print_info("Current container status:")
     print(status)
 
+    # Show current running version
+    print_info("\nCurrent version:")
+    try:
+        container_name = None
+        ps_result = subprocess.run(
+            [runtime, "ps", "--filter", "name=melodee", "--format", "{{.Names}}"],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        if ps_result.returncode == 0 and ps_result.stdout.strip():
+            for name in ps_result.stdout.strip().split('\n'):
+                if 'blazor' in name.lower() or 'melodee' in name.lower():
+                    container_name = name
+                    break
+        
+        if container_name:
+            version_result = subprocess.run(
+                [runtime, "exec", container_name, "cat", "/app/Melodee.Blazor.deps.json"],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+            if version_result.returncode == 0:
+                import json
+                deps = json.loads(version_result.stdout)
+                if 'targets' in deps:
+                    for target_key, target_value in deps['targets'].items():
+                        for lib_key in target_value.keys():
+                            if 'Melodee.Blazor/' in lib_key:
+                                version = lib_key.split('/')[1]
+                                print_info(f"  Running: {version}")
+                                break
+    except Exception:
+        pass  # Version detection is optional
+
     # Confirm update
     if not skip_confirm:
         print_warning("\nThis will rebuild and restart the Melodee containers.")
@@ -1083,7 +1119,7 @@ def update_containers(runtime: str, project_root: Path, skip_confirm: bool = Fal
     if healthy:
         print_success("\nUpdate completed successfully!")
 
-        # Show new version info
+        # Show git commit info
         try:
             result = subprocess.run(
                 ["git", "log", "-1", "--format=%h %s (%cr)"],
@@ -1093,9 +1129,50 @@ def update_containers(runtime: str, project_root: Path, skip_confirm: bool = Fal
                 timeout=10
             )
             if result.returncode == 0:
-                print_info(f"Now running: {result.stdout.strip()}")
+                print_info(f"Built from commit: {result.stdout.strip()}")
         except (subprocess.TimeoutExpired, OSError, FileNotFoundError):
             pass
+
+        # Verify actual running version in container
+        print_info("\nVerifying running version...")
+        try:
+            # Get container name
+            container_name = None
+            ps_result = subprocess.run(
+                [runtime, "ps", "--filter", "name=melodee", "--format", "{{.Names}}"],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+            if ps_result.returncode == 0 and ps_result.stdout.strip():
+                for name in ps_result.stdout.strip().split('\n'):
+                    if 'blazor' in name.lower() or 'melodee' in name.lower():
+                        container_name = name
+                        break
+            
+            if container_name:
+                # Check version via HTTP endpoint
+                import time
+                time.sleep(2)  # Give the app a moment to fully start
+                version_result = subprocess.run(
+                    [runtime, "exec", container_name, "cat", "/app/Melodee.Blazor.deps.json"],
+                    capture_output=True,
+                    text=True,
+                    timeout=10
+                )
+                if version_result.returncode == 0:
+                    import json
+                    deps = json.loads(version_result.stdout)
+                    if 'targets' in deps:
+                        # Find the Melodee.Blazor version in the targets
+                        for target_key, target_value in deps['targets'].items():
+                            for lib_key in target_value.keys():
+                                if 'Melodee.Blazor/' in lib_key:
+                                    version = lib_key.split('/')[1]
+                                    print_success(f"Container version: {version}")
+                                    break
+        except Exception as e:
+            print_info(f"Could not verify container version: {e}")
 
         return True
     else:
