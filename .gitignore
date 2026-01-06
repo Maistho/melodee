@@ -508,6 +508,9 @@ appsettings.*.local.json
 **/appsettings.Development.json
 **/appsettings.*.local.json
 
+# Compose override (user-specific for rootless podman)
+compose.override.yml
+
 # .NET User Secrets live outside the repo, but ignore any accidental exports
 secrets.json
 *.secrets.json

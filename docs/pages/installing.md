@@ -299,6 +299,39 @@ Schedule with cron:
 | Missing artwork | Ensure metadata jobs ran; trigger artwork refresh job. |
 | Container not healthy | Run `podman compose logs -f` to see application logs |
 | Port already in use | Change `MELODEE_PORT` in `.env` file |
+| Permission denied on volume files (rootless podman) | The setup script should create `compose.override.yml` automatically. If missing, see below. |
+
+### Rootless Podman Permission Issues
+
+If you're using **rootless podman** and encounter permission errors when accessing files in volumes (e.g., uploaded media in the inbound directory), the setup script automatically creates a `compose.override.yml` file to fix this.
+
+**How it works:**
+- Rootless podman uses user namespace mapping where container UIDs don't match host UIDs
+- The override file runs the container as your host user (e.g., UID 1000) instead of the default UID 0
+- Files created in volumes are then owned by your host user
+
+**If you see permission errors:**
+
+1. Re-run the setup script: `python3 scripts/run-container-setup.py`
+2. Or manually create `compose.override.yml` with your UID/GID:
+
+```yaml
+# compose.override.yml (for rootless podman only)
+services:
+  melodee.blazor:
+    user: "1000:1000"  # Replace with your UID:GID from 'id' command
+    environment:
+      - MELODEE_RUNNING_AS_USER=true
+```
+
+3. Restart containers: `podman compose down && podman compose up -d`
+
+**To check if you're affected:**
+- Run `podman info --format='{{.Host.Security.Rootless}}'`
+- If it returns `true`, you're using rootless podman
+- The setup script handles this automatically
+
+**Note:** This issue does **not** affect Docker or rootful (sudo) Podman.
 
 ### Container Diagnostics
 
