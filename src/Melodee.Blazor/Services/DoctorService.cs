@@ -910,7 +910,7 @@ public sealed class DoctorService(
     {
         // Resolve the actual path (follows symlinks)
         var resolvedPath = Path.GetFullPath(path);
-        
+
         if (OperatingSystem.IsWindows())
         {
             var root = Path.GetPathRoot(resolvedPath);
@@ -930,7 +930,7 @@ public sealed class DoctorService(
                 var drives = DriveInfo.GetDrives();
                 DriveInfo? bestMatch = null;
                 var bestMatchLength = 0;
-                
+
                 foreach (var drive in drives)
                 {
                     try
@@ -939,7 +939,7 @@ public sealed class DoctorService(
                         {
                             continue;
                         }
-                        
+
                         var mountPoint = drive.Name;
                         if (resolvedPath.StartsWith(mountPoint, StringComparison.Ordinal) && mountPoint.Length > bestMatchLength)
                         {
@@ -952,7 +952,7 @@ public sealed class DoctorService(
                         // Skip inaccessible drives
                     }
                 }
-                
+
                 if (bestMatch != null)
                 {
                     return (bestMatch.TotalSize, bestMatch.AvailableFreeSpace);
@@ -962,13 +962,13 @@ public sealed class DoctorService(
             {
                 // Fall through to simple approach
             }
-            
+
             // Fallback: use root
             var rootPath = Path.GetPathRoot(resolvedPath) ?? "/";
             var rootDrive = new DriveInfo(rootPath);
             return (rootDrive.TotalSize, rootDrive.AvailableFreeSpace);
         }
-        
+
         return (0, 0);
     }
 
@@ -1527,16 +1527,57 @@ public sealed class DoctorService(
 
         try
         {
-            var gcInfo = GC.GetGCMemoryInfo();
-            var totalMemory = gcInfo.TotalAvailableMemoryBytes;
-            var usedMemory = gcInfo.MemoryLoadBytes;
-            var availableMemory = totalMemory - usedMemory;
-            var usedPercent = totalMemory > 0 ? (double)usedMemory / totalMemory * 100 : 0;
-
             var processMemory = Process.GetCurrentProcess().WorkingSet64;
             var gen0Collections = GC.CollectionCount(0);
             var gen1Collections = GC.CollectionCount(1);
             var gen2Collections = GC.CollectionCount(2);
+
+            // Get system memory info (Linux/Unix specific)
+            long totalMemory = 0;
+            long availableMemory = 0;
+            double usedPercent = 0;
+
+            if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
+            {
+                // Read from /proc/meminfo on Linux
+                if (File.Exists("/proc/meminfo"))
+                {
+                    var lines = File.ReadAllLines("/proc/meminfo");
+                    foreach (var line in lines)
+                    {
+                        if (line.StartsWith("MemTotal:"))
+                        {
+                            totalMemory = ParseMemInfoValue(line) * 1024; // Convert KB to bytes
+                        }
+                        else if (line.StartsWith("MemAvailable:"))
+                        {
+                            availableMemory = ParseMemInfoValue(line) * 1024; // Convert KB to bytes
+                        }
+                    }
+
+                    if (totalMemory > 0)
+                    {
+                        var usedMemory = totalMemory - availableMemory;
+                        usedPercent = (double)usedMemory / totalMemory * 100;
+                    }
+                }
+            }
+            else
+            {
+                // Fallback to GC memory info for Windows
+                var gcInfo = GC.GetGCMemoryInfo();
+                totalMemory = gcInfo.TotalAvailableMemoryBytes;
+                var memoryLoad = gcInfo.MemoryLoadBytes;
+
+                // On Windows, use a safer calculation
+                if (totalMemory > 0)
+                {
+                    // MemoryLoadBytes is the total committed memory, not necessarily less than TotalAvailableMemoryBytes
+                    // Calculate available as a percentage-based estimate
+                    availableMemory = Math.Max(0, totalMemory - memoryLoad);
+                    usedPercent = (double)memoryLoad / totalMemory * 100;
+                }
+            }
 
             var status = availableMemory switch
             {
@@ -1547,9 +1588,12 @@ public sealed class DoctorService(
 
             var isHealthy = availableMemory >= MemoryPressureCriticalBytes;
 
-            var details = $"Process: {FormatFileSize(processMemory)}; " +
-                         $"System: {usedPercent:F1}% used ({FormatFileSize(availableMemory)} available); " +
-                         $"GC: {gen0Collections}/{gen1Collections}/{gen2Collections} (Gen0/1/2)";
+            var details = totalMemory > 0
+                ? $"Process: {FormatFileSize(processMemory)}; " +
+                  $"System: {usedPercent:F1}% used ({FormatFileSize(availableMemory)} available); " +
+                  $"GC: {gen0Collections}/{gen1Collections}/{gen2Collections} (Gen0/1/2)"
+                : $"Process: {FormatFileSize(processMemory)}; " +
+                  $"GC: {gen0Collections}/{gen1Collections}/{gen2Collections} (Gen0/1/2)";
 
             return new DoctorCheckResult("Memory", isHealthy, details, sw.Elapsed);
         }
@@ -1557,6 +1601,24 @@ public sealed class DoctorService(
         {
             return new DoctorCheckResult("Memory", true, $"Memory check unavailable: {ex.Message}", sw.Elapsed);
         }
+    }
+
+    private static long ParseMemInfoValue(string line)
+    {
+        // Format: "MemTotal:       6067416 kB"
+        var parts = line.Split(':', StringSplitOptions.TrimEntries);
+        if (parts.Length < 2)
+        {
+            return 0;
+        }
+
+        var valuePart = parts[1].Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (valuePart.Length > 0 && long.TryParse(valuePart[0], out var value))
+        {
+            return value;
+        }
+
+        return 0;
     }
 
     private DoctorCheckResult RunTempDirectoryCheck()

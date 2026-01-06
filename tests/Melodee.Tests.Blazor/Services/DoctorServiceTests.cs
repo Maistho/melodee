@@ -35,7 +35,7 @@ public class DoctorServiceTests
         _webHostEnvironment.Setup(x => x.ContentRootPath).Returns("/test/path");
         _httpContextAccessor = new Mock<IHttpContextAccessor>();
         _schedulerFactory = new Mock<ISchedulerFactory>();
-        
+
         var mockScheduler = new Mock<IScheduler>();
         mockScheduler.Setup(x => x.IsStarted).Returns(true);
         mockScheduler.Setup(x => x.IsShutdown).Returns(false);

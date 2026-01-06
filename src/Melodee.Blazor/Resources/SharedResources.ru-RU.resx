@@ -3701,7 +3701,7 @@
     <value>Загрузить альбом</value>
   </data>
   <data name="UploadAlbum.Instructions" xml:space="preserve">
-    <value>Выберите ZIP-файл, содержащий файлы альбома (аудиофайлы, изображения и т.д.). Файлы будут извлечены в новую папку во входящей библиотеке.</value>
+    <value>Выберите один или несколько ZIP-файлов, содержащих файлы альбома (аудиофайлы, изображения и т.д.). Каждый файл будет извлечен в новую папку во входящей библиотеке.</value>
   </data>
   <data name="UploadAlbum.SelectFile" xml:space="preserve">
     <value>ZIP-файл</value>
@@ -4494,5 +4494,29 @@
   </data>
   <data name="AdminDoctor.Check.DatabaseLatency" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Database Latency</value>
+  </data>
+  <data name="UploadAlbum.FilesSelected" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] files selected</value>
+  </data>
+  <data name="UploadAlbum.SelectedFiles" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Selected Files</value>
+  </data>
+  <data name="UploadAlbum.ProcessingFile" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Processing file</value>
+  </data>
+  <data name="UploadAlbum.UploadResults" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Upload Results</value>
+  </data>
+  <data name="UploadAlbum.Successful" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] successful</value>
+  </data>
+  <data name="UploadAlbum.Files" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] files</value>
+  </data>
+  <data name="UploadAlbum.Directories" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] directories</value>
+  </data>
+  <data name="UploadAlbum.Processing" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Processing</value>
   </data>
 </root>
