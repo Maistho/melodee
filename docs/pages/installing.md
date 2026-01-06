@@ -33,11 +33,42 @@ The script will:
 - Run preflight checks (disk space, memory, port availability, required files)
 - Detect your container runtime (Podman or Docker)
 - Offer to install Podman if no runtime is found
+- **Ask if you want to create a dedicated `melodee` system user** (recommended for multi-user servers)
 - Generate a secure `.env` file with random passwords and JWT tokens
 - Build the container image
 - Start the containers
 - Wait for health checks to pass
 - Provide you with the URL to access Melodee
+
+#### User Configuration
+
+The setup script offers two user configurations:
+
+**Option 1: Current User (Simple, Homelab)**
+- Containers run as your current user
+- Files owned by your user
+- Best for single-user homelab setups
+- No additional setup required
+
+**Option 2: Dedicated melodee User (Recommended for Servers)**
+- Creates a `melodee` system user
+- Containers run as the melodee user  
+- Multiple users can be added to the `melodee` group for shared access
+- Best for multi-user servers, CI/CD deployments, production environments
+
+**When to use dedicated melodee user:**
+- Demo/production servers with multiple admins
+- CI/CD deployments (e.g., GitHub Actions deploy user + admin user)
+- Shared server environments
+- When you want consistent ownership regardless of who manages the server
+
+**Example multi-user scenario:**
+```bash
+# After setup creates melodee user:
+sudo usermod -aG melodee steven   # Admin can access files
+sudo usermod -aG melodee deploy   # CI/CD user can access files
+# Both users can now manage Melodee files
+```
 
 #### Setup Script Options
 

@@ -9,10 +9,18 @@ if [ "$(id -u)" -ne 0 ]; then
     echo "Skipping permission fixes (rootless container mode)"
     
     # Create required directories with current user
+    # These will be created in the volumes with the current user's ownership
     echo "Creating required directories..."
     mkdir -p /app/storage/_search-engines/musicbrainz
     mkdir -p /app/inbound /app/staging /app/user-images /app/playlists /app/templates /app/Logs
     mkdir -p ~/.aspnet/DataProtection-Keys
+    
+    # Ensure we can write to these directories
+    # In rootless mode, these are mounted volumes and should already be writable
+    # But create subdirectories as needed
+    touch /app/storage/.melodee_test 2>/dev/null && rm -f /app/storage/.melodee_test || {
+        echo "WARNING: Cannot write to /app/storage - volume may have permission issues"
+    }
     
     # Wait for database
     echo "Waiting for database..."
@@ -32,7 +40,7 @@ if [ "$(id -u)" -ne 0 ]; then
     fi
     
     # Start application directly (no user switch needed)
-    echo "Starting Melodee server..."
+    echo "Starting Melodee server as UID=$(id -u)..."
     exec dotnet server.dll
 else
     # Running as root (traditional docker or rootful podman)
@@ -73,6 +81,6 @@ else
     fi
     
     # Switch to melodee user and start the application
-    echo "Starting Melodee server..."
+    echo "Starting Melodee server as melodee user..."
     exec su melodee -c 'cd /app && exec dotnet server.dll'
 fi
