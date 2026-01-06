@@ -16,7 +16,7 @@ It will:
 
 Usage:
     python scripts/run-container-setup.py [OPTIONS]
-    
+
 Options:
     --help, -h              Show this help message and exit
     --start                 Start containers after setup and verify permissions
@@ -29,16 +29,16 @@ Options:
 Examples:
     # Show help
     python scripts/run-container-setup.py --help
-    
+
     # Run preflight checks only
     python scripts/run-container-setup.py --check-only
-    
+
     # Setup and start containers (auto-checks permissions on rootless podman)
     python scripts/run-container-setup.py --start
-    
+
     # Check for permission issues on existing installation
     python scripts/run-container-setup.py --check-permissions
-    
+
     # Update running containers
     python scripts/run-container-setup.py --update
 """
@@ -149,17 +149,17 @@ def check_dockerfile_valid(project_root: Path) -> tuple[bool, str]:
     dockerfile = project_root / "Dockerfile"
     if not dockerfile.exists():
         return False, "Dockerfile not found"
-    
+
     content = dockerfile.read_text()
-    
+
     # Check for multi-stage build
     if "FROM" not in content:
         return False, "Dockerfile missing FROM instruction"
-    
+
     # Check for entrypoint
     if "ENTRYPOINT" not in content and "CMD" not in content:
         return False, "Dockerfile missing ENTRYPOINT or CMD"
-    
+
     return True, "Dockerfile looks valid"
 
 
@@ -168,20 +168,20 @@ def check_compose_valid(project_root: Path) -> tuple[bool, str]:
     compose_file = project_root / "compose.yml"
     if not compose_file.exists():
         return False, "compose.yml not found"
-    
+
     content = compose_file.read_text()
-    
+
     # Check for required services
     if "melodee-db:" not in content:
         return False, "compose.yml missing melodee-db service"
-    
+
     if "melodee.blazor:" not in content:
         return False, "compose.yml missing melodee.blazor service"
-    
+
     # Check for localhost/ prefix (podman compatibility)
     if "image: melodee:latest" in content and "localhost/melodee:latest" not in content:
         return False, "compose.yml should use 'localhost/melodee:latest' for Podman compatibility"
-    
+
     return True, "compose.yml looks valid"
 
 
@@ -190,9 +190,9 @@ def run_preflight_checks(project_root: Path, port: int = DEFAULT_PORT) -> bool:
     print("\n" + "-" * 60)
     print("  Preflight Checks")
     print("-" * 60 + "\n")
-    
+
     all_passed = True
-    
+
     # Check required files
     files_ok, missing = check_required_files(project_root)
     if files_ok:
@@ -200,7 +200,7 @@ def run_preflight_checks(project_root: Path, port: int = DEFAULT_PORT) -> bool:
     else:
         print_error(f"Missing required files: {', '.join(missing)}")
         all_passed = False
-    
+
     # Check Dockerfile
     dockerfile_ok, dockerfile_msg = check_dockerfile_valid(project_root)
     if dockerfile_ok:
@@ -208,7 +208,7 @@ def run_preflight_checks(project_root: Path, port: int = DEFAULT_PORT) -> bool:
     else:
         print_error(dockerfile_msg)
         all_passed = False
-    
+
     # Check compose.yml
     compose_ok, compose_msg = check_compose_valid(project_root)
     if compose_ok:
@@ -216,7 +216,7 @@ def run_preflight_checks(project_root: Path, port: int = DEFAULT_PORT) -> bool:
     else:
         print_error(compose_msg)
         all_passed = False
-    
+
     # Check disk space
     disk_ok, disk_msg = check_disk_space(project_root)
     if disk_ok:
@@ -224,7 +224,7 @@ def run_preflight_checks(project_root: Path, port: int = DEFAULT_PORT) -> bool:
     else:
         print_error(f"Disk space: {disk_msg}")
         all_passed = False
-    
+
     # Check memory
     mem_ok, mem_msg = check_memory()
     if mem_ok:
@@ -232,7 +232,7 @@ def run_preflight_checks(project_root: Path, port: int = DEFAULT_PORT) -> bool:
     else:
         print_warning(f"Memory: {mem_msg}")
         # Don't fail on memory, just warn
-    
+
     # Check port
     port_ok, port_msg = check_port_available(port)
     if port_ok:
@@ -240,7 +240,7 @@ def run_preflight_checks(project_root: Path, port: int = DEFAULT_PORT) -> bool:
     else:
         print_warning(port_msg)
         print_info(f"  You can change the port in .env file (MELODEE_PORT)")
-    
+
     print()
     return all_passed
 
@@ -248,11 +248,11 @@ def run_preflight_checks(project_root: Path, port: int = DEFAULT_PORT) -> bool:
 def detect_os() -> dict | None:
     """Detect the operating system and return info for package installation."""
     os_info = {"type": None, "id": None, "version": None}
-    
+
     # Check for Linux
     if sys.platform.startswith("linux"):
         os_info["type"] = "linux"
-        
+
         # Try to read /etc/os-release
         os_release = Path("/etc/os-release")
         if os_release.exists():
@@ -262,19 +262,19 @@ def detect_os() -> dict | None:
                     os_info["id"] = line.split("=", 1)[1].strip().strip('"').lower()
                 elif line.startswith("VERSION_ID="):
                     os_info["version"] = line.split("=", 1)[1].strip().strip('"')
-        
+
         return os_info
-    
+
     elif sys.platform == "darwin":
         os_info["type"] = "macos"
         os_info["id"] = "macos"
         return os_info
-    
+
     elif sys.platform == "win32":
         os_info["type"] = "windows"
         os_info["id"] = "windows"
         return os_info
-    
+
     return None
 
 
@@ -282,41 +282,41 @@ def get_install_commands(os_info: dict) -> list[list[str]] | None:
     """Get the commands to install podman and podman-compose for the detected OS."""
     if os_info is None:
         return None
-    
+
     os_id = os_info.get("id", "")
     os_type = os_info.get("type", "")
-    
+
     # Debian/Ubuntu based
     if os_id in ["debian", "ubuntu", "linuxmint", "pop"]:
         return [
             ["sudo", "apt-get", "update"],
             ["sudo", "apt-get", "install", "-y", "podman", "podman-compose"],
         ]
-    
+
     # Fedora
     elif os_id == "fedora":
         return [
             ["sudo", "dnf", "install", "-y", "podman", "podman-compose"],
         ]
-    
+
     # RHEL/CentOS/Rocky/Alma
     elif os_id in ["rhel", "centos", "rocky", "almalinux"]:
         return [
             ["sudo", "dnf", "install", "-y", "podman", "podman-compose"],
         ]
-    
+
     # Arch Linux
     elif os_id in ["arch", "manjaro", "endeavouros"]:
         return [
             ["sudo", "pacman", "-Sy", "--noconfirm", "podman", "podman-compose"],
         ]
-    
+
     # openSUSE
     elif os_id in ["opensuse-leap", "opensuse-tumbleweed", "sles"]:
         return [
             ["sudo", "zypper", "install", "-y", "podman", "podman-compose"],
         ]
-    
+
     # macOS
     elif os_type == "macos":
         if shutil.which("brew"):
@@ -327,20 +327,20 @@ def get_install_commands(os_info: dict) -> list[list[str]] | None:
             ]
         else:
             return None  # Need Homebrew
-    
+
     return None
 
 
 def install_podman(os_info: dict) -> bool:
     """Attempt to install podman and podman-compose."""
     commands = get_install_commands(os_info)
-    
+
     if commands is None:
         return False
-    
+
     print_info("Installing podman and podman-compose...")
     print()
-    
+
     for cmd in commands:
         print_info(f"Running: {' '.join(cmd)}")
         try:
@@ -354,7 +354,7 @@ def install_podman(os_info: dict) -> bool:
         except OSError as e:
             print_error(f"Failed to run command: {e}")
             return False
-    
+
     print()
     return True
 
@@ -362,19 +362,19 @@ def install_podman(os_info: dict) -> bool:
 def offer_install_podman() -> str | None:
     """Offer to install podman if no container runtime is found."""
     os_info = detect_os()
-    
+
     if os_info is None:
         print_error("Could not detect operating system")
         return None
-    
+
     os_type = os_info.get("type", "unknown")
     os_id = os_info.get("id", "unknown")
-    
+
     print_info(f"Detected OS: {os_id} ({os_type})")
-    
+
     # Check if we know how to install on this OS
     commands = get_install_commands(os_info)
-    
+
     if commands is None:
         if os_type == "macos" and not shutil.which("brew"):
             print_error("Homebrew is required to install podman on macOS")
@@ -387,18 +387,18 @@ def offer_install_podman() -> str | None:
             print_error(f"Automatic installation not supported for {os_id}")
             print_info("Please install podman or docker manually")
         return None
-    
+
     print()
     print_warning("No container runtime (podman or docker) found!")
     print_info("This script can install podman for you.")
     print()
-    
+
     response = input("  Would you like to install podman now? (y/N): ").strip().lower()
-    
+
     if response != 'y':
         print_info("Installation cancelled")
         return None
-    
+
     print()
     if install_podman(os_info):
         # Verify installation
@@ -449,7 +449,7 @@ def check_compose_available(runtime: str) -> bool:
             return True
     except (subprocess.TimeoutExpired, OSError):
         pass
-    
+
     # Try docker-compose as fallback for docker
     if runtime == "docker" and shutil.which("docker-compose"):
         try:
@@ -464,7 +464,7 @@ def check_compose_available(runtime: str) -> bool:
                 return True
         except (subprocess.TimeoutExpired, OSError):
             pass
-    
+
     return False
 
 
@@ -488,21 +488,21 @@ def create_env_file(project_root: Path, overwrite: bool = False) -> bool:
     """Create the .env file with generated secrets."""
     env_file = project_root / ".env"
     example_env = project_root / "example.env"
-    
+
     if env_file.exists() and not overwrite:
         print_info(f".env file already exists at {env_file}")
         response = input("  Overwrite? (y/N): ").strip().lower()
         if response != 'y':
             print_info("Keeping existing .env file")
             return True
-    
+
     # Generate secure values
     db_password = generate_secure_password()
     jwt_token = generate_jwt_token()
-    
+
     env_content = f"""# Melodee Docker Configuration
 # Generated by run-container-setup.py
-# 
+#
 # WARNING: This file contains secrets. Do not commit to version control!
 
 # Database password (auto-generated)
@@ -528,7 +528,7 @@ BRAVE_SEARCH__APIKEY=your_brave_api_key_here
 BRAVE_SEARCH__BASEURL=https://api.search.brave.com
 BRAVE_SEARCH__IMAGESEARCHPATH=/res/v1/images/search
 """
-    
+
     try:
         env_file.write_text(env_content)
         print_success(f"Created .env file at {env_file}")
@@ -541,10 +541,10 @@ BRAVE_SEARCH__IMAGESEARCHPATH=/res/v1/images/search
 def ensure_gitignore_has_env(project_root: Path):
     """Ensure .env is in .gitignore."""
     gitignore = project_root / ".gitignore"
-    
+
     if not gitignore.exists():
         return
-    
+
     content = gitignore.read_text()
     if ".env" not in content:
         print_info("Adding .env to .gitignore")
@@ -557,7 +557,7 @@ def is_rootless_podman(runtime: str) -> bool:
     """Check if using rootless podman."""
     if runtime != "podman":
         return False
-    
+
     try:
         result = subprocess.run(
             ["podman", "info", "--format", "{{.Host.Security.Rootless}}"],
@@ -569,7 +569,7 @@ def is_rootless_podman(runtime: str) -> bool:
             return result.stdout.strip().lower() == "true"
     except (subprocess.TimeoutExpired, OSError, FileNotFoundError):
         pass
-    
+
     # Fallback: if not running as root, assume rootless
     return os.geteuid() != 0
 
@@ -587,20 +587,20 @@ def check_melodee_user_exists() -> bool:
 def offer_create_melodee_user() -> bool:
     """
     Offer to create a dedicated melodee system user for multi-user setups.
-    
+
     This is recommended for:
     - Production/demo servers with multiple admins
     - CI/CD deployments where different users need access
     - Shared server environments
-    
+
     Returns True if user should be created, False if using current user.
     """
     print("\n" + "=" * 60)
     print("  User Configuration")
     print("=" * 60 + "\n")
-    
+
     current_user = os.getenv("USER") or os.getenv("USERNAME") or "unknown"
-    
+
     print_info("Melodee can run under different user configurations:")
     print()
     print("  1. Current user only (simple, homelab)")
@@ -614,18 +614,18 @@ def offer_create_melodee_user() -> bool:
     print("     - Multiple users can be added to melodee group")
     print("     - Best for: Multi-user servers, CI/CD, production")
     print()
-    
+
     if check_melodee_user_exists():
         print_success("Melodee user already exists on this system")
         response = input("\n  Use melodee user instead of current user? (Y/n): ").strip().lower()
         return response != 'n'
-    
+
     response = input("\n  Create dedicated melodee system user? (y/N): ").strip().lower()
-    
+
     if response == 'y':
         print_info("\nCreating melodee system user...")
         print_info("You will be prompted for sudo password\n")
-        
+
         try:
             # Create system user with home directory
             subprocess.run(
@@ -634,7 +634,7 @@ def offer_create_melodee_user() -> bool:
                 timeout=30
             )
             print_success("Created melodee system user")
-            
+
             # Add current user to melodee group
             subprocess.run(
                 ["sudo", "usermod", "-aG", "melodee", current_user],
@@ -642,12 +642,12 @@ def offer_create_melodee_user() -> bool:
                 timeout=10
             )
             print_success(f"Added {current_user} to melodee group")
-            
+
             print_warning(f"\nYou need to log out and back in for group membership to take effect")
             print_info("Or run: newgrp melodee")
-            
+
             return True
-            
+
         except subprocess.CalledProcessError as e:
             print_error(f"Failed to create melodee user: {e}")
             print_info("Falling back to current user setup")
@@ -655,7 +655,7 @@ def offer_create_melodee_user() -> bool:
         except subprocess.TimeoutExpired:
             print_error("Command timed out")
             return False
-    
+
     print_info("Using current user setup")
     return False
 
@@ -663,20 +663,20 @@ def offer_create_melodee_user() -> bool:
 def create_compose_override_for_rootless(project_root: Path, use_melodee_user: bool = False) -> bool:
     """
     Create compose.override.yml for rootless podman to fix permission issues.
-    
+
     In rootless podman:
     - Container UID 0 maps to host user (e.g., 1000)
     - Container non-root users map to sub-UIDs (e.g., 100998)
     - Files created by container non-root users are inaccessible to host user
-    
+
     Solution: Run container as host UID:GID and remove the user drop in entrypoint.
-    
+
     Args:
         project_root: Path to project root
         use_melodee_user: If True, run as melodee user instead of current user
     """
     override_file = project_root / "compose.override.yml"
-    
+
     if use_melodee_user:
         # Get melodee user's UID and GID
         try:
@@ -693,7 +693,7 @@ def create_compose_override_for_rootless(project_root: Path, use_melodee_user: b
         uid = os.getuid()
         gid = os.getgid()
         user_desc = "your user"
-    
+
     override_content = f"""# Auto-generated by run-container-setup.py for rootless podman
 # This ensures files created in volumes are owned by {user_desc}
 #
@@ -710,7 +710,7 @@ services:
       # Let the container know it's running as non-root
       - MELODEE_RUNNING_AS_USER=true
 """
-    
+
     try:
         override_file.write_text(override_content)
         print_success(f"Created compose.override.yml for rootless podman (UID={uid}, GID={gid})")
@@ -724,10 +724,10 @@ services:
 def ensure_gitignore_has_override(project_root: Path):
     """Ensure compose.override.yml is in .gitignore."""
     gitignore = project_root / ".gitignore"
-    
+
     if not gitignore.exists():
         return
-    
+
     content = gitignore.read_text()
     if "compose.override.yml" not in content:
         print_info("Adding compose.override.yml to .gitignore")
@@ -750,11 +750,11 @@ def get_compose_command(runtime: str) -> list[str]:
                 return ["podman", "compose"]
         except (subprocess.TimeoutExpired, OSError):
             pass
-        
+
         # Fall back to podman-compose (standalone)
         if shutil.which("podman-compose"):
             return ["podman-compose"]
-    
+
     # Docker uses 'docker compose'
     return [runtime, "compose"]
 
@@ -762,7 +762,7 @@ def get_compose_command(runtime: str) -> list[str]:
 def start_containers(runtime: str, project_root: Path) -> bool:
     """Start the containers using the detected runtime."""
     compose_cmd = get_compose_command(runtime)
-    
+
     # Build the image first (required for podman with local images)
     print_info("Building container image (this may take a while on first run)...")
     try:
@@ -783,37 +783,37 @@ def start_containers(runtime: str, project_root: Path) -> bool:
     except OSError as e:
         print_error(f"Failed to build container: {e}")
         return False
-    
+
     # Start the containers
     print_info("Starting containers...")
     try:
         result = subprocess.run(
             [*compose_cmd, "up", "-d"],
             cwd=project_root,
-            timeout=120  # 2 minute timeout for start
+            timeout=600  # 10 minute timeout for start (slower boxes need more time)
         )
         if result.returncode != 0:
             print_error("Failed to start containers")
             return False
         return True
     except subprocess.TimeoutExpired:
-        print_error("Container startup timed out")
+        print_error("Container startup timed out (10 minutes)")
         return False
     except OSError as e:
         print_error(f"Failed to start containers: {e}")
         return False
 
 
-def wait_for_healthy(runtime: str, project_root: Path, timeout: int = 120) -> bool:
+def wait_for_healthy(runtime: str, project_root: Path, timeout: int = 600) -> bool:
     """Wait for containers to become healthy."""
     compose_cmd = get_compose_command(runtime)
-    
+
     print_info(f"Waiting for containers to become healthy (timeout: {timeout}s)...")
-    
+
     start_time = time.time()
     db_healthy = False
     app_healthy = False
-    
+
     while time.time() - start_time < timeout:
         try:
             # Check container status
@@ -824,10 +824,10 @@ def wait_for_healthy(runtime: str, project_root: Path, timeout: int = 120) -> bo
                 text=True,
                 timeout=10
             )
-            
+
             if result.returncode == 0:
                 output = result.stdout.strip()
-                
+
                 # Check for health status in output
                 if "healthy" in output.lower():
                     # Parse JSON if available, otherwise check text
@@ -835,16 +835,16 @@ def wait_for_healthy(runtime: str, project_root: Path, timeout: int = 120) -> bo
                         if not db_healthy:
                             print_success("Database container is healthy")
                             db_healthy = True
-                    
+
                     if "melodee.blazor" in output or "melodee_melodee.blazor" in output:
                         if "healthy" in output:
                             if not app_healthy:
                                 print_success("Application container is healthy")
                                 app_healthy = True
-                
+
                 if db_healthy and app_healthy:
                     return True
-            
+
             # Also try a direct health check
             if not app_healthy:
                 try:
@@ -860,34 +860,34 @@ def wait_for_healthy(runtime: str, project_root: Path, timeout: int = 120) -> bo
                             return True
                 except (subprocess.TimeoutExpired, OSError, FileNotFoundError):
                     pass
-            
+
         except (subprocess.TimeoutExpired, OSError):
             pass
-        
+
         # Show progress
         elapsed = int(time.time() - start_time)
         if elapsed % 10 == 0 and elapsed > 0:
             print_info(f"  Still waiting... ({elapsed}s)")
-        
+
         time.sleep(2)
-    
+
     # Timeout reached
     if not db_healthy:
         print_warning("Database container did not become healthy in time")
     if not app_healthy:
         print_warning("Application container did not become healthy in time")
-    
+
     return False
 
 
 def show_container_logs(runtime: str, project_root: Path, lines: int = 50):
     """Show recent container logs for debugging."""
     compose_cmd = get_compose_command(runtime)
-    
+
     print("\n" + "-" * 60)
     print("  Recent Container Logs")
     print("-" * 60 + "\n")
-    
+
     try:
         subprocess.run(
             [*compose_cmd, "logs", "--tail", str(lines)],
@@ -901,7 +901,7 @@ def show_container_logs(runtime: str, project_root: Path, lines: int = 50):
 def check_existing_containers(runtime: str, project_root: Path) -> tuple[bool, str]:
     """Check if containers already exist from a previous run."""
     compose_cmd = get_compose_command(runtime)
-    
+
     try:
         result = subprocess.run(
             [*compose_cmd, "ps", "-a"],
@@ -910,12 +910,12 @@ def check_existing_containers(runtime: str, project_root: Path) -> tuple[bool, s
             text=True,
             timeout=10
         )
-        
+
         if result.returncode == 0 and result.stdout.strip():
             # Check if there are any melodee containers
             if "melodee" in result.stdout.lower():
                 return True, result.stdout
-        
+
         return False, ""
     except (subprocess.TimeoutExpired, OSError):
         return False, ""
@@ -924,35 +924,35 @@ def check_existing_containers(runtime: str, project_root: Path) -> tuple[bool, s
 def update_containers(runtime: str, project_root: Path, skip_confirm: bool = False) -> bool:
     """
     Safely update running containers to latest code.
-    
+
     This will:
     1. Verify containers are currently running
     2. Pull latest git changes (optional, user may have already done this)
     3. Build new image
     4. Recreate containers with new image (volumes preserved)
     5. Wait for healthy status
-    
+
     Args:
         runtime: Container runtime (podman or docker)
         project_root: Path to project root
         skip_confirm: If True, skip confirmation prompts (for automated deployments)
     """
     compose_cmd = get_compose_command(runtime)
-    
+
     print("\n" + "=" * 60)
     print("  Melodee Container Update")
     print("=" * 60 + "\n")
-    
+
     # Check if containers exist
     exists, status = check_existing_containers(runtime, project_root)
     if not exists:
         print_error("No existing Melodee containers found")
         print_info("Use --start to start containers for the first time")
         return False
-    
+
     print_info("Current container status:")
     print(status)
-    
+
     # Confirm update
     if not skip_confirm:
         print_warning("\nThis will rebuild and restart the Melodee containers.")
@@ -963,7 +963,7 @@ def update_containers(runtime: str, project_root: Path, skip_confirm: bool = Fal
             return False
     else:
         print_info("\nProceeding with update (--yes flag specified)")
-    
+
     # Check for uncommitted changes that might affect build
     try:
         result = subprocess.run(
@@ -983,7 +983,7 @@ def update_containers(runtime: str, project_root: Path, skip_confirm: bool = Fal
             print_info("These changes will be included in the build")
     except (subprocess.TimeoutExpired, OSError, FileNotFoundError):
         pass  # Git not available or not a git repo, skip check
-    
+
     # Show current git commit
     try:
         result = subprocess.run(
@@ -997,9 +997,9 @@ def update_containers(runtime: str, project_root: Path, skip_confirm: bool = Fal
             print_info(f"\nBuilding from commit: {result.stdout.strip()}")
     except (subprocess.TimeoutExpired, OSError, FileNotFoundError):
         pass
-    
+
     print()
-    
+
     # Build new image
     print_info("Step 1/3: Building new container image...")
     try:
@@ -1019,7 +1019,7 @@ def update_containers(runtime: str, project_root: Path, skip_confirm: bool = Fal
     except OSError as e:
         print_error(f"Build failed: {e}")
         return False
-    
+
     # Stop and recreate containers (preserves volumes)
     print_info("\nStep 2/3: Updating containers...")
     try:
@@ -1027,26 +1027,26 @@ def update_containers(runtime: str, project_root: Path, skip_confirm: bool = Fal
         result = subprocess.run(
             [*compose_cmd, "up", "-d"],
             cwd=project_root,
-            timeout=120
+            timeout=600  # 10 minute timeout for container recreation
         )
         if result.returncode != 0:
             print_error("Failed to update containers")
             return False
         print_success("Containers updated")
     except subprocess.TimeoutExpired:
-        print_error("Container update timed out")
+        print_error("Container update timed out (10 minutes)")
         return False
     except OSError as e:
         print_error(f"Update failed: {e}")
         return False
-    
+
     # Wait for healthy
     print_info("\nStep 3/3: Waiting for containers to become healthy...")
-    healthy = wait_for_healthy(runtime, project_root, timeout=180)
-    
+    healthy = wait_for_healthy(runtime, project_root, timeout=600)
+
     if healthy:
         print_success("\nUpdate completed successfully!")
-        
+
         # Show new version info
         try:
             result = subprocess.run(
@@ -1060,7 +1060,7 @@ def update_containers(runtime: str, project_root: Path, skip_confirm: bool = Fal
                 print_info(f"Now running: {result.stdout.strip()}")
         except (subprocess.TimeoutExpired, OSError, FileNotFoundError):
             pass
-        
+
         return True
     else:
         print_warning("\nContainers updated but may not be fully healthy")
@@ -1072,11 +1072,11 @@ def update_containers(runtime: str, project_root: Path, skip_confirm: bool = Fal
 def print_next_steps(runtime: str, started: bool, healthy: bool = False):
     """Print next steps for the user."""
     compose_cmd = " ".join(get_compose_command(runtime))
-    
+
     print("\n" + "-" * 60)
     print("  Next Steps")
     print("-" * 60 + "\n")
-    
+
     if started and healthy:
         print_success("Melodee is up and running!")
         print_info("Access Melodee at: http://localhost:8080")
@@ -1101,7 +1101,7 @@ def print_next_steps(runtime: str, started: bool, healthy: bool = False):
         print(f"    {compose_cmd} up -d")
         print()
         print_info("Then access Melodee at: http://localhost:8080")
-    
+
     print()
     print_info("Default admin credentials are set during first login.")
     print_info("Check the README.md for more information.")
@@ -1111,17 +1111,17 @@ def print_next_steps(runtime: str, started: bool, healthy: bool = False):
 def check_volume_permissions(runtime: str, project_root: Path) -> bool:
     """
     Check volume permissions for rootless podman issues.
-    
+
     This diagnostic function helps identify UID mapping problems where
     files in volumes are owned by sub-UIDs (e.g., 100998) instead of
     the expected host user or melodee user.
-    
+
     Returns True if permissions look correct, False if issues found.
     """
     print("\n" + "=" * 60)
     print("  Volume Permissions Diagnostic")
     print("=" * 60 + "\n")
-    
+
     # Check if rootless
     if runtime == "podman":
         try:
@@ -1132,7 +1132,7 @@ def check_volume_permissions(runtime: str, project_root: Path) -> bool:
                 timeout=10
             )
             is_rootless = result.returncode == 0 and result.stdout.strip().lower() == "true"
-            
+
             if is_rootless:
                 print_info("Running in rootless podman mode")
             else:
@@ -1143,9 +1143,9 @@ def check_volume_permissions(runtime: str, project_root: Path) -> bool:
     else:
         print_info(f"Running with {runtime} (typically rootful)")
         is_rootless = False
-    
+
     print()
-    
+
     # Get volume storage path
     volume_base = None
     if runtime == "podman" and is_rootless:
@@ -1155,42 +1155,42 @@ def check_volume_permissions(runtime: str, project_root: Path) -> bool:
         volume_base = Path("/var/lib/containers/storage/volumes")
     elif runtime == "docker":
         volume_base = Path("/var/lib/docker/volumes")
-    
+
     if not volume_base or not volume_base.exists():
         print_warning(f"Volume storage directory not found: {volume_base}")
         return False
-    
+
     print_info(f"Checking volumes in: {volume_base}")
     print()
-    
+
     # Volume names to check
     # Note: melodee_db_data is expected to have sub-UID ownership (database internals)
     user_volumes = [
         "melodee_inbound",
-        "melodee_staging", 
+        "melodee_staging",
         "melodee_storage",
         "melodee_logs"
     ]
-    
+
     db_volumes = ["melodee_db_data"]
-    
+
     issues_found = False
     current_uid = os.getuid()
-    
+
     # Check user-accessible volumes (should be owned by host user)
     for vol_name in user_volumes:
         vol_path = volume_base / vol_name / "_data"
-        
+
         if not vol_path.exists():
             print_warning(f"{vol_name}: Volume not found")
             continue
-        
+
         try:
             # Get directory stats
             stat_info = vol_path.stat()
             owner_uid = stat_info.st_uid
             owner_gid = stat_info.st_gid
-            
+
             # Check for sub-UID (typically in 100000+ range)
             if owner_uid > 65536:
                 print_error(f"{vol_name}: Owned by sub-UID {owner_uid}:{owner_gid}")
@@ -1206,29 +1206,29 @@ def check_volume_permissions(runtime: str, project_root: Path) -> bool:
                     print_info(f"{vol_name}: Owned by {user_info.pw_name} ({owner_uid}:{owner_gid})")
                 except KeyError:
                     print_warning(f"{vol_name}: Owned by UID {owner_uid}:{owner_gid}")
-            
+
         except PermissionError:
             print_error(f"{vol_name}: Permission denied (cannot read directory)")
             issues_found = True
         except OSError as e:
             print_error(f"{vol_name}: Error checking permissions: {e}")
             issues_found = True
-    
+
     print()
-    
+
     # Check database volumes (these SHOULD have sub-UID ownership in rootless mode)
     for vol_name in db_volumes:
         vol_path = volume_base / vol_name / "_data"
-        
+
         if not vol_path.exists():
             print_warning(f"{vol_name}: Volume not found")
             continue
-        
+
         try:
             stat_info = vol_path.stat()
             owner_uid = stat_info.st_uid
             owner_gid = stat_info.st_gid
-            
+
             if owner_uid > 65536:
                 print_info(f"{vol_name}: Owned by sub-UID {owner_uid}:{owner_gid} (expected for database)")
                 print_info(f"  ↳ PostgreSQL uses default namespace mapping (this is correct)")
@@ -1243,9 +1243,9 @@ def check_volume_permissions(runtime: str, project_root: Path) -> bool:
                     print_info(f"{vol_name}: Owned by UID {owner_uid}:{owner_gid}")
         except (PermissionError, OSError) as e:
             print_warning(f"{vol_name}: Cannot check permissions: {e}")
-    
+
     print()
-    
+
     # Check compose.override.yml
     override_file = project_root / "compose.override.yml"
     if override_file.exists():
@@ -1257,7 +1257,7 @@ def check_volume_permissions(runtime: str, project_root: Path) -> bool:
             else:
                 print_warning("  ⚠ No userns_mode found (may have UID mapping issues)")
                 issues_found = True
-            
+
             # Extract user setting
             import re
             user_match = re.search(r'user:\s*["\']?(\d+):(\d+)["\']?', content)
@@ -1272,9 +1272,9 @@ def check_volume_permissions(runtime: str, project_root: Path) -> bool:
             issues_found = True
         else:
             print_info("No compose.override.yml (not needed for rootful mode)")
-    
+
     print()
-    
+
     # Summary and recommendations
     if issues_found:
         print_error("ISSUES FOUND!")
@@ -1295,9 +1295,9 @@ def main():
     # Handle help first
     if "--help" in sys.argv or "-h" in sys.argv:
         print_help()
-    
+
     print_banner()
-    
+
     # Parse arguments
     start_after_setup = "--start" in sys.argv
     check_only = "--check-only" in sys.argv
@@ -1305,26 +1305,26 @@ def main():
     force_overwrite = "--force" in sys.argv
     update_mode = "--update" in sys.argv
     skip_confirm = "--yes" in sys.argv or "-y" in sys.argv
-    
+
     # Get project root first for preflight checks
     project_root = get_project_root()
     print(f"Project root: {project_root}")
-    
+
     # Detect container runtime early (needed for multiple modes)
     print("\nDetecting container runtime...")
     runtime = detect_container_runtime()
-    
+
     if not runtime and not check_permissions:
         # Only offer to install if not just checking permissions
         runtime = offer_install_podman()
-        
+
         if not runtime:
             print()
             print_error("Cannot continue without a container runtime.")
             print_info("  - Podman: https://podman.io/getting-started/installation")
             print_info("  - Docker: https://docs.docker.com/get-docker/")
             sys.exit(1)
-    
+
     # Handle permission check mode
     if check_permissions:
         if not runtime:
@@ -1332,7 +1332,7 @@ def main():
             sys.exit(1)
         success = check_volume_permissions(runtime, project_root)
         sys.exit(0 if success else 1)
-    
+
     # Run preflight checks
     if not run_preflight_checks(project_root):
         if check_only:
@@ -1342,19 +1342,19 @@ def main():
         print_info("Fix the issues above for best results")
     else:
         print_success("All preflight checks passed!")
-    
+
     if check_only:
         print_info("\n--check-only specified, exiting after checks")
         sys.exit(0)
         runtime = offer_install_podman()
-        
+
         if not runtime:
             print()
             print_error("Cannot continue without a container runtime.")
             print_info("  - Podman: https://podman.io/getting-started/installation")
             print_info("  - Docker: https://docs.docker.com/get-docker/")
             sys.exit(1)
-    
+
     # Check compose availability
     print("\nChecking compose availability...")
     if not check_compose_available(runtime):
@@ -1365,12 +1365,12 @@ def main():
         else:
             print_info("Install Docker Compose: https://docs.docker.com/compose/install/")
         sys.exit(1)
-    
+
     # Handle update mode separately
     if update_mode:
         success = update_containers(runtime, project_root, skip_confirm=skip_confirm)
         sys.exit(0 if success else 1)
-    
+
     # Check for existing containers
     exists, status = check_existing_containers(runtime, project_root)
     if exists:
@@ -1392,30 +1392,30 @@ def main():
             else:
                 subprocess.run([*compose_cmd, "down"], cwd=project_root, timeout=60)
                 print_success("Existing containers removed (volumes preserved)")
-    
+
     # Create .env file
     print("\nSetting up environment...")
     if not create_env_file(project_root, overwrite=force_overwrite):
         sys.exit(1)
-    
+
     # Ensure .env is gitignored
     ensure_gitignore_has_env(project_root)
-    
+
     # For rootless podman, create compose.override.yml to fix permissions
     use_melodee_user = False
     if is_rootless_podman(runtime):
         print_info("\nDetected rootless podman - configuring user permissions...")
-        
+
         # Offer to create dedicated melodee user for multi-user setups
         if not skip_confirm:
             use_melodee_user = offer_create_melodee_user()
-        
+
         if not create_compose_override_for_rootless(project_root, use_melodee_user):
             print_warning("Could not create compose.override.yml")
             print_info("You may experience file permission issues with volumes")
         else:
             ensure_gitignore_has_override(project_root)
-    
+
     # Optionally start containers
     started = False
     healthy = False
@@ -1424,10 +1424,10 @@ def main():
         started = start_containers(runtime, project_root)
         if started:
             print_success("Containers started!")
-            
+
             # Wait for healthy status
             healthy = wait_for_healthy(runtime, project_root)
-            
+
             if not healthy:
                 print_warning("Containers may not be fully healthy")
                 print_info("Showing recent logs for debugging:")
@@ -1437,7 +1437,7 @@ def main():
                 print("\nVerifying volume permissions...")
                 print_info("Waiting a moment for containers to create initial files...")
                 time.sleep(3)  # Give containers time to create files in volumes
-                
+
                 permissions_ok = check_volume_permissions(runtime, project_root)
                 if not permissions_ok:
                     print_warning("\nPermission issues detected but containers are running")
@@ -1448,10 +1448,10 @@ def main():
             print_error("Failed to start containers")
             print_info("Showing recent logs for debugging:")
             show_container_logs(runtime, project_root, lines=50)
-    
+
     # Print next steps
     print_next_steps(runtime, started, healthy)
-    
+
     return 0 if (not start_after_setup or started) else 1
 
 
