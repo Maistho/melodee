@@ -464,6 +464,22 @@ def check_compose_available(runtime: str) -> bool:
                 return True
         except (subprocess.TimeoutExpired, OSError):
             pass
+    
+    # Try podman-compose as fallback for podman
+    if runtime == "podman" and shutil.which("podman-compose"):
+        try:
+            result = subprocess.run(
+                ["podman-compose", "--version"],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+            if result.returncode == 0:
+                version_info = result.stdout.strip().split('\n')[0]
+                print_success(f"Found podman-compose: {version_info}")
+                return True
+        except (subprocess.TimeoutExpired, OSError):
+            pass
 
     return False
 
