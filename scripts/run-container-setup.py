@@ -927,8 +927,9 @@ def check_existing_containers(runtime: str, project_root: Path) -> tuple[bool, s
     compose_cmd = get_compose_command(runtime)
 
     try:
+        # Try compose ps first (without -a as podman-compose doesn't support it)
         result = subprocess.run(
-            [*compose_cmd, "ps", "-a"],
+            [*compose_cmd, "ps"],
             cwd=project_root,
             capture_output=True,
             text=True,
@@ -939,6 +940,17 @@ def check_existing_containers(runtime: str, project_root: Path) -> tuple[bool, s
             # Check if there are any melodee containers
             if "melodee" in result.stdout.lower():
                 return True, result.stdout
+
+        # Fallback: Check using runtime directly
+        result = subprocess.run(
+            [runtime, "ps", "--filter", "name=melodee", "--format", "table {{.ID}}\t{{.Image}}\t{{.Status}}\t{{.Names}}"],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+
+        if result.returncode == 0 and result.stdout.strip() and "melodee" in result.stdout.lower():
+            return True, result.stdout
 
         return False, ""
     except (subprocess.TimeoutExpired, OSError):
