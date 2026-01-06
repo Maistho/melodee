@@ -14,14 +14,32 @@ It will:
 8. Verify containers are healthy after startup
 
 Usage:
-    python scripts/run-container-setup.py [--start] [--check-only] [--force] [--update] [--yes]
+    python scripts/run-container-setup.py [OPTIONS]
     
 Options:
-    --start       Start containers after setup
-    --check-only  Only run checks, don't create .env or start containers
-    --force       Overwrite existing .env file without prompting
-    --update      Safely update running containers to latest code (preserves volumes)
-    --yes, -y     Skip confirmation prompts (for automated deployments)
+    --help, -h              Show this help message and exit
+    --start                 Start containers after setup
+    --check-only            Only run checks, don't create .env or start containers
+    --check-permissions     Check volume permissions for rootless podman issues
+    --force                 Overwrite existing .env file without prompting
+    --update                Safely update running containers to latest code (preserves volumes)
+    --yes, -y               Skip confirmation prompts (for automated deployments)
+
+Examples:
+    # Show help
+    python scripts/run-container-setup.py --help
+    
+    # Run preflight checks only
+    python scripts/run-container-setup.py --check-only
+    
+    # Setup and start containers
+    python scripts/run-container-setup.py --start
+    
+    # Check for permission issues
+    python scripts/run-container-setup.py --check-permissions
+    
+    # Update running containers
+    python scripts/run-container-setup.py --update
 """
 
 import os
@@ -32,6 +50,12 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+
+
+def print_help():
+    """Print help message and exit."""
+    print(__doc__)
+    sys.exit(0)
 
 
 def print_banner():
@@ -1083,13 +1107,167 @@ def print_next_steps(runtime: str, started: bool, healthy: bool = False):
     print()
 
 
+def check_volume_permissions(runtime: str, project_root: Path) -> bool:
+    """
+    Check volume permissions for rootless podman issues.
+    
+    This diagnostic function helps identify UID mapping problems where
+    files in volumes are owned by sub-UIDs (e.g., 100998) instead of
+    the expected host user or melodee user.
+    
+    Returns True if permissions look correct, False if issues found.
+    """
+    print("\n" + "=" * 60)
+    print("  Volume Permissions Diagnostic")
+    print("=" * 60 + "\n")
+    
+    # Check if rootless
+    if runtime == "podman":
+        try:
+            result = subprocess.run(
+                ["podman", "info", "--format", "{{.Host.Security.Rootless}}"],
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+            is_rootless = result.returncode == 0 and result.stdout.strip().lower() == "true"
+            
+            if is_rootless:
+                print_info("Running in rootless podman mode")
+            else:
+                print_info("Running in rootful podman mode")
+        except (subprocess.TimeoutExpired, OSError, FileNotFoundError):
+            print_warning("Could not determine if podman is rootless")
+            is_rootless = False
+    else:
+        print_info(f"Running with {runtime} (typically rootful)")
+        is_rootless = False
+    
+    print()
+    
+    # Get volume storage path
+    volume_base = None
+    if runtime == "podman" and is_rootless:
+        home = os.path.expanduser("~")
+        volume_base = Path(home) / ".local/share/containers/storage/volumes"
+    elif runtime == "podman":
+        volume_base = Path("/var/lib/containers/storage/volumes")
+    elif runtime == "docker":
+        volume_base = Path("/var/lib/docker/volumes")
+    
+    if not volume_base or not volume_base.exists():
+        print_warning(f"Volume storage directory not found: {volume_base}")
+        return False
+    
+    print_info(f"Checking volumes in: {volume_base}")
+    print()
+    
+    # Volume names to check
+    volume_names = [
+        "melodee_inbound",
+        "melodee_staging", 
+        "melodee_storage",
+        "melodee_db_data",
+        "melodee_logs"
+    ]
+    
+    issues_found = False
+    current_uid = os.getuid()
+    
+    for vol_name in volume_names:
+        vol_path = volume_base / vol_name / "_data"
+        
+        if not vol_path.exists():
+            print_warning(f"{vol_name}: Volume not found")
+            continue
+        
+        try:
+            # Get directory stats
+            stat_info = vol_path.stat()
+            owner_uid = stat_info.st_uid
+            owner_gid = stat_info.st_gid
+            
+            # Check for sub-UID (typically in 100000+ range)
+            if owner_uid > 65536:
+                print_error(f"{vol_name}: Owned by sub-UID {owner_uid}:{owner_gid}")
+                print_info(f"  ↳ This indicates user namespace mapping issue")
+                issues_found = True
+            elif owner_uid == current_uid:
+                print_success(f"{vol_name}: Owned by current user ({owner_uid}:{owner_gid})")
+            else:
+                # Check if it's a known system user
+                try:
+                    import pwd
+                    user_info = pwd.getpwuid(owner_uid)
+                    print_info(f"{vol_name}: Owned by {user_info.pw_name} ({owner_uid}:{owner_gid})")
+                except KeyError:
+                    print_warning(f"{vol_name}: Owned by UID {owner_uid}:{owner_gid}")
+            
+        except PermissionError:
+            print_error(f"{vol_name}: Permission denied (cannot read directory)")
+            issues_found = True
+        except OSError as e:
+            print_error(f"{vol_name}: Error checking permissions: {e}")
+            issues_found = True
+    
+    print()
+    
+    # Check compose.override.yml
+    override_file = project_root / "compose.override.yml"
+    if override_file.exists():
+        print_info("Checking compose.override.yml configuration:")
+        try:
+            content = override_file.read_text()
+            if "userns_mode" in content:
+                print_success("  ✓ userns_mode configured (UID mapping fix applied)")
+            else:
+                print_warning("  ⚠ No userns_mode found (may have UID mapping issues)")
+                issues_found = True
+            
+            # Extract user setting
+            import re
+            user_match = re.search(r'user:\s*["\']?(\d+):(\d+)["\']?', content)
+            if user_match:
+                print_info(f"  Container runs as UID:GID {user_match.group(1)}:{user_match.group(2)}")
+        except Exception as e:
+            print_error(f"  Error reading override file: {e}")
+    else:
+        if is_rootless:
+            print_warning("No compose.override.yml found")
+            print_info("  ↳ Re-run setup to create override for rootless podman")
+            issues_found = True
+        else:
+            print_info("No compose.override.yml (not needed for rootful mode)")
+    
+    print()
+    
+    # Summary and recommendations
+    if issues_found:
+        print_error("ISSUES FOUND!")
+        print()
+        print_info("Recommendations:")
+        print_info("  1. Stop containers: podman compose down -v")
+        print_info("  2. Re-run setup: python scripts/run-container-setup.py --start")
+        print_info("  3. Ensure userns_mode is configured in compose.override.yml")
+        print()
+        return False
+    else:
+        print_success("No permission issues detected!")
+        return True
+
+
 def main():
     """Main entry point."""
+    # Handle help first
+    if "--help" in sys.argv or "-h" in sys.argv:
+        print_help()
+    
     print_banner()
     
     # Parse arguments
     start_after_setup = "--start" in sys.argv
     check_only = "--check-only" in sys.argv
+    check_permissions = "--check-permissions" in sys.argv
     force_overwrite = "--force" in sys.argv
     update_mode = "--update" in sys.argv
     skip_confirm = "--yes" in sys.argv or "-y" in sys.argv
@@ -1097,6 +1275,29 @@ def main():
     # Get project root first for preflight checks
     project_root = get_project_root()
     print(f"Project root: {project_root}")
+    
+    # Detect container runtime early (needed for multiple modes)
+    print("\nDetecting container runtime...")
+    runtime = detect_container_runtime()
+    
+    if not runtime and not check_permissions:
+        # Only offer to install if not just checking permissions
+        runtime = offer_install_podman()
+        
+        if not runtime:
+            print()
+            print_error("Cannot continue without a container runtime.")
+            print_info("  - Podman: https://podman.io/getting-started/installation")
+            print_info("  - Docker: https://docs.docker.com/get-docker/")
+            sys.exit(1)
+    
+    # Handle permission check mode
+    if check_permissions:
+        if not runtime:
+            print_error("Cannot check permissions without a container runtime")
+            sys.exit(1)
+        success = check_volume_permissions(runtime, project_root)
+        sys.exit(0 if success else 1)
     
     # Run preflight checks
     if not run_preflight_checks(project_root):
@@ -1111,13 +1312,6 @@ def main():
     if check_only:
         print_info("\n--check-only specified, exiting after checks")
         sys.exit(0)
-    
-    # Detect container runtime
-    print("\nDetecting container runtime...")
-    runtime = detect_container_runtime()
-    
-    if not runtime:
-        # Offer to install podman
         runtime = offer_install_podman()
         
         if not runtime:
