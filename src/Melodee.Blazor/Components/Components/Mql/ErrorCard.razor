@@ -2,19 +2,23 @@
 
 <div class="error-card">
     <div class="error-header">
-        <RadzenBadge BadgeStyle="BadgeStyle.Danger" Text="@Error.Code" />
-        <span class="error-title">@Error.Title</span>
+        <RadzenBadge BadgeStyle="BadgeStyle.Danger" Text="@Code" />
+        <span class="error-title">@Title</span>
     </div>
     <div class="error-description">
-        @Error.Description
+        @Description
     </div>
 </div>
 
 @code {
     [Parameter]
-    public ErrorInfo Error { get; set; } = null!;
+    public string Code { get; set; } = string.Empty;
 
-    private sealed record ErrorInfo(string Code, string Title, string Description);
+    [Parameter]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Description { get; set; } = string.Empty;
 }
 
 <style>

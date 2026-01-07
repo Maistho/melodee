@@ -14,9 +14,9 @@
             <div class="error-category">
                 <h4>@category.Name</h4>
                 <div class="error-list">
-                    @foreach (var error in category.Errors.Where(e => string.IsNullOrEmpty(SearchTerm) || e.Code.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase) || e.Message.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)))
+                    @foreach (var error in category.Errors.Where(e => string.IsNullOrEmpty(SearchTerm) || e.Code.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase) || e.Description.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)))
                     {
-                        <ErrorCard Error="error" />
+                        <ErrorCard Code="@error.Code" Title="@error.Title" Description="@error.Description" />
                     }
                 </div>
             </div>

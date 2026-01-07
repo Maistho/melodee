@@ -24,7 +24,7 @@
         @if (ShowSearchButton)
         {
             <RadzenButton Icon="search"
-                          Click="OnSearch"
+                           Click="ExecuteSearch"
                           Disabled="Disabled || string.IsNullOrWhiteSpace(SearchText)" />
         }
     </div>
@@ -63,7 +63,7 @@
                     }
                 </div>
             </RadzenAlert>
-            @if (ValidationResult.Suggestions?.Any() == true)
+            @if (ValidationResult.Errors.Any(e => e.Suggestions?.Any() == true))
             {
                 <div class="suggestions-link">
                     <RadzenLink Path="/docs/mql/errors" Text="View error reference" />
@@ -107,7 +107,7 @@
     public string Placeholder { get; set; } = "Search with MQL (e.g., artist:Beatles AND year:>=1970)";
 
     [Parameter]
-    public IDictionary<string, object>? InputAttributes { get; set; }
+    public Dictionary<string, object>? InputAttributes { get; set; }
 
     [Parameter]
     public int MaxSuggestions { get; set; } = 8;
@@ -233,7 +233,7 @@
         return suggestion.Text;
     }
 
-    private async Task OnSearch()
+    private async Task ExecuteSearch()
     {
         if (!string.IsNullOrWhiteSpace(SearchText))
         {

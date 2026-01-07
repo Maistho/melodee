@@ -68,24 +68,29 @@
                                 <td><code>artist:!=The Beatles</code></td>
                             </tr>
                             <tr>
-                                <td><code>:<</code></td>
+                                <td><code>:&lt;</code></td>
                                 <td>Less than</td>
-                                <td><code>duration:<300</code> (less than 5 minutes)</td>
+                                <td><code>duration:&lt;300</code> (less than 5 minutes)</td>
                             </tr>
                             <tr>
-                                <td><code>:<=</code></td>
+                                <td><code>:&lt;=</code></td>
                                 <td>Less than or equal</td>
-                                <td><code>rating:<=3</code></td>
+                                <td><code>rating:&lt;=3</code></td>
                             </tr>
                             <tr>
-                                <td><code>:></code></td>
+                                <td><code>:&lt;=</code></td>
+                                <td>Less than or equal</td>
+                                <td><code>rating:&lt;=3</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>:&gt;</code></td>
                                 <td>Greater than</td>
-                                <td><code>bpm:>120</code></td>
+                                <td><code>bpm:&gt;120</code></td>
                             </tr>
                             <tr>
-                                <td><code>:>=</code></td>
+                                <td><code>:&gt;=</code></td>
                                 <td>Greater than or equal</td>
-                                <td><code>rating:>=4</code></td>
+                                <td><code>rating:&gt;=4</code></td>
                             </tr>
                         </tbody>
                     </table>
@@ -182,7 +187,7 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td><code>duration:<180</code></td>
+                                <td><code>duration:&lt;180</code></td>
                                 <td>Less than 3 minutes</td>
                             </tr>
                             <tr>
@@ -245,7 +250,7 @@
                         </li>
                         <li>
                             <strong>Be specific with numbers:</strong>
-                            <code>year:>=1970 AND year:<=1980</code> is clearer than <code>year:1970-1980</code> for some use cases.
+                            <code>year:&gt;=1970 AND year:&lt;=1980</code> is clearer than <code>year:1970-1980</code> for some use cases.
                         </li>
                         <li>
                             <strong>Use parentheses for complex logic:</strong>
@@ -259,7 +264,7 @@
 
                     <h4>Common Patterns</h4>
                     <div class="example-box">
-                        <code>artist:"@SearchQuery" AND year:>=@StartYear</code>
+                        <code>artist:"@@SearchQuery" AND year:&gt;=@@StartYear</code>
                         <p class="description">User can customize artist and year range.</p>
                     </div>
                     <div class="example-box">
@@ -267,7 +272,7 @@
                         <p class="description">Highly-rated or popular rock songs.</p>
                     </div>
                     <div class="example-box">
-                        <code>title:contains @Query AND NOT album:Compilations</code>
+                        <code>title:contains @@Query AND NOT album:Compilations</code>
                         <p class="description">Find songs by title excluding compilations.</p>
                     </div>
                 </div>

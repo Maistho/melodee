@@ -45,10 +45,10 @@
                 </div>
             }
 
-            @if (Errors.Count > MaxErrors)
+            @if ((Errors?.Count() ?? 0) > MaxErrors)
             {
                 <div class="more-errors">
-                    +@(Errors.Count - MaxErrors) more errors
+                    +@((Errors?.Count() ?? 0) - MaxErrors) more errors
                 </div>
             }
         </div>
