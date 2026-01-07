@@ -15,6 +15,7 @@ public class MqlControllerTests
     private readonly Mock<IMqlTokenizer> _tokenizerMock;
     private readonly Mock<IMqlParser> _parserMock;
     private readonly Mock<IMqlValidator> _validatorMock;
+    private readonly Mock<IMqlSuggestionService> _suggestionServiceMock;
     private readonly Mock<ILogger<MqlController>> _loggerMock;
     private readonly MqlController _controller;
 
@@ -23,12 +24,14 @@ public class MqlControllerTests
         _tokenizerMock = new Mock<IMqlTokenizer>();
         _parserMock = new Mock<IMqlParser>();
         _validatorMock = new Mock<IMqlValidator>();
+        _suggestionServiceMock = new Mock<IMqlSuggestionService>();
         _loggerMock = new Mock<ILogger<MqlController>>();
 
         _controller = new MqlController(
             _tokenizerMock.Object,
             _parserMock.Object,
             _validatorMock.Object,
+            _suggestionServiceMock.Object,
             _loggerMock.Object);
 
         SetupControllerContext();

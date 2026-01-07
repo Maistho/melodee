@@ -23,6 +23,28 @@ public sealed record MqlParseResponse
 }
 
 /// <summary>
+/// Request DTO for autocomplete suggestions.
+/// </summary>
+public sealed record MqlSuggestionRequestDto
+{
+    public string Entity { get; init; } = string.Empty;
+    public string Query { get; init; } = string.Empty;
+    public int CursorPosition { get; init; }
+}
+
+/// <summary>
+/// Response DTO for autocomplete suggestions.
+/// </summary>
+public sealed record MqlSuggestionResponseDto
+{
+    public List<MqlSuggestionDto> Suggestions { get; init; } = new();
+    public string Query { get; init; } = string.Empty;
+    public int CursorPosition { get; init; }
+    public string DetectedContext { get; init; } = string.Empty;
+    public long ProcessingTimeMs { get; init; }
+}
+
+/// <summary>
 /// Error response DTO for MQL parse failures.
 /// </summary>
 public sealed record MqlErrorResponse

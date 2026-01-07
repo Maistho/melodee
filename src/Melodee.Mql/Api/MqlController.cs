@@ -18,6 +18,7 @@ public class MqlController : ControllerBase
     private readonly IMqlTokenizer _tokenizer;
     private readonly IMqlParser _parser;
     private readonly IMqlValidator _validator;
+    private readonly IMqlSuggestionService _suggestionService;
     private readonly ILogger<MqlController> _logger;
 
     private const int MaxQueryLength = 500;
@@ -32,11 +33,13 @@ public class MqlController : ControllerBase
         IMqlTokenizer tokenizer,
         IMqlParser parser,
         IMqlValidator validator,
+        IMqlSuggestionService suggestionService,
         ILogger<MqlController> logger)
     {
         _tokenizer = tokenizer;
         _parser = parser;
         _validator = validator;
+        _suggestionService = suggestionService;
         _logger = logger;
     }
 
@@ -228,6 +231,76 @@ public class MqlController : ControllerBase
             ["status"] = "healthy",
             ["timestamp"] = DateTime.UtcNow.ToString("O")
         });
+    }
+
+    /// <summary>
+    /// Provides autocomplete suggestions for MQL queries.
+    /// </summary>
+    /// <param name="requestDto">The suggestion request containing entity type, query, and cursor position.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A list of suggestions based on the current query context.</returns>
+    [HttpPost("suggest")]
+    [Produces("application/json")]
+    [Consumes("application/json")]
+    public ActionResult<MqlSuggestionResponseDto> SuggestAsync(
+        [FromBody] MqlSuggestionRequestDto requestDto,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(requestDto.Entity))
+            {
+                return BadRequest(new MqlErrorResponse
+                {
+                    ErrorCode = "MQL_INVALID_ENTITY",
+                    Message = "Entity type is required",
+                    Timestamp = DateTime.UtcNow
+                });
+            }
+
+            var normalizedEntity = requestDto.Entity.ToLowerInvariant();
+            if (!MqlFieldRegistry.GetEntityTypes().Contains(normalizedEntity))
+            {
+                return BadRequest(new MqlErrorResponse
+                {
+                    ErrorCode = "MQL_UNKNOWN_ENTITY",
+                    Message = $"Unknown entity type: {requestDto.Entity}. Valid types: {string.Join(", ", MqlFieldRegistry.GetEntityTypes())}",
+                    Timestamp = DateTime.UtcNow
+                });
+            }
+
+            var cursorPosition = Math.Max(0, Math.Min(requestDto.CursorPosition, requestDto.Query.Length));
+            var result = _suggestionService.GetSuggestions(requestDto.Query ?? string.Empty, normalizedEntity, cursorPosition);
+
+            _logger.LogDebug("Generated {Count} suggestions for query '{Query}' at position {Pos}",
+                result.Suggestions.Count, requestDto.Query, cursorPosition);
+
+            return Ok(new MqlSuggestionResponseDto
+            {
+                Suggestions = result.Suggestions.Select(s => new MqlSuggestionDto
+                {
+                    Text = s.Text,
+                    Type = s.Type.ToString().ToLowerInvariant(),
+                    Description = s.Description,
+                    Confidence = s.Confidence
+                }).ToList(),
+                Query = result.Query,
+                CursorPosition = result.CursorPosition,
+                DetectedContext = result.DetectedContext,
+                ProcessingTimeMs = result.ProcessingTimeMs
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating suggestions for query: {Query}", requestDto.Query);
+
+            return StatusCode(StatusCodes.Status500InternalServerError, new MqlErrorResponse
+            {
+                ErrorCode = "MQL_SUGGESTION_ERROR",
+                Message = "An error occurred while generating suggestions",
+                Timestamp = DateTime.UtcNow
+            });
+        }
     }
 
     private static async Task<bool> CheckRateLimitAsync(string identifier)

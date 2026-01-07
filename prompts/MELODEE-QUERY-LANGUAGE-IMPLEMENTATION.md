@@ -1,6 +1,6 @@
 # Melodee Query Language (MQL) — Implementation Plan
 
-**Status:** In Progress - Phase 12 Complete  
+**Status:** In Progress - Phase 13 Complete  
 **Spec Reference:** [MELODEE-QUERY-LANGUAGE.md](./MELODEE-QUERY-LANGUAGE.md)
 
 ## Overview
@@ -38,7 +38,7 @@ This document outlines the phased implementation plan for MQL. Each phase builds
 
 ### Advanced Features
 - [x] **Phase 12: Smart Playlist Persistence**
-- [ ] **Phase 13: Autocomplete & Suggestions**
+- [x] **Phase 13: Autocomplete & Suggestions**
 - [ ] **Phase 14: Regex Support (Guarded)**
 
 ### Testing & Production Readiness
@@ -828,18 +828,30 @@ This document outlines the phased implementation plan for MQL. Each phase builds
 6. **API endpoint:**
    - `POST /api/v1/query/suggest`
    - Request: `{ "entity": "songs", "query": "art", "cursorPosition": 3 }`
-   - Response: list of suggestions
+    - Response: list of suggestions
 
 7. **Performance:**
-   - Cache genre/mood/artist lists
-   - Limit suggestions to 10
-   - Response time < 100ms
+    - Cache genre/mood/artist lists
+    - Limit suggestions to 10
+    - Response time < 100ms
 
 **Acceptance Criteria:**
-- [ ] Suggestions contextually appropriate
-- [ ] Field suggestions include descriptions
-- [ ] Known values suggested for appropriate fields
-- [ ] Response time < 100ms
+- [x] Suggestions contextually appropriate
+- [x] Field suggestions include descriptions
+- [x] Known values suggested for appropriate fields
+- [x] Response time < 100ms
+
+**Files Created:**
+- `src/Melodee.Mql/Models/MqlSuggestion.cs` - Suggestion models (MqlSuggestion, MqlSuggestionType, MqlSuggestionRequest, MqlSuggestionResponse)
+- `src/Melodee.Mql/Interfaces/IMqlSuggestionService.cs` - Service interface
+- `src/Melodee.Mql/Services/MqlSuggestionService.cs` - Service implementation with context detection
+- `src/Melodee.Mql/Api/Dto/MqlApiDto.cs` - Added MqlSuggestionRequestDto and MqlSuggestionResponseDto
+- `src/Melodee.Mql/Api/MqlController.cs` - Added POST /api/v1/query/suggest endpoint
+- `tests/Melodee.Mql.Tests/MqlSuggestionServiceTests.cs` - 36 unit tests
+
+**Tests:**
+- All 36 MqlSuggestionServiceTests pass
+- All 65 Tokenizer tests pass
 
 ---
 
