@@ -36,7 +36,7 @@ public sealed class MqlQueryAnalyzer
         var astDepth = parseResult.Ast != null ? CalculateAstDepth(parseResult.Ast) : 0;
         var fieldCount = parseResult.Ast != null ? CountFieldExpressions(parseResult.Ast) : 0;
         var hasRegex = ContainsRegexPatterns(query);
-        var hasNestedParentheses = CountParenthesesDepth(query) > 5;
+        var hasNestedParentheses = CountParenthesesDepth(query) > 1;
 
         var recommendations = new List<string>();
 

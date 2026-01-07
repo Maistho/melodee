@@ -1,0 +1,354 @@
+@using Melodee.Mql.Models
+@using Melodee.Mql.Constants
+
+<div class="mql-syntax-guide">
+    <RadzenTabs>
+        <Tabs>
+            <RadzenTabsItem Text="Quick Start">
+                <div class="guide-section">
+                    <h4>Basic Search</h4>
+                    <p>Enter free text to search across default fields:</p>
+                    <div class="example-box">
+                        <code>Abbey Road</code>
+                        <p class="description">Searches for "Abbey Road" in song titles, album names, and artist names.</p>
+                    </div>
+
+                    <h4>Field-Specific Search</h4>
+                    <p>Use <code>field:value</code> syntax to search specific fields:</p>
+                    <div class="example-box">
+                        <code>artist:Beatles</code>
+                        <p class="description">Find songs by The Beatles.</p>
+                    </div>
+                    <div class="example-box">
+                        <code>year:>=1970</code>
+                        <p class="description">Find songs from 1970 or later.</p>
+                    </div>
+                    <div class="example-box">
+                        <code>genre:"Progressive Rock"</code>
+                        <p class="description">Find songs in the Progressive Rock genre.</p>
+                    </div>
+
+                    <h4>Combining Terms</h4>
+                    <p>Terms are combined with AND by default. Use OR or NOT for more complex queries:</p>
+                    <div class="example-box">
+                        <code>artist:Beatles AND year:>=1970</code>
+                        <p class="description">Beatles songs from 1970 onwards.</p>
+                    </div>
+                    <div class="example-box">
+                        <code>genre:Rock OR genre:Jazz</code>
+                        <p class="description">Rock or Jazz songs.</p>
+                    </div>
+                    <div class="example-box">
+                        <code>NOT live</code>
+                        <p class="description">Exclude live recordings.</p>
+                    </div>
+                </div>
+            </RadzenTabsItem>
+
+            <RadzenTabsItem Text="Operators">
+                <div class="guide-section">
+                    <h4>Comparison Operators</h4>
+                    <table class="operator-table">
+                        <thead>
+                            <tr>
+                                <th>Operator</th>
+                                <th>Meaning</th>
+                                <th>Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>:=</code> or <code>:</code></td>
+                                <td>Equals</td>
+                                <td><code>artist:=Pink Floyd</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>:!</code> or <code>:!=</code></td>
+                                <td>Not equals</td>
+                                <td><code>artist:!=The Beatles</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>:<</code></td>
+                                <td>Less than</td>
+                                <td><code>duration:<300</code> (less than 5 minutes)</td>
+                            </tr>
+                            <tr>
+                                <td><code>:<=</code></td>
+                                <td>Less than or equal</td>
+                                <td><code>rating:<=3</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>:></code></td>
+                                <td>Greater than</td>
+                                <td><code>bpm:>120</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>:>=</code></td>
+                                <td>Greater than or equal</td>
+                                <td><code>rating:>=4</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4>String Operators</h4>
+                    <table class="operator-table">
+                        <thead>
+                            <tr>
+                                <th>Operator</th>
+                                <th>Meaning</th>
+                                <th>Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>contains</code></td>
+                                <td>Contains substring</td>
+                                <td><code>title:contains love</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>startsWith</code></td>
+                                <td>Starts with prefix</td>
+                                <td><code>album:startsWith The</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>endsWith</code></td>
+                                <td>Ends with suffix</td>
+                                <td><code>title:endsWith Road</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>wildcard</code></td>
+                                <td>SQL LIKE pattern</td>
+                                <td><code>title:wildcard *Love*</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4>Boolean Operators</h4>
+                    <table class="operator-table">
+                        <thead>
+                            <tr>
+                                <th>Operator</th>
+                                <th>Meaning</th>
+                                <th>Precedence</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>( )</code></td>
+                                <td>Grouping</td>
+                                <td>Highest</td>
+                            </tr>
+                            <tr>
+                                <td><code>NOT</code></td>
+                                <td>Negation</td>
+                                <td>High</td>
+                            </tr>
+                            <tr>
+                                <td><code>AND</code></td>
+                                <td>Intersection</td>
+                                <td>Medium</td>
+                            </tr>
+                            <tr>
+                                <td><code>OR</code></td>
+                                <td>Union</td>
+                                <td>Lowest</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </RadzenTabsItem>
+
+            <RadzenTabsItem Text="Ranges & Dates">
+                <div class="guide-section">
+                    <h4>Numeric Ranges</h4>
+                    <p>Use hyphen to specify inclusive ranges:</p>
+                    <div class="example-box">
+                        <code>year:1970-1980</code>
+                        <p class="description">Years 1970 through 1980 inclusive.</p>
+                    </div>
+                    <div class="example-box">
+                        <code>rating:3-5</code>
+                        <p class="description">Ratings between 3 and 5.</p>
+                    </div>
+
+                    <h4>Duration Values</h4>
+                    <p>Duration is specified in seconds:</p>
+                    <table class="operator-table">
+                        <thead>
+                            <tr>
+                                <th>Value</th>
+                                <th>Meaning</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>duration:<180</code></td>
+                                <td>Less than 3 minutes</td>
+                            </tr>
+                            <tr>
+                                <td><code>duration:300-600</code></td>
+                                <td>5-10 minutes</td>
+                            </tr>
+                            <tr>
+                                <td><code>duration:>3600</code></td>
+                                <td>Over 1 hour</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4>Date Values</h4>
+                    <p>Dates can be absolute or relative:</p>
+                    <table class="operator-table">
+                        <thead>
+                            <tr>
+                                <th>Syntax</th>
+                                <th>Meaning</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>added:2024-01-01</code></td>
+                                <td>Added on specific date</td>
+                            </tr>
+                            <tr>
+                                <td><code>added:today</code></td>
+                                <td>Added today</td>
+                            </tr>
+                            <tr>
+                                <td><code>added:last-week</code></td>
+                                <td>Added in the past week</td>
+                            </tr>
+                            <tr>
+                                <td><code>added:-30d</code></td>
+                                <td>Added in the last 30 days</td>
+                            </tr>
+                            <tr>
+                                <td><code>starredAt:-7d</code></td>
+                                <td>Starred in the last 7 days</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </RadzenTabsItem>
+
+            <RadzenTabsItem Text="Best Practices">
+                <div class="guide-section">
+                    <h4>Tips for Effective Searches</h4>
+                    <ul class="tips-list">
+                        <li>
+                            <strong>Start broad, then narrow:</strong>
+                            Begin with a simple search and add filters as needed.
+                        </li>
+                        <li>
+                            <strong>Use quotes for multi-word values:</strong>
+                            <code>artist:"Pink Floyd"</code> instead of <code>artist:Pink Floyd</code>
+                        </li>
+                        <li>
+                            <strong>Be specific with numbers:</strong>
+                            <code>year:>=1970 AND year:<=1980</code> is clearer than <code>year:1970-1980</code> for some use cases.
+                        </li>
+                        <li>
+                            <strong>Use parentheses for complex logic:</strong>
+                            <code>(rock OR metal) AND NOT live</code>
+                        </li>
+                        <li>
+                            <strong>User-scoped fields require authentication:</strong>
+                            Fields like <code>rating</code>, <code>plays</code>, and <code>starred</code> are per-user and require login.
+                        </li>
+                    </ul>
+
+                    <h4>Common Patterns</h4>
+                    <div class="example-box">
+                        <code>artist:"@SearchQuery" AND year:>=@StartYear</code>
+                        <p class="description">User can customize artist and year range.</p>
+                    </div>
+                    <div class="example-box">
+                        <code>genre:Rock AND (rating:>=4 OR plays:>100)</code>
+                        <p class="description">Highly-rated or popular rock songs.</p>
+                    </div>
+                    <div class="example-box">
+                        <code>title:contains @Query AND NOT album:Compilations</code>
+                        <p class="description">Find songs by title excluding compilations.</p>
+                    </div>
+                </div>
+            </RadzenTabsItem>
+        </Tabs>
+    </RadzenTabs>
+</div>
+
+<style>
+    .mql-syntax-guide {
+        padding: 1rem;
+    }
+
+    .guide-section {
+        padding: 1rem 0;
+    }
+
+    .guide-section h4 {
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+        color: var(--rz-text-color);
+    }
+
+    .example-box {
+        background: var(--rz-base-200);
+        border: 1px solid var(--rz-base-300);
+        border-radius: 4px;
+        padding: 0.75rem;
+        margin: 0.5rem 0;
+    }
+
+    .example-box code {
+        display: block;
+        font-family: monospace;
+        font-size: 1rem;
+        color: var(--rz-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .example-box .description {
+        margin: 0;
+        font-size: 0.875rem;
+        color: var(--rz-text-secondary-color);
+    }
+
+    .operator-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0.5rem 0;
+        font-size: 0.875rem;
+    }
+
+    .operator-table th,
+    .operator-table td {
+        padding: 0.5rem;
+        text-align: left;
+        border-bottom: 1px solid var(--rz-base-300);
+    }
+
+    .operator-table th {
+        background: var(--rz-base-200);
+        font-weight: 600;
+    }
+
+    .operator-table code {
+        font-size: 0.85rem;
+    }
+
+    .tips-list {
+        list-style-type: none;
+        padding: 0;
+    }
+
+    .tips-list li {
+        padding: 0.75rem;
+        margin: 0.5rem 0;
+        background: var(--rz-base-200);
+        border-radius: 4px;
+    }
+
+    .tips-list strong {
+        color: var(--rz-primary);
+    }
+</style>

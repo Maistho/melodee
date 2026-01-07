@@ -1,0 +1,95 @@
+@using Melodee.Mql.Constants
+@using Melodee.Mql.Models
+
+<div class="mql-error-reference">
+    <div class="error-search">
+        <RadzenTextBox @bind-Value="@SearchTerm" 
+                       Placeholder="Search errors..." 
+                       Style="width: 100%; max-width: 400px;" />
+    </div>
+
+    <div class="error-categories">
+        @foreach (var category in ErrorCategories)
+        {
+            <div class="error-category">
+                <h4>@category.Name</h4>
+                <div class="error-list">
+                    @foreach (var error in category.Errors.Where(e => string.IsNullOrEmpty(SearchTerm) || e.Code.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase) || e.Message.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        <ErrorCard Error="error" />
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private string SearchTerm { get; set; } = string.Empty;
+
+    private static IEnumerable<ErrorCategory> ErrorCategories => new[]
+    {
+        new ErrorCategory("Syntax Errors", new[]
+        {
+            new ErrorInfo(MqlErrorCodes.MqlInvalidToken, "Invalid token", "The query contains an unrecognized token. Check for typos or invalid characters."),
+            new ErrorInfo(MqlErrorCodes.MqlUnexpectedToken, "Unexpected token", "The token was not expected at this position. You may have unbalanced parentheses or operators."),
+            new ErrorInfo(MqlErrorCodes.MqlMissingOperator, "Missing operator", "An operator is expected between terms."),
+            new ErrorInfo(MqlErrorCodes.MqlUnterminatedString, "Unterminated string", "A quoted string is missing its closing quote."),
+            new ErrorInfo(MqlErrorCodes.MqlInvalidNumber, "Invalid number", "The number format is invalid. Use culture-invariant format (e.g., 123.45)."),
+            new ErrorInfo(MqlErrorCodes.MqlInvalidDate, "Invalid date", "The date format is invalid. Use YYYY-MM-DD or relative dates like 'today', 'last-week'."),
+        }),
+        new ErrorCategory("Validation Errors", new[]
+        {
+            new ErrorInfo(MqlErrorCodes.MqlUnknownField, "Unknown field", "The specified field does not exist for this entity type."),
+            new ErrorInfo(MqlErrorCodes.MqlInvalidOperator, "Invalid operator", "The operator is not valid for this field type."),
+            new ErrorInfo(MqlErrorCodes.MqlTypeMismatch, "Type mismatch", "The value type does not match the field type."),
+            new ErrorInfo(MqlErrorCodes.MqlInvalidValue, "Invalid value", "The value is not valid for this field."),
+            new ErrorInfo(MqlErrorCodes.MqlTooDeep, "Query too complex", "The query nesting depth exceeds the maximum allowed."),
+            new ErrorInfo(MqlErrorCodes.MqlTooManyFields, "Too many fields", "The query specifies more fields than allowed."),
+            new ErrorInfo(MqlErrorCodes.MqlQueryTooLong, "Query too long", "The query exceeds the maximum length."),
+        }),
+        new ErrorCategory("Security Errors", new[]
+        {
+            new ErrorInfo(MqlErrorCodes.MqlRegexTooComplex, "Regex too complex", "The regex pattern is too complex and may cause performance issues."),
+            new ErrorInfo(MqlErrorCodes.MqlRegexTimeout, "Regex timeout", "The regex pattern exceeded the timeout limit."),
+            new ErrorInfo(MqlErrorCodes.MqlInvalidRegex, "Invalid regex", "The regex pattern is invalid."),
+            new ErrorInfo(MqlErrorCodes.MqlRateLimitExceeded, "Rate limit exceeded", "Too many queries. Please wait before trying again."),
+        }),
+        new ErrorCategory("Execution Errors", new[]
+        {
+            new ErrorInfo(MqlErrorCodes.MqlCompileError, "Compilation error", "Failed to compile the query. This may indicate an internal error."),
+            new ErrorInfo(MqlErrorCodes.MqlParseTimeout, "Parse timeout", "Query parsing took too long."),
+            new ErrorInfo(MqlErrorCodes.MqlExecutionError, "Execution error", "An error occurred while executing the query."),
+        })
+    };
+
+    private sealed record ErrorCategory(string Name, IEnumerable<ErrorInfo> Errors);
+
+    private sealed record ErrorInfo(string Code, string Title, string Description);
+}
+
+<style>
+    .mql-error-reference {
+        padding: 1rem;
+    }
+
+    .error-search {
+        margin-bottom: 1.5rem;
+    }
+
+    .error-category {
+        margin-bottom: 1.5rem;
+    }
+
+    .error-category h4 {
+        margin-bottom: 0.75rem;
+        color: var(--rz-text-color);
+        border-bottom: 2px solid var(--rz-primary);
+        padding-bottom: 0.5rem;
+    }
+
+    .error-list {
+        display: grid;
+        gap: 0.75rem;
+    }
+</style>

@@ -83,10 +83,7 @@ public sealed class MqlMetricsService
             HitCount = stats.HitCount,
             MissCount = stats.MissCount,
             EvictionCount = stats.LastEvictionCount,
-            MemoryUsageBytes = stats.MemoryEstimateBytes,
-            HitRate = stats.HitCount + stats.MissCount > 0
-                ? (double)stats.HitCount / (stats.HitCount + stats.MissCount)
-                : 0
+            MemoryUsageBytes = stats.MemoryEstimateBytes
         };
     }
 
@@ -144,7 +141,7 @@ public sealed record CacheMetrics
     public long MissCount { get; init; }
     public long EvictionCount { get; init; }
     public long MemoryUsageBytes { get; init; }
-    public double HitRate { get; init; }
+    public double HitRate => HitCount + MissCount > 0 ? (double)HitCount / (HitCount + MissCount) : 0;
 }
 
 public static class ConcurrentDictionaryExtensions

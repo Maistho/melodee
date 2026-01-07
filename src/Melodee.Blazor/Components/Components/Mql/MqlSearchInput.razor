@@ -1,0 +1,355 @@
+@using Melodee.Mql.Api.Dto
+@using Melodee.Mql.Models
+
+<div class="mql-search-input">
+    <div class="input-wrapper">
+        <div class="entity-selector">
+            <RadzenDropDown @bind-Value="SelectedEntity"
+                            Data="Entities"
+                            Style="width: 100px;"
+                            Disabled="Disabled" />
+        </div>
+        
+        <div class="search-field">
+            <DebounceInput @ref="DebounceRef"
+                           @bind-Value="SearchText"
+                           DebounceTime="300"
+                           MinLength="2"
+                           OnValueChanged="OnSearchTextChanged"
+                           Placeholder="@Placeholder"
+                           Disabled="Disabled"
+                           AdditionalAttributes="InputAttributes" />
+        </div>
+
+        @if (ShowSearchButton)
+        {
+            <RadzenButton Icon="search"
+                          Click="OnSearch"
+                          Disabled="Disabled || string.IsNullOrWhiteSpace(SearchText)" />
+        }
+    </div>
+
+    @if (ShowSuggestions && Suggestions.Any())
+    {
+        <div class="suggestions-dropdown">
+            @foreach (var suggestion in Suggestions.Take(MaxSuggestions))
+            {
+                <div class="suggestion-item" @onclick="() => SelectSuggestion(suggestion)">
+                    <div class="suggestion-content">
+                        <span class="suggestion-text">@GetSuggestionDisplay(suggestion)</span>
+                        @if (!string.IsNullOrEmpty(suggestion.Description))
+                        {
+                            <span class="suggestion-description">@suggestion.Description</span>
+                        }
+                    </div>
+                    <span class="suggestion-type">@suggestion.Type</span>
+                </div>
+            }
+        </div>
+    }
+
+    @if (ShowError && ValidationResult != null && ValidationResult.Errors.Any())
+    {
+        <div class="validation-errors">
+            <RadzenAlert AlertStyle="AlertStyle.Warning" ShowIcon="true">
+                <div class="error-message">
+                    @foreach (var error in ValidationResult.Errors.Take(3))
+                    {
+                        <div>@error.Message</div>
+                    }
+                    @if (ValidationResult.Errors.Count > 3)
+                    {
+                        <div>...and @(ValidationResult.Errors.Count - 3) more errors</div>
+                    }
+                </div>
+            </RadzenAlert>
+            @if (ValidationResult.Suggestions?.Any() == true)
+            {
+                <div class="suggestions-link">
+                    <RadzenLink Path="/docs/mql/errors" Text="View error reference" />
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private DebounceInput DebounceRef = null!;
+
+    [Parameter]
+    public string SearchText { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> SearchTextChanged { get; set; }
+
+    [Parameter]
+    public string SelectedEntity { get; set; } = "songs";
+
+    [Parameter]
+    public EventCallback<string> SelectedEntityChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnSearch { get; set; }
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    [Parameter]
+    public bool ShowSearchButton { get; set; } = true;
+
+    [Parameter]
+    public bool ShowSuggestions { get; set; } = true;
+
+    [Parameter]
+    public bool ShowError { get; set; } = true;
+
+    [Parameter]
+    public string Placeholder { get; set; } = "Search with MQL (e.g., artist:Beatles AND year:>=1970)";
+
+    [Parameter]
+    public IDictionary<string, object>? InputAttributes { get; set; }
+
+    [Parameter]
+    public int MaxSuggestions { get; set; } = 8;
+
+    private static readonly string[] Entities = ["songs", "albums", "artists"];
+
+    private IList<MqlSuggestionDto> Suggestions { get; set; } = Array.Empty<MqlSuggestionDto>();
+    private MqlValidationResult? ValidationResult { get; set; }
+    private int CursorPosition { get; set; }
+
+    private async Task OnSearchTextChanged(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text) || text.Length < 2)
+        {
+            Suggestions = Array.Empty<MqlSuggestionDto>();
+            return;
+        }
+
+        await FetchSuggestions(text);
+    }
+
+    private async Task FetchSuggestions(string text)
+    {
+        try
+        {
+            // In a real implementation, this would call the API
+            // For now, we'll simulate with local suggestions
+            Suggestions = GetLocalSuggestions(text).ToList();
+        }
+        catch
+        {
+            Suggestions = Array.Empty<MqlSuggestionDto>();
+        }
+    }
+
+    private IEnumerable<MqlSuggestionDto> GetLocalSuggestions(string text)
+    {
+        var words = text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var lastWord = words.LastOrDefault() ?? string.Empty;
+
+        // Field suggestions
+        foreach (var field in new[] { "artist", "album", "title", "genre", "year", "rating", "duration", "bpm" })
+        {
+            if (field.StartsWith(lastWord, StringComparison.OrdinalIgnoreCase))
+            {
+                yield return new MqlSuggestionDto
+                {
+                    Text = field + ":",
+                    Type = "field",
+                    Description = $"Search by {field}",
+                    Confidence = 0.9
+                };
+            }
+        }
+
+        // Operator suggestions
+        foreach (var op in new[] { ":=", ":!", ":<", ":<=", ":>", ":>=", "contains", "startsWith", "endsWith" })
+        {
+            if (op.StartsWith(lastWord.TrimStart(':'), StringComparison.OrdinalIgnoreCase))
+            {
+                yield return new MqlSuggestionDto
+                {
+                    Text = op,
+                    Type = "operator",
+                    Description = GetOperatorDescription(op),
+                    Confidence = 0.8
+                };
+            }
+        }
+
+        // Boolean keywords
+        foreach (var keyword in new[] { "AND", "OR", "NOT" })
+        {
+            if (keyword.StartsWith(lastWord, StringComparison.OrdinalIgnoreCase))
+            {
+                yield return new MqlSuggestionDto
+                {
+                    Text = keyword,
+                    Type = "keyword",
+                    Description = $"Logical {keyword.ToLower()}",
+                    Confidence = 0.7
+                };
+            }
+        }
+    }
+
+    private static string GetOperatorDescription(string op)
+    {
+        return op switch
+        {
+            ":=" => "Equals",
+            ":!" or ":!=" => "Not equals",
+            ":<" => "Less than",
+            ":<=" => "Less than or equal",
+            ":>" => "Greater than",
+            ":>=" => "Greater than or equal",
+            "contains" => "Contains substring",
+            "startsWith" => "Starts with",
+            "endsWith" => "Ends with",
+            _ => op
+        };
+    }
+
+    private void SelectSuggestion(MqlSuggestionDto suggestion)
+    {
+        var words = SearchText.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (words.Length > 0)
+        {
+            words[^1] = suggestion.Text;
+            SearchText = string.Join(" ", words);
+        }
+        else
+        {
+            SearchText = suggestion.Text;
+        }
+
+        Suggestions = Array.Empty<MqlSuggestionDto>();
+        CursorPosition = SearchText.Length;
+    }
+
+    private static string GetSuggestionDisplay(MqlSuggestionDto suggestion)
+    {
+        return suggestion.Text;
+    }
+
+    private async Task OnSearch()
+    {
+        if (!string.IsNullOrWhiteSpace(SearchText))
+        {
+            await OnSearch.InvokeAsync(SearchText);
+        }
+    }
+
+    private sealed record MqlSuggestionDto
+    {
+        public string Text { get; init; } = string.Empty;
+        public string Type { get; init; } = string.Empty;
+        public string? Description { get; init; }
+        public double Confidence { get; init; }
+    }
+}
+
+<style>
+    .mql-search-input {
+        position: relative;
+        width: 100%;
+    }
+
+    .input-wrapper {
+        display: flex;
+        gap: 0.5rem;
+        align-items: stretch;
+    }
+
+    .entity-selector {
+        flex-shrink: 0;
+    }
+
+    .search-field {
+        flex: 1;
+        display: flex;
+        align-items: center;
+    }
+
+    .search-field input {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid var(--rz-base-400);
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+
+    .search-field input:focus {
+        outline: none;
+        border-color: var(--rz-primary);
+        box-shadow: 0 0 0 2px rgba(var(--rz-primary-rgb), 0.2);
+    }
+
+    .suggestions-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--rz-base-background);
+        border: 1px solid var(--rz-base-300);
+        border-radius: 4px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 1000;
+        max-height: 300px;
+        overflow-y: auto;
+        margin-top: 4px;
+    }
+
+    .suggestion-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0.75rem;
+        cursor: pointer;
+        border-bottom: 1px solid var(--rz-base-200);
+    }
+
+    .suggestion-item:last-child {
+        border-bottom: none;
+    }
+
+    .suggestion-item:hover {
+        background: var(--rz-base-200);
+    }
+
+    .suggestion-content {
+        display: flex;
+        flex-direction: column;
+        gap: 0.125rem;
+    }
+
+    .suggestion-text {
+        font-family: monospace;
+        color: var(--rz-text-color);
+    }
+
+    .suggestion-description {
+        font-size: 0.75rem;
+        color: var(--rz-text-secondary-color);
+    }
+
+    .suggestion-type {
+        font-size: 0.75rem;
+        color: var(--rz-primary);
+        text-transform: uppercase;
+    }
+
+    .validation-errors {
+        margin-top: 0.5rem;
+    }
+
+    .error-message {
+        font-size: 0.875rem;
+    }
+
+    .suggestions-link {
+        margin-top: 0.5rem;
+        font-size: 0.875rem;
+    }
+</style>

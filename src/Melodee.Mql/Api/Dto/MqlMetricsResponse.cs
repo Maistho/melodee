@@ -7,7 +7,7 @@ namespace Melodee.Mql.Api.Dto;
 /// </summary>
 public sealed class MqlMetricsResponse
 {
-    public DateTime Timestamp { get; init; }
+    public DateTime Timestamp { get; init; } = DateTime.UtcNow;
     public QueryMetricsSummary QueryMetrics { get; init; } = new();
     public CacheMetrics CacheMetrics { get; init; } = new();
     public string Status { get; init; } = "healthy";

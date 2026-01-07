@@ -1,0 +1,45 @@
+@using Melodee.Mql.Constants
+
+<div class="error-card">
+    <div class="error-header">
+        <RadzenBadge BadgeStyle="BadgeStyle.Danger" Text="@Error.Code" />
+        <span class="error-title">@Error.Title</span>
+    </div>
+    <div class="error-description">
+        @Error.Description
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public ErrorInfo Error { get; set; } = null!;
+
+    private sealed record ErrorInfo(string Code, string Title, string Description);
+}
+
+<style>
+    .error-card {
+        background: var(--rz-base-200);
+        border: 1px solid var(--rz-base-300);
+        border-radius: 6px;
+        padding: 0.75rem;
+    }
+
+    .error-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .error-title {
+        font-weight: 600;
+        color: var(--rz-text-color);
+    }
+
+    .error-description {
+        font-size: 0.875rem;
+        color: var(--rz-text-secondary-color);
+        margin: 0;
+    }
+</style>

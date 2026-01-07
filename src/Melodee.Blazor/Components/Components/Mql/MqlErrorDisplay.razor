@@ -1,0 +1,184 @@
+@using Melodee.Mql.Api.Dto
+@using Melodee.Mql.Models
+
+<div class="mql-error-display">
+    @if (Errors != null && Errors.Any())
+    {
+        <div class="errors-container">
+            @foreach (var error in Errors.Take(MaxErrors))
+            {
+                <div class="error-item" style="border-left-color: @GetErrorColor(error.ErrorCode);">
+                    <div class="error-header">
+                        <span class="error-code">@error.ErrorCode</span>
+                        <span class="error-message">@error.Message</span>
+                    </div>
+
+                    @if (ShowPosition && error.Position != null)
+                    {
+                        <div class="error-position">
+                            Line @error.Position.Line, Column @error.Position.Column
+                        </div>
+                    }
+
+                    @if (ShowSuggestions && error.Suggestions?.Any() == true)
+                    {
+                        <div class="error-suggestions">
+                            <span class="suggestions-label">Suggestions:</span>
+                            <div class="suggestions-list">
+                                @foreach (var suggestion in error.Suggestions.Take(MaxSuggestions))
+                                {
+                                    <RadzenButton Text="@suggestion.Text"
+                                                  Size="ButtonSize.Small"
+                                                  ButtonStyle="ButtonStyle.Light"
+                                                  Click="() => OnSuggestionClick(suggestion, error)" />
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    @if (ShowHelp && TryGetHelpLink(error.ErrorCode) is { } helpLink)
+                    {
+                        <div class="error-help">
+                            <RadzenLink Path="@helpLink.Path" Text="@helpLink.Text" Target="_blank" />
+                        </div>
+                    }
+                </div>
+            }
+
+            @if (Errors.Count > MaxErrors)
+            {
+                <div class="more-errors">
+                    +@(Errors.Count - MaxErrors) more errors
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public IEnumerable<MqlErrorResponse>? Errors { get; set; }
+
+    [Parameter]
+    public bool ShowPosition { get; set; } = true;
+
+    [Parameter]
+    public bool ShowSuggestions { get; set; } = true;
+
+    [Parameter]
+    public bool ShowHelp { get; set; } = true;
+
+    [Parameter]
+    public int MaxErrors { get; set; } = 3;
+
+    [Parameter]
+    public int MaxSuggestions { get; set; } = 3;
+
+    [Parameter]
+    public EventCallback<MqlSuggestionDto> OnSuggestion { get; set; }
+
+    private static string GetErrorColor(string errorCode)
+    {
+        return errorCode switch
+        {
+            var code when code.Contains("INVALID") || code.Contains("UNKNOWN") => "#ffc107",
+            var code when code.Contains("TOO") || code.Contains("COMPLEX") => "#fd7e14",
+            var code when code.Contains("RATE") || code.Contains("SECURITY") => "#dc3545",
+            var code when code.Contains("TIMEOUT") => "#6f42c1",
+            _ => "#6c757d"
+        };
+    }
+
+    private static (string Path, string Text)? TryGetHelpLink(string errorCode)
+    {
+        return errorCode switch
+        {
+            var code when code.Contains("UnknownField") => ("/docs/mql/fields", "View field reference"),
+            var code when code.Contains("InvalidOperator") => ("/docs/mql/operators", "View operator reference"),
+            var code when code.Contains("Unterminated") => ("/docs/mql/syntax#strings", "String syntax guide"),
+            var code when code.Contains("TooDeep") => ("/docs/mql/best-practices", "Query best practices"),
+            var code when code.Contains("RateLimit") => ("/docs/mql/rate-limits", "Rate limiting info"),
+            _ => ("/docs/mql/errors", "Error reference")
+        };
+    }
+
+    private async Task OnSuggestionClick(MqlSuggestionDto suggestion, MqlErrorResponse error)
+    {
+        await OnSuggestion.InvokeAsync(suggestion);
+    }
+}
+
+<style>
+    .mql-error-display {
+        font-size: 0.875rem;
+    }
+
+    .errors-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .error-item {
+        background: var(--rz-base-200);
+        border-left: 4px solid;
+        border-radius: 0 4px 4px 0;
+        padding: 0.75rem;
+    }
+
+    .error-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .error-code {
+        font-weight: 600;
+        color: var(--rz-danger);
+        font-size: 0.75rem;
+        padding: 0.125rem 0.375rem;
+        background: var(--rz-base-300);
+        border-radius: 3px;
+    }
+
+    .error-message {
+        color: var(--rz-text-color);
+        flex: 1;
+    }
+
+    .error-position {
+        margin-top: 0.375rem;
+        font-size: 0.75rem;
+        color: var(--rz-text-secondary-color);
+    }
+
+    .error-suggestions {
+        margin-top: 0.5rem;
+    }
+
+    .suggestions-label {
+        font-size: 0.75rem;
+        color: var(--rz-text-secondary-color);
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+
+    .suggestions-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+    }
+
+    .error-help {
+        margin-top: 0.5rem;
+        font-size: 0.75rem;
+    }
+
+    .more-errors {
+        text-align: center;
+        color: var(--rz-text-secondary-color);
+        padding: 0.5rem;
+        font-style: italic;
+    }
+</style>
