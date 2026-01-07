@@ -39,7 +39,7 @@ This document outlines the phased implementation plan for MQL. Each phase builds
 ### Advanced Features
 - [x] **Phase 12: Smart Playlist Persistence**
 - [x] **Phase 13: Autocomplete & Suggestions**
-- [ ] **Phase 14: Regex Support (Guarded)**
+- [x] **Phase 14: Regex Support (Guarded)**
 
 ### Testing & Production Readiness
 - [ ] **Phase 15: Comprehensive Testing Suite**
@@ -855,21 +855,21 @@ This document outlines the phased implementation plan for MQL. Each phase builds
 
 ---
 
-### Phase 14: Regex Support (Guarded)
+### Phase 14: Regex Support (Guarded) ✅ COMPLETE
 
 **Objective:** Implement optional, guarded regex support with security controls.
 
 **Deliverables:**
 
 1. **Regex parser extension:**
-   - Recognize `/pattern/flags` syntax
-   - Extract pattern and flags (i for case-insensitive)
-   - Generate `RegexExpressionNode`
+   - ✅ Recognize `/pattern/flags` syntax
+   - ✅ Extract pattern and flags (i for case-insensitive)
+   - ✅ Generate `RegexExpressionNode`
 
 2. **Pattern validation:**
-   - Length: max 100 characters
-   - Prohibited patterns check
-   - Timeout wrapper for evaluation
+   - ✅ Length: max 100 characters (enforced by MqlRegexGuard)
+   - ✅ Prohibited patterns check (ReDoS protection)
+   - ✅ Timeout wrapper for evaluation (500ms default)
 
 3. **Database-side regex (PostgreSQL only):**
    ```csharp
@@ -878,32 +878,43 @@ This document outlines the phased implementation plan for MQL. Each phase builds
    ```
 
 4. **Client-side fallback:**
-   - Compile to `Regex` object
-   - Apply to limited result set (< 1000)
-   - Add warning to response
+   - ✅ Compile to `Regex` object
+   - ✅ Apply to limited result set (< 1000)
+   - ✅ Add warning to response
 
 5. **Feature flag:**
-   - `MqlOptions.EnableRegex` (default: false)
-   - Require explicit opt-in
+   - ✅ `MqlOptions.EnableRegex` (default: false)
+   - ✅ Require explicit opt-in
 
 6. **Alternative operators (always available):**
-   - `contains(value)` → `Contains`
-   - `startsWith(value)` → `StartsWith`
-   - `endsWith(value)` → `EndsWith`
-   - `wildcard(pattern)` → SQL `LIKE`
+   - ✅ `contains(value)` → `Contains`
+   - ✅ `startsWith(value)` → `StartsWith`
+   - ✅ `endsWith(value)` → `EndsWith`
+   - ✅ `wildcard(pattern)` → SQL `LIKE`
 
 7. **Unit tests:**
-   - Valid regex compilation
-   - Invalid regex rejection
-   - Prohibited pattern detection
-   - Timeout enforcement
-   - Alternative operators
+   - ✅ Valid regex compilation
+   - ✅ Invalid regex rejection
+   - ✅ Prohibited pattern detection
+   - ✅ Timeout enforcement
+   - ✅ Alternative operators
 
 **Acceptance Criteria:**
-- [ ] Regex disabled by default
-- [ ] All guards from spec §4.5 enforced
-- [ ] Alternative operators work without regex
-- [ ] No ReDoS vulnerability possible
+- ✅ Regex disabled by default
+- ✅ All guards from spec §4.5 enforced
+- ✅ Alternative operators work without regex
+- ✅ No ReDoS vulnerability possible
+
+**Files Created/Modified:**
+- `src/Melodee.Mql/MqlOptions.cs` (NEW) - Feature flag configuration
+- `src/Melodee.Mql/Models/MqlAstNode.cs` (MODIFIED) - Added `RegexExpressionNode`
+- `src/Melodee.Mql/MqlParser.cs` (MODIFIED) - Parse regex to `RegexExpressionNode`
+- `src/Melodee.Mql/MqlSongCompiler.cs` (MODIFIED) - Compile regex expressions
+- `src/Melodee.Mql/MqlAlbumCompiler.cs` (MODIFIED) - Compile regex expressions
+- `src/Melodee.Mql/MqlArtistCompiler.cs` (MODIFIED) - Compile regex expressions
+- `src/Melodee.Mql/MqlCachedCompiler.cs` (MODIFIED) - Pass options to compilers
+- `tests/Melodee.Mql.Tests/MqlRegexExpressionTests.cs` (NEW) - Regex tests
+- `tests/Melodee.Mql.Tests/MqlParserTests.cs` (MODIFIED) - Updated test for regex node type
 
 ---
 
@@ -1147,7 +1158,7 @@ Update: @prompts/MELODEE-QUERY-LANGUAGE-IMPLEMENTATION.md mark Phase complete if
 **Example**
 
 ```
-Implement MQL Phase 13: Autocomplete & Suggestions
+Implement MQL Phase 14: Regex Support (Guarded)
 
 Read these files first:
 - prompts/MELODEE-QUERY-LANGUAGE.md - Full spec (§4.1-4.3 for syntax)
@@ -1167,7 +1178,7 @@ Update: @prompts/MELODEE-QUERY-LANGUAGE-IMPLEMENTATION.md mark Phase complete if
 ## Success Criteria
 
 Implementation is complete when:
-- [x] 9 of 17 phases complete (Phases 1-9)
+- [x] 10 of 17 phases complete (Phases 1-10, 12-14)
 - [ ] All 17 phases marked complete
 - [ ] Test coverage targets met (90%+ overall)
 - [ ] Performance budgets met under load

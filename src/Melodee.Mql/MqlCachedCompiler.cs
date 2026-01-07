@@ -13,6 +13,7 @@ public sealed class MqlCachedCompiler
 {
     private readonly IMqlExpressionCache _cache;
     private readonly IMqlFieldInfoProvider _fieldInfoProvider;
+    private readonly MqlOptions _options;
     private readonly IMqlCompiler<Song> _songCompiler;
     private readonly IMqlCompiler<Album> _albumCompiler;
     private readonly IMqlCompiler<Artist> _artistCompiler;
@@ -20,15 +21,17 @@ public sealed class MqlCachedCompiler
     public MqlCachedCompiler(
         IMqlExpressionCache? cache = null,
         IMqlFieldInfoProvider? fieldInfoProvider = null,
+        MqlOptions? options = null,
         IMqlCompiler<Song>? songCompiler = null,
         IMqlCompiler<Album>? albumCompiler = null,
         IMqlCompiler<Artist>? artistCompiler = null)
     {
         _cache = cache ?? new MqlExpressionCache();
         _fieldInfoProvider = fieldInfoProvider ?? new MqlFieldInfoProvider();
-        _songCompiler = songCompiler ?? new MqlSongCompiler(_fieldInfoProvider);
-        _albumCompiler = albumCompiler ?? new MqlAlbumCompiler(_fieldInfoProvider);
-        _artistCompiler = artistCompiler ?? new MqlArtistCompiler(_fieldInfoProvider);
+        _options = options ?? new MqlOptions();
+        _songCompiler = songCompiler ?? new MqlSongCompiler(_fieldInfoProvider, _options);
+        _albumCompiler = albumCompiler ?? new MqlAlbumCompiler(_fieldInfoProvider, _options);
+        _artistCompiler = artistCompiler ?? new MqlArtistCompiler(_fieldInfoProvider, _options);
     }
 
     public Expression<Func<Song, bool>> CompileSong(MqlAstNode ast, int? userId = null)
@@ -65,6 +68,7 @@ public sealed class MqlCachedCompiler
         {
             FreeTextNode freeText => $"ft:{freeText.Text.ToLowerInvariant()}",
             FieldExpressionNode field => $"{field.Field}:{field.Operator}:{field.Value}".ToLowerInvariant(),
+            RegexExpressionNode regex => $"{regex.Field}:/{regex.Pattern}/{regex.Flags}",
             BinaryExpressionNode binary => $"({NormalizeAst(binary.Left)}{binary.Operator.ToUpperInvariant()}{NormalizeAst(binary.Right)})",
             UnaryExpressionNode unary => $"NOT({NormalizeAst(unary.Operand)})",
             GroupNode group => NormalizeAst(group.Inner),

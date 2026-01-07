@@ -66,3 +66,16 @@ public record RangeNode(
     object Min,
     object Max,
     MqlToken Token) : MqlAstNode;
+
+/// <summary>
+/// Represents a regex expression: field:/pattern/flags.
+/// </summary>
+/// <param name="Field">The field name.</param>
+/// <param name="Pattern">The regex pattern (without delimiters).</param>
+/// <param name="Flags">Regex flags (i, g, ig).</param>
+/// <param name="Token">The original token.</param>
+public record RegexExpressionNode(
+    string Field,
+    string Pattern,
+    string Flags,
+    MqlToken Token) : MqlAstNode;

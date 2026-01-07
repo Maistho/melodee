@@ -28,7 +28,7 @@ public class ProgramTests
                 {
                     add.AddCommand<ConfigurationSetCommand>("set");
                 });
-                
+
                 config.AddBranch<LibrarySettings>("library", add =>
                 {
                     add.AddCommand<ProcessInboundCommand>("process");
@@ -45,7 +45,7 @@ public class ProgramTests
     {
         // Arrange
         var programType = typeof(Melodee.Cli.Program);
-        
+
         // Act
         var mainMethod = programType.GetMethod("Main", new[] { typeof(string[]) });
 
@@ -65,7 +65,7 @@ public class ProgramTests
         var expectedBranches = new[]
         {
             "configuration",
-            "file", 
+            "file",
             "import",
             "job",
             "library",
@@ -124,7 +124,7 @@ public class ProgramTests
     public void CommandApp_AllowsEmptyArgs()
     {
         // This test verifies that empty args don't cause exceptions
-        
+
         // Arrange
         var app = new CommandApp();
 
@@ -151,7 +151,7 @@ public class ProgramTests
         {
             commandType.IsPublic.Should().BeTrue($"{commandType.Name} should be public");
             commandType.IsClass.Should().BeTrue($"{commandType.Name} should be a class");
-            
+
             // Check if it inherits from CommandBase (through reflection)
             var hasCommandBaseInHierarchy = HasCommandBaseInHierarchy(commandType);
             hasCommandBaseInHierarchy.Should().BeTrue($"{commandType.Name} should inherit from CommandBase");
@@ -163,7 +163,7 @@ public class ProgramTests
         var currentType = type.BaseType;
         while (currentType != null)
         {
-            if (currentType.IsGenericType && 
+            if (currentType.IsGenericType &&
                 currentType.GetGenericTypeDefinition().Name.Contains("CommandBase"))
             {
                 return true;

@@ -12,7 +12,7 @@ public class SimpleProgramTests
     {
         // Test that we can access the CLI program
         var programType = typeof(Melodee.Cli.Program);
-        
+
         programType.Should().NotBeNull();
         programType.Assembly.GetName().Name.Should().Be("mcli");
     }

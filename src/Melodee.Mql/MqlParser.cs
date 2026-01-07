@@ -257,26 +257,49 @@ public sealed class MqlParser : IMqlParser
             return new FieldExpressionNode(fieldName, op, string.Empty, fieldToken);
         }
 
+        // Check if this is a regex pattern (starts with /)
+        if (value is string strValue && strValue.StartsWith("/"))
+        {
+            var (pattern, flags) = ParseRegexPattern(strValue);
+            AppendToNormalized($"/{pattern}/{flags}");
+            Advance(); // Move past the regex token
+            return new RegexExpressionNode(fieldName, pattern, flags, fieldToken);
+        }
+
         Advance(); // Move past the value token
 
         // Check if this is actually a range (if value is a string containing -)
-        if (value is string strValue && strValue.Contains('-') && !strValue.StartsWith("-"))
+        if (value is string rangeValue && rangeValue.Contains('-') && !rangeValue.StartsWith("-"))
         {
-            var rangeParts = strValue.Split('-', 2);
+            var rangeParts = rangeValue.Split('-', 2);
             if (rangeParts.Length == 2 &&
                 double.TryParse(rangeParts[0], out var min) &&
                 double.TryParse(rangeParts[1], out var max))
             {
-                AppendToNormalized(strValue);
+                AppendToNormalized(rangeValue);
                 Advance(); // Move past the range value
                 return new RangeNode(fieldName, min, max, fieldToken);
             }
         }
 
-        var valueStr = value.ToString() ?? string.Empty;
-        AppendToNormalized(valueStr);
+        AppendToNormalized(value.ToString() ?? string.Empty);
 
         return new FieldExpressionNode(fieldName, op, value, fieldToken);
+    }
+
+    private static (string Pattern, string Flags) ParseRegexPattern(string regexToken)
+    {
+        // Token format is /pattern/flags
+        var content = regexToken.TrimStart('/');
+        var lastSlashIndex = content.LastIndexOf('/');
+        if (lastSlashIndex > 0)
+        {
+            var pattern = content[..lastSlashIndex];
+            var flags = content[(lastSlashIndex + 1)..];
+            return (pattern, flags);
+        }
+
+        return (content, string.Empty);
     }
 
     private MqlAstNode ParseFreeText()

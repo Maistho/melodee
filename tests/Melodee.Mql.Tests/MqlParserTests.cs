@@ -380,14 +380,15 @@ public class MqlParserTests
     }
 
     [Fact]
-    public void Parse_RegexPattern_ReturnsFieldExpressionWithRegex()
+    public void Parse_RegexPattern_ReturnsRegexExpressionNode()
     {
         var result = ParseQuery("title:/remix/i");
 
         result.IsValid.Should().BeTrue();
-        var fieldNode = result.Ast.Should().BeOfType<FieldExpressionNode>().Subject;
-        fieldNode.Field.Should().Be("title");
-        fieldNode.Value.Should().Be("/remix/i");
+        var regexNode = result.Ast.Should().BeOfType<RegexExpressionNode>().Subject;
+        regexNode.Field.Should().Be("title");
+        regexNode.Pattern.Should().Be("remix");
+        regexNode.Flags.Should().Be("i");
     }
 
     [Fact]

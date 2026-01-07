@@ -548,13 +548,13 @@ class Program
         Console.WriteLine("=".PadRight(60, '='));
         Console.WriteLine("Completing Melodee.Blazor Translations");
         Console.WriteLine("=".PadRight(60, '='));
-        
+
         // Get the solution root (3 levels up from tools/CompleteTranslations/bin/Debug/net10.0)
         var solutionRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
         Console.WriteLine($"\nSolution root: {solutionRoot}");
 
         var baseResourcePath = Path.Combine(solutionRoot, "src/Melodee.Blazor/Resources/SharedResources.resx");
-        
+
         var languages = new Dictionary<string, string>
         {
             ["es-ES"] = Path.Combine(solutionRoot, "src/Melodee.Blazor/Resources/SharedResources.es-ES.resx"),
@@ -580,45 +580,45 @@ class Program
         foreach (var (langCode, resourcePath) in languages)
         {
             Console.WriteLine($"\nProcessing {langCode}...");
-            
+
             // Load the language resource file
             var langDoc = XDocument.Load(resourcePath);
             var root = langDoc.Root!;
-            
+
             // Get existing keys
             var existingKeys = root.Elements("data")
                 .Select(e => e.Attribute("name")!.Value)
                 .ToHashSet();
-            
+
             Console.WriteLine($"  Existing keys: {existingKeys.Count}");
-            
+
             // Find missing keys
             var missingKeys = baseKeys.Keys.Where(k => !existingKeys.Contains(k)).OrderBy(k => k).ToList();
             Console.WriteLine($"  Missing keys: {missingKeys.Count}");
-            
+
             if (missingKeys.Count == 0)
             {
                 Console.WriteLine($"  No missing translations in {langCode}");
                 continue;
             }
-            
+
             // Add missing keys to the XML
             var langTranslations = Translations[langCode];
             var lastDataElement = root.Elements("data").LastOrDefault();
-            
+
             foreach (var key in missingKeys)
             {
-                var translatedValue = langTranslations.ContainsKey(key) 
-                    ? langTranslations[key] 
+                var translatedValue = langTranslations.ContainsKey(key)
+                    ? langTranslations[key]
                     : baseKeys[key]; // Fallback to English if translation missing
-                
+
                 // Create new data element
                 var dataElement = new XElement("data",
                     new XAttribute("name", key),
                     new XAttribute(XNamespace.Xml + "space", "preserve"),
                     new XElement("value", translatedValue)
                 );
-                
+
                 // Add after the last data element
                 if (lastDataElement != null)
                 {
@@ -630,10 +630,10 @@ class Program
                     root.Add(dataElement);
                 }
             }
-            
+
             // Save the modified XML
             langDoc.Save(resourcePath);
-            
+
             Console.WriteLine($"  Added {missingKeys.Count} translations to {langCode}");
             totalAdded += missingKeys.Count;
         }

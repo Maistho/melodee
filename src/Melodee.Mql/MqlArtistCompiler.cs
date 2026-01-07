@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using System.Text.RegularExpressions;
 using Melodee.Common.Data.Models;
 using Melodee.Common.Extensions;
 using Melodee.Mql.Interfaces;
@@ -12,10 +13,12 @@ namespace Melodee.Mql;
 public sealed class MqlArtistCompiler : IMqlCompiler<Artist>
 {
     private readonly IMqlFieldInfoProvider _fieldInfoProvider;
+    private readonly MqlOptions _options;
 
-    public MqlArtistCompiler(IMqlFieldInfoProvider? fieldInfoProvider = null)
+    public MqlArtistCompiler(IMqlFieldInfoProvider? fieldInfoProvider = null, MqlOptions? options = null)
     {
         _fieldInfoProvider = fieldInfoProvider ?? new MqlFieldInfoProvider();
+        _options = options ?? new MqlOptions();
     }
 
     public Expression<Func<Artist, bool>> Compile(MqlAstNode ast, int? userId = null)
@@ -31,6 +34,7 @@ public sealed class MqlArtistCompiler : IMqlCompiler<Artist>
         {
             FreeTextNode freeText => CompileFreeText(freeText, parameter),
             FieldExpressionNode field => CompileFieldExpression(field, parameter, userId),
+            RegexExpressionNode regex => CompileRegexExpression(regex, parameter, userId),
             BinaryExpressionNode binary => CompileBinaryExpression(binary, parameter, userId),
             UnaryExpressionNode unary => CompileUnaryExpression(unary, parameter, userId),
             GroupNode group => CompileNode(group.Inner, parameter, userId),
@@ -327,6 +331,51 @@ public sealed class MqlArtistCompiler : IMqlCompiler<Artist>
             Expression.Property(null, typeof(Microsoft.EntityFrameworkCore.EF), "Functions"),
             propertyExpr,
             Expression.Constant(likePattern));
+    }
+
+    private Expression CompileRegexExpression(RegexExpressionNode node, ParameterExpression parameter, int? userId)
+    {
+        if (!_options.EnableRegex)
+        {
+            return Expression.Constant(true);
+        }
+
+        var fieldInfo = MqlFieldRegistry.GetField(node.Field, "artists");
+        if (fieldInfo is null)
+        {
+            return Expression.Constant(true);
+        }
+
+        var validationResult = _options.RegexGuard.ValidatePattern(node.Pattern);
+        if (!validationResult.IsValid)
+        {
+            return Expression.Constant(false);
+        }
+
+        var propertyPath = fieldInfo.DbMapping.Split('.');
+        var actualPath = propertyPath.Skip(1).ToArray();
+        Expression propertyExpr = actualPath.Length switch
+        {
+            1 => Expression.Property(parameter, actualPath[0]),
+            2 => GetNestedPropertyExpression(parameter, [actualPath[0], actualPath[1]]),
+            3 => GetNestedPropertyExpression(parameter, [actualPath[0], actualPath[1], actualPath[2]]),
+            _ => GetNestedPropertyExpression(parameter, actualPath)
+        };
+
+        var isCaseInsensitive = node.Flags.Contains("i", StringComparison.OrdinalIgnoreCase);
+        var regexOptions = RegexOptions.Compiled | (isCaseInsensitive ? RegexOptions.IgnoreCase : RegexOptions.None);
+
+        try
+        {
+            var regex = new Regex(validationResult.SafePattern ?? node.Pattern, regexOptions);
+            var isMatchMethod = typeof(Regex).GetMethod("IsMatch", [typeof(string)])!;
+
+            return Expression.Call(Expression.Constant(regex), isMatchMethod, propertyExpr);
+        }
+        catch
+        {
+            return Expression.Constant(false);
+        }
     }
 
     private Expression CompileBinaryExpression(BinaryExpressionNode node, ParameterExpression parameter, int? userId)

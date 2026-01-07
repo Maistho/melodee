@@ -46,7 +46,7 @@ public class SimpleCommandTests
         settings.Value.Should().Be(string.Empty);
     }
 
-    [Fact] 
+    [Fact]
     public void LibrarySettings_DefaultValues_AreCorrect()
     {
         var settings = new LibrarySettings();

@@ -20,7 +20,7 @@ public class ProjectReferenceTest
         {
             LibraryName = "Test"
         };
-        
+
         settings.LibraryName.Should().Be("Test");
     }
 
@@ -31,7 +31,7 @@ public class ProjectReferenceTest
         {
             LibraryName = "Test"
         };
-        
+
         settings.LibraryName.Should().Be("Test");
         // Note: [DefaultValue] attribute is CLI metadata, not actual initialization
         settings.CopyMode.Should().BeFalse(); // bool default is false
@@ -44,7 +44,7 @@ public class ProjectReferenceTest
         {
             LibraryName = "ValidName"
         };
-        
+
         var result = settings.Validate();
         result.Successful.Should().BeTrue();
     }
@@ -56,7 +56,7 @@ public class ProjectReferenceTest
         {
             LibraryName = ""
         };
-        
+
         var result = settings.Validate();
         result.Successful.Should().BeFalse();
         result.Message.Should().Contain("Library name is required");
