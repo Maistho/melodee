@@ -39,7 +39,7 @@ public class MqlArtistCompilerTests
             ApiKey = Guid.NewGuid(),
             Directory = name.Replace(" ", "").ToLowerInvariant(),
             Name = name,
-            NameNormalized = name.ToUpperInvariant(),
+            NameNormalized = name.ToNormalizedString() ?? name.ToUpperInvariant(),
             LibraryId = library.Id,
             CreatedAt = Instant.FromUtc(2025, 1, 1, 0, 0),
             SongCount = 10,
@@ -267,5 +267,140 @@ public class MqlArtistCompilerTests
     {
         var expression = CompileQuery("rating:>3", userId: 1);
         expression.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void Compile_PlaysGreaterThan_ReturnsCorrectExpression()
+    {
+        var expression = CompileQuery("plays:>50");
+        var compiled = expression.Compile();
+
+        var library = CreateLibrary(1);
+        var popularArtist = CreateArtist(1, "Popular Artist", library);
+        popularArtist.PlayedCount = 100;
+        var newArtist = CreateArtist(2, "New Artist", library);
+        newArtist.PlayedCount = 10;
+
+        compiled(popularArtist).Should().BeTrue();
+        compiled(newArtist).Should().BeFalse();
+    }
+
+    [Fact]
+    public void Compile_SongCountGreaterThan_ReturnsCorrectExpression()
+    {
+        var expression = CompileQuery("songcount:>5");
+        var compiled = expression.Compile();
+
+        var library = CreateLibrary(1);
+        var prolificArtist = CreateArtist(1, "Prolific Artist", library);
+        prolificArtist.SongCount = 50;
+        var newArtist = CreateArtist(2, "New Artist", library);
+        newArtist.SongCount = 2;
+
+        compiled(prolificArtist).Should().BeTrue();
+        compiled(newArtist).Should().BeFalse();
+    }
+
+    [Fact]
+    public void Compile_AlbumCountGreaterThan_ReturnsCorrectExpression()
+    {
+        var expression = CompileQuery("albumcount:>2");
+        var compiled = expression.Compile();
+
+        var library = CreateLibrary(1);
+        var prolificArtist = CreateArtist(1, "Prolific Artist", library);
+        prolificArtist.AlbumCount = 10;
+        var newArtist = CreateArtist(2, "New Artist", library);
+        newArtist.AlbumCount = 1;
+
+        compiled(prolificArtist).Should().BeTrue();
+        compiled(newArtist).Should().BeFalse();
+    }
+
+    [Fact]
+    public void Compile_SongCountRangeQuery_ReturnsCorrectExpression()
+    {
+        var expression = CompileQuery("songcount:5-20");
+        var compiled = expression.Compile();
+
+        var library = CreateLibrary(1);
+        var midRangeArtist = CreateArtist(1, "Mid Range Artist", library);
+        midRangeArtist.SongCount = 10;
+        var highCountArtist = CreateArtist(2, "High Count Artist", library);
+        highCountArtist.SongCount = 50;
+        var lowCountArtist = CreateArtist(3, "Low Count Artist", library);
+        lowCountArtist.SongCount = 2;
+
+        compiled(midRangeArtist).Should().BeTrue();
+        compiled(highCountArtist).Should().BeFalse();
+        compiled(lowCountArtist).Should().BeFalse();
+    }
+
+    [Fact]
+    public void Compile_PlaysRangeQuery_ReturnsCorrectExpression()
+    {
+        var expression = CompileQuery("plays:10-100");
+        var compiled = expression.Compile();
+
+        var library = CreateLibrary(1);
+        var moderateArtist = CreateArtist(1, "Moderate Artist", library);
+        moderateArtist.PlayedCount = 50;
+        var veryPopularArtist = CreateArtist(2, "Very Popular Artist", library);
+        veryPopularArtist.PlayedCount = 200;
+        var newArtist = CreateArtist(3, "New Artist", library);
+        newArtist.PlayedCount = 5;
+
+        compiled(moderateArtist).Should().BeTrue();
+        compiled(veryPopularArtist).Should().BeFalse();
+        compiled(newArtist).Should().BeFalse();
+    }
+
+    [Fact]
+    public void Compile_ArtistNameEquals_ReturnsCorrectExpression()
+    {
+        var expression = CompileQuery("artist:\"Pink Floyd\"");
+        var compiled = expression.Compile();
+
+        var library = CreateLibrary(1);
+        var pinkFloyd = CreateArtist(1, "Pink Floyd", library);
+        var beatles = CreateArtist(2, "The Beatles", library);
+
+        compiled(pinkFloyd).Should().BeTrue();
+        compiled(beatles).Should().BeFalse();
+    }
+
+    [Fact]
+    public void Compile_ComplexBooleanExpression_ReturnsCorrectExpression()
+    {
+        var expression = CompileQuery("plays:>50 AND songcount:>=5");
+        var compiled = expression.Compile();
+
+        var library = CreateLibrary(1);
+        var establishedArtist = CreateArtist(1, "Established Artist", library);
+        establishedArtist.PlayedCount = 100;
+        establishedArtist.SongCount = 20;
+        
+        var newPopularArtist = CreateArtist(2, "New Popular Artist", library);
+        newPopularArtist.PlayedCount = 100;
+        newPopularArtist.SongCount = 2;
+
+        compiled(establishedArtist).Should().BeTrue();
+        compiled(newPopularArtist).Should().BeFalse();
+    }
+
+    [Fact]
+    public void Compile_StarredWithDifferentUserId_ReturnsFalse()
+    {
+        var expression = CompileQuery("starred:true", userId: 2);
+        var compiled = expression.Compile();
+
+        var library = CreateLibrary(1);
+        var artist = CreateArtist(1, "Test Artist", library);
+        artist.UserArtists = new List<UserArtist>
+        {
+            new UserArtist { UserId = 1, IsStarred = true, ArtistId = 1, CreatedAt = Instant.FromUtc(2025, 1, 1, 0, 0) }
+        };
+
+        compiled(artist).Should().BeFalse();
     }
 }

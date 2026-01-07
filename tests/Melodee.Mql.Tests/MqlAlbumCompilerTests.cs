@@ -263,4 +263,149 @@ public class MqlAlbumCompilerTests
         var expression = CompileQuery("(artist:Beatles OR artist:Pink Floyd) AND year:>=1970");
         expression.Should().NotBeNull();
     }
+
+    [Fact]
+    public void Compile_DurationGreaterThan_ReturnsCorrectExpression()
+    {
+        var expression = CompileQuery("duration:>3000");
+        var compiled = expression.Compile();
+
+        var library = CreateLibrary(1);
+        var artist = CreateArtist(1, "Test Artist", library);
+        var longAlbum = CreateAlbum(1, "Long Album", artist, library);
+        longAlbum.Duration = 5000;
+        var shortAlbum = CreateAlbum(2, "Short Album", artist, library);
+        shortAlbum.Duration = 1000;
+
+        compiled(longAlbum).Should().BeTrue();
+        compiled(shortAlbum).Should().BeFalse();
+    }
+
+    [Fact]
+    public void Compile_SongCountComparison_ReturnsCorrectExpression()
+    {
+        var expression = CompileQuery("songcount:>=10");
+        var compiled = expression.Compile();
+
+        var library = CreateLibrary(1);
+        var artist = CreateArtist(1, "Test Artist", library);
+        var largeAlbum = CreateAlbum(1, "Large Album", artist, library);
+        largeAlbum.SongCount = 15;
+        var smallAlbum = CreateAlbum(2, "Small Album", artist, library);
+        smallAlbum.SongCount = 5;
+
+        compiled(largeAlbum).Should().BeTrue();
+        compiled(smallAlbum).Should().BeFalse();
+    }
+
+    [Fact]
+    public void Compile_MoodArrayQuery_ReturnsCorrectExpression()
+    {
+        var expression = CompileQuery("mood:Energetic");
+        var compiled = expression.Compile();
+
+        var library = CreateLibrary(1);
+        var artist = CreateArtist(1, "Test Artist", library);
+        var energeticAlbum = CreateAlbum(1, "Energetic Album", artist, library);
+        energeticAlbum.Moods = ["Energetic", "Upbeat"];
+        var mellowAlbum = CreateAlbum(2, "Mellow Album", artist, library);
+        mellowAlbum.Moods = ["Calm", "Relaxing"];
+
+        compiled(energeticAlbum).Should().BeTrue();
+        compiled(mellowAlbum).Should().BeFalse();
+    }
+
+    [Fact]
+    public void Compile_RatingQuery_WithUserId_ReturnsCorrectExpression()
+    {
+        var expression = CompileQuery("rating:>=4", userId: 1);
+        var compiled = expression.Compile();
+
+        var library = CreateLibrary(1);
+        var artist = CreateArtist(1, "Test Artist", library);
+        var highRatedAlbum = CreateAlbum(1, "High Rated Album", artist, library);
+        highRatedAlbum.UserAlbums = new List<UserAlbum>
+        {
+            new UserAlbum { UserId = 1, Rating = 5, AlbumId = 1, CreatedAt = Instant.FromUtc(2025, 1, 1, 0, 0) }
+        };
+        var lowRatedAlbum = CreateAlbum(2, "Low Rated Album", artist, library);
+        lowRatedAlbum.UserAlbums = new List<UserAlbum>
+        {
+            new UserAlbum { UserId = 1, Rating = 2, AlbumId = 2, CreatedAt = Instant.FromUtc(2025, 1, 1, 0, 0) }
+        };
+
+        compiled(highRatedAlbum).Should().BeTrue();
+        compiled(lowRatedAlbum).Should().BeFalse();
+    }
+
+    [Fact]
+    public void Compile_RatingQuery_WithoutUserId_ReturnsFalse()
+    {
+        var expression = CompileQuery("rating:>=4");
+        var compiled = expression.Compile();
+
+        var library = CreateLibrary(1);
+        var artist = CreateArtist(1, "Test Artist", library);
+        var album = CreateAlbum(1, "Test Album", artist, library);
+        album.UserAlbums = new List<UserAlbum>
+        {
+            new UserAlbum { UserId = 1, Rating = 5, AlbumId = 1, CreatedAt = Instant.FromUtc(2025, 1, 1, 0, 0) }
+        };
+
+        compiled(album).Should().BeFalse();
+    }
+
+    [Fact]
+    public void Compile_DurationRangeQuery_CompilesSuccessfully()
+    {
+        var expression = CompileQuery("duration:2000-5000");
+        var compiled = expression.Compile();
+
+        var library = CreateLibrary(1);
+        var artist = CreateArtist(1, "Test Artist", library);
+        var midAlbum = CreateAlbum(1, "Mid Duration Album", artist, library);
+        midAlbum.Duration = 3500;
+        var shortAlbum = CreateAlbum(2, "Short Album", artist, library);
+        shortAlbum.Duration = 1000;
+
+        compiled(midAlbum).Should().BeTrue();
+        compiled(shortAlbum).Should().BeFalse();
+    }
+
+    [Fact]
+    public void Compile_FreeTextSearch_MatchesArtistName()
+    {
+        var expression = CompileQuery("Beatles");
+        var compiled = expression.Compile();
+
+        var library = CreateLibrary(1);
+        var beatles = CreateArtist(1, "The Beatles", library);
+        var floyd = CreateArtist(2, "Pink Floyd", library);
+        var beatlesAlbum = CreateAlbum(1, "Abbey Road", beatles, library);
+        var floydAlbum = CreateAlbum(2, "The Wall", floyd, library);
+
+        compiled(beatlesAlbum).Should().BeTrue();
+        compiled(floydAlbum).Should().BeFalse();
+    }
+
+    [Fact]
+    public void Compile_ComplexBooleanExpression_ReturnsCorrectExpression()
+    {
+        var expression = CompileQuery("(genre:Rock OR genre:Jazz) AND year:>=1970");
+        var compiled = expression.Compile();
+
+        var library = CreateLibrary(1);
+        var artist = CreateArtist(1, "Test Artist", library);
+        
+        var rockAlbum1980 = CreateAlbum(1, "Rock 1980", artist, library);
+        rockAlbum1980.Genres = ["Rock"];
+        rockAlbum1980.ReleaseDate = new LocalDate(1980, 1, 1);
+        
+        var jazzAlbum1960 = CreateAlbum(2, "Jazz 1960", artist, library);
+        jazzAlbum1960.Genres = ["Jazz"];
+        jazzAlbum1960.ReleaseDate = new LocalDate(1960, 1, 1);
+
+        compiled(rockAlbum1980).Should().BeTrue();
+        compiled(jazzAlbum1960).Should().BeFalse();
+    }
 }
