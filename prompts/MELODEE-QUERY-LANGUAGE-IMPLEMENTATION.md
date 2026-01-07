@@ -1,6 +1,6 @@
 # Melodee Query Language (MQL) — Implementation Plan
 
-**Status:** In Progress - Phase 7 Complete  
+**Status:** In Progress - Phase 8 Complete  
 **Spec Reference:** [MELODEE-QUERY-LANGUAGE.md](./MELODEE-QUERY-LANGUAGE.md)
 
 ## Overview
@@ -29,7 +29,7 @@ This document outlines the phased implementation plan for MQL. Each phase builds
 
 ### Security & Authorization
 - [x] **Phase 7: Security Controls & Sanitization**
-- [ ] **Phase 8: User-Scoped Field Authorization**
+- [x] **Phase 8: User-Scoped Field Authorization**
 
 ### API & Integration
 - [ ] **Phase 9: Parse API Endpoint**
@@ -541,10 +541,10 @@ This document outlines the phased implementation plan for MQL. Each phase builds
    - Non-user-scoped fields always allowed
 
 **Acceptance Criteria:**
-- [ ] Anonymous users cannot use rating, plays, starred, etc.
-- [ ] Users can only query their own user-scoped data
-- [ ] Clear error messages with field names
-- [ ] 100% coverage on authorization logic
+- [x] Anonymous users cannot use rating, plays, starred, etc.
+- [x] Users can only query their own user-scoped data
+- [x] Clear error messages with field names
+- [x] 100% coverage on authorization logic
 
 ---
 
@@ -1152,7 +1152,7 @@ Update: @prompts/MELODEE-QUERY-LANGUAGE-IMPLEMENTATION.md mark Phase complete if
 ## Success Criteria
 
 Implementation is complete when:
-- [x] 7 of 17 phases complete (Phases 1-7)
+- [x] 8 of 17 phases complete (Phases 1-8)
 - [ ] All 17 phases marked complete
 - [ ] Test coverage targets met (90%+ overall)
 - [ ] Performance budgets met under load
