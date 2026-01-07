@@ -15,6 +15,7 @@ public class AsyncSyncUsageTests
         {
             Path.Combine(srcDir, "Melodee.Blazor/Services/BaseUrlService.cs"),
             Path.Combine(srcDir, "Melodee.Common/Migrations"),
+            Path.Combine(srcDir, "Melodee.Mql/MqlExpressionCache.cs"), // Synchronous cleanup is intentional
         };
 
         var patterns = new[]
