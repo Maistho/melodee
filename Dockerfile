@@ -8,13 +8,16 @@ COPY ["Directory.Build.props", "./"]
 
 # Copy project files for restore
 COPY ["src/Melodee.Blazor/Melodee.Blazor.csproj", "src/Melodee.Blazor/"]
+COPY ["src/Melodee.Cli/Melodee.Cli.csproj", "src/Melodee.Cli/"]
 COPY ["src/Melodee.Common/Melodee.Common.csproj", "src/Melodee.Common/"]
 
 # Restore as distinct layers
 RUN dotnet restore "src/Melodee.Blazor/Melodee.Blazor.csproj"
+RUN dotnet restore "src/Melodee.Cli/Melodee.Cli.csproj"
 
 # Copy everything else and build
 COPY ["src/Melodee.Blazor/", "src/Melodee.Blazor/"]
+COPY ["src/Melodee.Cli/", "src/Melodee.Cli/"]
 COPY ["src/Melodee.Common/", "src/Melodee.Common/"]
 
 WORKDIR "/src/src/Melodee.Blazor"
@@ -23,6 +26,8 @@ RUN dotnet build "Melodee.Blazor.csproj" -c Release -o /app/build
 # Publish stage
 FROM build AS publish
 RUN dotnet publish "Melodee.Blazor.csproj" -c Release -o /app/publish --self-contained false -p:PublishTrimmed=false
+WORKDIR "/src/src/Melodee.Cli"
+RUN dotnet publish "Melodee.Cli.csproj" -c Release -o /app/cli --self-contained false -p:PublishTrimmed=false
 
 # Migration bundle stage - create a self-contained migration bundle
 FROM build AS migrations
@@ -49,6 +54,7 @@ RUN apt-get update && \
 
 # Copy the published application
 COPY --from=publish /app/publish .
+COPY --from=publish /app/cli /app/cli
 
 # Copy the EF migration bundle
 COPY --from=migrations /app/efbundle /app/efbundle
