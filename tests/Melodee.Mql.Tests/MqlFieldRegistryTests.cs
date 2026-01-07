@@ -1,5 +1,4 @@
 using FluentAssertions;
-using Melodee.Mql;
 using Melodee.Mql.Models;
 
 namespace Melodee.Mql.Tests;
