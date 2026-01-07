@@ -282,6 +282,7 @@ builder.Services.AddScoped<IDoctorService, DoctorService>();
 
 // Rate limiting service for Blazor UI
 builder.Services.AddSingleton<IRateLimiterService, RateLimiterService>();
+builder.Services.AddSingleton<Melodee.Mql.Services.MqlMetricsService>();
 builder.Services.AddMemoryCache();
 
 // Custom blocks for page customization (uses Templates library)

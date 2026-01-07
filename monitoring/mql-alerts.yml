@@ -1,0 +1,112 @@
+# MQL Alert Configuration
+# This file contains Prometheus alerting rules for MQL services
+
+groups:
+  - name: mql_alerts
+    rules:
+      # High latency alert
+      - alert: MQLHighLatency
+        expr: histogram_quantile(0.95, rate(mql_query_duration_bucket[5m])) > 2000
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "MQL query P95 latency is high"
+          description: "P95 latency is {{ $value | humanize1024 }}ms, exceeding 2s threshold"
+
+      # Degraded performance warning
+      - alert: MQLDegradedPerformance
+        expr: histogram_quantile(0.95, rate(mql_query_duration_bucket[5m])) > 1000
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "MQL query P95 latency is elevated"
+          description: "P95 latency is {{ $value | humanize1024 }}ms, exceeding 1s warning threshold"
+
+      # High error rate
+      - alert: MQLHighErrorRate
+        expr: rate(mql_query_errors_total[5m]) / rate(mql_query_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "MQL error rate is high"
+          description: "Error rate is {{ $value | humanizePercentage }}, exceeding 5% threshold"
+
+      # Low cache hit rate
+      - alert: MQLELowCacheHitRate
+        expr: mql_cache_hit_rate < 0.3
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "MQL cache hit rate is low"
+          description: "Cache hit rate is {{ $value | humanizePercentage }}, below 30% threshold"
+
+      # Cache saturation warning
+      - alert: MQLCacheSaturation
+        expr: mql_cache_entries > 10000
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "MQL cache is approaching capacity"
+          description: "Cache has {{ $value }} entries, consider increasing cache size"
+
+      # Rate limit exceeded
+      - alert: MQLRateLimitExceeded
+        expr: increase(mql_rate_limit_exceeded_total[1m]) > 10
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "MQL rate limit being exceeded"
+          description: "{{ $value }} requests hit rate limit in last minute"
+
+      # Parse timeout
+      - alert: MQLParseTimeout
+        expr: increase(mql_parse_timeout_total[5m]) > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "MQL query parse timeouts occurring"
+          description: "{{ $value }} queries timed out during parsing in last 5 minutes"
+
+      # Security violations
+      - alert: MQLSecurityViolations
+        expr: increase(mql_security_violations_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "MQL security violations detected"
+          description: "{{ $value }} security violations in last 5 minutes"
+
+# Recording rules for commonly used queries
+  - name: mql_recording_rules
+    rules:
+      # Query rate by entity
+      - record: mql:query_rate_by_entity
+        expr: sum by (entity) (rate(mql_query_total[5m]))
+
+      # Error rate by code
+      - record: mql:error_rate_by_code
+        expr: sum by (error_code) (rate(mql_query_errors_total[5m]))
+
+      # P95 latency
+      - record: mql:p95_latency
+        expr: histogram_quantile(0.95, rate(mql_query_duration_bucket[5m]))
+
+      # P99 latency
+      - record: mql:p99_latency
+        expr: histogram_quantile(0.99, rate(mql_query_duration_bucket[5m]))
+
+      # Average latency
+      - record: mql:avg_latency
+        expr: rate(mql_query_duration_sum[5m]) / rate(mql_query_duration_count[5m])
+
+      # Cache effectiveness
+      - record: mql:cache_hit_rate
+        expr: rate(mql_cache_hits[5m]) / (rate(mql_cache_hits[5m]) + rate(mql_cache_misses[5m]))

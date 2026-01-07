@@ -3,6 +3,7 @@ using Melodee.Mql.Api;
 using Melodee.Mql.Api.Dto;
 using Melodee.Mql.Interfaces;
 using Melodee.Mql.Models;
+using Melodee.Mql.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -16,6 +17,8 @@ public class MqlControllerTests
     private readonly Mock<IMqlParser> _parserMock;
     private readonly Mock<IMqlValidator> _validatorMock;
     private readonly Mock<IMqlSuggestionService> _suggestionServiceMock;
+    private readonly Mock<IMqlExpressionCache> _cacheMock;
+    private readonly MqlMetricsService _metricsService;
     private readonly Mock<ILogger<MqlController>> _loggerMock;
     private readonly MqlController _controller;
 
@@ -25,13 +28,17 @@ public class MqlControllerTests
         _parserMock = new Mock<IMqlParser>();
         _validatorMock = new Mock<IMqlValidator>();
         _suggestionServiceMock = new Mock<IMqlSuggestionService>();
+        _cacheMock = new Mock<IMqlExpressionCache>();
         _loggerMock = new Mock<ILogger<MqlController>>();
+        _metricsService = new MqlMetricsService();
 
         _controller = new MqlController(
             _tokenizerMock.Object,
             _parserMock.Object,
             _validatorMock.Object,
             _suggestionServiceMock.Object,
+            _cacheMock.Object,
+            _metricsService,
             _loggerMock.Object);
 
         SetupControllerContext();

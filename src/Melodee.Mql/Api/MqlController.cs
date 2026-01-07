@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Melodee.Mql.Api.Dto;
 using Melodee.Mql.Interfaces;
 using Melodee.Mql.Models;
+using Melodee.Mql.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -19,6 +20,8 @@ public class MqlController : ControllerBase
     private readonly IMqlParser _parser;
     private readonly IMqlValidator _validator;
     private readonly IMqlSuggestionService _suggestionService;
+    private readonly IMqlExpressionCache _cache;
+    private readonly MqlMetricsService _metricsService;
     private readonly ILogger<MqlController> _logger;
 
     private const int MaxQueryLength = 500;
@@ -34,12 +37,16 @@ public class MqlController : ControllerBase
         IMqlParser parser,
         IMqlValidator validator,
         IMqlSuggestionService suggestionService,
+        IMqlExpressionCache cache,
+        MqlMetricsService metricsService,
         ILogger<MqlController> logger)
     {
         _tokenizer = tokenizer;
         _parser = parser;
         _validator = validator;
         _suggestionService = suggestionService;
+        _cache = cache;
+        _metricsService = metricsService;
         _logger = logger;
     }
 
@@ -231,6 +238,27 @@ public class MqlController : ControllerBase
             ["status"] = "healthy",
             ["timestamp"] = DateTime.UtcNow.ToString("O")
         });
+    }
+
+    /// <summary>
+    /// Returns performance metrics for the MQL API.
+    /// </summary>
+    [HttpGet("metrics")]
+    [Produces("application/json")]
+    public ActionResult<MqlMetricsResponse> GetMetrics()
+    {
+        var queryMetrics = _metricsService.GetSummary();
+        var cacheMetrics = _metricsService.GetCacheMetrics(_cache);
+
+        var response = new MqlMetricsResponse
+        {
+            Timestamp = DateTime.UtcNow,
+            QueryMetrics = queryMetrics,
+            CacheMetrics = cacheMetrics,
+            Status = queryMetrics.ErrorRate > 0.05 ? "degraded" : "healthy"
+        };
+
+        return Ok(response);
     }
 
     /// <summary>
