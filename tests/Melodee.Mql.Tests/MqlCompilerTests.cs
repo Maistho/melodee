@@ -446,3 +446,253 @@ public class MqlCompilerTests
         songs[0].ImageCount.Should().Be(1500);
     }
 }
+
+public sealed class MqlSongSearchPipelineTests
+{
+    private readonly MqlTokenizer _tokenizer;
+    private readonly MqlParser _parser;
+    private readonly MqlValidator _validator;
+    private readonly MqlSongCompiler _compiler;
+
+    public MqlSongSearchPipelineTests()
+    {
+        _tokenizer = new MqlTokenizer();
+        _parser = new MqlParser();
+        _validator = new MqlValidator();
+        _compiler = new MqlSongCompiler();
+    }
+
+    private static Artist CreateArtist(int id, string name, Library library)
+    {
+        return new Artist
+        {
+            Id = id,
+            ApiKey = Guid.NewGuid(),
+            Directory = name.Replace(" ", "").ToLowerInvariant(),
+            Name = name,
+            NameNormalized = name.ToNormalizedString() ?? name.ToUpperInvariant(),
+            LibraryId = library.Id,
+            CreatedAt = Instant.FromUtc(2025, 1, 1, 0, 0)
+        };
+    }
+
+    private static Album CreateAlbum(int id, string name, Artist artist, int year = 2020)
+    {
+        return new Album
+        {
+            Id = id,
+            ApiKey = Guid.NewGuid(),
+            ArtistId = artist.Id,
+            Artist = artist,
+            Name = name,
+            NameNormalized = name.ToNormalizedString() ?? name.ToUpperInvariant(),
+            Directory = $"/{artist.Directory}/{name.Replace(" ", "").ToLowerInvariant()}/",
+            ReleaseDate = new LocalDate(year, 1, 1),
+            CreatedAt = Instant.FromUtc(2025, 1, 1, 0, 0)
+        };
+    }
+
+    private static Song CreateSong(int id, string title, Album album, int bpm = 120, string[]? genres = null, string[]? moods = null)
+    {
+        return new Song
+        {
+            Id = id,
+            AlbumId = album.Id,
+            Album = album,
+            Title = title,
+            TitleNormalized = title.ToUpperInvariant(),
+            SongNumber = 1,
+            FileName = $"{title.Replace(" ", "_").ToLowerInvariant()}.flac",
+            FileSize = 1000000,
+            FileHash = $"hash_{id}",
+            Duration = 180000,
+            SamplingRate = 44100,
+            BitRate = 320,
+            BitDepth = 16,
+            BPM = bpm,
+            ContentType = "audio/flac",
+            CreatedAt = Instant.FromUtc(2025, 1, 1, 0, 0),
+            Genres = genres ?? Array.Empty<string>(),
+            Moods = moods ?? Array.Empty<string>()
+        };
+    }
+
+    private static UserSong CreateUserSong(int id, int userId, int songId, int rating, bool isStarred, int playedCount = 0)
+    {
+        return new UserSong
+        {
+            Id = id,
+            UserId = userId,
+            SongId = songId,
+            Rating = rating,
+            PlayedCount = playedCount,
+            IsStarred = isStarred,
+            StarredAt = isStarred ? Instant.FromUtc(2025, 1, 1, 0, 0) : null,
+            CreatedAt = Instant.FromUtc(2025, 1, 1, 0, 0)
+        };
+    }
+
+    private IQueryable<Song> CreateTestData()
+    {
+        var library = new Library
+        {
+            Id = 1,
+            Name = "Test Library",
+            Path = "/test/path",
+            Type = (int)LibraryType.Storage,
+            CreatedAt = Instant.FromUtc(2025, 1, 1, 0, 0)
+        };
+
+        var artist1 = CreateArtist(1, "Pink Floyd", library);
+        var artist2 = CreateArtist(2, "The Beatles", library);
+        var artist3 = CreateArtist(3, "Led Zeppelin", library);
+
+        var album1 = CreateAlbum(1, "The Dark Side of the Moon", artist1, 1973);
+        var album2 = CreateAlbum(2, "Abbey Road", artist2, 1969);
+        var album3 = CreateAlbum(3, "Physical Graffiti", artist3, 1975);
+
+        var song1 = CreateSong(1, "Time", album1, 120, new[] { "Rock", "Progressive Rock" }, new[] { "Psychedelic", "Atmospheric" });
+        song1.UserSongs.Add(CreateUserSong(1, 1, 1, 5, true, 100));
+
+        var song2 = CreateSong(2, "Money", album1, 130, new[] { "Rock" }, new[] { "Driving" });
+        song2.UserSongs.Add(CreateUserSong(2, 1, 2, 4, false, 50));
+
+        var song3 = CreateSong(3, "Come Together", album2, 100, new[] { "Rock" }, new[] { "Classic" });
+        song3.UserSongs.Add(CreateUserSong(3, 1, 3, 3, false, 25));
+
+        var song4 = CreateSong(4, "Something", album2, 90, new[] { "Rock", "Ballad" }, new[] { "Romantic" });
+        song4.UserSongs.Add(CreateUserSong(4, 1, 4, 4, true, 10));
+
+        var song5 = CreateSong(5, "Kashmir", album3, 140, new[] { "Rock", "Hard Rock" }, new[] { "Epic" });
+        song5.UserSongs.Add(CreateUserSong(5, 1, 5, 5, true, 200));
+
+        return new List<Song> { song1, song2, song3, song4, song5 }.AsQueryable();
+    }
+
+    private (bool IsValid, string? NormalizedQuery, int ResultCount) ExecuteFullPipeline(string query, int? userId = null)
+    {
+        var validationResult = _validator.Validate(query, "songs");
+        if (!validationResult.IsValid)
+        {
+            return (false, null, 0);
+        }
+
+        var tokens = _tokenizer.Tokenize(query).ToList();
+        var parseResult = _parser.Parse(tokens, "songs");
+
+        if (!parseResult.IsValid || parseResult.Ast == null)
+        {
+            return (false, null, 0);
+        }
+
+        var predicate = _compiler.Compile(parseResult.Ast, userId);
+        var songs = CreateTestData().Where(predicate).ToList();
+
+        return (true, parseResult.NormalizedQuery, songs.Count);
+    }
+
+    [Fact]
+    public void FullPipeline_ArtistFieldQuery_ReturnsCorrectResults()
+    {
+        var result = ExecuteFullPipeline("artist:\"Pink Floyd\"");
+
+        result.IsValid.Should().BeTrue();
+        result.ResultCount.Should().Be(2);
+    }
+
+    [Fact]
+    public void FullPipeline_ComplexBooleanQuery_ReturnsCorrectResults()
+    {
+        var result = ExecuteFullQuery("(artist:\"Pink Floyd\" OR artist:\"The Beatles\") AND year:>=1970");
+
+        result.IsValid.Should().BeTrue();
+        result.ResultCount.Should().Be(4);
+    }
+
+    [Fact]
+    [Trait("Category", "Integration")]
+    public void FullPipeline_BackwardCompatibility_WhenNoQueryProvided_ReturnsAllSongs()
+    {
+        var result = ExecuteFullPipeline("");
+
+        result.IsValid.Should().BeFalse();
+        result.ResultCount.Should().Be(0);
+    }
+
+    [Fact]
+    public void FullPipeline_UserScopedFieldWithUserId_ReturnsCorrectResults()
+    {
+        var result = ExecuteFullPipeline("starred:true", 1);
+
+        result.IsValid.Should().BeTrue();
+        result.ResultCount.Should().Be(3);
+    }
+
+    [Fact]
+    public void FullPipeline_RatingField_ReturnsCorrectResults()
+    {
+        var result = ExecuteFullPipeline("rating:>=4", 1);
+
+        result.IsValid.Should().BeTrue();
+        result.ResultCount.Should().Be(4);
+    }
+
+    [Fact]
+    public void FullPipeline_YearRange_ReturnsCorrectResults()
+    {
+        var result = ExecuteFullPipeline("year:1970-1980");
+
+        result.IsValid.Should().BeTrue();
+        result.ResultCount.Should().Be(5);
+    }
+
+    [Fact]
+    public void FullPipeline_GenreField_ReturnsCorrectResults()
+    {
+        var result = ExecuteFullPipeline("genre:Rock");
+
+        result.IsValid.Should().BeTrue();
+        result.ResultCount.Should().Be(5);
+    }
+
+    [Fact]
+    public void FullPipeline_BpmComparison_ReturnsCorrectResults()
+    {
+        var result = ExecuteFullPipeline("bpm:>100");
+
+        result.IsValid.Should().BeTrue();
+        result.ResultCount.Should().Be(4);
+    }
+
+    [Fact]
+    public void FullPipeline_NotOperator_ReturnsCorrectResults()
+    {
+        var result = ExecuteFullPipeline("NOT artist:\"Led Zeppelin\"");
+
+        result.IsValid.Should().BeTrue();
+        result.ResultCount.Should().Be(4);
+    }
+
+    [Fact]
+    public void FullPipeline_PlaysField_ReturnsCorrectResults()
+    {
+        var result = ExecuteFullPipeline("plays:>50", 1);
+
+        result.IsValid.Should().BeTrue();
+        result.ResultCount.Should().Be(3);
+    }
+
+    [Fact]
+    public void FullPipeline_NormalizedQuery_IsGenerated()
+    {
+        var result = ExecuteFullPipeline("artist:\"Pink Floyd\" AND year:>=1970");
+
+        result.IsValid.Should().BeTrue();
+        result.NormalizedQuery.Should().NotBeNullOrEmpty();
+    }
+
+    private (bool IsValid, string? NormalizedQuery, int ResultCount) ExecuteFullQuery(string query, int? userId = null)
+    {
+        return ExecuteFullPipeline(query, userId);
+    }
+}

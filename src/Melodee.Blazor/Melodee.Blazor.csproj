@@ -51,6 +51,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Melodee.Common\Melodee.Common.csproj" />
+    <ProjectReference Include="..\Melodee.Mql\Melodee.Mql.csproj" />
   </ItemGroup>
 
   <ItemGroup>

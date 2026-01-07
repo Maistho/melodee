@@ -1,5 +1,4 @@
 using FluentAssertions;
-using FluentAssertions.Extensions;
 using Melodee.Mql.Api;
 using Melodee.Mql.Api.Dto;
 using Melodee.Mql.Interfaces;

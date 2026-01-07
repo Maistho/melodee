@@ -49,10 +49,6 @@ public class SessionsController(
 
         var sanitizedUserId = LogSanitizer.Sanitize(user.Id.ToString());
 
-        var sanitizedUserId = LogSanitizer.Sanitize(user.Id.ToString());
-
-        var sanitizedUserId = LogSanitizer.Sanitize(user.Id.ToString());
-
         if (request == null || string.IsNullOrWhiteSpace(request.ItemId))
         {
             return NoContent();

@@ -1,5 +1,3 @@
-using Melodee.Mql.Models;
-
 namespace Melodee.Mql.Authorization;
 
 /// <summary>

@@ -1,6 +1,6 @@
 # Melodee Query Language (MQL) — Implementation Plan
 
-**Status:** In Progress - Phase 9 Complete  
+**Status:** In Progress - Phase 10 Complete  
 **Spec Reference:** [MELODEE-QUERY-LANGUAGE.md](./MELODEE-QUERY-LANGUAGE.md)
 
 ## Overview
@@ -33,7 +33,7 @@ This document outlines the phased implementation plan for MQL. Each phase builds
 
 ### API & Integration
 - [x] **Phase 9: Parse API Endpoint**
-- [ ] **Phase 10: Search Integration (Songs)**
+- [x] **Phase 10: Search Integration (Songs)**
 - [ ] **Phase 11: Album & Artist Entity Support**
 
 ### Advanced Features
@@ -1132,7 +1132,7 @@ Update: @prompts/MELODEE-QUERY-LANGUAGE-IMPLEMENTATION.md mark Phase complete if
 **Example**
 
 ```
-Implement MQL Phase 6: Expression Tree Caching
+Implement MQL Phase 11: Album & Artist Entity Support
 
 Read these files first:
 - prompts/MELODEE-QUERY-LANGUAGE.md - Full spec (§4.1-4.3 for syntax)
