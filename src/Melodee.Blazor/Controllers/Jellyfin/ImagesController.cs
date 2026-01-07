@@ -3,6 +3,7 @@ using Melodee.Common.Configuration;
 using Melodee.Common.Data;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services;
+using Melodee.Common.Utility;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -181,7 +182,8 @@ public class ImagesController(
             return ReturnImageResult(songAlbumImageResult.Bytes, songAlbumImageResult.Etag);
         }
 
-        logger.LogDebug("JellyfinImageNotFound ItemId={ItemId} ImageType={ImageType}", itemId, imageType);
+        logger.LogDebug("JellyfinImageNotFound ItemId={ItemId} ImageType={ImageType}",
+            LogSanitizer.Sanitize(itemId), LogSanitizer.Sanitize(imageType));
         return JellyfinNotFound("Item not found.");
     }
 
@@ -265,4 +267,3 @@ public class ImagesController(
         return "image/jpeg";
     }
 }
-

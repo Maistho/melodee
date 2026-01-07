@@ -2,6 +2,7 @@ using Melodee.Blazor.Filters;
 using Melodee.Common.Configuration;
 using Melodee.Common.Data;
 using Melodee.Common.Serialization;
+using Melodee.Common.Utility;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -51,6 +52,9 @@ public class AudioController(
             return JellyfinBadRequest("Invalid item ID format.");
         }
 
+        var sanitizedUserId = LogSanitizer.Sanitize(user.Id.ToString());
+        var sanitizedItemId = LogSanitizer.Sanitize(itemId);
+
         await using var dbContext = await DbContextFactory.CreateDbContextAsync(cancellationToken);
         var song = await dbContext.Songs
             .AsNoTracking()
@@ -75,17 +79,19 @@ public class AudioController(
             return JellyfinNotFound("Audio item not found.");
         }
 
+        var sanitizedTitle = LogSanitizer.Sanitize(song.Title);
         var filePath = Path.Combine(song.LibraryPath, song.ArtistDirectory, song.AlbumDirectory, song.FileName);
         if (!System.IO.File.Exists(filePath))
         {
-            logger.LogWarning("JellyfinStreamFileNotFound ItemId={ItemId} FilePath={FilePath}", itemId, filePath);
+            logger.LogWarning("JellyfinStreamFileNotFound ItemId={ItemId} FilePath={FilePath}",
+                sanitizedItemId, LogSanitizer.Sanitize(filePath));
             return JellyfinNotFound("Audio file not found.");
         }
 
         if (@static != true && (audioBitRate.HasValue || !string.IsNullOrWhiteSpace(container)))
         {
             logger.LogDebug("JellyfinTranscodingNotSupported ItemId={ItemId} Container={Container} BitRate={BitRate}",
-                itemId, container ?? "null", audioBitRate?.ToString() ?? "null");
+                sanitizedItemId, LogSanitizer.Sanitize(container ?? "null"), audioBitRate?.ToString() ?? "null");
             return JellyfinBadRequest("Transcoding is not supported. Use static=true for direct streaming.");
         }
 
@@ -95,7 +101,7 @@ public class AudioController(
         Response.Headers.Append("Accept-Ranges", "bytes");
 
         logger.LogInformation("JellyfinStreamStart UserId={UserId} ItemId={ItemId} Title={Title}",
-            user.Id, itemId, song.Title);
+            sanitizedUserId, sanitizedItemId, sanitizedTitle);
 
         if (Request.Method.Equals("HEAD", StringComparison.OrdinalIgnoreCase))
         {
@@ -232,6 +238,8 @@ public class AudioController(
             return JellyfinRangeNotSatisfiable();
         }
 
+        var sanitizedItemId = LogSanitizer.Sanitize(itemId);
+
         var rangeSpec = rangeHeader[6..];
         var dashIndex = rangeSpec.IndexOf('-');
         if (dashIndex < 0)
@@ -316,13 +324,13 @@ public class AudioController(
         {
             logger.LogInformation(
                 "JellyfinStreamCanceled UserId={UserId} ItemId={ItemId} BytesSent={BytesSent} TotalBytes={TotalBytes} Reason={Reason}",
-                userId, itemId, bytesSent, length, "ClientDisconnect");
+                userId, sanitizedItemId, bytesSent, length, "ClientDisconnect");
         }
         else if (bytesSent == length)
         {
             logger.LogDebug(
                 "JellyfinStreamComplete UserId={UserId} ItemId={ItemId} BytesSent={BytesSent}",
-                userId, itemId, bytesSent);
+                userId, sanitizedItemId, bytesSent);
         }
 
         return new EmptyResult();

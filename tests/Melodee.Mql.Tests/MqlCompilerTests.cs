@@ -1,9 +1,8 @@
 using System.Linq.Expressions;
+using FluentAssertions;
 using Melodee.Common.Data.Models;
 using Melodee.Common.Enums;
 using Melodee.Common.Extensions;
-using Melodee.Mql.Models;
-using FluentAssertions;
 using NodaTime;
 
 namespace Melodee.Mql.Tests;
@@ -25,7 +24,7 @@ public class MqlCompilerTests
     {
         var tokens = _tokenizer.Tokenize(query).ToList();
         var parseResult = _parser.Parse(tokens, "songs");
-        
+
         // Debug: Print tokens and parse result
         if (!parseResult.IsValid)
         {
@@ -41,7 +40,7 @@ public class MqlCompilerTests
                 Console.WriteLine($"  {e.Message}");
             }
         }
-        
+
         parseResult.IsValid.Should().BeTrue($"Query '{query}' should parse successfully: {string.Join(", ", parseResult.Errors.Select(e => e.Message))}");
         parseResult.Ast.Should().NotBeNull();
 

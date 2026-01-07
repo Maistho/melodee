@@ -5,6 +5,7 @@ using Melodee.Blazor.Filters;
 using Melodee.Common.Configuration;
 using Melodee.Common.Data;
 using Melodee.Common.Serialization;
+using Melodee.Common.Utility;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -49,7 +50,8 @@ public class ItemsController(
         CancellationToken cancellationToken)
     {
         logger.LogDebug("GetItemsAsync: includeItemTypes={IncludeItemTypes} parentId={ParentId} searchTerm={SearchTerm} startIndex={StartIndex} limit={Limit} recursive={Recursive}",
-            includeItemTypes, parentId, searchTerm, startIndex, limit, recursive);
+            LogSanitizer.Sanitize(includeItemTypes), LogSanitizer.Sanitize(parentId),
+            LogSanitizer.Sanitize(searchTerm), startIndex, limit, recursive);
 
         var user = await AuthenticateJellyfinAsync(cancellationToken);
         if (user == null)
@@ -271,7 +273,7 @@ public class ItemsController(
         }
 
         logger.LogInformation("JellyfinRefreshRequest ItemId={ItemId} Recursive={Recursive} by User={UserId}",
-            itemId, recursive ?? false, user.Id);
+            LogSanitizer.Sanitize(itemId), recursive ?? false, LogSanitizer.Sanitize(user.Id.ToString()));
 
         return NoContent();
     }
@@ -619,7 +621,8 @@ public class ItemsController(
         var filePath = GetSongFilePath(song);
         if (string.IsNullOrWhiteSpace(filePath) || !System.IO.File.Exists(filePath))
         {
-            logger.LogWarning("JellyfinFileNotFound ItemId={ItemId} FilePath={FilePath}", itemId, filePath ?? "null");
+            logger.LogWarning("JellyfinFileNotFound ItemId={ItemId} FilePath={FilePath}",
+                LogSanitizer.Sanitize(itemId), LogSanitizer.Sanitize(filePath ?? "null"));
             return JellyfinNotFound("File not found.");
         }
 

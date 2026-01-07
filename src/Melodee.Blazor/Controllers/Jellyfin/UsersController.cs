@@ -8,6 +8,7 @@ using Melodee.Common.Data;
 using Melodee.Common.Data.Models;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services;
+using Melodee.Common.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -31,18 +32,6 @@ public class UsersController(
     UserService userService,
     ILogger<UsersController> logger) : JellyfinControllerBase(etagRepository, serializer, configuration, configurationFactory, dbContextFactory, clock, loggerFactory)
 {
-    private static string SanitizeForLog(string value)
-    {
-        if (value is null)
-        {
-            return string.Empty;
-        }
-
-        return value
-            .Replace("\r", string.Empty)
-            .Replace("\n", string.Empty);
-    }
-
     /// <summary>
     /// Gets public users for the login screen. Finamp calls this to show available users.
     /// </summary>
@@ -65,7 +54,7 @@ public class UsersController(
         if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Pw))
         {
             logger.LogWarning("JellyfinAuthFailed UserName={UserName} RemoteIp={RemoteIp} Reason={Reason}",
-                SanitizeForLog(request.Username ?? "[empty]"), GetClientBinding(), "Missing credentials");
+                LogSanitizer.Sanitize(request.Username ?? "[empty]"), LogSanitizer.Sanitize(GetClientBinding()), "Missing credentials");
             return JellyfinBadRequest("Username and password are required.");
         }
 
@@ -73,7 +62,7 @@ public class UsersController(
         if (!authenticateResult.IsSuccess || authenticateResult.Data == null)
         {
             logger.LogWarning("JellyfinAuthFailed UserName={UserName} RemoteIp={RemoteIp} Reason={Reason}",
-                SanitizeForLog(request.Username), GetClientBinding(), "Invalid credentials");
+                LogSanitizer.Sanitize(request.Username), LogSanitizer.Sanitize(GetClientBinding()), "Invalid credentials");
             return JellyfinUnauthorized("Invalid username or password.");
         }
 
@@ -81,7 +70,7 @@ public class UsersController(
         if (user.IsLocked)
         {
             logger.LogWarning("JellyfinAuthFailed UserName={UserName} RemoteIp={RemoteIp} Reason={Reason}",
-                SanitizeForLog(request.Username), GetClientBinding(), "User locked");
+                LogSanitizer.Sanitize(request.Username), LogSanitizer.Sanitize(GetClientBinding()), "User locked");
             return JellyfinForbidden("User account is locked.");
         }
 
@@ -139,7 +128,8 @@ public class UsersController(
         await dbContext.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("JellyfinTokenIssued UserId={UserId} TokenId={TokenId} Client={Client} DeviceId={DeviceId}",
-            user.Id, jellyfinToken.Id, tokenInfo.Client ?? "unknown", tokenInfo.DeviceId ?? "unknown");
+            LogSanitizer.Sanitize(user.Id.ToString()), jellyfinToken.Id,
+            LogSanitizer.Sanitize(tokenInfo.Client ?? "unknown"), LogSanitizer.Sanitize(tokenInfo.DeviceId ?? "unknown"));
 
         var sessionId = Guid.NewGuid().ToString("N");
         var result = new JellyfinAuthenticationResult

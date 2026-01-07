@@ -6,6 +6,7 @@ using Melodee.Common.Data;
 using Melodee.Common.Data.Models.Extensions;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services;
+using Melodee.Common.Utility;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -46,14 +47,23 @@ public class SessionsController(
             return JellyfinUnauthorized();
         }
 
+        var sanitizedUserId = LogSanitizer.Sanitize(user.Id.ToString());
+
+        var sanitizedUserId = LogSanitizer.Sanitize(user.Id.ToString());
+
+        var sanitizedUserId = LogSanitizer.Sanitize(user.Id.ToString());
+
         if (request == null || string.IsNullOrWhiteSpace(request.ItemId))
         {
             return NoContent();
         }
 
+        var sanitizedItemId = LogSanitizer.Sanitize(request.ItemId);
+
         if (!TryParseJellyfinGuid(request.ItemId, out var apiKey))
         {
-            logger.LogWarning("JellyfinPlaybackStart InvalidItemId={ItemId} UserId={UserId}", request.ItemId, user.Id);
+            logger.LogWarning("JellyfinPlaybackStart InvalidItemId={ItemId} UserId={UserId}",
+                sanitizedItemId, sanitizedUserId);
             return NoContent();
         }
 
@@ -72,11 +82,12 @@ public class SessionsController(
             await scrobbleService.InitializeAsync(config, cancellationToken);
             await scrobbleService.NowPlaying(userInfo, apiKey, positionSeconds, clientName, userAgent, ipAddress, cancellationToken);
             logger.LogInformation("JellyfinPlaybackStart UserId={UserId} ItemId={ItemId} Position={Position}",
-                user.Id, request.ItemId, positionSeconds);
+                sanitizedUserId, sanitizedItemId, positionSeconds);
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "JellyfinPlaybackStart failed UserId={UserId} ItemId={ItemId}", user.Id, request.ItemId);
+            logger.LogWarning(ex, "JellyfinPlaybackStart failed UserId={UserId} ItemId={ItemId}",
+                sanitizedUserId, sanitizedItemId);
         }
 
         return NoContent();
@@ -106,6 +117,9 @@ public class SessionsController(
             return NoContent();
         }
 
+        var sanitizedUserId = LogSanitizer.Sanitize(user.Id.ToString());
+        var sanitizedItemId = LogSanitizer.Sanitize(request.ItemId);
+
         double? positionSeconds = request.PositionTicks.HasValue
             ? request.PositionTicks.Value / 10_000_000.0
             : null;
@@ -121,11 +135,12 @@ public class SessionsController(
             await scrobbleService.InitializeAsync(config, cancellationToken);
             await scrobbleService.NowPlaying(userInfo, apiKey, positionSeconds, clientName, userAgent, ipAddress, cancellationToken);
             logger.LogDebug("JellyfinPlaybackProgress UserId={UserId} ItemId={ItemId} Position={Position} IsPaused={IsPaused}",
-                user.Id, request.ItemId, positionSeconds, request.IsPaused);
+                sanitizedUserId, sanitizedItemId, positionSeconds, request.IsPaused);
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "JellyfinPlaybackProgress failed UserId={UserId} ItemId={ItemId}", user.Id, request.ItemId);
+            logger.LogWarning(ex, "JellyfinPlaybackProgress failed UserId={UserId} ItemId={ItemId}",
+                sanitizedUserId, sanitizedItemId);
         }
 
         return NoContent();
@@ -150,9 +165,13 @@ public class SessionsController(
             return NoContent();
         }
 
+        var sanitizedUserId = LogSanitizer.Sanitize(user.Id.ToString());
+        var sanitizedItemId = LogSanitizer.Sanitize(request.ItemId);
+
         if (!TryParseJellyfinGuid(request.ItemId, out var apiKey))
         {
-            logger.LogWarning("JellyfinPlaybackStopped InvalidItemId={ItemId} UserId={UserId}", request.ItemId, user.Id);
+            logger.LogWarning("JellyfinPlaybackStopped InvalidItemId={ItemId} UserId={UserId}",
+                sanitizedItemId, sanitizedUserId);
             return NoContent();
         }
 
@@ -170,17 +189,18 @@ public class SessionsController(
                 await scrobbleService.InitializeAsync(config, cancellationToken);
                 await scrobbleService.Scrobble(userInfo, apiKey, false, clientName, userAgent, ipAddress, cancellationToken);
                 logger.LogInformation("JellyfinPlaybackStopped UserId={UserId} ItemId={ItemId} PositionTicks={PositionTicks}",
-                    user.Id, request.ItemId, request.PositionTicks);
+                    sanitizedUserId, sanitizedItemId, request.PositionTicks);
             }
             else
             {
                 logger.LogDebug("JellyfinPlaybackStopped skipped scrobble (failed) UserId={UserId} ItemId={ItemId}",
-                    user.Id, request.ItemId);
+                    sanitizedUserId, sanitizedItemId);
             }
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "JellyfinPlaybackStopped failed UserId={UserId} ItemId={ItemId}", user.Id, request.ItemId);
+            logger.LogWarning(ex, "JellyfinPlaybackStopped failed UserId={UserId} ItemId={ItemId}",
+                sanitizedUserId, sanitizedItemId);
         }
 
         return NoContent();
@@ -200,7 +220,9 @@ public class SessionsController(
             return JellyfinUnauthorized();
         }
 
-        logger.LogDebug("JellyfinPlaybackPing UserId={UserId} PlaySessionId={PlaySessionId}", user.Id, playSessionId);
+        var sanitizedUserId = LogSanitizer.Sanitize(user.Id.ToString());
+        logger.LogDebug("JellyfinPlaybackPing UserId={UserId} PlaySessionId={PlaySessionId}",
+            sanitizedUserId, LogSanitizer.Sanitize(playSessionId));
         return NoContent();
     }
 
@@ -312,11 +334,13 @@ public class SessionsController(
             return JellyfinUnauthorized();
         }
 
+        var sanitizedUserId = LogSanitizer.Sanitize(user.Id.ToString());
+
         // For now, just acknowledge the capabilities - we don't need to store them
         // since Melodee doesn't support remote control features yet
         logger.LogDebug("JellyfinCapabilities UserId={UserId} PlayableMediaTypes={MediaTypes} SupportsMediaControl={SupportsMediaControl}",
-            user.Id,
-            request?.PlayableMediaTypes != null ? string.Join(",", request.PlayableMediaTypes) : "none",
+            sanitizedUserId,
+            LogSanitizer.Sanitize(request?.PlayableMediaTypes != null ? string.Join(",", request.PlayableMediaTypes) : "none"),
             request?.SupportsMediaControl);
 
         return NoContent();
@@ -339,8 +363,12 @@ public class SessionsController(
             return JellyfinUnauthorized();
         }
 
+        var sanitizedUserId = LogSanitizer.Sanitize(user.Id.ToString());
+
         logger.LogDebug("JellyfinCapabilities UserId={UserId} PlayableMediaTypes={MediaTypes} SupportsMediaControl={SupportsMediaControl}",
-            user.Id, playableMediaTypes ?? "none", supportsMediaControl);
+            sanitizedUserId,
+            LogSanitizer.Sanitize(playableMediaTypes ?? "none"),
+            supportsMediaControl);
 
         return NoContent();
     }
@@ -478,4 +506,3 @@ public record JellyfinClientCapabilitiesRequest
     [JsonPropertyName("IconUrl")]
     public string? IconUrl { get; init; }
 }
-
