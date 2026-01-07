@@ -1,0 +1,125 @@
+@using Melodee.Mql.Models
+@using Melodee.Mql.Constants
+@using Microsoft.AspNetCore.Components.Rendering
+
+<div class="field-table-container">
+    <table class="field-table" style="width: 100%; border-collapse: collapse; font-size: 0.875rem;">
+        <thead>
+            <tr style="background: var(--rz-base-200);">
+                <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid var(--rz-base-300);">Field</th>
+                <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid var(--rz-base-300);">Type</th>
+                <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid var(--rz-base-300);">Example</th>
+                <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid var(--rz-base-300);">Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var field in GetFieldsForEntity(EntityType))
+            {
+                <tr style="border-bottom: 1px solid var(--rz-base-300);">
+                    <td style="padding: 0.5rem 0.75rem;">
+                        <code>@field.Name</code>
+                        @if (field.Aliases?.Length > 0)
+                        {
+                            <text> (@string.Join(", ", field.Aliases))</text>
+                        }
+                    </td>
+                    <td style="padding: 0.5rem 0.75rem;">@GetTypeLabel(field.Type)</td>
+                    <td style="padding: 0.5rem 0.75rem;"><code>@field.Example</code></td>
+                    <td style="padding: 0.5rem 0.75rem; color: var(--rz-text-secondary-color);">@field.Description</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    [Parameter]
+    public string EntityType { get; set; } = string.Empty;
+
+    private static IEnumerable<FieldInfo> GetFieldsForEntity(string entityType)
+    {
+        return entityType.ToLowerInvariant() switch
+        {
+            "songs" => new[]
+            {
+                new FieldInfo("title", MqlFieldType.String, "title:Time", "Song title"),
+                new FieldInfo("artist", MqlFieldType.String, "artist:Beatles", "Artist name (via album)"),
+                new FieldInfo("album", MqlFieldType.String, "album:Abbey Road", "Album name"),
+                new FieldInfo("genre", MqlFieldType.ArrayString, "genre:Rock", "Genre tags"),
+                new FieldInfo("mood", MqlFieldType.ArrayString, "mood:Chill", "Mood tags"),
+                new FieldInfo("year", MqlFieldType.Number, "year:>=1970", "Release year"),
+                new FieldInfo("duration", MqlFieldType.Number, "duration:<300", "Duration in seconds"),
+                new FieldInfo("bpm", MqlFieldType.Number, "bpm:>120", "Beats per minute"),
+                new FieldInfo("rating", MqlFieldType.Number, "rating:>=4", "User rating (requires login)"),
+                new FieldInfo("plays", MqlFieldType.Number, "plays:>10", "Play count (requires login)"),
+                new FieldInfo("starred", MqlFieldType.Boolean, "starred:true", "Starred status (requires login)"),
+                new FieldInfo("starredAt", MqlFieldType.Date, "starredAt:last-week", "When starred (requires login)"),
+                new FieldInfo("lastPlayedAt", MqlFieldType.Date, "lastPlayedAt:-30d", "Last played (requires login)"),
+                new FieldInfo("added", MqlFieldType.Date, "added:last-month", "When added to library"),
+            },
+            "albums" => new[]
+            {
+                new FieldInfo("album", MqlFieldType.String, "album:Abbey Road", "Album name"),
+                new FieldInfo("name", MqlFieldType.String, "name:Abbey Road", "Album name (alias)"),
+                new FieldInfo("artist", MqlFieldType.String, "artist:Beatles", "Artist name"),
+                new FieldInfo("year", MqlFieldType.Number, "year:1970", "Release year"),
+                new FieldInfo("duration", MqlFieldType.Number, "duration:<3600", "Total duration in seconds"),
+                new FieldInfo("genre", MqlFieldType.ArrayString, "genre:Rock", "Genre tags"),
+                new FieldInfo("mood", MqlFieldType.ArrayString, "mood:Energetic", "Mood tags"),
+                new FieldInfo("rating", MqlFieldType.Number, "rating:>=4", "User rating (requires login)"),
+                new FieldInfo("plays", MqlFieldType.Number, "plays:>0", "Play count (requires login)"),
+                new FieldInfo("starred", MqlFieldType.Boolean, "starred:true", "Starred (requires login)"),
+                new FieldInfo("starredAt", MqlFieldType.Date, "starredAt:last-year", "When starred (requires login)"),
+                new FieldInfo("added", MqlFieldType.Date, "added:-6months", "When added to library"),
+            },
+            "artists" => new[]
+            {
+                new FieldInfo("artist", MqlFieldType.String, "artist:Pink Floyd", "Artist name"),
+                new FieldInfo("name", MqlFieldType.String, "name:Miles Davis", "Artist name (alias)"),
+                new FieldInfo("rating", MqlFieldType.Number, "rating:>=4", "User rating (requires login)"),
+                new FieldInfo("starred", MqlFieldType.Boolean, "starred:true", "Starred (requires login)"),
+                new FieldInfo("starredAt", MqlFieldType.Date, "starredAt:last-year", "When starred (requires login)"),
+                new FieldInfo("plays", MqlFieldType.Number, "plays:>0", "Total play count"),
+                new FieldInfo("added", MqlFieldType.Date, "added:last-year", "When added to library"),
+            },
+            _ => Array.Empty<FieldInfo>()
+        };
+    }
+
+    private static string GetTypeLabel(MqlFieldType type)
+    {
+        return type switch
+        {
+            MqlFieldType.String => "Text",
+            MqlFieldType.Number => "Number",
+            MqlFieldType.Boolean => "Boolean",
+            MqlFieldType.Date => "Date",
+            MqlFieldType.ArrayString => "String Array",
+            _ => type.ToString()
+        };
+    }
+
+    private sealed record FieldInfo(
+        string Name,
+        MqlFieldType Type,
+        string Example,
+        string Description,
+        string[]? Aliases = null);
+}
+
+<style>
+    .field-table-container {
+        overflow-x: auto;
+    }
+
+    .field-table th,
+    .field-table td {
+        padding: 0.75rem;
+        text-align: left;
+        border-bottom: 1px solid var(--rz-base-300);
+    }
+
+    .field-table tbody tr:hover {
+        background: var(--rz-base-200);
+    }
+</style>

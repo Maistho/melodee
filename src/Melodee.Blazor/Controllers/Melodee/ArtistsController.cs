@@ -297,12 +297,12 @@ public sealed class ArtistsController(
                 string.Empty,
                 a.Name,
                 a.NameNormalized,
-                null,
+                string.Empty,
                 a.Directory,
                 a.AlbumCount,
                 a.SongCount,
                 a.CreatedAt,
-                null,
+                string.Empty,
                 null
             )
             {

@@ -138,7 +138,7 @@ public class MqlCacheTests
     }
 
     [Fact]
-    public void CustomTtl_ExpiresEntry()
+    public async Task CustomTtl_ExpiresEntry()
     {
         var cache = new MqlExpressionCache(defaultTtl: TimeSpan.FromMilliseconds(100));
         var compiler = new MqlCachedCompiler(cache);
@@ -147,7 +147,7 @@ public class MqlCacheTests
         var stats1 = cache.GetStatistics();
         stats1.EntryCount.Should().Be(1);
 
-        Thread.Sleep(150);
+        await Task.Delay(150);
 
         var expression2 = CompileWithCache(compiler, "artist:Pink Floyd");
         var stats2 = cache.GetStatistics();
@@ -201,7 +201,7 @@ public class MqlCacheTests
     }
 
     [Fact]
-    public void ThreadSafety_MultipleThreadsCanAccessCache()
+    public async Task ThreadSafety_MultipleThreadsCanAccessCache()
     {
         var cache = new MqlExpressionCache();
         var compiler = new MqlCachedCompiler(cache);
@@ -216,7 +216,7 @@ public class MqlCacheTests
             }))
             .ToArray();
 
-        Task.WaitAll(tasks);
+        await Task.WhenAll(tasks);
 
         var stats = cache.GetStatistics();
         stats.EntryCount.Should().Be(10);

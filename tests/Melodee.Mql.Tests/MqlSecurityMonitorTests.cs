@@ -64,7 +64,7 @@ public class MqlSecurityMonitorTests
     }
 
     [Fact]
-    public void GetMetrics_ReturnsCorrectMetrics()
+    public async Task GetMetrics_ReturnsCorrectMetrics()
     {
         var monitor = new MqlSecurityMonitor(100);
 
@@ -72,7 +72,7 @@ public class MqlSecurityMonitorTests
         monitor.LogViolation("MQL_REGEX_DANGEROUS", "ReDoS pattern", "test2");
         monitor.LogWarning("Warning message", "test3");
 
-        var metrics = monitor.GetMetricsAsync(TimeSpan.FromMinutes(5)).Result;
+        var metrics = await monitor.GetMetricsAsync(TimeSpan.FromMinutes(5));
 
         metrics.TotalViolations.Should().Be(2);
         metrics.SqlInjectionAttempts.Should().Be(1);
@@ -80,17 +80,17 @@ public class MqlSecurityMonitorTests
     }
 
     [Fact]
-    public void GetMetrics_FiltersByTimeWindow()
+    public async Task GetMetrics_FiltersByTimeWindow()
     {
         var monitor = new MqlSecurityMonitor(100);
 
         monitor.LogViolation("TEST", "Old violation", "test1");
 
-        Thread.Sleep(100);
+        await Task.Delay(100);
 
         monitor.LogViolation("TEST", "New violation", "test2");
 
-        var metrics = monitor.GetMetricsAsync(TimeSpan.FromMilliseconds(50)).Result;
+        var metrics = await monitor.GetMetricsAsync(TimeSpan.FromMilliseconds(50));
 
         metrics.TotalViolations.Should().Be(1);
         metrics.TotalViolations.Should().Be(1);
@@ -136,7 +136,7 @@ public class MqlSecurityMonitorTests
     }
 
     [Fact]
-    public void MultipleViolations_CountCorrectly()
+    public async Task MultipleViolations_CountCorrectly()
     {
         var monitor = new MqlSecurityMonitor(100);
 
@@ -144,7 +144,7 @@ public class MqlSecurityMonitorTests
         monitor.LogViolation("PATTERN1", "Test 2", "q2");
         monitor.LogViolation("PATTERN2", "Test 3", "q3");
 
-        var metrics = monitor.GetMetricsAsync(TimeSpan.FromMinutes(5)).Result;
+        var metrics = await monitor.GetMetricsAsync(TimeSpan.FromMinutes(5));
 
         metrics.TotalViolations.Should().Be(3);
     }
