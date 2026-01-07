@@ -6,10 +6,12 @@ namespace Melodee.Mql.Models;
 /// <param name="ErrorCode">The error code identifying the type of error.</param>
 /// <param name="Message">User-friendly error message.</param>
 /// <param name="Position">Optional position information for the error.</param>
+/// <param name="Suggestions">Optional suggestions for fixing the error.</param>
 public record MqlError(
     string ErrorCode,
     string Message,
-    MqlErrorPosition? Position)
+    MqlErrorPosition? Position,
+    string[]? Suggestions = null)
 {
 }
 

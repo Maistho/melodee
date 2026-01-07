@@ -267,7 +267,8 @@ public sealed class MqlValidator : IMqlValidator
                     errors.Add(new MqlError(
                         MqlErrorCodes.MqlUnknownField,
                         $"Unknown field '{potentialField}' for entity type '{entityType}'.{suggestionText}",
-                        CalculatePosition(query, colonIndex - potentialField.Length)));
+                        CalculatePosition(query, colonIndex - potentialField.Length),
+                        suggestions));
 
                     var nearestField = suggestions.Length > 0 ? suggestions[0] : null;
                     if (nearestField != null)
