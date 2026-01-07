@@ -194,7 +194,8 @@ public class FileCustomBlockServiceTests : IDisposable
 
         // Assert
         Assert.True(result.Found);
-        Assert.Contains("<h1>Login Top</h1>", result.Content.ToString());
+        Assert.Contains("<h1", result.Content.ToString());
+        Assert.Contains("Login Top</h1>", result.Content.ToString());
     }
 
     [Fact]
@@ -213,7 +214,8 @@ public class FileCustomBlockServiceTests : IDisposable
 
         // Assert
         Assert.True(result.Found);
-        Assert.Contains("<h1>Auth Login Top</h1>", result.Content.ToString());
+        Assert.Contains("<h1", result.Content.ToString());
+        Assert.Contains("Auth Login Top</h1>", result.Content.ToString());
     }
 
     [Fact]
@@ -262,7 +264,9 @@ This is **bold** and this is *italic*.
 
         // Assert
         Assert.True(result.Found);
-        Assert.Contains("<h1>Welcome</h1>", result.Content.ToString());
+        // Markdig advanced extensions add id attributes to headings
+        Assert.Contains("<h1", result.Content.ToString());
+        Assert.Contains("Welcome</h1>", result.Content.ToString());
         Assert.Contains("<strong>bold</strong>", result.Content.ToString());
         Assert.Contains("<em>italic</em>", result.Content.ToString());
         Assert.Contains("<ul>", result.Content.ToString());
@@ -291,9 +295,11 @@ Safe **markdown** here.");
 
         // Assert
         Assert.True(result.Found);
-        // HTML tags are stripped or escaped by DisableHtml() and sanitization
+        // Dangerous tags and attributes are removed by sanitization
         Assert.DoesNotContain("<script>", result.Content.ToString());
-        Assert.DoesNotContain("<div", result.Content.ToString());
+        Assert.DoesNotContain("onclick", result.Content.ToString());
+        // Safe HTML elements like div are allowed
+        Assert.Contains("<div>Click me</div>", result.Content.ToString());
         // Verify markdown was properly rendered
         Assert.Contains("<strong>markdown</strong>", result.Content.ToString());
     }
@@ -377,6 +383,36 @@ Safe **markdown** here.");
         Assert.Contains("<code>", result.Content.ToString());
         Assert.Contains("<hr", result.Content.ToString());
         Assert.Contains("<blockquote>", result.Content.ToString());
+    }
+
+    [Fact]
+    public async Task GetBlockAsync_AllowsSafeHtmlDivs()
+    {
+        // Arrange
+        var loginDir = Path.Combine(GetCustomBlocksDirectory(), "login");
+        Directory.CreateDirectory(loginDir);
+        var filePath = Path.Combine(loginDir, "top.md");
+
+        File.WriteAllText(filePath, @"# Welcome
+
+<div style=""background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%); border-left: 4px solid #667eea; padding: 1.5rem;"">
+
+Demo credentials here
+
+</div>");
+
+        var service = CreateService();
+
+        // Act
+        var result = await service.GetAsync("login.top");
+
+        // Assert
+        Assert.True(result.Found);
+        Assert.Contains("<div", result.Content.ToString());
+        Assert.Contains("style=", result.Content.ToString());
+        Assert.Contains("</div>", result.Content.ToString());
+        // Dangerous inline scripts should still be removed
+        Assert.DoesNotContain("javascript:", result.Content.ToString());
     }
 
     #endregion
@@ -504,7 +540,9 @@ For support, contact [help@example.com](mailto:help@example.com).");
 
         // Assert
         Assert.True(result.Found);
-        Assert.Contains("<h2>Important Notice</h2>", result.Content.ToString());
+        // Markdig advanced extensions add id attributes to headings
+        Assert.Contains("<h2", result.Content.ToString());
+        Assert.Contains("Important Notice</h2>", result.Content.ToString());
         Assert.Contains("HTTPS", result.Content.ToString());
         Assert.Contains("mailto:help@example.com", result.Content.ToString());
         Assert.DoesNotContain("<script>", result.Content.ToString());
@@ -531,7 +569,9 @@ For support, contact [help@example.com](mailto:help@example.com).");
 
         // Assert
         Assert.True(result.Found);
-        Assert.Contains("<h3>Need Help?</h3>", result.Content.ToString());
+        // Markdig advanced extensions add id attributes to headings
+        Assert.Contains("<h3", result.Content.ToString());
+        Assert.Contains("Need Help?</h3>", result.Content.ToString());
         Assert.Contains("/account/forgot-password", result.Content.ToString());
         Assert.Contains("https://support.example.com", result.Content.ToString());
         Assert.Contains("<em>Powered by Melodee</em>", result.Content.ToString());

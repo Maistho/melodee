@@ -1015,12 +1015,13 @@ def check_existing_containers(runtime: str, project_root: Path) -> tuple[bool, s
             timeout=10
         )
 
+        # Check if compose ps worked
         if result.returncode == 0 and result.stdout.strip():
             # Check if there are any melodee containers
             if "melodee" in result.stdout.lower():
                 return True, result.stdout
 
-        # Fallback: Check using runtime directly
+        # Fallback: Check using runtime directly (more reliable)
         result = subprocess.run(
             [runtime, "ps", "--filter", "name=melodee", "--format", "table {{.ID}}\t{{.Image}}\t{{.Status}}\t{{.Names}}"],
             capture_output=True,
@@ -1028,8 +1029,13 @@ def check_existing_containers(runtime: str, project_root: Path) -> tuple[bool, s
             timeout=10
         )
 
-        if result.returncode == 0 and result.stdout.strip() and "melodee" in result.stdout.lower():
-            return True, result.stdout
+        if result.returncode == 0 and result.stdout.strip():
+            # Look for any line with melodee in it (case insensitive)
+            lines = result.stdout.strip().split('\n')
+            # Skip header line if present
+            for line in lines[1:] if len(lines) > 1 else lines:
+                if line.strip() and "melodee" in line.lower():
+                    return True, result.stdout
 
         return False, ""
     except (subprocess.TimeoutExpired, OSError):

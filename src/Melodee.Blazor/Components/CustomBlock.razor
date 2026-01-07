@@ -1,11 +1,12 @@
 @using Melodee.Blazor.Services.CustomBlocks
+@using Microsoft.AspNetCore.Components
 @inject ICustomBlockService CustomBlockService
 @inject ILogger<CustomBlock> Logger
 
 @if (_result?.Found == true && !string.IsNullOrEmpty(_wrapperClass))
 {
     <div class="@_wrapperClass @CssClass">
-        @_result.Content
+        @((MarkupString)_result.Content)
     </div>
 }
 

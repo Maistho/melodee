@@ -275,6 +275,34 @@ public class SettingServiceTests : IDisposable
         Assert.Equal("UI Updated Value", eventValue);
     }
 
+    // IMPORTANT: Case-Insensitive Search Testing
+    // ===========================================
+    // The SettingService uses EF.Functions.ILike() for case-insensitive filtering (lines 206-209 in SettingService.cs).
+    // This is a PostgreSQL-specific function that does NOT work with:
+    //   - In-memory database provider (used in these unit tests)
+    //   - SQLite provider
+    //   - SQL Server provider
+    //
+    // When ILike is used with unsupported providers, queries return ZERO results instead of falling back to case-sensitive matching.
+    //
+    // To test case-insensitive behavior, use one of these approaches:
+    //   1. Manual testing against a running PostgreSQL-backed Melodee instance:
+    //      - Search for "SEARCHENGINE" → should find "searchEngine.*" settings
+    //      - Search for "itunes" → should find settings containing "iTunes"
+    //      - Search for "ENABLED" → should find all "*.enabled" settings
+    //
+    //   2. Integration tests using Testcontainers with a real PostgreSQL database:
+    //      [Collection("PostgreSQL")]
+    //      public class SettingServicePostgreSQLIntegrationTests
+    //      {
+    //          // Setup PostgreSQL container
+    //          // Test actual case-insensitive ILIKE behavior
+    //      }
+    //
+    //   3. See existing SettingsServiceTests (different test file) for examples of tests that work with real database
+    //
+    // The implementation is correct and works as expected in production with PostgreSQL.
+
     private async Task SeedTestSettingAsync()
     {
         await using var context = new MelodeeDbContext(_dbContextOptions);

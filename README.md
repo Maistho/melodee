@@ -10,7 +10,7 @@
   [![CodeQL](https://github.com/melodee-project/melodee/actions/workflows/codeql.yml/badge.svg)](https://github.com/melodee-project/melodee/actions/workflows/codeql.yml)
   [![Discord](https://img.shields.io/discord/1337921126210211943)](https://discord.gg/bfMnEUrvbp)
 
-  [Features](#features) • [Quick Start](#quick-start) • [Documentation](#documentation) • [Contributing](#contributing) • [Support](#support)
+  [🌐 Try Demo](https://demo.melodee.org) • [Features](#features) • [Quick Start](#quick-start) • [Documentation](#documentation) • [Contributing](#contributing) • [Support](#support)
 </div>
 
 ---
@@ -20,6 +20,36 @@
 Melodee is a comprehensive music management and streaming system built with .NET 10 and Blazor. It provides a complete solution for processing, organizing, and serving large music libraries through both RESTful and OpenSubsonic-compatible APIs.
 
 Designed with homelab enthusiasts in mind, Melodee runs efficiently on a wide range of hardware from single-board computers like Raspberry Pi to full server setups, making it perfect for self-hosted music streaming in home environments.
+
+## 🌐 Try the Demo
+
+Experience Melodee before installing! Our official demo server is available at:
+
+**🎧 [https://demo.melodee.org](https://demo.melodee.org)**
+
+### Quick Start
+
+- **Login**: Username `demo` / Password `Mel0deeR0cks!`
+- **Or Register**: Create a free non-admin account (no email verification required)
+- **Reset Cycle**: All user data is purged every 24 hours at midnight UTC
+
+### What You Can Test
+
+- ✅ **Browse & Stream**: Pre-loaded sample music (permissively licensed)
+- ✅ **Create Playlists**: Build and share custom playlists
+- ✅ **Search**: Test full-text search across artists, albums, and songs
+- ✅ **Multiple Clients**: Compatible with Subsonic, OpenSubsonic, and Jellyfin clients
+- ✅ **API Explorer**: Interactive API documentation at `/scalar/v1`
+- ✅ **User Requests**: Submit requests for missing albums or songs
+
+### Demo Limitations
+
+- ❌ **No File Uploads**: Upload functionality is disabled for security
+- ❌ **No Admin Access**: Admin features are not available to demo users
+- ⚠️ **Limited Concurrent Users**: Maximum 100 simultaneous connections
+- 🔄 **24-Hour Reset**: All user accounts and data are deleted daily
+
+> **Note**: The demo server is for testing only. For production use, please [install Melodee](docs/pages/setup/installation.md) on your own infrastructure.
 
 ### Key Capabilities
 
@@ -81,6 +111,12 @@ Albums that don't pass validation (missing tags, artwork issues, etc.) stay in s
 - Delete albums that shouldn't be imported
 
 ## 🚀 Quick Start
+
+### 🌐 Try the Demo First!
+
+Before installing, test drive Melodee on our demo server:
+
+👉 **[https://demo.melodee.org](https://demo.melodee.org)** (Username: `demo`, Password: `Mel0deeR0cks!`)
 
 ### Prerequisites
 

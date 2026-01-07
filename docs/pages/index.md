@@ -13,6 +13,16 @@ Think of it as a blend of:
 - A tag & artwork editor (e.g. [Mp3Tag](https://www.mp3tag.de/en/))
 - An automated metadata enrichment + library quality pipeline
 
+## Demo Server
+Experience Melodee before installing! Our official demo server is available at:
+
+**🎧 [https://demo.melodee.org](https://demo.melodee.org)**
+
+- **Username**: `demo`
+- **Password**: `melodee`
+
+This server has sample permissively licensed music files for testing purposes. The demo server resets periodically, and data resets every 24 hours.
+
 ## End‑to‑End Flow
 
 1. Inbound scan detects new files in the inbound volume.

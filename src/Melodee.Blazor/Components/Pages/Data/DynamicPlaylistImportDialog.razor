@@ -1,0 +1,250 @@
+@inherits MelodeeComponentBase
+@using System.Text.Json
+@using Melodee.Common.Models
+@using Melodee.Common.Constants
+
+@inject LibraryService LibraryService
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+@inject IJSRuntime JS
+@inject ILogger Logger
+
+<RadzenStack Gap="1rem">
+    <RadzenAlert AlertStyle="AlertStyle.Info" Shade="Shade.Lighter" AllowClose="false">
+        <RadzenText TextStyle="TextStyle.Subtitle2">@L("DynamicPlaylistImportDialog.JSONImportSchema")</RadzenText>
+        <RadzenText TextStyle="TextStyle.Body2">
+            <pre style="font-size: 0.75rem; margin: 0.5rem 0;">
+{
+  "id": "00000000-0000-0000-0000-000000000000",  // Required - Use new GUID
+  "isEnabled": true,                              // Required
+  "name": "Recently Added",                       // Required
+  "comment": "Songs added in the last 30 days",   // Required
+  "isPublic": true,                               // Required
+  "forUserId": null,                              // Optional - User GUID or null
+  "songSelectionWhere": "s.\"CreatedAt\" > NOW() - INTERVAL '30 days'",  // Required - SQL WHERE clause
+  "songSelectionOrder": "s.\"CreatedAt\" DESC",   // Optional - SQL ORDER BY clause
+  "songLimit": 100                                // Optional - Max songs to return
+}
+            </pre>
+        </RadzenText>
+        <RadzenText TextStyle="TextStyle.Body2">
+            <strong>@L("Common.Note"):</strong> @L("DynamicPlaylistImportDialog.SQLNotes")
+        </RadzenText>
+    </RadzenAlert>
+
+    <RadzenFormField Text="@L("DynamicPlaylistImportDialog.JSONContent")" Variant="Variant.Outlined" Style="width: 100%;">
+        <RadzenTextArea @bind-Value="@_jsonContent" Rows="12" Style="width: 100%; font-family: monospace;" Placeholder="@L("DynamicPlaylistImportDialog.PasteJSON")"/>
+    </RadzenFormField>
+
+    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+        <InputFile OnChange="@OnFileSelected" accept=".json" style="display: none;" id="jsonFileInput"/>
+        <RadzenButton Text="@L("DynamicPlaylistImportDialog.UploadFile")" Icon="upload_file" ButtonStyle="ButtonStyle.Secondary" Click="@TriggerFileInput"/>
+        <RadzenText TextStyle="TextStyle.Caption" Style="align-self: center;">@_fileName</RadzenText>
+    </RadzenStack>
+
+    @if (_validationErrors.Any())
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Shade="Shade.Lighter" AllowClose="false">
+            <RadzenText TextStyle="TextStyle.Subtitle2">@L("DynamicPlaylistImportDialog.ValidationErrors")</RadzenText>
+            <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                @foreach (var error in _validationErrors)
+                {
+                    <li><RadzenText TextStyle="TextStyle.Body2">@error</RadzenText></li>
+                }
+            </ul>
+        </RadzenAlert>
+    }
+
+    @if (_previewPlaylist != null)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Success" Shade="Shade.Lighter" AllowClose="false">
+            <RadzenText TextStyle="TextStyle.Subtitle2">@L("Actions.Preview")</RadzenText>
+            <RadzenText TextStyle="TextStyle.Body2">
+                <strong>@L("Common.Name"):</strong> @_previewPlaylist.Name<br/>
+                <strong>@L("Common.Description"):</strong> @_previewPlaylist.Comment<br/>
+                <strong>@L("DynamicPlaylistImportDialog.IsEnabled"):</strong> @(_previewPlaylist.IsEnabled ? L("Common.Yes") : L("Common.No"))<br/>
+                <strong>@L("DynamicPlaylistImportDialog.IsPublic"):</strong> @(_previewPlaylist.IsPublic ? L("Common.Yes") : L("Common.No"))<br/>
+                @if (_previewPlaylist.ForUserId.HasValue)
+                {
+                    <strong>@L("DynamicPlaylistImportDialog.ForUser"):</strong> @_previewPlaylist.ForUserId.Value<br/>
+                }
+                @if (_previewPlaylist.SongLimit.HasValue)
+                {
+                    <strong>@L("DynamicPlaylistImportDialog.SongLimit"):</strong> @_previewPlaylist.SongLimit.Value<br/>
+                }
+                <strong>@L("DynamicPlaylistImportDialog.SQLWhere"):</strong> <code style="font-size: 0.85rem;">@_previewPlaylist.SongSelectionWhere</code><br/>
+                @if (!string.IsNullOrWhiteSpace(_previewPlaylist.SongSelectionOrder))
+                {
+                    <strong>@L("DynamicPlaylistImportDialog.SQLOrderBy"):</strong> <code style="font-size: 0.85rem;">@_previewPlaylist.SongSelectionOrder</code><br/>
+                }
+            </RadzenText>
+        </RadzenAlert>
+    }
+
+    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End">
+        <RadzenButton Text="@L("Actions.Cancel")" ButtonStyle="ButtonStyle.Light" Click="@Cancel"/>
+        <RadzenButton Text="@L("Actions.Validate")" Icon="check_circle" ButtonStyle="ButtonStyle.Secondary" Click="@ValidateJson" Disabled="@string.IsNullOrWhiteSpace(_jsonContent)"/>
+        <RadzenButton Text="@L("Actions.Import")" Icon="download" ButtonStyle="ButtonStyle.Primary" Click="@ImportPlaylist" Disabled="@(_previewPlaylist == null)"/>
+    </RadzenStack>
+</RadzenStack>
+
+@code {
+    string _jsonContent = string.Empty;
+    string _fileName = string.Empty;
+    List<string> _validationErrors = [];
+    DynamicPlaylist? _previewPlaylist;
+
+    async Task TriggerFileInput()
+    {
+        await JS.InvokeVoidAsync("eval", "document.getElementById('jsonFileInput').click()");
+    }
+
+    async Task OnFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file != null)
+        {
+            _fileName = file.Name;
+            using var stream = file.OpenReadStream(maxAllowedSize: 1024 * 1024);
+            using var reader = new StreamReader(stream);
+            _jsonContent = await reader.ReadToEndAsync();
+            _validationErrors.Clear();
+            _previewPlaylist = null;
+        }
+    }
+
+    void ValidateJson()
+    {
+        _validationErrors.Clear();
+        _previewPlaylist = null;
+
+        if (string.IsNullOrWhiteSpace(_jsonContent))
+        {
+            _validationErrors.Add(L("DynamicPlaylistImportDialog.Error.JsonRequired"));
+            return;
+        }
+
+        try
+        {
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var playlist = JsonSerializer.Deserialize<DynamicPlaylist>(_jsonContent, options);
+
+            if (playlist == null)
+            {
+                _validationErrors.Add(L("DynamicPlaylistImportDialog.Error.ParseFailed"));
+                return;
+            }
+
+            if (playlist.Id == Guid.Empty)
+            {
+                _validationErrors.Add(L("DynamicPlaylistImportDialog.Error.IdRequired"));
+            }
+
+            if (string.IsNullOrWhiteSpace(playlist.Name))
+            {
+                _validationErrors.Add(L("DynamicPlaylistImportDialog.Error.NameRequired"));
+            }
+
+            if (string.IsNullOrWhiteSpace(playlist.Comment))
+            {
+                _validationErrors.Add(L("DynamicPlaylistImportDialog.Error.CommentRequired"));
+            }
+
+            if (string.IsNullOrWhiteSpace(playlist.SongSelectionWhere))
+            {
+                _validationErrors.Add(L("DynamicPlaylistImportDialog.Error.WhereRequired"));
+            }
+
+            if (!_validationErrors.Any())
+            {
+                _previewPlaylist = playlist;
+            }
+        }
+        catch (JsonException ex)
+        {
+            _validationErrors.Add(string.Format(L("DynamicPlaylistImportDialog.Error.InvalidJson"), ex.Message));
+        }
+    }
+
+    async Task ImportPlaylist()
+    {
+        if (_previewPlaylist == null) return;
+
+        try
+        {
+            var playlistLibrary = await LibraryService.GetPlaylistLibraryAsync();
+            
+            if (!playlistLibrary.IsSuccess || playlistLibrary.Data == null)
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = L("DynamicPlaylistImportDialog.ImportFailed"),
+                    Detail = L("DynamicPlaylistImportDialog.Error.NoPlaylistLibrary"),
+                    Duration = 5000
+                });
+                return;
+            }
+
+            var dynamicPlaylistsPath = Path.Combine(playlistLibrary.Data.Path, "dynamic");
+            
+            if (!Directory.Exists(dynamicPlaylistsPath))
+            {
+                Directory.CreateDirectory(dynamicPlaylistsPath);
+                Logger.Information("Created dynamic playlists directory: {Path}", dynamicPlaylistsPath);
+            }
+
+            var fileName = $"{_previewPlaylist.Id}.json";
+            var filePath = Path.Combine(dynamicPlaylistsPath, fileName);
+
+            if (File.Exists(filePath))
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Warning,
+                    Summary = L("DynamicPlaylistImportDialog.FileExists"),
+                    Detail = string.Format(L("DynamicPlaylistImportDialog.FileExistsDetail"), fileName),
+                    Duration = 5000
+                });
+                return;
+            }
+
+            var jsonOptions = new JsonSerializerOptions 
+            { 
+                WriteIndented = true,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            };
+            var json = JsonSerializer.Serialize(_previewPlaylist, jsonOptions);
+            
+            await File.WriteAllTextAsync(filePath, json);
+            
+            Logger.Information("Imported dynamic playlist {Name} to {FilePath}", _previewPlaylist.Name, filePath);
+
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = L("DynamicPlaylistImportDialog.ImportSuccess"),
+                Detail = string.Format(L("DynamicPlaylistImportDialog.ImportSuccessDetail"), _previewPlaylist.Name, fileName),
+                Duration = 5000
+            });
+
+            DialogService.Close(true);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Error importing dynamic playlist {Name}", _previewPlaylist?.Name);
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = L("DynamicPlaylistImportDialog.ImportFailed"),
+                Detail = ex.Message,
+                Duration = 5000
+            });
+        }
+    }
+
+    void Cancel()
+    {
+        DialogService.Close(false);
+    }
+}

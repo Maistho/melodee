@@ -833,6 +833,24 @@
   <data name="Common.Modified" xml:space="preserve">
     <value>Modifié</value>
   </data>
+  <data name="Common.CreatedAt" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Created At</value>
+  </data>
+  <data name="Common.LastUpdatedAt" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Last Updated At</value>
+  </data>
+  <data name="Common.Never" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Never</value>
+  </data>
+  <data name="Common.None" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] None</value>
+  </data>
+  <data name="Common.Yes" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Yes</value>
+  </data>
+  <data name="Common.No" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No</value>
+  </data>
   <data name="Common.Name" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Name</value>
   </data>
@@ -4518,5 +4536,149 @@
   </data>
   <data name="UploadAlbum.Processing" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Processing</value>
+  </data>
+  <data name="DynamicPlaylistImportDialog.JSONImportSchema" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] JSON Import Schema</value>
+  </data>
+  <data name="DynamicPlaylistImportDialog.JSONContent" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] JSON Content</value>
+  </data>
+  <data name="DynamicPlaylistImportDialog.PasteJSON" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Paste or upload dynamic playlist JSON</value>
+  </data>
+  <data name="DynamicPlaylistImportDialog.UploadFile" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Upload File</value>
+  </data>
+  <data name="DynamicPlaylistImportDialog.ValidationErrors" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Validation Errors</value>
+  </data>
+  <data name="DynamicPlaylistImportDialog.SQLNotes" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] The songSelectionWhere and songSelectionOrder fields use PostgreSQL SQL syntax. Use table alias 's' for songs table.</value>
+  </data>
+  <data name="DynamicPlaylistImportDialog.IsEnabled" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Enabled</value>
+  </data>
+  <data name="DynamicPlaylistImportDialog.IsPublic" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Public</value>
+  </data>
+  <data name="DynamicPlaylistImportDialog.ForUser" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] For User</value>
+  </data>
+  <data name="DynamicPlaylistImportDialog.SongLimit" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Song Limit</value>
+  </data>
+  <data name="DynamicPlaylistImportDialog.SQLWhere" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] SQL WHERE Clause</value>
+  </data>
+  <data name="DynamicPlaylistImportDialog.SQLOrderBy" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] SQL ORDER BY Clause</value>
+  </data>
+  <data name="DynamicPlaylistImportDialog.Error.JsonRequired" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] JSON content is required</value>
+  </data>
+  <data name="DynamicPlaylistImportDialog.Error.ParseFailed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to parse JSON</value>
+  </data>
+  <data name="DynamicPlaylistImportDialog.Error.IdRequired" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Playlist ID is required and must be a valid GUID</value>
+  </data>
+  <data name="DynamicPlaylistImportDialog.Error.NameRequired" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Playlist name is required</value>
+  </data>
+  <data name="DynamicPlaylistImportDialog.Error.CommentRequired" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Playlist description (comment) is required</value>
+  </data>
+  <data name="DynamicPlaylistImportDialog.Error.WhereRequired" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] SQL WHERE clause is required</value>
+  </data>
+  <data name="DynamicPlaylistImportDialog.Error.InvalidJson" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Invalid JSON: {0}</value>
+  </data>
+  <data name="DynamicPlaylistImportDialog.ImportFailed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Import Failed</value>
+  </data>
+  <data name="DynamicPlaylistImportDialog.Error.NoPlaylistLibrary" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Playlist library not found</value>
+  </data>
+  <data name="DynamicPlaylistImportDialog.FileExists" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] File Already Exists</value>
+  </data>
+  <data name="DynamicPlaylistImportDialog.FileExistsDetail" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] A dynamic playlist with the same ID already exists: {0}</value>
+  </data>
+  <data name="DynamicPlaylistImportDialog.ImportSuccess" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Import Successful</value>
+  </data>
+  <data name="DynamicPlaylistImportDialog.ImportSuccessDetail" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Dynamic playlist '{0}' has been imported as {1}</value>
+  </data>
+  <data name="Actions.ImportDynamicPlaylist" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Import Dynamic Playlist</value>
+  </data>
+  <data name="SettingDetail.BasicInformation" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Basic Information</value>
+  </data>
+  <data name="SettingDetail.SetViaEnvironmentVariable" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] This setting is currently overridden by an environment variable</value>
+  </data>
+  <data name="SettingDetail.Title" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Setting Details</value>
+  </data>
+  <data name="SettingDetail.AuditInformation" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Audit &amp; System Information</value>
+  </data>
+  <data name="SettingDetail.Category" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Category</value>
+  </data>
+  <data name="SettingDetail.IsLocked" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Is Locked</value>
+  </data>
+  <data name="SettingDetail.ApiKey" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] API Key</value>
+  </data>
+  <data name="SettingCategory.General" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] General</value>
+  </data>
+  <data name="SettingCategory.Api" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] API</value>
+  </data>
+  <data name="SettingCategory.Conversion" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Conversion</value>
+  </data>
+  <data name="SettingCategory.Formatting" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Formatting</value>
+  </data>
+  <data name="SettingCategory.Imaging" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Imaging</value>
+  </data>
+  <data name="SettingCategory.Magic" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Magic</value>
+  </data>
+  <data name="SettingCategory.MediaConvertor" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Media Converter</value>
+  </data>
+  <data name="SettingCategory.PluginProcess" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Plugin Process</value>
+  </data>
+  <data name="SettingCategory.Scripting" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Scripting</value>
+  </data>
+  <data name="SettingCategory.SearchEngine" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Search Engine</value>
+  </data>
+  <data name="SettingCategory.Scrobbling" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Scrobbling</value>
+  </data>
+  <data name="SettingCategory.System" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] System</value>
+  </data>
+  <data name="SettingCategory.Transcoding" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Transcoding</value>
+  </data>
+  <data name="SettingCategory.Validation" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Validation</value>
+  </data>
+  <data name="SettingCategory.Jobs" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Jobs</value>
   </data>
 </root>

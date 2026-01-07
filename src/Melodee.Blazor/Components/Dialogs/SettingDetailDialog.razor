@@ -1,0 +1,170 @@
+@using Melodee.Blazor.Components.Pages
+@using Melodee.Blazor.Components.Shared
+@using Melodee.Common.Configuration
+@using Melodee.Common.Data.Models
+@using Melodee.Common.Extensions
+@using Melodee.Common.Enums
+
+@inherits MelodeeComponentBase
+
+<RadzenStack Gap="1.5rem">
+    <RadzenFieldset>
+        <HeaderTemplate>
+            <span class="d-inline-flex align-items-center align-middle">
+                <RadzenIcon Icon="settings" class="me-2"/>
+                <b>@L("SettingDetail.BasicInformation")</b>
+            </span>
+        </HeaderTemplate>
+        <ChildContent>
+            <RadzenStack Gap="0.5rem">
+                <RadzenRow>
+                    <RadzenColumn Size="12">
+                        <RadzenFormField Text="@L("AdminSettings.Key")" Variant="@Variant.Outlined">
+                            <RadzenTextBox Value="@Setting.Key" ReadOnly="true" Style="width: 100%; font-family: 'Courier New', monospace;"/>
+                        </RadzenFormField>
+                    </RadzenColumn>
+                </RadzenRow>
+                
+                <RadzenRow>
+                    <RadzenColumn Size="12">
+                        <RadzenFormField Text="@L("AdminSettings.Value")" Variant="@Variant.Outlined">
+                            <RadzenTextArea Value="@Setting.Value" ReadOnly="true" Style="width: 100%; font-family: 'Courier New', monospace;" Rows="3"/>
+                        </RadzenFormField>
+                    </RadzenColumn>
+                </RadzenRow>
+                
+                @if (!string.IsNullOrWhiteSpace(Setting.Comment))
+                {
+                    <RadzenRow>
+                        <RadzenColumn Size="12">
+                            <RadzenFormField Text="@L("AdminSettings.Comment")" Variant="@Variant.Outlined">
+                                <RadzenTextArea Value="@Setting.Comment" ReadOnly="true" Style="width: 100%" Rows="2"/>
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+                }
+                
+                @if (!string.IsNullOrWhiteSpace(Setting.Description))
+                {
+                    <RadzenRow>
+                        <RadzenColumn Size="12">
+                            <RadzenFormField Text="@L("Common.Description")" Variant="@Variant.Outlined">
+                                <RadzenTextArea Value="@Setting.Description" ReadOnly="true" Style="width: 100%" Rows="3"/>
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+                }
+            </RadzenStack>
+        </ChildContent>
+    </RadzenFieldset>
+    
+    <RadzenFieldset>
+        <HeaderTemplate>
+            <span class="d-inline-flex align-items-center align-middle">
+                <RadzenIcon Icon="history" class="me-2"/>
+                <b>@L("SettingDetail.AuditInformation")</b>
+            </span>
+        </HeaderTemplate>
+        <ChildContent>
+            <RadzenStack Gap="0.5rem">
+                <RadzenRow>
+                    <RadzenColumn Size="6">
+                        <RadzenFormField Text="@L("Common.CreatedAt")" Variant="@Variant.Outlined">
+                            <RadzenTextBox Value="@FormatDate(Setting.CreatedAt.ToDateTimeUtc())" ReadOnly="true" Style="width: 100%"/>
+                        </RadzenFormField>
+                    </RadzenColumn>
+                    <RadzenColumn Size="6">
+                        <RadzenFormField Text="@L("Common.LastUpdatedAt")" Variant="@Variant.Outlined">
+                            <RadzenTextBox Value="@(Setting.LastUpdatedAt.HasValue ? FormatDate(Setting.LastUpdatedAt.Value.ToDateTimeUtc()) : L("Common.Never"))" ReadOnly="true" Style="width: 100%"/>
+                        </RadzenFormField>
+                    </RadzenColumn>
+                </RadzenRow>
+                
+                <RadzenRow>
+                    <RadzenColumn Size="6">
+                        <RadzenFormField Text="@L("SettingDetail.Category")" Variant="@Variant.Outlined">
+                            <RadzenTextBox Value="@GetCategoryName()" ReadOnly="true" Style="width: 100%"/>
+                        </RadzenFormField>
+                    </RadzenColumn>
+                    <RadzenColumn Size="6">
+                        <RadzenFormField Text="@L("SettingDetail.IsLocked")" Variant="@Variant.Outlined" Style="display: flex; align-items: center;">
+                            <ChildContent>
+                                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Style="padding: 0.5rem;">
+                                    <RadzenCheckBox Value="@Setting.IsLocked" ReadOnly="true" Disabled="true"/>
+                                    <span>@(Setting.IsLocked ? L("Common.Yes") : L("Common.No"))</span>
+                                </RadzenStack>
+                            </ChildContent>
+                        </RadzenFormField>
+                    </RadzenColumn>
+                </RadzenRow>
+                
+                <RadzenRow>
+                    <RadzenColumn Size="12">
+                        <RadzenFormField Text="@L("SettingDetail.ApiKey")" Variant="@Variant.Outlined">
+                            <RadzenTextBox Value="@Setting.ApiKey.ToString()" ReadOnly="true" Style="width: 100%; font-family: 'Courier New', monospace; font-size: 0.9rem;"/>
+                        </RadzenFormField>
+                    </RadzenColumn>
+                </RadzenRow>
+                
+                @if (!string.IsNullOrWhiteSpace(Setting.Tags))
+                {
+                    <RadzenRow>
+                        <RadzenColumn Size="12">
+                            <RadzenFormField Text="@L("Common.Tags")" Variant="@Variant.Outlined">
+                                <RadzenTextBox Value="@Setting.Tags" ReadOnly="true" Style="width: 100%"/>
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+                }
+                
+                @if (!string.IsNullOrWhiteSpace(Setting.Notes))
+                {
+                    <RadzenRow>
+                        <RadzenColumn Size="12">
+                            <RadzenFormField Text="@L("Common.Notes")" Variant="@Variant.Outlined">
+                                <RadzenTextArea Value="@Setting.Notes" ReadOnly="true" Style="width: 100%" Rows="3"/>
+                            </RadzenFormField>
+                        </RadzenColumn>
+                    </RadzenRow>
+                }
+                
+                @if (IsSetViaEnvironmentVariable)
+                {
+                    <RadzenAlert AlertStyle="AlertStyle.Info" Variant="Variant.Flat" Shade="Shade.Lighter">
+                        <RadzenIcon Icon="info"/> @L("SettingDetail.SetViaEnvironmentVariable")
+                    </RadzenAlert>
+                }
+            </RadzenStack>
+        </ChildContent>
+    </RadzenFieldset>
+    
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+        <RadzenButton Text="@L("Actions.Close")" Click="@Close" ButtonStyle="ButtonStyle.Light" />
+    </RadzenStack>
+</RadzenStack>
+
+@code {
+    [Parameter]
+    public Setting Setting { get; set; } = null!;
+    
+    [CascadingParameter]
+    public DialogService DialogService { get; set; } = null!;
+    
+    private bool IsSetViaEnvironmentVariable => MelodeeConfigurationFactory.IsSetViaEnvironmentVariable(Setting.Key);
+    
+    private string GetCategoryName()
+    {
+        if (!Setting.Category.HasValue)
+        {
+            return L("Common.None");
+        }
+
+        var categoryKey = $"SettingCategory.{Setting.Category.Value}";
+        return L(categoryKey);
+    }
+    
+    private void Close()
+    {
+        DialogService.Close();
+    }
+}

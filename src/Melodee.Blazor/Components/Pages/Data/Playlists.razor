@@ -32,6 +32,10 @@
                 AlignItems="AlignItems.Center"
                 JustifyContent="JustifyContent.End"
                 Gap="0.5rem">
+                <RadzenButton Icon="upload" Text="@L("Actions.ImportDynamicPlaylist")"
+                              Click="@ImportDynamicPlaylistButtonClick"
+                              Size="ButtonSize.Small"
+                              ButtonStyle="ButtonStyle.Primary"/>
                 <RadzenButton Icon="delete" Disabled="!_selectedPlaylists.Any()" Text="@L("Actions.Delete")"
                               Click="@DeleteSelectedButtonClick"
                               Size="ButtonSize.Small"
@@ -195,6 +199,19 @@
         NavigationManager.NavigateTo($"/data/playlistedit/{Guid.Empty}");
     }
 
+
+    private async Task ImportDynamicPlaylistButtonClick()
+    {
+        var result = await DialogService.OpenAsync<DynamicPlaylistImportDialog>(
+            L("Actions.ImportDynamicPlaylist"),
+            null,
+            new DialogOptions { Width = "800px", Height = "600px", Resizable = true, Draggable = true });
+
+        if (result is true)
+        {
+            await _grid.RefreshDataAsync();
+        }
+    }
 
     private async Task DeleteSelectedButtonClick()
     {

@@ -3,15 +3,17 @@ using Markdig;
 namespace Melodee.Blazor.Services.CustomBlocks;
 
 /// <summary>
-/// Service for rendering Markdown to HTML with security constraints.
+/// Service for rendering Markdown to HTML.
+/// HTML elements in markdown are allowed and will be passed through,
+/// but must be sanitized separately using HtmlSanitizerService.
 /// </summary>
 public interface IMarkdownRenderer
 {
     /// <summary>
-    /// Renders Markdown to HTML with raw HTML disabled.
+    /// Renders Markdown to HTML. Raw HTML in the markdown will be preserved.
     /// </summary>
     /// <param name="markdown">Markdown source</param>
-    /// <returns>HTML output (unsanitized - must be sanitized separately)</returns>
+    /// <returns>HTML output (unsanitized - must be sanitized separately with HtmlSanitizerService)</returns>
     string RenderToHtml(string markdown);
 }
 
@@ -26,7 +28,7 @@ public sealed class MarkdownRenderer : IMarkdownRenderer
     {
         _pipeline = new MarkdownPipelineBuilder()
             .UseAdvancedExtensions()
-            .DisableHtml() // Critical: Prevent raw HTML from being passed through
+            .UseSoftlineBreakAsHardlineBreak()
             .Build();
     }
 

@@ -504,27 +504,27 @@ public sealed class DoctorService(
             await using var db = await dbContextFactory.CreateDbContextAsync(cancellationToken);
             var settingsDict = await db.Settings
                 .Where(s => s.Key.Contains(".enabled"))
-                .ToDictionaryAsync(s => s.Key, s => s.Value, cancellationToken);
+                .ToDictionaryAsync(s => s.Key, s => s.Value, StringComparer.OrdinalIgnoreCase, cancellationToken);
 
             var serviceDefinitions = new (string Category, string Name, string SettingKey)[]
             {
-                ("Search Engine", "Brave", "searchengine.brave.enabled"),
-                ("Search Engine", "Deezer", "searchengine.deezer.enabled"),
-                ("Search Engine", "iTunes", "searchengine.itunes.enabled"),
-                ("Search Engine", "Last.fm", "searchengine.lastfm.enabled"),
-                ("Search Engine", "MusicBrainz", "searchengine.musicbrainz.enabled"),
-                ("Search Engine", "Spotify", "searchengine.spotify.enabled"),
-                ("Search Engine", "Metal API", "searchengine.metalapi.enabled"),
-                ("Scrobbling", "Scrobbling", "scrobbling.enabled"),
-                ("Scrobbling", "Last.fm", "scrobbling.lastfm.enabled"),
-                ("Processing", "Conversion", "conversion.enabled"),
-                ("Processing", "Magic", "magic.enabled"),
-                ("Processing", "Scripting", "scripting.enabled"),
-                ("Plugins", "CueSheet", "plugin.cuesheet.enabled"),
-                ("Plugins", "M3U", "plugin.m3u.enabled"),
-                ("Plugins", "NFO", "plugin.nfo.enabled"),
-                ("Plugins", "Simple File Verification", "plugin.sfv.enabled"),
-                ("System", "Email", "email.enabled"),
+                ("Search Engine", "Brave", SettingRegistry.SearchEngineBraveEnabled),
+                ("Search Engine", "Deezer", SettingRegistry.SearchEngineDeezerEnabled),
+                ("Search Engine", "iTunes", SettingRegistry.SearchEngineITunesEnabled),
+                ("Search Engine", "Last.fm", SettingRegistry.SearchEngineLastFmEnabled),
+                ("Search Engine", "MusicBrainz", SettingRegistry.SearchEngineMusicBrainzEnabled),
+                ("Search Engine", "Spotify", SettingRegistry.SearchEngineSpotifyEnabled),
+                ("Search Engine", "Metal API", SettingRegistry.SearchEngineMetalApiEnabled),
+                ("Scrobbling", "Scrobbling", SettingRegistry.ScrobblingEnabled),
+                ("Scrobbling", "Last.fm", SettingRegistry.ScrobblingLastFmEnabled),
+                ("Processing", "Conversion", SettingRegistry.ConversionEnabled),
+                ("Processing", "Magic", SettingRegistry.MagicEnabled),
+                ("Processing", "Scripting", SettingRegistry.ScriptingEnabled),
+                ("Plugins", "CueSheet", SettingRegistry.PluginEnabledCueSheet),
+                ("Plugins", "M3U", SettingRegistry.PluginEnabledM3u),
+                ("Plugins", "NFO", SettingRegistry.PluginEnabledNfo),
+                ("Plugins", "Simple File Verification", SettingRegistry.PluginEnabledSimpleFileVerification),
+                ("System", "Email", SettingRegistry.EmailEnabled),
             };
 
             foreach (var (category, name, settingKey) in serviceDefinitions)
@@ -804,7 +804,7 @@ public sealed class DoctorService(
 
             var settings = await db.Settings
                 .Where(s => relevantKeys.Contains(s.Key))
-                .ToDictionaryAsync(s => s.Key, s => s.Value, cancellationToken);
+                .ToDictionaryAsync(s => s.Key, s => s.Value, StringComparer.OrdinalIgnoreCase, cancellationToken);
 
             var spotifyEnabled = settings.TryGetValue(SettingRegistry.SearchEngineSpotifyEnabled, out var se)
                 && bool.TryParse(se, out var seb) && seb;
@@ -1038,7 +1038,7 @@ public sealed class DoctorService(
 
             var settings = await db.Settings
                 .Where(s => allKeys.Contains(s.Key))
-                .ToDictionaryAsync(s => s.Key, s => s.Value, cancellationToken);
+                .ToDictionaryAsync(s => s.Key, s => s.Value, StringComparer.OrdinalIgnoreCase, cancellationToken);
 
             foreach (var (name, enabledKey, apiKeyKey, secretKey) in searchEngineDefinitions)
             {
@@ -1114,7 +1114,7 @@ public sealed class DoctorService(
 
             var settings = await db.Settings
                 .Where(s => relevantKeys.Contains(s.Key))
-                .ToDictionaryAsync(s => s.Key, s => s.Value, cancellationToken);
+                .ToDictionaryAsync(s => s.Key, s => s.Value, StringComparer.OrdinalIgnoreCase, cancellationToken);
 
             var emailEnabled = settings.TryGetValue(SettingRegistry.EmailEnabled, out var ee)
                 && bool.TryParse(ee, out var eeb) && eeb;
@@ -1153,7 +1153,7 @@ public sealed class DoctorService(
 
             var settings = await db.Settings
                 .Where(s => relevantKeys.Contains(s.Key))
-                .ToDictionaryAsync(s => s.Key, s => s.Value, cancellationToken);
+                .ToDictionaryAsync(s => s.Key, s => s.Value, StringComparer.OrdinalIgnoreCase, cancellationToken);
 
             var emailEnabled = settings.TryGetValue(SettingRegistry.EmailEnabled, out var ee)
                 && bool.TryParse(ee, out var eeb) && eeb;
