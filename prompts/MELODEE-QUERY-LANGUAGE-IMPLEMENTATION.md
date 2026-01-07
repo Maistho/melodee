@@ -1113,125 +1113,38 @@ Phase 17 (after 9-13)
 
 ## Coding Agent Prompt Template
 
-Use this template when delegating a phase to a coding agent:
-
 ```
-## Task: Implement MQL Phase {N} - {Phase Name}
+Implement MQL Phase {N}: {Phase Name}
 
-### Context
-You are implementing Phase {N} of the Melodee Query Language (MQL) feature. 
+Read these files first:
+- prompts/MELODEE-QUERY-LANGUAGE.md - Full spec
+- prompts/MELODEE-QUERY-LANGUAGE-IMPLEMENTATION.md - Phase {N} details
+- .github/instructions/csharp.instructions.md - C# standards
+- .github/instructions/testing.instructions.md - Test conventions
 
-**REQUIRED READING - Read these files BEFORE starting implementation:**
-1. `prompts/MELODEE-QUERY-LANGUAGE.md` - Full MQL specification
-2. `prompts/MELODEE-QUERY-LANGUAGE-IMPLEMENTATION.md` - Implementation plan (Phase {N} details)
-3. `.github/instructions/csharp.instructions.md` - C# coding standards
-4. `.github/instructions/testing.instructions.md` - Testing guidelines
-5. `.github/instructions/dotnet-architecture-good-practices.instructions.md` - Architecture patterns
-
-### Phase {N} Objective
-{Copy the Objective from the phase details}
-
-### Deliverables
-{Copy the Deliverables list from the phase details}
-
-### Acceptance Criteria
-{Copy the Acceptance Criteria checkboxes from the phase details}
-
-### Implementation Requirements
-
-1. **Follow project conventions:**
-   - Use existing code patterns from `src/Melodee.Common/` and `src/Melodee.Services/`
-   - Match naming conventions in existing codebase
-   - Use dependency injection patterns already established
-
-2. **Testing requirements:**
-   - Write unit tests for all public methods
-   - Follow test naming: `MethodName_Condition_ExpectedResult`
-   - Place tests in `tests/Melodee.Mql.Tests/` mirroring source structure
-   - Achieve coverage targets specified in Phase 15
-
-3. **Documentation:**
-   - Add XML documentation to all public APIs
-   - Update any affected existing documentation
-
-4. **Verification steps:**
-   - Run `dotnet build` - must pass with no errors
-   - Run `dotnet test --filter "Mql"` - all tests must pass
-   - Verify no regressions in existing tests
-
-### Dependencies
-{List any phases that must be complete first, if applicable}
-
-### Output
-When complete:
-1. List all files created/modified
-2. Confirm all acceptance criteria met
-3. Report test results
-4. Note any deviations from the plan with justification
+Follow patterns in src/Melodee.Common/ and src/Melodee.Services/.
+Write tests in tests/Melodee.Mql.Tests/.
+Run `dotnet build` and `dotnet test --filter "Mql"` before completing.
+Report: files changed, acceptance criteria status, test results.
 ```
 
-### Example Usage
-
-**Phase 2 Implementation Request:**
+**Example**
 
 ```
-## Task: Implement MQL Phase 2 - Tokenizer & Lexer
+Review document @prompts/MELODEE-QUERY-LANGUAGE-IMPLEMENTATION.md
 
-### Context
-You are implementing Phase 2 of the Melodee Query Language (MQL) feature.
+Implement MQL Phase 1: Core Infrastructure & Models
 
-**REQUIRED READING - Read these files BEFORE starting implementation:**
-1. `prompts/MELODEE-QUERY-LANGUAGE.md` - Full MQL specification
-2. `prompts/MELODEE-QUERY-LANGUAGE-IMPLEMENTATION.md` - Implementation plan (Phase 2 details)
-3. `.github/instructions/csharp.instructions.md` - C# coding standards
-4. `.github/instructions/testing.instructions.md` - Testing guidelines
-5. `.github/instructions/dotnet-architecture-good-practices.instructions.md` - Architecture patterns
+Read these files first:
+- prompts/MELODEE-QUERY-LANGUAGE.md - Full spec (§4.1-4.3 for syntax)
+- prompts/MELODEE-QUERY-LANGUAGE-IMPLEMENTATION.md - Phase 1 details
+- .github/instructions/csharp.instructions.md - C# standards
+- .github/instructions/testing.instructions.md - Test conventions
 
-### Phase 2 Objective
-Implement lexical analysis to convert raw query strings into a stream of tokens with position tracking.
-
-### Deliverables
-1. Tokenizer implementation (`MqlTokenizer.cs`)
-2. Token structure with position tracking
-3. Tokenization rules for all MQL syntax elements
-4. Edge case handling for malformed input
-5. Unit tests (`MqlTokenizerTests.cs`)
-
-### Acceptance Criteria
-- [ ] Tokenizer handles all syntax from spec §4.1-§4.3
-- [ ] Position tracking accurate for error reporting
-- [ ] 95%+ code coverage on tokenizer
-- [ ] Performance: tokenize 500-char query in <5ms
-
-### Implementation Requirements
-
-1. **Follow project conventions:**
-   - Use existing code patterns from `src/Melodee.Common/` and `src/Melodee.Services/`
-   - Match naming conventions in existing codebase
-   - Use dependency injection patterns already established
-
-2. **Testing requirements:**
-   - Write unit tests for all public methods
-   - Follow test naming: `MethodName_Condition_ExpectedResult`
-   - Place tests in `tests/Melodee.Mql.Tests/Unit/Parser/`
-   - Achieve 95%+ coverage on tokenizer
-
-3. **Documentation:**
-   - Add XML documentation to all public APIs
-
-4. **Verification steps:**
-   - Run `dotnet build` - must pass with no errors
-   - Run `dotnet test --filter "Tokenizer"` - all tests must pass
-
-### Dependencies
-Phase 1 (Core Infrastructure & Models) must be complete.
-
-### Output
-When complete:
-1. List all files created/modified
-2. Confirm all acceptance criteria met
-3. Report test results
-4. Note any deviations from the plan with justification
+Follow patterns in src/Melodee.Common/ and src/Melodee.Services/.
+Write tests in tests/Melodee.Mql.Tests/.
+Run `dotnet build` and `dotnet test --filter "Tokenizer"` before completing.
+Report: files changed, acceptance criteria status, test results.
 ```
 
 ---
