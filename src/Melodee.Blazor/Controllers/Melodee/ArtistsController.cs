@@ -1,9 +1,12 @@
+using System.Linq.Expressions;
 using Asp.Versioning;
 using Melodee.Blazor.Controllers.Melodee.Extensions;
 using Melodee.Blazor.Controllers.Melodee.Models;
 using Melodee.Blazor.Filters;
 using Melodee.Blazor.Services;
 using Melodee.Common.Configuration;
+using Melodee.Common.Data;
+using Melodee.Common.Data.Models;
 using Melodee.Common.Data.Models.Extensions;
 using Melodee.Common.Extensions;
 using Melodee.Common.Filtering;
@@ -11,11 +14,14 @@ using Melodee.Common.Models;
 using Melodee.Common.Models.Collection;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services;
+using Melodee.Mql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using Artist = Melodee.Blazor.Controllers.Melodee.Models.Artist;
+using Microsoft.EntityFrameworkCore;
+using ArtistEntity = Melodee.Common.Data.Models.Artist;
+using ArtistModel = Melodee.Blazor.Controllers.Melodee.Models.Artist;
 
 namespace Melodee.Blazor.Controllers.Melodee;
 
@@ -34,12 +40,16 @@ public sealed class ArtistsController(
     SongService songService,
     IBlacklistService blacklistService,
     IConfiguration configuration,
-    IMelodeeConfigurationFactory configurationFactory) : ControllerBase(
+    IMelodeeConfigurationFactory configurationFactory,
+    IDbContextFactory<MelodeeDbContext> contextFactory,
+    ILogger<ArtistsController> logger) : ControllerBase(
     etagRepository,
     serializer,
     configuration,
     configurationFactory)
 {
+    private IDbContextFactory<MelodeeDbContext> ContextFactory { get; } = contextFactory;
+    private ILogger<ArtistsController> Logger { get; } = logger;
     private static readonly HashSet<string> ArtistOrderFields =
     [
         nameof(ArtistDataInfo.Name),
@@ -77,7 +87,7 @@ public sealed class ArtistsController(
     /// </summary>
     [HttpGet]
     [Route("{id:guid}")]
-    [ProducesResponseType(typeof(Artist), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ArtistModel), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ArtistById(Guid id, CancellationToken cancellationToken = default)
@@ -112,12 +122,19 @@ public sealed class ArtistsController(
 
     /// <summary>
     /// List all artists with pagination and ordering.
+    /// Optional MQL query parameter for advanced filtering (e.g., q="artist:Beatles AND rating:>3").
     /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(ArtistPagedResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> ListAsync(string? q, short page, short pageSize, string? orderBy, string? orderDirection, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> ListAsync(
+        string? q,
+        short page,
+        short pageSize,
+        string? orderBy,
+        string? orderDirection,
+        CancellationToken cancellationToken = default)
     {
         if (!ApiRequest.IsAuthorized)
         {
@@ -145,18 +162,35 @@ public sealed class ArtistsController(
             return orderError!;
         }
 
-        var filterBy = new List<FilterOperatorInfo>();
-        if (q.Nullify() != null)
+        PagedResult<ArtistDataInfo> listResult;
+        if (!string.IsNullOrWhiteSpace(q))
         {
-            filterBy.Add(new FilterOperatorInfo(nameof(ArtistDataInfo.Name), FilterOperator.Contains, q!));
+            listResult = await SearchArtistsWithMqlAsync(
+                q,
+                new PagedRequest
+                {
+                    Page = validatedPage,
+                    PageSize = validatedPageSize,
+                    OrderBy = new Dictionary<string, string> { { validatedOrder.field, validatedOrder.direction } }
+                },
+                user.Id,
+                cancellationToken).ConfigureAwait(false);
         }
-        var listResult = await artistService.ListAsync(new PagedRequest
+        else
         {
-            Page = page,
-            PageSize = validatedPageSize,
-            FilterBy = filterBy.ToArray(),
-            OrderBy = new Dictionary<string, string> { { validatedOrder.field, validatedOrder.direction } }
-        }, cancellationToken).ConfigureAwait(false);
+            var filterBy = new List<FilterOperatorInfo>();
+            if (q.Nullify() != null)
+            {
+                filterBy.Add(new FilterOperatorInfo(nameof(ArtistDataInfo.Name), FilterOperator.Contains, q!));
+            }
+            listResult = await artistService.ListAsync(new PagedRequest
+            {
+                Page = validatedPage,
+                PageSize = validatedPageSize,
+                FilterBy = filterBy.ToArray(),
+                OrderBy = new Dictionary<string, string> { { validatedOrder.field, validatedOrder.direction } }
+            }, cancellationToken).ConfigureAwait(false);
+        }
 
         var baseUrl = await GetBaseUrlAsync(cancellationToken).ConfigureAwait(false);
 
@@ -170,6 +204,148 @@ public sealed class ArtistsController(
             ),
             data = listResult.Data.Select(x => x.ToArtistModel(baseUrl, user.ToUserModel(baseUrl))).ToArray()
         });
+    }
+
+    private async Task<PagedResult<ArtistDataInfo>> SearchArtistsWithMqlAsync(
+        string mqlQuery,
+        PagedRequest pagedRequest,
+        int userId,
+        CancellationToken cancellationToken)
+    {
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var validator = new MqlValidator();
+        var validationResult = validator.Validate(mqlQuery, "artists");
+
+        if (!validationResult.IsValid)
+        {
+            Logger.LogWarning("[ArtistsController] MQL validation failed for query: {Query}. Errors: {Errors}",
+                mqlQuery,
+                string.Join("; ", validationResult.Errors.Select(e => e.Message)));
+
+            return new PagedResult<ArtistDataInfo>
+            {
+                TotalCount = 0,
+                TotalPages = 0,
+                Data = []
+            };
+        }
+
+        var tokenizer = new MqlTokenizer();
+        var tokens = tokenizer.Tokenize(mqlQuery).ToList();
+
+        var parser = new MqlParser();
+        var parseResult = parser.Parse(tokens, "artists");
+
+        if (!parseResult.IsValid || parseResult.Ast == null)
+        {
+            Logger.LogWarning("[ArtistsController] MQL parse failed for query: {Query}. Errors: {Errors}",
+                mqlQuery,
+                string.Join("; ", parseResult.Errors.Select(e => e.Message)));
+
+            return new PagedResult<ArtistDataInfo>
+            {
+                TotalCount = 0,
+                TotalPages = 0,
+                Data = []
+            };
+        }
+
+        var baseQuery = scopedContext.Artists
+            .Include(a => a.UserArtists.Where(ua => ua.UserId == userId))
+            .AsNoTracking();
+
+        var compiler = new MqlArtistCompiler();
+        Expression<Func<ArtistEntity, bool>> predicate;
+        try
+        {
+            predicate = compiler.Compile(parseResult.Ast, userId);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "[ArtistsController] MQL compilation failed for query: {Query}", mqlQuery);
+            return new PagedResult<ArtistDataInfo>
+            {
+                TotalCount = 0,
+                TotalPages = 0,
+                Data = []
+            };
+        }
+
+        var filteredQuery = baseQuery.Where(predicate);
+
+        var artistCount = await filteredQuery.CountAsync(cancellationToken).ConfigureAwait(false);
+
+        ArtistDataInfo[] artists = [];
+
+        if (!pagedRequest.IsTotalCountOnlyRequest)
+        {
+            var orderedQuery = ApplyArtistOrdering(filteredQuery, pagedRequest);
+
+            var rawArtists = await orderedQuery
+                .Skip(pagedRequest.SkipValue)
+                .Take(pagedRequest.TakeValue)
+                .ToArrayAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            artists = rawArtists.Select(a => new ArtistDataInfo(
+                a.Id,
+                a.ApiKey,
+                a.IsLocked,
+                a.LibraryId,
+                string.Empty,
+                a.Name,
+                a.NameNormalized,
+                null,
+                a.Directory,
+                a.AlbumCount,
+                a.SongCount,
+                a.CreatedAt,
+                null,
+                null
+            )
+            {
+                UserStarred = a.UserArtists.FirstOrDefault()?.IsStarred ?? false,
+                UserRating = a.UserArtists.FirstOrDefault()?.Rating ?? 0,
+                LastPlayedAt = a.LastPlayedAt,
+                PlayedCount = a.PlayedCount,
+                CalculatedRating = a.CalculatedRating
+            }).ToArray();
+        }
+
+        stopwatch.Stop();
+        Logger.LogDebug("[ArtistsController] MQL search completed in {ElapsedMs}ms. Query: {Query}, Results: {Count}",
+            stopwatch.ElapsedMilliseconds,
+            mqlQuery,
+            artistCount);
+
+        return new PagedResult<ArtistDataInfo>
+        {
+            TotalCount = artistCount,
+            TotalPages = pagedRequest.TotalPages(artistCount),
+            Data = artists
+        };
+    }
+
+    private static IQueryable<ArtistEntity> ApplyArtistOrdering(IQueryable<ArtistEntity> query, PagedRequest pagedRequest)
+    {
+        var orderByClause = pagedRequest.OrderByValue("Name", PagedRequest.OrderAscDirection);
+        var isDescending = orderByClause.Contains("DESC", StringComparison.OrdinalIgnoreCase);
+        var fieldName = orderByClause.Split(' ')[0].Trim('"').ToLowerInvariant();
+
+        return fieldName switch
+        {
+            "name" or "namenormalized" => isDescending ? query.OrderByDescending(a => a.Name) : query.OrderBy(a => a.Name),
+            "albumcount" => isDescending ? query.OrderByDescending(a => a.AlbumCount) : query.OrderBy(a => a.AlbumCount),
+            "songcount" => isDescending ? query.OrderByDescending(a => a.SongCount) : query.OrderBy(a => a.SongCount),
+            "createdat" => isDescending ? query.OrderByDescending(a => a.CreatedAt) : query.OrderBy(a => a.CreatedAt),
+            "lastplayedat" => isDescending ? query.OrderByDescending(a => a.LastPlayedAt) : query.OrderBy(a => a.LastPlayedAt),
+            "playedcount" => isDescending ? query.OrderByDescending(a => a.PlayedCount) : query.OrderBy(a => a.PlayedCount),
+            "calculatedrating" => isDescending ? query.OrderByDescending(a => a.CalculatedRating) : query.OrderBy(a => a.CalculatedRating),
+            _ => query.OrderBy(a => a.Name)
+        };
     }
 
     /// <summary>

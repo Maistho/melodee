@@ -264,7 +264,7 @@ public class MqlCacheTests
         parseResult.IsValid.Should().BeTrue($"Query '{query}' should parse successfully");
         parseResult.Ast.Should().NotBeNull();
 
-        return compiler.Compile(parseResult.Ast!, userId);
+        return compiler.CompileSong(parseResult.Ast!, userId);
     }
 
     private static Artist CreateArtist(int id, string name, Library library)
