@@ -2,6 +2,7 @@ using FluentAssertions;
 using Melodee.Blazor.Controllers.Melodee;
 using Melodee.Blazor.Controllers.Melodee.Models;
 using Microsoft.AspNetCore.Mvc;
+using NodaTime;
 
 namespace Melodee.Tests.Blazor.Controllers.Melodee;
 
@@ -33,7 +34,7 @@ public class SmartPlaylistsControllerTests
     public void CreateSmartPlaylistAsync_HasHttpPostAttribute()
     {
         // Arrange
-        var method = typeof(SmartPlaylistsController).GetMethod(nameof(SmartPlaylistsController.CreateSmartPlaylistAsync));
+        var method = typeof(SmartPlaylistsController).GetMethod(nameof(SmartPlaylistsController.CreateAsync));
 
         // Assert
         method.Should().NotBeNull();
@@ -45,7 +46,7 @@ public class SmartPlaylistsControllerTests
     public void CreateSmartPlaylistAsync_HasCorrectParameters()
     {
         // Arrange
-        var method = typeof(SmartPlaylistsController).GetMethod(nameof(SmartPlaylistsController.CreateSmartPlaylistAsync));
+        var method = typeof(SmartPlaylistsController).GetMethod(nameof(SmartPlaylistsController.CreateAsync));
 
         // Assert
         method.Should().NotBeNull();
@@ -60,164 +61,209 @@ public class SmartPlaylistsControllerTests
     #region Model Tests
 
     [Fact]
-    public void SmartPlaylistRule_HasAllRequiredProperties()
+    public void SmartPlaylistDto_HasAllRequiredProperties()
     {
         // Arrange & Act
-        var rule = new SmartPlaylistRule(
-            "genre",
-            "equals",
-            "Rock");
+        var dto = new SmartPlaylistDto
+        {
+            ApiKey = Guid.NewGuid(),
+            Name = "Test Playlist",
+            MqlQuery = "genre = 'Rock'",
+            EntityType = "songs",
+            LastResultCount = 100,
+            IsPublic = true,
+            NormalizedQuery = "genre = 'rock'",
+            CreatedAt = Instant.FromDateTimeOffset(DateTimeOffset.UtcNow)
+        };
 
         // Assert
-        rule.Field.Should().Be("genre");
-        rule.Operator.Should().Be("equals");
-        rule.Value.Should().Be("Rock");
+        dto.ApiKey.Should().NotBe(Guid.Empty);
+        dto.Name.Should().Be("Test Playlist");
+        dto.MqlQuery.Should().Be("genre = 'Rock'");
+        dto.EntityType.Should().Be("songs");
+        dto.LastResultCount.Should().Be(100);
+        dto.IsPublic.Should().BeTrue();
     }
 
     [Fact]
     public void CreateSmartPlaylistRequest_HasAllRequiredProperties()
     {
-        // Arrange
-        var rules = new[]
+        // Arrange & Act
+        var request = new CreateSmartPlaylistRequest
         {
-            new SmartPlaylistRule("genre", "equals", "Rock"),
-            new SmartPlaylistRule("year", "greaterThan", 2020)
+            Name = "Rock Hits 2020+",
+            MqlQuery = "genre = 'Rock' && year >= 2020",
+            EntityType = "songs",
+            IsPublic = true
         };
-
-        // Act
-        var request = new CreateSmartPlaylistRequest(
-            "Rock Hits 2020+",
-            "Rock songs from 2020 onwards",
-            rules,
-            100,
-            true);
 
         // Assert
         request.Name.Should().Be("Rock Hits 2020+");
-        request.Description.Should().Be("Rock songs from 2020 onwards");
-        request.Rules.Should().HaveCount(2);
-        request.Limit.Should().Be(100);
-        request.AutoUpdate.Should().BeTrue();
+        request.MqlQuery.Should().Be("genre = 'Rock' && year >= 2020");
+        request.EntityType.Should().Be("songs");
+        request.IsPublic.Should().BeTrue();
     }
 
     [Fact]
-    public void SmartPlaylistResponse_HasAllRequiredProperties()
+    public void UpdateSmartPlaylistRequest_AllowsPartialUpdates()
     {
-        // Arrange
-        var rules = new[]
+        // Arrange & Act
+        var request = new UpdateSmartPlaylistRequest
         {
-            new SmartPlaylistRule("rating", "greaterThan", 4)
+            Name = "Updated Name",
+            MqlQuery = null,
+            EntityType = null,
+            IsPublic = false
         };
 
-        // Act
-        var response = new SmartPlaylistResponse(
+        // Assert
+        request.Name.Should().Be("Updated Name");
+        request.MqlQuery.Should().BeNull();
+        request.EntityType.Should().BeNull();
+        request.IsPublic.Should().BeFalse();
+    }
+
+    [Fact]
+    public void SmartPlaylistModel_HasAllRequiredProperties()
+    {
+        // Arrange
+        var owner = new User(
             Guid.NewGuid(),
-            "High Rated",
-            "Songs with 4+ stars",
-            rules,
-            150,
-            true);
+            "https://example.com/thumb.jpg",
+            "https://example.com/image.jpg",
+            "testuser",
+            "test@example.com",
+            false,
+            false,
+            Array.Empty<string>(),
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            "2024-01-01",
+            "2024-01-01"
+        );
 
-        // Assert
-        response.Id.Should().NotBeEmpty();
-        response.Name.Should().Be("High Rated");
-        response.Description.Should().Be("Songs with 4+ stars");
-        response.Rules.Should().HaveCount(1);
-        response.TrackCount.Should().Be(150);
-        response.AutoUpdate.Should().BeTrue();
-    }
-
-    [Theory]
-    [InlineData("genre")]
-    [InlineData("year")]
-    [InlineData("rating")]
-    [InlineData("playCount")]
-    [InlineData("bpm")]
-    [InlineData("duration")]
-    [InlineData("artist")]
-    [InlineData("album")]
-    public void SmartPlaylistRule_SupportsAllFields(string field)
-    {
-        // Arrange & Act
-        var rule = new SmartPlaylistRule(field, "equals", "value");
-
-        // Assert
-        rule.Field.Should().Be(field);
-    }
-
-    [Theory]
-    [InlineData("equals")]
-    [InlineData("contains")]
-    [InlineData("greaterThan")]
-    [InlineData("lessThan")]
-    [InlineData("between")]
-    public void SmartPlaylistRule_SupportsAllOperators(string op)
-    {
-        // Arrange & Act
-        var rule = new SmartPlaylistRule("genre", op, "value");
-
-        // Assert
-        rule.Operator.Should().Be(op);
-    }
-
-    [Fact]
-    public void SmartPlaylistRule_BetweenOperator_AcceptsRangeValue()
-    {
-        // Arrange & Act
-        var rangeValue = new { min = 2000, max = 2023 };
-        var rule = new SmartPlaylistRule("year", "between", rangeValue);
-
-        // Assert
-        rule.Value.Should().NotBeNull();
-    }
-
-    [Fact]
-    public void CreateSmartPlaylistRequest_AllowsNullDescription()
-    {
-        // Arrange & Act
-        var rules = new[] { new SmartPlaylistRule("genre", "equals", "Rock") };
-        var request = new CreateSmartPlaylistRequest(
-            "Rock Playlist",
-            null,
-            rules,
-            50,
-            false);
-
-        // Assert
-        request.Description.Should().BeNull();
-    }
-
-    [Fact]
-    public void CreateSmartPlaylistRequest_AllowsNullLimit()
-    {
-        // Arrange & Act
-        var rules = new[] { new SmartPlaylistRule("genre", "equals", "Rock") };
-        var request = new CreateSmartPlaylistRequest(
-            "Rock Playlist",
-            null,
-            rules,
-            null,
-            false);
-
-        // Assert
-        request.Limit.Should().BeNull();
-    }
-
-    [Fact]
-    public void SmartPlaylistResponse_AllowsNullDescription()
-    {
-        // Arrange & Act
-        var rules = new[] { new SmartPlaylistRule("genre", "equals", "Rock") };
-        var response = new SmartPlaylistResponse(
+        // Act
+        var model = new SmartPlaylistModel(
             Guid.NewGuid(),
             "Test Playlist",
-            null,
-            rules,
-            10,
-            true);
+            "genre = 'Rock'",
+            "songs",
+            100,
+            "2024-01-01",
+            true,
+            "genre = 'rock'",
+            "2024-01-01",
+            owner
+        );
 
         // Assert
-        response.Description.Should().BeNull();
+        model.ApiKey.Should().NotBe(Guid.Empty);
+        model.Name.Should().Be("Test Playlist");
+        model.MqlQuery.Should().Be("genre = 'Rock'");
+        model.EntityType.Should().Be("songs");
+        model.IsPublic.Should().BeTrue();
+    }
+
+    [Fact]
+    public void SmartPlaylistPagedResponse_HasAllRequiredProperties()
+    {
+        // Arrange
+        var meta = new PaginationMetadata(100, 10, 1, 10);
+        var data = Array.Empty<SmartPlaylistModel>();
+
+        // Act
+        var response = new SmartPlaylistPagedResponse(meta, data);
+
+        // Assert
+        response.Meta.Should().Be(meta);
+        response.Data.Should().BeEmpty();
+    }
+
+    [Theory]
+    [InlineData("songs")]
+    [InlineData("albums")]
+    [InlineData("artists")]
+    public void SmartPlaylistDto_SupportsAllEntityTypes(string entityType)
+    {
+        // Arrange & Act
+        var dto = new SmartPlaylistDto
+        {
+            ApiKey = Guid.NewGuid(),
+            Name = "Test",
+            MqlQuery = "test",
+            EntityType = entityType,
+            CreatedAt = Instant.FromDateTimeOffset(DateTimeOffset.UtcNow)
+        };
+
+        // Assert
+        dto.EntityType.Should().Be(entityType);
+    }
+
+    [Fact]
+    public void SmartPlaylistEvaluateResponse_HasAllRequiredProperties()
+    {
+        // Arrange
+        var owner = new User(
+            Guid.NewGuid(),
+            "https://example.com/thumb.jpg",
+            "https://example.com/image.jpg",
+            "testuser",
+            "test@example.com",
+            false,
+            false,
+            Array.Empty<string>(),
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            "2024-01-01",
+            "2024-01-01"
+        );
+        var playlist = new SmartPlaylistModel(
+            Guid.NewGuid(),
+            "Test",
+            "test",
+            "songs",
+            0,
+            "",
+            false,
+            null,
+            "",
+            owner
+        );
+        var meta = new PaginationMetadata(0, 10, 1, 0);
+        var data = Array.Empty<dynamic>();
+
+        // Act
+        var response = new SmartPlaylistEvaluateResponse(playlist, meta, data);
+
+        // Assert
+        response.Playlist.Should().Be(playlist);
+        response.Meta.Should().Be(meta);
+        response.Data.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void CreateSmartPlaylistRequest_DefaultIsPublicIsFalse()
+    {
+        // Arrange & Act
+        var request = new CreateSmartPlaylistRequest
+        {
+            Name = "Test",
+            MqlQuery = "test",
+            EntityType = "songs"
+        };
+
+        // Assert
+        request.IsPublic.Should().BeFalse();
     }
 
     #endregion

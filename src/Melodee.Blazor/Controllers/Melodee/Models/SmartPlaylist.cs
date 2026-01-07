@@ -1,32 +1,22 @@
-using System.Text.Json.Serialization;
-
 namespace Melodee.Blazor.Controllers.Melodee.Models;
 
-/// <summary>
-/// Smart playlist rule.
-/// </summary>
-public record SmartPlaylistRule(
-    string Field,
-    string Operator,
-    [property: JsonPropertyName("value")] object? Value);
-
-/// <summary>
-/// Request to create a smart playlist.
-/// </summary>
-public record CreateSmartPlaylistRequest(
+public sealed record SmartPlaylistModel(
+    Guid ApiKey,
     string Name,
-    string? Description,
-    SmartPlaylistRule[] Rules,
-    int? Limit,
-    bool AutoUpdate);
+    string MqlQuery,
+    string EntityType,
+    int LastResultCount,
+    string LastEvaluatedAt,
+    bool IsPublic,
+    string? NormalizedQuery,
+    string CreatedAt,
+    User Owner);
 
-/// <summary>
-/// Response for smart playlist creation.
-/// </summary>
-public record SmartPlaylistResponse(
-    Guid Id,
-    string Name,
-    string? Description,
-    SmartPlaylistRule[] Rules,
-    int TrackCount,
-    bool AutoUpdate);
+public sealed record SmartPlaylistPagedResponse(
+    PaginationMetadata Meta,
+    SmartPlaylistModel[] Data);
+
+public sealed record SmartPlaylistEvaluateResponse(
+    SmartPlaylistModel Playlist,
+    PaginationMetadata Meta,
+    dynamic[] Data);

@@ -83,6 +83,8 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
 
     public DbSet<JellyfinAccessToken> JellyfinAccessTokens { get; set; }
 
+    public DbSet<SmartPlaylist> SmartPlaylists { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Use a fixed timestamp for seed data to prevent migration churn
@@ -1487,6 +1489,19 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
         modelBuilder.Entity<JellyfinAccessToken>(jat =>
         {
             jat.HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<SmartPlaylist>(sp =>
+        {
+            sp.HasIndex(x => new { x.UserId, x.Name })
+                .IsUnique();
+
+            sp.HasIndex(x => x.IsPublic);
+
+            sp.HasOne(x => x.User)
                 .WithMany()
                 .HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.Cascade);

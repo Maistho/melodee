@@ -1,8 +1,10 @@
 using Asp.Versioning;
+using Melodee.Blazor.Controllers.Melodee.Extensions;
 using Melodee.Blazor.Controllers.Melodee.Models;
 using Melodee.Blazor.Filters;
+using Melodee.Blazor.Services;
 using Melodee.Common.Configuration;
-using Melodee.Common.Data.Models.Extensions;
+using Melodee.Common.Models;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -12,14 +14,6 @@ using Microsoft.AspNetCore.RateLimiting;
 
 namespace Melodee.Blazor.Controllers.Melodee;
 
-/// <summary>
-/// Create and manage smart playlists with dynamic rules.
-/// </summary>
-/// <remarks>
-/// Smart playlists automatically populate based on rules like genre, year, rating, play count, BPM, duration, artist, or album.
-/// Rules can use operators like equals, contains, greaterThan, lessThan, and between.
-/// Playlists can optionally auto-update as your library changes.
-/// </remarks>
 [ApiController]
 [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 [ServiceFilter(typeof(MelodeeApiAuthFilter))]
@@ -27,11 +21,11 @@ namespace Melodee.Blazor.Controllers.Melodee;
 [EnableRateLimiting("melodee-api")]
 [ApiVersion(1)]
 [Route("api/v{version:apiVersion}/playlists/smart")]
-public class SmartPlaylistsController(
+public sealed class SmartPlaylistsController(
     ISerializer serializer,
     EtagRepository etagRepository,
     UserService userService,
-    PlaylistService playlistService,
+    ISmartPlaylistService smartPlaylistService,
     IConfiguration configuration,
     IMelodeeConfigurationFactory configurationFactory) : ControllerBase(
     etagRepository,
@@ -39,25 +33,32 @@ public class SmartPlaylistsController(
     configuration,
     configurationFactory)
 {
-    private static readonly string[] ValidFields = ["genre", "year", "rating", "playCount", "bpm", "duration", "artist", "album"];
-    private static readonly string[] ValidOperators = ["equals", "contains", "greaterThan", "lessThan", "between"];
+    private static string GetErrorMessage(OperationResult<SmartPlaylistDto> result)
+    {
+        return result.Errors?.FirstOrDefault()?.Message ?? "An error occurred";
+    }
+
+    private static string GetErrorMessage(OperationResult<bool> result)
+    {
+        return result.Errors?.FirstOrDefault()?.Message ?? "An error occurred";
+    }
 
     /// <summary>
-    /// Create a smart playlist that automatically populates based on defined rules.
+    /// Create a new smart playlist with an MQL query.
     /// </summary>
-    /// <param name="request">Smart playlist configuration with name, description, rules, limit, and auto-update preference.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The created smart playlist with its ID and initial track count.</returns>
-    /// <remarks>
-    /// Rules define which tracks to include. Each rule has a field (genre, year, rating, playCount, bpm, duration, artist, album),
-    /// an operator (equals, contains, greaterThan, lessThan, between), and a value.
-    /// </remarks>
     [HttpPost]
-    [ProducesResponseType(typeof(SmartPlaylistResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(SmartPlaylistModel), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> CreateSmartPlaylistAsync([FromBody] CreateSmartPlaylistRequest request, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> CreateAsync(
+        [FromBody] Services.CreateSmartPlaylistRequest request,
+        CancellationToken cancellationToken = default)
     {
+        if (!ApiRequest.IsAuthorized)
+        {
+            return ApiUnauthorized();
+        }
+
         var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
         if (user == null)
         {
@@ -69,77 +70,274 @@ public class SmartPlaylistsController(
             return ApiUserLocked();
         }
 
-        // Validation
-        if (string.IsNullOrWhiteSpace(request.Name))
+        var result = await smartPlaylistService.CreateAsync(request, user.Id, cancellationToken).ConfigureAwait(false);
+
+        if (!result.IsSuccess || result.Data == null)
         {
-            return ApiValidationError("name is required");
+            return BadRequest(new ApiError("CreateFailed", GetErrorMessage(result)));
         }
 
-        if (request.Rules == null || request.Rules.Length == 0)
+        var baseUrl = await GetBaseUrlAsync(cancellationToken).ConfigureAwait(false);
+
+        return CreatedAtAction(nameof(GetByIdAsync), new { id = result.Data.ApiKey },
+            result.Data.ToSmartPlaylistModel(baseUrl, user.ToUserModel(baseUrl)));
+    }
+
+    /// <summary>
+    /// Get a smart playlist by ID.
+    /// </summary>
+    [HttpGet]
+    [Route("{id:guid}")]
+    [ProducesResponseType(typeof(SmartPlaylistModel), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        if (!ApiRequest.IsAuthorized)
         {
-            return ApiValidationError("rules is required and must not be empty");
+            return ApiUnauthorized();
         }
 
-        foreach (var rule in request.Rules)
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
         {
-            if (string.IsNullOrWhiteSpace(rule.Field))
+            return ApiUnauthorized();
+        }
+
+        if (user.IsLocked)
+        {
+            return ApiUserLocked();
+        }
+
+        var result = await smartPlaylistService.GetByApiKeyAsync(id, user.Id, cancellationToken).ConfigureAwait(false);
+
+        if (!result.IsSuccess || result.Data == null)
+        {
+            return NotFound(new ApiError("NotFound", "Smart playlist not found"));
+        }
+
+        var baseUrl = await GetBaseUrlAsync(cancellationToken).ConfigureAwait(false);
+
+        return Ok(result.Data.ToSmartPlaylistModel(baseUrl, user.ToUserModel(baseUrl)));
+    }
+
+    /// <summary>
+    /// List all smart playlists for the current user.
+    /// </summary>
+    [HttpGet]
+    [ProducesResponseType(typeof(SmartPlaylistPagedResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ListAsync(
+        short page,
+        short pageSize,
+        string? orderBy,
+        string? orderDirection,
+        CancellationToken cancellationToken = default)
+    {
+        if (!ApiRequest.IsAuthorized)
+        {
+            return ApiUnauthorized();
+        }
+
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
+        {
+            return ApiUnauthorized();
+        }
+
+        if (user.IsLocked)
+        {
+            return ApiUserLocked();
+        }
+
+        if (!TryValidatePaging(page, pageSize, out var validatedPage, out var validatedPageSize, out var pagingError))
+        {
+            return pagingError!;
+        }
+
+        var paging = new PagedRequest
+        {
+            Page = validatedPage,
+            PageSize = validatedPageSize,
+            OrderBy = new Dictionary<string, string>
             {
-                return ApiValidationError("Each rule must have a field");
+                { orderBy ?? "CreatedAt", orderDirection ?? PagedRequest.OrderDescDirection }
+            }
+        };
+
+        var result = await smartPlaylistService.ListByUserAsync(user.Id, paging, cancellationToken).ConfigureAwait(false);
+
+        var baseUrl = await GetBaseUrlAsync(cancellationToken).ConfigureAwait(false);
+
+        return Ok(new
+        {
+            meta = new PaginationMetadata(
+                result.TotalCount,
+                validatedPageSize,
+                validatedPage,
+                result.TotalPages
+            ),
+            data = result.Data.Select(x => x.ToSmartPlaylistModel(baseUrl, user.ToUserModel(baseUrl))).ToArray()
+        });
+    }
+
+    /// <summary>
+    /// Update a smart playlist.
+    /// </summary>
+    [HttpPut]
+    [Route("{id:guid}")]
+    [ProducesResponseType(typeof(SmartPlaylistModel), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateAsync(
+        Guid id,
+        [FromBody] Services.UpdateSmartPlaylistRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (!ApiRequest.IsAuthorized)
+        {
+            return ApiUnauthorized();
+        }
+
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
+        {
+            return ApiUnauthorized();
+        }
+
+        if (user.IsLocked)
+        {
+            return ApiUserLocked();
+        }
+
+        var result = await smartPlaylistService.UpdateAsync(id, request, user.Id, cancellationToken).ConfigureAwait(false);
+
+        if (!result.IsSuccess || result.Data == null)
+        {
+            var errorMessage = GetErrorMessage(result);
+            if (errorMessage.Contains("not found", StringComparison.OrdinalIgnoreCase))
+            {
+                return NotFound(new ApiError("NotFound", errorMessage));
             }
 
-            if (!ValidFields.Contains(rule.Field, StringComparer.OrdinalIgnoreCase))
-            {
-                return ApiValidationError($"Invalid field '{rule.Field}'. Valid fields: {string.Join(", ", ValidFields)}");
-            }
-
-            if (string.IsNullOrWhiteSpace(rule.Operator))
-            {
-                return ApiValidationError("Each rule must have an operator");
-            }
-
-            if (!ValidOperators.Contains(rule.Operator, StringComparer.OrdinalIgnoreCase))
-            {
-                return ApiValidationError($"Invalid operator '{rule.Operator}'. Valid operators: {string.Join(", ", ValidOperators)}");
-            }
+            return BadRequest(new ApiError("UpdateFailed", errorMessage));
         }
 
-        var limit = request.Limit ?? 100;
-        if (limit < 1 || limit > 1000)
+        var baseUrl = await GetBaseUrlAsync(cancellationToken).ConfigureAwait(false);
+
+        return Ok(result.Data.ToSmartPlaylistModel(baseUrl, user.ToUserModel(baseUrl)));
+    }
+
+    /// <summary>
+    /// Delete a smart playlist.
+    /// </summary>
+    [HttpDelete]
+    [Route("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        if (!ApiRequest.IsAuthorized)
         {
-            limit = 100;
+            return ApiUnauthorized();
         }
 
-        // Create the playlist as a regular playlist with smart rules metadata
-        var rulesJson = System.Text.Json.JsonSerializer.Serialize(request.Rules);
-        var comment = $"Smart playlist. AutoUpdate: {request.AutoUpdate}. Rules: {rulesJson}";
-
-        var createResult = await playlistService.CreatePlaylistAsync(
-            request.Name,
-            user.Id,
-            comment,
-            false,
-            [],
-            returnPrefixedApiKey: false,
-            cancellationToken).ConfigureAwait(false);
-
-        if (!createResult.IsSuccess || string.IsNullOrEmpty(createResult.Data))
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
         {
-            return ApiBadRequest("Unable to create smart playlist.");
+            return ApiUnauthorized();
         }
 
-        var playlistApiKey = Guid.Parse(createResult.Data);
-        var playlistResult = await playlistService.GetByApiKeyAsync(user.ToUserInfo(), playlistApiKey, cancellationToken).ConfigureAwait(false);
+        if (user.IsLocked)
+        {
+            return ApiUserLocked();
+        }
+
+        var result = await smartPlaylistService.DeleteAsync(id, user.Id, cancellationToken).ConfigureAwait(false);
+
+        if (!result.IsSuccess)
+        {
+            var errorMessage = GetErrorMessage(result);
+            if (errorMessage.Contains("not found", StringComparison.OrdinalIgnoreCase))
+            {
+                return NotFound(new ApiError("NotFound", errorMessage));
+            }
+
+            return BadRequest(new ApiError("DeleteFailed", errorMessage));
+        }
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Evaluate a smart playlist and return results.
+    /// </summary>
+    [HttpGet]
+    [Route("{id:guid}/evaluate")]
+    [ProducesResponseType(typeof(SmartPlaylistEvaluateResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> EvaluateAsync(
+        Guid id,
+        short page,
+        short pageSize,
+        string? orderBy,
+        string? orderDirection,
+        CancellationToken cancellationToken = default)
+    {
+        if (!ApiRequest.IsAuthorized)
+        {
+            return ApiUnauthorized();
+        }
+
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
+        {
+            return ApiUnauthorized();
+        }
+
+        if (user.IsLocked)
+        {
+            return ApiUserLocked();
+        }
+
+        if (!TryValidatePaging(page, pageSize, out var validatedPage, out var validatedPageSize, out var pagingError))
+        {
+            return pagingError!;
+        }
+
+        var paging = new PagedRequest
+        {
+            Page = validatedPage,
+            PageSize = validatedPageSize,
+            OrderBy = new Dictionary<string, string>
+            {
+                { orderBy ?? "CreatedAt", orderDirection ?? PagedRequest.OrderDescDirection }
+            }
+        };
+
+        var playlistResult = await smartPlaylistService.GetByApiKeyAsync(id, user.Id, cancellationToken).ConfigureAwait(false);
         if (!playlistResult.IsSuccess || playlistResult.Data == null)
         {
-            return ApiBadRequest("Smart playlist created but unable to retrieve details.");
+            return NotFound(new ApiError("NotFound", "Smart playlist not found"));
         }
 
-        return Ok(new SmartPlaylistResponse(
-            playlistApiKey,
-            request.Name,
-            request.Description,
-            request.Rules,
-            playlistResult.Data.SongCount ?? 0,
-            request.AutoUpdate));
+        var result = await smartPlaylistService.EvaluateAsync(id, paging, user.Id, cancellationToken).ConfigureAwait(false);
+
+        var baseUrl = await GetBaseUrlAsync(cancellationToken).ConfigureAwait(false);
+
+        return Ok(new SmartPlaylistEvaluateResponse(
+            playlistResult.Data.ToSmartPlaylistModel(baseUrl, user.ToUserModel(baseUrl)),
+            new PaginationMetadata(
+                result.TotalCount,
+                validatedPageSize,
+                validatedPage,
+                result.TotalPages
+            ),
+            result.Data.ToArray()
+        ));
     }
 }

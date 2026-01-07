@@ -1,6 +1,6 @@
 # Melodee Query Language (MQL) — Implementation Plan
 
-**Status:** In Progress - Phase 11 Complete  
+**Status:** In Progress - Phase 12 Complete  
 **Spec Reference:** [MELODEE-QUERY-LANGUAGE.md](./MELODEE-QUERY-LANGUAGE.md)
 
 ## Overview
@@ -37,7 +37,7 @@ This document outlines the phased implementation plan for MQL. Each phase builds
 - [x] **Phase 11: Album & Artist Entity Support**
 
 ### Advanced Features
-- [ ] **Phase 12: Smart Playlist Persistence**
+- [x] **Phase 12: Smart Playlist Persistence**
 - [ ] **Phase 13: Autocomplete & Suggestions**
 - [ ] **Phase 14: Regex Support (Guarded)**
 
@@ -1135,7 +1135,7 @@ Update: @prompts/MELODEE-QUERY-LANGUAGE-IMPLEMENTATION.md mark Phase complete if
 **Example**
 
 ```
-Implement MQL Phase 12: Smart Playlist Persistence
+Implement MQL Phase 13: Autocomplete & Suggestions
 
 Read these files first:
 - prompts/MELODEE-QUERY-LANGUAGE.md - Full spec (§4.1-4.3 for syntax)
