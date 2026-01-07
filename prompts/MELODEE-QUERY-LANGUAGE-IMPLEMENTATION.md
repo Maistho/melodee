@@ -1,6 +1,6 @@
 # Melodee Query Language (MQL) — Implementation Plan
 
-**Status:** Draft  
+**Status:** In Progress - Phase 5 Complete  
 **Spec Reference:** [MELODEE-QUERY-LANGUAGE.md](./MELODEE-QUERY-LANGUAGE.md)
 
 ## Overview
@@ -23,8 +23,8 @@ This document outlines the phased implementation plan for MQL. Each phase builds
 - [x] **Phase 3: Parser & AST**
 
 ### Core Compilation
-- [ ] **Phase 4: Input Validation Layer**
-- [ ] **Phase 5: Expression Tree Compiler (Songs)**
+- [x] **Phase 4: Input Validation Layer**
+- [x] **Phase 5: Expression Tree Compiler (Songs)**
 - [ ] **Phase 6: Expression Tree Caching**
 
 ### Security & Authorization
@@ -373,11 +373,11 @@ This document outlines the phased implementation plan for MQL. Each phase builds
    - Free text expansion
 
 **Acceptance Criteria:**
-- [ ] All Songs fields from spec §4.4 compile correctly
-- [ ] Generated expressions are parameterized (no string concatenation)
-- [ ] User-scoped fields require userId parameter
-- [ ] No client-side evaluation warnings from EF Core
-- [ ] 85%+ code coverage on compiler
+- [x] All Songs fields from spec §4.4 compile correctly
+- [x] Generated expressions are parameterized (no string concatenation)
+- [x] User-scoped fields require userId parameter
+- [x] No client-side evaluation warnings from EF Core
+- [x] 85%+ code coverage on compiler
 
 ---
 
@@ -1124,7 +1124,7 @@ Read these files first:
 
 Follow patterns in src/Melodee.Common/ and src/Melodee.Services/.
 Write tests in tests/Melodee.Mql.Tests/.
-Run `dotnet build` and `dotnet test --filter "Mql"` before completing.
+Run `dotnet format` and `dotnet build` and `dotnet test --filter "Tokenizer"` before completing.
 Report: files changed, acceptance criteria status, test results.
 Update: @prompts/MELODEE-QUERY-LANGUAGE-IMPLEMENTATION.md mark Phase complete if all criteria is met and all tests pass.
 ```
@@ -1132,9 +1132,7 @@ Update: @prompts/MELODEE-QUERY-LANGUAGE-IMPLEMENTATION.md mark Phase complete if
 **Example**
 
 ```
-Review document @prompts/MELODEE-QUERY-LANGUAGE-IMPLEMENTATION.md
-
-Implement MQL Phase 1: Core Infrastructure & Models
+Implement MQL Phase 6: Expression Tree Caching
 
 Read these files first:
 - prompts/MELODEE-QUERY-LANGUAGE.md - Full spec (§4.1-4.3 for syntax)
@@ -1144,7 +1142,7 @@ Read these files first:
 
 Follow patterns in src/Melodee.Common/ and src/Melodee.Services/.
 Write tests in tests/Melodee.Mql.Tests/.
-Run `dotnet build` and `dotnet test --filter "Tokenizer"` before completing.
+Run `dotnet format` and `dotnet build` and `dotnet test --filter "Tokenizer"` before completing.
 Report: files changed, acceptance criteria status, test results.
 Update: @prompts/MELODEE-QUERY-LANGUAGE-IMPLEMENTATION.md mark Phase complete if all criteria is met and all tests pass.
 ```
@@ -1154,6 +1152,7 @@ Update: @prompts/MELODEE-QUERY-LANGUAGE-IMPLEMENTATION.md mark Phase complete if
 ## Success Criteria
 
 Implementation is complete when:
+- [x] 5 of 17 phases complete (Phases 1-5)
 - [ ] All 17 phases marked complete
 - [ ] Test coverage targets met (90%+ overall)
 - [ ] Performance budgets met under load

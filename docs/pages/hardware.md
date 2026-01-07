@@ -22,7 +22,7 @@ Understanding these components helps optimize your hardware choices.
 - **CPU**: Dual-core 2.0GHz+ (Intel/AMD x64 or ARM64)
 - **RAM**: 2GB minimum, 4GB recommended
 - **Storage**: 
-  - System: 50GB SSD
+  - System: 100GB SSD
   - Media: Any drive with sufficient space
 - **Network**: 100 Mbps Ethernet
 - **Examples**: 

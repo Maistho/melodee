@@ -30,6 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Melodee.Common\Melodee.Common.csproj"/>
     <ProjectReference Include="..\..\src\Melodee.Mql\Melodee.Mql.csproj"/>
   </ItemGroup>
 

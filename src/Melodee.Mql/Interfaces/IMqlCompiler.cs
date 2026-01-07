@@ -15,5 +15,5 @@ public interface IMqlCompiler<TEntity> where TEntity : class
     /// <param name="ast">The AST to compile.</param>
     /// <param name="userId">Optional user ID for user-scoped fields.</param>
     /// <returns>The compiled expression.</returns>
-    Expression<Func<TEntity, bool>> Compile(MqlAstNode ast, Guid? userId = null);
+    Expression<Func<TEntity, bool>> Compile(MqlAstNode ast, int? userId = null);
 }

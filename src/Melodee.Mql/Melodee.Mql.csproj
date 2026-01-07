@@ -21,4 +21,8 @@
     <PackageReference Include="Ardalis.GuardClauses"/>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Melodee.Common\Melodee.Common.csproj" />
+  </ItemGroup>
+
 </Project>

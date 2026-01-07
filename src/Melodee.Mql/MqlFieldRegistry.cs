@@ -28,7 +28,8 @@ public static class MqlFieldRegistry
             ["composer"] = new("composer", [], MqlFieldType.String, "Song.ComposerNormalized", false, "Composer name"),
             ["discnumber"] = new("discNumber", ["disc"], MqlFieldType.Number, "Song.DiscNumber", false, "Disc number"),
             ["tracknumber"] = new("trackNumber", ["track"], MqlFieldType.Number, "Song.SortOrder", false, "Track number"),
-            ["comment"] = new("comment", [], MqlFieldType.String, "Song.Comment", false, "Comment")
+            ["comment"] = new("comment", [], MqlFieldType.String, "Song.Comment", false, "Comment"),
+            ["imagecount"] = new("imageCount", ["images"], MqlFieldType.Number, "Song.ImageCount", false, "Number of images")
         },
         ["albums"] = new(StringComparer.OrdinalIgnoreCase)
         {

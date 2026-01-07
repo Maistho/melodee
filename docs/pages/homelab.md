@@ -37,7 +37,7 @@ After setup, access Melodee at `http://localhost:8080`
 ### Minimum Requirements
 - **CPU**: Dual-core processor (Intel/AMD x64 or ARM64)
 - **RAM**: 2GB (4GB recommended for libraries with thousands of tracks)
-- **Storage**: 50GB+ for application and database (additional space for music library)
+- **Storage**: 100GB+ for application and database (additional space for music library)
 - **Network**: 100 Mbps Ethernet (1 Gbps recommended for multi-user streaming)
 
 ### Recommended for Large Libraries
@@ -206,7 +206,7 @@ Deploy Melodee using an LXC container with Docker support:
 1. **Create an LXC container**:
    - Use Ubuntu/Debian template
    - Allocate 2-4 CPU cores, 4-8GB RAM
-   - 20-50GB disk space (adjust based on needs)
+   - 20-100GB disk space (adjust based on needs)
 
 2. **Install Docker in the container**:
    ```bash
@@ -223,7 +223,7 @@ Create a dedicated VM for Melodee:
 1. **Create VM specifications**:
    - 2-4 vCPUs
    - 4-8GB RAM
-   - 50GB+ storage (SSD recommended for database)
+   - 100GB+ storage (SSD recommended for database)
    - Bridge network interface
 
 2. **Install operating system**:

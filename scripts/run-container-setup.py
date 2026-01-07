@@ -25,6 +25,8 @@ Options:
     --force                 Overwrite existing .env file without prompting
     --update                Safely update running containers to latest code (preserves volumes)
     --yes, -y               Skip confirmation prompts (for automated deployments)
+    --prune                 After build/update, prune dangling images and build cache (recommended for demo/test servers)
+    --prune-all             More aggressive prune of unused images/containers (keeps volumes; may require re-pull/rebuild later)
 
 Examples:
     # Show help
@@ -45,6 +47,7 @@ Examples:
 
 import os
 import secrets
+import re
 import shutil
 import socket
 import subprocess
@@ -483,6 +486,166 @@ def check_compose_available(runtime: str) -> bool:
 
     return False
 
+
+
+
+def parse_human_size_to_bytes(size_str: str) -> int:
+    """Parse sizes like '891.3MB', '2.168GB', '65.16kB' into bytes."""
+    s = (size_str or "").strip()
+    if not s:
+        return 0
+
+    # Normalize common suffixes
+    s = s.replace("iB", "B")  # KiB -> KB (close enough for pruning heuristics)
+    m = re.match(r"^([0-9]+(?:\.[0-9]+)?)\s*([KMGTP]?B)$", s, flags=re.IGNORECASE)
+    if not m:
+        return 0
+
+    val = float(m.group(1))
+    unit = m.group(2).upper()
+
+    multipliers = {
+        "B": 1,
+        "KB": 1024,
+        "MB": 1024 ** 2,
+        "GB": 1024 ** 3,
+        "TB": 1024 ** 4,
+        "PB": 1024 ** 5,
+    }
+    return int(val * multipliers.get(unit, 1))
+
+
+def list_dangling_images(runtime: str) -> list[dict]:
+    """Return a list of dangling (untagged) images with best-effort size parsing."""
+    if runtime not in ("podman", "docker"):
+        return []
+
+    cmd = [runtime, "images", "-a", "--filter", "dangling=true", "--format", "{{.ID}}\t{{.Size}}\t{{.CreatedSince}}"]
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
+        if result.returncode != 0:
+            return []
+        images: list[dict] = []
+        for line in result.stdout.strip().splitlines():
+            parts = line.split("\t")
+            if len(parts) < 2:
+                continue
+            img_id = parts[0].strip()
+            size_str = parts[1].strip()
+            created = parts[2].strip() if len(parts) > 2 else ""
+            if img_id:
+                images.append({
+                    "id": img_id,
+                    "size_str": size_str,
+                    "size_bytes": parse_human_size_to_bytes(size_str),
+                    "created": created,
+                })
+        return images
+    except (subprocess.TimeoutExpired, OSError):
+        return []
+
+
+def prune_container_storage(runtime: str, prune_all: bool, skip_confirm: bool) -> bool:
+    """
+    Prune container storage to prevent disk bloat from repeated builds.
+
+    - Safe prune (default): removes dangling images + build cache
+    - Aggressive prune (--prune-all): removes ALL unused images/containers/networks (keeps volumes)
+    """
+    if runtime not in ("podman", "docker"):
+        return True
+
+    # Summarize what we'd reclaim (best effort)
+    dangling = list_dangling_images(runtime)
+    dangling_count = len(dangling)
+    dangling_bytes = sum(x.get("size_bytes", 0) for x in dangling)
+
+    print("\n" + "-" * 60)
+    print("  Container Storage Cleanup")
+    print("-" * 60 + "\n")
+
+    if prune_all:
+        print_warning(f"{runtime}: Aggressive prune will remove ALL unused images/containers/networks (volumes are kept)")
+    else:
+        if dangling_count == 0:
+            print_info(f"{runtime}: No dangling images found")
+        else:
+            approx_gb = dangling_bytes / (1024 ** 3) if dangling_bytes else 0
+            if approx_gb > 0:
+                print_info(f"{runtime}: Found {dangling_count} dangling images (≈ {approx_gb:.1f}GB)")
+            else:
+                print_info(f"{runtime}: Found {dangling_count} dangling images")
+
+    if not skip_confirm:
+        if prune_all:
+            response = input("  Prune unused images/containers now? (y/N): ").strip().lower()
+            if response != 'y':
+                print_info("Cleanup skipped")
+                return True
+        else:
+            response = input("  Prune dangling images/build cache now? (Y/n): ").strip().lower()
+            if response == 'n':
+                print_info("Cleanup skipped")
+                return True
+    else:
+        print_info("Proceeding with cleanup (--yes flag specified)")
+
+    # Execute prune
+    try:
+        if prune_all:
+            # Keep volumes by default (no --volumes)
+            cmd = [runtime, "system", "prune", "-a", "-f"]
+            print_info(f"Running: {' '.join(cmd)}")
+            subprocess.run(cmd, timeout=600)
+        else:
+            cmd = [runtime, "image", "prune", "-f"]
+            print_info(f"Running: {' '.join(cmd)}")
+            subprocess.run(cmd, timeout=600)
+
+        # Builder cache prune (helps a lot on repeated builds). Best-effort.
+        builder_cmd = [runtime, "builder", "prune", "-a", "-f"]
+        print_info(f"Running: {' '.join(builder_cmd)}")
+        subprocess.run(builder_cmd, timeout=600)
+
+        print_success("Container storage cleanup completed")
+        return True
+    except subprocess.TimeoutExpired:
+        print_warning("Cleanup timed out")
+        return False
+    except OSError as e:
+        print_warning(f"Cleanup failed: {e}")
+        return False
+
+
+def maybe_suggest_prune(runtime: str):
+    """If there are many dangling images, warn the user how to reclaim disk."""
+    if runtime not in ("podman", "docker"):
+        return
+
+    dangling = list_dangling_images(runtime)
+    if not dangling:
+        return
+
+    dangling_count = len(dangling)
+    dangling_bytes = sum(x.get("size_bytes", 0) for x in dangling)
+    approx_gb = dangling_bytes / (1024 ** 3) if dangling_bytes else 0
+
+    # Heuristic: warn if more than a few images or > 1GB (approx)
+    if dangling_count >= 5 or approx_gb >= 1.0:
+        print()
+        print_warning("Container builds can accumulate untagged (dangling) images over time and consume disk space.")
+        if approx_gb > 0:
+            print_info(f"Detected {dangling_count} dangling images (≈ {approx_gb:.1f}GB).")
+
+        if runtime == "podman":
+            print_info("To clean up safely:")
+            print("    podman image prune")
+            print("    podman builder prune -a")
+        else:
+            print_info("To clean up safely:")
+            print("    docker image prune")
+            print("    docker builder prune -a")
+        print_info("Or re-run this script with --prune (or --prune-all for a more aggressive cleanup).\n")
 
 def generate_secure_password(length: int = 32) -> str:
     """Generate a secure random password."""
@@ -1042,7 +1205,7 @@ def check_existing_containers(runtime: str, project_root: Path) -> tuple[bool, s
         return False, ""
 
 
-def update_containers(runtime: str, project_root: Path, skip_confirm: bool = False) -> bool:
+def update_containers(runtime: str, project_root: Path, skip_confirm: bool = False, prune: bool = False, prune_all: bool = False) -> bool:
     """
     Safely update running containers to latest code.
 
@@ -1227,6 +1390,13 @@ def update_containers(runtime: str, project_root: Path, skip_confirm: bool = Fal
                 print_warning("Could not verify container version")
         else:
             print_warning("Could not find Melodee container to verify version")
+
+
+        # Optional cleanup: repeated builds can leave many dangling images/build cache
+        if prune or prune_all:
+            prune_container_storage(runtime, prune_all=prune_all, skip_confirm=skip_confirm)
+        else:
+            maybe_suggest_prune(runtime)
 
         return True
     else:
@@ -1473,6 +1643,11 @@ def main():
     update_mode = "--update" in sys.argv
     skip_confirm = "--yes" in sys.argv or "-y" in sys.argv
 
+    prune_requested = "--prune" in sys.argv
+    prune_all = "--prune-all" in sys.argv
+    if prune_all:
+        prune_requested = True
+
     # Get project root first for preflight checks
     project_root = get_project_root()
     print(f"Project root: {project_root}")
@@ -1535,7 +1710,7 @@ def main():
 
     # Handle update mode separately
     if update_mode:
-        success = update_containers(runtime, project_root, skip_confirm=skip_confirm)
+        success = update_containers(runtime, project_root, skip_confirm=skip_confirm, prune=prune_requested, prune_all=prune_all)
         sys.exit(0 if success else 1)
 
     # Check for existing containers
@@ -1615,6 +1790,14 @@ def main():
             print_error("Failed to start containers")
             print_info("Showing recent logs for debugging:")
             show_container_logs(runtime, project_root, lines=50)
+
+
+    # Optional cleanup / guidance: repeated builds can accumulate dangling images and cache
+    if start_after_setup and started:
+        if prune_requested:
+            prune_container_storage(runtime, prune_all=prune_all, skip_confirm=skip_confirm)
+        else:
+            maybe_suggest_prune(runtime)
 
     # Print next steps
     print_next_steps(runtime, started, healthy)
