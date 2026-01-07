@@ -73,8 +73,8 @@ public class LibraryMoveOkSettingsTests : IDisposable
     {
         var settings = new LibraryMoveOkSettings();
 
-        settings.LibraryName.Should().BeEmpty();
-        settings.ToLibraryName.Should().BeEmpty();
+        settings.LibraryName.Should().BeNull();
+        settings.ToLibraryName.Should().BeNull();
         settings.FromPath.Should().BeNull();
         settings.ToPath.Should().BeNull();
         settings.IsPathBasedMode.Should().BeFalse();

@@ -151,6 +151,18 @@ public static class Program
                 add.AddCommand<ShowTagsCommand>("show")
                     .WithDescription("Load given media file and show all known ID3 tags.");
             });
+            config.AddBranch<UserSettings>("user", add =>
+            {
+                add.SetDescription("User account management");
+                add.AddCommand<UserCreateCommand>("create")
+                    .WithDescription("Create a new user account.");
+                add.AddCommand<UserDeleteCommand>("delete")
+                    .WithAlias("rm")
+                    .WithDescription("Delete a user account.");
+                add.AddCommand<UserListCommand>("list")
+                    .WithAlias("ls")
+                    .WithDescription("List all users.");
+            });
             config.AddBranch<ValidateSettings>("validate", add =>
             {
                 add.SetDescription("Validate media files and metadata");

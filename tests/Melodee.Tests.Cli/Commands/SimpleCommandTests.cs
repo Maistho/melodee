@@ -51,7 +51,7 @@ public class SimpleCommandTests
     {
         var settings = new LibrarySettings();
 
-        settings.LibraryName.Should().Be(string.Empty);
+        settings.LibraryName.Should().BeNull();
         // Note: [DefaultValue] attribute is CLI metadata, not actual initialization
         settings.Verbose.Should().BeFalse(); // bool default is false
     }

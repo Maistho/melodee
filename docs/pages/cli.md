@@ -63,6 +63,7 @@ mcli [BRANCH] [COMMAND] [OPTIONS]
 | [library](/cli/library/) | Library management and operations | [View Details](/cli/library/) |
 | [parser](/cli/parser/) | Parse and analyze media metadata files | [View Details](/cli/parser/) |
 | [tags](/cli/tags/) | Display and manage media file tags | [View Details](/cli/tags/) |
+| [user](/cli/user/) | User account management | [View Details](/cli/user/) |
 | [validate](/cli/validate/) | Validate media files and metadata | [View Details](/cli/validate/) |
 
 ## Quick Examples
@@ -106,6 +107,12 @@ mcli [BRANCH] [COMMAND] [OPTIONS]
 
 # Find and merge duplicate artists
 ./mcli artist find-duplicates -m 0.95 --merge
+
+# List all users
+./mcli user list
+
+# Create a new user
+./mcli user create -u "demo" -e "demo@melodee.org" -p "SecurePass123!"
 
 # List background jobs with next run times
 ./mcli job list
