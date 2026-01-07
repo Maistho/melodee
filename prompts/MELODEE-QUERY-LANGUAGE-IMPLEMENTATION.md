@@ -18,9 +18,9 @@ This document outlines the phased implementation plan for MQL. Each phase builds
 ## Phase Map
 
 ### Foundation
-- [ ] **Phase 1: Core Infrastructure & Models**
-- [ ] **Phase 2: Tokenizer & Lexer**
-- [ ] **Phase 3: Parser & AST**
+- [x] **Phase 1: Core Infrastructure & Models**
+- [x] **Phase 2: Tokenizer & Lexer**
+- [x] **Phase 3: Parser & AST**
 
 ### Core Compilation
 - [ ] **Phase 4: Input Validation Layer**
@@ -1126,6 +1126,7 @@ Follow patterns in src/Melodee.Common/ and src/Melodee.Services/.
 Write tests in tests/Melodee.Mql.Tests/.
 Run `dotnet build` and `dotnet test --filter "Mql"` before completing.
 Report: files changed, acceptance criteria status, test results.
+Update: @prompts/MELODEE-QUERY-LANGUAGE-IMPLEMENTATION.md mark Phase complete if all criteria is met and all tests pass.
 ```
 
 **Example**
@@ -1145,6 +1146,7 @@ Follow patterns in src/Melodee.Common/ and src/Melodee.Services/.
 Write tests in tests/Melodee.Mql.Tests/.
 Run `dotnet build` and `dotnet test --filter "Tokenizer"` before completing.
 Report: files changed, acceptance criteria status, test results.
+Update: @prompts/MELODEE-QUERY-LANGUAGE-IMPLEMENTATION.md mark Phase complete if all criteria is met and all tests pass.
 ```
 
 ---

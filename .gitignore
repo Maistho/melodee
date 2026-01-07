@@ -514,3 +514,4 @@ compose.override.yml
 # .NET User Secrets live outside the repo, but ignore any accidental exports
 secrets.json
 *.secrets.json
+.aider*
