@@ -59,17 +59,18 @@
 
 <script>
 $(document).ready(function() {
-  var url = "https://api.github.com/search/repositories?q={{ site.github_user }}/{{ site.github_repo }}";
+  var url = "https://api.github.com/repos/{{ site.github_user }}/{{ site.github_repo }}";
   fetch(url, { 
-      headers: {"Accept":"application/vnd.github.preview"}
+      headers: {"Accept":"application/vnd.github.v3+json"}
   }).then(function(e) {
     return e.json()
   }).then(function(r) {
-     console.log(r.items[0])
-     stars = r.items[0]['stargazers_count']
-     forks = r.items[0]['forks_count']
-     $('#stars').text(stars + " Stars")
-     $('#forks').text(forks + " Forks")
+     if (r && r.stargazers_count !== undefined) {
+       $('#stars').text(r.stargazers_count + " Stars")
+       $('#forks').text(r.forks_count + " Forks")
+     }
+  }).catch(function(err) {
+     console.warn("Could not fetch repository stats:", err);
   });
 });
 </script>

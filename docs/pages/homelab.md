@@ -13,7 +13,7 @@ For first-time setup, use the automated setup script:
 
 ```bash
 # Clone the repository
-git clone https://github.com/sphildreth/melodee.git
+git clone https://github.com/melodee-project/melodee.git
 cd melodee
 
 # Run the setup script (detects podman or docker automatically)
@@ -238,7 +238,7 @@ Create a dedicated VM for Melodee:
    usermod -aG docker $USER
 
    # Clone and deploy Melodee
-   git clone https://github.com/sphildreth/melodee.git
+   git clone https://github.com/melodee-project/melodee.git
    cd melodee
    
    # Run setup script to generate secure configuration

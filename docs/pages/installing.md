@@ -22,7 +22,7 @@ For a fully automated setup, use our container setup script:
 
 ```bash
 # Clone the repository
-git clone https://github.com/sphildreth/melodee.git
+git clone https://github.com/melodee-project/melodee.git
 cd melodee
 
 # Run the setup script (checks prerequisites, creates .env, optionally starts containers)
@@ -96,7 +96,7 @@ If you prefer to set up manually:
 #### 1. Clone & Configure
 
 ```bash
-git clone https://github.com/sphildreth/melodee.git
+git clone https://github.com/melodee-project/melodee.git
 cd melodee
 cp example.env .env
 ```
@@ -186,7 +186,7 @@ podman compose up -d      # Recreate containers (volumes preserved)
 For basic homelab setups, the default `compose.yml` is sufficient. Simply run:
 
 ```bash
-git clone https://github.com/sphildreth/melodee.git
+git clone https://github.com/melodee-project/melodee.git
 cd melodee
 python3 scripts/run-container-setup.py --start
 ```

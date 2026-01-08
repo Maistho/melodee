@@ -66,7 +66,7 @@ If you prefer to set up manually:
 #### Clone and Configure
 ```bash
 # Clone the repository
-git clone https://github.com/sphildreth/melodee.git
+git clone https://github.com/melodee-project/melodee.git
 cd melodee
 
 # Copy environment file
