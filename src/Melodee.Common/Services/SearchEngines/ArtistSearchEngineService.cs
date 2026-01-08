@@ -53,13 +53,13 @@ public class ArtistSearchEngineService(
     private readonly ArtistSearchCache _searchCache = new();
 
     /// <summary>
-    ///     MusicBrainz rate limit: 1 request per second.
+    /// MusicBrainz rate limit: 1 request per second.
     /// </summary>
     private const string MusicBrainzProvider = "MusicBrainz";
     private static readonly TimeSpan MusicBrainzRateLimit = TimeSpan.FromSeconds(1);
 
     /// <summary>
-    ///     Spotify concurrency limit (conservative default).
+    /// Spotify concurrency limit (conservative default).
     /// </summary>
     private const string SpotifyProvider = "Spotify";
     private const int SpotifyMaxConcurrency = 2;
@@ -69,6 +69,47 @@ public class ArtistSearchEngineService(
     {
         _configuration = configuration ?? await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
 
+        // Subscribe to configuration changes to reload plugins
+        configurationFactory.ConfigurationChanged += OnConfigurationChanged;
+
+        await InitializePluginsAsync(cancellationToken).ConfigureAwait(false);
+
+        await using (var scopedContext = await artistSearchEngineServiceDbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
+        {
+            await scopedContext.Database.EnsureCreatedAsync(cancellationToken);
+        }
+
+        _initialized = true;
+    }
+
+    private async void OnConfigurationChanged(object? sender, EventArgs e)
+    {
+        try
+        {
+            Logger.Information("[{Name}] Configuration changed, reinitializing artist search engine plugins",
+                nameof(ArtistSearchEngineService));
+
+            // Reload configuration from factory
+            _configuration = await configurationFactory.GetConfigurationAsync().ConfigureAwait(false);
+
+            // Reinitialize plugins with new configuration
+            await InitializePluginsAsync(CancellationToken.None).ConfigureAwait(false);
+
+            // Clear the search cache to ensure fresh results with new settings
+            _searchCache.Clear();
+
+            Logger.Information("[{Name}] Artist search engine plugins reinitialized after configuration change",
+                nameof(ArtistSearchEngineService));
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "[{Name}] Failed to reinitialize artist search engine plugins after configuration change",
+                nameof(ArtistSearchEngineService));
+        }
+    }
+
+    private async Task InitializePluginsAsync(CancellationToken cancellationToken)
+    {
         _artistSearchEnginePlugins =
         [
             new MelodeeArtistSearchEnginePlugin(ContextFactory),
@@ -106,13 +147,6 @@ public class ArtistSearchEngineService(
                 IsEnabled = _configuration.GetValue<bool>(SettingRegistry.SearchEngineSpotifyEnabled)
             }
         ];
-
-        await using (var scopedContext = await artistSearchEngineServiceDbContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false))
-        {
-            await scopedContext.Database.EnsureCreatedAsync(cancellationToken);
-        }
-
-        _initialized = true;
     }
 
     private void CheckInitialized()
@@ -890,6 +924,94 @@ public class ArtistSearchEngineService(
             TotalPages = 1,
             Data = result?.OrderByDescending(x => x.Rank).ThenBy(x => x.SortName).ToArray() ?? []
         };
+    }
+
+    /// <summary>
+    ///     Look up artists by AMG ID using the iTunes lookup API.
+    ///     This method bypasses other search providers and directly queries iTunes.
+    /// </summary>
+    /// <param name="amgArtistId">The AMG Artist ID (digits only)</param>
+    /// <param name="maxResults">Maximum number of results to return (default: 10)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Paged result with ArtistSearchResult candidates</returns>
+    public async Task<PagedResult<ArtistSearchResult>> LookupByAmgIdAsync(
+        string amgArtistId,
+        int maxResults = 10,
+        CancellationToken cancellationToken = default)
+    {
+        // Validate AMG ID - must be digits only
+        var validationResult = SearchEngineQueryNormalization.ValidateAmgIdResult(amgArtistId);
+        if (!validationResult.IsSuccess)
+        {
+            return new PagedResult<ArtistSearchResult>(validationResult.Errors?.Select(e => e.Message).ToArray())
+            {
+                Data = []
+            };
+        }
+
+        try
+        {
+            var httpClient = httpClientFactory.CreateClient();
+            var userAgent = _configuration.GetValue<string>(SettingRegistry.SearchEngineUserAgent);
+            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(userAgent);
+
+            var requestUri = $"https://itunes.apple.com/lookup?amgArtistId={amgArtistId}&limit={maxResults}";
+            var response = await httpClient.GetAsync(requestUri, cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return new PagedResult<ArtistSearchResult>(
+                    [$"iTunes AMG lookup failed with status {response.StatusCode}"])
+                {
+                    Data = []
+                };
+            }
+
+            var jsonResponse = await response.Content.ReadAsStringAsync(cancellationToken);
+            var searchResult = serializer.Deserialize<ITunesSearchResult>(jsonResponse);
+
+            var results = new List<ArtistSearchResult>();
+            if (searchResult?.Results?.Any() ?? false)
+            {
+                foreach (var sr in searchResult.Results)
+                {
+                    if (sr.ArtistName.Nullify() == null)
+                    {
+                        continue;
+                    }
+
+                    results.Add(new ArtistSearchResult
+                    {
+                        Name = sr.ArtistName!,
+                        SortName = sr.ArtistName?.ToNormalizedString(),
+                        FromPlugin = "iTunes",
+                        AlbumCount = sr.TrackCount,
+                        UniqueId = SafeParser.Hash($"{sr.ArtistId}:{sr.AmgArtistId}:{sr.ArtistName}"),
+                        Rank = 10,
+                        ImageUrl = sr.ArtworkUrl100,
+                        ThumbnailUrl = sr.ArtworkUrl60 ?? sr.ArtworkUrl100,
+                        AmgId = sr.AmgArtistId?.ToString(),
+                        ItunesId = sr.ArtistId?.ToString()
+                    });
+                }
+            }
+
+            Logger.Debug("[{Name}] AMG lookup for [{AmgId}] returned [{Count}] results",
+                nameof(ArtistSearchEngineService), amgArtistId, results.Count);
+
+            return new PagedResult<ArtistSearchResult>
+            {
+                Data = results.OrderByDescending(x => x.Rank).Take(maxResults).ToArray(),
+                TotalCount = results.Count,
+                TotalPages = 1,
+                CurrentPage = 1
+            };
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Error performing AMG lookup for [{AmgId}]", amgArtistId);
+            return new PagedResult<ArtistSearchResult>(["AMG lookup failed."]) { Data = [] };
+        }
     }
 
     public async Task<OperationResult<bool>> RefreshArtistAlbums(Artist[] selectedArtists,

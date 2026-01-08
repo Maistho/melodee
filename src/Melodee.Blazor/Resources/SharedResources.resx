@@ -4881,4 +4881,16 @@
   <data name="ArtistLookup.SelectToApply" xml:space="preserve">
     <value>Select to apply</value>
   </data>
+  <data name="ArtistLookup.ByName" xml:space="preserve">
+    <value>By Name</value>
+  </data>
+  <data name="ArtistLookup.ByAmgId" xml:space="preserve">
+    <value>By AMG ID</value>
+  </data>
+  <data name="ArtistLookup.EnterAmgId" xml:space="preserve">
+    <value>Enter AMG ID</value>
+  </data>
+  <data name="ArtistLookup.AmghelpText" xml:space="preserve">
+    <value>Enter an AMG Artist ID (digits only) to look up the artist</value>
+  </data>
 </root>

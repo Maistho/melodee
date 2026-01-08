@@ -13,19 +13,45 @@
 @inject NotificationService NotificationService
 
 <RadzenStack Gap="1rem">
-    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
-        <RadzenTextBox @bind-Value="@_searchText"
-                       Placeholder="@L("ArtistLookup.EnterArtistName")"
-                       Style="flex: 1"
-                       Name="SearchText"
-                       @onkeyup="@OnKeyUpAsync"
-                       Disabled="@_isLoading"/>
-        <RadzenButton Icon="search"
-                      Text="@L("Actions.Search")"
-                      Click="@SearchAsync"
-                      Disabled="@(_isLoading || string.IsNullOrWhiteSpace(_searchText))"
-                      ButtonStyle="ButtonStyle.Primary"/>
-    </RadzenStack>
+    <RadzenTabs>
+        <Tabs>
+            <RadzenTabsItem Text="@L("ArtistLookup.ByName")">
+                <RadzenStack Gap="1rem" class="rz-p-2">
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                        <RadzenTextBox @bind-Value="@_searchText"
+                                       Placeholder="@L("ArtistLookup.EnterArtistName")"
+                                       Style="flex: 1"
+                                       Name="SearchText"
+                                       @onkeyup="@OnKeyUpAsync"
+                                       Disabled="@_isLoading"/>
+                        <RadzenButton Icon="search"
+                                      Text="@L("Actions.Search")"
+                                      Click="@SearchAsync"
+                                      Disabled="@(_isLoading || string.IsNullOrWhiteSpace(_searchText))"
+                                      ButtonStyle="ButtonStyle.Primary"/>
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenTabsItem>
+            <RadzenTabsItem Text="@L("ArtistLookup.ByAmgId")">
+                <RadzenStack Gap="1rem" class="rz-p-2">
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                        <RadzenTextBox @bind-Value="@_amgIdText"
+                                       Placeholder="@L("ArtistLookup.EnterAmgId")"
+                                       Style="flex: 1"
+                                       Name="AmgIdText"
+                                       @onkeyup="@OnAmgIdKeyUpAsync"
+                                       Disabled="@_isLoading"/>
+                        <RadzenButton Icon="search"
+                                      Text="@L("Actions.Search")"
+                                      Click="@SearchByAmgIdAsync"
+                                      Disabled="@(_isLoading || string.IsNullOrWhiteSpace(_amgIdText))"
+                                      ButtonStyle="ButtonStyle.Primary"/>
+                    </RadzenStack>
+                    <RadzenText Text="@L("ArtistLookup.AmghelpText")" class="rz-text-secondary" TextStyle="TextStyle.Caption"/>
+                </RadzenStack>
+            </RadzenTabsItem>
+        </Tabs>
+    </RadzenTabs>
 
     @if (_providers != null && _providers.Length > 0)
     {
@@ -99,6 +125,14 @@
                             {
                                 <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="@($"Discogs: {candidate.DiscogsId}")"/>
                             }
+                            @if (!string.IsNullOrEmpty(candidate.AmgId))
+                            {
+                                <RadzenBadge BadgeStyle="BadgeStyle.Danger" Text="@($"AMG: {candidate.AmgId}")"/>
+                            }
+                            @if (!string.IsNullOrEmpty(candidate.ItunesId))
+                            {
+                                <RadzenBadge BadgeStyle="BadgeStyle.Secondary" Text="@($"iTunes: {candidate.ItunesId}")"/>
+                            }
                         </RadzenStack>
                     </RadzenStack>
                 </RadzenCard>
@@ -126,6 +160,7 @@
 
 @code {
     private string _searchText = string.Empty;
+    private string _amgIdText = string.Empty;
     private ArtistLookupCandidate[]? _candidates;
     private ProviderInfo[]? _providers;
     private string[] _selectedProviderIds = [];
@@ -133,6 +168,7 @@
     private bool _hasError;
     private bool _hasSearched;
     private bool _hasPartialFailures;
+    private bool _isAmgIdMode;
     private CancellationTokenSource? _searchCts;
     private IArtistSearchEnginePlugin[] _plugins = [];
 
@@ -171,6 +207,73 @@
         if (args.Key == "Enter" && !string.IsNullOrWhiteSpace(_searchText))
         {
             await SearchAsync();
+        }
+    }
+
+    private async Task OnAmgIdKeyUpAsync(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter" && !string.IsNullOrWhiteSpace(_amgIdText))
+        {
+            await SearchByAmgIdAsync();
+        }
+    }
+
+    private async Task SearchByAmgIdAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_amgIdText))
+        {
+            return;
+        }
+
+        _searchCts?.Cancel();
+        _searchCts = new CancellationTokenSource();
+
+        _isLoading = true;
+        _hasError = false;
+        _hasSearched = true;
+        _hasPartialFailures = false;
+        _candidates = null;
+        _isAmgIdMode = true;
+
+        try
+        {
+            var result = await ArtistSearchEngineService.LookupByAmgIdAsync(_amgIdText.Trim(), 20, _searchCts.Token);
+
+            if (result.IsSuccess && result.Data != null)
+            {
+                _candidates = result.Data.Select(c => new ArtistLookupCandidate
+                {
+                    ProviderDisplayName = c.FromPlugin,
+                    ProviderId = _plugins.FirstOrDefault(p => p.DisplayName == c.FromPlugin)?.Id,
+                    Name = c.Name,
+                    SortName = c.SortName,
+                    ImageUrl = c.ImageUrl,
+                    ThumbnailUrl = c.ThumbnailUrl,
+                    MusicBrainzId = c.MusicBrainzId,
+                    SpotifyId = c.SpotifyId,
+                    DiscogsId = c.DiscogsId,
+                    AmgId = c.AmgId,
+                    WikiDataId = c.WikiDataId,
+                    ItunesId = c.ItunesId,
+                    LastFmId = c.LastFmId
+                }).ToArray();
+            }
+            else
+            {
+                _hasError = true;
+                _candidates = [];
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception)
+        {
+            _hasError = true;
+        }
+        finally
+        {
+            _isLoading = false;
         }
     }
 

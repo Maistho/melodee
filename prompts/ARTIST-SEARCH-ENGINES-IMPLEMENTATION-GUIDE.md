@@ -11,8 +11,8 @@ This guide is written to minimize decision-making for coding agents. Follow the 
 - [x] Phase 0 — Baseline + conventions alignment
 - [x] Phase 1 — Shared infrastructure (validation, HTTP clients, retry, throttling, caching helpers)
 - [x] Phase 2 — Provider plugins (Discogs, iTunes, Last.fm, WikiData)
-- [ ] Phase 3 — AMG lookup UI integration (via injected ArtistSearchEngineService)
-- [ ] Phase 4 — Settings + admin UI wiring (enable flags + provider settings)
+- [x] Phase 3 — AMG lookup UI integration (via injected ArtistSearchEngineService)
+- [x] Phase 4 — Settings + admin UI wiring (enable flags + provider settings)
 - [ ] Phase 5 — Tests (unit + fixtures, no live API in CI)
 - [ ] Phase 6 — Documentation + final verification
 
@@ -21,11 +21,11 @@ This guide is written to minimize decision-making for coding agents. Follow the 
 ## Coding agent template
 ```.aiignore
 You are a coding agent working in /home/steven/source/melodee. Your task is to COMPLETE ONE PHASE 
-from prompts/ARTIST-SEARCH-ENGINES-IMPLEMENTATION-GUIDE.md: **Phase 3 — AMG lookup UI integration (via injected ArtistSearchEngineService)** (and only that phase), 
+from prompts/ARTIST-SEARCH-ENGINES-IMPLEMENTATION-GUIDE.md: **Phase 5 — Tests (unit + fixtures, no live API in CI)** (and only that phase), 
 meeting its Exit Criteria.
 
  Requirements (follow exactly; do not bikeshed):
- 1) Read prompts/ARTIST-SEARCH-ENGINES-IMPLEMENTATION-GUIDE.md and implement every checklist item in Phase 3 in order.
+ 1) Read prompts/ARTIST-SEARCH-ENGINES-IMPLEMENTATION-GUIDE.md and implement every checklist item in Phase 5 in order.
  2) Follow the guide’s Global Defaults:
     - Timeout: 10s per request
     - Use SettingRegistry.SearchEngineUserAgent (searchEngine.userAgent) as User-Agent on all external provider requests
@@ -39,7 +39,7 @@ meeting its Exit Criteria.
  4) If the phase involves settings seed data, modify the EF Core model/seed and generate a NEW migration (never edit existing migrations).
  5) If the phase involves Blazor UI, inject and call services directly (no internal HTTP calls) and localize any new user-facing strings.
  6) Tests:
-    - If Phase 3 includes tests, add deterministic tests using mocked HTTP responses; do NOT call live external APIs in CI.
+    - If Phase 5 includes tests, add deterministic tests using mocked HTTP responses; do NOT call live external APIs in CI.
 
  Validation:
  - Run the relevant verification commands for your phase (at minimum: `dotnet test` for impacted projects).
@@ -216,32 +216,32 @@ Exit criteria:
 
 ## Phase 3 — AMG lookup UI integration (iTunes only)
 
-- [ ] Update `src/Melodee.Blazor/Components/Dialogs/ArtistLookupDialog.razor` to support “Lookup by AMG ID”.
-- [ ] The dialog must use injected services (it already injects `ArtistSearchEngineService`; no internal HTTP calls).
+- [x] Update `src/Melodee.Blazor/Components/Dialogs/ArtistLookupDialog.razor` to support "Lookup by AMG ID".
+- [x] The dialog must use injected services (it already injects `ArtistSearchEngineService`; no internal HTTP calls).
 
 Concrete approach:
-- [ ] Extend `ArtistSearchEngineService` (or a small helper service it owns) with an explicit method, e.g. `LookupByAmgIdAsync(string amgArtistId, ...)`, that:
-  - validates digits-only
-  - calls iTunes lookup endpoint `https://itunes.apple.com/lookup?amgArtistId={ID}`
-  - returns `ArtistSearchResult` candidates with `AmgId` and `ItunesId` populated where available
+- [x] Extend `ArtistSearchEngineService` with an explicit method `LookupByAmgIdAsync(string amgArtistId, ...)`, that:
+  - [x] validates digits-only using `SearchEngineQueryNormalization.ValidateAmgIdResult()`
+  - [x] calls iTunes lookup endpoint `https://itunes.apple.com/lookup?amgArtistId={ID}`
+  - [x] returns `ArtistSearchResult` candidates with `AmgId` and `ItunesId` populated where available
 
 Exit criteria:
-- [ ] User can enter an AMG ID and get candidates without enabling non-iTunes providers.
+- [x] User can enter an AMG ID and get candidates without enabling non-iTunes providers.
 
 ---
 
 ## Phase 4 — Settings + admin UI
 
 ### 4.1 Add settings keys (database-backed)
-- [ ] Ensure these NEW keys exist in DB seed/config:
-  - `searchEngine.discogs.enabled`
-  - `searchEngine.discogs.userToken`
-  - `searchEngine.wikidata.enabled`
-- [ ] Reuse existing keys (already present in DB seed / `SettingRegistry`) instead of adding duplicates:
-  - `searchEngine.userAgent` (shared UA for external providers)
-  - `searchEngine.itunes.enabled`
-  - `searchEngine.lastFm.Enabled`
-  - `scrobbling.lastFm.apiKey` (used by Last.fm search engine plugin)
+- [x] Ensure these NEW keys exist in DB seed/config:
+  - [x] `searchEngine.discogs.enabled`
+  - [x] `searchEngine.discogs.userToken`
+  - [x] `searchEngine.wikidata.enabled`
+- [x] Reuse existing keys (already present in DB seed / `SettingRegistry`) instead of adding duplicates:
+  - [x] `searchEngine.userAgent` (shared UA for external providers)
+  - [x] `searchEngine.itunes.enabled`
+  - [x] `searchEngine.lastFm.Enabled`
+  - [x] `scrobbling.lastFm.apiKey` (used by Last.fm search engine plugin)
 
 Rules:
 - This repo uses EF Core seed data for settings in `MelodeeDbContext`: update seed and **generate a new migration** (do not edit existing migrations).
@@ -249,14 +249,14 @@ Rules:
   - Env var mapping uses `_` → `.` and is case-insensitive.
 
 ### 4.2 Admin UI
-- [ ] Prefer using the existing generic settings admin page `src/Melodee.Blazor/Components/Pages/Admin/Settings.razor` (it already lists `SettingRegistry` keys and respects env-var overrides).
-- [ ] If you add provider-specific UI beyond generic key/value editing, keep it additive and ensure secrets are not displayed.
+- [x] Prefer using the existing generic settings admin page `src/Melodee.Blazor/Components/Pages/Admin/Settings.razor` (it already lists `SettingRegistry` keys and respects env-var overrides).
+- [x] If you add provider-specific UI beyond generic key/value editing, keep it additive and ensure secrets are not displayed.
 
 ### 4.3 Localization
-- [ ] Any new user-facing strings must be localized via existing localization patterns (no hardcoded text).
+- [x] Any new user-facing strings must be localized via existing localization patterns (no hardcoded text).
 
 Exit criteria:
-- [ ] An admin can enable Discogs/WikiData and configure required settings without restarting the app.
+- [x] An admin can enable Discogs/WikiData and configure required settings without restarting the app.
 
 ---
 
