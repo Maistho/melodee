@@ -1,6 +1,11 @@
----
----
 (function () {
+	var config = window.searchConfig || {
+		searchVersions: ["all"],
+		versioning: "false",
+		allowSearch: "true",
+		tagColor: "primary"
+	};
+
 	function getQueryVariable(variable) {
 		var query = window.location.search.substring(1),
 			vars = query.split("&");
@@ -63,32 +68,32 @@
 
 		if (results.length) {
 			var resultsHTML = "";
-			var searchVersions = [{% for v in site.version_params.search_versions %}"{{ v }}",{% endfor %}"all"]
+			var searchVersions = config.searchVersions;
 			results.forEach(function (result) {
 			
   				var item = window.data[result.ref]
 
 				// Versioning is disabled
-				if (("{{ site.version_params.versioning }}" == "false") && (item.version != "all")) {
+				if ((config.versioning == "false") && (item.version != "all")) {
 				    return
 				}
 
 				// Skip result if showing versions disabled
-				if (("{{ site.version_params.allow_search }}" == "false") && (item.version != "all")) {
+				if ((config.allowSearch == "false") && (item.version != "all")) {
 				    return
 				}
 
-                               // Skip result if version not in all or versions allowed for search
-				if (("{{ site.version_params.versioning }}" == "true") && ("{{ site.version_params.allow_search }}" == "true") && (!searchVersions.includes(item.version))) {
+				// Skip result if version not in all or versions allowed for search
+				if ((config.versioning == "true") && (config.allowSearch == "true") && (!searchVersions.includes(item.version))) {
 				    return
 				}
 
-                                if (item.title) {
+				if (item.title) {
 					contentPreview = getPreview(query, item.content, 170),
 					titlePreview = getPreview(query, item.title);
 
 					// If we only allow one version (all) skip adding a badge
-					if (searchVersions.length == 1 ||  "{{ site.version_params.versioning }}" == "false"){
+					if (searchVersions.length == 1 || config.versioning == "false"){
 						versionBadge = ""
 
 					// Any older version shows up in gray
@@ -97,8 +102,8 @@
 
 					// Current is blue (primary)
 					} else {
-						versionBadge = "<span class='badge badge-{{ site.tag_color }}'>Current</span>"
-                                       }
+						versionBadge = "<span class='badge badge-" + config.tagColor + "'>Current</span>"
+					}
 					resultsHTML += "<li><h4><a href='" + item.url.trim() + "'>" + titlePreview + "</a></h4><p>" + versionBadge +"<small>" + contentPreview + "</small></p></li>";
 				}
 			});
@@ -124,13 +129,13 @@
 		searchQueryEl = document.getElementById("search-query");
 
 	searchQueryEl.innerText = query;
-        if (query != ""){
-   		searchQueryContainerEl.style.display = "inline";
-        }
+	if (query != ""){
+		searchQueryContainerEl.style.display = "inline";
+	}
 
 	for (var key in window.data) {
 		window.index.add(window.data[key]);
 	}
 
-	displaySearchResults(window.index.search(query), query); // Hand the results off to be displayed
+	displaySearchResults(window.index.search(query), query);
 })();
