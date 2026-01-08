@@ -69,9 +69,16 @@ public sealed class MqlAlbumCompiler : IMqlCompiler<Album>
             return Expression.Constant(true);
         }
 
-        return node.Operator.ToLowerInvariant() switch
+        var effectiveOperator = node.Operator.ToLowerInvariant();
+        // Only apply DefaultOperator for unquoted "equals" - "exactequals" means user explicitly quoted the value
+        if (effectiveOperator == "equals" && fieldInfo.DefaultOperator != "equals")
         {
-            "equals" => CompileEquals(fieldInfo, node.Value, parameter, userId),
+            effectiveOperator = fieldInfo.DefaultOperator;
+        }
+
+        return effectiveOperator switch
+        {
+            "equals" or "exactequals" => CompileEquals(fieldInfo, node.Value, parameter, userId),
             "notequals" => Expression.Not(CompileEquals(fieldInfo, node.Value, parameter, userId)),
             "lessthan" => CompileLessThan(fieldInfo, node.Value, parameter, userId),
             "lessthanorequals" => CompileLessThanOrEquals(fieldInfo, node.Value, parameter, userId),
@@ -278,16 +285,19 @@ public sealed class MqlAlbumCompiler : IMqlCompiler<Album>
             return CompileArrayContains(parameter, propertyPath, stringValue);
         }
 
-        Expression propertyExpr = propertyPath.Length switch
+        var actualPath = propertyPath.Skip(1).ToArray();
+        Expression propertyExpr = actualPath.Length switch
         {
-            1 => Expression.Property(parameter, propertyPath[0]),
-            2 => GetNestedPropertyExpression(parameter, [propertyPath[1], propertyPath[2]]),
-            3 => GetNestedPropertyExpression(parameter, [propertyPath[1], propertyPath[2], propertyPath[3]]),
-            _ => GetNestedPropertyExpression(parameter, propertyPath.Skip(1).ToArray())
+            1 => Expression.Property(parameter, actualPath[0]),
+            2 => GetNestedPropertyExpression(parameter, [actualPath[0], actualPath[1]]),
+            3 => GetNestedPropertyExpression(parameter, [actualPath[0], actualPath[1], actualPath[2]]),
+            _ => GetNestedPropertyExpression(parameter, actualPath)
         };
 
         var containsMethod = typeof(string).GetMethod("Contains", [typeof(string)])!;
-        return Expression.Call(propertyExpr, containsMethod, Expression.Constant(stringValue));
+        var containsCall = Expression.Call(propertyExpr, containsMethod, Expression.Constant(stringValue));
+        var nullCheck = Expression.NotEqual(propertyExpr, Expression.Constant(null, typeof(string)));
+        return Expression.AndAlso(nullCheck, containsCall);
     }
 
     private Expression CompileArrayContains(ParameterExpression parameter, string[] propertyPath, string value)

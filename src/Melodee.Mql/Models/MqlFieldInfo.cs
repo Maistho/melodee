@@ -10,6 +10,7 @@ namespace Melodee.Mql.Models;
 /// <param name="IsUserScoped">Whether the field requires user context (e.g., rating, plays).</param>
 /// <param name="Description">Human-readable description of the field.</param>
 /// <param name="ValueMultiplier">Optional multiplier applied to user input values before comparison (e.g., 1000 to convert seconds to milliseconds).</param>
+/// <param name="DefaultOperator">Default comparison operator for this field (e.g., "contains" for string fields, "equals" for others).</param>
 public record MqlFieldInfo(
     string Name,
     string[] Aliases,
@@ -17,7 +18,8 @@ public record MqlFieldInfo(
     string DbMapping,
     bool IsUserScoped,
     string? Description,
-    double ValueMultiplier = 1.0)
+    double ValueMultiplier = 1.0,
+    string DefaultOperator = "equals")
 {
     /// <summary>
     /// Checks if the given name matches this field (by name or alias).

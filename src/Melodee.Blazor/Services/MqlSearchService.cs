@@ -11,7 +11,7 @@ using Song = Melodee.Common.Data.Models.Song;
 
 namespace Melodee.Blazor.Services;
 
-public sealed record MqlSearchResult<T>
+public sealed record MqlSearchResult<T> where T : notnull
 {
     public required bool IsValid { get; init; }
     public required List<string> Errors { get; init; }
@@ -19,11 +19,22 @@ public sealed record MqlSearchResult<T>
     public required PagedResult<T> Results { get; init; }
 }
 
+public sealed record MqlSearchAllResult
+{
+    public required bool IsValid { get; init; }
+    public required List<string> Errors { get; init; }
+    public required List<string> Warnings { get; init; }
+    public required PagedResult<Song> Songs { get; init; }
+    public required PagedResult<Album> Albums { get; init; }
+    public required PagedResult<Artist> Artists { get; init; }
+}
+
 public interface IMqlSearchService
 {
     Task<MqlSearchResult<Song>> SearchSongsAsync(string mqlQuery, int userId, PagedRequest paging, CancellationToken cancellationToken = default);
     Task<MqlSearchResult<Album>> SearchAlbumsAsync(string mqlQuery, int userId, PagedRequest paging, CancellationToken cancellationToken = default);
     Task<MqlSearchResult<Artist>> SearchArtistsAsync(string mqlQuery, int userId, PagedRequest paging, CancellationToken cancellationToken = default);
+    Task<MqlSearchAllResult> SearchAllAsync(string mqlQuery, int userId, PagedRequest paging, CancellationToken cancellationToken = default);
     MqlValidationResult ValidateQuery(string mqlQuery, string entityType);
 }
 
@@ -277,6 +288,40 @@ public sealed class MqlSearchService(
                 TotalPages = paging.TotalPages(totalCount),
                 Data = artists
             }
+        };
+    }
+
+    public async Task<MqlSearchAllResult> SearchAllAsync(string mqlQuery, int userId, PagedRequest paging, CancellationToken cancellationToken = default)
+    {
+        var songTask = SearchSongsAsync(mqlQuery, userId, paging, cancellationToken);
+        var albumTask = SearchAlbumsAsync(mqlQuery, userId, paging, cancellationToken);
+        var artistTask = SearchArtistsAsync(mqlQuery, userId, paging, cancellationToken);
+
+        await Task.WhenAll(songTask, albumTask, artistTask).ConfigureAwait(false);
+
+        var songResult = await songTask;
+        var albumResult = await albumTask;
+        var artistResult = await artistTask;
+
+        var errors = new List<string>();
+        var warnings = new List<string>();
+
+        if (!songResult.IsValid) errors.AddRange(songResult.Errors.Select(e => $"Songs: {e}"));
+        if (!albumResult.IsValid) errors.AddRange(albumResult.Errors.Select(e => $"Albums: {e}"));
+        if (!artistResult.IsValid) errors.AddRange(artistResult.Errors.Select(e => $"Artists: {e}"));
+
+        warnings.AddRange(songResult.Warnings);
+        warnings.AddRange(albumResult.Warnings);
+        warnings.AddRange(artistResult.Warnings);
+
+        return new MqlSearchAllResult
+        {
+            IsValid = songResult.IsValid || albumResult.IsValid || artistResult.IsValid,
+            Errors = errors,
+            Warnings = warnings.Distinct().ToList(),
+            Songs = songResult.Results,
+            Albums = albumResult.Results,
+            Artists = artistResult.Results
         };
     }
 }

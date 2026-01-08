@@ -4840,4 +4840,13 @@
   <data name="SettingCategory.Jobs" xml:space="preserve">
     <value>Jobs</value>
   </data>
+<data name="Common.All" xml:space="preserve">
+    <value>All</value>
+  </data>
+<data name="Common.Artists" xml:space="preserve">
+    <value>Artists</value>
+  </data>
+<data name="Common.Albums" xml:space="preserve">
+    <value>Albums</value>
+  </data>
 </root>

@@ -4702,4 +4702,13 @@
   <data name="Search.MqlParseError" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Failed to parse query</value>
   </data>
+  <data name="Common.All" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] All</value>
+  </data>
+  <data name="Common.Artists" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Artists</value>
+  </data>
+  <data name="Common.Albums" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Albums</value>
+  </data>
 </root>

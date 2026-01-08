@@ -46,11 +46,12 @@
                 
                 <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Stretch">
                     <RadzenDropDown @bind-Value="_selectedEntity"
-                                    Data="_entityTypes"
+                                    Data="EntityTypes"
                                     TextProperty="Label"
                                     ValueProperty="Value"
                                     Style="width: 120px;" />
                     <RadzenTextBox @bind-Value="_mqlQuery" 
+                                   @bind-Value:event="oninput"
                                    Placeholder="@L("Search.MqlPlaceholder")"
                                    Style="flex: 1;"
                                    @onkeydown="OnMqlKeyDown" />
@@ -364,19 +365,20 @@
     private bool _advancedMode;
     private bool _mqlSearchPerformed;
     private string _mqlQuery = string.Empty;
-    private string _selectedEntity = "songs";
-    private List<string> _mqlErrors = new();
+    private string _selectedEntity = "all";
+    private List<string> _mqlErrors = [];
     
     private Song[] _mqlSongResults = [];
     private Album[] _mqlAlbumResults = [];
     private Artist[] _mqlArtistResults = [];
     
-    private static readonly List<EntityType> _entityTypes = new()
-    {
-        new("songs", "Songs"),
-        new("albums", "Albums"),
-        new("artists", "Artists")
-    };
+    private List<EntityType> EntityTypes =>
+    [
+        new("all", L("Common.All")),
+        new("songs", L("Common.Songs")),
+        new("albums", L("Common.Albums")),
+        new("artists", L("Common.Artists"))
+    ];
     
     private sealed record EntityType(string Value, string Label);
 
@@ -521,6 +523,18 @@
             
             switch (_selectedEntity)
             {
+                case "all":
+                    var allResult = await MqlSearchService.SearchAllAsync(_mqlQuery, userId, paging);
+                    _mqlSongResults = allResult.Songs.Data.ToArray();
+                    _mqlAlbumResults = allResult.Albums.Data.ToArray();
+                    _mqlArtistResults = allResult.Artists.Data.ToArray();
+                    if (!allResult.IsValid)
+                    {
+                        _mqlErrors.AddRange(allResult.Errors);
+                    }
+                    _mqlErrors.AddRange(allResult.Warnings);
+                    break;
+                    
                 case "songs":
                     var songResult = await MqlSearchService.SearchSongsAsync(_mqlQuery, userId, paging);
                     if (songResult.IsValid)

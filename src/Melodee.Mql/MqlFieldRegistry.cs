@@ -11,9 +11,9 @@ public static class MqlFieldRegistry
     {
         ["songs"] = new(StringComparer.OrdinalIgnoreCase)
         {
-            ["title"] = new("title", [], MqlFieldType.String, "Song.TitleNormalized", false, "Song title"),
-            ["artist"] = new("artist", [], MqlFieldType.String, "Song.Album.Artist.NameNormalized", false, "Artist name"),
-            ["album"] = new("album", [], MqlFieldType.String, "Song.Album.NameNormalized", false, "Album name"),
+            ["title"] = new("title", [], MqlFieldType.String, "Song.TitleNormalized", false, "Song title", DefaultOperator: "contains"),
+            ["artist"] = new("artist", [], MqlFieldType.String, "Song.Album.Artist.NameNormalized", false, "Artist name", DefaultOperator: "contains"),
+            ["album"] = new("album", [], MqlFieldType.String, "Song.Album.NameNormalized", false, "Album name", DefaultOperator: "contains"),
             ["genre"] = new("genre", [], MqlFieldType.ArrayString, "Song.Genres", false, "Genre tags"),
             ["mood"] = new("mood", [], MqlFieldType.ArrayString, "Song.Moods", false, "Mood tags"),
             ["year"] = new("year", [], MqlFieldType.Number, "Song.Album.ReleaseDate.Year", false, "Release year"),
@@ -25,16 +25,16 @@ public static class MqlFieldRegistry
             ["starredat"] = new("starredAt", [], MqlFieldType.Date, "Song.UserSongs.StarredAt", true, "Date starred"),
             ["lastplayedat"] = new("lastPlayedAt", [], MqlFieldType.Date, "Song.UserSongs.LastPlayedAt", true, "Last played date"),
             ["added"] = new("added", [], MqlFieldType.Date, "Song.CreatedAt", false, "Date added to library"),
-            ["composer"] = new("composer", [], MqlFieldType.String, "Song.ComposerNormalized", false, "Composer name"),
+            ["composer"] = new("composer", [], MqlFieldType.String, "Song.ComposerNormalized", false, "Composer name", DefaultOperator: "contains"),
             ["discnumber"] = new("discNumber", ["disc"], MqlFieldType.Number, "Song.DiscNumber", false, "Disc number"),
             ["tracknumber"] = new("trackNumber", ["track"], MqlFieldType.Number, "Song.SortOrder", false, "Track number"),
-            ["comment"] = new("comment", [], MqlFieldType.String, "Song.Comment", false, "Comment"),
+            ["comment"] = new("comment", [], MqlFieldType.String, "Song.Comment", false, "Comment", DefaultOperator: "contains"),
             ["imagecount"] = new("imageCount", ["images"], MqlFieldType.Number, "Song.ImageCount", false, "Number of images")
         },
         ["albums"] = new(StringComparer.OrdinalIgnoreCase)
         {
-            ["album"] = new("album", ["name"], MqlFieldType.String, "Album.NameNormalized", false, "Album name"),
-            ["artist"] = new("artist", [], MqlFieldType.String, "Album.Artist.NameNormalized", false, "Artist name"),
+            ["album"] = new("album", ["name"], MqlFieldType.String, "Album.NameNormalized", false, "Album name", DefaultOperator: "contains"),
+            ["artist"] = new("artist", [], MqlFieldType.String, "Album.Artist.NameNormalized", false, "Artist name", DefaultOperator: "contains"),
             ["year"] = new("year", [], MqlFieldType.Number, "Album.ReleaseDate.Year", false, "Release year"),
             ["duration"] = new("duration", [], MqlFieldType.Number, "Album.Duration", false, "Total duration in seconds", 1000),
             ["genre"] = new("genre", [], MqlFieldType.ArrayString, "Album.Genres", false, "Genre tags"),
@@ -50,7 +50,7 @@ public static class MqlFieldRegistry
         },
         ["artists"] = new(StringComparer.OrdinalIgnoreCase)
         {
-            ["artist"] = new("artist", ["name"], MqlFieldType.String, "Artist.NameNormalized", false, "Artist name"),
+            ["artist"] = new("artist", ["name"], MqlFieldType.String, "Artist.NameNormalized", false, "Artist name", DefaultOperator: "contains"),
             ["rating"] = new("rating", [], MqlFieldType.Number, "Artist.UserArtists.Rating", true, "User rating"),
             ["starred"] = new("starred", [], MqlFieldType.Boolean, "Artist.UserArtists.IsStarred", true, "Starred status"),
             ["starredat"] = new("starredAt", [], MqlFieldType.Date, "Artist.UserArtists.StarredAt", true, "Date starred"),

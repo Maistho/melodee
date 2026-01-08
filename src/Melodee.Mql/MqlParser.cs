@@ -248,6 +248,9 @@ public sealed class MqlParser : IMqlParser
 
         Advance();
 
+        // Check if value is a quoted string (StringLiteral) - if so, use exact matching
+        var isQuotedString = _currentToken.Type == MqlTokenType.StringLiteral;
+
         // Parse value
         var value = ParseValue();
 
@@ -284,7 +287,10 @@ public sealed class MqlParser : IMqlParser
 
         AppendToNormalized(value.ToString() ?? string.Empty);
 
-        return new FieldExpressionNode(fieldName, op, value, fieldToken);
+        // If the value was quoted, use "ExactEquals" to override DefaultOperator behavior
+        var finalOp = (isQuotedString && op == "Equals") ? "ExactEquals" : op;
+
+        return new FieldExpressionNode(fieldName, finalOp, value, fieldToken);
     }
 
     private static (string Pattern, string Flags) ParseRegexPattern(string regexToken)

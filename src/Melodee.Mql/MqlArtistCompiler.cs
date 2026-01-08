@@ -67,9 +67,16 @@ public sealed class MqlArtistCompiler : IMqlCompiler<Artist>
             return Expression.Constant(true);
         }
 
-        return node.Operator.ToLowerInvariant() switch
+        var effectiveOperator = node.Operator.ToLowerInvariant();
+        // Only apply DefaultOperator for unquoted "equals" - "exactequals" means user explicitly quoted the value
+        if (effectiveOperator == "equals" && fieldInfo.DefaultOperator != "equals")
         {
-            "equals" => CompileEquals(fieldInfo, node.Value, parameter, userId),
+            effectiveOperator = fieldInfo.DefaultOperator;
+        }
+
+        return effectiveOperator switch
+        {
+            "equals" or "exactequals" => CompileEquals(fieldInfo, node.Value, parameter, userId),
             "notequals" => Expression.Not(CompileEquals(fieldInfo, node.Value, parameter, userId)),
             "lessthan" => CompileLessThan(fieldInfo, node.Value, parameter, userId),
             "lessthanorequals" => CompileLessThanOrEquals(fieldInfo, node.Value, parameter, userId),
