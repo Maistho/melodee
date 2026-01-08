@@ -1,3 +1,4 @@
+using Melodee.Blazor.Controllers.Melodee.Models.ArtistLookup;
 using Melodee.Common.Models.SearchEngines;
 
 namespace Melodee.Tests.Common.Services.SearchEngines;
@@ -85,6 +86,174 @@ public class ArtistSearchEngineServiceTests : ServiceTestBase
         // Assert
         Assert.NotNull(result);
         Assert.Equal(0, result.TotalCount);
+    }
+
+    #endregion
+
+    #region LookupAsync Tests
+
+    [Fact]
+    public async Task LookupAsync_WithEmptyName_ReturnsEmptyResult()
+    {
+        // Arrange
+        var service = GetArtistSearchEngineService();
+        await service.InitializeAsync();
+
+        // Act
+        var result = await service.LookupAsync(string.Empty, 10, null, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Empty(result.Candidates);
+    }
+
+    [Fact]
+    public async Task LookupAsync_WithValidName_ReturnsCandidates()
+    {
+        // Arrange
+        var service = GetArtistSearchEngineService();
+        await service.InitializeAsync();
+
+        // Act
+        var result = await service.LookupAsync("Test", 10, null, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Candidates);
+    }
+
+    [Fact]
+    public async Task LookupAsync_WithProviderFilter_RespectsFilter()
+    {
+        // Arrange
+        var service = GetArtistSearchEngineService();
+        await service.InitializeAsync();
+
+        var plugins = service.GetRegisteredPlugins();
+        var firstPluginId = plugins.FirstOrDefault()?.Id;
+
+        // Act
+        var result = await service.LookupAsync("Test", 10, [firstPluginId ?? "Unknown"], CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Candidates);
+    }
+
+    [Fact]
+    public async Task LookupAsync_GetRegisteredPlugins_ReturnsEnabledPlugins()
+    {
+        // Arrange
+        var service = GetArtistSearchEngineService();
+        await service.InitializeAsync();
+
+        // Act
+        var plugins = service.GetRegisteredPlugins();
+
+        // Assert
+        Assert.NotNull(plugins);
+        Assert.NotEmpty(plugins);
+    }
+
+    #endregion
+
+    #region ArtistLookupRequest Validation Tests
+
+    [Fact]
+    public void ArtistLookupRequest_WithEmptyName_ReturnsValidationError()
+    {
+        // Arrange
+        var request = new ArtistLookupRequest { ArtistName = string.Empty };
+
+        // Act
+        var isValid = request.Validate(out var errorMessage);
+
+        // Assert
+        Assert.False(isValid);
+        Assert.NotNull(errorMessage);
+        Assert.Contains("required", errorMessage, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void ArtistLookupRequest_WithWhitespaceName_ReturnsValidationError()
+    {
+        // Arrange
+        var request = new ArtistLookupRequest { ArtistName = "   " };
+
+        // Act
+        var isValid = request.Validate(out var errorMessage);
+
+        // Assert
+        Assert.False(isValid);
+        Assert.NotNull(errorMessage);
+    }
+
+    [Fact]
+    public void ArtistLookupRequest_WithNameTooLong_ReturnsValidationError()
+    {
+        // Arrange
+        var request = new ArtistLookupRequest { ArtistName = new string('a', 201) };
+
+        // Act
+        var isValid = request.Validate(out var errorMessage);
+
+        // Assert
+        Assert.False(isValid);
+        Assert.NotNull(errorMessage);
+        Assert.Contains("200", errorMessage);
+    }
+
+    [Fact]
+    public void ArtistLookupRequest_WithInvalidLimit_ReturnsValidationError()
+    {
+        // Arrange
+        var request = new ArtistLookupRequest { ArtistName = "Test Artist", Limit = 100 };
+
+        // Act
+        var isValid = request.Validate(out var errorMessage);
+
+        // Assert
+        Assert.False(isValid);
+        Assert.NotNull(errorMessage);
+        Assert.Contains("limit", errorMessage, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void ArtistLookupRequest_WithTooManyProviderIds_ReturnsValidationError()
+    {
+        // Arrange
+        var request = new ArtistLookupRequest
+        {
+            ArtistName = "Test",
+            ProviderIds = Enumerable.Range(0, 21).Select(i => $"provider_{i}").ToArray()
+        };
+
+        // Act
+        var isValid = request.Validate(out var errorMessage);
+
+        // Assert
+        Assert.False(isValid);
+        Assert.NotNull(errorMessage);
+        Assert.Contains("ProviderIds", errorMessage);
+    }
+
+    [Fact]
+    public void ArtistLookupRequest_WithValidData_ReturnsSuccess()
+    {
+        // Arrange
+        var request = new ArtistLookupRequest
+        {
+            ArtistName = "Test Artist",
+            Limit = 10,
+            ProviderIds = ["provider1", "provider2"]
+        };
+
+        // Act
+        var isValid = request.Validate(out var errorMessage);
+
+        // Assert
+        Assert.True(isValid);
+        Assert.Null(errorMessage);
     }
 
     #endregion

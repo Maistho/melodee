@@ -1,0 +1,235 @@
+@using Melodee.Blazor.Components.Pages
+@using Melodee.Blazor.Controllers.Melodee.Models.ArtistLookup
+
+@inherits MelodeeComponentBase
+
+@inject IHttpClientFactory HttpClientFactory
+@inject DialogService DialogService
+@inject NotificationService NotificationService
+
+<RadzenStack Gap="1rem">
+    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+        <RadzenTextBox @bind-Value="@_searchText"
+                       Placeholder="@L("ArtistLookup.EnterArtistName")"
+                       Style="flex: 1"
+                       Name="SearchText"
+                       @onkeyup="@OnKeyUpAsync"
+                       Disabled="@_isLoading"/>
+        <RadzenButton Icon="search"
+                      Text="@L("Actions.Search")"
+                      Click="@SearchAsync"
+                      Disabled="@(_isLoading || string.IsNullOrWhiteSpace(_searchText))"
+                      ButtonStyle="ButtonStyle.Primary"/>
+    </RadzenStack>
+
+    @if (_providers != null && _providers.Length > 0)
+    {
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" class="rz-mt-2">
+            <RadzenLabel Text="@L("ArtistLookup.FilterByProvider")" Component="ProviderFilter"/>
+            <RadzenDropDown @bind-Value="@_selectedProviderIds"
+                            Data="@_providers.Where(p => p.IsEnabled)"
+                            TextProperty="DisplayName"
+                            ValueProperty="Id"
+                            Multiple="true"
+                            Placeholder="@L("ArtistLookup.AllEnabledProviders")"
+                            Style="flex: 1"
+                            Name="ProviderFilter"
+                            AllowFiltering="false"/>
+        </RadzenStack>
+    }
+
+    @if (_isLoading)
+    {
+        <RadzenStack AlignItems="AlignItems.Center" class="rz-p-4">
+            <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate"/>
+            <RadzenText Text="@L("ArtistLookup.Searching")" class="rz-text-secondary"/>
+        </RadzenStack>
+    }
+    else if (_hasError)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" ShowIcon="true">
+            @L("ArtistLookup.SearchError")
+        </RadzenAlert>
+    }
+    else if (_candidates != null && _candidates.Length > 0)
+    {
+        <RadzenStack Gap="0.5rem" class="rz-mt-2" Style="max-height: 400px; overflow-y: auto;">
+            @foreach (var candidate in _candidates)
+            {
+                <RadzenCard class="candidate-card" Click="@(() => SelectCandidate(candidate))">
+                    <RadzenStack Gap="0.5rem">
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                            @if (!string.IsNullOrEmpty(candidate.ThumbnailUrl))
+                            {
+                                <RadzenImage Path="@candidate.ThumbnailUrl"
+                                             Style="width: 48px; height: 48px; object-fit: cover;"
+                                             AlternateText="@candidate.Name"/>
+                            }
+                            <RadzenStack Style="flex: 1">
+                                <RadzenText TextStyle="TextStyle.Body1" class="rz-font-weight-bold">
+                                    @candidate.Name
+                                </RadzenText>
+                                @if (!string.IsNullOrEmpty(candidate.SortName) && candidate.SortName != candidate.Name)
+                                {
+                                    <RadzenText TextStyle="TextStyle.Caption" class="rz-text-secondary">
+                                        @candidate.SortName
+                                    </RadzenText>
+                                }
+                                <RadzenText TextStyle="TextStyle.Caption" class="rz-text-secondary">
+                                    @L("ArtistLookup.FromProvider", candidate.ProviderDisplayName)
+                                </RadzenText>
+                            </RadzenStack>
+                        </RadzenStack>
+
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem" class="rz-mt-1">
+                            @if (candidate.MusicBrainzId.HasValue)
+                            {
+                                <RadzenBadge BadgeStyle="BadgeStyle.Info" Text="@($"MB: {candidate.MusicBrainzId.Value.ToString()[..8]}...")"/>
+                            }
+                            @if (!string.IsNullOrEmpty(candidate.SpotifyId))
+                            {
+                                <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="@($"Spotify: {candidate.SpotifyId}")"/>
+                            }
+                            @if (!string.IsNullOrEmpty(candidate.DiscogsId))
+                            {
+                                <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="@($"Discogs: {candidate.DiscogsId}")"/>
+                            }
+                        </RadzenStack>
+                    </RadzenStack>
+                </RadzenCard>
+            }
+        </RadzenStack>
+    }
+    else if (_hasSearched)
+    {
+        <RadzenText Text="@L("ArtistLookup.NoResults")" class="rz-text-secondary rz-text-align-center"/>
+    }
+
+    @if (_hasPartialFailures)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" class="rz-mt-2">
+            @L("ArtistLookup.SomeProvidersFailed")
+        </RadzenAlert>
+    }
+
+    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End" class="rz-mt-4">
+        <RadzenButton Text="@L("Actions.Cancel")"
+                      ButtonStyle="ButtonStyle.Light"
+                      Click="@(() => DialogService.Close(null))"/>
+    </RadzenStack>
+</RadzenStack>
+
+@code {
+    private string _searchText = string.Empty;
+    private ArtistLookupCandidate[]? _candidates;
+    private ProviderInfo[]? _providers;
+    private string[] _selectedProviderIds = [];
+    private bool _isLoading;
+    private bool _hasError;
+    private bool _hasSearched;
+    private bool _hasPartialFailures;
+    private CancellationTokenSource? _searchCts;
+
+    [Parameter]
+    public string? InitialArtistName { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        _searchText = InitialArtistName ?? string.Empty;
+        await LoadProvidersAsync();
+    }
+
+    private async Task LoadProvidersAsync()
+    {
+        try
+        {
+            var httpClient = HttpClientFactory.CreateClient("MelodeeApi");
+            var response = await httpClient.GetAsync("api/v1/artist-lookup/providers");
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadFromJsonAsync<ProviderInfo[]>();
+                _providers = content ?? [];
+            }
+        }
+        catch (Exception)
+        {
+            _providers = [];
+        }
+    }
+
+    private async Task OnKeyUpAsync(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter" && !string.IsNullOrWhiteSpace(_searchText))
+        {
+            await SearchAsync();
+        }
+    }
+
+    private async Task SearchAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_searchText))
+        {
+            return;
+        }
+
+        _searchCts?.Cancel();
+        _searchCts = new CancellationTokenSource();
+
+        _isLoading = true;
+        _hasError = false;
+        _hasSearched = true;
+        _hasPartialFailures = false;
+        _candidates = null;
+
+        try
+        {
+            var httpClient = HttpClientFactory.CreateClient("MelodeeApi");
+            var request = new
+            {
+                ArtistName = _searchText,
+                Limit = 20,
+                ProviderIds = _selectedProviderIds.Length > 0 ? _selectedProviderIds : null
+            };
+
+            var response = await httpClient.PostAsJsonAsync("api/v1/artist-lookup", request, _searchCts.Token);
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadFromJsonAsync<ArtistLookupResponse>(_searchCts.Token);
+                _candidates = content?.Candidates ?? [];
+                _hasPartialFailures = content?.HasPartialFailures ?? false;
+            }
+            else
+            {
+                _hasError = true;
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception)
+        {
+            _hasError = true;
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void SelectCandidate(ArtistLookupCandidate candidate)
+    {
+        DialogService.Close(candidate);
+    }
+}
+
+<style>
+    .candidate-card {
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .candidate-card:hover {
+        background-color: var(--rz-base-200);
+    }
+</style>

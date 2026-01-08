@@ -4843,10 +4843,42 @@
 <data name="Common.All" xml:space="preserve">
     <value>All</value>
   </data>
-<data name="Common.Artists" xml:space="preserve">
+  <data name="Common.Artists" xml:space="preserve">
     <value>Artists</value>
   </data>
-<data name="Common.Albums" xml:space="preserve">
+  <data name="Common.Albums" xml:space="preserve">
     <value>Albums</value>
+  </data>
+
+  <!-- Artist Lookup -->
+  <data name="ArtistLookup.Title" xml:space="preserve">
+    <value>Artist Lookup</value>
+  </data>
+  <data name="ArtistLookup.EnterArtistName" xml:space="preserve">
+    <value>Enter artist name</value>
+  </data>
+  <data name="ArtistLookup.Searching" xml:space="preserve">
+    <value>Searching...</value>
+  </data>
+  <data name="ArtistLookup.NoResults" xml:space="preserve">
+    <value>No artists found</value>
+  </data>
+  <data name="ArtistLookup.SearchError" xml:space="preserve">
+    <value>An error occurred while searching. Please try again.</value>
+  </data>
+  <data name="ArtistLookup.SomeProvidersFailed" xml:space="preserve">
+    <value>Some search providers failed. Results may be incomplete.</value>
+  </data>
+  <data name="ArtistLookup.FromProvider" xml:space="preserve">
+    <value>From {0}</value>
+  </data>
+  <data name="ArtistLookup.FilterByProvider" xml:space="preserve">
+    <value>Filter by provider:</value>
+  </data>
+  <data name="ArtistLookup.AllEnabledProviders" xml:space="preserve">
+    <value>All enabled providers</value>
+  </data>
+  <data name="ArtistLookup.SelectToApply" xml:space="preserve">
+    <value>Select to apply</value>
   </data>
 </root>

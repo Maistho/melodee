@@ -10,6 +10,7 @@ COPY ["Directory.Build.props", "./"]
 COPY ["src/Melodee.Blazor/Melodee.Blazor.csproj", "src/Melodee.Blazor/"]
 COPY ["src/Melodee.Cli/Melodee.Cli.csproj", "src/Melodee.Cli/"]
 COPY ["src/Melodee.Common/Melodee.Common.csproj", "src/Melodee.Common/"]
+COPY ["src/Melodee.Mql/Melodee.Mql.csproj", "src/Melodee.Mql/"]
 
 # Restore as distinct layers
 RUN dotnet restore "src/Melodee.Blazor/Melodee.Blazor.csproj"
@@ -19,6 +20,7 @@ RUN dotnet restore "src/Melodee.Cli/Melodee.Cli.csproj"
 COPY ["src/Melodee.Blazor/", "src/Melodee.Blazor/"]
 COPY ["src/Melodee.Cli/", "src/Melodee.Cli/"]
 COPY ["src/Melodee.Common/", "src/Melodee.Common/"]
+COPY ["src/Melodee.Mql/", "src/Melodee.Mql/"]
 
 WORKDIR "/src/src/Melodee.Blazor"
 RUN dotnet build "Melodee.Blazor.csproj" -c Release -o /app/build

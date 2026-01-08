@@ -1062,6 +1062,99 @@ public class ArtistSearchEngineService(
         };
     }
 
+    public IArtistSearchEnginePlugin[] GetRegisteredPlugins()
+    {
+        CheckInitialized();
+        return _artistSearchEnginePlugins;
+    }
+
+    public async Task<ArtistLookupResult> LookupAsync(
+        string artistName,
+        int? maxResults,
+        string[]? providerIds,
+        CancellationToken cancellationToken = default)
+    {
+        CheckInitialized();
+
+        var normalizedQuery = new ArtistQuery
+        {
+            Name = Utility.UnicodeNormalizer.Normalize(artistName)
+        };
+
+        var enabledPlugins = _artistSearchEnginePlugins.Where(x => x.IsEnabled).ToArray();
+
+        var filteredPlugins = providerIds != null && providerIds.Length > 0
+            ? enabledPlugins.Where(p => providerIds.Contains(p.Id)).ToArray()
+            : enabledPlugins;
+
+        var candidates = new List<ArtistSearchResult>();
+        var failedProviders = new List<(string ProviderId, string ErrorMessage)>();
+        var totalOperationTime = 0L;
+
+        foreach (var plugin in filteredPlugins.OrderBy(x => x.SortOrder))
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                break;
+            }
+
+            try
+            {
+                var startTicks = Stopwatch.GetTimestamp();
+                var pluginResult = await plugin.DoArtistSearchAsync(
+                    normalizedQuery,
+                    maxResults ?? _configuration.GetValue<int>(SettingRegistry.SearchEngineDefaultPageSize),
+                    cancellationToken).ConfigureAwait(false);
+
+                totalOperationTime += Stopwatch.GetElapsedTime(startTicks).Milliseconds;
+
+                if (pluginResult is { IsSuccess: true, Data: not null })
+                {
+                    foreach (var result in pluginResult.Data)
+                    {
+                        candidates.Add(result);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Warning(ex,
+                    "[{Plugin}] Search failed during artist lookup for query [{ArtistName}]",
+                    plugin.DisplayName,
+                    artistName);
+                failedProviders.Add((plugin.Id, "Search failed"));
+            }
+        }
+
+        var uniqueCandidates = new Dictionary<string, ArtistSearchResult>();
+        foreach (var candidate in candidates.OrderByDescending(x => x.Rank).ThenBy(x => x.Name))
+        {
+            var key = GetCandidateKey(candidate);
+            if (!uniqueCandidates.ContainsKey(key))
+            {
+                uniqueCandidates[key] = candidate;
+            }
+        }
+
+        return new ArtistLookupResult
+        {
+            Candidates = uniqueCandidates.Values
+                .Take(maxResults ?? _configuration.GetValue<int>(SettingRegistry.SearchEngineDefaultPageSize))
+                .ToArray(),
+            HasPartialFailures = failedProviders.Count > 0,
+            FailedProviderIds = failedProviders.Select(x => x.ProviderId).ToArray(),
+            OperationTime = totalOperationTime
+        };
+    }
+
+    private static string GetCandidateKey(ArtistSearchResult result)
+    {
+        return string.Join("|",
+            result.MusicBrainzId?.ToString() ?? string.Empty,
+            result.SpotifyId ?? string.Empty,
+            result.Name.ToNormalizedString() ?? string.Empty);
+    }
+
     private static bool IsAlbumUniqueConstraint(DbUpdateException ex)
     {
         return ex.InnerException is SqliteException sqlite &&

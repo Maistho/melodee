@@ -2,6 +2,9 @@
 @page "/media/artist/{ArtistId:int}/edit"
 
 @inherits MelodeeComponentBase
+@using Melodee.Blazor.Components.Dialogs
+@using Melodee.Blazor.Controllers.Melodee.Models.ArtistLookup
+@using Melodee.Common.Models
 @using Melodee.Common.Services.SearchEngines
 @using Artist = Melodee.Common.Models.SearchEngines.ArtistSearchEngineServiceData.Artist
 
@@ -265,15 +268,58 @@
     {
     }
 
-    private async Task SearchForExternalButtonClick(string amgid)
+    private async Task SearchForExternalButtonClick(string fieldName)
     {
-        await DialogService.OpenAsync("External Search", ds =>
-            @<div>
-                <RadzenText>External search integration for artist metadata retrieval.</RadzenText>
-                <RadzenText class="rz-text-secondary">This feature allows searching external providers (iTunes, Last.fm, Spotify) for artist information.</RadzenText>
-                <RadzenButton Text="Close" Click="@(() => ds.Close())" class="rz-mt-3"/>
-            </div>,
-            new DialogOptions { Width = "500px" });
+        var initialArtistName = !string.IsNullOrEmpty(_artist.Name) ? _artist.Name : string.Empty;
+        var result = await DialogService.OpenAsync<ArtistLookupDialog>(
+            L("ArtistLookup.Title"),
+            new Dictionary<string, object> { { "InitialArtistName", initialArtistName } },
+            new DialogOptions { Width = "600px", Height = "80vh" });
+
+        if (result is ArtistLookupCandidate candidate)
+        {
+            ApplyCandidateToArtist(candidate, fieldName);
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = "Artist Found",
+                Detail = "Artist information has been updated from the selected provider.",
+                Duration = ToastTime
+            });
+        }
+    }
+
+    private void ApplyCandidateToArtist(ArtistLookupCandidate candidate, string triggeredField)
+    {
+        if (!string.IsNullOrEmpty(candidate.AmgId))
+        {
+            _artist.AmgId = candidate.AmgId;
+        }
+        if (!string.IsNullOrEmpty(candidate.DiscogsId))
+        {
+            _artist.DiscogsId = candidate.DiscogsId;
+        }
+        if (!string.IsNullOrEmpty(candidate.ItunesId))
+        {
+            _artist.ItunesId = candidate.ItunesId;
+        }
+        if (!string.IsNullOrEmpty(candidate.LastFmId))
+        {
+            _artist.LastFmId = candidate.LastFmId;
+        }
+        if (candidate.MusicBrainzId.HasValue)
+        {
+            _artist.MusicBrainzId = candidate.MusicBrainzId.Value;
+            _artist.MusicBrainzIdValue = candidate.MusicBrainzId.Value.ToString();
+        }
+        if (!string.IsNullOrEmpty(candidate.SpotifyId))
+        {
+            _artist.SpotifyId = candidate.SpotifyId;
+        }
+        if (!string.IsNullOrEmpty(candidate.WikiDataId))
+        {
+            _artist.WikiDataId = candidate.WikiDataId;
+        }
     }
 
 

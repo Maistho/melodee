@@ -37,6 +37,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Melodee.Blazor\Melodee.Blazor.csproj"/>
     <ProjectReference Include="..\..\src\Melodee.Common\Melodee.Common.csproj"/>
   </ItemGroup>
 
