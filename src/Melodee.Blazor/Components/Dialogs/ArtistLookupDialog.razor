@@ -1,9 +1,14 @@
 @using Melodee.Blazor.Components.Pages
 @using Melodee.Blazor.Controllers.Melodee.Models.ArtistLookup
+@using Melodee.Common.Configuration
+@using Melodee.Common.Models.SearchEngines
+@using Melodee.Common.Plugins.SearchEngine
+@using Melodee.Common.Services.SearchEngines
 
 @inherits MelodeeComponentBase
 
-@inject IHttpClientFactory HttpClientFactory
+@inject ArtistSearchEngineService ArtistSearchEngineService
+@inject IMelodeeConfigurationFactory ConfigurationFactory
 @inject DialogService DialogService
 @inject NotificationService NotificationService
 
@@ -129,6 +134,7 @@
     private bool _hasSearched;
     private bool _hasPartialFailures;
     private CancellationTokenSource? _searchCts;
+    private IArtistSearchEnginePlugin[] _plugins = [];
 
     [Parameter]
     public string? InitialArtistName { get; set; }
@@ -144,13 +150,15 @@
     {
         try
         {
-            var httpClient = HttpClientFactory.CreateClient("MelodeeApi");
-            var response = await httpClient.GetAsync("api/v1/artist-lookup/providers");
-            if (response.IsSuccessStatusCode)
+            var configuration = await ConfigurationFactory.GetConfigurationAsync();
+            await ArtistSearchEngineService.InitializeAsync(configuration);
+            _plugins = ArtistSearchEngineService.GetRegisteredPlugins();
+            _providers = _plugins.Select(p => new ProviderInfo
             {
-                var content = await response.Content.ReadFromJsonAsync<ProviderInfo[]>();
-                _providers = content ?? [];
-            }
+                Id = p.Id,
+                DisplayName = p.DisplayName,
+                IsEnabled = p.IsEnabled
+            }).ToArray();
         }
         catch (Exception)
         {
@@ -184,25 +192,29 @@
 
         try
         {
-            var httpClient = HttpClientFactory.CreateClient("MelodeeApi");
-            var request = new
-            {
-                ArtistName = _searchText,
-                Limit = 20,
-                ProviderIds = _selectedProviderIds.Length > 0 ? _selectedProviderIds : null
-            };
+            var result = await ArtistSearchEngineService.LookupAsync(
+                _searchText,
+                20,
+                _selectedProviderIds.Length > 0 ? _selectedProviderIds : null,
+                _searchCts.Token);
 
-            var response = await httpClient.PostAsJsonAsync("api/v1/artist-lookup", request, _searchCts.Token);
-            if (response.IsSuccessStatusCode)
+            _candidates = result.Candidates.Select(c => new ArtistLookupCandidate
             {
-                var content = await response.Content.ReadFromJsonAsync<ArtistLookupResponse>(_searchCts.Token);
-                _candidates = content?.Candidates ?? [];
-                _hasPartialFailures = content?.HasPartialFailures ?? false;
-            }
-            else
-            {
-                _hasError = true;
-            }
+                ProviderDisplayName = c.FromPlugin,
+                ProviderId = _plugins.FirstOrDefault(p => p.DisplayName == c.FromPlugin)?.Id,
+                Name = c.Name,
+                SortName = c.SortName,
+                ImageUrl = c.ImageUrl,
+                ThumbnailUrl = c.ThumbnailUrl,
+                MusicBrainzId = c.MusicBrainzId,
+                SpotifyId = c.SpotifyId,
+                DiscogsId = c.DiscogsId,
+                AmgId = c.AmgId,
+                WikiDataId = c.WikiDataId,
+                ItunesId = c.ItunesId,
+                LastFmId = c.LastFmId
+            }).ToArray();
+            _hasPartialFailures = result.HasPartialFailures;
         }
         catch (OperationCanceledException)
         {

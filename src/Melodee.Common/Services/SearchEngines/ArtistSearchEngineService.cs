@@ -11,9 +11,14 @@ using Melodee.Common.Models.SearchEngines.ArtistSearchEngineServiceData;
 using Melodee.Common.Models.SearchEngines.ArtistSearchEngineServiceData.Extension;
 using Melodee.Common.Models.SpecialArtists;
 using Melodee.Common.Plugins.SearchEngine;
+using Melodee.Common.Plugins.SearchEngine.Discogs;
+using Melodee.Common.Plugins.SearchEngine.ITunes;
+using Melodee.Common.Plugins.SearchEngine.LastFm;
 using Melodee.Common.Plugins.SearchEngine.MusicBrainz;
 using Melodee.Common.Plugins.SearchEngine.MusicBrainz.Data;
 using Melodee.Common.Plugins.SearchEngine.Spotify;
+using Melodee.Common.Plugins.SearchEngine.WikiData;
+using Melodee.Common.Serialization;
 using Melodee.Common.Services.Caching;
 using Melodee.Common.Services.Scanning;
 using Melodee.Common.Utility;
@@ -36,7 +41,9 @@ public class ArtistSearchEngineService(
     IMelodeeConfigurationFactory configurationFactory,
     IDbContextFactory<MelodeeDbContext> melodeeDbContextFactory,
     IDbContextFactory<ArtistSearchEngineServiceDbContext> artistSearchEngineServiceDbContextFactory,
-    IMusicBrainzRepository musicBrainzRepository)
+    IMusicBrainzRepository musicBrainzRepository,
+    ISerializer serializer,
+    IHttpClientFactory httpClientFactory)
     : ServiceBase(logger, cacheManager, melodeeDbContextFactory)
 {
     private IArtistSearchEnginePlugin[] _artistSearchEnginePlugins = [];
@@ -72,6 +79,22 @@ public class ArtistSearchEngineService(
             new Spotify(Log.Logger, _configuration, CacheManager, spotifyClientBuilder, settingService, ContextFactory)
             {
                 IsEnabled = _configuration.GetValue<bool>(SettingRegistry.SearchEngineSpotifyEnabled)
+            },
+            new ITunesSearchEngine(Log.Logger, serializer, httpClientFactory, CacheManager)
+            {
+                IsEnabled = _configuration.GetValue<bool>(SettingRegistry.SearchEngineITunesEnabled)
+            },
+            new LastFm(Log.Logger, _configuration, serializer, httpClientFactory, CacheManager)
+            {
+                IsEnabled = _configuration.GetValue<bool>(SettingRegistry.SearchEngineLastFmEnabled)
+            },
+            new DiscogsArtistSearchEnginePlugin(Log.Logger, _configuration, httpClientFactory, CacheManager)
+            {
+                IsEnabled = _configuration.GetValue<bool>(SettingRegistry.SearchEngineDiscogsEnabled)
+            },
+            new WikiDataArtistSearchEnginePlugin(Log.Logger, _configuration, httpClientFactory, CacheManager)
+            {
+                IsEnabled = _configuration.GetValue<bool>(SettingRegistry.SearchEngineWikiDataEnabled)
             }
         ];
 
@@ -354,9 +377,9 @@ public class ArtistSearchEngineService(
                     plugin.DisplayName,
                     Stopwatch.GetElapsedTime(startTicks).TotalMilliseconds);
 
-                // If we found results from a higher-priority source, stop searching
-                // This avoids hitting rate-limited APIs like Spotify unnecessarily
-                if (pluginsResult.Count > 0 || plugin.StopProcessing)
+                // Process all enabled providers to merge results from all sources
+                // Only stop if cancellation is requested or plugin signals StopProcessing
+                if (cancellationToken.IsCancellationRequested || plugin.StopProcessing)
                 {
                     break;
                 }

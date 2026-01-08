@@ -190,7 +190,9 @@ public abstract class ServiceTestBase : IDisposable, IAsyncDisposable
             MockConfigurationFactory(),
             MockFactory(),
             MockArtistSearchEngineFactory(),
-            GetMusicBrainzRepository());
+            GetMusicBrainzRepository(),
+            Serializer,
+            MockHttpClientFactory());
     }
 
     protected ImageConvertor GetImageConvertor()

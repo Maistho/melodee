@@ -1358,6 +1358,36 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
                     Description = "Maximum number of concurrent audio streams allowed per user (default: 2)",
                     Value = "2",
                     CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1709,
+                    ApiKey = SeedGuid("Setting", 1709),
+                    Category = (int)SettingCategory.SearchEngine,
+                    Key = SettingRegistry.SearchEngineDiscogsEnabled,
+                    Comment = "Is Discogs search engine enabled.",
+                    Value = "false",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1710,
+                    ApiKey = SeedGuid("Setting", 1710),
+                    Category = (int)SettingCategory.SearchEngine,
+                    Key = SettingRegistry.SearchEngineDiscogsUserToken,
+                    Comment = "Discogs API user token for authentication.",
+                    Value = "",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1711,
+                    ApiKey = SeedGuid("Setting", 1711),
+                    Category = (int)SettingCategory.SearchEngine,
+                    Key = SettingRegistry.SearchEngineWikiDataEnabled,
+                    Comment = "Is WikiData search engine enabled.",
+                    Value = "false",
+                    CreatedAt = seedDataTimestamp
                 }
             );
         });

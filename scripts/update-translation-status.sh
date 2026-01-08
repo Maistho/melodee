@@ -20,20 +20,20 @@ for file in "$RESOURCES_DIR"/SharedResources*.resx; do
     else
         lang=$(echo "$filename" | sed 's/SharedResources\.//' | sed 's/\.resx//')
     fi
-    
+
     total=$(grep -c '<data name=' "$file" 2>/dev/null || echo "0")
     total="${total//[^0-9]/}"  # Strip non-numeric characters
     total_strings=$total
-    
+
     needs=$(grep -c '\[NEEDS TRANSLATION\]' "$file" 2>/dev/null || echo "0")
     needs="${needs//[^0-9]/}"  # Strip non-numeric characters
-    
+
     if [[ "$total" -gt 0 ]]; then
         pct=$(( ((total - needs) * 100) / total ))
     else
         pct=0
     fi
-    
+
     if [[ "$needs" -eq 0 ]]; then
         echo "  $lang: ✅ 100%"
     else

@@ -4,6 +4,8 @@
 @inherits MelodeeComponentBase
 @using Melodee.Blazor.Components.Dialogs
 @using Melodee.Blazor.Controllers.Melodee.Models.ArtistLookup
+@using Melodee.Common.Configuration
+@using Melodee.Common.Constants
 @using Melodee.Common.Models
 @using Melodee.Common.Services.SearchEngines
 @using Artist = Melodee.Common.Models.SearchEngines.ArtistSearchEngineServiceData.Artist
@@ -83,7 +85,8 @@
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
                                 <RadzenButton Icon="search" Text="Search"
-                                              Click="@(() => SearchForExternalButtonClick("AmgId"))"/>
+                                              Click="@(() => SearchForExternalButtonClick("AmgId"))"
+                                              Disabled="@(!_isMusicBrainzEnabled && !_isSpotifyEnabled)"/>
                             </RadzenColumn>
                         </RadzenRow>
                         <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
@@ -98,7 +101,8 @@
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
                                 <RadzenButton Icon="search" Text="Search"
-                                              Click="@(() => SearchForExternalButtonClick("DiscogsId"))"/>
+                                              Click="@(() => SearchForExternalButtonClick("DiscogsId"))"
+                                              Disabled="@(!_isMusicBrainzEnabled && !_isSpotifyEnabled)"/>
                             </RadzenColumn>
                         </RadzenRow>
                         <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
@@ -113,7 +117,8 @@
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
                                 <RadzenButton Icon="search" Text="Search"
-                                              Click="@(() => SearchForExternalButtonClick("ItunesId"))"/>
+                                              Click="@(() => SearchForExternalButtonClick("ItunesId"))"
+                                              Disabled="@(!_isMusicBrainzEnabled && !_isSpotifyEnabled)"/>
                             </RadzenColumn>
                         </RadzenRow>
                         <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
@@ -128,7 +133,8 @@
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
                                 <RadzenButton Icon="search" Text="Search"
-                                              Click="@(() => SearchForExternalButtonClick("LastFmId"))"/>
+                                              Click="@(() => SearchForExternalButtonClick("LastFmId"))"
+                                              Disabled="@(!_isMusicBrainzEnabled && !_isSpotifyEnabled)"/>
                             </RadzenColumn>
                         </RadzenRow>
 
@@ -147,7 +153,8 @@
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
                                 <RadzenButton Icon="search" Text="Search"
-                                              Click="@(() => SearchForExternalButtonClick("MusicBrainzId"))"/>
+                                              Click="@(() => SearchForExternalButtonClick("MusicBrainzId"))"
+                                              Disabled="@(!_isMusicBrainzEnabled)"/>
                             </RadzenColumn>
                         </RadzenRow>
 
@@ -163,7 +170,8 @@
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
                                 <RadzenButton Icon="search" Text="Search"
-                                              Click="@(() => SearchForExternalButtonClick("SpotifyId"))"/>
+                                              Click="@(() => SearchForExternalButtonClick("SpotifyId"))"
+                                              Disabled="@(!_isSpotifyEnabled)"/>
                             </RadzenColumn>
                         </RadzenRow>
                         <RadzenRow AlignItems="AlignItems.Center" RowGap="0.25rem">
@@ -178,7 +186,8 @@
                             </RadzenColumn>
                             <RadzenColumn Size="12" SizeMD="2" class="rz-text-align-start rz-text-align-md-end">
                                 <RadzenButton Icon="search" Text="Search"
-                                              Click="@(() => SearchForExternalButtonClick("WikiDataId"))"/>
+                                              Click="@(() => SearchForExternalButtonClick("WikiDataId"))"
+                                              Disabled="@(!_isMusicBrainzEnabled && !_isSpotifyEnabled)"/>
                             </RadzenColumn>
                         </RadzenRow>
 
@@ -200,12 +209,22 @@
 
     [Parameter] public int ArtistId { get; set; }
 
+    private bool _isMusicBrainzEnabled;
+    private bool _isSpotifyEnabled;
+
     Artist _artist = new()
     {
         Name = string.Empty,
         NameNormalized = string.Empty,
         SortName = string.Empty
     };
+
+    protected override async Task OnInitializedAsync()
+    {
+        var configuration = await ConfigurationFactory.GetConfigurationAsync();
+        _isMusicBrainzEnabled = configuration.GetValue<bool>(SettingRegistry.SearchEngineMusicBrainzEnabled);
+        _isSpotifyEnabled = configuration.GetValue<bool>(SettingRegistry.SearchEngineSpotifyEnabled);
+    }
 
     protected override async Task OnParametersSetAsync()
     {

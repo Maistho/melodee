@@ -1,10 +1,8 @@
 using System.Diagnostics;
 using Asp.Versioning;
-using Melodee.Blazor.Controllers.Melodee.Extensions;
 using Melodee.Blazor.Controllers.Melodee.Models;
 using Melodee.Blazor.Controllers.Melodee.Models.ArtistLookup;
 using Melodee.Blazor.Filters;
-using Melodee.Blazor.Services;
 using Melodee.Common.Configuration;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services;
@@ -36,7 +34,19 @@ public sealed class ArtistLookupController(
         configuration,
         configurationFactory)
 {
+    private bool _initialized;
+
     private ILogger<ArtistLookupController> Logger { get; } = logger;
+
+    private async Task EnsureInitializedAsync(CancellationToken cancellationToken)
+    {
+        if (!_initialized)
+        {
+            await artistSearchEngineService.InitializeAsync(null, cancellationToken);
+            _initialized = true;
+        }
+    }
+
     [HttpPost]
     [ProducesResponseType(typeof(ArtistLookupResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
@@ -60,6 +70,8 @@ public sealed class ArtistLookupController(
         {
             return ApiUserLocked();
         }
+
+        await EnsureInitializedAsync(cancellationToken);
 
         var stopwatch = Stopwatch.StartNew();
 
@@ -125,6 +137,8 @@ public sealed class ArtistLookupController(
         {
             return ApiUserLocked();
         }
+
+        await EnsureInitializedAsync(cancellationToken);
 
         var plugins = artistSearchEngineService.GetRegisteredPlugins();
         var providers = plugins.Select(p => new ProviderInfo
