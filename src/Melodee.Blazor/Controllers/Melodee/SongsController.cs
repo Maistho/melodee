@@ -17,6 +17,7 @@ using Melodee.Common.Plugins.MetaData.Song;
 using Melodee.Common.Security;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services;
+using Melodee.Common.Utility;
 using Melodee.Mql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -297,8 +298,8 @@ public class SongsController(
         if (!validationResult.IsValid)
         {
             Logger.LogWarning("[SongsController] MQL validation failed for query: {Query}. Errors: {Errors}",
-                mqlQuery,
-                string.Join("; ", validationResult.Errors.Select(e => e.Message)));
+                LogSanitizer.Sanitize(mqlQuery),
+                string.Join("; ", validationResult.Errors.Select(e => LogSanitizer.Sanitize(e.Message))));
 
             return new MelodeeModels.PagedResult<SongDataInfo>
             {
@@ -317,8 +318,8 @@ public class SongsController(
         if (!parseResult.IsValid || parseResult.Ast == null)
         {
             Logger.LogWarning("[SongsController] MQL parse failed for query: {Query}. Errors: {Errors}",
-                mqlQuery,
-                string.Join("; ", parseResult.Errors.Select(e => e.Message)));
+                LogSanitizer.Sanitize(mqlQuery),
+                string.Join("; ", parseResult.Errors.Select(e => LogSanitizer.Sanitize(e.Message))));
 
             return new MelodeeModels.PagedResult<SongDataInfo>
             {
@@ -342,7 +343,7 @@ public class SongsController(
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "[SongsController] MQL compilation failed for query: {Query}", mqlQuery);
+            Logger.LogError(ex, "[SongsController] MQL compilation failed for query: {Query}", LogSanitizer.Sanitize(mqlQuery));
             return new MelodeeModels.PagedResult<SongDataInfo>
             {
                 TotalCount = 0,
@@ -395,7 +396,7 @@ public class SongsController(
         stopwatch.Stop();
         Logger.LogDebug("[SongsController] MQL search completed in {ElapsedMs}ms. Query: {Query}, Results: {Count}",
             stopwatch.ElapsedMilliseconds,
-            mqlQuery,
+            LogSanitizer.Sanitize(mqlQuery),
             songCount);
 
         return new MelodeeModels.PagedResult<SongDataInfo>

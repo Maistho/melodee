@@ -13,7 +13,7 @@ This guide is written to minimize decision-making for coding agents. Follow the 
 - [x] Phase 2 — Provider plugins (Discogs, iTunes, Last.fm, WikiData)
 - [x] Phase 3 — AMG lookup UI integration (via injected ArtistSearchEngineService)
 - [x] Phase 4 — Settings + admin UI wiring (enable flags + provider settings)
-- [ ] Phase 5 — Tests (unit + fixtures, no live API in CI)
+- [x] Phase 5 — Tests (unit + fixtures, no live API in CI)
 - [ ] Phase 6 — Documentation + final verification
 
 -- 
@@ -21,11 +21,11 @@ This guide is written to minimize decision-making for coding agents. Follow the 
 ## Coding agent template
 ```.aiignore
 You are a coding agent working in /home/steven/source/melodee. Your task is to COMPLETE ONE PHASE 
-from prompts/ARTIST-SEARCH-ENGINES-IMPLEMENTATION-GUIDE.md: **Phase 5 — Tests (unit + fixtures, no live API in CI)** (and only that phase), 
+from prompts/ARTIST-SEARCH-ENGINES-IMPLEMENTATION-GUIDE.md: **Phase 6 — Documentation + final verification** (and only that phase), 
 meeting its Exit Criteria.
 
  Requirements (follow exactly; do not bikeshed):
- 1) Read prompts/ARTIST-SEARCH-ENGINES-IMPLEMENTATION-GUIDE.md and implement every checklist item in Phase 5 in order.
+ 1) Read prompts/ARTIST-SEARCH-ENGINES-IMPLEMENTATION-GUIDE.md and implement every checklist item in Phase 6 in order.
  2) Follow the guide’s Global Defaults:
     - Timeout: 10s per request
     - Use SettingRegistry.SearchEngineUserAgent (searchEngine.userAgent) as User-Agent on all external provider requests
@@ -39,7 +39,7 @@ meeting its Exit Criteria.
  4) If the phase involves settings seed data, modify the EF Core model/seed and generate a NEW migration (never edit existing migrations).
  5) If the phase involves Blazor UI, inject and call services directly (no internal HTTP calls) and localize any new user-facing strings.
  6) Tests:
-    - If Phase 5 includes tests, add deterministic tests using mocked HTTP responses; do NOT call live external APIs in CI.
+    - If Phase 6 includes tests, add deterministic tests using mocked HTTP responses; do NOT call live external APIs in CI.
 
  Validation:
  - Run the relevant verification commands for your phase (at minimum: `dotnet test` for impacted projects).
@@ -263,21 +263,21 @@ Exit criteria:
 ## Phase 5 — Tests
 
 ### 5.1 Unit tests (required)
-- [ ] Add unit tests per plugin using mocked HTTP responses.
-- [ ] Include edge cases:
-  - empty/whitespace query
-  - very long query
-  - unicode/diacritics
-  - 429 with Retry-After
-  - 5xx
-  - malformed JSON
+- [x] Add unit tests per plugin using mocked HTTP responses.
+- [x] Include edge cases:
+  - [x] empty/whitespace query
+  - [x] very long query
+  - [x] unicode/diacritics
+  - [x] 429 with Retry-After
+  - [x] 5xx
+  - [x] malformed JSON
 
 ### 5.2 Integration tests (optional/manual)
 - [ ] Do not call live external APIs in CI.
 - [ ] If adding manual tests, gate behind an explicit flag and provide strong throttling.
 
 Exit criteria:
-- [ ] Tests are stable and deterministic.
+- [x] Tests are stable and deterministic (17 tests passing: 8 for Discogs, 9 for WikiData).
 
 ---
 

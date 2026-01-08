@@ -171,7 +171,7 @@ public class SQLiteMusicBrainzRepository(
             if (searcher != null)
             {
                 Logger.Debug("[{RepoName}] Using Lucene index at [{Path}] for query: NameNormalized=[{NameNormalized}], NameNormalizedReversed=[{NameNormalizedReversed}]",
-                    nameof(SQLiteMusicBrainzRepository), lucenePath, LogSanitizer.Sanitize(query.NameNormalized), LogSanitizer.Sanitize(query.NameNormalizedReversed));
+                    nameof(SQLiteMusicBrainzRepository), LogSanitizer.Sanitize(lucenePath), LogSanitizer.Sanitize(query.NameNormalized), LogSanitizer.Sanitize(query.NameNormalizedReversed));
 
                 // Build a comprehensive query with multiple search strategies
                 BooleanQuery categoryQuery = [];

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Melodee.Common.Utility;
 using Melodee.Mql.Api.Dto;
 using Melodee.Mql.Interfaces;
 using Melodee.Mql.Models;
@@ -102,7 +103,7 @@ public class MqlController : ControllerBase
             if (!validationResult.IsValid)
             {
                 _logger.LogWarning("Query validation failed for {Query}: {Errors}",
-                    request.Query, string.Join(", ", validationResult.Errors.Select(e => e.Message)));
+                    LogSanitizer.Sanitize(request.Query), string.Join(", ", validationResult.Errors.Select(e => LogSanitizer.Sanitize(e.Message))));
 
                 var firstError = validationResult.Errors.First();
                 return BadRequest(new MqlErrorResponse
@@ -163,7 +164,7 @@ public class MqlController : ControllerBase
             if (!parseResult.IsValid)
             {
                 _logger.LogWarning("Query parsing failed for {Query}: {Errors}",
-                    request.Query, string.Join(", ", parseResult.Errors.Select(e => e.Message)));
+                    LogSanitizer.Sanitize(request.Query), string.Join(", ", parseResult.Errors.Select(e => LogSanitizer.Sanitize(e.Message))));
 
                 var firstError = parseResult.Errors.First();
                 return BadRequest(new MqlErrorResponse
@@ -192,7 +193,7 @@ public class MqlController : ControllerBase
             }
 
             _logger.LogInformation("Query parsed successfully in {TimeMs}ms: {Query}",
-                stopwatch.ElapsedMilliseconds, request.Query);
+                stopwatch.ElapsedMilliseconds, LogSanitizer.Sanitize(request.Query));
 
             return Ok(new MqlParseResponse
             {
@@ -215,7 +216,7 @@ public class MqlController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unexpected error parsing query: {Query}", request.Query);
+            _logger.LogError(ex, "Unexpected error parsing query: {Query}", LogSanitizer.Sanitize(request.Query));
 
             return StatusCode(StatusCodes.Status500InternalServerError, new MqlErrorResponse
             {
@@ -301,7 +302,7 @@ public class MqlController : ControllerBase
             var result = _suggestionService.GetSuggestions(requestDto.Query ?? string.Empty, normalizedEntity, cursorPosition);
 
             _logger.LogDebug("Generated {Count} suggestions for query '{Query}' at position {Pos}",
-                result.Suggestions.Count, requestDto.Query, cursorPosition);
+                result.Suggestions.Count, LogSanitizer.Sanitize(requestDto.Query), cursorPosition);
 
             return Ok(new MqlSuggestionResponseDto
             {
@@ -320,7 +321,7 @@ public class MqlController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error generating suggestions for query: {Query}", requestDto.Query);
+            _logger.LogError(ex, "Error generating suggestions for query: {Query}", LogSanitizer.Sanitize(requestDto.Query));
 
             return StatusCode(StatusCodes.Status500InternalServerError, new MqlErrorResponse
             {

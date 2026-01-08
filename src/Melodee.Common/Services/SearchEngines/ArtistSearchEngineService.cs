@@ -1120,7 +1120,9 @@ public class ArtistSearchEngineService(
         if (!validationResult.IsSuccess)
         {
             return new OperationResult<bool>(validationResult.Data.Item2
-                ?.Where(x => !string.IsNullOrWhiteSpace(x.ErrorMessage)).Select(x => x.ErrorMessage!).ToArray() ?? [])
+                ?.Where(x => !string.IsNullOrWhiteSpace(x.ErrorMessage))
+                .Select(x => LogSanitizer.Sanitize(x.ErrorMessage)!)
+                .ToArray() ?? [])
             {
                 Data = false,
                 Type = OperationResponseType.ValidationFailure

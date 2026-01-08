@@ -13,6 +13,7 @@ using Melodee.Common.Models;
 using Melodee.Common.Models.Collection;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services;
+using Melodee.Common.Utility;
 using Melodee.Mql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -221,8 +222,8 @@ public sealed class ArtistsController(
         if (!validationResult.IsValid)
         {
             Logger.LogWarning("[ArtistsController] MQL validation failed for query: {Query}. Errors: {Errors}",
-                mqlQuery,
-                string.Join("; ", validationResult.Errors.Select(e => e.Message)));
+                LogSanitizer.Sanitize(mqlQuery),
+                string.Join("; ", validationResult.Errors.Select(e => LogSanitizer.Sanitize(e.Message))));
 
             return new PagedResult<ArtistDataInfo>
             {
@@ -241,8 +242,8 @@ public sealed class ArtistsController(
         if (!parseResult.IsValid || parseResult.Ast == null)
         {
             Logger.LogWarning("[ArtistsController] MQL parse failed for query: {Query}. Errors: {Errors}",
-                mqlQuery,
-                string.Join("; ", parseResult.Errors.Select(e => e.Message)));
+                LogSanitizer.Sanitize(mqlQuery),
+                string.Join("; ", parseResult.Errors.Select(e => LogSanitizer.Sanitize(e.Message))));
 
             return new PagedResult<ArtistDataInfo>
             {
@@ -264,7 +265,7 @@ public sealed class ArtistsController(
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "[ArtistsController] MQL compilation failed for query: {Query}", mqlQuery);
+            Logger.LogError(ex, "[ArtistsController] MQL compilation failed for query: {Query}", LogSanitizer.Sanitize(mqlQuery));
             return new PagedResult<ArtistDataInfo>
             {
                 TotalCount = 0,
@@ -317,7 +318,7 @@ public sealed class ArtistsController(
         stopwatch.Stop();
         Logger.LogDebug("[ArtistsController] MQL search completed in {ElapsedMs}ms. Query: {Query}, Results: {Count}",
             stopwatch.ElapsedMilliseconds,
-            mqlQuery,
+            LogSanitizer.Sanitize(mqlQuery),
             artistCount);
 
         return new PagedResult<ArtistDataInfo>

@@ -1,6 +1,7 @@
 using Melodee.Common.Data;
 using Melodee.Common.Data.Models;
 using Melodee.Common.Models;
+using Melodee.Common.Utility;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 
@@ -114,7 +115,7 @@ public sealed class SmartPlaylistService(
         scopedContext.SmartPlaylists.Add(playlist);
         await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        logger.Information("[SmartPlaylistService] Created smart playlist {Name} for user {UserId}", playlist.Name, userId);
+        logger.Information("[SmartPlaylistService] Created smart playlist {Name} for user {UserId}", LogSanitizer.Sanitize(playlist.Name), userId);
 
         return new OperationResult<SmartPlaylistDto> { Data = MapToDto(playlist), Type = OperationResponseType.Ok };
     }
@@ -260,7 +261,7 @@ public sealed class SmartPlaylistService(
             playlist.LastUpdatedAt = SystemClock.Instance.GetCurrentInstant();
             await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-            logger.Information("[SmartPlaylistService] Updated smart playlist {Name} (API key: {ApiKey})", playlist.Name, playlist.ApiKey);
+            logger.Information("[SmartPlaylistService] Updated smart playlist {Name} (API key: {ApiKey})", LogSanitizer.Sanitize(playlist.Name), playlist.ApiKey);
         }
 
         return new OperationResult<SmartPlaylistDto> { Data = MapToDto(playlist), Type = OperationResponseType.Ok };

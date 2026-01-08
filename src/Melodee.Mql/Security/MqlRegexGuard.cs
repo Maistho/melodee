@@ -116,7 +116,8 @@ public sealed class MqlRegexGuard : IMqlRegexGuard
 
         try
         {
-            var regex = new Regex(pattern, RegexOptions.Compiled);
+            // Test compilation with timeout to prevent ReDoS during validation
+            var regex = new Regex(pattern, RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
             var safePattern = MqlTextSanitizer.SanitizeForRegex(pattern);
 
             return new RegexValidationResult

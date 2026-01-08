@@ -374,6 +374,12 @@ public class UsersController(
             return JellyfinUnauthorized();
         }
 
+        // Validate itemId to prevent open redirect vulnerability
+        if (!Guid.TryParse(itemId, out _))
+        {
+            return BadRequest(new { error = "Invalid item ID format" });
+        }
+
         return RedirectPreserveMethod($"/Items/{itemId}");
     }
 

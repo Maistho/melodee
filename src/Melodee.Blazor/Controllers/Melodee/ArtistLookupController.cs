@@ -7,6 +7,7 @@ using Melodee.Common.Configuration;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services;
 using Melodee.Common.Services.SearchEngines;
+using Melodee.Common.Utility;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -84,7 +85,7 @@ public sealed class ArtistLookupController(
         stopwatch.Stop();
         Logger.LogDebug("[ArtistLookupController] Lookup completed in {ElapsedMs}ms for [{ArtistName}]",
             stopwatch.ElapsedMilliseconds,
-            request.ArtistName);
+            LogSanitizer.Sanitize(request.ArtistName));
 
         var plugins = artistSearchEngineService.GetRegisteredPlugins();
         var providers = plugins.Select(p => new ProviderInfo

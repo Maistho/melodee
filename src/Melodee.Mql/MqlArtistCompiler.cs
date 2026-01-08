@@ -354,7 +354,7 @@ public sealed class MqlArtistCompiler : IMqlCompiler<Artist>
         }
 
         var validationResult = _options.RegexGuard.ValidatePattern(node.Pattern);
-        if (!validationResult.IsValid)
+        if (!validationResult.IsValid || validationResult.SafePattern == null)
         {
             return Expression.Constant(false);
         }
@@ -374,7 +374,8 @@ public sealed class MqlArtistCompiler : IMqlCompiler<Artist>
 
         try
         {
-            var regex = new Regex(validationResult.SafePattern ?? node.Pattern, regexOptions);
+            // Use ONLY the sanitized pattern, with timeout to prevent ReDoS
+            var regex = new Regex(validationResult.SafePattern, regexOptions, TimeSpan.FromMilliseconds(100));
             var isMatchMethod = typeof(Regex).GetMethod("IsMatch", [typeof(string)])!;
 
             return Expression.Call(Expression.Constant(regex), isMatchMethod, propertyExpr);

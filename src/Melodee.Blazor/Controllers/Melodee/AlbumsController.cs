@@ -11,6 +11,7 @@ using Melodee.Common.Models;
 using Melodee.Common.Models.Collection;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services;
+using Melodee.Common.Utility;
 using Melodee.Mql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -174,8 +175,8 @@ public sealed class AlbumsController(
         if (!validationResult.IsValid)
         {
             Logger.LogWarning("[AlbumsController] MQL validation failed for query: {Query}. Errors: {Errors}",
-                mqlQuery,
-                string.Join("; ", validationResult.Errors.Select(e => e.Message)));
+                LogSanitizer.Sanitize(mqlQuery),
+                string.Join("; ", validationResult.Errors.Select(e => LogSanitizer.Sanitize(e.Message))));
 
             return new PagedResult<AlbumDataInfo>
             {
@@ -194,8 +195,8 @@ public sealed class AlbumsController(
         if (!parseResult.IsValid || parseResult.Ast == null)
         {
             Logger.LogWarning("[AlbumsController] MQL parse failed for query: {Query}. Errors: {Errors}",
-                mqlQuery,
-                string.Join("; ", parseResult.Errors.Select(e => e.Message)));
+                LogSanitizer.Sanitize(mqlQuery),
+                string.Join("; ", parseResult.Errors.Select(e => LogSanitizer.Sanitize(e.Message))));
 
             return new PagedResult<AlbumDataInfo>
             {
@@ -218,7 +219,7 @@ public sealed class AlbumsController(
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "[AlbumsController] MQL compilation failed for query: {Query}", mqlQuery);
+            Logger.LogError(ex, "[AlbumsController] MQL compilation failed for query: {Query}", LogSanitizer.Sanitize(mqlQuery));
             return new PagedResult<AlbumDataInfo>
             {
                 TotalCount = 0,
@@ -271,7 +272,7 @@ public sealed class AlbumsController(
         stopwatch.Stop();
         Logger.LogDebug("[AlbumsController] MQL search completed in {ElapsedMs}ms. Query: {Query}, Results: {Count}",
             stopwatch.ElapsedMilliseconds,
-            mqlQuery,
+            LogSanitizer.Sanitize(mqlQuery),
             albumCount);
 
         return new PagedResult<AlbumDataInfo>
