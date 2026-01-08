@@ -4681,4 +4681,25 @@
   <data name="SettingCategory.Jobs" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Jobs</value>
   </data>
+  <data name="Search.AdvancedMode" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Advanced</value>
+  </data>
+  <data name="Search.SimpleMode" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Simple</value>
+  </data>
+  <data name="Search.AdvancedSearch" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Advanced Search (MQL)</value>
+  </data>
+  <data name="Search.SyntaxHelp" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Syntax Help</value>
+  </data>
+  <data name="Search.MqlPlaceholder" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] e.g., artist:Beatles AND year:&gt;=1970</value>
+  </data>
+  <data name="Search.Examples" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Examples</value>
+  </data>
+  <data name="Search.MqlParseError" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to parse query</value>
+  </data>
 </root>

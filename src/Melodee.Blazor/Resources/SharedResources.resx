@@ -1258,6 +1258,27 @@
   <data name="Search.PlaySong" xml:space="preserve">
     <value>Play song</value>
   </data>
+  <data name="Search.AdvancedMode" xml:space="preserve">
+    <value>Advanced</value>
+  </data>
+  <data name="Search.SimpleMode" xml:space="preserve">
+    <value>Simple</value>
+  </data>
+  <data name="Search.AdvancedSearch" xml:space="preserve">
+    <value>Advanced Search (MQL)</value>
+  </data>
+  <data name="Search.SyntaxHelp" xml:space="preserve">
+    <value>Syntax Help</value>
+  </data>
+  <data name="Search.MqlPlaceholder" xml:space="preserve">
+    <value>e.g., artist:Beatles AND year:>=1970</value>
+  </data>
+  <data name="Search.Examples" xml:space="preserve">
+    <value>Examples</value>
+  </data>
+  <data name="Search.MqlParseError" xml:space="preserve">
+    <value>Failed to parse query</value>
+  </data>
 
 
   <data name="NowPlaying.PageTitle" xml:space="preserve">

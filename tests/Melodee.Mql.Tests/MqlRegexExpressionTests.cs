@@ -1,8 +1,6 @@
 using System.Linq.Expressions;
 using FluentAssertions;
 using Melodee.Common.Data.Models;
-using Melodee.Common.Enums;
-using Melodee.Common.Extensions;
 using Melodee.Mql.Models;
 using NodaTime;
 

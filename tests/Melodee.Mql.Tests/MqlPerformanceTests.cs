@@ -1,10 +1,6 @@
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Text;
 using FluentAssertions;
-using Melodee.Mql.Interfaces;
-using Melodee.Mql.Models;
 
 namespace Melodee.Mql.Tests;
 

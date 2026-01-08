@@ -45,7 +45,7 @@
                         return
                     }
                     var query = $(this).val();
-                    var searchPage = "{{ site.url }}{{ site.baseurl }}/search/?q=" + query;
+                    var searchPage = "/search/?q=" + encodeURIComponent(query);
                     document.location = searchPage;
                     return false;
                 });

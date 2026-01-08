@@ -107,7 +107,7 @@ public sealed class MqlAlbumCompiler : IMqlCompiler<Album>
             _ => GetNestedPropertyExpression(parameter, actualPath)
         };
 
-        var convertedValue = ConvertValueForComparison(value, fieldInfo.Type, propertyExpr.Type);
+        var convertedValue = ConvertValueForComparison(value, fieldInfo.Type, propertyExpr.Type, fieldInfo.ValueMultiplier);
         return Expression.Equal(propertyExpr, Expression.Constant(convertedValue, propertyExpr.Type));
     }
 
@@ -204,7 +204,7 @@ public sealed class MqlAlbumCompiler : IMqlCompiler<Album>
             _ => GetNestedPropertyExpression(parameter, actualPath)
         };
 
-        var convertedValue = ConvertValueForComparison(value, fieldInfo.Type, propertyExpr.Type);
+        var convertedValue = ConvertValueForComparison(value, fieldInfo.Type, propertyExpr.Type, fieldInfo.ValueMultiplier);
 
         if (propertyExpr.Type.IsGenericType && propertyExpr.Type.GetGenericTypeDefinition() == typeof(Nullable<>))
         {
@@ -237,10 +237,10 @@ public sealed class MqlAlbumCompiler : IMqlCompiler<Album>
 
         Expression valueMatch = fieldInfo.Name switch
         {
-            "rating" => CompileUserAlbumPropertyComparison(userAlbumParam, nameof(UserAlbum.Rating), value, comparisonType),
-            "plays" => CompileUserAlbumPropertyComparison(userAlbumParam, nameof(UserAlbum.PlayedCount), value, comparisonType),
-            "starredat" => CompileUserAlbumPropertyComparison(userAlbumParam, nameof(UserAlbum.StarredAt), value, comparisonType),
-            "lastplayedat" => CompileUserAlbumPropertyComparison(userAlbumParam, nameof(UserAlbum.LastPlayedAt), value, comparisonType),
+            "rating" => CompileUserAlbumPropertyComparison(userAlbumParam, nameof(UserAlbum.Rating), value, comparisonType, fieldInfo.ValueMultiplier),
+            "plays" => CompileUserAlbumPropertyComparison(userAlbumParam, nameof(UserAlbum.PlayedCount), value, comparisonType, fieldInfo.ValueMultiplier),
+            "starredat" => CompileUserAlbumPropertyComparison(userAlbumParam, nameof(UserAlbum.StarredAt), value, comparisonType, fieldInfo.ValueMultiplier),
+            "lastplayedat" => CompileUserAlbumPropertyComparison(userAlbumParam, nameof(UserAlbum.LastPlayedAt), value, comparisonType, fieldInfo.ValueMultiplier),
             _ => Expression.Constant(true)
         };
 
@@ -252,10 +252,10 @@ public sealed class MqlAlbumCompiler : IMqlCompiler<Album>
         return anyCall;
     }
 
-    private Expression CompileUserAlbumPropertyComparison(Expression userAlbumParam, string propertyName, object value, string comparisonType)
+    private Expression CompileUserAlbumPropertyComparison(Expression userAlbumParam, string propertyName, object value, string comparisonType, double valueMultiplier = 1.0)
     {
         var propertyExpr = Expression.Property(userAlbumParam, propertyName);
-        var convertedValue = ConvertValueForComparison(value, MqlFieldType.Number, propertyExpr.Type);
+        var convertedValue = ConvertValueForComparison(value, MqlFieldType.Number, propertyExpr.Type, valueMultiplier);
 
         var rightExpr = Expression.Constant(convertedValue, propertyExpr.Type);
         return comparisonType switch
@@ -446,8 +446,8 @@ public sealed class MqlAlbumCompiler : IMqlCompiler<Album>
             _ => GetNestedPropertyExpression(parameter, actualPath)
         };
 
-        var minValue = ConvertValueForComparison(node.Min, fieldInfo.Type, propertyExpr.Type);
-        var maxValue = ConvertValueForComparison(node.Max, fieldInfo.Type, propertyExpr.Type);
+        var minValue = ConvertValueForComparison(node.Min, fieldInfo.Type, propertyExpr.Type, fieldInfo.ValueMultiplier);
+        var maxValue = ConvertValueForComparison(node.Max, fieldInfo.Type, propertyExpr.Type, fieldInfo.ValueMultiplier);
 
         var minComparison = Expression.GreaterThanOrEqual(propertyExpr, Expression.Constant(minValue, propertyExpr.Type));
         var maxComparison = Expression.LessThanOrEqual(propertyExpr, Expression.Constant(maxValue, propertyExpr.Type));
@@ -483,6 +483,27 @@ public sealed class MqlAlbumCompiler : IMqlCompiler<Album>
         if (fieldType == MqlFieldType.Number)
         {
             var doubleValue = Convert.ToDouble(value);
+            if (targetType == typeof(double))
+            {
+                return doubleValue;
+            }
+
+            if (targetType == typeof(int))
+            {
+                return (int)doubleValue;
+            }
+
+            return doubleValue;
+        }
+
+        return ConvertValue(value, fieldType, targetType);
+    }
+
+    private static object ConvertValueForComparison(object value, MqlFieldType fieldType, Type targetType, double valueMultiplier)
+    {
+        if (fieldType == MqlFieldType.Number)
+        {
+            var doubleValue = Convert.ToDouble(value) * valueMultiplier;
             if (targetType == typeof(double))
             {
                 return doubleValue;

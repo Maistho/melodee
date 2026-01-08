@@ -111,7 +111,7 @@ public sealed class MqlSongCompiler : IMqlCompiler<Melodee.Common.Data.Models.So
             _ => GetNestedPropertyExpression(parameter, actualPath)
         };
 
-        var convertedValue = ConvertValueForComparison(value, fieldInfo.Type, propertyExpr.Type);
+        var convertedValue = ConvertValueForComparison(value, fieldInfo.Type, propertyExpr.Type, fieldInfo.ValueMultiplier);
         return Expression.Equal(propertyExpr, Expression.Constant(convertedValue, propertyExpr.Type));
     }
 
@@ -208,7 +208,7 @@ public sealed class MqlSongCompiler : IMqlCompiler<Melodee.Common.Data.Models.So
             _ => GetNestedPropertyExpression(parameter, actualPath)
         };
 
-        var convertedValue = ConvertValueForComparison(value, fieldInfo.Type, propertyExpr.Type);
+        var convertedValue = ConvertValueForComparison(value, fieldInfo.Type, propertyExpr.Type, fieldInfo.ValueMultiplier);
 
         if (propertyExpr.Type.IsGenericType && propertyExpr.Type.GetGenericTypeDefinition() == typeof(Nullable<>))
         {
@@ -241,10 +241,10 @@ public sealed class MqlSongCompiler : IMqlCompiler<Melodee.Common.Data.Models.So
 
         Expression valueMatch = fieldInfo.Name switch
         {
-            "rating" => CompileUserSongPropertyComparison(userSongParam, nameof(Melodee.Common.Data.Models.UserSong.Rating), value, comparisonType),
-            "plays" => CompileUserSongPropertyComparison(userSongParam, nameof(Melodee.Common.Data.Models.UserSong.PlayedCount), value, comparisonType),
-            "starredat" => CompileUserSongPropertyComparison(userSongParam, nameof(Melodee.Common.Data.Models.UserSong.StarredAt), value, comparisonType),
-            "lastplayedat" => CompileUserSongPropertyComparison(userSongParam, nameof(Melodee.Common.Data.Models.UserSong.LastPlayedAt), value, comparisonType),
+            "rating" => CompileUserSongPropertyComparison(userSongParam, nameof(Melodee.Common.Data.Models.UserSong.Rating), value, comparisonType, fieldInfo.ValueMultiplier),
+            "plays" => CompileUserSongPropertyComparison(userSongParam, nameof(Melodee.Common.Data.Models.UserSong.PlayedCount), value, comparisonType, fieldInfo.ValueMultiplier),
+            "starredat" => CompileUserSongPropertyComparison(userSongParam, nameof(Melodee.Common.Data.Models.UserSong.StarredAt), value, comparisonType, fieldInfo.ValueMultiplier),
+            "lastplayedat" => CompileUserSongPropertyComparison(userSongParam, nameof(Melodee.Common.Data.Models.UserSong.LastPlayedAt), value, comparisonType, fieldInfo.ValueMultiplier),
             _ => Expression.Constant(true)
         };
 
@@ -256,10 +256,10 @@ public sealed class MqlSongCompiler : IMqlCompiler<Melodee.Common.Data.Models.So
         return anyCall;
     }
 
-    private Expression CompileUserSongPropertyComparison(Expression userSongParam, string propertyName, object value, string comparisonType)
+    private Expression CompileUserSongPropertyComparison(Expression userSongParam, string propertyName, object value, string comparisonType, double valueMultiplier = 1.0)
     {
         var propertyExpr = Expression.Property(userSongParam, propertyName);
-        var convertedValue = ConvertValueForComparison(value, MqlFieldType.Number, propertyExpr.Type);
+        var convertedValue = ConvertValueForComparison(value, MqlFieldType.Number, propertyExpr.Type, valueMultiplier);
 
         var rightExpr = Expression.Constant(convertedValue, propertyExpr.Type);
         return comparisonType switch
@@ -453,8 +453,8 @@ public sealed class MqlSongCompiler : IMqlCompiler<Melodee.Common.Data.Models.So
             _ => GetNestedPropertyExpression(parameter, actualPath)
         };
 
-        var minValue = ConvertValueForComparison(node.Min, fieldInfo.Type, propertyExpr.Type);
-        var maxValue = ConvertValueForComparison(node.Max, fieldInfo.Type, propertyExpr.Type);
+        var minValue = ConvertValueForComparison(node.Min, fieldInfo.Type, propertyExpr.Type, fieldInfo.ValueMultiplier);
+        var maxValue = ConvertValueForComparison(node.Max, fieldInfo.Type, propertyExpr.Type, fieldInfo.ValueMultiplier);
 
         var minComparison = Expression.GreaterThanOrEqual(propertyExpr, Expression.Constant(minValue, propertyExpr.Type));
         var maxComparison = Expression.LessThanOrEqual(propertyExpr, Expression.Constant(maxValue, propertyExpr.Type));
@@ -485,11 +485,11 @@ public sealed class MqlSongCompiler : IMqlCompiler<Melodee.Common.Data.Models.So
         };
     }
 
-    private static object ConvertValueForComparison(object value, MqlFieldType fieldType, Type targetType)
+    private static object ConvertValueForComparison(object value, MqlFieldType fieldType, Type targetType, double valueMultiplier = 1.0)
     {
         if (fieldType == MqlFieldType.Number)
         {
-            var doubleValue = Convert.ToDouble(value);
+            var doubleValue = Convert.ToDouble(value) * valueMultiplier;
             if (targetType == typeof(double))
             {
                 return doubleValue;

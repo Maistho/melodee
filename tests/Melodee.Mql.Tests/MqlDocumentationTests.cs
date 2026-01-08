@@ -1,6 +1,5 @@
 using FluentAssertions;
 using Melodee.Mql.Api.Dto;
-using Melodee.Mql.Models;
 using Melodee.Mql.Services;
 
 namespace Melodee.Mql.Tests;

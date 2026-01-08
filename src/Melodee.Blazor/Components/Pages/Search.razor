@@ -1,6 +1,9 @@
 @page "/search/{Query}"
+@page "/search"
 @using System.Security.Claims
+@using Melodee.Blazor.Services
 @using Melodee.Common.Data.Models.Extensions
+@using Melodee.Common.Models
 @using Melodee.Common.Models.Collection
 @using Melodee.Common.Models.Search
 @using Album = Melodee.Common.Data.Models.Album
@@ -11,27 +14,215 @@
 @inject IMelodeeConfigurationFactory ConfigurationFactory
 @inject IJSRuntime JsRuntime
 @inject NavigationManager NavigationManager
+@inject IMqlSearchService MqlSearchService
 
 @inherits MelodeeComponentBase
 
 <PageTitle>@L("Search.PageTitle")</PageTitle>
 
 <RadzenStack>
-    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
-        <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-m-0">@L("Search.ResultsFor", Query)</RadzenText>
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" class="rz-mb-2">
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem">
+            <RadzenText TextStyle="TextStyle.H6" class="rz-display-flex rz-m-0">@L("Search.ResultsFor", Query ?? string.Empty)</RadzenText>
+            <RadzenButton 
+                Text="@(_advancedMode ? L("Search.SimpleMode") : L("Search.AdvancedMode"))" 
+                Icon="@(_advancedMode ? "search" : "tune")" 
+                ButtonStyle="ButtonStyle.Secondary" 
+                Size="ButtonSize.Small"
+                Click="@ToggleAdvancedMode" />
+        </RadzenStack>
         <RadzenButton Text="@L("Search.RequestMusic")" Icon="add" ButtonStyle="ButtonStyle.Primary" Click="@NavigateToRequestMusic" />
     </RadzenStack>
-    @if (!_searchResult.Artists.Any() && !_searchResult.Albums.Any() && !_searchResult.Songs.Any())
+    
+    @if (_advancedMode)
+    {
+        <RadzenCard class="rz-mb-4">
+            <RadzenStack Gap="1rem">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                    <RadzenIcon Icon="tune" Style="color: var(--rz-primary);" />
+                    <RadzenText TextStyle="TextStyle.Subtitle1" class="rz-m-0">@L("Search.AdvancedSearch")</RadzenText>
+                    <RadzenLink Path="https://melodee.org/mql/" Text="@L("Search.SyntaxHelp")" Target="_blank" Style="font-size: 0.875rem; margin-left: auto;" />
+                </RadzenStack>
+                
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Stretch">
+                    <RadzenDropDown @bind-Value="_selectedEntity"
+                                    Data="_entityTypes"
+                                    TextProperty="Label"
+                                    ValueProperty="Value"
+                                    Style="width: 120px;" />
+                    <RadzenTextBox @bind-Value="_mqlQuery" 
+                                   Placeholder="@L("Search.MqlPlaceholder")"
+                                   Style="flex: 1;"
+                                   @onkeydown="OnMqlKeyDown" />
+                    <RadzenButton Icon="search" 
+                                  Text="@L("Actions.Search")" 
+                                  Click="ExecuteMqlSearch"
+                                  Disabled="@string.IsNullOrWhiteSpace(_mqlQuery)" />
+                </RadzenStack>
+                
+                @if (_mqlErrors.Any())
+                {
+                    <RadzenAlert AlertStyle="AlertStyle.Warning" ShowIcon="true" AllowClose="true">
+                        @foreach (var error in _mqlErrors.Take(3))
+                        {
+                            <div>@error</div>
+                        }
+                    </RadzenAlert>
+                }
+                
+                <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Wrap="FlexWrap.Wrap">
+                    <RadzenText TextStyle="TextStyle.Caption" class="rz-text-secondary-color">@L("Search.Examples"):</RadzenText>
+                    <RadzenLink Text="artist:Beatles" Click="@(() => SetMqlExample("artist:Beatles"))" Style="font-size: 0.75rem;" />
+                    <RadzenLink Text="year:>=1970 AND genre:rock" Click="@(() => SetMqlExample("year:>=1970 AND genre:rock"))" Style="font-size: 0.75rem;" />
+                    <RadzenLink Text="rating:>=4 AND plays:>10" Click="@(() => SetMqlExample("rating:>=4 AND plays:>10"))" Style="font-size: 0.75rem;" />
+                </RadzenStack>
+            </RadzenStack>
+        </RadzenCard>
+    }
+    
+    @* MQL Search Results *@
+    @if (_advancedMode && _mqlSearchPerformed)
+    {
+        @if (!_mqlSongResults.Any() && !_mqlAlbumResults.Any() && !_mqlArtistResults.Any() && !_mqlErrors.Any())
+        {
+            <RadzenCard class="rz-mt-4">
+                <RadzenStack AlignItems="AlignItems.Center" Gap="1rem" class="rz-p-4">
+                    <RadzenIcon Icon="search_off" Style="font-size: 48px; color: var(--rz-text-tertiary-color);" />
+                    <RadzenText TextStyle="TextStyle.H6">@L("Search.NoResultsFound")</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body2" class="rz-text-align-center">@L("Search.NoResultsDescription", _mqlQuery)</RadzenText>
+                </RadzenStack>
+            </RadzenCard>
+        }
+        
+        @* MQL Artist Results *@
+        <RadzenPanel AllowCollapse="true" Visible="_mqlArtistResults.Any()">
+            <HeaderTemplate>
+                <RadzenText TextStyle="TextStyle.Subtitle2" class="rz-display-flex rz-m-0">
+                    <RadzenIcon Icon="artist" class="rz-me-1"/>
+                    @L("Search.ArtistsCount", _mqlArtistResults.Length)
+                </RadzenText>
+            </HeaderTemplate>
+            <ChildContent>
+                <RadzenTable AllowAlternatingRows="true">
+                    <RadzenTableHeader>
+                        <RadzenTableHeaderRow>
+                            <RadzenTableHeaderCell>@L("Search.ArtistColumnTitle")</RadzenTableHeaderCell>
+                            <RadzenTableHeaderCell>@L("Common.Albums")</RadzenTableHeaderCell>
+                            <RadzenTableHeaderCell>@L("Common.Songs")</RadzenTableHeaderCell>
+                        </RadzenTableHeaderRow>
+                    </RadzenTableHeader>
+                    <RadzenTableBody>
+                        @foreach (var artist in _mqlArtistResults)
+                        {
+                            <RadzenTableRow>
+                                <RadzenTableCell>
+                                    <RadzenLink Path="@($"/data/artist/{artist.ApiKey}")">@artist.Name</RadzenLink>
+                                </RadzenTableCell>
+                                <RadzenTableCell>@artist.AlbumCount</RadzenTableCell>
+                                <RadzenTableCell>@artist.SongCount</RadzenTableCell>
+                            </RadzenTableRow>
+                        }
+                    </RadzenTableBody>
+                </RadzenTable>
+            </ChildContent>
+        </RadzenPanel>
+        
+        @* MQL Album Results *@
+        <RadzenPanel AllowCollapse="true" Visible="_mqlAlbumResults.Any()">
+            <HeaderTemplate>
+                <RadzenText TextStyle="TextStyle.Subtitle2" class="rz-display-flex rz-m-0">
+                    <RadzenIcon Icon="album" class="rz-me-1"/>
+                    @L("Search.AlbumsCount", _mqlAlbumResults.Length)
+                </RadzenText>
+            </HeaderTemplate>
+            <ChildContent>
+                <RadzenTable AllowAlternatingRows="true">
+                    <RadzenTableHeader>
+                        <RadzenTableHeaderRow>
+                            <RadzenTableHeaderCell>@L("Search.ArtistColumnTitle")</RadzenTableHeaderCell>
+                            <RadzenTableHeaderCell>@L("Search.AlbumColumnTitle")</RadzenTableHeaderCell>
+                            <RadzenTableHeaderCell>@L("Common.Year")</RadzenTableHeaderCell>
+                            <RadzenTableHeaderCell>@L("Common.Songs")</RadzenTableHeaderCell>
+                        </RadzenTableHeaderRow>
+                    </RadzenTableHeader>
+                    <RadzenTableBody>
+                        @foreach (var album in _mqlAlbumResults)
+                        {
+                            <RadzenTableRow>
+                                <RadzenTableCell>
+                                    <RadzenLink Path="@($"/data/artist/{album.Artist.ApiKey}")">@album.Artist.Name</RadzenLink>
+                                </RadzenTableCell>
+                                <RadzenTableCell>
+                                    <RadzenLink Path="@($"/data/album/{album.ApiKey}")">@album.Name</RadzenLink>
+                                </RadzenTableCell>
+                                <RadzenTableCell>@album.ReleaseDate.Year</RadzenTableCell>
+                                <RadzenTableCell>@album.SongCount</RadzenTableCell>
+                            </RadzenTableRow>
+                        }
+                    </RadzenTableBody>
+                </RadzenTable>
+            </ChildContent>
+        </RadzenPanel>
+        
+        @* MQL Song Results *@
+        <RadzenPanel AllowCollapse="true" Visible="_mqlSongResults.Any()">
+            <HeaderTemplate>
+                <RadzenText TextStyle="TextStyle.Subtitle2" class="rz-display-flex rz-m-0">
+                    <RadzenIcon Icon="music_note" class="rz-me-1"/>
+                    @L("Search.SongsCount", _mqlSongResults.Length)
+                </RadzenText>
+            </HeaderTemplate>
+            <ChildContent>
+                <RadzenTable AllowAlternatingRows="true">
+                    <RadzenTableHeader>
+                        <RadzenTableHeaderRow>
+                            <RadzenTableHeaderCell>@L("Search.ArtistColumnTitle")</RadzenTableHeaderCell>
+                            <RadzenTableHeaderCell>@L("Search.AlbumColumnTitle")</RadzenTableHeaderCell>
+                            <RadzenTableHeaderCell>@L("Common.Year")</RadzenTableHeaderCell>
+                            <RadzenTableHeaderCell>@L("Search.TitleColumnTitle")</RadzenTableHeaderCell>
+                        </RadzenTableHeaderRow>
+                    </RadzenTableHeader>
+                    <RadzenTableBody>
+                        @foreach (var song in _mqlSongResults)
+                        {
+                            <RadzenTableRow>
+                                <RadzenTableCell>
+                                    <RadzenLink Path="@($"/data/artist/{song.Album.Artist.ApiKey}")">@song.Album.Artist.Name</RadzenLink>
+                                </RadzenTableCell>
+                                <RadzenTableCell>
+                                    <RadzenLink Path="@($"/data/album/{song.Album.ApiKey}")">@song.Album.Name</RadzenLink>
+                                </RadzenTableCell>
+                                <RadzenTableCell>@song.Album.ReleaseDate.Year</RadzenTableCell>
+                                <RadzenTableCell>
+                                    <RadzenIcon
+                                        Icon="play_arrow"
+                                        class="filled-icon"
+                                        IconColor="@Colors.Info"
+                                        title="@L("Search.PlaySong")"
+                                        @onclick="@(() => PlayMqlSong(song))"
+                                        Style="cursor:pointer;font-size:14px;"/>
+                                    @song.Title
+                                </RadzenTableCell>
+                            </RadzenTableRow>
+                        }
+                    </RadzenTableBody>
+                </RadzenTable>
+            </ChildContent>
+        </RadzenPanel>
+    }
+    
+    @* Simple Search Results *@
+    @if (!_advancedMode && !_searchResult.Artists.Any() && !_searchResult.Albums.Any() && !_searchResult.Songs.Any())
     {
         <RadzenCard class="rz-mt-4">
             <RadzenStack AlignItems="AlignItems.Center" Gap="1rem" class="rz-p-4">
                 <RadzenIcon Icon="search_off" Style="font-size: 48px; color: var(--rz-text-tertiary-color);" />
                 <RadzenText TextStyle="TextStyle.H6">@L("Search.NoResultsFound")</RadzenText>
-                <RadzenText TextStyle="TextStyle.Body2" class="rz-text-align-center">@L("Search.NoResultsDescription", Query)</RadzenText>
+                <RadzenText TextStyle="TextStyle.Body2" class="rz-text-align-center">@L("Search.NoResultsDescription", Query ?? string.Empty)</RadzenText>
             </RadzenStack>
         </RadzenCard>
     }
-    <RadzenPanel AllowCollapse="true" Visible="_searchResult.Artists.Any()">
+    <RadzenPanel AllowCollapse="true" Visible="@(!_advancedMode && _searchResult.Artists.Any())">
         <HeaderTemplate>
             <RadzenText TextStyle="TextStyle.Subtitle2" class="rz-display-flex rz-m-0">
                 <RadzenIcon Icon="artist" class="rz-me-1"/>
@@ -52,7 +243,7 @@
             </RadzenStack>
         </ChildContent>
     </RadzenPanel>
-    <RadzenPanel AllowCollapse="true" Visible="_searchResult.Albums.Any()">
+    <RadzenPanel AllowCollapse="true" Visible="@(!_advancedMode && _searchResult.Albums.Any())">
         <HeaderTemplate>
             <RadzenText TextStyle="TextStyle.Subtitle2" class="rz-display-flex rz-m-0">
                 <RadzenIcon Icon="album" class="rz-me-1"/>
@@ -101,7 +292,7 @@
             </RadzenTable>
         </ChildContent>
     </RadzenPanel>
-    <RadzenPanel AllowCollapse="true" Visible="_searchResult.Songs.Any()">
+    <RadzenPanel AllowCollapse="true" Visible="@(!_advancedMode && _searchResult.Songs.Any())">
         <HeaderTemplate>
             <RadzenText TextStyle="TextStyle.Subtitle2" class="rz-display-flex rz-m-0">
                 <RadzenIcon Icon="album" class="rz-me-1"/>
@@ -169,14 +360,38 @@
 @code {
 
     string _userAgent = string.Empty;
+    
+    private bool _advancedMode;
+    private bool _mqlSearchPerformed;
+    private string _mqlQuery = string.Empty;
+    private string _selectedEntity = "songs";
+    private List<string> _mqlErrors = new();
+    
+    private Song[] _mqlSongResults = [];
+    private Album[] _mqlAlbumResults = [];
+    private Artist[] _mqlArtistResults = [];
+    
+    private static readonly List<EntityType> _entityTypes = new()
+    {
+        new("songs", "Songs"),
+        new("albums", "Albums"),
+        new("artists", "Artists")
+    };
+    
+    private sealed record EntityType(string Value, string Label);
 
-    [Parameter] public required string Query { get; set; }
+    [Parameter] public string? Query { get; set; }
 
     SearchResult _searchResult = new([], 0, [], 0, [], 0, [], 0, [], 0);
     private short _defaultMaxResults;
 
     protected override async Task OnParametersSetAsync()
     {
+        if (string.IsNullOrWhiteSpace(Query))
+        {
+            return;
+        }
+        
         MainLayoutProxyService.ToggleSpinnerVisible();
         try
         {
@@ -258,5 +473,115 @@
         var encodedQuery = Uri.EscapeDataString($"User Searched for: {Query}");
         NavigationManager.NavigateTo($"/requests/new?notes={encodedQuery}");
     }
-
+    
+    private void ToggleAdvancedMode()
+    {
+        _advancedMode = !_advancedMode;
+        _mqlErrors.Clear();
+        _mqlSearchPerformed = false;
+        _mqlSongResults = [];
+        _mqlAlbumResults = [];
+        _mqlArtistResults = [];
+    }
+    
+    private void SetMqlExample(string example)
+    {
+        _mqlQuery = example;
+        _mqlErrors.Clear();
+        _mqlSearchPerformed = false;
+    }
+    
+    private async Task OnMqlKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(_mqlQuery))
+        {
+            await ExecuteMqlSearch();
+        }
+    }
+    
+    private async Task ExecuteMqlSearch()
+    {
+        if (string.IsNullOrWhiteSpace(_mqlQuery))
+        {
+            return;
+        }
+        
+        _mqlErrors.Clear();
+        _mqlSongResults = [];
+        _mqlAlbumResults = [];
+        _mqlArtistResults = [];
+        _mqlSearchPerformed = false;
+        
+        MainLayoutProxyService.ToggleSpinnerVisible();
+        
+        try
+        {
+            var userId = GetCurrentUserId();
+            var paging = new PagedRequest { PageSize = _defaultMaxResults, Page = 1 };
+            
+            switch (_selectedEntity)
+            {
+                case "songs":
+                    var songResult = await MqlSearchService.SearchSongsAsync(_mqlQuery, userId, paging);
+                    if (songResult.IsValid)
+                    {
+                        _mqlSongResults = songResult.Results.Data.ToArray();
+                        _mqlErrors.AddRange(songResult.Warnings);
+                    }
+                    else
+                    {
+                        _mqlErrors.AddRange(songResult.Errors);
+                    }
+                    break;
+                    
+                case "albums":
+                    var albumResult = await MqlSearchService.SearchAlbumsAsync(_mqlQuery, userId, paging);
+                    if (albumResult.IsValid)
+                    {
+                        _mqlAlbumResults = albumResult.Results.Data.ToArray();
+                        _mqlErrors.AddRange(albumResult.Warnings);
+                    }
+                    else
+                    {
+                        _mqlErrors.AddRange(albumResult.Errors);
+                    }
+                    break;
+                    
+                case "artists":
+                    var artistResult = await MqlSearchService.SearchArtistsAsync(_mqlQuery, userId, paging);
+                    if (artistResult.IsValid)
+                    {
+                        _mqlArtistResults = artistResult.Results.Data.ToArray();
+                        _mqlErrors.AddRange(artistResult.Warnings);
+                    }
+                    else
+                    {
+                        _mqlErrors.AddRange(artistResult.Errors);
+                    }
+                    break;
+            }
+            
+            _mqlSearchPerformed = true;
+        }
+        catch (Exception ex)
+        {
+            _mqlErrors.Add($"{L("Search.MqlParseError")}: {ex.Message}");
+        }
+        finally
+        {
+            MainLayoutProxyService.ToggleSpinnerVisible(false);
+        }
+    }
+    
+    private int GetCurrentUserId()
+    {
+        var userIdClaim = CurrentUser?.FindFirstValue(ClaimTypes.NameIdentifier);
+        return int.TryParse(userIdClaim, out var userId) ? userId : 0;
+    }
+    
+    private async Task PlayMqlSong(Song song)
+    {
+        var songs = new List<Song> { song };
+        await PlayAction(song.Title, songs.Select(s => s.ToSongDataInfo()).ToList());
+    }
 }

@@ -1,10 +1,8 @@
-using System.Collections.Generic;
 using System.Linq.Expressions;
 using FluentAssertions;
 using Melodee.Common.Data.Models;
 using Melodee.Common.Enums;
 using Melodee.Common.Extensions;
-using Melodee.Mql.Models;
 using NodaTime;
 
 namespace Melodee.Mql.Tests;
@@ -379,7 +377,7 @@ public class MqlArtistCompilerTests
         var establishedArtist = CreateArtist(1, "Established Artist", library);
         establishedArtist.PlayedCount = 100;
         establishedArtist.SongCount = 20;
-        
+
         var newPopularArtist = CreateArtist(2, "New Popular Artist", library);
         newPopularArtist.PlayedCount = 100;
         newPopularArtist.SongCount = 2;

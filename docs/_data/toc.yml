@@ -29,6 +29,8 @@
       url: "charts"
     - title: "Playlists"
       url: "playlists"
+    - title: "Query Language (MQL)"
+      url: "mql"
     - title: "Requests"
       url: "requests"
     - title: "Scrobbling"

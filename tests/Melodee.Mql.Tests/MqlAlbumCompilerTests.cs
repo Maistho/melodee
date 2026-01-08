@@ -1,10 +1,7 @@
-using System.Collections.Generic;
 using System.Linq.Expressions;
 using FluentAssertions;
 using Melodee.Common.Data.Models;
 using Melodee.Common.Enums;
-using Melodee.Common.Extensions;
-using Melodee.Mql.Models;
 using NodaTime;
 
 namespace Melodee.Mql.Tests;
@@ -267,15 +264,16 @@ public class MqlAlbumCompilerTests
     [Fact]
     public void Compile_DurationGreaterThan_ReturnsCorrectExpression()
     {
-        var expression = CompileQuery("duration:>3000");
+        // Duration stored in milliseconds, query uses seconds due to ValueMultiplier
+        var expression = CompileQuery("duration:>3");
         var compiled = expression.Compile();
 
         var library = CreateLibrary(1);
         var artist = CreateArtist(1, "Test Artist", library);
         var longAlbum = CreateAlbum(1, "Long Album", artist, library);
-        longAlbum.Duration = 5000;
+        longAlbum.Duration = 5000; // 5000ms = 5 seconds
         var shortAlbum = CreateAlbum(2, "Short Album", artist, library);
-        shortAlbum.Duration = 1000;
+        shortAlbum.Duration = 1000; // 1000ms = 1 second
 
         compiled(longAlbum).Should().BeTrue();
         compiled(shortAlbum).Should().BeFalse();
@@ -358,15 +356,16 @@ public class MqlAlbumCompilerTests
     [Fact]
     public void Compile_DurationRangeQuery_CompilesSuccessfully()
     {
-        var expression = CompileQuery("duration:2000-5000");
+        // Duration stored in milliseconds, query uses seconds due to ValueMultiplier
+        var expression = CompileQuery("duration:2-5");
         var compiled = expression.Compile();
 
         var library = CreateLibrary(1);
         var artist = CreateArtist(1, "Test Artist", library);
         var midAlbum = CreateAlbum(1, "Mid Duration Album", artist, library);
-        midAlbum.Duration = 3500;
+        midAlbum.Duration = 3500; // 3500ms = 3.5 seconds (within 2-5s range)
         var shortAlbum = CreateAlbum(2, "Short Album", artist, library);
-        shortAlbum.Duration = 1000;
+        shortAlbum.Duration = 1000; // 1000ms = 1 second (below 2s)
 
         compiled(midAlbum).Should().BeTrue();
         compiled(shortAlbum).Should().BeFalse();
@@ -396,11 +395,11 @@ public class MqlAlbumCompilerTests
 
         var library = CreateLibrary(1);
         var artist = CreateArtist(1, "Test Artist", library);
-        
+
         var rockAlbum1980 = CreateAlbum(1, "Rock 1980", artist, library);
         rockAlbum1980.Genres = ["Rock"];
         rockAlbum1980.ReleaseDate = new LocalDate(1980, 1, 1);
-        
+
         var jazzAlbum1960 = CreateAlbum(2, "Jazz 1960", artist, library);
         jazzAlbum1960.Genres = ["Jazz"];
         jazzAlbum1960.ReleaseDate = new LocalDate(1960, 1, 1);

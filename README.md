@@ -295,6 +295,31 @@ Melodee includes a comprehensive job scheduling system powered by Quartz.NET:
 
 Jobs can be manually triggered, paused, or monitored from the admin UI at `/admin/jobs`.
 
+### 🔍 Melodee Query Language (MQL)
+
+MQL is a powerful query language for advanced music library searches. Access it via the **Advanced** button in the Search page.
+
+**Syntax highlights:**
+- **Field-specific search**: `artist:"Pink Floyd" album:"The Wall"`
+- **Numeric comparisons**: `year:>=2000 rating:>3 duration:<300`
+- **Date ranges**: `added:last-week lastPlayedAt:-30d`
+- **Boolean logic**: `(rock OR metal) AND NOT live`
+- **Regex patterns**: `title:/.*remix.*/i`
+
+**Example queries:**
+```
+# Find highly-rated jazz you haven't heard recently
+genre:Jazz rating:>=4 lastPlayedAt:<-90d
+
+# Pink Floyd albums from the 70s
+artist:"Pink Floyd" year:1970-1979
+
+# Recently added music you haven't played yet
+added:-7d plays:0
+```
+
+See the full [MQL Documentation](https://melodee.org/mql/) for complete field reference and examples.
+
 ### 🔌 Plugin Architecture
 
 - **Media Format Support**: AAC, AC3, M4A, FLAC, OGG, APE, MP3, WAV, WMA, and more

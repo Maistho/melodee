@@ -428,7 +428,8 @@ public class MqlCompilerTests
     [Fact]
     public void Compile_DurationField_ReturnsCorrectExpression()
     {
-        var expression = CompileQuery("duration:>100000");
+        // Duration is stored in milliseconds (180000ms = 180s), query uses seconds due to ValueMultiplier
+        var expression = CompileQuery("duration:>100");
 
         var songs = CreateTestData().Where(expression).ToList();
 
