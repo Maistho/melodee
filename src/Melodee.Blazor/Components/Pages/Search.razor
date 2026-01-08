@@ -46,12 +46,11 @@
                 
                 <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Stretch">
                     <RadzenDropDown @bind-Value="_selectedEntity"
-                                    Data="EntityTypes"
+                                    Data="_entityTypes"
                                     TextProperty="Label"
                                     ValueProperty="Value"
                                     Style="width: 120px;" />
                     <RadzenTextBox @bind-Value="_mqlQuery" 
-                                   @bind-Value:event="oninput"
                                    Placeholder="@L("Search.MqlPlaceholder")"
                                    Style="flex: 1;"
                                    @onkeydown="OnMqlKeyDown" />
@@ -372,13 +371,7 @@
     private Album[] _mqlAlbumResults = [];
     private Artist[] _mqlArtistResults = [];
     
-    private List<EntityType> EntityTypes =>
-    [
-        new("all", L("Common.All")),
-        new("songs", L("Common.Songs")),
-        new("albums", L("Common.Albums")),
-        new("artists", L("Common.Artists"))
-    ];
+    private List<EntityType> _entityTypes = [];
     
     private sealed record EntityType(string Value, string Label);
 
@@ -421,6 +414,14 @@
     {
         await base.OnInitializedAsync();
         _userAgent = await JsRuntime.InvokeAsync<string>("getUserAgent", []);
+
+        _entityTypes =
+        [
+            new EntityType("all", L("Common.All")),
+            new EntityType("songs", L("Common.Songs")),
+            new EntityType("albums", L("Common.Albums")),
+            new EntityType("artists", L("Common.Artists"))
+        ];
 
         var configuration = await ConfigurationFactory.GetConfigurationAsync();
         _defaultMaxResults = configuration.GetValue<short?>(SettingRegistry.SearchResultsDefaultPageSize) ??
