@@ -1,4 +1,4 @@
-@page "/podcasts/{ChannelApiKey}"
+@page "/data/podcasts/{ChannelApiKey}"
 @inherits MelodeeComponentBase
 @using Melodee.Common.Models.Collection
 
@@ -14,7 +14,7 @@
 <RadzenStack Style="height: 100%">
     <RadzenBreadCrumb Class="rz-pb-5">
         <RadzenBreadCrumbItem Path="/" Text="@L("Navigation.Dashboard")" />
-        <RadzenBreadCrumbItem Path="/podcasts" Icon="podcasts" Text="@L("Navigation.Podcasts")" />
+        <RadzenBreadCrumbItem Path="/data/podcasts" Icon="podcasts" Text="@L("Navigation.Podcasts")" />
         @if (_channel != null)
         {
             <RadzenBreadCrumbItem Text="@_channel.Title" />
@@ -331,7 +331,7 @@
                         Duration = ToastTime
                     });
 
-                    NavigationManager.NavigateTo("/podcasts");
+                    NavigationManager.NavigateTo("/data/podcasts");
                 }
                 else
                 {

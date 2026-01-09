@@ -1271,7 +1271,7 @@
     <value>Syntax Help</value>
   </data>
   <data name="Search.MqlPlaceholder" xml:space="preserve">
-    <value>e.g., artist:Beatles AND year:>=1970</value>
+    <value>e.g., artist:Beatles AND year:&gt;=1970</value>
   </data>
   <data name="Search.Examples" xml:space="preserve">
     <value>Examples</value>
@@ -4144,7 +4144,7 @@
     <value>Releases by Genre</value>
   </data>
 
-  <!-- Admin Doctor Page -->
+  
   <data name="AdminDoctor.PageTitle" xml:space="preserve">
     <value>System Doctor</value>
   </data>
@@ -4443,7 +4443,7 @@
     <value>No Results Found</value>
   </data>
 <data name="Search.NoResultsDescription" xml:space="preserve">
-    <value>We couldn't find any artists, albums, or songs matching &quot;{0}&quot;. Try a different search term or request the music you're looking for.</value>
+    <value>We couldn't find any artists, albums, or songs matching "{0}". Try a different search term or request the music you're looking for.</value>
   </data>
 <data name="Grid.NoRecordsToDisplay" xml:space="preserve">
     <value>No records to display</value>
@@ -4794,7 +4794,7 @@
     <value>API Key</value>
   </data>
   
-  <!-- Setting Category Names -->
+  
   <data name="SettingCategory.General" xml:space="preserve">
     <value>General</value>
   </data>
@@ -4850,7 +4850,7 @@
     <value>Albums</value>
   </data>
 
-  <!-- Artist Lookup -->
+  
   <data name="ArtistLookup.Title" xml:space="preserve">
     <value>Artist Lookup</value>
   </data>
@@ -4896,4 +4896,19 @@
 <data name="ArtistLookup.SelectToMerge" xml:space="preserve">
     <value>Select one or more results to merge their provider IDs</value>
   </data>
-</root>
+<data name="Navigation.Podcasts" xml:space="preserve">
+    <value>Podcasts</value>
+  </data>
+<data name="Common.Actions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+<data name="Common.Episodes" xml:space="preserve">
+    <value>Episodes</value>
+  </data>
+<data name="Podcast.AllChannelsRefreshed" xml:space="preserve">
+    <value>All podcast channels refreshed successfully</value>
+  </data>
+<data name="Podcast.DeleteChannelConfirm" xml:space="preserve">
+    <value>Are you sure you want to delete this podcast channel? All downloaded episodes will be removed.</value>
+  </data>
+<data name="Podcast.AddChannel" xml:space="preserve"><value>Add Podcast Channel</value></data><data name="Podcast.FeedUrl" xml:space="preserve"><value>Podcast Feed URL</value></data><data name="Podcast.LastSync" xml:space="preserve"><value>Last Sync</value></data><data name="Podcast.FeatureDisabled" xml:space="preserve"><value>Podcast feature is currently disabled. Please contact your administrator to enable it.</value></data><data name="Podcast.ChannelAdded" xml:space="preserve"><value>Podcast channel added successfully</value></data><data name="Podcast.ChannelRefreshed" xml:space="preserve"><value>Podcast channel refreshed successfully</value></data><data name="Podcast.ChannelDeleted" xml:space="preserve"><value>Podcast channel deleted successfully</value></data></root>

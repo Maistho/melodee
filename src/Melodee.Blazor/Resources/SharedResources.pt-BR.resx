@@ -4890,4 +4890,19 @@
   <data name="ArtistLookup.Title" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Artist Lookup</value>
   </data>
-</root>
+  <data name="Navigation.Podcasts" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Podcasts</value>
+  </data>
+  <data name="Podcast.ChannelDeleted" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Podcast channel deleted successfully</value>
+  </data>
+  <data name="Common.Episodes" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Episodes</value>
+  </data>
+  <data name="Podcast.AllChannelsRefreshed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] All podcast channels refreshed successfully</value>
+  </data>
+  <data name="Podcast.DeleteChannelConfirm" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Are you sure you want to delete this podcast channel? All downloaded episodes will be removed.</value>
+  </data>
+<data name="Common.Actions" xml:space="preserve"><value>[NEEDS TRANSLATION] Actions</value></data><data name="Podcast.AddChannel" xml:space="preserve"><value>[NEEDS TRANSLATION] Add Podcast Channel</value></data><data name="Podcast.FeedUrl" xml:space="preserve"><value>[NEEDS TRANSLATION] Podcast Feed URL</value></data><data name="Podcast.LastSync" xml:space="preserve"><value>[NEEDS TRANSLATION] Last Sync</value></data><data name="Podcast.FeatureDisabled" xml:space="preserve"><value>[NEEDS TRANSLATION] Podcast feature is currently disabled. Please contact your administrator to enable it.</value></data><data name="Podcast.ChannelAdded" xml:space="preserve"><value>[NEEDS TRANSLATION] Podcast channel added successfully</value></data><data name="Podcast.ChannelRefreshed" xml:space="preserve"><value>[NEEDS TRANSLATION] Podcast channel refreshed successfully</value></data></root>

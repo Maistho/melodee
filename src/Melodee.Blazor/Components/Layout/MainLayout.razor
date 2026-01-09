@@ -91,6 +91,8 @@
                                          Visible="@AuthService.IsAdmin"/>
                     <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.NowPlaying")" Path="/activity/nowplaying" Icon="sound_sampler"/>
                     <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Playlists")" Path="/data/playlists" Icon="playlist_play"/>
+                    <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Podcasts")" Path="/data/podcasts" Icon="podcasts" 
+                                         Visible="@_podcastEnabled"/>
                     <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.RadioStations")" Path="/data/radiostations" Icon="radio"/>
                     <RadzenPanelMenuItem Path="/requests" Icon="assignment">
                       <Template>
@@ -136,6 +138,7 @@
     bool _hasUnreadRequests;
     Timer? _activityTimer;
     bool _isRtl = false;
+    bool _podcastEnabled = false;
 
     string _debounceInputValue = "";
 
@@ -219,6 +222,7 @@
     {
         var configuration = await MelodeeConfigurationFactory.GetConfigurationAsync();
         _siteTitle = configuration.GetValue<string>(SettingRegistry.SystemSiteName) ?? SettingDefaults.DefaultSiteName;
+        _podcastEnabled = configuration.GetValue<bool>(SettingRegistry.PodcastEnabled);
     }
 
     private async Task CheckUnreadRequestsAsync()

@@ -333,15 +333,15 @@ Melodee features comprehensive localization with support for 10 languages:
 | Language | Code | Status | RTL |
 |----------|------|--------|-----|
 | English (US) | en-US | ✅ 100% | - |
-| Arabic | ar-SA | 🔄 31% | ✅ |
-| Chinese (Simplified) | zh-CN | 🔄 38% | - |
-| French | fr-FR | 🔄 37% | - |
-| German | de-DE | 🔄 41% | - |
-| Italian | it-IT | 🔄 41% | - |
-| Japanese | ja-JP | 🔄 37% | - |
-| Portuguese (Brazil) | pt-BR | 🔄 42% | - |
-| Russian | ru-RU | 🔄 38% | - |
-| Spanish | es-ES | 🔄 38% | - |
+| Arabic | ar-SA | 🔄 29% | ✅ |
+| Chinese (Simplified) | zh-CN | 🔄 35% | - |
+| French | fr-FR | 🔄 34% | - |
+| German | de-DE | 🔄 39% | - |
+| Italian | it-IT | 🔄 38% | - |
+| Japanese | ja-JP | 🔄 34% | - |
+| Portuguese (Brazil) | pt-BR | 🔄 39% | - |
+| Russian | ru-RU | 🔄 35% | - |
+| Spanish | es-ES | 🔄 35% | - |
 
 - **Language Selector**: Available in the header for quick switching
 - **User Preference**: Language choice is saved to your user profile and persists across sessions
@@ -360,7 +360,7 @@ We welcome translation contributions from the community! Strings marked with `[N
 
 Resource files are standard .NET `.resx` XML format. You can edit them with any text editor or Visual Studio's resource editor.
 
-**Current translation needs:** ~850-1000 strings per language need native translations. See [Contributing Guide](CONTRIBUTING.md) for details.
+**Current translation needs:** ~965-1,123 strings per language need native translations (out of 1,577 total). See [Contributing Guide](CONTRIBUTING.md) for details.
 
 ### 🌐 OpenSubsonic API
 

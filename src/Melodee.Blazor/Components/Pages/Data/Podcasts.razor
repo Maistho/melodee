@@ -1,4 +1,4 @@
-@page "/podcasts"
+@page "/data/podcasts"
 @inherits MelodeeComponentBase
 @using Melodee.Common.Filtering
 @using Melodee.Common.Models.Collection
@@ -79,7 +79,7 @@
                                 {
                                     <RadzenIcon Icon="podcasts" Style="width: 40px; height: 40px;" />
                                 }
-                                <RadzenLink Path="@($"/podcasts/{data.ApiKey}")" Text="@data.Title" />
+                                <RadzenLink Path="@($"/data/podcasts/{data.ApiKey}")" Text="@data.Title" />
                             </RadzenStack>
                         </Template>
                     </RadzenDataGridColumn>
@@ -110,7 +110,7 @@
                                               Click="@(() => RefreshChannel(data.Id))"
                                               title="@L("Actions.Refresh")" />
                                 <RadzenButton Icon="open_in_new" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light"
-                                              Click="@(() => NavigationManager.NavigateTo($"/podcasts/{data.ApiKey}"))"
+                                              Click="@(() => NavigationManager.NavigateTo($"/data/podcasts/{data.ApiKey}"))"
                                               title="@L("Actions.View")" />
                                 <RadzenButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger"
                                               Click="@(() => DeleteChannel(data.Id))"
