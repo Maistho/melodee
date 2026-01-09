@@ -129,6 +129,7 @@ public class PodcastController(
     [Route("/rest/getNewestPodcasts")]
     public async Task<IActionResult> GetNewestPodcastsAsync(
         int count = 20,
+        int offset = 0,
         CancellationToken cancellationToken = default)
     {
         var auth = await AuthenticateAsync(cancellationToken);
@@ -150,7 +151,7 @@ public class PodcastController(
 
         try
         {
-            var result = await podcastService.GetNewestEpisodesAsync(auth.UserInfo.Id, count, cancellationToken).ConfigureAwait(false);
+            var result = await podcastService.GetNewestEpisodesAsync(auth.UserInfo.Id, count, offset, cancellationToken).ConfigureAwait(false);
 
             var episodes = result.Data?.Select(e => e.ToPodcastEpisodeResponse()).ToList() ?? [];
 

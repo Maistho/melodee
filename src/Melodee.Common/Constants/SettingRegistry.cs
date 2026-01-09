@@ -65,6 +65,7 @@ public static class SettingRegistry
     public const string PodcastDownloadMaxConcurrentGlobal = "podcast.download.maxConcurrent.global";
     public const string PodcastDownloadMaxConcurrentPerUser = "podcast.download.maxConcurrent.perUser";
     public const string PodcastDownloadMaxEnclosureBytes = "podcast.download.maxEnclosureBytes";
+    public const string PodcastQuotaMaxBytesPerUser = "podcast.quota.maxBytesPerUser";
     public const string PodcastRetentionDownloadedEpisodesInDays = "podcast.retention.downloadedEpisodesInDays";
     public const string PodcastRecoveryStuckDownloadThresholdMinutes = "podcast.recovery.stuckDownloadThresholdMinutes";
     public const string PodcastRecoveryOrphanedUsageThresholdHours = "podcast.recovery.orphanedUsageThresholdHours";

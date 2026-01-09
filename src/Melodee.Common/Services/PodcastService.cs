@@ -629,6 +629,7 @@ public sealed class PodcastService(
     public async Task<OperationResult<IEnumerable<PodcastEpisode>>> GetNewestEpisodesAsync(
         int userId,
         int count = 20,
+        int offset = 0,
         CancellationToken cancellationToken = default)
     {
         try
@@ -639,6 +640,7 @@ public sealed class PodcastService(
                 .Include(x => x.PodcastChannel)
                 .Where(x => x.PodcastChannel.UserId == userId && !x.PodcastChannel.IsDeleted)
                 .OrderByDescending(x => x.PublishDate)
+                .Skip(offset)
                 .Take(count)
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);

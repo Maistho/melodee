@@ -45,6 +45,7 @@ public sealed class PodcastDownloadJob(
         var maxConcurrentGlobal = configuration.GetValue<int>(SettingRegistry.PodcastDownloadMaxConcurrentGlobal);
         var maxConcurrentPerUser = configuration.GetValue<int>(SettingRegistry.PodcastDownloadMaxConcurrentPerUser);
         var maxEnclosureBytes = configuration.GetValue<long>(SettingRegistry.PodcastDownloadMaxEnclosureBytes);
+        var maxBytesPerUser = configuration.GetValue<long>(SettingRegistry.PodcastQuotaMaxBytesPerUser);
         var timeoutSeconds = configuration.GetValue<int>(SettingRegistry.PodcastHttpTimeoutSeconds);
         var maxRedirects = configuration.GetValue<int>(SettingRegistry.PodcastHttpMaxRedirects);
 
@@ -63,6 +64,7 @@ public sealed class PodcastDownloadJob(
         Logger.Information("[{JobName}] Processing {EpisodeCount} episodes for download.", nameof(PodcastDownloadJob), episodesToDownload.Count);
 
         var processedUserIds = new HashSet<int>();
+        var userUsageCache = new Dictionary<int, long>();
         var processedCount = 0;
 
         foreach (var episode in episodesToDownload)
@@ -73,17 +75,45 @@ public sealed class PodcastDownloadJob(
                 break;
             }
 
-            if (processedUserIds.Contains(episode.PodcastChannel.UserId))
+            var userId = episode.PodcastChannel.UserId;
+
+            if (processedUserIds.Contains(userId))
             {
-                Logger.Debug("[{JobName}] Per-user limit reached for user {UserId}, skipping.", nameof(PodcastDownloadJob), episode.PodcastChannel.UserId);
+                Logger.Debug("[{JobName}] Per-user limit reached for user {UserId}, skipping.", nameof(PodcastDownloadJob), userId);
                 continue;
+            }
+
+            if (maxBytesPerUser > 0)
+            {
+                if (!userUsageCache.TryGetValue(userId, out var currentUsage))
+                {
+                    currentUsage = await dbContext.PodcastEpisodes
+                        .Where(x => x.PodcastChannel.UserId == userId && x.DownloadStatus == PodcastEpisodeDownloadStatus.Downloaded)
+                        .SumAsync(x => x.LocalFileSize ?? 0, context.CancellationToken)
+                        .ConfigureAwait(false);
+                    userUsageCache[userId] = currentUsage;
+                }
+
+                if (currentUsage >= maxBytesPerUser)
+                {
+                    Logger.Warning("[{JobName}] User {UserId} has reached their storage quota of {Quota} bytes.", nameof(PodcastDownloadJob), userId, maxBytesPerUser);
+                    episode.DownloadStatus = PodcastEpisodeDownloadStatus.Failed;
+                    episode.DownloadError = "User storage quota reached.";
+                    await dbContext.SaveChangesAsync(context.CancellationToken).ConfigureAwait(false);
+                    continue;
+                }
             }
 
             try
             {
                 await DownloadEpisodeAsync(episode, podcastLibrary, maxEnclosureBytes, timeoutSeconds, maxRedirects, configuration, context.CancellationToken).ConfigureAwait(false);
                 processedCount++;
-                processedUserIds.Add(episode.PodcastChannel.UserId);
+                processedUserIds.Add(userId);
+                
+                if (maxBytesPerUser > 0 && episode.DownloadStatus == PodcastEpisodeDownloadStatus.Downloaded)
+                {
+                    userUsageCache[userId] += episode.LocalFileSize ?? 0;
+                }
             }
             catch (Exception ex)
             {

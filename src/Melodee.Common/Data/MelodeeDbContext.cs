@@ -1567,6 +1567,16 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
                         "Cron expression to run the podcast recovery job, set empty to disable. Default of '0 */30 * ? * *' runs every 30 minutes.",
                     Value = "0 */30 * ? * *",
                     CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1812,
+                    ApiKey = SeedGuid("Setting", 1812),
+                    Category = (int)SettingCategory.Podcast,
+                    Key = SettingRegistry.PodcastQuotaMaxBytesPerUser,
+                    Comment = "Maximum total storage in bytes for all podcasts per user. 0 for unlimited.",
+                    Value = "5368709120", // 5GB
+                    CreatedAt = seedDataTimestamp
                 }
             );
         });
