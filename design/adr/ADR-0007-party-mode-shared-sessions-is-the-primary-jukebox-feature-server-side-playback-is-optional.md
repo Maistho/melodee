@@ -27,4 +27,4 @@ The Subsonic/OpenSubsonic `jukeboxControl` endpoint implies server-side playback
 
 ### References
 
-- `design/requirements/JUKEBOX-REQUIREMENTS.md`
+- `design/requirements/jukebox-requirements.md`

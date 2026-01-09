@@ -20,7 +20,9 @@ If a decision changes, prefer creating a **new ADR** and marking the old one **S
 
 ### File naming
 
-Use one ADR per file:
+Use one ADR per file.
+
+**Casing preference:** Prefer readable kebab-case for filenames and avoid ALL-CAPS filenames (harder to scan in listings).
 
 - `ADR-0001-short-title.md`
 

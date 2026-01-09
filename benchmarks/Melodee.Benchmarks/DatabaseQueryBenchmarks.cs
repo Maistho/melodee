@@ -12,7 +12,7 @@ using NodaTime;
 namespace Melodee.Benchmarks;
 
 /// <summary>
-/// Benchmarks for database query operations addressing PERFORMANCE_REVIEW.md requirements
+/// Benchmarks for database query operations addressing database performance requirements
 /// </summary>
 [SimpleJob(RuntimeMoniker.HostProcess)]
 [MemoryDiagnoser]

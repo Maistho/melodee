@@ -9,7 +9,7 @@ namespace Melodee.Blazor.Controllers.OpenSubsonic;
 /// <summary>
 /// Jukebox control endpoints.
 /// Currently returns HTTP 410 Gone because server-side jukebox playback is not enabled by default.
-/// See `design/requirements/JUKEBOX-REQUIREMENTS.md` for the intended Party Mode + optional backends approach.
+/// See `design/requirements/jukebox-requirements.md` for the intended Party Mode + optional backends approach.
 /// </summary>
 public class JukeboxController(ISerializer serializer, EtagRepository etagRepository, IMelodeeConfigurationFactory configurationFactory) : ControllerBase(etagRepository, serializer, configurationFactory)
 {

@@ -33,7 +33,7 @@ This document compares Melodee’s current feature set to other common self-host
 - Differentiated take
   - Make **Party Mode** the primary feature: shared sessions + shared queue + a designated playback endpoint (web player first).
   - Keep server-side playback optional via explicitly configured backends (Snapcast/MPD/Chromecast/etc.).
-  - See: `design/requirements/JUKEBOX-REQUIREMENTS.md` (ADR-0007).
+  - See: `design/requirements/jukebox-requirements.md` (ADR-0007).
 
 #### 1.3 Internet radio: clarify the gap and close it
 

@@ -29,8 +29,8 @@ dotnet run -c Release --project benchmarks/Melodee.Benchmarks collection
 ## Build Status: ✅ WORKING
 
 The benchmarks build successfully and execute properly, covering all the performance concerns identified in both:
-- `API_REVIEW_FIX.md` (streaming performance)
-- `PERFORMANCE_REVIEW.md` (general performance issues)
+- Streaming performance requirements
+- General performance issues
 
 ## Available Benchmark Categories
 

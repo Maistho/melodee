@@ -44,7 +44,9 @@ These are useful for development/testing because they are publicly accessible RS
 - Create/delete/list channels per user.
 - Refresh channels by polling RSS/Atom feeds.
 - Display episodes and allow server-side download.
-- Stream downloaded episodes via existing streaming/download primitives (or introduce podcast-specific streaming if required).
+- Cache channel artwork locally (basic cover art caching so OpenSubsonic clients can consistently render art).
+- Stream downloaded episodes via existing streaming/download primitives.
+  - Streaming must support HTTP Range requests (seeking) for good podcast client compatibility.
 - Minimal Blazor UI for managing channels and viewing download status.
 
 ### Phase 2: Quality-of-life and operational hardening
@@ -73,7 +75,8 @@ These are useful for development/testing because they are publicly accessible RS
   - Validate feed URL (see Security requirements).
   - Fetch and parse feed; store channel metadata (title, description, image, site link).
   - Create initial episode list from feed items (do not auto-download by default).
-- Delete channel: marks channel deleted and (optionally) schedules cleanup of downloaded episode files.
+- Delete channel:
+  - Marks channel deleted and enqueues cleanup of downloaded episode files (default; cleanup is async).
 - List channels: supports pagination and lightweight summaries.
 
 ### 3) Feed refresh
@@ -87,14 +90,21 @@ These are useful for development/testing because they are publicly accessible RS
   - Last refresh attempt time, last successful refresh time.
   - HTTP status summary and error message (sanitized) for UI.
   - Episode adds/updates/deletes as appropriate.
+- Large feeds:
+  - The server must cap the number of items processed/stored per channel (configurable) to avoid unbounded growth.
 
 ### 4) Episode lifecycle
 
 - Episodes must capture at least: title, publish date, description/summary, enclosure URL, enclosure mime type, enclosure byte length (when known).
+- Feeds frequently omit `enclosure` metadata (mime type/length). When missing, infer where possible (e.g., from HTTP response headers during download) and otherwise leave null.
 - Download episode:
   - Transition state: `Queued` → `Downloading` → `Downloaded` or `Failed`.
   - Store local file metadata and a safe, server-controlled storage path.
   - If an episode is already downloaded, repeated download requests should be idempotent.
+- Episode identity (deduplication within a channel):
+  - Episodes must have a stable key used for upserts during refresh.
+  - Preferred: feed item `<guid>`.
+  - Fallback: a stable hash of `(EnclosureUrl + PublishDate + Title)`.
 - Delete episode:
   - Removes local file if downloaded.
   - Keeps episode metadata record (preferred) or deletes record (acceptable) depending on OpenSubsonic semantics; document behavior.
@@ -116,14 +126,17 @@ These are useful for development/testing because they are publicly accessible RS
   - `UserId` (FK → User)
   - `FeedUrl` (string, unique per user)
   - `Title` (string)
-  - `Description` (string)
+  - `Description` (string) (can be large; store as a long text column)
   - `SiteUrl` (string?)
   - `ImageUrl` (string?)
+  - `CoverArtLocalPath` (string?) (server-controlled relative path)
   - `Etag` (string?)
   - `LastModified` (DateTimeOffset?)
   - `LastSyncAt` (DateTimeOffset?)
   - `LastSyncAttemptAt` (DateTimeOffset?)
   - `LastSyncError` (string?)
+  - `ConsecutiveFailureCount` (int)
+  - `NextSyncAt` (DateTimeOffset?) (for backoff)
   - `IsDeleted` (bool)
   - `CreatedAt` / `UpdatedAt`
 
@@ -132,11 +145,12 @@ These are useful for development/testing because they are publicly accessible RS
   - `PodcastChannelId` (FK)
   - `Guid` (string?) (from feed item guid if available)
   - `Title` (string)
-  - `Description` (string)
+  - `Description` (string) (can be large; store as a long text column)
   - `PublishDate` (DateTimeOffset?)
   - `EnclosureUrl` (string)
   - `EnclosureLength` (long?)
   - `MimeType` (string?)
+  - `EpisodeKey` (string) (stable per-channel identity; guid when available, else hash)
   - `DownloadStatus` (enum: None/Queued/Downloading/Downloaded/Failed)
   - `DownloadError` (string?)
   - `LocalPath` (string?) (server-controlled relative path only)
@@ -154,7 +168,8 @@ These are useful for development/testing because they are publicly accessible RS
 
 - `PodcastChannel(UserId, FeedUrl)` unique.
 - `PodcastEpisode(PodcastChannelId, PublishDate)` index for newest queries.
-- `PodcastEpisode(PodcastChannelId, Guid)` unique when guid exists.
+- `PodcastEpisode(PodcastChannelId, EpisodeKey)` unique.
+- `PodcastEpisode(PodcastChannelId, DownloadStatus)` index for queue/status queries.
 
 ## Storage requirements
 
@@ -162,22 +177,35 @@ These are useful for development/testing because they are publicly accessible RS
 - Use IDs/guids for path generation (never use user-provided titles as path components).
 - Example layout:
   - `podcasts/{userId}/{channelId}/{episodeId}.{ext}`
+- Downloads must write to a temp file and then atomically move into place to avoid partial/corrupt media.
+- Temporary/failed download files must be cleaned up.
 - Support configurable base directory/volume via existing configuration patterns.
+
+### Trade-offs (MVP)
+
+- **No cross-user deduplication (initially):** In Phase 1, podcast channels and downloaded media are stored per-user. This keeps the model simple but can duplicate storage/bandwidth when many users subscribe to the same feed. Consider normalizing into shared `PodcastFeed`/`PodcastEpisode` plus user subscriptions as a Phase 2 optimization if this becomes a scaling concern.
 
 ## Background jobs (Quartz)
 
 - `PodcastRefreshJob`
   - Runs periodically (configurable, e.g., every 30–60 minutes).
   - Refreshes channels with backoff for repeated failures.
+    - Suggested algorithm: `Backoff = min(InitialInterval * (2^ConsecutiveFailureCount), MaxBackoff)`; reset on success.
   - Uses conditional HTTP requests (ETag / Last-Modified).
 
 - `PodcastDownloadJob`
   - Processes queued episode downloads.
+  - Queue ordering should be FIFO by enqueue time (fairness).
   - Enforces concurrency limits (global + per-user).
   - Enforces max file size and timeouts.
+  - Uses atomic write (temp + move) to avoid corrupt files.
 
 - `PodcastCleanupJob` (Phase 2)
   - Applies retention policies and deletes old downloaded media.
+
+- `PodcastRecoveryJob` (Phase 2)
+  - Resets episodes stuck in transient states (e.g., `Downloading`) beyond a configured threshold.
+  - Cleans up orphaned temp files.
 
 Jobs must integrate with existing job history/tracking so admins can see status in the Jobs UI.
 
@@ -221,9 +249,16 @@ Implement the routes currently stubbed in `PodcastController`:
 
 - Must return standard `subsonic-response` envelope in JSON and XML.
 - Episode and channel identifiers must be stable and map cleanly to Melodee entities.
+- Define an ID encoding scheme that cannot collide with music IDs (examples):
+  - Channel ID: `podcast:channel:{channelId}`
+  - Episode ID: `podcast:episode:{episodeId}`
 - Decide how episodes are streamed to OpenSubsonic clients:
   1. **Preferred**: represent episodes as “songs” with ids that work with existing `/rest/stream` and `/rest/download` endpoints.
   2. Alternative: add explicit podcast streaming endpoints (not part of OpenSubsonic spec; avoid unless necessary).
+
+- Cover art:
+  - OpenSubsonic clients frequently expect the server to provide cover art (e.g., via `getCoverArt`), not a remote URL.
+  - Channel artwork should be cached locally (Phase 1) and served via existing cover art mechanisms.
 
 ### B) Native Melodee API (recommended for Blazor UI)
 
@@ -268,8 +303,9 @@ Localization:
 - Validate feed/enclosure URLs:
   - Allow-list schemes: `https` (default), optionally `http` behind explicit config.
   - Resolve DNS and block private, loopback, link-local, and multicast IP ranges.
-  - Block non-standard ports unless allow-listed.
-  - Limit redirects (e.g., max 5) and re-validate after each redirect.
+    - Mitigate DNS rebinding by validating the resolved IP at connection time (avoid TOCTOU between “check” and “fetch”).
+  - Block non-standard ports unless allow-listed (defaults should be 443, plus 80 only if http is enabled).
+  - Limit redirects (e.g., max 5 per request chain) and re-validate after each redirect.
 
 ### Safe parsing and size limits
 
@@ -286,11 +322,17 @@ Localization:
 
 - Log per-channel refresh outcomes (success/failure) with correlation to job runs.
 - Surface last error reason (sanitized) in UI.
+- Capture basic operational metrics (at minimum): refresh duration, refresh success rate, download success rate, bytes downloaded.
+- Document backup/restore expectations (database rows + podcast storage subtree).
 - Provide configuration knobs:
-  - Refresh interval
-  - Download concurrency
+  - Refresh interval (default and min)
+  - Download concurrency (global + per-user)
   - Max feed size
+  - Max episodes per channel (cap for large feeds)
   - Max enclosure size
+  - Timeouts (feed fetch and enclosure download)
+  - Redirect limit
+  - Allowed ports / scheme allow-list
   - Storage root
   - Retention policy defaults
 

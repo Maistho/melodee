@@ -9,7 +9,7 @@ using Serilog;
 namespace Melodee.Benchmarks;
 
 /// <summary>
-/// Benchmarks for caching operations addressing PERFORMANCE_REVIEW.md requirements
+/// Benchmarks for caching operations addressing caching performance requirements
 /// </summary>
 [SimpleJob(RuntimeMoniker.HostProcess)]
 [MemoryDiagnoser]
