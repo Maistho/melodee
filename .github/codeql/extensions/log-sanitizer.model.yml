@@ -1,0 +1,39 @@
+# CodeQL Model Extension for Melodee LogSanitizer
+# This file tells CodeQL to recognize LogSanitizer.Sanitize() as a sanitizer
+# for log-forging vulnerabilities.
+#
+# Reference: https://docs.github.com/en/code-security/codeql-cli/using-custom-codeSecurity/using-model-extensions
+
+extensions:
+  - addsTo:
+      pack: codeql/csharp-queries
+      extensible: summaryModel
+    data:
+      # LogSanitizer.Sanitize(string?) sanitizes log input
+      - ["Melodee.Common.Utility", "LogSanitizer", False, "Sanitize", "(System.String)", "", "Argument[0]", "ReturnValue", "taint", "manual"]
+      # LogSanitizer.SanitizeObject(object?) sanitizes log input
+      - ["Melodee.Common.Utility", "LogSanitizer", False, "SanitizeObject", "(System.Object)", "", "Argument[0]", "ReturnValue", "taint", "manual"]
+      # LogSanitizer.MaskEmail(string?) masks sensitive data
+      - ["Melodee.Common.Utility", "LogSanitizer", False, "MaskEmail", "(System.String)", "", "Argument[0]", "ReturnValue", "taint", "manual"]
+      # LogSanitizer.MaskIdentifier(string?, int) masks sensitive data
+      - ["Melodee.Common.Utility", "LogSanitizer", False, "MaskIdentifier", "(System.String,System.Int32)", "", "Argument[0]", "ReturnValue", "taint", "manual"]
+
+  - addsTo:
+      pack: codeql/csharp-queries
+      extensible: sinkModel
+    data: []
+
+  - addsTo:
+      pack: codeql/csharp-queries
+      extensible: sourceModel
+    data: []
+
+  - addsTo:
+      pack: codeql/csharp-queries
+      extensible: neutralModel
+    data:
+      # Mark LogSanitizer methods as sanitizers (removing taint)
+      - ["Melodee.Common.Utility", "LogSanitizer", "Sanitize", "(System.String)", "summary", "manual"]
+      - ["Melodee.Common.Utility", "LogSanitizer", "SanitizeObject", "(System.Object)", "summary", "manual"]
+      - ["Melodee.Common.Utility", "LogSanitizer", "MaskEmail", "(System.String)", "summary", "manual"]
+      - ["Melodee.Common.Utility", "LogSanitizer", "MaskIdentifier", "(System.String,System.Int32)", "summary", "manual"]

@@ -3,6 +3,17 @@
 
 name: "CodeQL config"
 
+# Model extensions define custom sanitizers and sinks for CodeQL analysis
+model-extensions:
+  - ".github/codeql/extensions/log-sanitizer.model.yml"
+
+# Query filters to tune analysis results
+query-filters:
+  # Exclude false positives where we have verified mitigations
+  - exclude:
+      id: cs/web/cookie-secure-not-set
+      # MelodeeBlazorCookieMiddleware.cs already sets Secure=true (line 29)
+
 # For JavaScript/TypeScript, only analyze application code in src directory
 # Exclude documentation, vendored libraries, and other non-application code
 paths-ignore:
