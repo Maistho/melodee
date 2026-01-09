@@ -6,8 +6,8 @@
 
 extensions:
   - addsTo:
-      pack: codeql/csharp-queries
-      extensible: summary
+      pack: codeql/csharp-all
+      extensible: summaryModel
     data:
       # LogSanitizer.Sanitize(string?) sanitizes log input
       - ["Melodee.Common.Utility", "LogSanitizer", False, "Sanitize", "(System.String)", "", "Argument[0]", "ReturnValue", "taint", "manual"]
@@ -19,18 +19,18 @@ extensions:
       - ["Melodee.Common.Utility", "LogSanitizer", False, "MaskIdentifier", "(System.String,System.Int32)", "", "Argument[0]", "ReturnValue", "taint", "manual"]
 
   - addsTo:
-      pack: codeql/csharp-queries
-      extensible: sink
+      pack: codeql/csharp-all
+      extensible: sinkModel
     data: []
 
   - addsTo:
-      pack: codeql/csharp-queries
-      extensible: source
+      pack: codeql/csharp-all
+      extensible: sourceModel
     data: []
 
   - addsTo:
-      pack: codeql/csharp-queries
-      extensible: neutral
+      pack: codeql/csharp-all
+      extensible: neutralModel
     data:
       # Mark LogSanitizer methods as sanitizers (removing taint)
       - ["Melodee.Common.Utility", "LogSanitizer", "Sanitize", "(System.String)", "summary", "manual"]

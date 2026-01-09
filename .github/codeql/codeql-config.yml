@@ -5,7 +5,7 @@ name: "CodeQL config"
 
 # Model extensions define custom sanitizers and sinks for CodeQL analysis
 model-extensions:
-  - ".github/codeql/extensions/log-sanitizer.model.yml"
+  - ".github/codeql/extensions/log-sanitizer.model.yaml"
 
 # Query filters to tune analysis results
 query-filters:
