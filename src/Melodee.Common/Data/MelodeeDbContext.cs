@@ -85,6 +85,10 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
 
     public DbSet<SmartPlaylist> SmartPlaylists { get; set; }
 
+    public DbSet<PodcastChannel> PodcastChannels { get; set; }
+
+    public DbSet<PodcastEpisode> PodcastEpisodes { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Use a fixed timestamp for seed data to prevent migration churn
@@ -167,6 +171,16 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
                     Description = "Library where templates are stored, organized by language code.",
                     Path = "/storage/templates/",
                     Type = (int)LibraryType.Templates,
+                    CreatedAt = seedDataTimestamp
+                },
+                new Library
+                {
+                    Id = 7,
+                    ApiKey = SeedGuid("Library", 7),
+                    Name = "Podcasts",
+                    Description = "Library where podcast media files are stored.",
+                    Path = "/storage/podcasts/",
+                    Type = (int)LibraryType.Podcast,
                     CreatedAt = seedDataTimestamp
                 });
         });
@@ -1388,6 +1402,119 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
                     Comment = "Is WikiData search engine enabled.",
                     Value = "false",
                     CreatedAt = seedDataTimestamp
+                },
+                // Podcast settings
+                new Setting
+                {
+                    Id = 1800,
+                    ApiKey = SeedGuid("Setting", 1800),
+                    Category = (int)SettingCategory.Podcast,
+                    Key = SettingRegistry.PodcastEnabled,
+                    Comment = "Enable podcast support.",
+                    Value = "true",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1801,
+                    ApiKey = SeedGuid("Setting", 1801),
+                    Category = (int)SettingCategory.Podcast,
+                    Key = SettingRegistry.PodcastHttpAllowHttp,
+                    Comment = "Allow HTTP (non-secure) URLs for podcast feeds.",
+                    Value = "false",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1802,
+                    ApiKey = SeedGuid("Setting", 1802),
+                    Category = (int)SettingCategory.Podcast,
+                    Key = SettingRegistry.PodcastHttpTimeoutSeconds,
+                    Comment = "Timeout in seconds for HTTP requests to podcast feeds.",
+                    Value = "30",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1803,
+                    ApiKey = SeedGuid("Setting", 1803),
+                    Category = (int)SettingCategory.Podcast,
+                    Key = SettingRegistry.PodcastHttpMaxRedirects,
+                    Comment = "Maximum number of HTTP redirects to follow for podcast feeds.",
+                    Value = "5",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1804,
+                    ApiKey = SeedGuid("Setting", 1804),
+                    Category = (int)SettingCategory.Podcast,
+                    Key = SettingRegistry.PodcastHttpMaxFeedBytes,
+                    Comment = "Maximum size in bytes for podcast feed responses.",
+                    Value = "10485760",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1805,
+                    ApiKey = SeedGuid("Setting", 1805),
+                    Category = (int)SettingCategory.Podcast,
+                    Key = SettingRegistry.PodcastRefreshMaxItemsPerChannel,
+                    Comment = "Maximum number of episodes to store per podcast channel.",
+                    Value = "500",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1806,
+                    ApiKey = SeedGuid("Setting", 1806),
+                    Category = (int)SettingCategory.Podcast,
+                    Key = SettingRegistry.PodcastDownloadMaxConcurrentGlobal,
+                    Comment = "Maximum concurrent podcast episode downloads (global).",
+                    Value = "2",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1807,
+                    ApiKey = SeedGuid("Setting", 1807),
+                    Category = (int)SettingCategory.Podcast,
+                    Key = SettingRegistry.PodcastDownloadMaxConcurrentPerUser,
+                    Comment = "Maximum concurrent podcast episode downloads per user.",
+                    Value = "1",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1808,
+                    ApiKey = SeedGuid("Setting", 1808),
+                    Category = (int)SettingCategory.Podcast,
+                    Key = SettingRegistry.PodcastDownloadMaxEnclosureBytes,
+                    Comment = "Maximum size in bytes for podcast episode downloads.",
+                    Value = "2147483648",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1850,
+                    ApiKey = SeedGuid("Setting", 1850),
+                    Category = (int)SettingCategory.Jobs,
+                    Key = SettingRegistry.JobsPodcastRefreshCronExpression,
+                    Comment =
+                        "Cron expression to run the podcast refresh job, set empty to disable. Default of '0 */15 * ? * *' runs every 15 minutes.",
+                    Value = "0 */15 * ? * *",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1851,
+                    ApiKey = SeedGuid("Setting", 1851),
+                    Category = (int)SettingCategory.Jobs,
+                    Key = SettingRegistry.JobsPodcastDownloadCronExpression,
+                    Comment =
+                        "Cron expression to run the podcast download job, set empty to disable. Default of '0 */5 * ? * *' runs every 5 minutes.",
+                    Value = "0 */5 * ? * *",
+                    CreatedAt = seedDataTimestamp
                 }
             );
         });
@@ -1534,6 +1661,38 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
             sp.HasOne(x => x.User)
                 .WithMany()
                 .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<PodcastChannel>(pc =>
+        {
+            pc.HasIndex(x => new { x.UserId, x.FeedUrl })
+                .IsUnique();
+
+            pc.HasIndex(x => x.IsDeleted);
+
+            pc.HasIndex(x => x.NextSyncAt);
+
+            pc.HasMany(x => x.Episodes)
+                .WithOne(e => e.PodcastChannel)
+                .HasForeignKey(e => e.PodcastChannelId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            pc.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<PodcastEpisode>(pe =>
+        {
+            pe.HasIndex(x => new { x.PodcastChannelId, x.PublishDate });
+
+            pe.HasIndex(x => new { x.PodcastChannelId, x.EpisodeKey })
+                .IsUnique();
+
+            pe.HasIndex(x => new { x.PodcastChannelId, x.DownloadStatus });
+
+            pe.HasOne(x => x.PodcastChannel)
+                .WithMany(c => c.Episodes)
+                .HasForeignKey(x => x.PodcastChannelId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 

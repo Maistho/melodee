@@ -107,6 +107,30 @@ public class OpenSubsonicApiService(
         return id.Nullify() != null && (id?.StartsWith($"dpl{OpenSubsonicServer.ApiIdSeparator}") ?? false);
     }
 
+    private static bool IsApiIdForPodcastChannel(string? id)
+    {
+        return id.Nullify() != null && (id?.StartsWith("podcast:channel:") ?? false);
+    }
+
+    private static int? PodcastChannelIdFromId(string? id)
+    {
+        if (id.Nullify() == null)
+        {
+            return null;
+        }
+
+        if (id!.StartsWith("podcast:channel:", StringComparison.OrdinalIgnoreCase))
+        {
+            var idPart = id["podcast:channel:".Length..];
+            if (int.TryParse(idPart, out var channelId))
+            {
+                return channelId;
+            }
+        }
+
+        return null;
+    }
+
     private static Guid? ApiKeyFromId(string? id)
     {
         if (id.Nullify() == null)
@@ -1244,10 +1268,48 @@ public class OpenSubsonicApiService(
                 }
                 else if (IsApiIdForChart(apiId))
                 {
-                    var chartImageBytesAndEtab = await chartService.GetChartImageBytesAndEtagAsync(apiKey.Value, size, cancellationToken).ConfigureAwait(false);
+                    var chartImageBytesAndEtab = await chartService.GetChartImageBytesAndEtagAsync(apiKey.Value, size, cancellationToken);
                     result = chartImageBytesAndEtab.Bytes ?? defaultImages.ChartImageBytes;
                     eTag = chartImageBytesAndEtab.Etag ?? badEtag;
                     imageBytesAndEtag = new ImageBytesAndEtag(result, eTag);
+                }
+                else if (IsApiIdForPodcastChannel(apiId))
+                {
+                    var channelId = PodcastChannelIdFromId(apiId);
+                    if (channelId.HasValue)
+                    {
+                        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+                        var channel = await context.PodcastChannels
+                            .FirstOrDefaultAsync(x => x.Id == channelId.Value, cancellationToken)
+                            .ConfigureAwait(false);
+
+                        if (channel != null && !string.IsNullOrEmpty(channel.CoverArtLocalPath))
+                        {
+                            var podcastLibraryResult = await libraryService.GetPodcastLibraryAsync(cancellationToken).ConfigureAwait(false);
+                            var podcastLibrary = podcastLibraryResult.Data;
+                            if (podcastLibrary != null)
+                            {
+                                var coverArtPath = Path.Combine(podcastLibrary.Path, channel.CoverArtLocalPath);
+                                var coverArtFileInfo = new FileInfo(coverArtPath);
+                                if (coverArtFileInfo.Exists)
+                                {
+                                    result = await File.ReadAllBytesAsync(coverArtFileInfo.FullName, cancellationToken).ConfigureAwait(false);
+                                    eTag = coverArtFileInfo.LastWriteTimeUtc.ToEtag();
+                                }
+                            }
+                        }
+
+                        if (result == null)
+                        {
+                            result = defaultImages.PlaylistImageBytes;
+                            eTag = badEtag;
+                        }
+                        imageBytesAndEtag = new ImageBytesAndEtag(result, eTag);
+                    }
+                    else
+                    {
+                        imageBytesAndEtag = new ImageBytesAndEtag(null, null);
+                    }
                 }
                 else if (isUserImageRequest)
                 {

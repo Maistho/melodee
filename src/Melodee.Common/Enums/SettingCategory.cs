@@ -30,5 +30,7 @@ public enum SettingCategory
 
     Validation,
 
-    Jobs
+    Jobs,
+
+    Podcast
 }

@@ -54,6 +54,20 @@ public static class SettingRegistry
     public const string PluginEnabledNfo = "plugin.nfo.enabled";
     public const string PluginEnabledSimpleFileVerification = "plugin.simpleFileVerification.enabled";
     public const string ProcessingAlbumTitleRemovals = "processing.albumTitleRemovals";
+
+    // Podcast settings
+    public const string PodcastEnabled = "podcast.enabled";
+    public const string PodcastHttpAllowHttp = "podcast.http.allowHttp";
+    public const string PodcastHttpTimeoutSeconds = "podcast.http.timeoutSeconds";
+    public const string PodcastHttpMaxRedirects = "podcast.http.maxRedirects";
+    public const string PodcastHttpMaxFeedBytes = "podcast.http.maxFeedBytes";
+    public const string PodcastRefreshMaxItemsPerChannel = "podcast.refresh.maxItemsPerChannel";
+    public const string PodcastDownloadMaxConcurrentGlobal = "podcast.download.maxConcurrent.global";
+    public const string PodcastDownloadMaxConcurrentPerUser = "podcast.download.maxConcurrent.perUser";
+    public const string PodcastDownloadMaxEnclosureBytes = "podcast.download.maxEnclosureBytes";
+    public const string JobsPodcastRefreshCronExpression = "jobs.podcastRefresh.cronExpression";
+    public const string JobsPodcastDownloadCronExpression = "jobs.podcastDownload.cronExpression";
+
     public const string ProcessingArtistNameReplacements = "processing.artistNameReplacements";
     public const string ProcessingConvertedExtension = "processing.convertedExtension";
     public const string ProcessingDoContinueOnDirectoryProcessingErrors = "processing.doContinueOnDirectoryProcessingErrors";

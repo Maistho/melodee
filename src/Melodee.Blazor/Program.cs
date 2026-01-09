@@ -729,6 +729,34 @@ if (!isQuartzDisabled)
                 .StartNow()
                 .Build());
     }
+
+    var podcastRefreshCronExpression = melodeeConfiguration.GetValue<string>(SettingRegistry.JobsPodcastRefreshCronExpression);
+    if (podcastRefreshCronExpression.Nullify() != null)
+    {
+        await quartzScheduler.ScheduleJob(
+            JobBuilder.Create<PodcastRefreshJob>()
+                .WithIdentity(JobKeyRegistry.PodcastRefreshJobKey)
+                .Build(),
+            TriggerBuilder.Create()
+                .WithIdentity("PodcastRefreshJob-trigger")
+                .WithCronSchedule(podcastRefreshCronExpression!)
+                .StartNow()
+                .Build());
+    }
+
+    var podcastDownloadCronExpression = melodeeConfiguration.GetValue<string>(SettingRegistry.JobsPodcastDownloadCronExpression);
+    if (podcastDownloadCronExpression.Nullify() != null)
+    {
+        await quartzScheduler.ScheduleJob(
+            JobBuilder.Create<PodcastDownloadJob>()
+                .WithIdentity(JobKeyRegistry.PodcastDownloadJobKey)
+                .Build(),
+            TriggerBuilder.Create()
+                .WithIdentity("PodcastDownloadJob-trigger")
+                .WithCronSchedule(podcastDownloadCronExpression!)
+                .StartNow()
+                .Build());
+    }
 }
 
 #endregion
