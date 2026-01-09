@@ -13,28 +13,33 @@ It is derived from `design/requirements/podcast-requirements.md`.
 
 ### Immutable decisions (do not reinterpret)
 
-1. **Authorization**: All podcast capabilities are gated by `User.HasPodcastRole`.
-2. **MVP storage model**: Podcasts are stored **per-user** (no cross-user deduplication in Phase 1).
-3. **Storage root and paths**: Podcast media is stored under a dedicated podcasts subtree (not inside music library folders) using server-generated IDs:
-   - `podcasts/{userId}/{channelId}/{episodeId}.{ext}`
-4. **Episode identity**: Episode refresh/upsert uses a stable per-channel key:
+1. **Master feature flag**: All podcast functionality is gated by `podcast.enabled` (default `true`). When `false`, **Podcasts must not appear anywhere** (NavMenu, header search results, Advanced search entity dropdown, pages/components) and all podcast handlers should short-circuit as “feature disabled”.
+2. **Authorization**: When enabled, all podcast capabilities are gated by `User.HasPodcastRole`.
+3. **MVP storage model**: Podcasts are stored **per-user** (no cross-user deduplication in Phase 1).
+4. **Storage root and paths**: Podcast media is stored under a dedicated **Podcast Library** root using server-generated IDs:
+   - Create a new `Library` with type `Podcast`.
+   - All podcast storage uses the library path as the podcast root.
+   - Example: `{podcastLibraryPath}/{userId}/{channelId}/{episodeId}.{ext}`
+5. **Configuration keys**: All podcast-related configuration uses the `podcast.*` prefix (e.g. `podcast.enabled`). Do **not** hardcode podcast settings (network, storage, limits, schedules); use the existing configuration/options patterns.
+6. **Network resiliency**: Feed fetch and enclosure download must use Polly following existing solution patterns (retry/backoff + timeouts) to improve resiliency.
+7. **Episode identity**: Episode refresh/upsert uses a stable per-channel key:
    - Preferred: feed item `<guid>`
    - Fallback: stable hash of `(EnclosureUrl + PublishDate + Title)`
-5. **OpenSubsonic ID encoding (no collisions with music IDs)**:
+8. **OpenSubsonic ID encoding (no collisions with music IDs)**:
    - Channel ID: `podcast:channel:{channelId}`
    - Episode ID: `podcast:episode:{episodeId}`
-6. **Streaming**: Podcast episode streaming must support **HTTP Range requests**.
-7. **Downloads**:
-   - Must be atomic: download to temp file, then move into place.
-   - Temporary/failed download files must be cleaned up.
-   - Queue ordering is FIFO by enqueue time.
-8. **Refresh backoff**:
-   - `Backoff = min(InitialInterval * (2^ConsecutiveFailureCount), MaxBackoff)`; reset on success.
-9. **Security**:
-   - SSRF protection is mandatory (scheme allow-list, port allow-list, private IP blocklist).
-   - Must mitigate DNS rebinding: validate resolved IP at connection time (avoid TOCTOU between “check” and “fetch”).
-   - Redirects: max 5 per request chain; re-validate after each redirect.
-10. **Channel delete behavior**:
+9. **Streaming**: Podcast episode streaming must support **HTTP Range requests**.
+10. **Downloads**:
+    - Must be atomic: download to temp file, then move into place.
+    - Temporary/failed download files must be cleaned up.
+    - Queue ordering is FIFO by enqueue time.
+11. **Refresh backoff**:
+    - `Backoff = min(InitialInterval * (2^ConsecutiveFailureCount), MaxBackoff)`; reset on success.
+12. **Security**:
+    - SSRF protection is mandatory (scheme allow-list, port allow-list, private IP blocklist).
+    - Must mitigate DNS rebinding: validate resolved IP at connection time (avoid TOCTOU between “check” and “fetch”).
+    - Redirects: max 5 per request chain; re-validate after each redirect.
+13. **Channel delete behavior**:
     - Channel delete is soft-delete and enqueues async cleanup of downloaded media (default).
 
 ---
@@ -45,6 +50,7 @@ It is derived from `design/requirements/podcast-requirements.md`.
 - [ ] Phase 1 — MVP: Data model + jobs + OpenSubsonic endpoints + minimal Blazor UI
 - [ ] Phase 1.1 — MVP: Cover art caching + cover art serving integration
 - [ ] Phase 1.2 — MVP: Streaming via existing primitives with Range support verified
+- [ ] Phase 1.3 — MVP: Search + MQL integration (Podcasts in global search + Advanced mode)
 - [ ] Phase 2 — Operational hardening (recovery, retention, quotas, better observability)
 - [ ] Phase 3 — Broader integration (native API if not done earlier; optional Jellyfin mapping)
 
@@ -126,8 +132,9 @@ Required indexes
 
 #### Requirements
 
-- All podcast media under a dedicated podcast root directory.
-- Only server-controlled relative paths are stored.
+- Create a new `Library` entry of type `Podcast`.
+- **All podcast media and cover art storage must be rooted at the Podcast Library path** (this is the podcast “storage root”).
+- Only server-controlled relative paths are stored (relative to the Podcast Library root).
 - Download writes:
   - Download to temp file in same filesystem.
   - Atomically move to final path.
@@ -138,10 +145,11 @@ Required indexes
 #### Requirements
 
 - Fetch and parse RSS/Atom for a channel.
+  - Must use Polly-based resiliency policies (follow existing solution patterns) for transient network failures.
 - Store/update channel metadata (title/description/site/image link).
 - Store/update episodes:
   - Use `EpisodeKey` for idempotent upserts.
-  - Cap number of items processed/stored per channel (configurable).
+  - Cap number of items processed/stored per channel (configurable via `podcast.*` settings).
 
 #### HTTP caching
 
@@ -154,7 +162,8 @@ Required indexes
 
 - `PodcastDownloadJob` processes queued episodes.
 - FIFO ordering by enqueue time.
-- Enforce:
+- Download must use Polly-based resiliency policies (follow existing solution patterns) for transient network failures.
+- Enforce (all configurable via `podcast.*` settings):
   - global concurrency limit
   - per-user concurrency limit
   - max enclosure size
@@ -237,7 +246,8 @@ Localization:
 ### Phase 1 acceptance checks
 
 - OpenSubsonic endpoints return `200` and function end-to-end with at least one podcast-capable OpenSubsonic client.
-- A user with `HasPodcastRole=false` cannot create/list/refresh/download podcasts.
+- When `podcast.enabled=false`, podcasts are not visible/available anywhere in the application.
+- When enabled, a user with `HasPodcastRole=false` cannot create/list/refresh/download podcasts.
 - Refresh job ingests a real-world feed and populates episodes.
 - Downloaded episode can be streamed without arbitrary file access.
 - Podcast jobs appear in jobs monitoring UI.
@@ -279,6 +289,86 @@ Confirm and, if missing, implement HTTP Range request support for streaming down
 ### Acceptance checks
 
 - A podcast client can seek within an episode without restarting download.
+
+---
+
+## Phase 1.3 — MVP: Search + MQL integration
+
+### Scope
+
+Make podcasts discoverable in the global UI search and queryable via MQL (the “Advanced mode” on `/search`).
+
+### Requirements
+
+#### 1) Podcasts should be searchable (header/global search)
+
+- **Header search must include podcasts** (when `podcast.enabled=true`):
+  - Header search navigates to `/search/{Query}` (see `MainLayout.razor`) and renders results via `Search.razor`.
+  - Update the simple search pipeline so `SearchService.DoSearchAsync(...)` can return podcast results alongside artists/albums/songs.
+- Extend search models and include flags:
+  - Add `SearchInclude.PodcastChannels` and `SearchInclude.PodcastEpisodes` (or a single `SearchInclude.Podcasts`) to `Melodee.Common.Models.Search.SearchInclude`.
+  - Extend `Melodee.Common.Models.Search.SearchResult` to carry podcasts:
+    - Recommended: `PodcastChannelDataInfo[] PodcastChannels` + `int TotalPodcastChannels`
+    - Recommended: `PodcastEpisodeDataInfo[] PodcastEpisodes` + `int TotalPodcastEpisodes`
+- Implement the backend query in `Melodee.Common.Services.SearchService`:
+  - Query `PodcastChannel` / `PodcastEpisode` for the current user.
+  - Filter by normalized text using the same conventions as music search (prefer `*Normalized` columns).
+  - Ensure podcast search results are **gated**:
+    - If `podcast.enabled == false`, podcast arrays must be empty and UI must not render podcast sections.
+    - If `User.HasPodcastRole == false`, podcast arrays must be empty regardless of requested include flags.
+- Update `src/Melodee.Blazor/Components/Pages/Search.razor` (simple mode):
+  - Include podcasts in the “no results found” condition.
+  - Add a `RadzenPanel` section for podcasts (channels and/or episodes).
+  - Navigation targets:
+    - Podcast channel results link to the podcast channel details UI.
+    - Podcast episode results link to the channel detail page with episode highlighted (or a dedicated episode view if it exists).
+- (Optional but recommended) Update `api/v1/search/suggest`:
+  - Add podcast suggestions so future autocomplete UIs can include podcasts.
+  - Return `type: "podcast"` (and/or `podcast-episode`) and a thumbnail URL pointing at cached cover art.
+
+#### 2) “Advanced” search option should have a “Podcasts” dropdown
+
+The `/search` page has an Advanced mode that currently exposes MQL with an entity dropdown (`all/songs/albums/artists`).
+
+- Add `podcasts` to the entity dropdown in `Search.razor` and localize the label (only when `podcast.enabled=true`).
+- Render results for podcasts in Advanced mode:
+  - Recommended: treat “Podcasts” as **PodcastEpisode** results (episodes are the playable/searchable unit).
+  - Show at minimum: channel title, episode title, publish date, and download status.
+
+#### 3) MQL should work with Podcasts (parity with artists/albums/songs)
+
+- Add a new MQL entity type (only when `podcast.enabled=true`):
+  - Entity name: `podcasts` (recommended) mapped to `PodcastEpisode`.
+- Update `Melodee.Mql.MqlFieldRegistry`:
+  - Add a new `"podcasts"` entry with fields and EF mappings.
+  - Minimum fields (Phase 1.3):
+    - `title` (default operator: `contains`) → `PodcastEpisode.TitleNormalized`
+    - `channel` (default operator: `contains`) → `PodcastEpisode.PodcastChannel.TitleNormalized`
+    - `published` → `PodcastEpisode.PublishDate`
+    - `downloaded` (boolean) → derived from `PodcastEpisode.DownloadStatus`
+    - `duration` → `PodcastEpisode.Duration`
+- Implement a compiler:
+  - Add `MqlPodcastEpisodeCompiler` (mirrors `MqlSongCompiler` style) that compiles AST → `Expression<Func<PodcastEpisode,bool>>`.
+  - Ensure operator handling matches the existing compilers (equals, comparisons, contains/startsWith/endsWith/wildcard, range).
+- Update validation and suggestions:
+  - `MqlValidator` already uses `MqlFieldRegistry.GetEntityTypes()`; ensure `podcasts` is included.
+  - Update `MqlSuggestionService.DetectContext(...)` to include `podcasts` when deciding whether a token is a field name.
+- Extend the Blazor MQL execution pipeline:
+  - Add `SearchPodcastsAsync(...)` to `IMqlSearchService` and implement it in `MqlSearchService`.
+  - Update `SearchAllAsync(...)` to optionally include podcasts (recommended: include podcasts only when the user has `HasPodcastRole`).
+  - Update `Search.razor` advanced mode switch logic + result rendering to show the new podcast results.
+
+### Acceptance checks
+
+- Searching from the header (simple search) returns podcasts alongside artists/albums/songs.
+- Advanced mode dropdown includes “Podcasts” and executing MQL queries returns podcast results.
+- MQL validation/suggestions work for podcast fields (no “unknown field” errors for valid podcast fields).
+- When `podcast.enabled=false`:
+  - Podcasts do not appear in NavMenu, search results, or Advanced search dropdown, and
+  - all podcast UI/pages/components are effectively unavailable.
+- A user without `HasPodcastRole`:
+  - does not see podcasts in results, and
+  - cannot use the Podcasts dropdown / query podcasts via MQL.
 
 ---
 
