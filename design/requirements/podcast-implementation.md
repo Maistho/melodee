@@ -48,8 +48,8 @@ It is derived from `design/requirements/podcast-requirements.md`.
 
 - [x] Phase 0 — Repository discovery & scaffolding (no feature behavior)
 - [x] Phase 1 — MVP: Data model + jobs + OpenSubsonic endpoints + minimal Blazor UI
-- [ ] Phase 1.1 — MVP: Cover art caching + cover art serving integration
-- [ ] Phase 1.2 — MVP: Streaming via existing primitives with Range support verified
+- [x] Phase 1.1 — MVP: Cover art caching + cover art serving integration
+- [x] Phase 1.2 — MVP: Streaming via existing primitives with Range support verified
 - [ ] Phase 1.3 — MVP: Search + MQL integration (Podcasts in global search + Advanced mode)
 - [ ] Phase 2 — Operational hardening (recovery, retention, quotas, better observability)
 - [ ] Phase 3 — Broader integration (native API if not done earlier; optional Jellyfin mapping)

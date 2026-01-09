@@ -429,7 +429,8 @@ builder.Services
     .AddScoped<ILyricPlugin, LyricPlugin>()
     .AddScoped<UserQueueService>()
     .AddScoped<PlaybackSettingsService>()
-    .AddScoped<EqualizerPresetService>();
+    .AddScoped<EqualizerPresetService>()
+    .AddScoped<PodcastService>();
 
 #endregion
 
@@ -754,6 +755,34 @@ if (!isQuartzDisabled)
             TriggerBuilder.Create()
                 .WithIdentity("PodcastDownloadJob-trigger")
                 .WithCronSchedule(podcastDownloadCronExpression!)
+                .StartNow()
+                .Build());
+    }
+
+    var podcastCleanupCronExpression = melodeeConfiguration.GetValue<string>(SettingRegistry.JobsPodcastCleanupCronExpression);
+    if (podcastCleanupCronExpression.Nullify() != null)
+    {
+        await quartzScheduler.ScheduleJob(
+            JobBuilder.Create<PodcastCleanupJob>()
+                .WithIdentity(JobKeyRegistry.PodcastCleanupJobKey)
+                .Build(),
+            TriggerBuilder.Create()
+                .WithIdentity("PodcastCleanupJob-trigger")
+                .WithCronSchedule(podcastCleanupCronExpression!)
+                .StartNow()
+                .Build());
+    }
+
+    var podcastRecoveryCronExpression = melodeeConfiguration.GetValue<string>(SettingRegistry.JobsPodcastRecoveryCronExpression);
+    if (podcastRecoveryCronExpression.Nullify() != null)
+    {
+        await quartzScheduler.ScheduleJob(
+            JobBuilder.Create<PodcastRecoveryJob>()
+                .WithIdentity(JobKeyRegistry.PodcastRecoveryJobKey)
+                .Build(),
+            TriggerBuilder.Create()
+                .WithIdentity("PodcastRecoveryJob-trigger")
+                .WithCronSchedule(podcastRecoveryCronExpression!)
                 .StartNow()
                 .Build());
     }

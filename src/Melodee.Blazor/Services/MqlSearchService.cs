@@ -2,6 +2,8 @@ using System.Linq.Expressions;
 using Melodee.Common.Data;
 using Melodee.Common.Models;
 using Melodee.Mql;
+using Melodee.Common.Configuration;
+using Melodee.Common.Constants;
 using Melodee.Mql.Interfaces;
 using Melodee.Mql.Models;
 using Microsoft.EntityFrameworkCore;
@@ -27,6 +29,7 @@ public sealed record MqlSearchAllResult
     public required PagedResult<Song> Songs { get; init; }
     public required PagedResult<Album> Albums { get; init; }
     public required PagedResult<Artist> Artists { get; init; }
+    public required PagedResult<Melodee.Common.Data.Models.PodcastEpisode> PodcastEpisodes { get; init; }
 }
 
 public interface IMqlSearchService
@@ -34,13 +37,15 @@ public interface IMqlSearchService
     Task<MqlSearchResult<Song>> SearchSongsAsync(string mqlQuery, int userId, PagedRequest paging, CancellationToken cancellationToken = default);
     Task<MqlSearchResult<Album>> SearchAlbumsAsync(string mqlQuery, int userId, PagedRequest paging, CancellationToken cancellationToken = default);
     Task<MqlSearchResult<Artist>> SearchArtistsAsync(string mqlQuery, int userId, PagedRequest paging, CancellationToken cancellationToken = default);
+    Task<MqlSearchResult<Melodee.Common.Data.Models.PodcastEpisode>> SearchPodcastsAsync(string mqlQuery, int userId, PagedRequest paging, CancellationToken cancellationToken = default);
     Task<MqlSearchAllResult> SearchAllAsync(string mqlQuery, int userId, PagedRequest paging, CancellationToken cancellationToken = default);
     MqlValidationResult ValidateQuery(string mqlQuery, string entityType);
 }
 
 public sealed class MqlSearchService(
     IDbContextFactory<MelodeeDbContext> contextFactory,
-    IMqlValidator validator) : IMqlSearchService
+    IMqlValidator validator,
+    IMelodeeConfigurationFactory configurationFactory) : IMqlSearchService
 {
     public MqlValidationResult ValidateQuery(string mqlQuery, string entityType)
     {
@@ -291,17 +296,113 @@ public sealed class MqlSearchService(
         };
     }
 
+    public async Task<MqlSearchResult<Melodee.Common.Data.Models.PodcastEpisode>> SearchPodcastsAsync(string mqlQuery, int userId, PagedRequest paging, CancellationToken cancellationToken = default)
+    {
+        var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
+        if (!configuration.GetValue<bool>(SettingRegistry.PodcastEnabled))
+        {
+            return new MqlSearchResult<Melodee.Common.Data.Models.PodcastEpisode>
+            {
+                IsValid = true,
+                Errors = [],
+                Warnings = [],
+                Results = new PagedResult<Melodee.Common.Data.Models.PodcastEpisode> { TotalCount = 0, TotalPages = 0, Data = [] }
+            };
+        }
+
+        var trimmedQuery = mqlQuery?.Trim() ?? string.Empty;
+        // Skip validation/search if entity type is not 'podcasts' or 'all' but we are calling directly.
+        // Assuming caller handles entity selection logic or we rely on validation.
+        var validationResult = validator.Validate(trimmedQuery, "podcasts");
+        if (!validationResult.IsValid)
+        {
+            return new MqlSearchResult<Melodee.Common.Data.Models.PodcastEpisode>
+            {
+                IsValid = false,
+                Errors = validationResult.Errors.Select(e => e.Message).ToList(),
+                Warnings = validationResult.Warnings,
+                Results = new PagedResult<Melodee.Common.Data.Models.PodcastEpisode> { TotalCount = 0, TotalPages = 0, Data = [] }
+            };
+        }
+
+        var tokenizer = new MqlTokenizer();
+        var tokens = tokenizer.Tokenize(trimmedQuery).ToList();
+
+        var parser = new MqlParser();
+        var parseResult = parser.Parse(tokens, "podcasts");
+
+        if (!parseResult.IsValid || parseResult.Ast == null)
+        {
+            return new MqlSearchResult<Melodee.Common.Data.Models.PodcastEpisode>
+            {
+                IsValid = false,
+                Errors = parseResult.Errors.Select(e => e.Message).ToList(),
+                Warnings = [],
+                Results = new PagedResult<Melodee.Common.Data.Models.PodcastEpisode> { TotalCount = 0, TotalPages = 0, Data = [] }
+            };
+        }
+
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var baseQuery = context.PodcastEpisodes
+            .Include(x => x.PodcastChannel)
+            .Where(x => x.PodcastChannel.UserId == userId && !x.PodcastChannel.IsDeleted)
+            .AsNoTracking();
+
+        var compiler = new MqlPodcastEpisodeCompiler();
+        Expression<Func<Melodee.Common.Data.Models.PodcastEpisode, bool>> predicate;
+        try
+        {
+            predicate = compiler.Compile(parseResult.Ast, userId);
+        }
+        catch (Exception ex)
+        {
+            return new MqlSearchResult<Melodee.Common.Data.Models.PodcastEpisode>
+            {
+                IsValid = false,
+                Errors = [$"Compilation error: {ex.Message}"],
+                Warnings = [],
+                Results = new PagedResult<Melodee.Common.Data.Models.PodcastEpisode> { TotalCount = 0, TotalPages = 0, Data = [] }
+            };
+        }
+
+        var filteredQuery = baseQuery.Where(predicate);
+        var totalCount = await filteredQuery.CountAsync(cancellationToken).ConfigureAwait(false);
+
+        var episodes = await filteredQuery
+            .OrderByDescending(x => x.PublishDate)
+            .Skip(paging.SkipValue)
+            .Take(paging.TakeValue)
+            .ToArrayAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return new MqlSearchResult<Melodee.Common.Data.Models.PodcastEpisode>
+        {
+            IsValid = true,
+            Errors = [],
+            Warnings = validationResult.Warnings,
+            Results = new PagedResult<Melodee.Common.Data.Models.PodcastEpisode>
+            {
+                TotalCount = totalCount,
+                TotalPages = paging.TotalPages(totalCount),
+                Data = episodes
+            }
+        };
+    }
+
     public async Task<MqlSearchAllResult> SearchAllAsync(string mqlQuery, int userId, PagedRequest paging, CancellationToken cancellationToken = default)
     {
         var songTask = SearchSongsAsync(mqlQuery, userId, paging, cancellationToken);
         var albumTask = SearchAlbumsAsync(mqlQuery, userId, paging, cancellationToken);
         var artistTask = SearchArtistsAsync(mqlQuery, userId, paging, cancellationToken);
+        var podcastTask = SearchPodcastsAsync(mqlQuery, userId, paging, cancellationToken);
 
-        await Task.WhenAll(songTask, albumTask, artistTask).ConfigureAwait(false);
+        await Task.WhenAll(songTask, albumTask, artistTask, podcastTask).ConfigureAwait(false);
 
         var songResult = await songTask;
         var albumResult = await albumTask;
         var artistResult = await artistTask;
+        var podcastResult = await podcastTask;
 
         var errors = new List<string>();
         var warnings = new List<string>();
@@ -309,19 +410,22 @@ public sealed class MqlSearchService(
         if (!songResult.IsValid) errors.AddRange(songResult.Errors.Select(e => $"Songs: {e}"));
         if (!albumResult.IsValid) errors.AddRange(albumResult.Errors.Select(e => $"Albums: {e}"));
         if (!artistResult.IsValid) errors.AddRange(artistResult.Errors.Select(e => $"Artists: {e}"));
+        if (!podcastResult.IsValid) errors.AddRange(podcastResult.Errors.Select(e => $"Podcasts: {e}"));
 
         warnings.AddRange(songResult.Warnings);
         warnings.AddRange(albumResult.Warnings);
         warnings.AddRange(artistResult.Warnings);
+        warnings.AddRange(podcastResult.Warnings);
 
         return new MqlSearchAllResult
         {
-            IsValid = songResult.IsValid || albumResult.IsValid || artistResult.IsValid,
+            IsValid = songResult.IsValid || albumResult.IsValid || artistResult.IsValid || podcastResult.IsValid,
             Errors = errors,
             Warnings = warnings.Distinct().ToList(),
             Songs = songResult.Results,
             Albums = albumResult.Results,
-            Artists = artistResult.Results
+            Artists = artistResult.Results,
+            PodcastEpisodes = podcastResult.Results
         };
     }
 }

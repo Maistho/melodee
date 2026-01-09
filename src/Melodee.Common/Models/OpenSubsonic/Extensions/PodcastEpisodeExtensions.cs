@@ -1,6 +1,7 @@
 using Melodee.Common.Data.Models;
 using Melodee.Common.Enums;
 using Melodee.Common.Models.OpenSubsonic.Responses;
+using System.Globalization;
 
 namespace Melodee.Common.Models.OpenSubsonic.Extensions;
 
@@ -25,7 +26,7 @@ public static class PodcastEpisodeExtensions
             Title = episode.Title,
             Description = episode.Description,
             Url = episode.EnclosureUrl,
-            PublishDate = episode.PublishDate?.ToString("ddd, dd MMM yyyy HH:mm:ss K") ?? episode.CreatedAt.ToString("ddd, dd MMM yyyy HH:mm:ss K"),
+            PublishDate = episode.PublishDate?.ToString("ddd, dd MMM yyyy HH:mm:ss K", CultureInfo.InvariantCulture) ?? episode.CreatedAt.ToString("ddd, dd MMM yyyy HH:mm:ss K", CultureInfo.InvariantCulture),
             Duration = episode.Duration?.ToString(@"hh\:mm\:ss"),
             Status = status,
             FileSize = episode.LocalFileSize ?? episode.EnclosureLength,

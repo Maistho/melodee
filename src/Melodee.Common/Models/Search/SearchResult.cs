@@ -12,7 +12,11 @@ public sealed record SearchResult(
     PlaylistDataInfo[] Playlists,
     int TotalPlaylists,
     ArtistDataInfo[] MusicBrainzArtists,
-    int TotalMusicBrainzArtists)
+    int TotalMusicBrainzArtists,
+    PodcastChannelDataInfo[] PodcastChannels,
+    int TotalPodcastChannels,
+    PodcastEpisodeDataInfo[] PodcastEpisodes,
+    int TotalPodcastEpisodes)
 {
-    public int TotalCount => TotalArtists + TotalAlbums + TotalSongs + TotalPlaylists + TotalMusicBrainzArtists;
+    public int TotalCount => TotalArtists + TotalAlbums + TotalSongs + TotalPlaylists + TotalMusicBrainzArtists + TotalPodcastChannels + TotalPodcastEpisodes;
 }

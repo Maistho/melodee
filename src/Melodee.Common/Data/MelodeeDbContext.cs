@@ -1515,6 +1515,58 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
                         "Cron expression to run the podcast download job, set empty to disable. Default of '0 */5 * ? * *' runs every 5 minutes.",
                     Value = "0 */5 * ? * *",
                     CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1809,
+                    ApiKey = SeedGuid("Setting", 1809),
+                    Category = (int)SettingCategory.Podcast,
+                    Key = SettingRegistry.PodcastRetentionDownloadedEpisodesInDays,
+                    Comment = "Number of days to keep downloaded episodes. 0 to disable retention.",
+                    Value = "0",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1810,
+                    ApiKey = SeedGuid("Setting", 1810),
+                    Category = (int)SettingCategory.Podcast,
+                    Key = SettingRegistry.PodcastRecoveryStuckDownloadThresholdMinutes,
+                    Comment = "Threshold in minutes to consider a downloading episode as stuck.",
+                    Value = "60",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1811,
+                    ApiKey = SeedGuid("Setting", 1811),
+                    Category = (int)SettingCategory.Podcast,
+                    Key = SettingRegistry.PodcastRecoveryOrphanedUsageThresholdHours,
+                    Comment = "Threshold in hours to consider a temporary file orphaned.",
+                    Value = "12",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1852,
+                    ApiKey = SeedGuid("Setting", 1852),
+                    Category = (int)SettingCategory.Jobs,
+                    Key = SettingRegistry.JobsPodcastCleanupCronExpression,
+                    Comment =
+                        "Cron expression to run the podcast cleanup job, set empty to disable. Default of '0 0 2 * * ?' runs daily at 2 AM.",
+                    Value = "0 0 2 * * ?",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1853,
+                    ApiKey = SeedGuid("Setting", 1853),
+                    Category = (int)SettingCategory.Jobs,
+                    Key = SettingRegistry.JobsPodcastRecoveryCronExpression,
+                    Comment =
+                        "Cron expression to run the podcast recovery job, set empty to disable. Default of '0 */30 * ? * *' runs every 30 minutes.",
+                    Value = "0 */30 * ? * *",
+                    CreatedAt = seedDataTimestamp
                 }
             );
         });

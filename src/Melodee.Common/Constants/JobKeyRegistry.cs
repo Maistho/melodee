@@ -18,4 +18,6 @@ public static class JobKeyRegistry
     public static readonly JobKey StagingAlbumRevalidationJobKey = new("StagingAlbumRevalidationJob");
     public static readonly JobKey PodcastRefreshJobKey = new("PodcastRefreshJob");
     public static readonly JobKey PodcastDownloadJobKey = new("PodcastDownloadJob");
+    public static readonly JobKey PodcastCleanupJobKey = new("PodcastCleanupJob");
+    public static readonly JobKey PodcastRecoveryJobKey = new("PodcastRecoveryJob");
 }

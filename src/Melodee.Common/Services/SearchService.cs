@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using Melodee.Common.Constants;
+using Melodee.Common.Configuration;
 using System.Web;
 using Melodee.Common.Data;
 using Melodee.Common.Extensions;
@@ -21,10 +23,12 @@ public sealed class SearchService(
     ILogger logger,
     ICacheManager cacheManager,
     IDbContextFactory<MelodeeDbContext> contextFactory,
+    IMelodeeConfigurationFactory configurationFactory,
     UserService userService,
     ArtistService artistService,
     AlbumService albumService,
     SongService songService,
+    PodcastService podcastService,
     IMusicBrainzRepository musicBrainzRepository,
     IBus bus)
     : ServiceBase(logger, cacheManager, contextFactory)
@@ -45,18 +49,22 @@ public sealed class SearchService(
         var totalSongs = 0;
         var totalPlaylists = 0;
         var totalMusicBrainzArtists = 0;
+        var totalPodcastChannels = 0;
+        var totalPodcastEpisodes = 0;
 
         List<ArtistDataInfo> artists = [];
         List<AlbumDataInfo> albums = [];
         List<SongDataInfo> songs = [];
         List<PlaylistDataInfo> playlists = [];
         List<ArtistDataInfo> musicBrainzArtists = [];
+        List<PodcastChannelDataInfo> podcastChannels = [];
+        List<PodcastEpisodeDataInfo> podcastEpisodes = [];
 
         if (searchTerm.Nullify() == null)
         {
             return new OperationResult<SearchResult>(OperationResponseType.ValidationFailure, "No Search Term Provided")
             {
-                Data = new SearchResult([], 0, [], 0, [], 0, [], 0, [], 0)
+                Data = new SearchResult([], 0, [], 0, [], 0, [], 0, [], 0, [], 0, [], 0)
             };
         }
 
@@ -71,7 +79,7 @@ public sealed class SearchService(
         {
             return new OperationResult<SearchResult>
             {
-                Data = new SearchResult([], 0, [], 0, [], 0, [], 0, [], 0)
+                Data = new SearchResult([], 0, [], 0, [], 0, [], 0, [], 0, [], 0, [], 0)
             };
         }
 
@@ -137,7 +145,7 @@ public sealed class SearchService(
                 {
                     return new OperationResult<SearchResult>(OperationResponseType.NotFound, "Artist not found")
                     {
-                        Data = new SearchResult([], 0, [], 0, [], 0, [], 0, [], 0)
+                        Data = new SearchResult([], 0, [], 0, [], 0, [], 0, [], 0, [], 0, [], 0)
                     };
                 }
             }
@@ -190,6 +198,35 @@ public sealed class SearchService(
                 .ToList();
         }
 
+        var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
+        var podcastEnabled = configuration.GetValue<bool>(SettingRegistry.PodcastEnabled);
+
+        if (include.HasFlag(SearchInclude.PodcastChannels) && user.Data!.HasPodcastRole && podcastEnabled)
+        {
+            var podcastChannelRequest = new PagedRequest
+            {
+                Page = 1,
+                PageSize = pageSize,
+                FilterBy = [new FilterOperatorInfo(nameof(PodcastChannelDataInfo.TitleNormalized), FilterOperator.Contains, searchTermNormalized)]
+            };
+            var podcastChannelResult = await podcastService.ListChannelsAsync(podcastChannelRequest, user.Data.Id, cancellationToken);
+            totalPodcastChannels = podcastChannelResult.TotalCount;
+            podcastChannels = podcastChannelResult.Data.ToList();
+        }
+
+        if (include.HasFlag(SearchInclude.PodcastEpisodes) && user.Data!.HasPodcastRole && podcastEnabled)
+        {
+            var podcastEpisodeRequest = new PagedRequest
+            {
+                Page = 1,
+                PageSize = pageSize,
+                FilterBy = [new FilterOperatorInfo(nameof(PodcastEpisodeDataInfo.TitleNormalized), FilterOperator.Contains, searchTermNormalized)]
+            };
+            var podcastEpisodeResult = await podcastService.ListEpisodesAsync(podcastEpisodeRequest, user.Data.Id, cancellationToken);
+            totalPodcastEpisodes = podcastEpisodeResult.TotalCount;
+            podcastEpisodes = podcastEpisodeResult.Data.ToList();
+        }
+
         var elapsedTime = Stopwatch.GetElapsedTime(startTicks);
 
         await bus.SendLocal(new SearchHistoryEvent
@@ -215,7 +252,11 @@ public sealed class SearchService(
                 playlists.ToArray(),
                 totalPlaylists,
                 musicBrainzArtists.ToArray(),
-                totalMusicBrainzArtists)
+                totalMusicBrainzArtists,
+                podcastChannels.ToArray(),
+                totalPodcastChannels,
+                podcastEpisodes.ToArray(),
+                totalPodcastEpisodes)
         };
     }
 
