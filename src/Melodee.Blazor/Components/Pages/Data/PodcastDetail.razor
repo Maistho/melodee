@@ -1,13 +1,16 @@
 @page "/data/podcasts/{ChannelApiKey}"
 @inherits MelodeeComponentBase
 @using Melodee.Common.Models.Collection
+@using Melodee.Common.Enums
 
 @inject MainLayoutProxyService MainLayoutProxyService
 @inject ILogger Logger
 @inject PodcastService PodcastService
+@inject PodcastPlaybackService PodcastPlaybackService
 @inject NotificationService NotificationService
 @inject DialogService DialogService
 @inject NavigationManager NavigationManager
+@inject LibraryService LibraryService
 
 <PageTitle>@(_channel?.Title ?? L("Navigation.Podcasts"))</PageTitle>
 
@@ -71,6 +74,50 @@
                 </RadzenStack>
             </RadzenColumn>
         </RadzenRow>
+
+        @* Audio Player Section *@
+        @if (_currentEpisode != null)
+        {
+            <RadzenCard Class="rz-my-4" Style="background: var(--rz-base-100);">
+                <RadzenStack Gap="0.5rem">
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem">
+                        <RadzenStack Gap="0.25rem" Style="flex: 1;">
+                            <RadzenText TextStyle="TextStyle.Body1" Style="margin: 0;"><strong>@_currentEpisode.Title</strong></RadzenText>
+                            <RadzenText TextStyle="TextStyle.Caption" Class="rz-text-secondary-color" Style="margin: 0;">
+                                @(_currentEpisode.Duration.HasValue ? _currentEpisode.Duration.Value.ToString(@"hh\:mm\:ss") : "")
+                            </RadzenText>
+                        </RadzenStack>
+                        <RadzenButton Icon="@(_isPlaying ? "pause" : "play_arrow")" 
+                                      Size="ButtonSize.Small" 
+                                      ButtonStyle="ButtonStyle.Primary"
+                                      Click="@TogglePlayPause" />
+                        <RadzenButton Icon="stop" 
+                                      Size="ButtonSize.Small" 
+                                      ButtonStyle="ButtonStyle.Light"
+                                      Click="@StopPlayback" />
+                    </RadzenStack>
+                    
+                    <audio @ref="_audioElement" 
+                           @ontimeupdate="OnTimeUpdate" 
+                           @onended="OnPlaybackEnded"
+                           @onloadedmetadata="OnAudioLoaded"
+                           style="width: 100%;" 
+                           controls>
+                        <source src="@_audioSource" type="@(_currentEpisode.MimeType ?? "audio/mpeg")" />
+                    </audio>
+                    
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                        <RadzenText TextStyle="TextStyle.Caption" Style="min-width: 60px;">@_currentTime</RadzenText>
+                        <RadzenSlider @bind-Value="_currentPosition" 
+                                      Min="0" 
+                                      Max="@_duration" 
+                                      Change="@OnSeek"
+                                      Style="flex: 1;" />
+                        <RadzenText TextStyle="TextStyle.Caption" Style="min-width: 60px;">@_totalTime</RadzenText>
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenCard>
+        }
 
         <RadzenText TextStyle="TextStyle.H6" Class="rz-mb-2">@L("Common.Episodes") (@_count)</RadzenText>
 
@@ -440,15 +487,210 @@
         }
     }
 
-    private void PlayEpisode(PodcastEpisodeDataInfo episode)
+    // Playback state
+    private PodcastEpisodeDataInfo? _currentEpisode;
+    private ElementReference _audioElement;
+    private string _audioSource = string.Empty;
+    private bool _isPlaying;
+    private double _currentPosition;
+    private double _duration;
+    private string _currentTime = "00:00";
+    private string _totalTime = "00:00";
+    private System.Timers.Timer? _heartbeatTimer;
+    private System.Timers.Timer? _bookmarkTimer;
+    private string _podcastLibraryPath = string.Empty;
+
+    private async Task PlayEpisode(PodcastEpisodeDataInfo episode)
     {
-        // TODO: Implement podcast playback in a future release
-        NotificationService.Notify(new NotificationMessage
+        try
         {
-            Severity = NotificationSeverity.Info,
-            Summary = L("Message.Info"),
-            Detail = L("Podcast.PlaybackNotImplemented"),
-            Duration = ToastTime
-        });
+            // Get podcast library path
+            if (string.IsNullOrEmpty(_podcastLibraryPath))
+            {
+                var libraryResult = await LibraryService.GetPodcastLibraryAsync();
+                if (!libraryResult.IsSuccess || libraryResult.Data == null)
+                {
+                    NotificationService.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = L("Message.Error"),
+                        Detail = "Podcast library not configured",
+                        Duration = ToastTime
+                    });
+                    return;
+                }
+                _podcastLibraryPath = libraryResult.Data.Path;
+            }
+
+            // Set current episode and build audio source
+            _currentEpisode = episode;
+            _audioSource = $"/api/v1/podcasts/episodes/{episode.Id}/stream";
+            
+            Logger.Information("[PodcastDetail] Starting playback for episode {EpisodeId}: {Title}", episode.Id, episode.Title);
+
+            // Check for existing bookmark
+            var bookmarkResult = await PodcastPlaybackService.GetBookmarkAsync(CurrentUsersId, episode.Id);
+            if (bookmarkResult.IsSuccess && bookmarkResult.Data != null)
+            {
+                _currentPosition = bookmarkResult.Data.PositionSeconds;
+                Logger.Information("[PodcastDetail] Resuming from bookmark position: {Position}s", _currentPosition);
+            }
+
+            // Start heartbeat timer (every 30 seconds)
+            _heartbeatTimer?.Dispose();
+            _heartbeatTimer = new System.Timers.Timer(30000);
+            _heartbeatTimer.Elapsed += async (sender, e) => await SendHeartbeat();
+            _heartbeatTimer.Start();
+
+            // Start bookmark timer (every 10 seconds)
+            _bookmarkTimer?.Dispose();
+            _bookmarkTimer = new System.Timers.Timer(10000);
+            _bookmarkTimer.Elapsed += async (sender, e) => await SaveBookmark();
+            _bookmarkTimer.Start();
+
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "[PodcastDetail] Error starting playback");
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = L("Message.Error"),
+                Detail = ex.Message,
+                Duration = ToastTime
+            });
+        }
+    }
+
+    private async Task TogglePlayPause()
+    {
+        _isPlaying = !_isPlaying;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task StopPlayback()
+    {
+        _currentEpisode = null;
+        _audioSource = string.Empty;
+        _isPlaying = false;
+        _currentPosition = 0;
+        _duration = 0;
+        
+        _heartbeatTimer?.Stop();
+        _heartbeatTimer?.Dispose();
+        _bookmarkTimer?.Stop();
+        _bookmarkTimer?.Dispose();
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnTimeUpdate(ChangeEventArgs args)
+    {
+        // This will be called by the audio element's timeupdate event
+        // The actual implementation would need JavaScript interop
+        await Task.CompletedTask;
+    }
+
+    private async Task OnAudioLoaded(EventArgs args)
+    {
+        // Audio metadata loaded - duration is now available
+        // This would need JavaScript interop to get actual duration
+        await Task.CompletedTask;
+    }
+
+    private async Task OnSeek(double value)
+    {
+        _currentPosition = value;
+        // Would need JavaScript interop to actually seek the audio element
+        await Task.CompletedTask;
+    }
+
+    private async Task OnPlaybackEnded(EventArgs args)
+    {
+        if (_currentEpisode == null) return;
+
+        try
+        {
+            // Scrobble the episode as completed
+            var duration = _currentEpisode.Duration?.TotalSeconds ?? _duration;
+            await PodcastPlaybackService.ScrobbleAsync(
+                CurrentUsersId,
+                _currentEpisode.Id,
+                (int)duration,
+                "Melodee.Blazor");
+
+            Logger.Information("[PodcastDetail] Episode {EpisodeId} playback completed and scrobbled", _currentEpisode.Id);
+
+            // Clear current episode
+            await StopPlayback();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "[PodcastDetail] Error handling playback end");
+        }
+    }
+
+    private async Task SendHeartbeat()
+    {
+        if (_currentEpisode == null || !_isPlaying) return;
+
+        try
+        {
+            await PodcastPlaybackService.NowPlayingAsync(
+                CurrentUsersId,
+                _currentEpisode.Id,
+                (int)_currentPosition,
+                "Melodee.Blazor");
+
+            Logger.Debug("[PodcastDetail] Heartbeat sent for episode {EpisodeId} at position {Position}s", 
+                _currentEpisode.Id, _currentPosition);
+
+            // Check if we should scrobble (50% or 240 seconds)
+            var duration = _currentEpisode.Duration?.TotalSeconds ?? _duration;
+            var threshold = Math.Max(duration * 0.5, 240);
+            
+            if (_currentPosition >= threshold)
+            {
+                await PodcastPlaybackService.ScrobbleAsync(
+                    CurrentUsersId,
+                    _currentEpisode.Id,
+                    (int)_currentPosition,
+                    "Melodee.Blazor");
+
+                Logger.Information("[PodcastDetail] Episode {EpisodeId} scrobbled at threshold", _currentEpisode.Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "[PodcastDetail] Error sending heartbeat");
+        }
+    }
+
+    private async Task SaveBookmark()
+    {
+        if (_currentEpisode == null || !_isPlaying || _currentPosition < 1) return;
+
+        try
+        {
+            await PodcastPlaybackService.SaveBookmarkAsync(
+                CurrentUsersId,
+                _currentEpisode.Id,
+                (int)_currentPosition);
+
+            Logger.Debug("[PodcastDetail] Bookmark saved for episode {EpisodeId} at position {Position}s", 
+                _currentEpisode.Id, _currentPosition);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "[PodcastDetail] Error saving bookmark");
+        }
+    }
+
+    public override void Dispose()
+    {
+        _heartbeatTimer?.Dispose();
+        _bookmarkTimer?.Dispose();
+        base.Dispose();
     }
 }

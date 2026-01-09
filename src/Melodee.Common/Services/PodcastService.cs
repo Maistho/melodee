@@ -485,8 +485,8 @@ public sealed class PodcastService(
         var feed = SyndicationFeed.Load(
             XmlReader.Create(new StringReader(feedContent), new XmlReaderSettings
             {
-                DtdProcessing = DtdProcessing.Prohibit,
-                XmlResolver = null
+                DtdProcessing = DtdProcessing.Ignore, // Ignore DTD declarations in podcast feeds (many feeds include them for compatibility)
+                XmlResolver = null // Prevent external entity resolution for security
             }));
 
         if (feed.Id.Nullify() == null && feed.Title.Text.Nullify() == null)

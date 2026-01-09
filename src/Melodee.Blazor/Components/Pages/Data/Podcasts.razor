@@ -18,6 +18,13 @@
         <RadzenBreadCrumbItem Icon="podcasts" Text="@L("Navigation.Podcasts")" />
     </RadzenBreadCrumb>
     
+    @* DEBUG PANEL - Remove after fixing *@
+    <RadzenAlert AlertStyle="AlertStyle.Info" Shade="Shade.Lighter" AllowClose="false" Style="margin-bottom: 1rem;">
+        <RadzenText TextStyle="TextStyle.Caption">
+            <strong>DEBUG:</strong> PodcastEnabled=@_podcastEnabled | CurrentUsersId=@CurrentUsersId | Count=@_count | Channels=@(_channels?.Count() ?? 0) | IsLoading=@_isLoading
+        </RadzenText>
+    </RadzenAlert>
+    
     <RadzenRow AlignItems="AlignItems.Center">
         <RadzenColumn Size="12" SizeMD="6">
             <RadzenText Text="@L("Navigation.Podcasts")" TextStyle="TextStyle.DisplayH6" TagName="TagName.H1" style="margin: 0" />
@@ -139,8 +146,11 @@
 
     private async Task LoadData(LoadDataArgs args)
     {
+        Logger.Information("[Podcasts] LoadData called. PodcastEnabled={PodcastEnabled}, CurrentUsersId={UserId}", _podcastEnabled, CurrentUsersId);
+        
         if (!_podcastEnabled || CurrentUsersId == 0)
         {
+            Logger.Warning("[Podcasts] LoadData returned early. PodcastEnabled={PodcastEnabled}, CurrentUsersId={UserId}", _podcastEnabled, CurrentUsersId);
             return;
         }
 
@@ -155,9 +165,14 @@
                 PageSize = (short)(args.Top ?? DefaultPageSize)
             };
 
+            Logger.Information("[Podcasts] Calling PodcastService.ListChannelsAsync for UserId={UserId}, Page={Page}, PageSize={PageSize}", 
+                CurrentUsersId, request.Page, request.PageSize);
+            
             var result = await PodcastService.ListChannelsAsync(request, CurrentUsersId);
             _channels = result.Data;
             _count = result.TotalCount;
+            
+            Logger.Information("[Podcasts] Loaded {Count} channels, TotalCount={TotalCount}", _channels?.Count() ?? 0, _count);
         }
         catch (Exception ex)
         {

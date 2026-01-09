@@ -52,9 +52,12 @@ public sealed class PodcastHttpClient : IDisposable
         var timeoutSeconds = configuration.GetValue<int>(SettingRegistry.PodcastHttpTimeoutSeconds);
         var maxRedirects = configuration.GetValue<int>(SettingRegistry.PodcastHttpMaxRedirects);
 
-        _httpClient.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
+        // Use CancellationTokenSource with timeout instead of setting HttpClient.Timeout
+        // to avoid "Properties can only be modified before sending the first request" error
+        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeoutCts.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
 
-        var validationResult = await _ssrfValidator.ValidateUrlAsync(url, cancellationToken).ConfigureAwait(false);
+        var validationResult = await _ssrfValidator.ValidateUrlAsync(url, timeoutCts.Token).ConfigureAwait(false);
         if (!validationResult.IsValid)
         {
             return PodcastHttpResult.Failed(validationResult.ErrorMessage ?? "SSRF validation failed");
@@ -80,7 +83,7 @@ public sealed class PodcastHttpClient : IDisposable
                     }
 
                     return await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
-                }, cancellationToken).ConfigureAwait(false);
+                }, timeoutCts.Token).ConfigureAwait(false);
 
                 if (IsRedirect(response.StatusCode))
                 {
@@ -95,7 +98,7 @@ public sealed class PodcastHttpClient : IDisposable
                         redirectLocation,
                         redirectCount,
                         maxRedirects,
-                        cancellationToken).ConfigureAwait(false);
+                        timeoutCts.Token).ConfigureAwait(false);
 
                     if (!redirectValidation.IsValid)
                     {

@@ -1,72 +1,10 @@
 ## Podcast Support Requirements (Melodee)
 
+### Status
 
-### Status (Updated: 2026-01-09)
+Melodee currently exposes OpenSubsonic podcast routes (`/rest/*Podcast*.view`) but returns HTTP `501 Not Implemented`.
+This document scopes what it would take to implement podcasts in a way that fits Melodee’s architecture (jobs-driven ingestion, multi-user roles, and multiple API surfaces).
 
-**Phase 1 (MVP) - IN PROGRESS**
-
-✅ **Completed:**
-- ✅ Data models for channels and episodes
-- ✅ Database migrations applied  
-- ✅ RSS/Atom feed parsing with DTD support
-- ✅ Feed refresh infrastructure (conditional requests, ETag, Last-Modified)
-- ✅ Episode download queue system
-- ✅ Channel CRUD operations (create, list, delete)
-- ✅ Episode CRUD operations
-- ✅ HTTP Range request support for streaming
-- ✅ SSRF protection for feed URLs
-- ✅ OpenSubsonic endpoints: `getPodcasts`, `getNewestPodcasts`, `refreshPodcasts`, `createPodcastChannel`, `deletePodcastChannel`, `deletePodcastEpisode`, `downloadPodcastEpisode`, `streamPodcastEpisode`
-- ✅ Blazor UI: Channel list, add channel dialog, channel detail with episodes
-- ✅ Playback tracking data models: `UserPodcastEpisodePlayHistory`, `PodcastEpisodeBookmark`
-- ✅ Playback tracking service: `PodcastPlaybackService` (NowPlaying, Scrobble, Bookmarks)
-
-🚧 **In Progress (Current Session):**
-- 🚧 Blazor UI: Episode playback controls on PodcastDetail page
-- 🚧 Blazor UI: Progress bar with resume position
-- 🚧 Blazor UI: Auto-save bookmarks during playback
-- 🚧 Blazor UI: "Now playing" heartbeat mechanism
-
-⏳ **Remaining for Phase 1:**
-- ⏳ OpenSubsonic: Update `scrobble.view` endpoint to handle podcast episodes
-- ⏳ OpenSubsonic: Update `getNowPlaying.view` to include podcast episodes
-- ⏳ OpenSubsonic: Implement `getBookmarks.view` for podcast episodes
-- ⏳ OpenSubsonic: Implement `createBookmark.view` for podcast episodes  
-- ⏳ OpenSubsonic: Implement `deleteBookmark.view` for podcast episodes
-- ⏳ Native API: `/api/v1/podcasts/episodes/{id}/play` endpoint
-- ⏳ Native API: `/api/v1/podcasts/episodes/{id}/bookmark` endpoints
-- ⏳ Blazor UI: Display played/unplayed indicators in episode list
-- ⏳ Blazor UI: Show play history in episode detail
-
-### Implementation Notes (2026-01-09)
-
-**Playback Tracking Architecture:**
-- Mirrors existing music scrobbling infrastructure (`UserSongPlayHistory` → `UserPodcastEpisodePlayHistory`)
-- Separate bookmark table for resume positions per user (`PodcastEpisodeBookmark`)
-- "Now playing" uses heartbeat mechanism with `IsNowPlaying` flag and `LastHeartbeatAt` timestamp
-- Scrobbling logic: Mark episode as "played" when 50%+ duration or 240+ seconds
-- All timestamps use NodaTime `Instant` for timezone-aware storage
-- Foreign keys cascade delete (when user or episode deleted, tracking is also deleted)
-
-**Blazor Playback Implementation (Current):**
-- HTML5 `<audio>` element with custom controls
-- Direct service injection (NO HTTP calls to backend API from Blazor components)
-- Bookmark saves every 10 seconds during playback
-- Heartbeat sends "now playing" every 30 seconds
-- Scrobble on completion or when threshold reached
-- Resume from bookmark on page load if exists
-
-**OpenSubsonic Integration (Next):**
-- Episode IDs use format: `podcast:episode:{episodeId}`
-- `scrobble.view` needs to detect podcast episode IDs and route to `PodcastPlaybackService`
-- Bookmarks stored per user, accessible via OpenSubsonic bookmark endpoints
-- "Now playing" includes both songs and podcast episodes
-
----
-
-### Original Status
-
-Melodee exposes OpenSubsonic podcast routes and has implemented most of Phase 1.
-This document scopes the complete podcast implementation in a way that fits Melodee's architecture (jobs-driven ingestion, multi-user roles, and multiple API surfaces).
 ### Goals
 
 - Provide first-class podcast subscriptions (RSS/Atom) and episode playback.

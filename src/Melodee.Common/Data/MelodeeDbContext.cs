@@ -89,6 +89,10 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
 
     public DbSet<PodcastEpisode> PodcastEpisodes { get; set; }
 
+    public DbSet<UserPodcastEpisodePlayHistory> UserPodcastEpisodePlayHistories { get; set; }
+
+    public DbSet<PodcastEpisodeBookmark> PodcastEpisodeBookmarks { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Use a fixed timestamp for seed data to prevent migration churn

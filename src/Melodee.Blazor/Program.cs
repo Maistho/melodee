@@ -432,7 +432,8 @@ builder.Services
     .AddScoped<EqualizerPresetService>()
     .AddSingleton<ISsrfValidator, SsrfValidator>()
     .AddSingleton<PodcastHttpClient>()
-    .AddScoped<PodcastService>();
+    .AddScoped<PodcastService>()
+    .AddScoped<PodcastPlaybackService>();
 
 #endregion
 
