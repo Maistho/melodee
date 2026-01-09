@@ -299,7 +299,9 @@ public class PodcastController(
 
         try
         {
-            var result = await podcastService.DeleteChannelAsync(channelId.Value, auth.UserInfo.Id, cancellationToken: cancellationToken).ConfigureAwait(false);
+            // Hard delete for podcasts - they can be easily re-added from RSS feed
+            // Soft delete would block re-adding the same feed URL due to unique constraint
+            var result = await podcastService.DeleteChannelAsync(channelId.Value, auth.UserInfo.Id, softDelete: false, cancellationToken: cancellationToken).ConfigureAwait(false);
 
             if (!result.IsSuccess)
             {

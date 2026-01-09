@@ -4780,4 +4780,40 @@
   <data name="Podcast.ChannelNotFound" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Podcast channel not found</value>
   </data>
+  <data name="Podcast.VisitWebsite" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Visit Website</value>
+  </data>
+  <data name="Actions.OpenExternal" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Open in New Tab</value>
+  </data>
+  <data name="Message.Error" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Error</value>
+  </data>
+  <data name="Message.Warning" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Warning</value>
+  </data>
+  <data name="Podcast.DeleteEpisodeConfirm" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Are you sure you want to delete this episode?</value>
+  </data>
+  <data name="Podcast.EpisodeDeleted" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Episode deleted successfully</value>
+  </data>
+  <data name="Podcast.EpisodeQueued" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Episode queued for download</value>
+  </data>
+  <data name="Podcast.StatusNone" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Not Downloaded</value>
+  </data>
+  <data name="Podcast.StatusQueued" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Queued</value>
+  </data>
+  <data name="Podcast.StatusDownloading" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Downloading</value>
+  </data>
+  <data name="Podcast.StatusDownloaded" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Downloaded</value>
+  </data>
+  <data name="Podcast.StatusFailed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed</value>
+  </data>
 <data name="Podcast.AddChannel" xml:space="preserve"><value>[NEEDS TRANSLATION] Add Podcast Channel</value></data><data name="Podcast.FeedUrl" xml:space="preserve"><value>[NEEDS TRANSLATION] Podcast Feed URL</value></data><data name="Podcast.LastSync" xml:space="preserve"><value>[NEEDS TRANSLATION] Last Sync</value></data><data name="Podcast.FeatureDisabled" xml:space="preserve"><value>[NEEDS TRANSLATION] Podcast feature is currently disabled. Please contact your administrator to enable it.</value></data><data name="Podcast.ChannelAdded" xml:space="preserve"><value>[NEEDS TRANSLATION] Podcast channel added successfully</value></data><data name="Podcast.ChannelRefreshed" xml:space="preserve"><value>[NEEDS TRANSLATION] Podcast channel refreshed successfully</value></data><data name="Podcast.ChannelDeleted" xml:space="preserve"><value>[NEEDS TRANSLATION] Podcast channel deleted successfully</value></data></root>
