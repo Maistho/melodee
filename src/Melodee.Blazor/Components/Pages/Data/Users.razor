@@ -169,9 +169,9 @@
         try
         {
             Dictionary<string, string>? sorting = null;
-            if (args.Sorts.Any())
+            if (args.Sorts?.Any() == true)
             {
-                sorting = args.Sorts.ToDictionary(x => x.Property, x => x.SortOrder == SortOrder.Ascending ? PagedRequest.OrderAscDirection : PagedRequest.OrderDescDirection);
+                sorting = args.Sorts.ToDictionary(x => x.Property ?? string.Empty, x => x.SortOrder == SortOrder.Ascending ? PagedRequest.OrderAscDirection : PagedRequest.OrderDescDirection);
             }
 
             FilterOperatorInfo[]? filters = null;
@@ -183,7 +183,7 @@
                     new FilterOperatorInfo(nameof(UserDataInfo.Email), FilterOperator.Contains, _debounceInputValue.ToNormalizedString() ?? _debounceInputValue, FilterOperatorInfo.OrJoinOperator)
                 ];
             }
-            else if (args.Filters.Any())
+            else if (args.Filters?.Any() == true)
             {
                 filters = args.Filters.Select(x => x.ToFilterOperatorInfo()).ToArray();
             }

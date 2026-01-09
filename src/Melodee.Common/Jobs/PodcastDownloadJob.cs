@@ -73,9 +73,9 @@ public sealed class PodcastDownloadJob(
                 break;
             }
 
-            var userId = episode.PodcastChannel.UserId;
+            var userId = episode.PodcastChannel?.UserId;
 
-            if (processedUserIds.Contains(userId))
+            if (userId == null || processedUserIds.Contains(userId.Value))
             {
                 Logger.Debug("[{JobName}] Per-user limit reached for user {UserId}, skipping.", nameof(PodcastDownloadJob), userId);
                 continue;
@@ -83,18 +83,19 @@ public sealed class PodcastDownloadJob(
 
             if (maxBytesPerUser > 0)
             {
-                if (!userUsageCache.TryGetValue(userId, out var currentUsage))
+                long currentUsage = 0;
+                if (userId.HasValue && !userUsageCache.TryGetValue(userId.Value, out currentUsage))
                 {
                     currentUsage = await dbContext.PodcastEpisodes
-                        .Where(x => x.PodcastChannel.UserId == userId && x.DownloadStatus == PodcastEpisodeDownloadStatus.Downloaded)
+                        .Where(x => x.PodcastChannel != null && x.PodcastChannel.UserId == userId.Value && x.DownloadStatus == PodcastEpisodeDownloadStatus.Downloaded)
                         .SumAsync(x => x.LocalFileSize ?? 0, context.CancellationToken)
                         .ConfigureAwait(false);
-                    userUsageCache[userId] = currentUsage;
+                    userUsageCache[userId.Value] = currentUsage;
                 }
 
                 if (currentUsage >= maxBytesPerUser)
                 {
-                    Logger.Warning("[{JobName}] User {UserId} has reached their storage quota of {Quota} bytes.", nameof(PodcastDownloadJob), userId, maxBytesPerUser);
+                    Logger.Warning("[{JobName}] User {UserId} has reached their storage quota of {Quota} bytes.", nameof(PodcastDownloadJob), userId.Value, maxBytesPerUser);
                     episode.DownloadStatus = PodcastEpisodeDownloadStatus.Failed;
                     episode.DownloadError = "User storage quota reached.";
                     await dbContext.SaveChangesAsync(context.CancellationToken).ConfigureAwait(false);
@@ -106,11 +107,17 @@ public sealed class PodcastDownloadJob(
             {
                 await DownloadEpisodeAsync(episode, podcastLibrary, maxEnclosureBytes, timeoutSeconds, maxRedirects, configuration, context.CancellationToken).ConfigureAwait(false);
                 processedCount++;
-                processedUserIds.Add(userId);
+                if (userId.HasValue)
+                {
+                    processedUserIds.Add(userId.Value);
+                }
 
                 if (maxBytesPerUser > 0 && episode.DownloadStatus == PodcastEpisodeDownloadStatus.Downloaded)
                 {
-                    userUsageCache[userId] += episode.LocalFileSize ?? 0;
+                    if (userId.HasValue)
+                    {
+                        userUsageCache[userId.Value] += episode.LocalFileSize ?? 0;
+                    }
                 }
             }
             catch (Exception ex)
@@ -134,7 +141,8 @@ public sealed class PodcastDownloadJob(
         var extension = GetExtensionFromMimeType(mimeType);
 
         var fileName = $"{episode.Id}{extension}";
-        var userDirectory = Path.Combine(podcastLibrary.Path, episode.PodcastChannel.UserId.ToString());
+        var userIdString = episode.PodcastChannel?.UserId.ToString() ?? string.Empty;
+        var userDirectory = Path.Combine(podcastLibrary.Path, userIdString);
         var channelDirectory = Path.Combine(userDirectory, episode.PodcastChannelId.ToString());
         Directory.CreateDirectory(channelDirectory);
 
@@ -180,7 +188,7 @@ public sealed class PodcastDownloadJob(
                 }
             }
 
-            episode.LocalPath = Path.Combine(episode.PodcastChannel.UserId.ToString(), episode.PodcastChannelId.ToString(), fileName);
+            episode.LocalPath = Path.Combine(episode.PodcastChannel?.UserId.ToString() ?? string.Empty, episode.PodcastChannelId.ToString(), fileName);
             episode.LocalFileSize = downloadedBytes;
             episode.MimeType = mimeType;
             episode.DownloadStatus = PodcastEpisodeDownloadStatus.Downloaded;

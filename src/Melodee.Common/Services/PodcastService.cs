@@ -257,7 +257,7 @@ public sealed class PodcastService(
 
             var episode = await context.PodcastEpisodes
                 .Include(x => x.PodcastChannel)
-                .FirstOrDefaultAsync(x => x.Id == episodeId && x.PodcastChannel.UserId == userId, cancellationToken)
+                .FirstOrDefaultAsync(x => x.Id == episodeId && x.PodcastChannel != null && x.PodcastChannel.UserId == userId, cancellationToken)
                 .ConfigureAwait(false);
 
             if (episode == null)
@@ -285,7 +285,7 @@ public sealed class PodcastService(
 
             var episode = await context.PodcastEpisodes
                 .Include(x => x.PodcastChannel)
-                .FirstOrDefaultAsync(x => x.Id == episodeId && x.PodcastChannel.UserId == userId, cancellationToken)
+                .FirstOrDefaultAsync(x => x.Id == episodeId && x.PodcastChannel != null && x.PodcastChannel.UserId == userId, cancellationToken)
                 .ConfigureAwait(false);
 
             if (episode == null)
@@ -326,7 +326,7 @@ public sealed class PodcastService(
 
             var episode = await context.PodcastEpisodes
                 .Include(x => x.PodcastChannel)
-                .FirstOrDefaultAsync(x => x.Id == episodeId && x.PodcastChannel.UserId == userId, cancellationToken)
+                .FirstOrDefaultAsync(x => x.Id == episodeId && x.PodcastChannel != null && x.PodcastChannel.UserId == userId, cancellationToken)
                 .ConfigureAwait(false);
 
             if (episode == null)
@@ -640,16 +640,29 @@ public sealed class PodcastService(
         {
             await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
 
-            var episodes = await context.PodcastEpisodes
-                .Include(x => x.PodcastChannel)
-                .Where(x => x.PodcastChannel.UserId == userId && !x.PodcastChannel.IsDeleted)
-                .OrderByDescending(x => x.PublishDate)
-                .Skip(offset)
-                .Take(count)
+            // First get the channel IDs for this user that are not deleted
+            var channelIds = await context.PodcastChannels
+                .IgnoreQueryFilters()
+                .Where(c => c.UserId == userId && !c.IsDeleted)
+                .Select(c => c.Id)
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-            return new OperationResult<IEnumerable<PodcastEpisode>> { Data = episodes };
+            // Get the episodes for those channels, then order in memory
+            // (SQLite doesn't support ORDER BY on DateTimeOffset)
+            var episodes = await context.PodcastEpisodes
+                .Include(x => x.PodcastChannel)
+                .Where(e => channelIds.Contains(e.PodcastChannelId))
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            var orderedEpisodes = episodes
+                .OrderByDescending(x => x.PublishDate)
+                .Skip(offset)
+                .Take(count)
+                .ToList();
+
+            return new OperationResult<IEnumerable<PodcastEpisode>> { Data = orderedEpisodes };
         }
         catch (Exception ex)
         {
@@ -720,7 +733,7 @@ public sealed class PodcastService(
 
         var query = context.PodcastEpisodes
             .Include(x => x.PodcastChannel)
-            .Where(x => x.PodcastChannel.UserId == userId && !x.PodcastChannel.IsDeleted)
+            .Where(x => x.PodcastChannel != null && x.PodcastChannel.UserId == userId && !x.PodcastChannel.IsDeleted)
             .AsNoTracking();
 
         if (channelId.HasValue)
@@ -745,14 +758,14 @@ public sealed class PodcastService(
             .Take(request.TakeValue)
             .Select(x => new PodcastEpisodeDataInfo(
                 x.Id,
-                x.ApiKey,
+                 x.ApiKey,
                 x.Title,
                 x.TitleNormalized ?? x.Title,
                 x.Description ?? string.Empty,
                 x.PublishDate,
                 x.Duration,
-                x.PodcastChannel.Title,
-                x.PodcastChannel.ApiKey,
+                x.PodcastChannel?.Title ?? string.Empty,
+                x.PodcastChannel?.ApiKey ?? string.Empty,
                 x.DownloadStatus == PodcastEpisodeDownloadStatus.Downloaded,
                 x.CreatedAt,
                 string.Empty,

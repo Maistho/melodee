@@ -256,9 +256,9 @@
         try
         {
             Dictionary<string, string>? sorting = null;
-            if (args.Sorts.Any())
+            if (args.Sorts?.Any() == true)
             {
-                sorting = args.Sorts.ToDictionary(x => x.Property, x => x.SortOrder == SortOrder.Ascending ? PagedRequest.OrderAscDirection : PagedRequest.OrderDescDirection);
+                sorting = args.Sorts.ToDictionary(x => x.Property ?? string.Empty, x => x.SortOrder == SortOrder.Ascending ? PagedRequest.OrderAscDirection : PagedRequest.OrderDescDirection);
             }
 
             FilterOperatorInfo[]? filters = null;

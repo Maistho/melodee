@@ -10,6 +10,6 @@ public static class FilterDescriptorExtensions
     public static FilterOperatorInfo ToFilterOperatorInfo(this FilterDescriptor descriptor)
     {
         var filterOperator = SafeParser.ToEnum<FilterOperator>(descriptor.FilterOperator.ToString());
-        return new FilterOperatorInfo(descriptor.Property, filterOperator, descriptor.FilterValue);
+        return new FilterOperatorInfo(descriptor.Property ?? string.Empty, filterOperator, descriptor.FilterValue ?? string.Empty);
     }
 }

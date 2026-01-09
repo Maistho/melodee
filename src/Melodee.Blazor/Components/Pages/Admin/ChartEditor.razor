@@ -578,7 +578,7 @@
                         {
                             Severity = NotificationSeverity.Warning,
                             Summary = L("ChartEditor.ChartCreatedItemsFailed"),
-                            Detail = itemsResult.Messages?.FirstOrDefault(),
+                            Detail = itemsResult.Messages?.FirstOrDefault() ?? string.Empty,
                             Duration = ToastTime
                         });
                     }
@@ -593,7 +593,7 @@
                             {
                                 Severity = NotificationSeverity.Warning,
                                 Summary = L("ChartEditor.ChartCreatedImageFailed"),
-                                Detail = imageResult.Messages?.FirstOrDefault(),
+                                Detail = imageResult.Messages?.FirstOrDefault() ?? string.Empty,
                                 Duration = ToastTime
                             });
                         }

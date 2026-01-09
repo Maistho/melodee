@@ -155,7 +155,7 @@
             {
                 Severity = NotificationSeverity.Error,
                 Summary = L("ChartItemResolveDialog.FailedToLink"),
-                Detail = result.Messages?.FirstOrDefault(),
+                Detail = result.Messages?.FirstOrDefault() ?? string.Empty,
                 Duration = 5000
             });
         }
