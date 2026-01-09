@@ -1,4 +1,3 @@
-using System.Text;
 using Melodee.Common.Configuration;
 using Melodee.Common.Constants;
 using Melodee.Common.Extensions;
@@ -8,6 +7,7 @@ using Melodee.Common.Serialization;
 using Melodee.Common.Services;
 using Melodee.Common.Services.Caching;
 using Melodee.Common.Utility;
+using Polly;
 using Serilog;
 
 namespace Melodee.Common.Plugins.SearchEngine.WikiData;
@@ -24,8 +24,10 @@ public class WikiDataArtistSearchEnginePlugin(
 {
     private const int MaxConcurrency = 2;
     private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(2);
+    private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(10);
 
     private readonly SemaphoreSlim _concurrencyLimiter = new(MaxConcurrency, MaxConcurrency);
+    private readonly ResiliencePipeline<HttpResponseMessage> _retryPipeline = SearchEnginePolicies.CreateHttpRetryPipeline();
 
     public string Id => "7B9C8E1F-2A3D-4E5B-8C7D-9E0F1A2B3C4D";
 
@@ -59,6 +61,7 @@ public class WikiDataArtistSearchEnginePlugin(
                 try
                 {
                     var httpClient = httpClientFactory.CreateClient();
+                    httpClient.Timeout = RequestTimeout;
                     httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(userAgent);
 
                     var safeSearchTerm = EscapeForSparql(normalizedInput);
@@ -74,7 +77,9 @@ public class WikiDataArtistSearchEnginePlugin(
                     var encodedSparql = Uri.EscapeDataString(sparql);
                     var requestUri = $"https://query.wikidata.org/sparql?format=json&query={encodedSparql}";
 
-                    var response = await httpClient.GetAsync(requestUri, cancellationToken);
+                    var response = await _retryPipeline.ExecuteAsync(
+                        async ct => await httpClient.GetAsync(requestUri, ct),
+                        cancellationToken);
 
                     if (!response.IsSuccessStatusCode)
                     {

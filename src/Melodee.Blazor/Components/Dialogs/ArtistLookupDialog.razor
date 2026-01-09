@@ -168,7 +168,6 @@
     private bool _hasError;
     private bool _hasSearched;
     private bool _hasPartialFailures;
-    private bool _isAmgIdMode;
     private CancellationTokenSource? _searchCts;
     private IArtistSearchEnginePlugin[] _plugins = [];
 
@@ -233,7 +232,6 @@
         _hasSearched = true;
         _hasPartialFailures = false;
         _candidates = null;
-        _isAmgIdMode = true;
 
         try
         {

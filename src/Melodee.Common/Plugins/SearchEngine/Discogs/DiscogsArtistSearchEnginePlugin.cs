@@ -8,6 +8,7 @@ using Melodee.Common.Serialization;
 using Melodee.Common.Services;
 using Melodee.Common.Services.Caching;
 using Melodee.Common.Utility;
+using Polly;
 using Serilog;
 
 namespace Melodee.Common.Plugins.SearchEngine.Discogs;
@@ -24,7 +25,9 @@ public class DiscogsArtistSearchEnginePlugin(
 {
     private const int MaxConcurrency = 2;
     private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(2);
+    private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(10);
     private readonly SemaphoreSlim _concurrencyLimiter = new(MaxConcurrency, MaxConcurrency);
+    private readonly ResiliencePipeline<HttpResponseMessage> _retryPipeline = SearchEnginePolicies.CreateHttpRetryPipeline();
 
     public string Id => "5A8D2E5B-3C9D-4E7F-9B7A-A1B2C3D4E5F6";
 
@@ -59,6 +62,7 @@ public class DiscogsArtistSearchEnginePlugin(
                 try
                 {
                     var httpClient = httpClientFactory.CreateClient();
+                    httpClient.Timeout = RequestTimeout;
                     httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(userAgent);
 
                     if (!string.IsNullOrWhiteSpace(userToken))
@@ -71,7 +75,9 @@ public class DiscogsArtistSearchEnginePlugin(
                     var requestUri =
                         $"https://api.discogs.com/database/search?q={searchTerm}&type=artist&per_page={maxResults}";
 
-                    var response = await httpClient.GetAsync(requestUri, cancellationToken);
+                    var response = await _retryPipeline.ExecuteAsync(
+                        async ct => await httpClient.GetAsync(requestUri, ct),
+                        cancellationToken);
 
                     if (!response.IsSuccessStatusCode)
                     {
@@ -101,7 +107,7 @@ public class DiscogsArtistSearchEnginePlugin(
 
                             results.Add(new ArtistSearchResult
                             {
-                                Name = discogsResult.Title,
+                                Name = discogsResult.Title!,
                                 SortName = discogsResult.Title.ToNormalizedString(),
                                 FromPlugin = DisplayName,
                                 UniqueId = SafeParser.Hash($"{discogsResult.Id}:{discogsResult.Title}"),

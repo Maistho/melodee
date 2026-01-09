@@ -1,5 +1,4 @@
 using System.Text.RegularExpressions;
-using Melodee.Common.Extensions;
 using Melodee.Common.Models;
 
 namespace Melodee.Common.Utility;

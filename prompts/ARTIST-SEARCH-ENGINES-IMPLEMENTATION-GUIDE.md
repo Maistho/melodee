@@ -14,7 +14,7 @@ This guide is written to minimize decision-making for coding agents. Follow the 
 - [x] Phase 3 — AMG lookup UI integration (via injected ArtistSearchEngineService)
 - [x] Phase 4 — Settings + admin UI wiring (enable flags + provider settings)
 - [x] Phase 5 — Tests (unit + fixtures, no live API in CI)
-- [ ] Phase 6 — Documentation + final verification
+- [x] Phase 6 — Documentation + final verification
 
 -- 
 
@@ -150,11 +150,11 @@ Follow existing patterns: services construct plugins manually (see `AlbumImageSe
 
 ### 2.1 Discogs plugin (new)
 
-- [ ] File: `src/Melodee.Common/Plugins/SearchEngine/Discogs/DiscogsArtistSearchEnginePlugin.cs`
-- [ ] Settings (NEW keys):
-  - `searchEngine.discogs.enabled` (bool, default false)
-  - `searchEngine.discogs.userToken` (string, optional; treat as secret)
-- [ ] User-Agent: use existing `searchEngine.userAgent` setting (already present in DB seed).
+- [x] File: `src/Melodee.Common/Plugins/SearchEngine/Discogs/DiscogsArtistSearchEnginePlugin.cs`
+- [x] Settings (NEW keys):
+  - [x] `searchEngine.discogs.enabled` (bool, default false)
+  - [x] `searchEngine.discogs.userToken` (string, optional; treat as secret)
+- [x] User-Agent: use existing `searchEngine.userAgent` setting (already present in DB seed).
 
 Implementation details:
 - Use Discogs search endpoint with `type=artist`.
@@ -294,7 +294,7 @@ Exit criteria:
 
 ## Done Definition
 
-- [ ] All phases checked off.
-- [ ] Providers can be enabled/disabled independently.
-- [ ] Admin settings page controls all required provider settings.
-- [ ] Search works with multiple providers and merges results without crashing on provider failures.
+- [x] All phases checked off.
+- [x] Providers can be enabled/disabled independently.
+- [x] Admin settings page controls all required provider settings.
+- [x] Search works with multiple providers and merges results without crashing on provider failures.

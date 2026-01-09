@@ -4,7 +4,6 @@ using Melodee.Common.Configuration;
 using Melodee.Common.Constants;
 using Melodee.Common.Models.SearchEngines;
 using Melodee.Common.Plugins.SearchEngine.WikiData;
-using Melodee.Common.Services.Caching;
 using Melodee.Tests.Common.Services;
 using Moq;
 using Moq.Protected;
@@ -186,6 +185,43 @@ public class WikiDataArtistSearchEnginePluginTests : ServiceTestBase
         Assert.NotNull(result);
         Assert.True(result.IsSuccess);
         Assert.Empty(result.Data);
+    }
+
+    [Fact]
+    public async Task DoArtistSearchAsync_With429Response_RetriesWithBackoff()
+    {
+        // Arrange - return 429 twice, then success
+        var callCount = 0;
+        var handlerMock = new Mock<HttpMessageHandler>();
+        handlerMock.Protected()
+            .Setup<Task<HttpResponseMessage>>(
+                "SendAsync",
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>())
+            .ReturnsAsync(() =>
+            {
+                callCount++;
+                if (callCount <= 2)
+                {
+                    var response429 = new HttpResponseMessage(HttpStatusCode.TooManyRequests);
+                    response429.Headers.RetryAfter = new System.Net.Http.Headers.RetryConditionHeaderValue(TimeSpan.FromSeconds(1));
+                    return response429;
+                }
+                return new HttpResponseMessage
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    Content = new StringContent("{\"head\":{\"vars\":[]},\"results\":{\"bindings\":[]}}", Encoding.UTF8, "application/json")
+                };
+            });
+
+        var plugin = CreatePlugin(handlerMock.Object);
+
+        // Act
+        var result = await plugin.DoArtistSearchAsync(new ArtistQuery { Name = "Test Artist" }, 10);
+
+        // Assert - should have retried and eventually succeeded
+        Assert.NotNull(result);
+        Assert.True(callCount >= 2, $"Expected at least 2 calls (retries), got {callCount}");
     }
 
     [Fact]
