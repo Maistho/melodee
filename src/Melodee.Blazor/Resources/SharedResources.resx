@@ -4893,4 +4893,7 @@
   <data name="ArtistLookup.AmghelpText" xml:space="preserve">
     <value>Enter an AMG Artist ID (digits only) to look up the artist</value>
   </data>
+<data name="ArtistLookup.SelectToMerge" xml:space="preserve">
+    <value>Select one or more results to merge their provider IDs</value>
+  </data>
 </root>

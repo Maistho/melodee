@@ -4711,4 +4711,7 @@
   <data name="Common.Albums" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Albums</value>
   </data>
+  <data name="ArtistLookup.SelectToMerge" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Select one or more results to merge their provider IDs</value>
+  </data>
 </root>

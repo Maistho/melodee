@@ -84,12 +84,17 @@
     }
     else if (_candidates != null && _candidates.Length > 0)
     {
+        <RadzenText Text="@L("ArtistLookup.SelectToMerge")" class="rz-text-secondary rz-mb-2" TextStyle="TextStyle.Caption"/>
         <RadzenStack Gap="0.5rem" class="rz-mt-2" Style="max-height: 400px; overflow-y: auto;">
             @foreach (var candidate in _candidates)
             {
-                <RadzenCard class="candidate-card" Click="@(() => SelectCandidate(candidate))">
+                <RadzenCard class="@GetCandidateCardClass(candidate)" Click="@(() => ToggleCandidateSelection(candidate))">
                     <RadzenStack Gap="0.5rem">
                         <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                            <RadzenCheckBox TValue="bool" 
+                                            Value="@_selectedCandidates.Contains(candidate)" 
+                                            Change="@((bool _) => ToggleCandidateSelection(candidate))"
+                                            class="rz-mr-2"/>
                             @if (!string.IsNullOrEmpty(candidate.ThumbnailUrl))
                             {
                                 <RadzenImage Path="@candidate.ThumbnailUrl"
@@ -112,7 +117,7 @@
                             </RadzenStack>
                         </RadzenStack>
 
-                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem" class="rz-mt-1">
+                        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem" class="rz-mt-1" Wrap="FlexWrap.Wrap">
                             @if (candidate.MusicBrainzId.HasValue)
                             {
                                 <RadzenBadge BadgeStyle="BadgeStyle.Info" Text="@($"MB: {candidate.MusicBrainzId.Value.ToString()[..8]}...")"/>
@@ -132,6 +137,14 @@
                             @if (!string.IsNullOrEmpty(candidate.ItunesId))
                             {
                                 <RadzenBadge BadgeStyle="BadgeStyle.Secondary" Text="@($"iTunes: {candidate.ItunesId}")"/>
+                            }
+                            @if (!string.IsNullOrEmpty(candidate.WikiDataId))
+                            {
+                                <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="@($"WikiData: {candidate.WikiDataId}")"/>
+                            }
+                            @if (!string.IsNullOrEmpty(candidate.LastFmId))
+                            {
+                                <RadzenBadge BadgeStyle="BadgeStyle.Dark" Text="@($"Last.fm: {candidate.LastFmId}")"/>
                             }
                         </RadzenStack>
                     </RadzenStack>
@@ -155,6 +168,13 @@
         <RadzenButton Text="@L("Actions.Cancel")"
                       ButtonStyle="ButtonStyle.Light"
                       Click="@(() => DialogService.Close(null))"/>
+        @if (_selectedCandidates.Count > 0)
+        {
+            <RadzenButton Text="@L("Actions.Save")"
+                          Icon="save"
+                          ButtonStyle="ButtonStyle.Primary"
+                          Click="@SaveSelectedCandidates"/>
+        }
     </RadzenStack>
 </RadzenStack>
 
@@ -170,6 +190,7 @@
     private bool _hasPartialFailures;
     private CancellationTokenSource? _searchCts;
     private IArtistSearchEnginePlugin[] _plugins = [];
+    private readonly HashSet<ArtistLookupCandidate> _selectedCandidates = new();
 
     [Parameter]
     public string? InitialArtistName { get; set; }
@@ -226,6 +247,7 @@
 
         _searchCts?.Cancel();
         _searchCts = new CancellationTokenSource();
+        _selectedCandidates.Clear();
 
         _isLoading = true;
         _hasError = false;
@@ -284,6 +306,7 @@
 
         _searchCts?.Cancel();
         _searchCts = new CancellationTokenSource();
+        _selectedCandidates.Clear();
 
         _isLoading = true;
         _hasError = false;
@@ -330,19 +353,67 @@
         }
     }
 
-    private void SelectCandidate(ArtistLookupCandidate candidate)
+    private void ToggleCandidateSelection(ArtistLookupCandidate candidate)
     {
-        DialogService.Close(candidate);
+        if (!_selectedCandidates.Remove(candidate))
+        {
+            _selectedCandidates.Add(candidate);
+        }
+    }
+
+    private string GetCandidateCardClass(ArtistLookupCandidate candidate)
+    {
+        return _selectedCandidates.Contains(candidate) 
+            ? "candidate-card candidate-card-selected" 
+            : "candidate-card";
+    }
+
+    private void SaveSelectedCandidates()
+    {
+        if (_selectedCandidates.Count == 0)
+        {
+            return;
+        }
+
+        // Merge all selected candidates into a single result with combined provider IDs
+        var merged = new ArtistLookupCandidate
+        {
+            ProviderDisplayName = string.Join(", ", _selectedCandidates.Select(c => c.ProviderDisplayName).Distinct()),
+            ProviderId = _selectedCandidates.FirstOrDefault(c => c.ProviderId != null)?.ProviderId,
+            Name = _selectedCandidates.First().Name,
+            SortName = _selectedCandidates.FirstOrDefault(c => c.SortName != null)?.SortName,
+            ImageUrl = _selectedCandidates.FirstOrDefault(c => c.ImageUrl != null)?.ImageUrl,
+            ThumbnailUrl = _selectedCandidates.FirstOrDefault(c => c.ThumbnailUrl != null)?.ThumbnailUrl,
+            MusicBrainzId = _selectedCandidates.FirstOrDefault(c => c.MusicBrainzId.HasValue)?.MusicBrainzId,
+            SpotifyId = _selectedCandidates.FirstOrDefault(c => !string.IsNullOrEmpty(c.SpotifyId))?.SpotifyId,
+            DiscogsId = _selectedCandidates.FirstOrDefault(c => !string.IsNullOrEmpty(c.DiscogsId))?.DiscogsId,
+            AmgId = _selectedCandidates.FirstOrDefault(c => !string.IsNullOrEmpty(c.AmgId))?.AmgId,
+            WikiDataId = _selectedCandidates.FirstOrDefault(c => !string.IsNullOrEmpty(c.WikiDataId))?.WikiDataId,
+            ItunesId = _selectedCandidates.FirstOrDefault(c => !string.IsNullOrEmpty(c.ItunesId))?.ItunesId,
+            LastFmId = _selectedCandidates.FirstOrDefault(c => !string.IsNullOrEmpty(c.LastFmId))?.LastFmId
+        };
+
+        DialogService.Close(merged);
     }
 }
 
 <style>
     .candidate-card {
         cursor: pointer;
-        transition: background-color 0.2s;
+        transition: background-color 0.2s, border-color 0.2s;
+        border: 2px solid transparent;
     }
 
     .candidate-card:hover {
         background-color: var(--rz-base-200);
+    }
+
+    .candidate-card-selected {
+        border-color: var(--rz-primary);
+        background-color: var(--rz-primary-lighter);
+    }
+
+    .candidate-card-selected:hover {
+        background-color: var(--rz-primary-light);
     }
 </style>
