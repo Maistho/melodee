@@ -1,0 +1,402 @@
+using FluentAssertions;
+using Melodee.Common.Configuration;
+using Melodee.Common.Constants;
+using Melodee.Common.Data;
+using Melodee.Common.Data.Models;
+using Melodee.Common.Enums;
+using Melodee.Common.Services;
+using Melodee.Common.Services.Caching;
+using Melodee.Common.Services.Security;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
+using Moq;
+using NodaTime;
+using Serilog;
+
+namespace Melodee.Tests.Common.Services;
+
+public class PodcastServiceTests : IAsyncDisposable
+{
+    private readonly SqliteConnection _connection;
+    private readonly DbContextOptions<MelodeeDbContext> _dbOptions;
+    private readonly ILogger _logger;
+    private readonly ICacheManager _cacheManager;
+    private readonly Mock<IMelodeeConfigurationFactory> _configFactoryMock;
+    private readonly Mock<LibraryService> _libraryServiceMock;
+    private readonly Mock<ISsrfValidator> _ssrfValidatorMock;
+    private readonly PodcastHttpClient _podcastHttpClient;
+    private readonly IDbContextFactory<MelodeeDbContext> _contextFactory;
+
+    public PodcastServiceTests()
+    {
+        _connection = new SqliteConnection("Filename=:memory:;Cache=Shared;");
+        _connection.Open();
+
+        _dbOptions = new DbContextOptionsBuilder<MelodeeDbContext>()
+            .UseSqlite(_connection, x => x.UseNodaTime())
+            .Options;
+
+        using (var context = new MelodeeDbContext(_dbOptions))
+        {
+            context.Database.EnsureCreated();
+            context.SaveChanges();
+        }
+
+        _logger = new LoggerConfiguration().CreateLogger();
+        _cacheManager = new FakeCacheManager(_logger, TimeSpan.FromMinutes(5), new Melodee.Common.Serialization.Serializer(_logger));
+
+        _configFactoryMock = new Mock<IMelodeeConfigurationFactory>();
+        var configMock = new Mock<IMelodeeConfiguration>();
+        configMock.Setup(x => x.GetValue<int>(SettingRegistry.PodcastRefreshMaxItemsPerChannel)).Returns(50);
+        configMock.Setup(x => x.GetValue<long>(SettingRegistry.PodcastHttpMaxFeedBytes)).Returns(10 * 1024 * 1024);
+        _configFactoryMock.Setup(x => x.GetConfigurationAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(configMock.Object);
+
+        _libraryServiceMock = new Mock<LibraryService>();
+
+        _ssrfValidatorMock = new Mock<ISsrfValidator>();
+        _ssrfValidatorMock.Setup(x => x.ValidateUrlAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(SsrfValidationResult.Valid([]));
+
+        _podcastHttpClient = new PodcastHttpClient(
+            _logger, _ssrfValidatorMock.Object, _configFactoryMock.Object);
+
+        _contextFactory = CreateContextFactory();
+    }
+
+    private IDbContextFactory<MelodeeDbContext> CreateContextFactory()
+    {
+        var factoryMock = new Mock<IDbContextFactory<MelodeeDbContext>>();
+        factoryMock.Setup(x => x.CreateDbContextAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() => new MelodeeDbContext(_dbOptions));
+        return factoryMock.Object;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await _connection.DisposeAsync();
+    }
+
+    private PodcastService CreateService() =>
+        new(_logger, _cacheManager, _contextFactory, _configFactoryMock.Object,
+            _libraryServiceMock.Object, _ssrfValidatorMock.Object, _podcastHttpClient);
+
+    [Fact]
+    public async Task CreateChannelAsync_WithValidUrl_CreatesChannel()
+    {
+        var service = CreateService();
+        const int userId = 1;
+        const string feedUrl = "https://example.com/podcast.rss";
+
+        var result = await service.CreateChannelAsync(userId, feedUrl);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Data.Should().NotBeNull();
+        result.Data!.UserId.Should().Be(userId);
+        result.Data.FeedUrl.Should().Be(feedUrl);
+    }
+
+    [Fact]
+    public async Task CreateChannelAsync_WithSsrfViolation_ReturnsError()
+    {
+        _ssrfValidatorMock.Setup(x => x.ValidateUrlAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(SsrfValidationResult.Invalid("Access to private IP not allowed"));
+
+        var service = CreateService();
+
+        var result = await service.CreateChannelAsync(1, "https://192.168.1.1/podcast.rss");
+
+        result.IsSuccess.Should().BeFalse();
+        result.Messages.Should().Contain(m => m.Contains("private"));
+    }
+
+    [Fact]
+    public async Task CreateChannelAsync_DuplicateFeedUrl_ReturnsError()
+    {
+        var service = CreateService();
+        const int userId = 1;
+        const string feedUrl = "https://example.com/podcast.rss";
+
+        await service.CreateChannelAsync(userId, feedUrl);
+        var result = await service.CreateChannelAsync(userId, feedUrl);
+
+        result.IsSuccess.Should().BeFalse();
+        result.Messages.Should().Contain(m => m.Contains("already exists"));
+    }
+
+    [Fact]
+    public async Task ListChannelsAsync_ReturnsUserChannelsOnly()
+    {
+        var service = CreateService();
+
+        await using var context = await _contextFactory.CreateDbContextAsync();
+        context.PodcastChannels.Add(new PodcastChannel
+        {
+            UserId = 1,
+            FeedUrl = "https://example1.com/feed",
+            Title = "Podcast 1",
+            CreatedAt = SystemClock.Instance.GetCurrentInstant()
+        });
+        context.PodcastChannels.Add(new PodcastChannel
+        {
+            UserId = 2,
+            FeedUrl = "https://example2.com/feed",
+            Title = "Podcast 2",
+            CreatedAt = SystemClock.Instance.GetCurrentInstant()
+        });
+        await context.SaveChangesAsync();
+
+        var result = await service.ListChannelsAsync(1, limit: 100);
+
+        result.Data.Should().HaveCount(1);
+        result.Data!.First().Title.Should().Be("Podcast 1");
+    }
+
+    [Fact]
+    public async Task ListChannelsAsync_ExcludesDeletedChannels()
+    {
+        var service = CreateService();
+
+        await using var context = await _contextFactory.CreateDbContextAsync();
+        context.PodcastChannels.Add(new PodcastChannel
+        {
+            UserId = 1,
+            FeedUrl = "https://example1.com/feed",
+            Title = "Active Podcast",
+            IsDeleted = false,
+            CreatedAt = SystemClock.Instance.GetCurrentInstant()
+        });
+        context.PodcastChannels.Add(new PodcastChannel
+        {
+            UserId = 1,
+            FeedUrl = "https://example2.com/feed",
+            Title = "Deleted Podcast",
+            IsDeleted = true,
+            CreatedAt = SystemClock.Instance.GetCurrentInstant()
+        });
+        await context.SaveChangesAsync();
+
+        var result = await service.ListChannelsAsync(1, limit: 100);
+
+        result.Data.Should().HaveCount(1);
+        result.Data!.First().Title.Should().Be("Active Podcast");
+    }
+
+    [Fact]
+    public async Task DeleteChannelAsync_SoftDelete_MarksAsDeleted()
+    {
+        var service = CreateService();
+
+        await using var context = await _contextFactory.CreateDbContextAsync();
+        var channel = new PodcastChannel
+        {
+            UserId = 1,
+            FeedUrl = "https://example.com/feed",
+            Title = "Test Podcast",
+            CreatedAt = SystemClock.Instance.GetCurrentInstant()
+        };
+        context.PodcastChannels.Add(channel);
+        await context.SaveChangesAsync();
+        var channelId = channel.Id;
+
+        var result = await service.DeleteChannelAsync(channelId, 1, softDelete: true);
+
+        result.IsSuccess.Should().BeTrue();
+
+        await using var verifyContext = await _contextFactory.CreateDbContextAsync();
+        var deletedChannel = await verifyContext.PodcastChannels.FindAsync(channelId);
+        deletedChannel.Should().NotBeNull();
+        deletedChannel!.IsDeleted.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task DeleteChannelAsync_HardDelete_RemovesChannel()
+    {
+        var service = CreateService();
+
+        await using var context = await _contextFactory.CreateDbContextAsync();
+        var channel = new PodcastChannel
+        {
+            UserId = 1,
+            FeedUrl = "https://example.com/feed",
+            Title = "Test Podcast",
+            CreatedAt = SystemClock.Instance.GetCurrentInstant()
+        };
+        context.PodcastChannels.Add(channel);
+        await context.SaveChangesAsync();
+        var channelId = channel.Id;
+
+        var result = await service.DeleteChannelAsync(channelId, 1, softDelete: false);
+
+        result.IsSuccess.Should().BeTrue();
+
+        await using var verifyContext = await _contextFactory.CreateDbContextAsync();
+        var deletedChannel = await verifyContext.PodcastChannels.FindAsync(channelId);
+        deletedChannel.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task DeleteChannelAsync_WrongUser_ReturnsError()
+    {
+        var service = CreateService();
+
+        await using var context = await _contextFactory.CreateDbContextAsync();
+        var channel = new PodcastChannel
+        {
+            UserId = 1,
+            FeedUrl = "https://example.com/feed",
+            Title = "Test Podcast",
+            CreatedAt = SystemClock.Instance.GetCurrentInstant()
+        };
+        context.PodcastChannels.Add(channel);
+        await context.SaveChangesAsync();
+        var channelId = channel.Id;
+
+        var result = await service.DeleteChannelAsync(channelId, userId: 999);
+
+        result.IsSuccess.Should().BeFalse();
+        result.Messages.Should().Contain(m => m.Contains("not found"));
+    }
+
+    [Fact]
+    public async Task QueueDownloadAsync_ValidEpisode_SetsStatusToQueued()
+    {
+        var service = CreateService();
+
+        await using var context = await _contextFactory.CreateDbContextAsync();
+        var channel = new PodcastChannel
+        {
+            UserId = 1,
+            FeedUrl = "https://example.com/feed",
+            Title = "Test Podcast",
+            CreatedAt = SystemClock.Instance.GetCurrentInstant()
+        };
+        context.PodcastChannels.Add(channel);
+        await context.SaveChangesAsync();
+
+        var episode = new PodcastEpisode
+        {
+            PodcastChannelId = channel.Id,
+            EpisodeKey = "ep1",
+            Title = "Episode 1",
+            EnclosureUrl = "https://example.com/ep1.mp3",
+            DownloadStatus = PodcastEpisodeDownloadStatus.None,
+            CreatedAt = SystemClock.Instance.GetCurrentInstant()
+        };
+        context.PodcastEpisodes.Add(episode);
+        await context.SaveChangesAsync();
+
+        var result = await service.QueueDownloadAsync(episode.Id, 1);
+
+        result.IsSuccess.Should().BeTrue();
+
+        await using var verifyContext = await _contextFactory.CreateDbContextAsync();
+        var updatedEpisode = await verifyContext.PodcastEpisodes.FindAsync(episode.Id);
+        updatedEpisode!.DownloadStatus.Should().Be(PodcastEpisodeDownloadStatus.Queued);
+    }
+
+    [Fact]
+    public async Task QueueDownloadAsync_AlreadyDownloaded_ReturnsSuccess()
+    {
+        var service = CreateService();
+
+        await using var context = await _contextFactory.CreateDbContextAsync();
+        var channel = new PodcastChannel
+        {
+            UserId = 1,
+            FeedUrl = "https://example.com/feed",
+            Title = "Test Podcast",
+            CreatedAt = SystemClock.Instance.GetCurrentInstant()
+        };
+        context.PodcastChannels.Add(channel);
+        await context.SaveChangesAsync();
+
+        var episode = new PodcastEpisode
+        {
+            PodcastChannelId = channel.Id,
+            EpisodeKey = "ep1",
+            Title = "Episode 1",
+            EnclosureUrl = "https://example.com/ep1.mp3",
+            DownloadStatus = PodcastEpisodeDownloadStatus.Downloaded,
+            CreatedAt = SystemClock.Instance.GetCurrentInstant()
+        };
+        context.PodcastEpisodes.Add(episode);
+        await context.SaveChangesAsync();
+
+        var result = await service.QueueDownloadAsync(episode.Id, 1);
+
+        result.IsSuccess.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task GetNewestEpisodesAsync_ReturnsEpisodesOrderedByDate()
+    {
+        var service = CreateService();
+
+        await using var context = await _contextFactory.CreateDbContextAsync();
+        var channel = new PodcastChannel
+        {
+            UserId = 1,
+            FeedUrl = "https://example.com/feed",
+            Title = "Test Podcast",
+            CreatedAt = SystemClock.Instance.GetCurrentInstant()
+        };
+        context.PodcastChannels.Add(channel);
+        await context.SaveChangesAsync();
+
+        var episodes = new[]
+        {
+            new PodcastEpisode
+            {
+                PodcastChannelId = channel.Id,
+                EpisodeKey = "ep1",
+                Title = "Old Episode",
+                EnclosureUrl = "https://example.com/ep1.mp3",
+                PublishDate = DateTimeOffset.UtcNow.AddDays(-7),
+                CreatedAt = SystemClock.Instance.GetCurrentInstant()
+            },
+            new PodcastEpisode
+            {
+                PodcastChannelId = channel.Id,
+                EpisodeKey = "ep2",
+                Title = "New Episode",
+                EnclosureUrl = "https://example.com/ep2.mp3",
+                PublishDate = DateTimeOffset.UtcNow.AddDays(-1),
+                CreatedAt = SystemClock.Instance.GetCurrentInstant()
+            }
+        };
+        context.PodcastEpisodes.AddRange(episodes);
+        await context.SaveChangesAsync();
+
+        var result = await service.GetNewestEpisodesAsync(1, count: 10);
+
+        result.Data.Should().HaveCount(2);
+        result.Data!.First().Title.Should().Be("New Episode");
+    }
+
+    [Theory]
+    [InlineData(0, 15)]   // Initial: 15 min * 2^0 = 15 min
+    [InlineData(1, 30)]   // 15 min * 2^1 = 30 min
+    [InlineData(2, 60)]   // 15 min * 2^2 = 60 min
+    [InlineData(3, 120)]  // 15 min * 2^3 = 120 min
+    [InlineData(4, 240)]  // 15 min * 2^4 = 240 min
+    [InlineData(10, 1440)] // Capped at 24 hours (1440 min)
+    public void CalculateNextSyncTime_ExponentialBackoff_CorrectMinutes(int failureCount, int expectedMinutes)
+    {
+        // Access via reflection since it's a private method
+        var method = typeof(PodcastService).GetMethod("CalculateNextSyncTime",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+
+        var result = method?.Invoke(null, [failureCount]) as Instant?;
+
+        result.Should().NotBeNull();
+
+        // Calculate expected: min(15 * 2^failureCount, 1440) minutes from now
+        var now = SystemClock.Instance.GetCurrentInstant();
+        var expectedDuration = Duration.FromMinutes(expectedMinutes);
+
+        // Allow 1 second tolerance for timing
+        var diff = (result!.Value - now - expectedDuration).TotalSeconds;
+        Math.Abs(diff).Should().BeLessThan(1);
+    }
+}

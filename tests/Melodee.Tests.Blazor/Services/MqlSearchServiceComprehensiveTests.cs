@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Melodee.Common.Configuration;
 using Melodee.Common.Data;
 using Melodee.Common.Data.Models;
 using Melodee.Common.Extensions;
@@ -6,6 +7,7 @@ using Melodee.Common.Models;
 using Melodee.Mql;
 using Melodee.Mql.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Moq;
 using NodaTime;
 using Album = Melodee.Common.Data.Models.Album;
 using Artist = Melodee.Common.Data.Models.Artist;
@@ -21,6 +23,7 @@ public class MqlSearchServiceComprehensiveTests
     private readonly IMqlValidator _validator;
     private readonly string _databaseName;
     private readonly DbContextOptions<MelodeeDbContext> _options;
+    private readonly IMelodeeConfigurationFactory _configurationFactory;
 
     public MqlSearchServiceComprehensiveTests()
     {
@@ -31,12 +34,17 @@ public class MqlSearchServiceComprehensiveTests
 
         _validator = new MqlValidator();
 
+        var configMock = new Mock<IMelodeeConfigurationFactory>();
+        configMock.Setup(x => x.GetConfigurationAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Mock<IMelodeeConfiguration>().Object);
+        _configurationFactory = configMock.Object;
+
         SeedComprehensiveTestData();
     }
 
     private MqlSearchService CreateService()
     {
-        return new MqlSearchService(new TestDbContextFactory(_options), _validator);
+        return new MqlSearchService(new TestDbContextFactory(_options), _validator, _configurationFactory);
     }
 
     private void SeedComprehensiveTestData()

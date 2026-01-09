@@ -16,6 +16,8 @@ public sealed record PodcastChannelDataInfo(
     string Tags,
     bool UserStarred,
     int UserRating,
+    string? SiteUrl = null,
+    int EpisodeCount = 0,
     Instant? LastPlayedAt = null,
     int PlayedCount = 0)
 {

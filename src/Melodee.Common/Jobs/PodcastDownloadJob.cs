@@ -1,13 +1,10 @@
-using System.Security.Cryptography;
 using Melodee.Common.Configuration;
 using Melodee.Common.Constants;
 using Melodee.Common.Data;
 using Melodee.Common.Data.Models;
 using Melodee.Common.Enums;
-using Melodee.Common.Extensions;
 using Melodee.Common.Services;
 using Microsoft.EntityFrameworkCore;
-using NodaTime;
 using Quartz;
 using Serilog;
 
@@ -21,7 +18,8 @@ public sealed class PodcastDownloadJob(
     ILogger logger,
     IMelodeeConfigurationFactory configurationFactory,
     MelodeeDbContext dbContext,
-    LibraryService libraryService) : JobBase(logger, configurationFactory)
+    LibraryService libraryService,
+    PodcastHttpClient podcastHttpClient) : JobBase(logger, configurationFactory)
 {
     public override bool DoCreateJobHistory => true;
 
@@ -109,7 +107,7 @@ public sealed class PodcastDownloadJob(
                 await DownloadEpisodeAsync(episode, podcastLibrary, maxEnclosureBytes, timeoutSeconds, maxRedirects, configuration, context.CancellationToken).ConfigureAwait(false);
                 processedCount++;
                 processedUserIds.Add(userId);
-                
+
                 if (maxBytesPerUser > 0 && episode.DownloadStatus == PodcastEpisodeDownloadStatus.Downloaded)
                 {
                     userUsageCache[userId] += episode.LocalFileSize ?? 0;
@@ -130,56 +128,9 @@ public sealed class PodcastDownloadJob(
         Logger.Information("[{JobName}] Downloading episode [{EpisodeId}] {EpisodeTitle}", nameof(PodcastDownloadJob), episode.Id, episode.Title);
 
         episode.DownloadStatus = PodcastEpisodeDownloadStatus.Downloading;
+        await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        var httpClient = new HttpClient
-        {
-            Timeout = TimeSpan.FromSeconds(timeoutSeconds)
-        };
-
-        var redirectCount = 0;
-        var currentUrl = episode.EnclosureUrl;
-        HttpResponseMessage? response = null;
-
-        while (redirectCount <= maxRedirects)
-        {
-            using var request = new HttpRequestMessage(HttpMethod.Get, currentUrl);
-            response = await httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-            var isRedirect = response.StatusCode == System.Net.HttpStatusCode.MovedPermanently ||
-                             response.StatusCode == System.Net.HttpStatusCode.Found ||
-                             response.StatusCode == System.Net.HttpStatusCode.Redirect ||
-                             response.StatusCode == System.Net.HttpStatusCode.RedirectKeepVerb ||
-                             response.StatusCode == System.Net.HttpStatusCode.TemporaryRedirect ||
-                             response.StatusCode == System.Net.HttpStatusCode.PermanentRedirect;
-
-            if (isRedirect)
-            {
-                var redirectUrl = response.Headers.Location;
-                if (redirectUrl == null)
-                {
-                    throw new Exception("Redirect without location header");
-                }
-
-                currentUrl = redirectUrl.ToString();
-                redirectCount++;
-                continue;
-            }
-
-            break;
-        }
-
-        if (response == null || !response.IsSuccessStatusCode)
-        {
-            throw new Exception($"HTTP {(int)(response?.StatusCode ?? System.Net.HttpStatusCode.InternalServerError)}: {response?.ReasonPhrase}");
-        }
-
-        var contentLength = response.Content.Headers.ContentLength;
-        if (contentLength.HasValue && contentLength.Value > maxEnclosureBytes)
-        {
-            throw new Exception($"File size {contentLength.Value} exceeds maximum allowed {maxEnclosureBytes}");
-        }
-
-        var mimeType = response.Content.Headers.ContentType?.MediaType ?? episode.MimeType ?? "application/octet-stream";
+        var mimeType = episode.MimeType ?? "application/octet-stream";
         var extension = GetExtensionFromMimeType(mimeType);
 
         var fileName = $"{episode.Id}{extension}";
@@ -192,18 +143,42 @@ public sealed class PodcastDownloadJob(
 
         try
         {
-            await using (var fileStream = new FileStream(tempFilePath, FileMode.Create, FileAccess.Write, FileShare.None))
+            await using var fileStream = new FileStream(tempFilePath, FileMode.Create, FileAccess.Write, FileShare.None);
+
+            var downloadResult = await podcastHttpClient.DownloadToStreamAsync(
+                episode.EnclosureUrl,
+                fileStream,
+                maxEnclosureBytes,
+                cancellationToken: cancellationToken).ConfigureAwait(false);
+
+            if (!downloadResult.IsSuccess)
             {
-                await response.Content.CopyToAsync(fileStream, cancellationToken).ConfigureAwait(false);
+                throw new Exception(downloadResult.ErrorMessage ?? "Download failed");
             }
+
+            await fileStream.FlushAsync(cancellationToken).ConfigureAwait(false);
+            fileStream.Close();
 
             var downloadedBytes = new FileInfo(tempFilePath).Length;
-            if (contentLength.HasValue && downloadedBytes != contentLength.Value)
-            {
-                throw new Exception($"Downloaded {downloadedBytes} bytes but expected {contentLength.Value}");
-            }
 
             File.Move(tempFilePath, finalFilePath, overwrite: true);
+
+            // Update MIME type if the server provided one
+            if (!string.IsNullOrEmpty(downloadResult.ContentType))
+            {
+                mimeType = downloadResult.ContentType;
+                extension = GetExtensionFromMimeType(mimeType);
+
+                // If extension changed, rename the file
+                var newFileName = $"{episode.Id}{extension}";
+                if (newFileName != fileName)
+                {
+                    var newFinalFilePath = Path.Combine(channelDirectory, newFileName);
+                    File.Move(finalFilePath, newFinalFilePath, overwrite: true);
+                    fileName = newFileName;
+                    finalFilePath = newFinalFilePath;
+                }
+            }
 
             episode.LocalPath = Path.Combine(episode.PodcastChannel.UserId.ToString(), episode.PodcastChannelId.ToString(), fileName);
             episode.LocalFileSize = downloadedBytes;

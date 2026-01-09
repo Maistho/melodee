@@ -59,7 +59,7 @@ public sealed class MqlPodcastEpisodeCompiler : IMqlCompiler<Melodee.Common.Data
         var searchMethod = typeof(string).GetMethod("Contains", [typeof(string)])!;
         var titleContains = Expression.Call(titleExpr, searchMethod, Expression.Constant(searchTerm));
         var channelContains = Expression.Call(channelExpr, searchMethod, Expression.Constant(searchTerm));
-        
+
         // Description can be null
         var descriptionNotNull = Expression.NotEqual(descriptionExpr, Expression.Constant(null, typeof(string)));
         var descriptionContains = Expression.Call(descriptionExpr, searchMethod, Expression.Constant(searchTerm));
@@ -153,7 +153,7 @@ public sealed class MqlPodcastEpisodeCompiler : IMqlCompiler<Melodee.Common.Data
         {
             var underlyingType = propertyExpr.Type.GetGenericArguments()[0];
             var nonNullableProperty = Expression.Convert(propertyExpr, underlyingType);
-            var convertedConstant = Convert.ChangeType(convertedValue, underlyingType);
+            var convertedConstant = ConvertToType(convertedValue, underlyingType);
             var rightExpr = Expression.Constant(convertedConstant, underlyingType);
             var comparison = comparisonFactory(nonNullableProperty, rightExpr);
             var hasValueCheck = Expression.NotEqual(propertyExpr, Expression.Constant(null, propertyExpr.Type));
@@ -161,6 +161,16 @@ public sealed class MqlPodcastEpisodeCompiler : IMqlCompiler<Melodee.Common.Data
         }
 
         return comparisonFactory(propertyExpr, Expression.Constant(convertedValue, propertyExpr.Type));
+    }
+
+    private static object ConvertToType(object value, Type targetType)
+    {
+        if (targetType == typeof(TimeSpan))
+        {
+            var milliseconds = Convert.ToDouble(value);
+            return TimeSpan.FromMilliseconds(milliseconds);
+        }
+        return Convert.ChangeType(value, targetType);
     }
 
     private Expression CompileContains(MqlFieldInfo fieldInfo, object value, ParameterExpression parameter, int? userId)
@@ -325,10 +335,23 @@ public sealed class MqlPodcastEpisodeCompiler : IMqlCompiler<Melodee.Common.Data
         var minValue = ConvertValueForComparison(node.Min, fieldInfo.Type, propertyExpr.Type, fieldInfo.ValueMultiplier);
         var maxValue = ConvertValueForComparison(node.Max, fieldInfo.Type, propertyExpr.Type, fieldInfo.ValueMultiplier);
 
-        var minComparison = Expression.GreaterThanOrEqual(propertyExpr, Expression.Constant(minValue, propertyExpr.Type));
-        var maxComparison = Expression.LessThanOrEqual(propertyExpr, Expression.Constant(maxValue, propertyExpr.Type));
+        if (propertyExpr.Type.IsGenericType && propertyExpr.Type.GetGenericTypeDefinition() == typeof(Nullable<>))
+        {
+            var underlyingType = propertyExpr.Type.GetGenericArguments()[0];
+            var nonNullableProperty = Expression.Convert(propertyExpr, underlyingType);
+            var convertedMinValue = ConvertToType(minValue, underlyingType);
+            var convertedMaxValue = ConvertToType(maxValue, underlyingType);
+            var minComparison = Expression.GreaterThanOrEqual(nonNullableProperty, Expression.Constant(convertedMinValue, underlyingType));
+            var maxComparison = Expression.LessThanOrEqual(nonNullableProperty, Expression.Constant(convertedMaxValue, underlyingType));
+            var rangeCheck = Expression.AndAlso(minComparison, maxComparison);
+            var hasValueCheck = Expression.NotEqual(propertyExpr, Expression.Constant(null, propertyExpr.Type));
+            return Expression.AndAlso(hasValueCheck, rangeCheck);
+        }
 
-        return Expression.AndAlso(minComparison, maxComparison);
+        var minComparisonExpr = Expression.GreaterThanOrEqual(propertyExpr, Expression.Constant(minValue, propertyExpr.Type));
+        var maxComparisonExpr = Expression.LessThanOrEqual(propertyExpr, Expression.Constant(maxValue, propertyExpr.Type));
+
+        return Expression.AndAlso(minComparisonExpr, maxComparisonExpr);
     }
 
     private static Expression GetNestedPropertyExpression(Expression expr, string[] propertyNames)

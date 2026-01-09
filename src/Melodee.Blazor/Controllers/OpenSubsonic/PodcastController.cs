@@ -5,22 +5,17 @@ using Melodee.Common.Constants;
 using Melodee.Common.Data.Models;
 using Melodee.Common.Enums;
 using Melodee.Common.Extensions;
+using Melodee.Common.Models;
 using Melodee.Common.Models.OpenSubsonic;
+using Melodee.Common.Models.OpenSubsonic.Extensions;
 using Melodee.Common.Models.OpenSubsonic.Responses;
 using Melodee.Common.Models.Streaming;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services;
-using Melodee.Results;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Serilog;
-using Melodee.Common.Models;
-using Melodee.Common.Data.Models.Extensions;
-using Melodee.Common.Models.OpenSubsonic;
-using Melodee.Common.Models.OpenSubsonic.Responses;
-using Melodee.Common.Models.OpenSubsonic.Extensions;
-using Melodee.Common.Models.Extensions;
 using Microsoft.Extensions.Primitives;
+using Serilog;
 
 namespace Melodee.Blazor.Controllers.OpenSubsonic;
 
@@ -594,7 +589,7 @@ public class PodcastController(
         else if (data is StatusResponse) dataPropertyName = "status";
         else if (data.GetType().Name.Contains("Channel")) dataPropertyName = "podcastChannel";
         else if (data.GetType().Name.Contains("Episode")) dataPropertyName = "podcastEpisode";
-        
+
         return new ResponseModel
         {
             UserInfo = UserInfo.BlankUserInfo,

@@ -2,7 +2,6 @@ using System.Diagnostics;
 using Melodee.Common.Configuration;
 using Melodee.Common.Constants;
 using Melodee.Common.Data;
-using Melodee.Common.Data.Models;
 using Melodee.Common.Enums;
 using Melodee.Common.Services;
 using Microsoft.EntityFrameworkCore;
@@ -27,7 +26,7 @@ public sealed class PodcastCleanupJob(
 
         try
         {
-            var configuration = await configurationFactory.GetConfigurationAsync(context.CancellationToken);
+            var configuration = await ConfigurationFactory.GetConfigurationAsync(context.CancellationToken);
             if (!configuration.GetValue<bool>(SettingRegistry.PodcastEnabled))
             {
                 Logger.Information("[{JobId}] Podcast support disabled, skipping cleanup", jobId);
@@ -44,18 +43,18 @@ public sealed class PodcastCleanupJob(
             var cutoffDate = NodaTime.SystemClock.Instance.GetCurrentInstant().Minus(NodaTime.Duration.FromDays(retentionDays));
 
             await using var scopedContext = await contextFactory.CreateDbContextAsync(context.CancellationToken);
-            
+
             var library = await scopedContext.Libraries.FirstOrDefaultAsync(x => x.Type == (int)LibraryType.Podcast, context.CancellationToken);
             if (library == null)
             {
-                 Logger.Warning("[{JobId}] Podcast library not found, skipping cleanup", jobId);
-                 return;
+                Logger.Warning("[{JobId}] Podcast library not found, skipping cleanup", jobId);
+                return;
             }
 
             var episodesToDelete = await scopedContext.PodcastEpisodes
-                .Where(x => x.DownloadStatus == PodcastEpisodeDownloadStatus.Downloaded && 
+                .Where(x => x.DownloadStatus == PodcastEpisodeDownloadStatus.Downloaded &&
                             x.LocalPath != null &&
-                            x.LastUpdatedAt != null && 
+                            x.LastUpdatedAt != null &&
                             x.LastUpdatedAt < cutoffDate)
                 .ToListAsync(context.CancellationToken);
 
@@ -86,7 +85,7 @@ public sealed class PodcastCleanupJob(
                     Logger.Error(ex, "[{JobId}] Error cleaning up episode {EpisodeId}", jobId, episode.Id);
                 }
             }
-            
+
             if (episodesToDelete.Count > 0)
             {
                 await scopedContext.SaveChangesAsync(context.CancellationToken);
@@ -95,7 +94,7 @@ public sealed class PodcastCleanupJob(
         catch (Exception ex)
         {
             Logger.Error(ex, "[{JobId}] PodcastCleanupJob failed", jobId);
-            throw; 
+            throw;
         }
         finally
         {

@@ -1,0 +1,37 @@
+@inherits MelodeeComponentBase
+
+@inject DialogService DialogService
+
+<RadzenStack Gap="1rem" Class="rz-p-4">
+    <RadzenFormField Text="@L("Podcast.FeedUrl")" Variant="Variant.Outlined" Style="width: 100%;">
+        <RadzenTextBox @bind-Value="_feedUrl" Placeholder="https://example.com/podcast.rss" Style="width: 100%;" />
+    </RadzenFormField>
+    
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+        <RadzenButton Text="@L("Actions.Cancel")" ButtonStyle="ButtonStyle.Light" Click="@Cancel" />
+        <RadzenButton Text="@L("Actions.Add")" ButtonStyle="ButtonStyle.Primary" Click="@Submit" Disabled="@(string.IsNullOrWhiteSpace(_feedUrl) || !IsValidUrl(_feedUrl))" />
+    </RadzenStack>
+</RadzenStack>
+
+@code {
+    private string _feedUrl = string.Empty;
+
+    private void Cancel()
+    {
+        DialogService.Close(null);
+    }
+
+    private void Submit()
+    {
+        if (!string.IsNullOrWhiteSpace(_feedUrl) && IsValidUrl(_feedUrl))
+        {
+            DialogService.Close(_feedUrl);
+        }
+    }
+
+    private static bool IsValidUrl(string url)
+    {
+        return Uri.TryCreate(url, UriKind.Absolute, out var uri) && 
+               (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+    }
+}

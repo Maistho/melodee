@@ -1,5 +1,5 @@
-using Melodee.Common.Models.Collection;
-using Melodee.Common.Filtering;
+using System.ServiceModel.Syndication;
+using System.Xml;
 using Melodee.Common.Configuration;
 using Melodee.Common.Constants;
 using Melodee.Common.Data;
@@ -7,14 +7,12 @@ using Melodee.Common.Data.Models;
 using Melodee.Common.Enums;
 using Melodee.Common.Extensions;
 using Melodee.Common.Models;
+using Melodee.Common.Models.Collection;
 using Melodee.Common.Services.Caching;
+using Melodee.Common.Services.Security;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using Serilog;
-using System.IO;
-using System.Net.Http.Headers;
-using System.ServiceModel.Syndication;
-using System.Xml;
 
 namespace Melodee.Common.Services;
 
@@ -26,7 +24,9 @@ public sealed class PodcastService(
     ICacheManager cacheManager,
     IDbContextFactory<MelodeeDbContext> contextFactory,
     IMelodeeConfigurationFactory configurationFactory,
-    LibraryService libraryService) : ServiceBase(logger, cacheManager, contextFactory)
+    LibraryService libraryService,
+    ISsrfValidator ssrfValidator,
+    PodcastHttpClient podcastHttpClient) : ServiceBase(logger, cacheManager, contextFactory)
 {
     public async Task<DbContext> CreateDbContextAsync(CancellationToken cancellationToken = default)
     {
@@ -103,18 +103,11 @@ public sealed class PodcastService(
     {
         try
         {
-            var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
-            var allowHttp = configuration.GetValue<bool>(SettingRegistry.PodcastHttpAllowHttp);
-
-            if (!feedUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase) &&
-                !feedUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+            // Validate URL with SSRF protection
+            var ssrfResult = await ssrfValidator.ValidateUrlAsync(feedUrl, cancellationToken).ConfigureAwait(false);
+            if (!ssrfResult.IsValid)
             {
-                return new OperationResult<PodcastChannel>("Invalid feed URL: must start with http:// or https://") { Data = null! };
-            }
-
-            if (feedUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) && !allowHttp)
-            {
-                return new OperationResult<PodcastChannel>("HTTP feeds are disabled. Enable podcast.http.allowHttp to allow.") { Data = null! };
+                return new OperationResult<PodcastChannel>(ssrfResult.ErrorMessage ?? "URL validation failed") { Data = null! };
             }
 
             await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
@@ -141,9 +134,7 @@ public sealed class PodcastService(
 
             Logger.Information("[{ServiceName}] Created channel {ChannelId} for user {UserId}", nameof(PodcastService), channel.Id, userId);
 
-            Logger.Information("[{ServiceName}] Created channel {ChannelId} for user {UserId}", nameof(PodcastService), channel.Id, userId);
-
-            // Refesh the channel immediately to populate metadata and episodes
+            // Refresh the channel immediately to populate metadata and episodes
             await RefreshChannelAsync(channel.Id, cancellationToken).ConfigureAwait(false);
 
             // Reload to get the latest updates
@@ -403,6 +394,7 @@ public sealed class PodcastService(
             }
 
             var maxItemsPerChannel = configuration.GetValue<int>(SettingRegistry.PodcastRefreshMaxItemsPerChannel);
+            var maxFeedBytes = configuration.GetValue<long>(SettingRegistry.PodcastHttpMaxFeedBytes);
 
             Logger.Information("[{ServiceName}] Refreshing channel [{ChannelId}] {ChannelTitle}", nameof(PodcastService), channel.Id, channel.Title);
 
@@ -410,24 +402,41 @@ public sealed class PodcastService(
 
             try
             {
-                using var httpClient = new HttpClient
+                // Build conditional request headers
+                var headers = new Dictionary<string, string>();
+                if (!string.IsNullOrEmpty(channel.Etag))
                 {
-                    Timeout = TimeSpan.FromSeconds(configuration.GetValue<int>(SettingRegistry.PodcastHttpTimeoutSeconds))
-                };
-
-                using var request = new HttpRequestMessage(HttpMethod.Get, channel.FeedUrl);
-                var currentEtag = channel.Etag;
-                if (!string.IsNullOrEmpty(currentEtag))
-                {
-                    request.Headers.IfNoneMatch.Add(new EntityTagHeaderValue($"\"{currentEtag}\""));
+                    headers["If-None-Match"] = $"\"{channel.Etag}\"";
                 }
-
                 if (channel.LastModified.HasValue)
                 {
-                    request.Headers.IfModifiedSince = channel.LastModified.Value;
+                    headers["If-Modified-Since"] = channel.LastModified.Value.ToString("R");
                 }
 
-                using var response = await httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+                // Use resilient HTTP client with SSRF protection and Polly retries
+                var httpResult = await podcastHttpClient.GetAsync(
+                    channel.FeedUrl,
+                    headers,
+                    maxFeedBytes,
+                    cancellationToken).ConfigureAwait(false);
+
+                if (!httpResult.IsSuccess)
+                {
+                    // Check if it's a 304 Not Modified (not exposed directly, but we handle via error message pattern)
+                    if (httpResult.ErrorMessage?.Contains("304") == true)
+                    {
+                        Logger.Debug("[{ServiceName}] Channel [{ChannelId}] not modified, skipping", nameof(PodcastService), channel.Id);
+                        channel.LastSyncAt = SystemClock.Instance.GetCurrentInstant();
+                        channel.ConsecutiveFailureCount = 0;
+                        channel.NextSyncAt = null;
+                        channel.LastSyncError = null;
+                        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+                        return new OperationResult<bool> { Data = true };
+                    }
+                    throw new Exception(httpResult.ErrorMessage ?? "Failed to fetch feed");
+                }
+
+                using var response = httpResult.Response!;
 
                 if (response.StatusCode == System.Net.HttpStatusCode.NotModified)
                 {
@@ -438,11 +447,6 @@ public sealed class PodcastService(
                     channel.LastSyncError = null;
                     await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
                     return new OperationResult<bool> { Data = true };
-                }
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    throw new Exception($"HTTP {(int)response.StatusCode}: {response.ReasonPhrase}");
                 }
 
                 var content = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
@@ -491,6 +495,7 @@ public sealed class PodcastService(
         }
 
         channel.Title = feed.Title.Text;
+        channel.TitleNormalized = feed.Title.Text.ToNormalizedString();
         channel.Description = feed.Description?.Text;
         channel.SiteUrl = feed.Links.FirstOrDefault(l => l.RelationshipType == "alternate")?.Uri?.ToString();
 
@@ -541,6 +546,7 @@ public sealed class PodcastService(
             }
 
             episode.Title = item.Title?.Text ?? "Untitled";
+            episode.TitleNormalized = episode.Title.ToNormalizedString();
             episode.Description = item.Summary?.Text ?? item.Content?.ToString();
             episode.PublishDate = item.PublishDate;
             episode.Guid = item.Id;
@@ -558,7 +564,7 @@ public sealed class PodcastService(
 
             episodeCount++;
         }
-        
+
         Logger.Information("[{ServiceName}] Processed {EpisodeCount} episodes for channel [{ChannelId}]", nameof(PodcastService), episodeCount, channel.Id);
     }
 
@@ -566,19 +572,17 @@ public sealed class PodcastService(
     {
         try
         {
-            using var httpClient = new HttpClient
-            {
-                Timeout = TimeSpan.FromSeconds(configuration.GetValue<int>(SettingRegistry.PodcastHttpTimeoutSeconds))
-            };
+            const long maxCoverArtBytes = 10 * 1024 * 1024; // 10 MB max for cover art
 
-            using var request = new HttpRequestMessage(HttpMethod.Get, imageUrl);
-            using var response = await httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            var httpResult = await podcastHttpClient.GetAsync(imageUrl, maxResponseBytes: maxCoverArtBytes, cancellationToken: cancellationToken).ConfigureAwait(false);
 
-            if (!response.IsSuccessStatusCode)
+            if (!httpResult.IsSuccess)
             {
-                Logger.Warning("[{ServiceName}] Failed to download cover art for channel [{ChannelId}]: HTTP {StatusCode}", nameof(PodcastService), channel.Id, (int)response.StatusCode);
+                Logger.Warning("[{ServiceName}] Failed to download cover art for channel [{ChannelId}]: {Error}", nameof(PodcastService), channel.Id, httpResult.ErrorMessage);
                 return null;
             }
+
+            using var response = httpResult.Response!;
 
             var contentType = response.Content.Headers.ContentType?.MediaType ?? "image/jpeg";
             var extension = contentType.ToLowerInvariant() switch
@@ -658,11 +662,14 @@ public sealed class PodcastService(
     {
         await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
 
-        var query = context.PodcastChannels.Where(x => x.UserId == userId && !x.IsDeleted).AsNoTracking();
+        var query = context.PodcastChannels
+            .Include(x => x.Episodes)
+            .Where(x => x.UserId == userId && !x.IsDeleted)
+            .AsNoTracking();
 
         if (request.FilterBy?.Any() == true)
         {
-            var filter = request.FilterBy.First(); // Assuming simple filter for now
+            var filter = request.FilterBy.First();
             if (filter.PropertyName.Equals(nameof(PodcastChannelDataInfo.TitleNormalized), StringComparison.OrdinalIgnoreCase))
             {
                 query = query.Where(x => EF.Functions.Like(x.Title, $"%{filter.Value}%"));
@@ -679,7 +686,7 @@ public sealed class PodcastService(
                 x.Id,
                 x.ApiKey,
                 x.Title,
-                x.Title,
+                x.TitleNormalized ?? x.Title,
                 x.Description ?? string.Empty,
                 x.ImageUrl ?? string.Empty,
                 x.FeedUrl,
@@ -689,8 +696,8 @@ public sealed class PodcastService(
                 string.Empty,
                 false,
                 0,
-                null,
-                0))
+                x.SiteUrl,
+                x.Episodes.Count))
             .ToArrayAsync(cancellationToken)
             .ConfigureAwait(false);
 
@@ -704,12 +711,22 @@ public sealed class PodcastService(
 
     public async Task<PagedResult<PodcastEpisodeDataInfo>> ListEpisodesAsync(PagedRequest request, int userId, CancellationToken cancellationToken = default)
     {
+        return await ListEpisodesAsync(request, userId, null, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<PagedResult<PodcastEpisodeDataInfo>> ListEpisodesAsync(PagedRequest request, int userId, int? channelId, CancellationToken cancellationToken = default)
+    {
         await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
 
         var query = context.PodcastEpisodes
             .Include(x => x.PodcastChannel)
             .Where(x => x.PodcastChannel.UserId == userId && !x.PodcastChannel.IsDeleted)
             .AsNoTracking();
+
+        if (channelId.HasValue)
+        {
+            query = query.Where(x => x.PodcastChannelId == channelId.Value);
+        }
 
         if (request.FilterBy?.Any() == true)
         {
@@ -730,10 +747,10 @@ public sealed class PodcastService(
                 x.Id,
                 x.ApiKey,
                 x.Title,
-                x.Title,
+                x.TitleNormalized ?? x.Title,
                 x.Description ?? string.Empty,
-                x.PublishDate ?? x.CreatedAt.ToDateTimeOffset(),
-                0, // Duration
+                x.PublishDate,
+                x.Duration,
                 x.PodcastChannel.Title,
                 x.PodcastChannel.ApiKey,
                 x.DownloadStatus == PodcastEpisodeDownloadStatus.Downloaded,
@@ -741,8 +758,9 @@ public sealed class PodcastService(
                 string.Empty,
                 false,
                 0,
-                null,
-                0))
+                x.DownloadStatus,
+                x.DownloadError,
+                x.EnclosureUrl))
             .ToArrayAsync(cancellationToken)
             .ConfigureAwait(false);
 

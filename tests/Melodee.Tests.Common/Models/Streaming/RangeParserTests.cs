@@ -1,5 +1,4 @@
 using Melodee.Common.Models.Streaming;
-using Xunit;
 
 namespace Melodee.Tests.Common.Models.Streaming;
 

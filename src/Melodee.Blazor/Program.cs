@@ -430,6 +430,8 @@ builder.Services
     .AddScoped<UserQueueService>()
     .AddScoped<PlaybackSettingsService>()
     .AddScoped<EqualizerPresetService>()
+    .AddSingleton<ISsrfValidator, SsrfValidator>()
+    .AddSingleton<PodcastHttpClient>()
     .AddScoped<PodcastService>();
 
 #endregion

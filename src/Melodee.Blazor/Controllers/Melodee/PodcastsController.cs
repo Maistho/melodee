@@ -1,23 +1,19 @@
 using Asp.Versioning;
-using Melodee.Blazor.Controllers.Melodee.Extensions;
+using Melodee.Blazor.Controllers.Melodee.Models;
 using Melodee.Blazor.Filters;
+using Melodee.Blazor.Services;
 using Melodee.Common.Configuration;
-using Melodee.Common.Data;
 using Melodee.Common.Data.Models;
 using Melodee.Common.Filtering;
 using Melodee.Common.Models;
 using Melodee.Common.Models.Collection;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services;
-using Melodee.Common.Utility;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
-using Melodee.Blazor.Controllers.Melodee.Models;
-using Melodee.Common.Data.Models.Extensions;
-using Melodee.Blazor.Services;
 
 namespace Melodee.Blazor.Controllers.Melodee;
 
@@ -32,7 +28,6 @@ public sealed class PodcastsController(
     EtagRepository etagRepository,
     UserService userService,
     PodcastService podcastService,
-    IBlacklistService blacklistService,
     IConfiguration configuration,
     IMelodeeConfigurationFactory configurationFactory,
     ILogger<PodcastsController> logger) : ControllerBase(
@@ -53,7 +48,7 @@ public sealed class PodcastsController(
     public async Task<IActionResult> ListChannelsAsync(
         short page = 1,
         short pageSize = 50,
-        string? orderBy = null, 
+        string? orderBy = null,
         string? orderDirection = null,
         string? search = null,
         CancellationToken cancellationToken = default)
@@ -147,7 +142,7 @@ public sealed class PodcastsController(
     [HttpGet]
     [Route("channels/{id:int}/episodes")]
     public async Task<IActionResult> ListEpisodesAsync(
-        int id, 
+        int id,
         short page = 1,
         short pageSize = 50,
         CancellationToken cancellationToken = default)
@@ -165,14 +160,20 @@ public sealed class PodcastsController(
         var limit = validatedPageSize;
 
         var result = await podcastService.ListEpisodesAsync(id, user.Id, limit, offset, cancellationToken);
-        
+
         if (!result.IsSuccess) return ApiBadRequest(result.Messages?.FirstOrDefault() ?? "Error listing episodes");
 
-        return Ok(new 
-        { 
-            Data = result.Data.Select(x => new 
+        return Ok(new
+        {
+            Data = result.Data.Select(x => new
             {
-                x.Id, x.Title, x.PublishDate, x.DownloadStatus, x.Duration, x.EnclosureLength, x.Guid 
+                x.Id,
+                x.Title,
+                x.PublishDate,
+                x.DownloadStatus,
+                x.Duration,
+                x.EnclosureLength,
+                x.Guid
             }),
             TotalCount = result.AdditionalData.TryGetValue("TotalCount", out var count) ? count : 0
         });

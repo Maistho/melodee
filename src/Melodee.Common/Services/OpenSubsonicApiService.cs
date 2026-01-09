@@ -1278,7 +1278,7 @@ public class OpenSubsonicApiService(
                     var channelId = PodcastChannelIdFromId(apiId);
                     if (channelId.HasValue)
                     {
-                        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+                        await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
                         var channel = await context.PodcastChannels
                             .FirstOrDefaultAsync(x => x.Id == channelId.Value, cancellationToken)
                             .ConfigureAwait(false);

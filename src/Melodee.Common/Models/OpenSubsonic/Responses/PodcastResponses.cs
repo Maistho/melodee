@@ -1,5 +1,4 @@
 using System.Xml.Serialization;
-using Melodee.Common.Models.OpenSubsonic.Enums;
 
 namespace Melodee.Common.Models.OpenSubsonic.Responses;
 

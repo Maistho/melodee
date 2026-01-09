@@ -516,16 +516,22 @@
         await base.OnInitializedAsync();
         _userAgent = await JsRuntime.InvokeAsync<string>("getUserAgent", []);
 
+        var configuration = await ConfigurationFactory.GetConfigurationAsync();
+        var podcastEnabled = configuration.GetValue<bool>(SettingRegistry.PodcastEnabled);
+        
         _entityTypes =
         [
             new EntityType("all", L("Common.All")),
             new EntityType("songs", L("Common.Songs")),
             new EntityType("albums", L("Common.Albums")),
-            new EntityType("artists", L("Common.Artists")),
-            new EntityType("podcasts", L("Common.Podcasts"))
+            new EntityType("artists", L("Common.Artists"))
         ];
+        
+        if (podcastEnabled)
+        {
+            _entityTypes.Add(new EntityType("podcasts", L("Common.Podcasts")));
+        }
 
-        var configuration = await ConfigurationFactory.GetConfigurationAsync();
         _defaultMaxResults = configuration.GetValue<short?>(SettingRegistry.SearchResultsDefaultPageSize) ??
                              configuration.GetValue<short?>(SettingRegistry.DefaultsPageSize) ??
                              50;

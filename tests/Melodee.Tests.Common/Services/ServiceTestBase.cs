@@ -21,6 +21,7 @@ using Melodee.Common.Services;
 using Melodee.Common.Services.Caching;
 using Melodee.Common.Services.Scanning;
 using Melodee.Common.Services.SearchEngines;
+using Melodee.Common.Services.Security;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Moq;
@@ -318,7 +319,25 @@ public abstract class ServiceTestBase : IDisposable, IAsyncDisposable
 
     protected SearchService GetSearchService()
     {
-        return new SearchService(Logger, CacheManager, MockFactory(), GetUserService(), GetArtistService(), GetAlbumService(), GetSongService(), MockMusicBrainzRepository(), MockBus());
+        return new SearchService(Logger, CacheManager, MockFactory(), MockConfigurationFactory(), GetUserService(), GetArtistService(), GetAlbumService(), GetSongService(), GetPodcastService(), MockMusicBrainzRepository(), MockBus());
+    }
+
+    protected PodcastService GetPodcastService()
+    {
+        return new PodcastService(Logger, CacheManager, MockFactory(), MockConfigurationFactory(), GetLibraryService(), MockSsrfValidator(), MockPodcastHttpClient());
+    }
+
+    protected ISsrfValidator MockSsrfValidator()
+    {
+        var mock = new Mock<ISsrfValidator>();
+        mock.Setup(x => x.ValidateUrlAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(SsrfValidationResult.Valid([]));
+        return mock.Object;
+    }
+
+    protected PodcastHttpClient MockPodcastHttpClient()
+    {
+        return new PodcastHttpClient(Logger, MockSsrfValidator(), MockConfigurationFactory());
     }
 
     protected PlaylistService GetPlaylistService()

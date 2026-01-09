@@ -1,7 +1,7 @@
+using System.Globalization;
 using Melodee.Common.Data.Models;
 using Melodee.Common.Enums;
 using Melodee.Common.Models.OpenSubsonic.Responses;
-using System.Globalization;
 
 namespace Melodee.Common.Models.OpenSubsonic.Extensions;
 

@@ -1,0 +1,454 @@
+@page "/podcasts/{ChannelApiKey}"
+@inherits MelodeeComponentBase
+@using Melodee.Common.Models.Collection
+
+@inject MainLayoutProxyService MainLayoutProxyService
+@inject ILogger Logger
+@inject PodcastService PodcastService
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+@inject NavigationManager NavigationManager
+
+<PageTitle>@(_channel?.Title ?? L("Navigation.Podcasts"))</PageTitle>
+
+<RadzenStack Style="height: 100%">
+    <RadzenBreadCrumb Class="rz-pb-5">
+        <RadzenBreadCrumbItem Path="/" Text="@L("Navigation.Dashboard")" />
+        <RadzenBreadCrumbItem Path="/podcasts" Icon="podcasts" Text="@L("Navigation.Podcasts")" />
+        @if (_channel != null)
+        {
+            <RadzenBreadCrumbItem Text="@_channel.Title" />
+        }
+    </RadzenBreadCrumb>
+
+    @if (_channel == null && !_isLoading)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Warning" Shade="Shade.Light" AllowClose="false">
+            <RadzenText>@L("Podcast.ChannelNotFound")</RadzenText>
+        </RadzenAlert>
+    }
+    else if (_channel != null)
+    {
+        <RadzenRow AlignItems="AlignItems.Start" Gap="1rem" Class="rz-mb-4">
+            <RadzenColumn Size="12" SizeMD="2">
+                @if (!string.IsNullOrEmpty(_channel.ImageUrl))
+                {
+                    <RadzenImage Path="@_channel.ImageUrl" Style="width: 100%; max-width: 200px; border-radius: 8px;" AlternateText="@_channel.Title" />
+                }
+                else
+                {
+                    <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" 
+                                 Style="width: 200px; height: 200px; background: var(--rz-base-200); border-radius: 8px;">
+                        <RadzenIcon Icon="podcasts" Style="font-size: 64px; color: var(--rz-text-tertiary-color);" />
+                    </RadzenStack>
+                }
+            </RadzenColumn>
+            <RadzenColumn Size="12" SizeMD="10">
+                <RadzenStack Gap="0.5rem">
+                    <RadzenText TextStyle="TextStyle.DisplayH5" TagName="TagName.H1" Class="rz-m-0">@_channel.Title</RadzenText>
+                    @if (!string.IsNullOrEmpty(_channel.Description))
+                    {
+                        <RadzenText TextStyle="TextStyle.Body2" Class="rz-text-secondary-color" Style="max-width: 800px;">
+                            @(_channel.Description.Length > 300 ? _channel.Description[..300] + "..." : _channel.Description)
+                        </RadzenText>
+                    }
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.Center">
+                        @if (_channel.LastSyncAt.HasValue)
+                        {
+                            <RadzenText TextStyle="TextStyle.Caption" Class="rz-text-tertiary-color">
+                                <RadzenIcon Icon="sync" Style="font-size: 14px;" /> @L("Podcast.LastSync"): @_channel.LastSyncAt.Value.ToDateTimeUtc().ToLocalTime().ToString("g")
+                            </RadzenText>
+                        }
+                        @if (!string.IsNullOrEmpty(_channel.SiteUrl))
+                        {
+                            <RadzenLink Path="@_channel.SiteUrl" Target="_blank" Text="@L("Podcast.VisitWebsite")" />
+                        }
+                    </RadzenStack>
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Class="rz-mt-2">
+                        <RadzenButton Icon="refresh" Text="@L("Actions.Refresh")" Size="ButtonSize.Small" Click="@RefreshChannel" />
+                        <RadzenButton Icon="delete" Text="@L("Actions.Delete")" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Click="@DeleteChannel" />
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenColumn>
+        </RadzenRow>
+
+        <RadzenText TextStyle="TextStyle.H6" Class="rz-mb-2">@L("Common.Episodes") (@_count)</RadzenText>
+
+        <RadzenRow Style="flex: 1; overflow: hidden;">
+            <RadzenDataGrid
+                @ref="_grid"
+                Style="height: 100%"
+                IsLoading="@_isLoading"
+                Count="@_count"
+                Data="@_episodes"
+                LoadData="@LoadEpisodes"
+                AllowSorting="true"
+                AllowPaging="true"
+                PageSize="DefaultPageSize"
+                PagerHorizontalAlign="HorizontalAlign.Center"
+                ShowPagingSummary="true"
+                PageSizeOptions="@PageSizeOptions"
+                PagingSummaryFormat="@GridPagingSummaryFormat"
+                PageSizeText="@GridPageSizeText"
+                EmptyText="@GridEmptyText"
+                ColumnWidth="200px">
+                <Columns>
+                    <RadzenDataGridColumn Property="@nameof(PodcastEpisodeDataInfo.Title)" Title="@L("Common.Title")" Width="400px">
+                        <Template Context="data">
+                            <RadzenStack Gap="0.25rem">
+                                <RadzenText TextStyle="TextStyle.Body1">@data.Title</RadzenText>
+                                @if (!string.IsNullOrEmpty(data.Description))
+                                {
+                                    <RadzenText TextStyle="TextStyle.Caption" Class="rz-text-secondary-color" Style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 400px;">
+                                        @(data.Description.Length > 150 ? data.Description[..150] + "..." : data.Description)
+                                    </RadzenText>
+                                }
+                            </RadzenStack>
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn Property="@nameof(PodcastEpisodeDataInfo.PublishDate)" Title="@L("Common.Date")" Width="150px">
+                        <Template Context="data">
+                            @if (data.PublishDate.HasValue)
+                            {
+                                <RadzenText>@data.PublishDate.Value.ToString("d")</RadzenText>
+                            }
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn Property="@nameof(PodcastEpisodeDataInfo.Duration)" Title="@L("Common.Duration")" Width="100px">
+                        <Template Context="data">
+                            @if (data.Duration.HasValue)
+                            {
+                                <RadzenText>@data.Duration.Value.ToString(@"hh\:mm\:ss")</RadzenText>
+                            }
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn Property="@nameof(PodcastEpisodeDataInfo.DownloadStatus)" Title="@L("Common.Status")" Width="120px">
+                        <Template Context="data">
+                            @switch (data.DownloadStatus)
+                            {
+                                case Melodee.Common.Enums.PodcastEpisodeDownloadStatus.None:
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="@L("Podcast.StatusNone")" />
+                                    break;
+                                case Melodee.Common.Enums.PodcastEpisodeDownloadStatus.Queued:
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Info" Text="@L("Podcast.StatusQueued")" />
+                                    break;
+                                case Melodee.Common.Enums.PodcastEpisodeDownloadStatus.Downloading:
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="@L("Podcast.StatusDownloading")" />
+                                    break;
+                                case Melodee.Common.Enums.PodcastEpisodeDownloadStatus.Downloaded:
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="@L("Podcast.StatusDownloaded")" />
+                                    break;
+                                case Melodee.Common.Enums.PodcastEpisodeDownloadStatus.Failed:
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Danger" Text="@L("Podcast.StatusFailed")" title="@data.DownloadError" />
+                                    break;
+                            }
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn Title="@L("Common.Actions")" Width="150px" Sortable="false" Filterable="false">
+                        <Template Context="data">
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem">
+                                @if (data.DownloadStatus == Melodee.Common.Enums.PodcastEpisodeDownloadStatus.None || 
+                                     data.DownloadStatus == Melodee.Common.Enums.PodcastEpisodeDownloadStatus.Failed)
+                                {
+                                    <RadzenButton Icon="download" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Primary"
+                                                  Click="@(() => QueueDownload(data.Id))"
+                                                  title="@L("Actions.Download")" />
+                                }
+                                @if (data.DownloadStatus == Melodee.Common.Enums.PodcastEpisodeDownloadStatus.Downloaded)
+                                {
+                                    <RadzenButton Icon="play_arrow" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Success"
+                                                  Click="@(() => PlayEpisode(data))"
+                                                  title="@L("Actions.Play")" />
+                                    <RadzenButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light"
+                                                  Click="@(() => DeleteEpisode(data.Id))"
+                                                  title="@L("Actions.Delete")" />
+                                }
+                                @if (!string.IsNullOrEmpty(data.EnclosureUrl))
+                                {
+                                    <RadzenButton Icon="open_in_new" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light"
+                                                  Click="@(() => NavigationManager.NavigateTo(data.EnclosureUrl, true))"
+                                                  title="@L("Actions.OpenExternal")" />
+                                }
+                            </RadzenStack>
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+        </RadzenRow>
+    }
+</RadzenStack>
+
+@code {
+    [Parameter]
+    public string ChannelApiKey { get; set; } = string.Empty;
+
+    private RadzenDataGrid<PodcastEpisodeDataInfo>? _grid;
+    private PodcastChannelDataInfo? _channel;
+    private IEnumerable<PodcastEpisodeDataInfo> _episodes = [];
+    private int _count;
+    private bool _isLoading;
+    private int _channelId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await LoadChannel();
+    }
+
+    private async Task LoadChannel()
+    {
+        if (CurrentUsersId == 0 || string.IsNullOrEmpty(ChannelApiKey))
+        {
+            return;
+        }
+
+        _isLoading = true;
+        MainLayoutProxyService.ToggleSpinnerVisible();
+
+        try
+        {
+            // Find channel by ApiKey
+            var channelsResult = await PodcastService.ListChannelsAsync(new PagedRequest { PageSize = 1000 }, CurrentUsersId);
+            _channel = channelsResult.Data.FirstOrDefault(c => c.ApiKey.ToString() == ChannelApiKey);
+            
+            if (_channel != null)
+            {
+                _channelId = _channel.Id;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "[PodcastDetail] Error loading channel");
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = L("Message.Error"),
+                Detail = ex.Message,
+                Duration = ToastTime
+            });
+        }
+        finally
+        {
+            _isLoading = false;
+            MainLayoutProxyService.ToggleSpinnerVisible();
+        }
+    }
+
+    private async Task LoadEpisodes(LoadDataArgs args)
+    {
+        if (_channelId == 0)
+        {
+            return;
+        }
+
+        _isLoading = true;
+
+        try
+        {
+            var request = new PagedRequest
+            {
+                Page = (args.Skip ?? 0) / (args.Top ?? DefaultPageSize) + 1,
+                PageSize = (short)(args.Top ?? DefaultPageSize)
+            };
+
+            var result = await PodcastService.ListEpisodesAsync(request, CurrentUsersId, _channelId);
+            _episodes = result.Data;
+            _count = result.TotalCount;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "[PodcastDetail] Error loading episodes");
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task RefreshChannel()
+    {
+        if (_channelId == 0)
+        {
+            return;
+        }
+
+        MainLayoutProxyService.ToggleSpinnerVisible();
+
+        try
+        {
+            var result = await PodcastService.RefreshChannelAsync(_channelId);
+
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = result.IsSuccess ? NotificationSeverity.Success : NotificationSeverity.Warning,
+                Summary = result.IsSuccess ? L("Message.Success") : L("Message.Warning"),
+                Detail = result.IsSuccess ? L("Podcast.ChannelRefreshed") : string.Join(", ", result.Messages ?? []),
+                Duration = ToastTime
+            });
+
+            await LoadChannel();
+            await _grid?.Reload()!;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "[PodcastDetail] Error refreshing channel");
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = L("Message.Error"),
+                Detail = ex.Message,
+                Duration = ToastTime
+            });
+        }
+        finally
+        {
+            MainLayoutProxyService.ToggleSpinnerVisible();
+        }
+    }
+
+    private async Task DeleteChannel()
+    {
+        var confirmed = await DialogService.Confirm(
+            L("Podcast.DeleteChannelConfirm"),
+            L("Actions.Delete"),
+            new ConfirmOptions { OkButtonText = L("Actions.Delete"), CancelButtonText = L("Actions.Cancel") });
+
+        if (confirmed == true)
+        {
+            MainLayoutProxyService.ToggleSpinnerVisible();
+
+            try
+            {
+                var result = await PodcastService.DeleteChannelAsync(_channelId, CurrentUsersId);
+
+                if (result.IsSuccess)
+                {
+                    NotificationService.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Success,
+                        Summary = L("Message.Success"),
+                        Detail = L("Podcast.ChannelDeleted"),
+                        Duration = ToastTime
+                    });
+
+                    NavigationManager.NavigateTo("/podcasts");
+                }
+                else
+                {
+                    NotificationService.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Error,
+                        Summary = L("Message.Error"),
+                        Detail = string.Join(", ", result.Messages ?? []),
+                        Duration = ToastTime
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "[PodcastDetail] Error deleting channel");
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = L("Message.Error"),
+                    Detail = ex.Message,
+                    Duration = ToastTime
+                });
+            }
+            finally
+            {
+                MainLayoutProxyService.ToggleSpinnerVisible();
+            }
+        }
+    }
+
+    private async Task QueueDownload(int episodeId)
+    {
+        MainLayoutProxyService.ToggleSpinnerVisible();
+
+        try
+        {
+            var result = await PodcastService.QueueDownloadAsync(episodeId, CurrentUsersId);
+
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = result.IsSuccess ? NotificationSeverity.Success : NotificationSeverity.Error,
+                Summary = result.IsSuccess ? L("Message.Success") : L("Message.Error"),
+                Detail = result.IsSuccess ? L("Podcast.EpisodeQueued") : string.Join(", ", result.Messages ?? []),
+                Duration = ToastTime
+            });
+
+            await _grid?.Reload()!;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "[PodcastDetail] Error queuing download");
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = L("Message.Error"),
+                Detail = ex.Message,
+                Duration = ToastTime
+            });
+        }
+        finally
+        {
+            MainLayoutProxyService.ToggleSpinnerVisible();
+        }
+    }
+
+    private async Task DeleteEpisode(int episodeId)
+    {
+        var confirmed = await DialogService.Confirm(
+            L("Podcast.DeleteEpisodeConfirm"),
+            L("Actions.Delete"),
+            new ConfirmOptions { OkButtonText = L("Actions.Delete"), CancelButtonText = L("Actions.Cancel") });
+
+        if (confirmed == true)
+        {
+            MainLayoutProxyService.ToggleSpinnerVisible();
+
+            try
+            {
+                var result = await PodcastService.DeleteEpisodeAsync(episodeId, CurrentUsersId);
+
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = result.IsSuccess ? NotificationSeverity.Success : NotificationSeverity.Error,
+                    Summary = result.IsSuccess ? L("Message.Success") : L("Message.Error"),
+                    Detail = result.IsSuccess ? L("Podcast.EpisodeDeleted") : string.Join(", ", result.Messages ?? []),
+                    Duration = ToastTime
+                });
+
+                await _grid?.Reload()!;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "[PodcastDetail] Error deleting episode");
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = L("Message.Error"),
+                    Detail = ex.Message,
+                    Duration = ToastTime
+                });
+            }
+            finally
+            {
+                MainLayoutProxyService.ToggleSpinnerVisible();
+            }
+        }
+    }
+
+    private void PlayEpisode(PodcastEpisodeDataInfo episode)
+    {
+        // TODO: Implement podcast playback in a future release
+        NotificationService.Notify(new NotificationMessage
+        {
+            Severity = NotificationSeverity.Info,
+            Summary = L("Message.Info"),
+            Detail = L("Podcast.PlaybackNotImplemented"),
+            Duration = ToastTime
+        });
+    }
+}

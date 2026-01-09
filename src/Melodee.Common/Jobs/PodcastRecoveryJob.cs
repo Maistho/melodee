@@ -2,7 +2,6 @@ using System.Diagnostics;
 using Melodee.Common.Configuration;
 using Melodee.Common.Constants;
 using Melodee.Common.Data;
-using Melodee.Common.Data.Models;
 using Melodee.Common.Enums;
 using Melodee.Common.Services;
 using Microsoft.EntityFrameworkCore;
@@ -27,7 +26,7 @@ public sealed class PodcastRecoveryJob(
 
         try
         {
-            var configuration = await configurationFactory.GetConfigurationAsync(context.CancellationToken);
+            var configuration = await ConfigurationFactory.GetConfigurationAsync(context.CancellationToken);
             if (!configuration.GetValue<bool>(SettingRegistry.PodcastEnabled))
             {
                 Logger.Information("[{JobId}] Podcast support disabled, skipping recovery", jobId);
@@ -38,13 +37,13 @@ public sealed class PodcastRecoveryJob(
             var orphanedThresholdHours = configuration.GetValue<int>(SettingRegistry.PodcastRecoveryOrphanedUsageThresholdHours);
 
             var stuckCutoff = NodaTime.SystemClock.Instance.GetCurrentInstant().Minus(NodaTime.Duration.FromMinutes(stuckThresholdMinutes));
-            
+
             await using var scopedContext = await contextFactory.CreateDbContextAsync(context.CancellationToken);
-            
+
             // 1. Reset Stuck Downloads
             var stuckEpisodes = await scopedContext.PodcastEpisodes
-                .Where(x => x.DownloadStatus == PodcastEpisodeDownloadStatus.Downloading && 
-                            x.LastUpdatedAt != null && 
+                .Where(x => x.DownloadStatus == PodcastEpisodeDownloadStatus.Downloading &&
+                            x.LastUpdatedAt != null &&
                             x.LastUpdatedAt < stuckCutoff)
                 .ToListAsync(context.CancellationToken);
 
@@ -65,10 +64,10 @@ public sealed class PodcastRecoveryJob(
             if (library != null && fileSystemService.DirectoryExists(library.Path))
             {
                 var orphanedCutoff = DateTime.UtcNow.AddHours(-orphanedThresholdHours);
-                
+
                 var tempFiles = fileSystemService.GetFiles(library.Path, "*.tmp", SearchOption.AllDirectories);
                 var deletedCount = 0;
-                
+
                 foreach (var file in tempFiles)
                 {
                     if (!Path.GetFileName(file).EndsWith(".tmp")) continue;
@@ -80,13 +79,13 @@ public sealed class PodcastRecoveryJob(
                             fileSystemService.DeleteFile(file);
                             deletedCount++;
                         }
-                        catch (Exception ex)
+                        catch
                         {
-                            // Logger.Warning(ex, "[{JobId}] Failed to delete orphaned file {Path}", jobId, file);
+                            // Ignore deletion failures for orphaned temp files
                         }
                     }
                 }
-                
+
                 if (deletedCount > 0)
                 {
                     Logger.Information("[{JobId}] Deleted {Count} orphaned temp files", jobId, deletedCount);
