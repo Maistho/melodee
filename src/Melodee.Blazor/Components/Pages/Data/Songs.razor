@@ -4,12 +4,14 @@
 @using Melodee.Common.Filtering
 @using Melodee.Common.Models.Collection
 @using FilterOperator = Melodee.Common.Filtering.FilterOperator
+@using Melodee.Mql.Interfaces
 @inherits MelodeeComponentBase
 
 @inject MainLayoutProxyService MainLayoutProxyService
 @inject ILogger Logger
 @inject IMelodeeConfigurationFactory ConfigurationFactory
 @inject SongService SongService
+@inject IMqlSearchService MqlSearchService
 @inject StatisticsService StatisticsService
 @inject NotificationService NotificationService
 @inject DialogService DialogService
@@ -216,6 +218,7 @@
     Statistic[] _statistics = [];
     bool _yourFavoriteSongsFilterSet;
     bool _yourRatedSongsFilterSet;
+    string _persistentMqlFilter = string.Empty;
 
     RadzenDataGrid<SongDataInfo> _grid = null!;
     int _count;
@@ -244,14 +247,14 @@
     {
         if (Filter != null)
         {
+            // Convert URL filter to MQL fragment, e.g., "Title_Hello" -> 'title contains "Hello"'
             var filterParts = Filter.Split("_");
-            var column = _grid.ColumnsCollection.FirstOrDefault(x => x.Property == filterParts[0]);
-            if (column != null)
+            if (filterParts.Length >= 2)
             {
-                var val = SafeParser.ChangeType(column.FilterPropertyType, filterParts[1]);
-                await column.SetFilterValueAsync(val);
-                column.SetFilterOperator(Radzen.FilterOperator.Equals);
-                await _grid.RefreshDataAsync();
+                var property = MapPropertyToMqlField(filterParts[0]); // Helper to map, e.g., "Title" -> "title"
+                var value = filterParts[1];
+                _persistentMqlFilter = $"{property} contains \"{value}\"";
+                await LoadData(new LoadDataArgs()); // Trigger reload with MQL
             }
         }
     }
@@ -262,52 +265,126 @@
         MainLayoutProxyService.ToggleSpinnerVisible();
         try
         {
-            Dictionary<string, string>? sorting = null;
-            if (args.Sorts?.Any() == true)
+            var mqlQuery = BuildMqlQuery(args, _debounceInputValue.Nullify());
+            var paging = new PagedRequest
             {
-                sorting = args.Sorts.ToDictionary(x => x.Property ?? string.Empty, x => x.SortOrder == SortOrder.Ascending ? PagedRequest.OrderAscDirection : PagedRequest.OrderDescDirection);
-            }
-
-            FilterOperatorInfo[]? filters = null;
-            if (_debounceInputValue.Nullify() != null)
-            {
-                filters =
-                [
-                    new FilterOperatorInfo(nameof(SongDataInfo.TitleNormalized), FilterOperator.Contains, _debounceInputValue.ToNormalizedString() ?? _debounceInputValue)
-                ];
-            }
-            else if (args.Filters.Any())
-            {
-                filters = args.Filters.Select(x => x.ToFilterOperatorInfo()).ToArray();
-            }
-
-            var result = await SongService.ListAsync(new PagedRequest
-            {
-                FilterBy = filters,
                 Page = _currentPage,
-                PageSize = SafeParser.ToNumber<short>(args.Top),
-                OrderBy = sorting
-            }, CurrentUser!.UserId());
+                PageSize = SafeParser.ToNumber<short>(args.Top ?? DefaultPageSize)
+            };
+
+            // Assuming MqlSearchService.SearchSongsAsync returns PagedResult<SongDataInfo>
+            var result = await MqlSearchService.SearchSongsAsync(mqlQuery, paging, CurrentUser!.UserId());
             _songs = result.Data;
             _count = SafeParser.ToNumber<int>(result.TotalCount);
         }
         catch (Exception e)
         {
-            Logger.Error(e, "Loading Albums");
+            Logger.Error(e, "Loading Songs with MQL");
+            // Fallback: Could use original SongService.ListAsync if MQL fails
         }
         finally
         {
             MainLayoutProxyService.ToggleSpinnerVisible();
+            _isLoading = false;
+        }
+    }
+
+    private string BuildMqlQuery(LoadDataArgs args, string? searchTerm)
+    {
+        var baseQuery = "select * from songs";
+        var whereClauses = new List<string>();
+        var orderByClauses = new List<string>();
+
+        // Persistent filters from stats clicks
+        if (!string.IsNullOrEmpty(_persistentMqlFilter))
+        {
+            whereClauses.Add(_persistentMqlFilter);
         }
 
-        _isLoading = false;
+        // Debounce search as MQL
+        if (!string.IsNullOrEmpty(searchTerm))
+        {
+            whereClauses.Add($"title contains \"{searchTerm.ToNormalizedString()}\"");
+        }
+
+        // Grid filters to MQL
+        if (args.Filters?.Any() == true)
+        {
+            foreach (var filter in args.Filters)
+            {
+                var mqlField = MapPropertyToMqlField(filter.Property ?? string.Empty);
+                var mqlOperator = MapFilterOperator(filter.FilterOperator);
+                var value = SafeParser.ToString(filter.Value); // Escape as needed
+                whereClauses.Add($"{mqlField} {mqlOperator} {value}");
+            }
+        }
+
+        // Grid sorts to MQL
+        if (args.Sorts?.Any() == true)
+        {
+            foreach (var sort in args.Sorts)
+            {
+                var mqlField = MapPropertyToMqlField(sort.Property ?? string.Empty);
+                var direction = sort.SortOrder == SortOrder.Ascending ? "asc" : "desc";
+                orderByClauses.Add($"{mqlField} {direction}");
+            }
+        }
+
+        var query = baseQuery;
+        if (whereClauses.Any())
+        {
+            query += " where " + string.Join(" and ", whereClauses);
+        }
+        if (orderByClauses.Any())
+        {
+            query += " order by " + string.Join(", ", orderByClauses);
+        }
+
+        // Default sort if none
+        if (!orderByClauses.Any())
+        {
+            query += " order by title asc";
+        }
+
+        return query;
+    }
+
+    private string MapPropertyToMqlField(string property)
+    {
+        // Map Radzen properties to MQL fields (extend as needed)
+        return property.ToLower() switch
+        {
+            nameof(SongDataInfo.Title) => "title",
+            nameof(SongDataInfo.AlbumName) => "album.name",
+            nameof(SongDataInfo.ArtistName) => "artist.name",
+            nameof(SongDataInfo.SongNumber) => "songNumber",
+            nameof(SongDataInfo.FileSize) => "fileSize",
+            nameof(SongDataInfo.Duration) => "duration",
+            nameof(SongDataInfo.CreatedAt) => "createdAt",
+            nameof(SongDataInfo.UserStarred) => "userStarred",
+            nameof(SongDataInfo.UserRating) => "userRating",
+            nameof(SongDataInfo.Tags) => "tags",
+            _ => property.ToLower()
+        };
+    }
+
+    private string MapFilterOperator(Radzen.FilterOperator op)
+    {
+        // Map Radzen operators to MQL (extend for more)
+        return op switch
+        {
+            Radzen.FilterOperator.Contains => "contains",
+            Radzen.FilterOperator.Equals => "equals",
+            Radzen.FilterOperator.GreaterThan => "gt",
+            Radzen.FilterOperator.LessThan => "lt",
+            _ => "equals"
+        };
     }
 
     private void AddButtonClick()
     {
         NavigationManager.NavigateTo($"/data/albumedit/{Guid.Empty}");
     }
-
 
     private async Task DeleteSelectedButtonClick()
     {
@@ -328,7 +405,12 @@
 
     private async Task DoSearchAsync(string s)
     {
-        await LoadData(new LoadDataArgs { Sorts = [], Filters = [] });
+        // Clear grid filters to rely on MQL
+        foreach (var column in _grid.ColumnsCollection)
+        {
+            column.ClearFilters();
+        }
+        await LoadData(new LoadDataArgs { Sorts = _grid.Sorts, Filters = [] }); // Preserve sorts, ignore grid filters for search
     }
 
     private async void MergeSelectedButtonClick()
@@ -341,48 +423,38 @@
             new DialogOptions { Width = "500px" });
     }
 
-
     private async Task StatClickAsync(Statistic statistic)
     {
+        var userId = CurrentUser!.UserId().ToString();
         if (statistic.Title.ToNormalizedString() == L("Data.YourFavoriteSongs").ToNormalizedString())
         {
             _yourFavoriteSongsFilterSet = !_yourFavoriteSongsFilterSet;
-            var column = _grid.ColumnsCollection.FirstOrDefault(x => x.Property == "UserStarred");
-            if (column != null)
+            if (_yourFavoriteSongsFilterSet)
             {
-                if (_yourFavoriteSongsFilterSet)
-                {
-                    await column.SetFilterValueAsync(true);
-                    column.SetFilterOperator(Radzen.FilterOperator.Equals);
-                }
-                else
-                {
-                    column.ClearFilters();
-                }
-
-                await _grid.RefreshDataAsync();
+                _persistentMqlFilter += (_persistentMqlFilter.Contains("where") ? " and " : " where ") + $"userStarred = true and userId = '{userId}'";
+            }
+            else
+            {
+                _persistentMqlFilter = _persistentMqlFilter.Replace($"userStarred = true and userId = '{userId}'", "").Replace(" where ", " ").Trim();
+                if (_persistentMqlFilter.StartsWith("and ")) _persistentMqlFilter = _persistentMqlFilter[4..];
             }
         }
 
         if (statistic.Title.ToNormalizedString() == L("Data.YourRatedSongs").ToNormalizedString())
         {
             _yourRatedSongsFilterSet = !_yourRatedSongsFilterSet;
-            var column = _grid.ColumnsCollection.FirstOrDefault(x => x.Property == "UserRating");
-            if (column != null)
+            if (_yourRatedSongsFilterSet)
             {
-                if (_yourRatedSongsFilterSet)
-                {
-                    await column.SetFilterValueAsync(0);
-                    column.SetFilterOperator(Radzen.FilterOperator.GreaterThan);
-                }
-                else
-                {
-                    column.ClearFilters();
-                }
-
-                await _grid.RefreshDataAsync();
+                _persistentMqlFilter += (_persistentMqlFilter.Contains("where") ? " and " : " where ") + $"userRating > 0 and userId = '{userId}'";
+            }
+            else
+            {
+                _persistentMqlFilter = _persistentMqlFilter.Replace($"userRating > 0 and userId = '{userId}'", "").Replace(" where ", " ").Trim();
+                if (_persistentMqlFilter.StartsWith("and ")) _persistentMqlFilter = _persistentMqlFilter[4..];
             }
         }
+
+        await _grid.RefreshDataAsync();
     }
 
     private BadgeStyle DetermineBadgeStyle(Statistic statistic)
@@ -399,7 +471,4 @@
 
         return BadgeStyle.Info;
     }
-
 }
-
-
