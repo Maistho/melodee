@@ -675,6 +675,9 @@ public sealed class PodcastService(
     {
         await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
 
+        Log.Information("[PodcastService.ListChannelsAsync] Starting query for UserId={UserId}, Skip={Skip}, Take={Take}", 
+            userId, request.SkipValue, request.TakeValue);
+
         var query = context.PodcastChannels
             .Include(x => x.Episodes)
             .Where(x => x.UserId == userId && !x.IsDeleted)
@@ -690,6 +693,8 @@ public sealed class PodcastService(
         }
 
         var totalCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);
+        
+        Log.Information("[PodcastService.ListChannelsAsync] TotalCount={TotalCount} for UserId={UserId}", totalCount, userId);
 
         var channels = await query
             .OrderBy(x => x.Title)
@@ -713,6 +718,9 @@ public sealed class PodcastService(
                 x.Episodes.Count))
             .ToArrayAsync(cancellationToken)
             .ConfigureAwait(false);
+
+        Log.Information("[PodcastService.ListChannelsAsync] Returning {Count} channels out of {TotalCount} for UserId={UserId}", 
+            channels.Length, totalCount, userId);
 
         return new PagedResult<PodcastChannelDataInfo>
         {

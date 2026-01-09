@@ -133,7 +133,7 @@
 
 @code {
     private RadzenDataGrid<PodcastChannelDataInfo>? _grid;
-    private IEnumerable<PodcastChannelDataInfo> _channels = [];
+    private IEnumerable<PodcastChannelDataInfo>? _channels;
     private int _count;
     private bool _isLoading;
     private bool _podcastEnabled;
@@ -146,7 +146,8 @@
 
     private async Task LoadData(LoadDataArgs args)
     {
-        Logger.Information("[Podcasts] LoadData called. PodcastEnabled={PodcastEnabled}, CurrentUsersId={UserId}", _podcastEnabled, CurrentUsersId);
+        Logger.Information("[Podcasts] LoadData called. PodcastEnabled={PodcastEnabled}, CurrentUsersId={UserId}, Skip={Skip}, Top={Top}", 
+            _podcastEnabled, CurrentUsersId, args.Skip, args.Top);
         
         if (!_podcastEnabled || CurrentUsersId == 0)
         {
@@ -165,14 +166,18 @@
                 PageSize = (short)(args.Top ?? DefaultPageSize)
             };
 
-            Logger.Information("[Podcasts] Calling PodcastService.ListChannelsAsync for UserId={UserId}, Page={Page}, PageSize={PageSize}", 
-                CurrentUsersId, request.Page, request.PageSize);
+            Logger.Information("[Podcasts] Calling PodcastService.ListChannelsAsync for UserId={UserId}, Page={Page}, PageSize={PageSize}, Skip={Skip}, Take={Take}", 
+                CurrentUsersId, request.Page, request.PageSize, request.SkipValue, request.TakeValue);
             
             var result = await PodcastService.ListChannelsAsync(request, CurrentUsersId);
-            _channels = result.Data;
+            
+            Logger.Information("[Podcasts] Result received: TotalCount={TotalCount}, DataCount={DataCount}, DataIsNull={DataIsNull}", 
+                result.TotalCount, result.Data?.Count() ?? 0, result.Data == null);
+            
+            _channels = result.Data ?? Array.Empty<PodcastChannelDataInfo>();
             _count = result.TotalCount;
             
-            Logger.Information("[Podcasts] Loaded {Count} channels, TotalCount={TotalCount}", _channels?.Count() ?? 0, _count);
+            Logger.Information("[Podcasts] Assigned to fields: _channels.Count={Count}, _count={TotalCount}", _channels.Count(), _count);
         }
         catch (Exception ex)
         {
@@ -332,7 +337,9 @@
             
             try
             {
-                var result = await PodcastService.DeleteChannelAsync(channelId, CurrentUsersId);
+                // Hard delete for podcasts - they can be easily re-added from RSS feed
+                // Soft delete would block re-adding the same feed URL due to unique constraint
+                var result = await PodcastService.DeleteChannelAsync(channelId, CurrentUsersId, softDelete: false);
                 
                 NotificationService.Notify(new NotificationMessage
                 {
