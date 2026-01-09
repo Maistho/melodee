@@ -210,5 +210,5 @@ benchmarks/artifacts/
 ## References
 
 - [BenchmarkDotNet Documentation](https://benchmarkdotnet.org/)
-- [API_REVIEW_FIX.md](../../prompts/API_REVIEW_FIX.md) - Streaming performance requirements
-- [PERFORMANCE_REVIEW.md](../../prompts/PERFORMANCE_REVIEW.md) - General performance concerns
+- [API_REVIEW_FIX.md](../../design/API_REVIEW_FIX.md) - Streaming performance requirements
+- [PERFORMANCE_REVIEW.md](../../design/PERFORMANCE_REVIEW.md) - General performance concerns
