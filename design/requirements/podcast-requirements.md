@@ -30,12 +30,20 @@ This document scopes what it would take to implement podcasts in a way that fits
 These are useful for development/testing because they are publicly accessible RSS feeds (no auth required):
 
 - Darknet Diaries — `https://darknetdiaries.com/feed.xml`
-- Syntax.fm — `https://feed.syntax.fm/rss`
-- The Changelog — `https://changelog.com/podcast/feed`
-- Talk Python — `https://talkpython.fm/episodes/rss`
-- Software Engineering Daily — `https://softwareengineeringdaily.com/feed/podcast/`
+- Dissect — `https://feeds.megaphone.fm/dissect`
+- NPR All Songs Considered — `https://feeds.npr.org/510019/podcast.xml`
 - NPR Planet Money — `https://feeds.npr.org/510289/podcast.xml`
 - NPR TED Radio Hour — `https://feeds.npr.org/510298/podcast.xml`
+- Popcast (NYT) — `https://feeds.simplecast.com/W1rB_kgL`
+- Rolling Stone Music Now — `https://feeds.megaphone.fm/rollingstonemusicnow`
+- Science Vs — `https://feeds.megaphone.fm/sciencevs`
+- Software Engineering Daily — `https://softwareengineeringdaily.com/feed/podcast/`
+- Switched on Pop — `https://feeds.megaphone.fm/switchedonpop`
+- Syntax.fm — `https://feed.syntax.fm/rss`
+- TED Talks Daily — `https://feeds.feedburner.com/TEDTalks_audio`
+- Talk Python — `https://talkpython.fm/episodes/rss`
+- The Changelog — `https://changelog.com/podcast/feed`
+- The Daily (NYT) — `https://feeds.simplecast.com/54nAGcIl`
 
 ## Product scope and rollout plan
 
