@@ -11,6 +11,8 @@
 @inject DialogService DialogService
 @inject NavigationManager NavigationManager
 @inject LibraryService LibraryService
+@inject IJSRuntime JsRuntime
+@implements IAsyncDisposable
 
 <PageTitle>@(_channel?.Title ?? L("Navigation.Podcasts"))</PageTitle>
 
@@ -84,36 +86,30 @@
                         <RadzenStack Gap="0.25rem" Style="flex: 1;">
                             <RadzenText TextStyle="TextStyle.Body1" Style="margin: 0;"><strong>@_currentEpisode.Title</strong></RadzenText>
                             <RadzenText TextStyle="TextStyle.Caption" Class="rz-text-secondary-color" Style="margin: 0;">
-                                @(_currentEpisode.Duration.HasValue ? _currentEpisode.Duration.Value.ToString(@"hh\:mm\:ss") : "")
+                                @FormatTime(_duration)
                             </RadzenText>
                         </RadzenStack>
                         <RadzenButton Icon="@(_isPlaying ? "pause" : "play_arrow")" 
                                       Size="ButtonSize.Small" 
                                       ButtonStyle="ButtonStyle.Primary"
-                                      Click="@TogglePlayPause" />
+                                      Click="@TogglePlayPause" 
+                                      Disabled="@(_currentEpisode == null)" />
                         <RadzenButton Icon="stop" 
                                       Size="ButtonSize.Small" 
                                       ButtonStyle="ButtonStyle.Light"
-                                      Click="@StopPlayback" />
+                                      Click="@StopPlayback" 
+                                      Disabled="@(_currentEpisode == null)" />
                     </RadzenStack>
                     
-                    <audio @ref="_audioElement" 
-                           @ontimeupdate="OnTimeUpdate" 
-                           @onended="OnPlaybackEnded"
-                           @onloadedmetadata="OnAudioLoaded"
-                           style="width: 100%;" 
-                           controls>
-                        <source src="@_audioSource" type="@(_currentEpisode.MimeType ?? "audio/mpeg")" />
-                    </audio>
-                    
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
-                        <RadzenText TextStyle="TextStyle.Caption" Style="min-width: 60px;">@_currentTime</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption" Style="min-width: 60px;">@FormatTime(_currentPosition)</RadzenText>
                         <RadzenSlider @bind-Value="_currentPosition" 
                                       Min="0" 
                                       Max="@_duration" 
-                                      Change="@OnSeek"
-                                      Style="flex: 1;" />
-                        <RadzenText TextStyle="TextStyle.Caption" Style="min-width: 60px;">@_totalTime</RadzenText>
+                                      Change="@(async (decimal value) => await OnSeek((double)value))"
+                                      Style="flex: 1;" 
+                                      Disabled="@(_duration == 0)" />
+                        <RadzenText TextStyle="TextStyle.Caption" Style="min-width: 60px;">@FormatTime(_duration)</RadzenText>
                     </RadzenStack>
                 </RadzenStack>
             </RadzenCard>
@@ -487,23 +483,48 @@
         }
     }
 
-    // Playback state
+    // Playback state and JavaScript interop
+    private DotNetObjectReference<PodcastDetail>? _objRef;
+    private IJSObjectReference? _module;
     private PodcastEpisodeDataInfo? _currentEpisode;
-    private ElementReference _audioElement;
-    private string _audioSource = string.Empty;
     private bool _isPlaying;
-    private double _currentPosition;
-    private double _duration;
-    private string _currentTime = "00:00";
-    private string _totalTime = "00:00";
+    private decimal _currentPosition;
+    private decimal _duration;
     private System.Timers.Timer? _heartbeatTimer;
     private System.Timers.Timer? _bookmarkTimer;
     private string _podcastLibraryPath = string.Empty;
+    private bool _hasScrobbled;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        
+        if (firstRender)
+        {
+            try
+            {
+                _objRef = DotNetObjectReference.Create(this);
+                _module = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/podcastPlayer.js");
+                await _module.InvokeVoidAsync("initializeAudio", _objRef);
+                Logger.Information("[PodcastDetail] Podcast player initialized");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "[PodcastDetail] Failed to initialize podcast player");
+            }
+        }
+    }
 
     private async Task PlayEpisode(PodcastEpisodeDataInfo episode)
     {
         try
         {
+            if (_module == null)
+            {
+                Logger.Warning("[PodcastDetail] Cannot play episode - player module not initialized");
+                return;
+            }
+
             // Get podcast library path
             if (string.IsNullOrEmpty(_podcastLibraryPath))
             {
@@ -522,19 +543,29 @@
                 _podcastLibraryPath = libraryResult.Data.Path;
             }
 
-            // Set current episode and build audio source
+            // Set current episode
             _currentEpisode = episode;
-            _audioSource = $"/api/v1/podcasts/episodes/{episode.Id}/stream";
+            _duration = (decimal)(episode.Duration?.TotalSeconds ?? 0);
+            _hasScrobbled = false;
             
             Logger.Information("[PodcastDetail] Starting playback for episode {EpisodeId}: {Title}", episode.Id, episode.Title);
 
             // Check for existing bookmark
+            double startPosition = 0;
             var bookmarkResult = await PodcastPlaybackService.GetBookmarkAsync(CurrentUsersId, episode.Id);
             if (bookmarkResult.IsSuccess && bookmarkResult.Data != null)
             {
-                _currentPosition = bookmarkResult.Data.PositionSeconds;
-                Logger.Information("[PodcastDetail] Resuming from bookmark position: {Position}s", _currentPosition);
+                startPosition = bookmarkResult.Data.PositionSeconds;
+                Logger.Information("[PodcastDetail] Resuming from bookmark position: {Position}s", startPosition);
             }
+
+            // Build audio source URL - use OpenSubsonic endpoint
+            var audioSource = $"/rest/streamPodcastEpisode.view?id=podcast:episode:{episode.Id}";
+            
+            // Load and play episode
+            await _module.InvokeVoidAsync("loadEpisode", audioSource, startPosition);
+            await _module.InvokeVoidAsync("playEpisode");
+            _isPlaying = true;
 
             // Start heartbeat timer (every 30 seconds)
             _heartbeatTimer?.Dispose();
@@ -565,70 +596,144 @@
 
     private async Task TogglePlayPause()
     {
-        _isPlaying = !_isPlaying;
-        await InvokeAsync(StateHasChanged);
+        if (_module == null || _currentEpisode == null) return;
+
+        try
+        {
+            if (_isPlaying)
+            {
+                await _module.InvokeVoidAsync("pauseEpisode");
+                _heartbeatTimer?.Stop();
+                _bookmarkTimer?.Stop();
+            }
+            else
+            {
+                await _module.InvokeVoidAsync("playEpisode");
+                _heartbeatTimer?.Start();
+                _bookmarkTimer?.Start();
+            }
+            
+            _isPlaying = !_isPlaying;
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "[PodcastDetail] Error toggling playback");
+        }
     }
 
     private async Task StopPlayback()
     {
-        _currentEpisode = null;
-        _audioSource = string.Empty;
-        _isPlaying = false;
-        _currentPosition = 0;
-        _duration = 0;
-        
-        _heartbeatTimer?.Stop();
-        _heartbeatTimer?.Dispose();
-        _bookmarkTimer?.Stop();
-        _bookmarkTimer?.Dispose();
+        if (_module == null) return;
 
+        try
+        {
+            await _module.InvokeVoidAsync("stopEpisode");
+            
+            _currentEpisode = null;
+            _isPlaying = false;
+            _currentPosition = 0;
+            _duration = 0;
+            _hasScrobbled = false;
+            
+            _heartbeatTimer?.Stop();
+            _heartbeatTimer?.Dispose();
+            _heartbeatTimer = null;
+            
+            _bookmarkTimer?.Stop();
+            _bookmarkTimer?.Dispose();
+            _bookmarkTimer = null;
+
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "[PodcastDetail] Error stopping playback");
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnTimeUpdate(double currentTime, double duration)
+    {
+        _currentPosition = (decimal)currentTime;
+        if (duration > 0)
+        {
+            _duration = (decimal)duration;
+        }
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task OnTimeUpdate(ChangeEventArgs args)
+    [JSInvokable]
+    public async Task OnMetadataLoaded(double duration)
     {
-        // This will be called by the audio element's timeupdate event
-        // The actual implementation would need JavaScript interop
-        await Task.CompletedTask;
-    }
-
-    private async Task OnAudioLoaded(EventArgs args)
-    {
-        // Audio metadata loaded - duration is now available
-        // This would need JavaScript interop to get actual duration
-        await Task.CompletedTask;
+        _duration = (decimal)duration;
+        Logger.Information("[PodcastDetail] Episode duration loaded: {Duration}s", duration);
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task OnSeek(double value)
     {
-        _currentPosition = value;
-        // Would need JavaScript interop to actually seek the audio element
-        await Task.CompletedTask;
+        if (_module == null) return;
+
+        try
+        {
+            await _module.InvokeVoidAsync("seekTo", value);
+            _currentPosition = (decimal)value;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "[PodcastDetail] Error seeking");
+        }
     }
 
-    private async Task OnPlaybackEnded(EventArgs args)
+    [JSInvokable]
+    public async Task OnEpisodeEnded()
     {
         if (_currentEpisode == null) return;
 
         try
         {
-            // Scrobble the episode as completed
-            var duration = _currentEpisode.Duration?.TotalSeconds ?? _duration;
-            await PodcastPlaybackService.ScrobbleAsync(
-                CurrentUsersId,
-                _currentEpisode.Id,
-                (int)duration,
-                "Melodee.Blazor");
+            Logger.Information("[PodcastDetail] Episode {EpisodeId} playback completed", _currentEpisode.Id);
 
-            Logger.Information("[PodcastDetail] Episode {EpisodeId} playback completed and scrobbled", _currentEpisode.Id);
+            // Scrobble if not already scrobbled
+            if (!_hasScrobbled)
+            {
+                var duration = _currentEpisode.Duration?.TotalSeconds ?? (double)_duration;
+                await PodcastPlaybackService.ScrobbleAsync(
+                    CurrentUsersId,
+                    _currentEpisode.Id,
+                    (int)duration,
+                    "Melodee.Blazor");
+                
+                _hasScrobbled = true;
+                Logger.Information("[PodcastDetail] Episode {EpisodeId} scrobbled on completion", _currentEpisode.Id);
+            }
 
             // Clear current episode
             await StopPlayback();
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "[PodcastDetail] Error handling playback end");
+            Logger.Error(ex, "[PodcastDetail] Error handling episode end");
         }
+    }
+
+    [JSInvokable]
+    public Task OnAudioError(int errorCode)
+    {
+        Logger.Error("[PodcastDetail] Audio error occurred for episode {EpisodeId} with error code {ErrorCode}",
+            _currentEpisode?.Id, errorCode);
+        
+        NotificationService.Notify(new NotificationMessage
+        {
+            Severity = NotificationSeverity.Error,
+            Summary = L("Message.Error"),
+            Detail = $"Audio playback error (code {errorCode})",
+            Duration = ToastTime
+        });
+
+        _isPlaying = false;
+        return InvokeAsync(StateHasChanged);
     }
 
     private async Task SendHeartbeat()
@@ -647,18 +752,22 @@
                 _currentEpisode.Id, _currentPosition);
 
             // Check if we should scrobble (50% or 240 seconds)
-            var duration = _currentEpisode.Duration?.TotalSeconds ?? _duration;
-            var threshold = Math.Max(duration * 0.5, 240);
-            
-            if (_currentPosition >= threshold)
+            if (!_hasScrobbled)
             {
-                await PodcastPlaybackService.ScrobbleAsync(
-                    CurrentUsersId,
-                    _currentEpisode.Id,
-                    (int)_currentPosition,
-                    "Melodee.Blazor");
+                var duration = _currentEpisode.Duration?.TotalSeconds ?? (double)_duration;
+                var threshold = Math.Max(duration * 0.5, 240);
+                
+                if ((double)_currentPosition >= threshold)
+                {
+                    await PodcastPlaybackService.ScrobbleAsync(
+                        CurrentUsersId,
+                        _currentEpisode.Id,
+                        (int)_currentPosition,
+                        "Melodee.Blazor");
 
-                Logger.Information("[PodcastDetail] Episode {EpisodeId} scrobbled at threshold", _currentEpisode.Id);
+                    _hasScrobbled = true;
+                    Logger.Information("[PodcastDetail] Episode {EpisodeId} scrobbled at threshold", _currentEpisode.Id);
+                }
             }
         }
         catch (Exception ex)
@@ -687,10 +796,32 @@
         }
     }
 
-    public override void Dispose()
+    private static string FormatTime(decimal seconds)
     {
-        _heartbeatTimer?.Dispose();
-        _bookmarkTimer?.Dispose();
-        base.Dispose();
+        var ts = TimeSpan.FromSeconds((double)seconds);
+        return ts.Hours > 0 
+            ? ts.ToString(@"h\:mm\:ss") 
+            : ts.ToString(@"m\:ss");
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            _heartbeatTimer?.Dispose();
+            _bookmarkTimer?.Dispose();
+
+            if (_module != null)
+            {
+                await _module.InvokeVoidAsync("cleanupAudio");
+                await _module.DisposeAsync();
+            }
+
+            _objRef?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "[PodcastDetail] Error during disposal");
+        }
     }
 }

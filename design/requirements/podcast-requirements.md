@@ -19,12 +19,11 @@
 - ✅ Blazor UI: Channel list, add channel dialog, channel detail with episodes
 - ✅ Playback tracking data models: `UserPodcastEpisodePlayHistory`, `PodcastEpisodeBookmark`
 - ✅ Playback tracking service: `PodcastPlaybackService` (NowPlaying, Scrobble, Bookmarks)
-
-🚧 **In Progress (Current Session):**
-- 🚧 Blazor UI: Episode playback controls on PodcastDetail page
-- 🚧 Blazor UI: Progress bar with resume position
-- 🚧 Blazor UI: Auto-save bookmarks during playback
-- 🚧 Blazor UI: "Now playing" heartbeat mechanism
+- ✅ **Blazor UI: Episode playback controls with JavaScript interop**
+- ✅ **Blazor UI: Progress bar with seek and resume from bookmark**
+- ✅ **Blazor UI: Auto-save bookmarks every 10 seconds during playback**
+- ✅ **Blazor UI: "Now playing" heartbeat every 30 seconds**
+- ✅ **JavaScript module: podcastPlayer.js for HTML5 audio control**
 
 ⏳ **Remaining for Phase 1:**
 - ⏳ OpenSubsonic: Update `scrobble.view` endpoint to handle podcast episodes
@@ -47,15 +46,18 @@
 - All timestamps use NodaTime `Instant` for timezone-aware storage
 - Foreign keys cascade delete (when user or episode deleted, tracking is also deleted)
 
-**Blazor Playback Implementation (Current):**
-- HTML5 `<audio>` element with custom controls
+**Blazor Playback Implementation (✅ COMPLETE):**
+- JavaScript interop module (`podcastPlayer.js`) controls HTML5 Audio API
 - Direct service injection (NO HTTP calls to backend API from Blazor components)
-- Bookmark saves every 10 seconds during playback
-- Heartbeat sends "now playing" every 30 seconds
-- Scrobble on completion or when threshold reached
-- Resume from bookmark on page load if exists
+- Bookmark saves every 10 seconds during playback (timer-based)
+- Heartbeat sends "now playing" every 30 seconds (timer-based)
+- Scrobble on completion OR when 50%/240s threshold reached (prevents duplicates)
+- Resume from bookmark on episode load if bookmark exists
+- Proper resource disposal (timers, JS module, .NET object reference)
+- Audio streaming via OpenSubsonic endpoint: `/rest/streamPodcastEpisode.view?id=podcast:episode:{id}`
+- See `/docs/podcast-playback-blazor-implementation.md` for detailed implementation notes
 
-**OpenSubsonic Integration (Next):**
+**OpenSubsonic Integration (NEXT - Priority B):**
 - Episode IDs use format: `podcast:episode:{episodeId}`
 - `scrobble.view` needs to detect podcast episode IDs and route to `PodcastPlaybackService`
 - Bookmarks stored per user, accessible via OpenSubsonic bookmark endpoints
