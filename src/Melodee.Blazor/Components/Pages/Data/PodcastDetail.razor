@@ -103,12 +103,18 @@
                     
                     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
                         <RadzenText TextStyle="TextStyle.Caption" Style="min-width: 60px;">@FormatTime(_currentPosition)</RadzenText>
-                        <RadzenSlider @bind-Value="_currentPosition" 
-                                      Min="0" 
-                                      Max="@_duration" 
-                                      Change="@(async (decimal value) => await OnSeek((double)value))"
-                                      Style="flex: 1;" 
-                                      Disabled="@(_duration == 0)" />
+                        @if (_duration > 0)
+                        {
+                            <RadzenSlider @bind-Value="_currentPosition" 
+                                          Min="0" 
+                                          Max="@_duration" 
+                                          Change="@(async (decimal value) => await OnSeek((double)value))"
+                                          Style="flex: 1;" />
+                        }
+                        else
+                        {
+                            <div style="flex: 1; height: 20px; background: var(--rz-base-200); border-radius: 4px;"></div>
+                        }
                         <RadzenText TextStyle="TextStyle.Caption" Style="min-width: 60px;">@FormatTime(_duration)</RadzenText>
                     </RadzenStack>
                 </RadzenStack>
@@ -190,6 +196,15 @@
                     <RadzenDataGridColumn Title="@L("Common.Actions")" Width="150px" Sortable="false" Filterable="false">
                         <Template Context="data">
                             <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem">
+                                @* Play button only available for downloaded episodes *@
+                                @if (data.DownloadStatus == Melodee.Common.Enums.PodcastEpisodeDownloadStatus.Downloaded)
+                                {
+                                    <RadzenButton Icon="play_arrow" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Success"
+                                                  Click="@(() => PlayEpisode(data))"
+                                                  title="@L("Actions.Play")" />
+                                }
+                                
+                                @* Download button shown if not downloaded and not in progress *@
                                 @if (data.DownloadStatus == Melodee.Common.Enums.PodcastEpisodeDownloadStatus.None || 
                                      data.DownloadStatus == Melodee.Common.Enums.PodcastEpisodeDownloadStatus.Failed)
                                 {
@@ -197,15 +212,26 @@
                                                   Click="@(() => QueueDownload(data.Id))"
                                                   title="@L("Actions.Download")" />
                                 }
+                                
+                                @* Show downloading indicator *@
+                                @if (data.DownloadStatus == Melodee.Common.Enums.PodcastEpisodeDownloadStatus.Queued ||
+                                     data.DownloadStatus == Melodee.Common.Enums.PodcastEpisodeDownloadStatus.Downloading)
+                                {
+                                    <RadzenButton Icon="hourglass_empty" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light"
+                                                  Disabled="true"
+                                                  title="@L("Podcast.StatusDownloading")" />
+                                }
+                                
+                                @* Delete button shown if downloaded *@
                                 @if (data.DownloadStatus == Melodee.Common.Enums.PodcastEpisodeDownloadStatus.Downloaded)
                                 {
-                                    <RadzenButton Icon="play_arrow" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Success"
-                                                  Click="@(() => PlayEpisode(data))"
-                                                  title="@L("Actions.Play")" />
                                     <RadzenButton Icon="delete" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light"
                                                   Click="@(() => DeleteEpisode(data.Id))"
                                                   title="@L("Actions.Delete")" />
                                 }
+                                }
+                                
+                                @* External link always available if URL exists *@
                                 @if (!string.IsNullOrEmpty(data.EnclosureUrl))
                                 {
                                     <RadzenButton Icon="open_in_new" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light"
@@ -559,8 +585,12 @@
                 Logger.Information("[PodcastDetail] Resuming from bookmark position: {Position}s", startPosition);
             }
 
-            // Build audio source URL - use OpenSubsonic endpoint
-            var audioSource = $"/rest/streamPodcastEpisode.view?id=podcast:episode:{episode.Id}";
+            // Build audio source URL - use relative URL so browser sends authentication cookie
+            // The melodee_blazor_token cookie is automatically sent by the browser for same-origin requests
+            var audioSource = $"/rest/streamPodcastEpisode?id=podcast:episode:{episode.Id}";
+            
+            Logger.Information("[PodcastDetail] Loading episode {EpisodeId} from {AudioSource} at position {StartPosition}s", 
+                episode.Id, audioSource, startPosition);
             
             // Load and play episode
             await _module.InvokeVoidAsync("loadEpisode", audioSource, startPosition);

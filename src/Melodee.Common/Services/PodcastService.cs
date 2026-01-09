@@ -274,6 +274,38 @@ public sealed class PodcastService(
         }
     }
 
+    /// <summary>
+    /// Get a podcast episode by ID without user filtering.
+    /// Used for streaming when authentication is handled at the endpoint level.
+    /// </summary>
+    public async Task<OperationResult<PodcastEpisode?>> GetEpisodeForStreamingAsync(
+        int episodeId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+            var episode = await context.PodcastEpisodes
+                .Include(x => x.PodcastChannel)
+                .FirstOrDefaultAsync(x => x.Id == episodeId, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (episode == null)
+            {
+                Logger.Warning("[{ServiceName}] Episode {EpisodeId} not found for streaming", nameof(PodcastService), episodeId);
+                return new OperationResult<PodcastEpisode?>("Episode not found") { Data = null };
+            }
+
+            return new OperationResult<PodcastEpisode?> { Data = episode };
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "[{ServiceName}] Error getting episode {EpisodeId} for streaming", nameof(PodcastService), episodeId);
+            return new OperationResult<PodcastEpisode?>(ex.Message) { Data = null };
+        }
+    }
+
     public async Task<OperationResult<bool>> QueueDownloadAsync(
         int episodeId,
         int userId,

@@ -26,15 +26,42 @@
 - ✅ **JavaScript module: podcastPlayer.js for HTML5 audio control**
 
 ⏳ **Remaining for Phase 1:**
-- ⏳ OpenSubsonic: Update `scrobble.view` endpoint to handle podcast episodes
-- ⏳ OpenSubsonic: Update `getNowPlaying.view` to include podcast episodes
-- ⏳ OpenSubsonic: Implement `getBookmarks.view` for podcast episodes
-- ⏳ OpenSubsonic: Implement `createBookmark.view` for podcast episodes  
-- ⏳ OpenSubsonic: Implement `deleteBookmark.view` for podcast episodes
 - ⏳ Native API: `/api/v1/podcasts/episodes/{id}/play` endpoint
 - ⏳ Native API: `/api/v1/podcasts/episodes/{id}/bookmark` endpoints
 - ⏳ Blazor UI: Display played/unplayed indicators in episode list
 - ⏳ Blazor UI: Show play history in episode detail
+
+**Phase 2: OpenSubsonic Client Playback Tracking (NOT IMPLEMENTED)**
+
+Currently, podcast playback tracking (NowPlaying, Scrobble, Bookmarks) **only works in Melodee.Blazor**, not in OpenSubsonic clients like Feishin, Symfonium, or Submarine.
+
+❌ **OpenSubsonic Client Gaps:**
+- `/rest/scrobble.view` only recognizes music (`song:*` IDs), not podcast episodes (`podcast:episode:*` IDs)
+- `/rest/getNowPlaying.view` only returns currently playing songs, not podcast episodes
+- `/rest/getBookmarks.view` does not exist for podcasts (only for music)
+- `/rest/createBookmark.view` does not exist for podcasts
+- `/rest/deleteBookmark.view` does not exist for podcasts
+- OpenSubsonic `ScrobbleService` in `OpenSubsonicApiService.cs` only handles `DatabaseSongScrobbleInfo`, not podcast episodes
+
+**Root Cause:**
+- The `ScrobbleService` calls `DatabaseSongScrobbleInfoForSongApiKey()` which only queries the `Songs` table
+- No equivalent method exists for podcast episodes
+- `ApiKeyFromId()` can parse `podcast:episode:*` IDs correctly, but no handler processes them
+
+**Impact:**
+- OpenSubsonic clients can **stream** podcast episodes via `/rest/streamPodcastEpisode`
+- OpenSubsonic clients **cannot track** listening progress, bookmarks, or scrobbles
+- Users must use Melodee.Blazor for full podcast playback tracking experience
+
+**Required for Phase 2:**
+- ⏳ Extend `/rest/scrobble.view` to detect `podcast:episode:*` IDs and call `PodcastPlaybackService.ScrobbleAsync()`
+- ⏳ Extend `/rest/getNowPlaying.view` to query both `UserSongPlayHistory` (IsNowPlaying=true) AND `UserPodcastEpisodePlayHistory` (IsNowPlaying=true)
+- ⏳ Implement `/rest/getBookmarks.view` to return podcast episode bookmarks (similar to music bookmarks)
+- ⏳ Implement `/rest/createBookmark.view` to call `PodcastPlaybackService.SaveBookmarkAsync()` for podcast episodes
+- ⏳ Implement `/rest/deleteBookmark.view` to delete podcast episode bookmarks
+- ⏳ Add `DatabasePodcastEpisodeScrobbleInfo` method to retrieve episode metadata for scrobbling
+- ⏳ Update `ScrobbleService` to handle both song and podcast episode IDs
+- ⏳ Test with real OpenSubsonic clients (Feishin, Symfonium) to verify playback tracking works end-to-end
 
 ### Implementation Notes (2026-01-09)
 
@@ -415,8 +442,18 @@ Localization:
 
 ## Acceptance criteria (Phase 1)
 
-- OpenSubsonic endpoints listed above return `200` and function end-to-end with at least one OpenSubsonic client known to support podcasts.
-- A user with `HasPodcastRole=false` cannot create/list/refresh/download podcasts.
-- Podcast refresh job can ingest a real-world feed and populate episodes.
-- Downloaded episode can be streamed without exposing arbitrary file access.
-- Jobs appear in the existing jobs monitoring UI with meaningful status.
+- ✅ OpenSubsonic streaming endpoint (`/rest/streamPodcastEpisode`) works with OpenSubsonic clients
+- ✅ Blazor UI can play podcast episodes with full playback tracking (NowPlaying, Scrobble, Bookmarks)
+- ❌ **OpenSubsonic clients can stream but NOT track playback** (deferred to Phase 2)
+- ✅ A user with `HasPodcastRole=false` cannot create/list/refresh/download podcasts
+- ✅ Podcast refresh job can ingest a real-world feed and populate episodes
+- ✅ Downloaded episode can be streamed without exposing arbitrary file access
+- ✅ Jobs appear in the existing jobs monitoring UI with meaningful status
+
+## Acceptance criteria (Phase 2 - Future)
+
+- OpenSubsonic clients (Feishin, Symfonium, etc.) can track podcast playback via `/rest/scrobble.view`
+- OpenSubsonic `/rest/getNowPlaying.view` returns both music and podcast episodes currently playing
+- OpenSubsonic bookmark endpoints work for podcast episodes (get, create, delete)
+- Podcast playback history is visible in Blazor UI with played/unplayed indicators
+- All podcast functionality tested end-to-end with at least 2 different OpenSubsonic clients

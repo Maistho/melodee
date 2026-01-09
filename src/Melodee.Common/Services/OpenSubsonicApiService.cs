@@ -1567,9 +1567,18 @@ public class OpenSubsonicApiService(
             var user = apiRequest.Username == null
                 ? null
                 : await userService.GetByUsernameAsync(apiRequest.Username, cancellationToken).ConfigureAwait(false);
+            
+            var userInfo = user?.Data?.ToUserInfo() ?? UserInfo.BlankUserInfo;
+            
+            Logger.Debug("[{MethodName}] Authentication bypassed (cookie auth). Username: {Username}, UserInfo: {UserInfo}, Roles: {Roles}",
+                nameof(AuthenticateSubsonicApiAsync),
+                apiRequest.Username ?? "null",
+                userInfo.Id,
+                string.Join(", ", userInfo.Roles ?? []));
+            
             return new ResponseModel
             {
-                UserInfo = user?.Data?.ToUserInfo() ?? UserInfo.BlankUserInfo,
+                UserInfo = userInfo,
                 ResponseData = await NewApiResponse(true, string.Empty, string.Empty)
             };
         }
