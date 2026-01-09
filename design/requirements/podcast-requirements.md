@@ -28,7 +28,12 @@ This document scopes what it would take to implement podcasts in a way that fits
 ### Example test feeds (free)
 
 These are useful for development/testing because they are publicly accessible RSS feeds (no auth required):
-
+- Accidental Tech Podcast — `https://atp.fm/episodes?format=rss`
+- Adventure Zone — `https://www.maximumfun.org/podcasts/adventure-zone/rss`
+- Brave Technologist — `https://rss.libsyn.com/shows/332183/destinations/2705240.xml`
+- CodeNewbie — `https://www.codenewbie.org/podcast/feed`
+- Command Line Heroes — `https://www.redhat.com/en/command-line-heroes-podcast/feed`
+- Dark Matter — `https://www.maximumfun.org/podcasts/dark-matter/rss`
 - Darknet Diaries — `https://darknetdiaries.com/feed.xml`
 - Dissect — `https://feeds.megaphone.fm/dissect`
 - NPR All Songs Considered — `https://feeds.npr.org/510019/podcast.xml`

@@ -233,10 +233,10 @@
                         {
                             <RadzenTableRow>
                                 <RadzenTableCell>
-                                    <RadzenLink Path="@($"/podcasts/{episode.PodcastChannel.ApiKey}/episodes/{episode.ApiKey}")">@episode.Title</RadzenLink>
+                                    <RadzenLink Path="@($"/podcasts/{episode.PodcastChannel?.ApiKey}/episodes/{episode.ApiKey}")">@episode.Title</RadzenLink>
                                 </RadzenTableCell>
                                 <RadzenTableCell>
-                                    <RadzenLink Path="@($"/podcasts/{episode.PodcastChannel.ApiKey}")">@episode.PodcastChannel.Title</RadzenLink>
+                                    <RadzenLink Path="@($"/podcasts/{episode.PodcastChannel?.ApiKey}")">@episode.PodcastChannel?.Title</RadzenLink>
                                 </RadzenTableCell>
                                 <RadzenTableCell>@episode.PublishDate</RadzenTableCell>
                             </RadzenTableRow>

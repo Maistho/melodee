@@ -333,11 +333,11 @@
             }
 
             FilterOperatorInfo[]? filters = null;
-            if (args.Filters.Any())
+            if (args.Filters?.Any() == true)
             {
-                filters = args.Filters.Select(x => new FilterOperatorInfo(x.Property,
+                filters = args.Filters.Select(x => new FilterOperatorInfo(x.Property ?? string.Empty,
                         SafeParser.ToEnum<FilterOperator>(x.FilterOperator.ToDictionary()),
-                        x.FilterValue))
+                        x.FilterValue ?? string.Empty))
                     .ToArray();
             }
 

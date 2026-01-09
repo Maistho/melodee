@@ -466,12 +466,12 @@
         {
             var searchResult = await MusicBrainzRepository.SearchArtist(new ArtistQuery
             {
-                Name = arg.Filter
+                Name = arg.Filter ?? string.Empty
             }, 10);
-            _musicBrainzArtists = searchResult.Data
+            _musicBrainzArtists = searchResult.Data?
                 .Where(x => x.MusicBrainzId != null)
                 .Select(x => new KeyValue(x.MusicBrainzId!.ToString()!, x.Name))
-                .ToList();
+                .ToList() ?? [];
         }
         finally
         {
@@ -489,7 +489,7 @@
                 PageSize = 10,
                 FilterBy =
                 [
-                    new FilterOperatorInfo(nameof(Library.Name), FilterOperator.Contains, arg.Filter)
+                    new FilterOperatorInfo(nameof(Library.Name), FilterOperator.Contains, arg.Filter ?? string.Empty)
                 ]
             });
             _libraries = listResult.Data.ToList();

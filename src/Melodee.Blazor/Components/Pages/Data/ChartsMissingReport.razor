@@ -278,11 +278,11 @@
     {
         var result = await DialogService.OpenAsync<MissingAlbumIdentifyDialog>(
             L("ChartsMissingReport.IdentifyMissingAlbum"),
-            new Dictionary<string, object?>
+            new Dictionary<string, object>
             {
                 { nameof(MissingAlbumIdentifyDialog.ArtistName), item.ArtistName },
                 { nameof(MissingAlbumIdentifyDialog.AlbumTitle), item.AlbumTitle },
-                { nameof(MissingAlbumIdentifyDialog.ReleaseYear), item.ReleaseYear },
+                { nameof(MissingAlbumIdentifyDialog.ReleaseYear), item.ReleaseYear ?? (object)0 },
                 { nameof(MissingAlbumIdentifyDialog.ChartCount), item.ChartCount },
                 { nameof(MissingAlbumIdentifyDialog.ChartService), ChartService }
             },

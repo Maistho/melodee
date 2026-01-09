@@ -164,7 +164,7 @@ public sealed class PodcastsController(
 
         return Ok(new
         {
-            Data = result.Data.Select(x => new
+            Data = result.Data!.Select(x => new
             {
                 x.Id,
                 x.Title,
@@ -174,7 +174,7 @@ public sealed class PodcastsController(
                 x.EnclosureLength,
                 x.Guid
             }),
-            TotalCount = result.AdditionalData.TryGetValue("TotalCount", out var count) ? count : 0
+            TotalCount = result.AdditionalData!.TryGetValue("TotalCount", out var count) && count is int intCount ? intCount : 0
         });
     }
 

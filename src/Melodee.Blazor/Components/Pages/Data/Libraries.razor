@@ -186,7 +186,7 @@
                     new FilterOperatorInfo(nameof(Library.Name), FilterOperator.Contains, _debounceInputValue.ToNormalizedString() ?? _debounceInputValue)
                 ];
             }
-            else if (args.Filters.Any())
+            else if (args.Filters?.Any() == true)
             {
                 filters = args.Filters.Select(x => x.ToFilterOperatorInfo()).ToArray();
             }

@@ -346,7 +346,7 @@ public sealed class MqlSearchService(
 
         var baseQuery = context.PodcastEpisodes
             .Include(x => x.PodcastChannel)
-            .Where(x => x.PodcastChannel.UserId == userId && !x.PodcastChannel.IsDeleted)
+            .Where(x => x.PodcastChannel != null && x.PodcastChannel.UserId == userId && !x.PodcastChannel.IsDeleted)
             .AsNoTracking();
 
         var compiler = new MqlPodcastEpisodeCompiler();

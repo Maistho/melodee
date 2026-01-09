@@ -261,7 +261,7 @@
 
     void OnTopSongRowClick(DataGridRowMouseEventArgs<TopItemStat> args)
     {
-        if (!string.IsNullOrWhiteSpace(args.Data.Extra) && Guid.TryParse(args.Data.Extra, out var albumApiKey))
+        if (!string.IsNullOrWhiteSpace(args.Data?.Extra) && Guid.TryParse(args.Data.Extra, out var albumApiKey))
         {
             NavigationManager.NavigateTo($"/data/album/{albumApiKey}");
         }

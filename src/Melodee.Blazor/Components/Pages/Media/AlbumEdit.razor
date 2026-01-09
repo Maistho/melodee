@@ -349,9 +349,9 @@
         {
             var searchResult = await ArtistSearchEngineService.DoSearchAsync(new ArtistQuery
             {
-                Name = arg.Filter
+                Name = arg.Filter ?? string.Empty
             }, 10);
-            _artistSearchResults = searchResult.Data.ToList();
+            _artistSearchResults = searchResult.Data?.ToList() ?? [];
         }
         finally
         {

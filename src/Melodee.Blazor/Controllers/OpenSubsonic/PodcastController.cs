@@ -61,7 +61,7 @@ public class PodcastController(
 
             if (id.Nullify() != null)
             {
-                var channelId = ParsePodcastChannelId(id);
+                var channelId = ParsePodcastChannelId(id!);
                 if (channelId == null)
                 {
                     return BadRequest(CreateResponse(new Error(0, "Invalid channel id")));
@@ -469,7 +469,7 @@ public class PodcastController(
                 return NotFound(CreateResponse(Error.GenericError("Podcast library not configured")));
             }
 
-            var filePath = Path.Combine(podcastLibrary.Path, episode.LocalPath);
+            var filePath = Path.Combine(podcastLibrary.Path, episode.LocalPath ?? string.Empty);
             if (!System.IO.File.Exists(filePath))
             {
                 return NotFound(CreateResponse(Error.GenericError("Episode file not found")));

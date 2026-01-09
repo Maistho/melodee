@@ -1069,9 +1069,9 @@
 
         await DialogService.OpenAsync<ArtistValidationDialog>(
             L("ArtistDetail.ValidateAlbumsTitle", _artist.Name),
-            new Dictionary<string, object?>
+            new Dictionary<string, object>
             {
-                { nameof(ArtistValidationDialog.ValidationResult), validationResult.Data },
+                { nameof(ArtistValidationDialog.ValidationResult), validationResult.Data! },
                 { nameof(ArtistValidationDialog.IsLoading), false }
             },
             new DialogOptions

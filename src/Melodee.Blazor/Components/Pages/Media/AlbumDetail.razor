@@ -717,7 +717,7 @@
     {
         Console.WriteLine($"++ OnMenuItemClicked arg [{arg}]");
         OperationResult<bool>? result;
-        switch ((MenuItems)arg.Value)
+        switch ((MenuItems)(arg.Value ?? 0))
         {
             case MenuItems.RenumberSongs:
                 _album = await MediaEditService.RenumberSongsAsync(_album).ConfigureAwait(false);
