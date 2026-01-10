@@ -1,4 +1,5 @@
 @inherits MelodeeComponentBase
+@using Microsoft.JSInterop
 
 @inject DialogService DialogService
 @inject PodcastOpmlService PodcastOpmlService
@@ -220,7 +221,8 @@
     private async Task DownloadFile(string fileName, string content)
     {
         var bytes = System.Text.Encoding.UTF8.GetBytes(content);
-        var base64 = Convert.ToBase64String(bytes);
-        await JsRuntime.InvokeVoidAsync("downloadFile", fileName, "application/xml", base64);
+        var fileStream = new MemoryStream(bytes);
+        using var streamRef = new DotNetStreamReference(stream: fileStream);
+        await JsRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
     }
 }

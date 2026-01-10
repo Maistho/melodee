@@ -431,12 +431,12 @@ curl "http://your-server:port/rest/search3?query=love&u=username&t=$TOKEN&s=$SAL
 - ✅ Cover art retrieval
 - ✅ Lyrics support
 - ✅ Similar songs/artists
+- ✅ Podcasts (subscribe, download, stream, bookmarks)
 
 ### Partially Supported
 
 - ⚠️ Bookmarks (basic support)
 - ⚠️ Shares (via Melodee native shares)
-- ⚠️ Podcasts (not implemented - music-focused)
 
 ### Not Applicable
 

@@ -5024,4 +5024,13 @@
   <data name="ArtistLookup.Title" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Artist Lookup</value>
   </data>
+  <data name="Message.Error" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Error</value>
+  </data>
+  <data name="Message.Success" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Success</value>
+  </data>
+  <data name="Message.Warning" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Warning</value>
+  </data>
 </root>

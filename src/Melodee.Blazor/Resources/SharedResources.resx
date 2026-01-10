@@ -5024,4 +5024,13 @@
   <data name="Podcast.Channel" xml:space="preserve">
     <value>Channel</value>
   </data>
+  <data name="Message.Error" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="Message.Success" xml:space="preserve">
+    <value>Success</value>
+  </data>
+  <data name="Message.Warning" xml:space="preserve">
+    <value>Warning</value>
+  </data>
 </root>

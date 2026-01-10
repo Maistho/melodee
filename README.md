@@ -58,6 +58,7 @@ Experience Melodee before installing! Our official demo server is available at:
 - **⚡ Automatic Ingestion**: Drop files → play music (validated albums flow through automatically)
 - **🔄 Automated Jobs**: Cron-based scheduling with intelligent job chaining
 - **📝 User Requests**: Submit and track requests for missing albums/songs, with automatic completion when matches are detected
+- **🎙️ Podcast Support**: Subscribe to podcasts, auto-download episodes, playback tracking with resume positions
 - **🎵 OpenSubsonic API**: Compatible with popular Subsonic and OpenSubsonic clients
 - **🎬 Jellyfin API**: Compatible with Jellyfin music clients (Finamp, Feishin, Streamyfin)
 - **🌐 Melodee API**: Fast RESTful API for custom integrations
@@ -292,6 +293,10 @@ Melodee includes a comprehensive job scheduling system powered by Quartz.NET:
 | **ChartUpdateJob** | Links chart entries to albums | Daily at 2 AM |
 | **MusicBrainzUpdateDatabaseJob** | Updates local MusicBrainz cache | Monthly |
 | **NowPlayingCleanupJob** | Cleans stale now-playing entries | Every 5 minutes |
+| **PodcastRefreshJob** | Fetches new episodes from subscribed podcasts | Every 30 minutes |
+| **PodcastDownloadJob** | Downloads queued podcast episodes | Every 5 minutes |
+| **PodcastCleanupJob** | Enforces retention policies on downloaded episodes | Daily at 3 AM |
+| **PodcastRecoveryJob** | Resets stuck downloads and cleans orphaned files | Every hour |
 
 Jobs can be manually triggered, paused, or monitored from the admin UI at `/admin/jobs`.
 
