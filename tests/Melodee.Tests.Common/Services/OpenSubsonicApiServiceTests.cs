@@ -7,7 +7,7 @@ using NodaTime;
 
 namespace Melodee.Tests.Common.Services;
 
-public class OpenSubsonicApiServiceTests : ServiceTestBase
+public partial class OpenSubsonicApiServiceTests : ServiceTestBase
 {
     #region Helper Methods
 

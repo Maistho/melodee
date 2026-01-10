@@ -332,4 +332,22 @@ public class PodcastPlaybackService(
 
         return new OperationResult<IEnumerable<UserPodcastEpisodePlayHistory>> { Data = nowPlaying };
     }
+
+    /// <summary>
+    /// Get all bookmarks for a user's podcast episodes.
+    /// </summary>
+    public async Task<OperationResult<IEnumerable<PodcastEpisodeBookmark>>> GetAllBookmarksAsync(
+        int userId,
+        CancellationToken cancellationToken = default)
+    {
+        await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var bookmarks = await context.PodcastEpisodeBookmarks
+            .Where(b => b.UserId == userId)
+            .OrderByDescending(b => b.UpdatedAt)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return new OperationResult<IEnumerable<PodcastEpisodeBookmark>> { Data = bookmarks };
+    }
 }

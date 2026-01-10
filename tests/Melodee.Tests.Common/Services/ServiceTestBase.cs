@@ -255,7 +255,8 @@ public abstract class ServiceTestBase : IDisposable, IAsyncDisposable
             GetUserQueueService(),
             GetStatisticsService(),
             MockBus(),
-            GetLyricPlugin());
+            GetLyricPlugin(),
+            GetPodcastPlaybackService());
     }
 
     protected ISchedulerFactory CreateMockSchedulerFactory()
@@ -505,5 +506,10 @@ public abstract class ServiceTestBase : IDisposable, IAsyncDisposable
             CacheManager,
             MockFactory(),
             GetUserService());
+    }
+
+    protected PodcastPlaybackService GetPodcastPlaybackService()
+    {
+        return new PodcastPlaybackService(Logger, CacheManager, MockFactory());
     }
 }
