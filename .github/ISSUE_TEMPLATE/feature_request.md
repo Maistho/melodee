@@ -7,11 +7,11 @@ assignees: ''
 
 ---
 
-** Description **
+### Description
 Put a simple overview of the enhancement here.
 
-** Requirements **
+### Requirements
 Bullet points of requirements for the enhancement.
 
-** Success Criteria **
+### Success Criteria
 Bullet points for code complete for the enhancement.
