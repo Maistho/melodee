@@ -45,7 +45,7 @@ public sealed class PodcastDownloadJob(
         var maxEnclosureBytes = configuration.GetValue<long>(SettingRegistry.PodcastDownloadMaxEnclosureBytes);
         var maxBytesPerUser = configuration.GetValue<long>(SettingRegistry.PodcastQuotaMaxBytesPerUser);
         var timeoutSeconds = configuration.GetValue<int>(SettingRegistry.PodcastHttpTimeoutSeconds);
-        var maxRedirects = configuration.GetValue<int>(SettingRegistry.PodcastHttpMaxRedirects);
+        var maxRedirects = configuration.GetValue<int>(SettingRegistry.PodcastHttpMaxRedirects, v => v > 0 ? v : SettingDefaults.PodcastHttpMaxRedirects);
 
         var episodesToDownload = await dbContext.PodcastEpisodes
             .Include(x => x.PodcastChannel)

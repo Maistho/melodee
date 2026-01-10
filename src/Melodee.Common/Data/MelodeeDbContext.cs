@@ -1444,8 +1444,8 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
                     ApiKey = SeedGuid("Setting", 1803),
                     Category = (int)SettingCategory.Podcast,
                     Key = SettingRegistry.PodcastHttpMaxRedirects,
-                    Comment = "Maximum number of HTTP redirects to follow for podcast feeds.",
-                    Value = "5",
+                    Comment = "Maximum number of HTTP redirects to follow for podcast feeds. Podcast CDNs often use multiple analytics redirects, so 10 is recommended.",
+                    Value = "10",
                     CreatedAt = seedDataTimestamp
                 },
                 new Setting

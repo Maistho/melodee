@@ -50,7 +50,7 @@ public sealed class PodcastHttpClient : IDisposable
     {
         var configuration = await _configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
         var timeoutSeconds = configuration.GetValue<int>(SettingRegistry.PodcastHttpTimeoutSeconds);
-        var maxRedirects = configuration.GetValue<int>(SettingRegistry.PodcastHttpMaxRedirects);
+        var maxRedirects = configuration.GetValue<int>(SettingRegistry.PodcastHttpMaxRedirects, v => v > 0 ? v : SettingDefaults.PodcastHttpMaxRedirects);
 
         // Use CancellationTokenSource with timeout instead of setting HttpClient.Timeout
         // to avoid "Properties can only be modified before sending the first request" error
@@ -93,6 +93,9 @@ public sealed class PodcastHttpClient : IDisposable
                         return PodcastHttpResult.Failed("Redirect without Location header");
                     }
 
+                    _logger.Debug("[PodcastHttpClient] Redirect {Count}/{Max}: {From} -> {To}", 
+                        redirectCount + 1, maxRedirects, currentUrl, redirectLocation);
+
                     var redirectValidation = await _ssrfValidator.ValidateRedirectAsync(
                         currentUrl,
                         redirectLocation,
@@ -102,6 +105,8 @@ public sealed class PodcastHttpClient : IDisposable
 
                     if (!redirectValidation.IsValid)
                     {
+                        _logger.Warning("[PodcastHttpClient] Redirect validation failed after {Count} redirects: {Error}", 
+                            redirectCount, redirectValidation.ErrorMessage);
                         return PodcastHttpResult.Failed(redirectValidation.ErrorMessage ?? "Redirect validation failed");
                     }
 
