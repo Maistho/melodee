@@ -405,4 +405,159 @@ public class PodcastServiceTests : IAsyncDisposable
         var diff = (result!.Value - now - expectedDuration).TotalSeconds;
         Math.Abs(diff).Should().BeLessThan(1);
     }
+
+    [Fact]
+    public async Task ListEpisodesAsync_WithPlayHistory_PopulatesPlayedData()
+    {
+        var service = CreateService();
+        const int userId = 1;
+
+        await using var context = await _contextFactory.CreateDbContextAsync();
+        
+        // Create a user with all required fields
+        context.Users.Add(new User
+        {
+            Id = userId,
+            UserName = "testuser",
+            UserNameNormalized = "TESTUSER",
+            Email = "test@example.com",
+            EmailNormalized = "TEST@EXAMPLE.COM",
+            PublicKey = Guid.NewGuid().ToString(),
+            PasswordEncrypted = "encrypted_password",
+            CreatedAt = SystemClock.Instance.GetCurrentInstant()
+        });
+        
+        var channel = new PodcastChannel
+        {
+            UserId = userId,
+            FeedUrl = "https://example.com/feed",
+            Title = "Test Podcast",
+            CreatedAt = SystemClock.Instance.GetCurrentInstant()
+        };
+        context.PodcastChannels.Add(channel);
+        await context.SaveChangesAsync();
+
+        var playedEpisode = new PodcastEpisode
+        {
+            PodcastChannelId = channel.Id,
+            EpisodeKey = "played-ep",
+            Title = "Played Episode",
+            EnclosureUrl = "https://example.com/played.mp3",
+            CreatedAt = SystemClock.Instance.GetCurrentInstant()
+        };
+        var unplayedEpisode = new PodcastEpisode
+        {
+            PodcastChannelId = channel.Id,
+            EpisodeKey = "unplayed-ep",
+            Title = "Unplayed Episode",
+            EnclosureUrl = "https://example.com/unplayed.mp3",
+            CreatedAt = SystemClock.Instance.GetCurrentInstant()
+        };
+        context.PodcastEpisodes.AddRange(playedEpisode, unplayedEpisode);
+        await context.SaveChangesAsync();
+
+        // Add play history for the first episode
+        var playedAt = SystemClock.Instance.GetCurrentInstant();
+        context.UserPodcastEpisodePlayHistories.AddRange(
+            new UserPodcastEpisodePlayHistory
+            {
+                UserId = userId,
+                PodcastEpisodeId = playedEpisode.Id,
+                PlayedAt = playedAt.Minus(Duration.FromHours(2)),
+                IsNowPlaying = false
+            },
+            new UserPodcastEpisodePlayHistory
+            {
+                UserId = userId,
+                PodcastEpisodeId = playedEpisode.Id,
+                PlayedAt = playedAt,
+                IsNowPlaying = false
+            }
+        );
+        await context.SaveChangesAsync();
+
+        var request = new Melodee.Common.Models.PagedRequest { Page = 1, PageSize = 10 };
+        var result = await service.ListEpisodesAsync(request, userId, channel.Id);
+
+        result.Data.Should().HaveCount(2);
+        
+        var played = result.Data!.First(x => x.Title == "Played Episode");
+        played.LastPlayedAt.Should().NotBeNull();
+        played.PlayedCount.Should().Be(2);
+
+        var unplayed = result.Data!.First(x => x.Title == "Unplayed Episode");
+        unplayed.LastPlayedAt.Should().BeNull();
+        unplayed.PlayedCount.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task ListEpisodesAsync_ExcludesNowPlayingFromPlayCount()
+    {
+        var service = CreateService();
+        const int userId = 1;
+
+        await using var context = await _contextFactory.CreateDbContextAsync();
+        
+        context.Users.Add(new User
+        {
+            Id = userId,
+            UserName = "testuser",
+            UserNameNormalized = "TESTUSER",
+            Email = "test@example.com",
+            EmailNormalized = "TEST@EXAMPLE.COM",
+            PublicKey = Guid.NewGuid().ToString(),
+            PasswordEncrypted = "encrypted_password",
+            CreatedAt = SystemClock.Instance.GetCurrentInstant()
+        });
+        
+        var channel = new PodcastChannel
+        {
+            UserId = userId,
+            FeedUrl = "https://example.com/feed",
+            Title = "Test Podcast",
+            CreatedAt = SystemClock.Instance.GetCurrentInstant()
+        };
+        context.PodcastChannels.Add(channel);
+        await context.SaveChangesAsync();
+
+        var episode = new PodcastEpisode
+        {
+            PodcastChannelId = channel.Id,
+            EpisodeKey = "ep1",
+            Title = "Test Episode",
+            EnclosureUrl = "https://example.com/ep1.mp3",
+            CreatedAt = SystemClock.Instance.GetCurrentInstant()
+        };
+        context.PodcastEpisodes.Add(episode);
+        await context.SaveChangesAsync();
+
+        // Add completed plays and one currently playing
+        var playedAt = SystemClock.Instance.GetCurrentInstant();
+        context.UserPodcastEpisodePlayHistories.AddRange(
+            new UserPodcastEpisodePlayHistory
+            {
+                UserId = userId,
+                PodcastEpisodeId = episode.Id,
+                PlayedAt = playedAt.Minus(Duration.FromHours(1)),
+                IsNowPlaying = false
+            },
+            new UserPodcastEpisodePlayHistory
+            {
+                UserId = userId,
+                PodcastEpisodeId = episode.Id,
+                PlayedAt = playedAt,
+                IsNowPlaying = true  // Currently playing - should NOT count
+            }
+        );
+        await context.SaveChangesAsync();
+
+        var request = new Melodee.Common.Models.PagedRequest { Page = 1, PageSize = 10 };
+        var result = await service.ListEpisodesAsync(request, userId, channel.Id);
+
+        result.Data.Should().HaveCount(1);
+        var episodeData = result.Data!.First();
+        
+        // Should only count completed plays (1), not the IsNowPlaying entry
+        episodeData.PlayedCount.Should().Be(1);
+    }
 }

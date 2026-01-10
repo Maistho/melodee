@@ -182,7 +182,7 @@
                         <Template Context="data">
                             @if (data.PublishDate.HasValue)
                             {
-                                <RadzenText>@data.PublishDate.Value.ToString("d")</RadzenText>
+                                <RadzenText>@FormatDate(data.PublishDate.Value.ToDateTimeUtc())</RadzenText>
                             }
                         </Template>
                     </RadzenDataGridColumn>

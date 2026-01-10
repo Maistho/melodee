@@ -9,7 +9,7 @@ public sealed record PodcastEpisodeDataInfo(
     string Title,
     string TitleNormalized,
     string Description,
-    DateTimeOffset? PublishDate,
+    Instant? PublishDate,
     TimeSpan? Duration,
     string ChannelTitle,
     Guid ChannelApiKey,

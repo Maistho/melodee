@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Melodee.Common.Data.Constants;
 using Melodee.Common.Enums;
+using NodaTime;
 
 namespace Melodee.Common.Data.Models;
 
@@ -25,7 +26,7 @@ public class PodcastEpisode : DataModelBase
     [MaxLength(MaxLengthDefinitions.MaxTextLength)]
     public new string? Description { get; set; }
 
-    public DateTimeOffset? PublishDate { get; set; }
+    public Instant? PublishDate { get; set; }
 
     [MaxLength(MaxLengthDefinitions.MaxIndexableLength)]
     public required string EnclosureUrl { get; set; }

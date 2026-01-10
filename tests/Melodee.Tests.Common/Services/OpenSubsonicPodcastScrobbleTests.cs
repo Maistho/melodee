@@ -64,7 +64,7 @@ public class OpenSubsonicPodcastScrobbleTests : ServiceTestBase
             PodcastChannelId = channel.Id,
             Title = "Test Episode",
             Description = "Test Description",
-            PublishDate = DateTimeOffset.UtcNow,
+            PublishDate = SystemClock.Instance.GetCurrentInstant(),
             EnclosureUrl = "https://example.com/episode.mp3",
             EpisodeKey = Guid.NewGuid().ToString(),
             CreatedAt = SystemClock.Instance.GetCurrentInstant()

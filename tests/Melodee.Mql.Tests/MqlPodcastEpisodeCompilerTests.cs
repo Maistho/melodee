@@ -47,7 +47,7 @@ public class MqlPodcastEpisodeCompilerTests
         };
     }
 
-    private static PodcastEpisode CreateEpisode(int id, string title, PodcastChannel channel, TimeSpan? duration = null, DateTimeOffset? publishDate = null, string? description = null)
+    private static PodcastEpisode CreateEpisode(int id, string title, PodcastChannel channel, TimeSpan? duration = null, Instant? publishDate = null, string? description = null)
     {
         return new PodcastEpisode
         {

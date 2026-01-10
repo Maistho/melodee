@@ -2161,7 +2161,7 @@ public class OpenSubsonicApiService(
                     null,
                     null,
                     null,
-                    episode.PublishDate?.Year ?? 0,
+                    episode.PublishDate?.InUtc().Year ?? 0,
                     null,
                     episode.LocalFileSize ?? 0,
                     episode.MimeType ?? "audio/mpeg",

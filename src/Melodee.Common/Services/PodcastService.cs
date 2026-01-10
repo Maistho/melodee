@@ -697,7 +697,9 @@ public sealed class PodcastService(
             episode.Title = item.Title?.Text ?? "Untitled";
             episode.TitleNormalized = episode.Title.ToNormalizedString();
             episode.Description = item.Summary?.Text ?? item.Content?.ToString();
-            episode.PublishDate = item.PublishDate;
+            episode.PublishDate = item.PublishDate != DateTimeOffset.MinValue 
+                ? Instant.FromDateTimeOffset(item.PublishDate) 
+                : null;
             episode.Guid = item.Id;
             episode.EnclosureUrl = enclosure.Uri.ToString();
             episode.MimeType = enclosure.MediaType;
@@ -914,13 +916,14 @@ public sealed class PodcastService(
 
         var totalCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);
 
+        // Join with play history to get LastPlayedAt and PlayedCount
         var episodes = await query
             .OrderByDescending(x => x.PublishDate)
             .Skip(request.SkipValue)
             .Take(request.TakeValue)
             .Select(x => new PodcastEpisodeDataInfo(
                 x.Id,
-                 x.ApiKey,
+                x.ApiKey,
                 x.Title,
                 x.TitleNormalized ?? x.Title,
                 x.Description ?? string.Empty,
@@ -935,7 +938,14 @@ public sealed class PodcastService(
                 0,
                 x.DownloadStatus,
                 x.DownloadError,
-                x.EnclosureUrl))
+                x.EnclosureUrl,
+                context.UserPodcastEpisodePlayHistories
+                    .Where(h => h.UserId == userId && h.PodcastEpisodeId == x.Id && !h.IsNowPlaying)
+                    .OrderByDescending(h => h.PlayedAt)
+                    .Select(h => (Instant?)h.PlayedAt)
+                    .FirstOrDefault(),
+                context.UserPodcastEpisodePlayHistories
+                    .Count(h => h.UserId == userId && h.PodcastEpisodeId == x.Id && !h.IsNowPlaying)))
             .ToArrayAsync(cancellationToken)
             .ConfigureAwait(false);
 
