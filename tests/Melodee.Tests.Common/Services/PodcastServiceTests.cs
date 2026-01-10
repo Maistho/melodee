@@ -413,7 +413,7 @@ public class PodcastServiceTests : IAsyncDisposable
         const int userId = 1;
 
         await using var context = await _contextFactory.CreateDbContextAsync();
-        
+
         // Create a user with all required fields
         context.Users.Add(new User
         {
@@ -426,7 +426,7 @@ public class PodcastServiceTests : IAsyncDisposable
             PasswordEncrypted = "encrypted_password",
             CreatedAt = SystemClock.Instance.GetCurrentInstant()
         });
-        
+
         var channel = new PodcastChannel
         {
             UserId = userId,
@@ -480,7 +480,7 @@ public class PodcastServiceTests : IAsyncDisposable
         var result = await service.ListEpisodesAsync(request, userId, channel.Id);
 
         result.Data.Should().HaveCount(2);
-        
+
         var played = result.Data!.First(x => x.Title == "Played Episode");
         played.LastPlayedAt.Should().NotBeNull();
         played.PlayedCount.Should().Be(2);
@@ -497,7 +497,7 @@ public class PodcastServiceTests : IAsyncDisposable
         const int userId = 1;
 
         await using var context = await _contextFactory.CreateDbContextAsync();
-        
+
         context.Users.Add(new User
         {
             Id = userId,
@@ -509,7 +509,7 @@ public class PodcastServiceTests : IAsyncDisposable
             PasswordEncrypted = "encrypted_password",
             CreatedAt = SystemClock.Instance.GetCurrentInstant()
         });
-        
+
         var channel = new PodcastChannel
         {
             UserId = userId,
@@ -556,7 +556,7 @@ public class PodcastServiceTests : IAsyncDisposable
 
         result.Data.Should().HaveCount(1);
         var episodeData = result.Data!.First();
-        
+
         // Should only count completed plays (1), not the IsNowPlaying entry
         episodeData.PlayedCount.Should().Be(1);
     }

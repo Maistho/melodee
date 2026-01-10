@@ -698,8 +698,8 @@ public sealed class PodcastService(
             episode.Title = item.Title?.Text ?? "Untitled";
             episode.TitleNormalized = episode.Title.ToNormalizedString();
             episode.Description = item.Summary?.Text ?? item.Content?.ToString();
-            episode.PublishDate = item.PublishDate != DateTimeOffset.MinValue 
-                ? Instant.FromDateTimeOffset(item.PublishDate) 
+            episode.PublishDate = item.PublishDate != DateTimeOffset.MinValue
+                ? Instant.FromDateTimeOffset(item.PublishDate)
                 : null;
             episode.Guid = item.Id;
             episode.EnclosureUrl = enclosure.Uri.ToString();
