@@ -19,7 +19,8 @@ public sealed record PodcastChannelDataInfo(
     string? SiteUrl = null,
     int EpisodeCount = 0,
     Instant? LastPlayedAt = null,
-    int PlayedCount = 0)
+    int PlayedCount = 0,
+    int UnplayedDownloadedCount = 0)
 {
     public static string InfoLineTitle => "Last Sync";
 

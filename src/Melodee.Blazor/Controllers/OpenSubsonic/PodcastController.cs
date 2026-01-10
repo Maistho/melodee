@@ -446,7 +446,7 @@ public class PodcastController(
 
         // Only check for HasStreamRole if authentication was required (not localhost/cookie auth)
         // When authentication is bypassed (localhost or Blazor cookie auth), skip role check
-        var userRoles = auth.UserInfo.Roles ?? [];
+        var userRoles = auth.UserInfo!.Roles ?? [];
         if (ApiRequest.RequiresAuthentication && !userRoles.Contains("HasStreamRole"))
         {
             Log.Warning("[StreamPodcastEpisode] User {UserId} does not have HasStreamRole. Roles: {Roles}",

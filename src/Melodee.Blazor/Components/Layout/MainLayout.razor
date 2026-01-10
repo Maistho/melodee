@@ -13,6 +13,7 @@
 @inject IMelodeeConfigurationFactory MelodeeConfigurationFactory
 @inject RequestActivityService RequestActivityService
 @inject ILocalizationService LocalizationService
+@inject PodcastService PodcastService
 
 <RadzenComponents @rendermode="InteractiveServer"/>
 
@@ -91,8 +92,17 @@
                                          Visible="@AuthService.IsAdmin"/>
                     <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.NowPlaying")" Path="/activity/nowplaying" Icon="sound_sampler"/>
                     <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Playlists")" Path="/data/playlists" Icon="playlist_play"/>
-                    <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Podcasts")" Path="/data/podcasts" Icon="podcasts" 
-                                         Visible="@_podcastEnabled"/>
+                    <RadzenPanelMenuItem Path="/data/podcasts" Icon="podcasts" Visible="@_podcastEnabled">
+                      <Template>
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem">
+                          <span>@LocalizationService.Localize("Navigation.Podcasts")</span>
+                          @if (_unplayedPodcastCount > 0)
+                          {
+                            <RadzenBadge BadgeStyle="BadgeStyle.Info" IsPill="true" Text="@(_unplayedPodcastCount > 99 ? "99+" : _unplayedPodcastCount.ToString())" Style="font-size: 0.65rem; padding: 2px 6px;"/>
+                          }
+                        </RadzenStack>
+                      </Template>
+                    </RadzenPanelMenuItem>
                     <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.RadioStations")" Path="/data/radiostations" Icon="radio"/>
                     <RadzenPanelMenuItem Path="/requests" Icon="assignment">
                       <Template>
@@ -136,6 +146,7 @@
     bool _sidebarExpanded = true;
     string _siteTitle = string.Empty;
     bool _hasUnreadRequests;
+    int _unplayedPodcastCount;
     Timer? _activityTimer;
     bool _isRtl = false;
     bool _podcastEnabled = false;
@@ -211,8 +222,8 @@
 
             MainLayoutProxyService.ShowSpinner = false;
 
-            await CheckUnreadRequestsAsync();
-            _activityTimer = new Timer(async _ => await CheckUnreadRequestsAsync(), null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
+            await CheckActivityAsync();
+            _activityTimer = new Timer(async _ => await CheckActivityAsync(), null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
 
             StateHasChanged();
         }
@@ -225,6 +236,12 @@
         _podcastEnabled = configuration.GetValue<bool>(SettingRegistry.PodcastEnabled);
     }
 
+    private async Task CheckActivityAsync()
+    {
+        await CheckUnreadRequestsAsync();
+        await CheckUnplayedPodcastsAsync();
+    }
+
     private async Task CheckUnreadRequestsAsync()
     {
         try
@@ -233,6 +250,25 @@
             if (userId > 0)
             {
                 _hasUnreadRequests = await RequestActivityService.HasUnreadAsync(userId);
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch
+        {
+            // Silently ignore errors in background polling
+        }
+    }
+
+    private async Task CheckUnplayedPodcastsAsync()
+    {
+        try
+        {
+            if (!_podcastEnabled) return;
+            
+            var userId = AuthService.CurrentUser?.UserId() ?? 0;
+            if (userId > 0)
+            {
+                _unplayedPodcastCount = await PodcastService.GetUnplayedDownloadedEpisodeCountAsync(userId);
                 await InvokeAsync(StateHasChanged);
             }
         }

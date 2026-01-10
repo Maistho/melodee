@@ -4950,4 +4950,7 @@
   <data name="Podcast.StatusFailed" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Failed</value>
   </data>
+  <data name="Podcast.UnplayedEpisodes" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Unplayed episodes</value>
+  </data>
 <data name="Common.Actions" xml:space="preserve"><value>[NEEDS TRANSLATION] Actions</value></data><data name="Podcast.AddChannel" xml:space="preserve"><value>[NEEDS TRANSLATION] Add Podcast Channel</value></data><data name="Podcast.FeedUrl" xml:space="preserve"><value>[NEEDS TRANSLATION] Podcast Feed URL</value></data><data name="Podcast.LastSync" xml:space="preserve"><value>[NEEDS TRANSLATION] Last Sync</value></data><data name="Podcast.FeatureDisabled" xml:space="preserve"><value>[NEEDS TRANSLATION] Podcast feature is currently disabled. Please contact your administrator to enable it.</value></data><data name="Podcast.ChannelAdded" xml:space="preserve"><value>[NEEDS TRANSLATION] Podcast channel added successfully</value></data><data name="Podcast.ChannelRefreshed" xml:space="preserve"><value>[NEEDS TRANSLATION] Podcast channel refreshed successfully</value></data></root>

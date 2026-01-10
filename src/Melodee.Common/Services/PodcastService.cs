@@ -68,6 +68,37 @@ public sealed class PodcastService(
         }
     }
 
+    /// <summary>
+    /// Gets the count of downloaded but unplayed podcast episodes for a user.
+    /// Used for displaying a badge on the Podcasts menu item.
+    /// </summary>
+    public async Task<int> GetUnplayedDownloadedEpisodeCountAsync(
+        int userId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+            var count = await context.PodcastEpisodes
+                .Where(e => e.PodcastChannel != null 
+                         && e.PodcastChannel.UserId == userId 
+                         && !e.PodcastChannel.IsDeleted
+                         && e.DownloadStatus == PodcastEpisodeDownloadStatus.Downloaded
+                         && !context.UserPodcastEpisodePlayHistories
+                             .Any(h => h.UserId == userId && h.PodcastEpisodeId == e.Id))
+                .CountAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            return count;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "[{ServiceName}] Error getting unplayed episode count for user {UserId}", nameof(PodcastService), userId);
+            return 0;
+        }
+    }
+
     public async Task<OperationResult<PodcastChannel?>> GetChannelAsync(
         int channelId,
         int userId,
@@ -833,7 +864,12 @@ public sealed class PodcastService(
                 false,
                 0,
                 x.SiteUrl,
-                x.Episodes.Count))
+                x.Episodes.Count,
+                null,
+                0,
+                x.Episodes.Count(e => 
+                    e.DownloadStatus == PodcastEpisodeDownloadStatus.Downloaded &&
+                    !context.UserPodcastEpisodePlayHistories.Any(h => h.UserId == userId && h.PodcastEpisodeId == e.Id))))
             .ToArrayAsync(cancellationToken)
             .ConfigureAwait(false);
 

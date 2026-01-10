@@ -80,6 +80,13 @@
                                     <RadzenIcon Icon="podcasts" Style="width: 40px; height: 40px;" />
                                 }
                                 <RadzenLink Path="@($"/data/podcasts/{data.ApiKey}")" Text="@data.Title" />
+                                @if (data.UnplayedDownloadedCount > 0)
+                                {
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Info" IsPill="true" 
+                                                 Text="@data.UnplayedDownloadedCount.ToString()" 
+                                                 title="@L("Podcast.UnplayedEpisodes")"
+                                                 Style="font-size: 0.7rem;" />
+                                }
                             </RadzenStack>
                         </Template>
                     </RadzenDataGridColumn>
