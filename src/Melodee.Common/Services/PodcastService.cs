@@ -204,7 +204,7 @@ public sealed class PodcastService(
 
             // Get podcast library for file operations
             var podcastLibraryResult = await libraryService.GetPodcastLibraryAsync(cancellationToken).ConfigureAwait(false);
-            var podcastLibrary = podcastLibraryResult.Data;
+            var podcastLibrary = podcastLibraryResult?.Data;
 
             if (softDelete)
             {
@@ -478,7 +478,7 @@ public sealed class PodcastService(
             if (!string.IsNullOrEmpty(episode.LocalPath))
             {
                 var podcastLibraryResult = await libraryService.GetPodcastLibraryAsync(cancellationToken).ConfigureAwait(false);
-                var podcastLibrary = podcastLibraryResult.Data;
+                var podcastLibrary = podcastLibraryResult?.Data;
 
                 if (podcastLibrary != null)
                 {
