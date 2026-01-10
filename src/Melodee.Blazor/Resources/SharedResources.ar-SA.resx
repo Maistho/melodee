@@ -5036,4 +5036,10 @@
   <data name="Actions.Pin" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Pin</value>
   </data>
+  <data name="Actions.OpenExternal" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Open External</value>
+  </data>
+  <data name="Actions.View" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] View</value>
+  </data>
 </root>

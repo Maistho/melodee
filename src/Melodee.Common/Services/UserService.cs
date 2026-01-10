@@ -946,7 +946,7 @@ IBus bus)
                                     {
                                         pin.Icon = "podcasts";
                                         pin.ImageUrl = podcastResult.Data.ImageUrl ?? string.Empty;
-                                        pin.LinkUrl = $"/data/podcast/{podcastResult.Data.ApiKey}";
+                                        pin.LinkUrl = $"/data/podcasts/{podcastResult.Data.ApiKey}";
                                         pin.Text = podcastResult.Data.Title;
                                     }
 

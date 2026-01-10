@@ -1,326 +1,534 @@
-## Jukebox / Party Mode Requirements (Melodee)
+# Melodee Jukebox / Party Mode — Comprehensive Requirements & Implementation Phases
 
-### Status
+**Document purpose:** Provide a single, complete set of requirements for implementing “Jukebox / Party Mode” in Melodee, including:
+- A **core Party Mode** (shared session + shared queue) that does **not** require server-side audio hardware.
+- Optional **Jukebox Backends** (server/headless playback targets) that are **explicitly configured**.
+- Optional **OpenSubsonic/Subsonic `jukeboxControl` compatibility**, enabled **only** when a backend is configured.
 
-- Melodee exposes OpenSubsonic/Subsonic jukebox route(s) (`/rest/jukeboxControl(.view)`) but intentionally returns HTTP `410 Gone`.
-- Melodee keeps “server-side audio output” optional; `jukeboxControl` remains disabled unless a jukebox backend is explicitly configured (ADR-0007).
-- Melodee **does** already have primitives that are adjacent to “jukebox-like” experiences:
-  - Per-user persisted queue (`PlayQues` table) + `UserQueueService` + `api/v1/queue` endpoints.
-  - Client tracking (`Players` table) and “Now Playing” activity.
-  - A Blazor `/musicplayer` page that plays audio in the browser.
+This document is designed to be handed to a coding agent and broken into implementation phases with clear deliverables and acceptance criteria.
 
-This document defines a competitive “party mode” / “jukebox” feature set and the guardrails to keep server-side playback explicit and optional (ADR-0007).
+---
 
-### Terms
+## 1. Terminology & Concepts
 
-- **Jukebox (Subsonic sense)**: server-side playback control where audio is emitted from an output accessible to the server process.
-- **Party mode**: a shared queue/session where multiple users can add/reorder, and one designated player endpoint consumes the queue.
-- **Endpoint / Player**: a concrete playback target (browser tab, Snapcast client, Chromecast, MPD instance, etc.).
-- **Controller**: a client that can modify a party session (add songs, skip, volume).
-- **Listener**: a client that can observe the session (now playing, queue) but not control.
+### 1.1 “Jukebox mode” (Subsonic sense)
+A remote-control mode where a client issues **transport + queue commands** and playback happens on a **target** (often the server audio device, but in practice any configured backend output).
 
-### Product intent
+### 1.2 “Party Mode” (Melodee core)
+A **shared session** where multiple users can collaboratively manage a **shared queue**, and one designated **Endpoint** consumes that queue and plays audio.
 
-Deliver a feature that competitors often call “jukebox” (party / shared playback), without forcing Melodee to become an always-on local audio player on headless servers.
+### 1.3 Endpoint / Player (Target)
+A concrete playback target:
+- **MVP**: Melodee **Web Player** (existing Blazor `/musicplayer`) attached to a session.
+- Future: MPV headless, Snapcast, MPD, Chromecast, etc. via plugins/backends.
 
-## Goals
+### 1.4 Controller vs Listener
+- **Controller (DJ/Controller role):** Can modify queue, skip, seek, play/pause, and optionally volume.
+- **Listener:** Can observe queue and now playing state only.
 
-- Provide a **shared queue** (“party session”) that multiple users can collaboratively manage.
-- Provide a **device/endpoint abstraction** so Melodee can target:
-  - the web UI music player (browser-based playback), and
-  - optionally external playback backends (Snapcast/MPD/etc.) via plugins.
-- Provide strong **authorization** and anti-abuse controls for “remote control” features.
-- Keep “server-side audio output” optional and explicitly configured (ADR-0007).
+---
 
-## Non-goals (initially)
+## 2. Product Intent
 
-- Implementing every casting protocol (Sonos, AirPlay, etc.) in core.
-- DRM / protected streaming.
-- Using OpenSubsonic jukebox as the *only* API surface (Melodee should have a clean native API as the primary contract).
+Users asking for “jukebox” typically want:
+- A **single shared queue**
+- A **now playing** view
+- **Add/reorder/remove**
+- **Start/stop/skip/seek**
+- **Anti-griefing controls** (roles, locks, rate limiting, moderation)
+- Optional **volume control**
 
-## Competitive baseline (what users expect when they say “jukebox”)
+Melodee must provide this without forcing a headless server to become a local audio player by default.
 
-Typical expectations taken from Subsonic ecosystem servers and “party mode” concepts:
+---
 
-- Start/stop/skip and “now playing” view.
-- Add to queue (by song/album/playlist) and reorder/remove.
-- A single shared queue that is not tied to a single user’s private playback.
-- A way to prevent griefing: roles, locks, and moderation.
-- Optional volume control for the endpoint.
+## 3. Goals & Non-goals
 
-## Architecture alignment (ADR-0007)
+### 3.1 Goals
+1. **Party sessions** with shared queue and multi-user collaboration.
+2. **Endpoint abstraction**: Web Player first; optional backend targets next.
+3. Strong **authorization + anti-abuse**.
+4. Optional, explicit **server/headless playback** behind configuration flags.
+5. Optional **OpenSubsonic/Subsonic jukebox compatibility** behind configuration.
 
-Melodee can satisfy the market need while keeping server-side audio output explicit and optional (ADR-0007) by defining **two tiers**:
+### 3.2 Non-goals (initially)
+- Supporting every casting ecosystem protocol in core (Sonos/AirPlay/etc.).
+- DRM/protected content.
+- Replacing Melodee’s native API with Subsonic jukebox as primary contract.
 
-1. **Core feature: Party sessions + shared queue**
-   - Playback happens on a designated endpoint (initially, the Blazor Music Player in a browser).
-   - Melodee stores and serves state; it does not need local audio hardware.
+---
 
-2. **Optional plugin/module: Jukebox backend(s)**
-   - If a deployment explicitly wants server-side or headless endpoint playback, implement adapters (e.g., MPD, Snapcast server, PipeWire/ALSA) behind a feature flag.
-   - Only when such a backend is configured should Melodee consider implementing OpenSubsonic `jukeboxControl` semantics.
+## 4. Architecture Principles (Guardrails)
 
-## Functional requirements
+1. **Default install behavior**
+    - Party Mode can be enabled/disabled via config.
+    - OpenSubsonic `/rest/jukeboxControl(.view)` **returns 410** unless an explicit backend is configured and enabled.
 
-### 1) Party session lifecycle
+2. **Two-tier design**
+    - **Tier A (Core):** Party sessions + shared queue + playback state. Playback is executed by a designated Endpoint (Web Player first).
+    - **Tier B (Optional):** Jukebox Backends (MPV/Snapcast/MPD/etc.) plugged in behind feature flags.
 
-- Create session:
-  - Owner (user) creates a party session with a name, optional PIN/join code, and default permissions.
-  - Owner selects a target endpoint (see Endpoints) or leaves it unassigned.
-- Join session:
-  - Users can join by link or join code.
-  - Session exposes role/permission model: Owner, DJ, Controller, Listener.
-- End session:
-  - Owner ends the session; server marks session closed and stops accepting control commands.
+---
 
-### 2) Shared queue
+## 5. User Stories
 
-- Session has an ordered queue of songs (by Song ApiKey).
-- Required operations:
-  - Add: enqueue song(s) (single song, album, playlist).
-  - Remove: delete a queued item.
-  - Reorder: move items (with concurrency control).
-  - Clear: empty queue.
-  - Set current: choose the current item.
-- Queue items should carry minimal metadata:
-  - SongApiKey, enqueuedAt, enqueuedByUserId, optional “note”, and an optional “source” (playlist/album).
-- Concurrency:
-  - Must be resilient to multiple clients sending changes.
-  - Prefer optimistic concurrency using a monotonically increasing `queueRevision` or `ETag`.
+### 5.1 Party Host / Owner
+- Create a party session, set name + join method (link/code/PIN).
+- Choose a playback endpoint (or leave unassigned until later).
+- Promote a friend to DJ/Controller.
+- Lock queue or enable “DJ-only control”.
+- Kick/ban a disruptive participant.
+- End the session.
 
-### 3) Playback state model
+### 5.2 DJ / Controller
+- Add songs/albums/playlists to the queue.
+- Reorder queue items.
+- Skip, seek, play/pause.
+- Optionally control volume (if enabled).
 
-A session must track:
+### 5.3 Listener
+- Join session and view queue + now playing.
+- See who added each queue item and when.
 
-- `currentQueueItemId` (or index)
-- `positionSeconds`
-- `isPlaying`
-- `volume` (optional; endpoint dependent)
-- `lastHeartbeatAt` from the active endpoint
+### 5.4 Endpoint (Web Player)
+- Attach to a session and consume its queue.
+- Heartbeat to server with current position/state.
+- Resume gracefully after refresh or temporary disconnect.
 
-The playback state is authoritative for controllers to see “now playing” and for endpoints to resume/continue.
+---
 
-### 4) Endpoints / players
+## 6. Functional Requirements
 
-- An endpoint represents “where music is played”.
-- MVP endpoint: the existing Blazor `/musicplayer` page acts as a playback endpoint.
-  - The page should be able to “attach” to a party session and consume the session queue.
-  - It must periodically heartbeat to the server to indicate it is active.
-- Future endpoints (plugin-based): Snapcast client group, MPD instance, Chromecast target, etc.
+### 6.1 Party Session Lifecycle
+- **Create session**
+    - Fields: name, visibility (private/public), join code/PIN (optional), default role for joiners.
+    - Owner selects endpoint (optional).
+- **Join session**
+    - By link and/or join code.
+    - Server assigns role (default Listener) unless owner changes.
+- **Leave session**
+    - Participant leaves session.
+    - If Endpoint leaves/dies, session remains active but endpoint becomes stale.
+- **End session**
+    - Owner ends; session becomes read-only and playback is stopped on endpoint (best-effort).
 
+### 6.2 Shared Queue
+A session has an ordered queue of **QueueItems** with:
+- `QueueItemId` (ApiKey)
+- `SongApiKey`
+- `EnqueuedAt`
+- `EnqueuedByUserId`
+- `Source` (optional: album/playlist/search)
+- `Note` (optional)
+- `SortOrder` (or position index)
+
+Operations (minimum):
+- Add songs (single/multiple) by song id
+- Add album → expands to songs (respect album order)
+- Add playlist → expands to songs (playlist order)
+- Remove queue item
+- Reorder items
+- Clear queue
+- Set current item (owner/controller)
+
+Concurrency:
+- Use optimistic concurrency with a monotonically increasing `QueueRevision` (and/or HTTP `ETag`).
+- All queue mutations must validate `expectedRevision` and return conflict if stale.
+
+### 6.3 Playback State Model (Authoritative)
+Session tracks:
+- `CurrentQueueItemId` (or index)
+- `PositionSeconds`
+- `IsPlaying`
+- `Volume` (nullable; endpoint dependent)
+- `LastHeartbeatAt` (from active endpoint)
+- `LastUpdatedByUserId` (audit)
+- `PlaybackRevision` (optional; similar to queue revision)
+
+Rules:
+- Endpoint is the source of truth for **position/time**.
+- Controllers are the source of truth for **intent** (play/pause/skip/seek), which the endpoint executes.
+
+### 6.4 Endpoints / Players
 Endpoint requirements:
+- Identity: `EndpointId` (ApiKey), `Name`, `Type`
+- Ownership: `OwnerUserId` or `System`
+- Scope: `Room` / `Shared` label (optional)
+- Capabilities:
+    - `canPlay`, `canPause`, `canSeek`, `canSkip`, `canSetVolume`, `canReportPosition`
+- Heartbeat:
+    - Endpoint sends heartbeat every N seconds (config default e.g., 5–10s)
+    - Heartbeat includes: isPlaying, currentQueueItemId, positionSeconds, volume if applicable
 
-- Must have a unique identity (`endpointId`) and a display name.
-- Must be associated with an owning user (or system) and optionally a shared/room scope.
-- Must declare capabilities:
-  - canPlay, canPause, canSeek, canSkip, canSetVolume, canReportPosition.
+MVP Endpoint:
+- Existing Blazor `/musicplayer` becomes an attachable endpoint:
+    - Accept `?session=<sessionKey>` (or UI flow) to attach
+    - Consumes session queue & plays audio via browser
+    - Reports progress + state back to server
 
-### 5) Permissions and anti-abuse
+### 6.5 Permissions & Anti-abuse
+Global gate:
+- All Party/Jukebox features require `User.HasJukeboxRole` (or equivalent policy).
 
-- Gate all “party/jukebox control” features behind `User.HasJukeboxRole`.
-- Session-level permissions:
-  - Owner can:
-    - assign endpoint
-    - promote/demote roles
-    - lock/unlock queue
-    - kick/ban participants
-  - Controllers/DJs can:
-    - add/remove/reorder queue
-    - skip
-    - set current
-    - optionally control volume (configurable)
-  - Listeners can only view
-- Rate limiting:
-  - Protect “add to queue”, “skip”, “volume” with rate limits.
+Session roles:
+- **Owner**
+    - Assign endpoint
+    - Promote/demote roles
+    - Lock/unlock queue
+    - Kick/ban participants
+    - End session
+- **DJ/Controller**
+    - Add/remove/reorder queue
+    - Skip / set current
+    - Seek (if endpoint supports)
+    - Volume (if enabled + endpoint supports)
+- **Listener**
+    - View-only
+
+Anti-abuse:
+- Rate limiting per user and per session on:
+    - Add-to-queue
+    - Skip/seek
+    - Volume changes
+- Moderation:
+    - Queue lock (only owner/DJs can change)
+    - “Skip cooldown” (e.g., 10s)
+    - “Max adds per minute” (config)
 - Audit trail:
-  - Record “who changed what” for queue mutations and playback control.
+    - Log queue mutations and control commands with user identity and timestamp.
 
-### 6) Real-time updates
+### 6.6 Real-time Updates
+Preferred:
+- SignalR for:
+    - `QueueChanged(sessionId, revision, diff)`
+    - `PlaybackStateChanged(sessionId, state)`
+    - `ParticipantsChanged(sessionId, participants)`
+      Fallback:
+- Polling with `If-None-Match` / ETag and `revision` endpoints.
 
-- Clients need timely updates for queue and now playing.
-- Prefer SignalR for session events:
-  - `QueueChanged(sessionId, revision, diff)`
-  - `PlaybackStateChanged(sessionId, state)`
-  - `ParticipantChanged(sessionId, participants)`
-- Polling fallback is acceptable for MVP.
+---
 
-## API requirements
+## 7. API Requirements (Native API is Primary)
 
-### A) Melodee native API (primary)
+> Exact route conventions should align with existing `api/v1/...` patterns.
 
-Proposed endpoints (illustrative; align with existing `api/v{version}/...` patterns):
+### 7.1 Party Sessions
+- `POST   /api/v1/party-sessions`
+- `GET    /api/v1/party-sessions/{id}`
+- `POST   /api/v1/party-sessions/{id}/join`
+- `POST   /api/v1/party-sessions/{id}/leave`
+- `POST   /api/v1/party-sessions/{id}/end`
 
-- `POST /api/v1/party-sessions` create session
-- `GET /api/v1/party-sessions/{id}` session details
-- `POST /api/v1/party-sessions/{id}/join` join session
-- `POST /api/v1/party-sessions/{id}/leave` leave session
-- `POST /api/v1/party-sessions/{id}/end` end session
+Participants:
+- `GET    /api/v1/party-sessions/{id}/participants`
+- `POST   /api/v1/party-sessions/{id}/participants/{userId}/role`
+- `POST   /api/v1/party-sessions/{id}/participants/{userId}/kick`
+- `POST   /api/v1/party-sessions/{id}/participants/{userId}/ban`
 
-Queue:
+### 7.2 Queue
+- `GET    /api/v1/party-sessions/{id}/queue` → includes `revision` + items
+- `POST   /api/v1/party-sessions/{id}/queue/items` → add (songs/album/playlist)
+- `DELETE /api/v1/party-sessions/{id}/queue/items/{itemId}` → remove
+- `POST   /api/v1/party-sessions/{id}/queue/reorder` → move/position
+- `POST   /api/v1/party-sessions/{id}/queue/clear`
 
-- `GET /api/v1/party-sessions/{id}/queue` (includes `revision`)
-- `PUT /api/v1/party-sessions/{id}/queue` replace queue (admin/control)
-- `POST /api/v1/party-sessions/{id}/queue/items` add
-- `DELETE /api/v1/party-sessions/{id}/queue/items/{itemId}` remove
-- `POST /api/v1/party-sessions/{id}/queue/reorder` reorder
+All mutation endpoints should accept `expectedRevision`.
 
-Playback state:
+### 7.3 Playback Control (Intent)
+- `GET    /api/v1/party-sessions/{id}/playback`
+- `POST   /api/v1/party-sessions/{id}/playback/play`
+- `POST   /api/v1/party-sessions/{id}/playback/pause`
+- `POST   /api/v1/party-sessions/{id}/playback/skip` (optional: to next, or specify item)
+- `POST   /api/v1/party-sessions/{id}/playback/seek` (positionSeconds)
+- `POST   /api/v1/party-sessions/{id}/playback/volume` (0.0–1.0 or 0–100, if supported)
 
-- `GET /api/v1/party-sessions/{id}/playback`
-- `POST /api/v1/party-sessions/{id}/playback/play`
-- `POST /api/v1/party-sessions/{id}/playback/pause`
-- `POST /api/v1/party-sessions/{id}/playback/seek` (positionSeconds)
-- `POST /api/v1/party-sessions/{id}/playback/skip`
-- `POST /api/v1/party-sessions/{id}/playback/volume` (if supported)
+### 7.4 Endpoints
+- `GET    /api/v1/endpoints` (available endpoints for user)
+- `POST   /api/v1/endpoints/register` (for web player + future plugins)
+- `POST   /api/v1/endpoints/{endpointId}/attach` (attach endpoint to session)
+- `POST   /api/v1/endpoints/{endpointId}/detach`
+- `POST   /api/v1/endpoints/{endpointId}/heartbeat` (state + position)
 
-Endpoints:
+---
 
-- `GET /api/v1/endpoints` list endpoints available to user
-- `POST /api/v1/endpoints/heartbeat` (endpointId, sessionId, state)
+## 8. OpenSubsonic/Subsonic Compatibility (Optional, Backend-gated)
 
-### B) OpenSubsonic `jukeboxControl` (optional / plugin-gated)
+### 8.1 Default behavior
+- `/rest/jukeboxControl(.view)` returns **410 Gone** unless:
+    - `jukebox.enabled=true` AND
+    - a backend is configured AND
+    - an active endpoint/back-end target is selected.
 
-Current behavior should remain:
-
-- Default install: return HTTP `410 Gone` per ADR-0007.
-
-If a deployment enables a jukebox backend:
-
-- Implement `jukeboxControl` with Subsonic semantics **only when**:
-  - a backend is configured, and
-  - a default target endpoint is selected.
-
-Supported actions should be explicitly documented and tested (the Subsonic ecosystem commonly expects):
-
-- `get` / `status` (queue + current)
-- `set` (replace queue)
-- `start`, `stop`, `skip`
-- `add` (add track(s))
+### 8.2 Supported actions (minimum viable)
+Implement the Subsonic jukebox action set when enabled:
+- `get`, `status`, `set`
+- `start`, `stop`
+- `skip` (support `index` and `offset` seconds)
+- `add` (multiple `id`)
 - `clear`
-- `remove` (remove by index)
-- `setGain` / volume (only if backend supports)
+- `remove` (by index)
+- `shuffle`
+- `setGain` (volume 0.0–1.0), only if backend supports
 
-Compatibility note:
+### 8.3 Mapping Strategy
+- Map Subsonic “jukebox playlist” to Melodee Party Session queue.
+- Use a configured “default party session” OR create an internal “Jukebox Session” for that backend.
+- Enforce permissions (`HasJukeboxRole`) and apply the same rate limits.
 
-- Many jukebox clients assume audio plays on the server itself. For those clients, this only works if the configured backend truly represents an audible output in the user’s environment (server audio hardware, Snapcast output, etc.).
+---
 
-## Data model requirements
+## 9. Jukebox Backend Design (Optional Tier)
 
-### MVP (party sessions in core)
+### 9.1 Backend goals
+- Allow headless/server playback or external control targets without coupling Melodee core to specific players.
+- Support multiple backend types over time with consistent contracts.
 
-Add new tables/entities (names illustrative; align with existing style):
+### 9.2 Proposed backend interface
+Define a backend contract, e.g. `IPlaybackEndpointBackend` with methods:
+- `GetCapabilities()`
+- `Play(queueItem, startPositionSeconds?)`
+- `Pause()`, `Stop()`
+- `Skip(nextQueueItem)`
+- `Seek(positionSeconds)`
+- `SetVolume(value)` (optional)
+- `GetStatus()` (current track id, position, isPlaying, volume)
+- Events/callbacks:
+    - `OnTrackEnded`, `OnError`, `OnPositionChanged` (optional)
 
+### 9.3 Reference backend: MPV (recommended first backend)
+Feature knobs commonly expected by users:
+- MPV executable path override
+- Audio device selection (MPV audio device name)
+- Extra args / command template for integration (e.g., Snapcast scenarios)
+- IPC socket for real-time control
+- Process supervision (restart on crash)
+
+> Implementation details are flexible; the requirement is that the backend can be configured and can report status reliably.
+
+### 9.4 Operational constraints
+- Docker deployments may need:
+    - `/dev/snd` device pass-through
+    - appropriate group permissions
+- Document these clearly when the backend is enabled.
+
+---
+
+## 10. Data Model Requirements
+
+> Names illustrative; align with Melodee conventions.
+
+### 10.1 Core tables
 - `PartySession`
-  - ApiKey
-  - Name
-  - OwnerUserId
-  - JoinCodeHash (optional)
-  - Status (Active/Ended)
-  - ActiveEndpointId (nullable)
-  - CreatedAt / LastUpdatedAt
+    - ApiKey, Name, OwnerUserId, Status (Active/Ended)
+    - JoinCodeHash (optional), ActiveEndpointId (nullable)
+    - CreatedAt, UpdatedAt
+    - QueueRevision (long), PlaybackRevision (long)
 
 - `PartySessionParticipant`
-  - PartySessionId
-  - UserId
-  - Role (Owner/DJ/Controller/Listener)
-  - JoinedAt
+    - PartySessionId, UserId, Role, JoinedAt, LastSeenAt
 
 - `PartyQueueItem`
-  - PartySessionId
-  - ApiKey
-  - SongId + SongApiKey
-  - EnqueuedByUserId
-  - EnqueuedAt
-  - SortOrder
+    - ApiKey, PartySessionId, SongId/SongApiKey
+    - EnqueuedByUserId, EnqueuedAt
+    - SortOrder, Source, Note
 
 - `PartyPlaybackState`
-  - PartySessionId
-  - CurrentQueueItemApiKey
-  - PositionSeconds
-  - IsPlaying
-  - Volume (nullable)
-  - UpdatedByUserId (nullable)
-  - LastHeartbeatAt
+    - PartySessionId
+    - CurrentQueueItemApiKey
+    - PositionSeconds
+    - IsPlaying
+    - Volume (nullable)
+    - LastHeartbeatAt
+    - UpdatedByUserId
 
 - `Endpoint`
-  - ApiKey
-  - OwnerUserId
-  - Name
-  - Type (WebPlayer/Snapcast/MPD/Chromecast/…)
-  - Capabilities JSON
-  - LastSeenAt
+    - ApiKey, OwnerUserId, Name, Type
+    - CapabilitiesJson
+    - LastSeenAt
+    - IsShared (bool), Room (optional)
 
-### Reuse opportunities
+### 10.2 Reuse / boundaries
+- Existing per-user queue (`PlayQues`) remains private playback; do not overload it.
+- Existing `Players` may inform endpoint discovery but Party endpoints require capabilities.
 
-- Existing per-user `PlayQues` and `QueueController` should remain as “private queues”. Party sessions should be distinct (do not overload per-user queue).
-- Existing `Players` table can inform endpoint discovery/last seen, but party endpoints likely need additional capability fields.
+---
 
-## UI requirements (Blazor)
+## 11. UI Requirements (Blazor)
 
-- Session creation/join screen:
-  - Create session, show join link / QR.
-  - Join a session by link/code.
-- Party session view:
-  - Now playing + queue.
-  - Add songs (search/pick) and reorder.
-  - Role/permissions UI for owner.
-- Endpoint selection:
-  - Choose a target endpoint for the session.
-- Web player integration:
-  - `/musicplayer` can attach to a session (e.g., `?session=<id>`).
-  - Acts as the “active endpoint” by heartbeating and reporting position.
+### 11.1 Session management
+- Create session, show join link + join code/PIN
+- Join by link/code
+- Session dashboard:
+    - Now playing
+    - Queue with add/reorder/remove
+    - Participants list + roles
+    - Owner controls (lock queue, kick/ban, assign endpoint)
 
-## Security requirements
+### 11.2 Endpoint selection
+- List endpoints:
+    - My web players (active browser tabs)
+    - Shared room endpoints (future)
+- Assign selected endpoint to session
 
-- Treat join codes as secrets:
-  - Store hashed join codes; do not store raw PINs.
-- Prevent IDOR:
-  - Session and queue operations must verify membership and role.
-- Rate limiting:
-  - Apply tight rate limits to control actions to prevent denial-of-service and “skip spam”.
-- Auditability:
-  - Store who made each queue mutation and control command.
+### 11.3 Web Player attachment
+- `/musicplayer` can attach to a session:
+    - session picker + “Attach”
+    - or query string parameter
+- Displays “Party Mode” UI state and sends heartbeats.
 
-## Operational requirements
+---
 
-- Feature flags / configuration:
-  - `partyMode.enabled` (core)
-  - `jukebox.backends.*` (optional plugin backends)
-- Clear documentation for “jukebox backend” deployments:
-  - required ports/devices
-  - container/VM pass-through
-  - expected reliability model
+## 12. Security, Privacy, Reliability
 
-## Telemetry and diagnostics
+Security:
+- Hash join codes/PINs; never store raw secrets.
+- Prevent IDOR: validate membership + role for every operation.
+- Apply rate limiting to control endpoints.
+- Audit trail persisted for key actions.
 
-- Track:
-  - active sessions
-  - queue mutations per minute
-  - active endpoints and heartbeat staleness
-  - playback errors by backend type
+Reliability:
+- Heartbeat staleness detection:
+    - if `LastHeartbeatAt` exceeds threshold (e.g., 30s), endpoint considered stale
+    - controllers can reassign endpoint
+- If endpoint dies mid-track:
+    - session remains active; state persists; new endpoint can resume from last known position
 
-## Rollout plan (suggested)
+Performance:
+- Queue operations should be O(log n) / O(n) acceptable for typical party sizes (hundreds of tracks).
+- Avoid broadcasting full queue on every change; prefer diffs once SignalR exists.
 
-### Phase 1: Party sessions + web player endpoint
+---
 
-- Implement party sessions + shared queue + permissions.
-- Integrate with `/musicplayer` as the first endpoint.
-- Provide polling-based updates (SignalR optional).
-- Keep `/rest/jukeboxControl` returning 410.
+## 13. Implementation Phases (Agent-ready)
 
-### Phase 2: Real-time + moderation
+### Phase 0 — Foundations (DB + Domain + Policies)
+**Deliverables**
+- New entities/tables + migrations for PartySession, Participants, QueueItems, PlaybackState, Endpoint
+- Authorization policies and role model
+- Feature flags:
+    - `partyMode.enabled`
+    - `jukebox.enabled` (default false)
+- API scaffolding and DTOs
 
-- SignalR events for queue/playback updates.
-- Owner moderation tools (kick, lock queue, restrict volume).
+**Acceptance**
+- DB migrates cleanly; endpoints compile; basic auth checks in place.
 
-### Phase 3: Optional backends + OpenSubsonic jukeboxControl (opt-in)
+---
 
-- Add a single well-scoped backend first (e.g., Snapcast or MPD).
-- Only then enable OpenSubsonic `jukeboxControl` behind configuration.
+### Phase 1 — Party Sessions + Shared Queue (Polling OK) + Web Player Endpoint MVP
+**Deliverables**
+- Party session CRUD + join/leave/end
+- Shared queue operations with `QueueRevision` optimistic concurrency
+- Basic playback intent endpoints (play/pause/skip/seek) storing intent/state
+- Web Player attachment:
+    - attach to session
+    - fetch queue/current item
+    - play in browser and heartbeat position/state
+- Polling refresh for controllers/listeners
 
-## Acceptance criteria
+**Acceptance**
+- Two users can join same session, add songs, see consistent queue.
+- Web player plays from shared queue and advances to next track.
+- Unauthorized users cannot control.
 
-- Multiple users can join a party session, add songs, and see a consistent queue.
-- A single web player endpoint can attach to the session and play through the queue.
-- Permission rules prevent non-controllers from skipping or griefing.
-- Default builds remain aligned with ADR-0007 (no implicit server-side audio output; `jukeboxControl` stays 410 unless explicitly enabled).
+---
+
+### Phase 2 — Real-time + Moderation + Anti-abuse
+**Deliverables**
+- SignalR hub + events for queue/playback/participants
+- Owner tools: queue lock, kick/ban, role changes
+- Rate limiting for control actions
+- Audit trail for queue and playback commands
+
+**Acceptance**
+- UI updates instantly (queue + now playing).
+- Skip spam is blocked by rate limits/cooldowns.
+- Owner can moderate.
+
+---
+
+### Phase 3 — Endpoint Registry & Capability Model (First-class)
+**Deliverables**
+- Endpoint register/list/attach/detach semantics
+- Capability-driven UI (hide/disable unsupported controls)
+- Staleness detection + “reassign endpoint” flow
+
+**Acceptance**
+- Multiple endpoints show up; owner can switch endpoint mid-session.
+- Controls reflect endpoint capabilities.
+
+---
+
+### Phase 4 — Optional MPV Backend (Headless Jukebox)
+**Deliverables**
+- Backend abstraction + MPV backend implementation
+- Config:
+    - enabled flag
+    - mpv path
+    - audio device selection
+    - extra args/template
+- Observability: backend health + error surfaced in session
+
+**Acceptance**
+- In a configured deployment, MPV backend plays session queue headlessly.
+- Play/pause/skip/seek work; state remains consistent.
+
+---
+
+### Phase 5 — OpenSubsonic/Subsonic `jukeboxControl` (Backend-gated)
+**Deliverables**
+- Enable `/rest/jukeboxControl(.view)` only when backend enabled
+- Implement action mapping to a dedicated Jukebox Session or configurable session
+- Test matrix using at least one Subsonic client that supports jukebox
+
+**Acceptance**
+- Default build still returns 410.
+- When enabled, `get/status/add/start/stop/skip/setGain` etc. function correctly.
+
+---
+
+### Phase 6 — Additional Backends (Optional roadmap)
+**Deliverables**
+- Snapcast/MPD plugin(s) (choose one first)
+- Multi-room patterns (multiple backend instances/devices)
+
+**Acceptance**
+- At least one additional backend works end-to-end and is documented.
+
+---
+
+## 14. Testing Requirements
+
+Unit tests:
+- Queue concurrency + revision conflicts
+- Role enforcement
+- Rate limiting
+
+Integration tests:
+- Session lifecycle
+- Endpoint heartbeat updates playback state
+- Web player plays and advances queue
+
+E2E (smoke):
+- Two browsers join a session; one acts as endpoint; other as controller.
+
+---
+
+## 15. Acceptance Criteria Summary (Must-have)
+- Multi-user shared queue with consistent ordering and revision-based concurrency.
+- Web player can act as a party endpoint (attach + play + heartbeat).
+- Role-based permissions and anti-abuse controls exist.
+- Default install does NOT enable server-side jukebox and keeps `jukeboxControl` disabled (410).
+- Optional backend + Subsonic jukebox compatibility can be enabled explicitly.
+
+---
+
+## Appendix A — Notes for Coding Agents
+- Prefer incremental, mergeable PRs per phase.
+- Each phase must include:
+    - migrations + models
+    - API endpoints + tests
+    - minimal UI wiring (where applicable)
+    - docs updates
+- Keep Party Mode (core) and Jukebox Backends (optional) cleanly separated.
+
