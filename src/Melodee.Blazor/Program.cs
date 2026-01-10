@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO.Compression;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.RateLimiting;
 using Asp.Versioning;
@@ -356,6 +357,49 @@ builder.Services.AddRateLimiter(options =>
             _ => new ConcurrencyLimiterOptions
             {
                 PermitLimit = streamConcurrentLimit,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 5
+            });
+    });
+    
+    // Party mode rate limiting policies
+    options.AddPolicy("party-queue-add", context =>
+    {
+        // Rate limit: max 20 queue additions per minute per user per session
+        var userId = context.User.FindFirstValue(ClaimTypes.Sid) ?? "anonymous";
+        return RateLimitPartition.GetFixedWindowLimiter(userId,
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 20,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 5
+            });
+    });
+    
+    options.AddPolicy("party-playback-control", context =>
+    {
+        // Rate limit: max 30 playback control actions per minute per user per session
+        var userId = context.User.FindFirstValue(ClaimTypes.Sid) ?? "anonymous";
+        return RateLimitPartition.GetFixedWindowLimiter(userId,
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 30,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 10
+            });
+    });
+    
+    options.AddPolicy("party-volume", context =>
+    {
+        // Rate limit: max 20 volume changes per minute per user per session
+        var userId = context.User.FindFirstValue(ClaimTypes.Sid) ?? "anonymous";
+        return RateLimitPartition.GetFixedWindowLimiter(userId,
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 20,
+                Window = TimeSpan.FromMinutes(1),
                 QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                 QueueLimit = 5
             });

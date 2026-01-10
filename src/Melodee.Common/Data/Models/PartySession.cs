@@ -48,6 +48,12 @@ public class PartySession : DataModelBase
     [Required]
     public long PlaybackRevision { get; set; }
 
+    /// <summary>
+    /// Whether the queue is locked. When locked, only Owner/DJ can modify the queue.
+    /// </summary>
+    [Required]
+    public bool IsQueueLocked { get; set; } = false;
+
     public ICollection<PartySessionParticipant> Participants { get; set; } = new List<PartySessionParticipant>();
 
     public ICollection<PartyQueueItem> QueueItems { get; set; } = new List<PartyQueueItem>();

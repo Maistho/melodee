@@ -14,7 +14,7 @@ This guide breaks the **Melodee Jukebox / Party Mode** requirements into impleme
 
 - [x] **Phase 0 — Foundations:** DB, domain models, auth policies, feature flags, scaffolding
 - [x] **Phase 1 — Party Sessions + Shared Queue + Web Player Endpoint (MVP):** CRUD/join, queue, playback intent, heartbeat, polling UI
-- [ ] **Phase 2 — Real-time + Moderation + Anti-abuse:** SignalR events, rate limits, queue lock, kick/ban, audit
+- [x] **Phase 2 — Real-time + Moderation + Anti-abuse:** SignalR events, rate limits, queue lock, kick/ban, audit
 - [ ] **Phase 3 — Endpoint Registry + Capability Model:** endpoints first-class, attach/detach, staleness, capability-driven UI
 - [ ] **Phase 4 — MPV Backend:** backend abstraction + MPV backend, config + health reporting
 - [ ] **Phase 5 — Subsonic/OpenSubsonic `jukeboxControl` (Backend-gated):** full mapping, tests, default 410

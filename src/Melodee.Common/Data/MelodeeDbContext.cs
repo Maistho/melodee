@@ -103,6 +103,8 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
 
     public DbSet<PartySessionEndpoint> PartySessionEndpoints { get; set; }
 
+    public DbSet<PartyAuditEvent> PartyAuditEvents { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Use a fixed timestamp for seed data to prevent migration churn
