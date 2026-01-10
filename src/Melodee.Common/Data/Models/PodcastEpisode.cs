@@ -51,4 +51,9 @@ public class PodcastEpisode : DataModelBase
     public long? LocalFileSize { get; set; }
 
     public TimeSpan? Duration { get; set; }
+
+    /// <summary>
+    ///     When this episode was queued for download. Used for FIFO ordering in download job.
+    /// </summary>
+    public Instant? QueuedAt { get; set; }
 }

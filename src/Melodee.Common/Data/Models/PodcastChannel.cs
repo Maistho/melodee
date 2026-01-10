@@ -49,5 +49,15 @@ public class PodcastChannel : DataModelBase
 
     public bool IsDeleted { get; set; }
 
+    /// <summary>
+    ///     Maximum number of downloaded episodes to keep for this channel. 0 or null means unlimited (uses global setting).
+    /// </summary>
+    public int? MaxDownloadedEpisodes { get; set; }
+
+    /// <summary>
+    ///     Maximum storage bytes for downloaded episodes in this channel. 0 or null means unlimited (uses global/user quota).
+    /// </summary>
+    public long? MaxStorageBytes { get; set; }
+
     public ICollection<PodcastEpisode> Episodes { get; set; } = new List<PodcastEpisode>();
 }

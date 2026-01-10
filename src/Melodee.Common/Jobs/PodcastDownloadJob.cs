@@ -50,7 +50,7 @@ public sealed class PodcastDownloadJob(
         var episodesToDownload = await dbContext.PodcastEpisodes
             .Include(x => x.PodcastChannel)
             .Where(x => x.DownloadStatus == PodcastEpisodeDownloadStatus.Queued)
-            .OrderBy(x => x.CreatedAt)
+            .OrderBy(x => x.QueuedAt ?? x.CreatedAt)
             .ToListAsync(context.CancellationToken).ConfigureAwait(false);
 
         if (episodesToDownload.Count == 0)
@@ -100,6 +100,46 @@ public sealed class PodcastDownloadJob(
                     episode.DownloadError = "User storage quota reached.";
                     await dbContext.SaveChangesAsync(context.CancellationToken).ConfigureAwait(false);
                     continue;
+                }
+            }
+
+            // Per-channel quota enforcement
+            var channel = episode.PodcastChannel;
+            if (channel != null)
+            {
+                // Check max downloaded episodes per channel
+                if (channel.MaxDownloadedEpisodes > 0)
+                {
+                    var downloadedEpisodeCount = await dbContext.PodcastEpisodes
+                        .CountAsync(x => x.PodcastChannelId == channel.Id && x.DownloadStatus == PodcastEpisodeDownloadStatus.Downloaded, context.CancellationToken)
+                        .ConfigureAwait(false);
+
+                    if (downloadedEpisodeCount >= channel.MaxDownloadedEpisodes)
+                    {
+                        Logger.Warning("[{JobName}] Channel {ChannelId} has reached max downloaded episodes limit of {Limit}.", nameof(PodcastDownloadJob), channel.Id, channel.MaxDownloadedEpisodes);
+                        episode.DownloadStatus = PodcastEpisodeDownloadStatus.Failed;
+                        episode.DownloadError = "Channel episode limit reached.";
+                        await dbContext.SaveChangesAsync(context.CancellationToken).ConfigureAwait(false);
+                        continue;
+                    }
+                }
+
+                // Check max storage bytes per channel
+                if (channel.MaxStorageBytes > 0)
+                {
+                    var channelUsage = await dbContext.PodcastEpisodes
+                        .Where(x => x.PodcastChannelId == channel.Id && x.DownloadStatus == PodcastEpisodeDownloadStatus.Downloaded)
+                        .SumAsync(x => x.LocalFileSize ?? 0, context.CancellationToken)
+                        .ConfigureAwait(false);
+
+                    if (channelUsage >= channel.MaxStorageBytes)
+                    {
+                        Logger.Warning("[{JobName}] Channel {ChannelId} has reached storage quota of {Quota} bytes.", nameof(PodcastDownloadJob), channel.Id, channel.MaxStorageBytes);
+                        episode.DownloadStatus = PodcastEpisodeDownloadStatus.Failed;
+                        episode.DownloadError = "Channel storage quota reached.";
+                        await dbContext.SaveChangesAsync(context.CancellationToken).ConfigureAwait(false);
+                        continue;
+                    }
                 }
             }
 

@@ -67,6 +67,8 @@ public static class SettingRegistry
     public const string PodcastDownloadMaxEnclosureBytes = "podcast.download.maxEnclosureBytes";
     public const string PodcastQuotaMaxBytesPerUser = "podcast.quota.maxBytesPerUser";
     public const string PodcastRetentionDownloadedEpisodesInDays = "podcast.retention.downloadedEpisodesInDays";
+    public const string PodcastRetentionKeepLastNEpisodes = "podcast.retention.keepLastNEpisodes";
+    public const string PodcastRetentionKeepUnplayedOnly = "podcast.retention.keepUnplayedOnly";
     public const string PodcastRecoveryStuckDownloadThresholdMinutes = "podcast.recovery.stuckDownloadThresholdMinutes";
     public const string PodcastRecoveryOrphanedUsageThresholdHours = "podcast.recovery.orphanedUsageThresholdHours";
     public const string JobsPodcastRefreshCronExpression = "jobs.podcastRefresh.cronExpression";

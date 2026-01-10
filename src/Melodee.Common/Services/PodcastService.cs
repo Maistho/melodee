@@ -441,6 +441,7 @@ public sealed class PodcastService(
 
             episode.DownloadStatus = PodcastEpisodeDownloadStatus.Queued;
             episode.DownloadError = null;
+            episode.QueuedAt = SystemClock.Instance.GetCurrentInstant();
             episode.LastUpdatedAt = SystemClock.Instance.GetCurrentInstant();
 
             await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

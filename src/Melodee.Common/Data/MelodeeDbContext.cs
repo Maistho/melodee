@@ -1581,6 +1581,26 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
                     Comment = "Maximum total storage in bytes for all podcasts per user. 0 for unlimited.",
                     Value = "5368709120", // 5GB
                     CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1813,
+                    ApiKey = SeedGuid("Setting", 1813),
+                    Category = (int)SettingCategory.Podcast,
+                    Key = SettingRegistry.PodcastRetentionKeepLastNEpisodes,
+                    Comment = "Keep only the last N downloaded episodes per channel. 0 to disable this policy.",
+                    Value = "0",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1814,
+                    ApiKey = SeedGuid("Setting", 1814),
+                    Category = (int)SettingCategory.Podcast,
+                    Key = SettingRegistry.PodcastRetentionKeepUnplayedOnly,
+                    Comment = "Delete downloaded episodes after they have been played. false to disable.",
+                    Value = "false",
+                    CreatedAt = seedDataTimestamp
                 }
             );
         });
