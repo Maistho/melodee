@@ -13,6 +13,7 @@
 @inject DialogService DialogService
 @inject NavigationManager NavigationManager
 @inject LibraryService LibraryService
+@inject UserService UserService
 @inject IJSRuntime JsRuntime
 @implements IAsyncDisposable
 
@@ -52,7 +53,12 @@
             </RadzenColumn>
             <RadzenColumn Size="12" SizeMD="10">
                 <RadzenStack Gap="0.5rem">
-                    <RadzenText TextStyle="TextStyle.DisplayH5" TagName="TagName.H1" Class="rz-m-0">@_channel.Title</RadzenText>
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                        <RadzenText TextStyle="TextStyle.DisplayH5" TagName="TagName.H1" Class="rz-m-0">@_channel.Title</RadzenText>
+                        <RadzenIcon Icon="@(_isPinned ? "keep" : "keep_off")" class="filled-icon"
+                                    IconColor="@(_isPinned ? "#99CCFF" : "#C9C9C7")"
+                                    @onclick="@TogglePinned" Style="cursor:pointer;" title="@L("Actions.Pin")" />
+                    </RadzenStack>
                     @if (!string.IsNullOrEmpty(_channel.Description))
                     {
                         <RadzenText TextStyle="TextStyle.Body2" Class="rz-text-secondary-color" Style="max-width: 800px;">
@@ -333,6 +339,7 @@
     private int _count;
     private bool _isLoading;
     private int _channelId;
+    private bool _isPinned;
 
     protected override async Task OnInitializedAsync()
     {
@@ -359,6 +366,7 @@
             if (_channel != null)
             {
                 _channelId = _channel.Id;
+                _isPinned = await UserService.IsPinned(CurrentUsersId, UserPinType.PodcastChannel, _channelId);
             }
         }
         catch (Exception ex)
@@ -549,6 +557,12 @@
                 MainLayoutProxyService.ToggleSpinnerVisible();
             }
         }
+    }
+
+    private async Task TogglePinned()
+    {
+        _isPinned = !_isPinned;
+        await UserService.TogglePinnedAsync(CurrentUsersId, UserPinType.PodcastChannel, _channelId);
     }
 
     private async Task ShowSettingsDialog()

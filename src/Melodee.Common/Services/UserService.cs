@@ -44,6 +44,7 @@ ArtistService artistService,
 AlbumService albumService,
 SongService songService,
 PlaylistService playlistService,
+PodcastService podcastService,
 IBus bus)
 : ServiceBase(logger, cacheManager, contextFactory)
 {
@@ -935,6 +936,18 @@ IBus bus)
                                         pin.ImageUrl = $"/images/{playlistResult.Data.ToApiKey()}/{ImageSize.Thumbnail}";
                                         pin.LinkUrl = $"/data/playlist/ {playlistResult.Data.ApiKey}";
                                         pin.Text = playlistResult.Data.Name;
+                                    }
+
+                                    break;
+                                case UserPinType.PodcastChannel:
+                                    var podcastResult = await podcastService.GetChannelAsync(pin.PinId, pin.UserId, cancellationToken)
+                                        .ConfigureAwait(false);
+                                    if (podcastResult is { IsSuccess: true, Data: not null })
+                                    {
+                                        pin.Icon = "podcasts";
+                                        pin.ImageUrl = podcastResult.Data.ImageUrl ?? string.Empty;
+                                        pin.LinkUrl = $"/data/podcast/{podcastResult.Data.ApiKey}";
+                                        pin.Text = podcastResult.Data.Title;
                                     }
 
                                     break;

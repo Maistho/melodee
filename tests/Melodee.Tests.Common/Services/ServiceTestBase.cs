@@ -451,6 +451,7 @@ public abstract class ServiceTestBase : IDisposable, IAsyncDisposable
             GetAlbumService(),
             GetSongService(),
             GetPlaylistService(),
+            GetPodcastService(),
             MockBus());
     }
 

@@ -10,5 +10,7 @@ public enum UserPinType
 
     Song,
 
-    Playlist
+    Playlist,
+    
+    PodcastChannel
 }

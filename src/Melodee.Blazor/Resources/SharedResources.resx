@@ -5033,4 +5033,7 @@
   <data name="Message.Warning" xml:space="preserve">
     <value>Warning</value>
   </data>
+  <data name="Actions.Pin" xml:space="preserve">
+    <value>Pin</value>
+  </data>
 </root>
