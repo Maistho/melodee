@@ -59,7 +59,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
 
-<data name="Navigation.Dashboard" xml:space="preserve">
+  <data name="Navigation.Dashboard" xml:space="preserve">
     <value>Painel</value>
   </data>
   <data name="Navigation.Library" xml:space="preserve">
@@ -149,8 +149,6 @@
   <data name="Admin.YouAreEditor" xml:space="preserve">
     <value>Você é um Editor!</value>
   </data>
-
-
   <data name="Actions.Save" xml:space="preserve">
     <value>Salvar</value>
   </data>
@@ -244,8 +242,6 @@
   <data name="Actions.No" xml:space="preserve">
     <value>Não</value>
   </data>
-
-
   <data name="Common.Name" xml:space="preserve">
     <value>Nome</value>
   </data>
@@ -327,8 +323,6 @@
   <data name="Common.Bitrate" xml:space="preserve">
     <value>Taxa de bits</value>
   </data>
-
-
   <data name="Auth.Login" xml:space="preserve">
     <value>Entrar</value>
   </data>
@@ -503,8 +497,6 @@
   <data name="Auth.EmailAddress" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Email address</value>
   </data>
-
-
   <data name="Messages.Loading" xml:space="preserve">
     <value>Carregando...</value>
   </data>
@@ -550,8 +542,6 @@
   <data name="Messages.UnsavedChanges" xml:space="preserve">
     <value>[NEEDS TRANSLATION] You have unsaved changes. Do you want to continue?</value>
   </data>
-
-
   <data name="Dashboard.Welcome" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Welcome to Melodee</value>
   </data>
@@ -618,8 +608,6 @@
   <data name="Dashboard.When" xml:space="preserve">
     <value>[NEEDS TRANSLATION] When</value>
   </data>
-
-
   <data name="Library.BrowseArtists" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Browse Artists</value>
   </data>
@@ -638,8 +626,6 @@
   <data name="Library.SortBy" xml:space="preserve">
     <value>Ordenar por</value>
   </data>
-
-
   <data name="Player.NowPlaying" xml:space="preserve">
     <value>Reproduzindo agora</value>
   </data>
@@ -658,8 +644,6 @@
   <data name="Player.ClearQueue" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Clear Queue</value>
   </data>
-
-
   <data name="Settings.General" xml:space="preserve">
     <value>Geral</value>
   </data>
@@ -684,8 +668,6 @@
   <data name="Settings.Privacy" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Privacy</value>
   </data>
-
-
   <data name="About.Title" xml:space="preserve">
     <value>[NEEDS TRANSLATION] About {0}</value>
   </data>
@@ -746,8 +728,6 @@
   <data name="About.GitHub" xml:space="preserve">
     <value>GitHub</value>
   </data>
-
-
   <data name="Data.Statistics" xml:space="preserve">
     <value>Estatísticas</value>
   </data>
@@ -1039,8 +1019,6 @@
   <data name="Profile.UnlinkingError" xml:space="preserve">
     <value>[NEEDS TRANSLATION] An error occurred while unlinking. Please try again.</value>
   </data>
-
-
   <data name="RequestNew.PageTitle" xml:space="preserve">
     <value>[NEEDS TRANSLATION] New Request</value>
   </data>
@@ -1065,8 +1043,6 @@
   <data name="RequestNew.ErrorCreatingRequest" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Error creating request</value>
   </data>
-
-
   <data name="RequestDetail.PageTitle" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Request Detail</value>
   </data>
@@ -1121,8 +1097,6 @@
   <data name="RequestDetail.ErrorPosting" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Error posting comment</value>
   </data>
-
-
   <data name="RequestEdit.PageTitle" xml:space="preserve">
     <value>Editar solicitação</value>
   </data>
@@ -1153,8 +1127,6 @@
   <data name="RequestEdit.ErrorUpdating" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Error updating request</value>
   </data>
-
-
   <data name="Validation.Required" xml:space="preserve">
     <value>[NEEDS TRANSLATION] This field is required</value>
   </data>
@@ -1167,8 +1139,6 @@
   <data name="Validation.PasswordsDoNotMatch" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Passwords do not match</value>
   </data>
-
-
   <data name="Stats.PageTitle" xml:space="preserve">
     <value>Estatísticas</value>
   </data>
@@ -1226,8 +1196,6 @@
   <data name="Stats.LibraryScansPerDay" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Library scans per day</value>
   </data>
-
-
   <data name="Search.PageTitle" xml:space="preserve">
     <value>Resultados da pesquisa</value>
   </data>
@@ -1261,8 +1229,6 @@
   <data name="Search.PlaySong" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Play song</value>
   </data>
-
-
   <data name="NowPlaying.PageTitle" xml:space="preserve">
     <value>Reproduzindo agora</value>
   </data>
@@ -1272,8 +1238,6 @@
   <data name="NowPlaying.NoSongsPlaying" xml:space="preserve">
     <value>[NEEDS TRANSLATION] No songs are currently playing.</value>
   </data>
-
-
   <data name="Users.PageTitle" xml:space="preserve">
     <value>Usuários</value>
   </data>
@@ -1286,8 +1250,6 @@
   <data name="Users.Delete" xml:space="preserve">
     <value>Excluir</value>
   </data>
-
-
   <data name="Shares.PageTitle" xml:space="preserve">
     <value>Compartilhamentos</value>
   </data>
@@ -1300,8 +1262,6 @@
   <data name="Shares.Delete" xml:space="preserve">
     <value>Excluir</value>
   </data>
-
-
   <data name="RadioStations.PageTitle" xml:space="preserve">
     <value>Estações de Rádio</value>
   </data>
@@ -1314,8 +1274,6 @@
   <data name="RadioStations.Delete" xml:space="preserve">
     <value>Excluir</value>
   </data>
-
-
   <data name="Nav.Back" xml:space="preserve">
     <value>Voltar</value>
   </data>
@@ -1361,8 +1319,6 @@
   <data name="Nav.Libraries" xml:space="preserve">
     <value>Bibliotecas</value>
   </data>
-
-
   <data name="Actions.SelectAll" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Select All</value>
   </data>
@@ -1498,8 +1454,6 @@
   <data name="Actions.ViewAll" xml:space="preserve">
     <value>Ver tudo</value>
   </data>
-
-
   <data name="Label.Name" xml:space="preserve">
     <value>Nome</value>
   </data>
@@ -1782,8 +1736,6 @@
   <data name="Status.Complete" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Complete</value>
   </data>
-
-
   <data name="Dialog.AreYouSure" xml:space="preserve">
     <value>Tem certeza?</value>
   </data>
@@ -1808,8 +1760,6 @@
   <data name="Dialog.StartScan" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Start scan</value>
   </data>
-
-
   <data name="TableHeader.Hash" xml:space="preserve">
     <value>#</value>
   </data>
@@ -1918,8 +1868,6 @@
   <data name="TableHeader.SpotifyId" xml:space="preserve">
     <value>[NEEDS TRANSLATION] SpotifyId</value>
   </data>
-
-
   <data name="Message.DisplayingPage" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Displaying page {0} of {1} (total {2} records)</value>
   </data>
@@ -1956,8 +1904,6 @@
   <data name="Message.DeletingLibraries" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Deleting Libraries</value>
   </data>
-
-
   <data name="ArtistDetail.DeleteArtistWarning" xml:space="preserve">
     <value>Excluir o artista, todos os álbuns do artista e todos os arquivos do álbum. ATENÇÃO!</value>
   </data>
@@ -2072,8 +2018,6 @@
   <data name="ArtistDetail.DeletedArtistAlbums" xml:space="preserve">
     <value>[NEEDS TRANSLATION] deleted artist albums</value>
   </data>
-
-
   <data name="AlbumDetail.DeleteAlbum" xml:space="preserve">
     <value>Excluir o álbum e todos os arquivos do álbum. ATENÇÃO!</value>
   </data>
@@ -2176,13 +2120,9 @@
   <data name="AlbumDetail.SetSongRating" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Set song rating</value>
   </data>
-
-
   <data name="SongDetail.DetailsGoHere" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Details go here for {0}</value>
   </data>
-
-
   <data name="Libraries.PageTitle" xml:space="preserve">
     <value>Bibliotecas</value>
   </data>
@@ -2195,8 +2135,6 @@
   <data name="Libraries.SelectItem" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Select item</value>
   </data>
-
-
   <data name="LibraryDetail.CleanLibrary" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Clean library, removing any empty folders.</value>
   </data>
@@ -2338,8 +2276,6 @@
   <data name="Message.UpdatedLibraryAggregates" xml:space="preserve">
     <value>[NEEDS TRANSLATION] updated library aggregates</value>
   </data>
-
-
   <data name="PlaylistDetail.UnlockPlaylist" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Unlock playlist, will allow modifications.</value>
   </data>
@@ -2373,8 +2309,6 @@
   <data name="Message.TogglingPin" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Toggling Pin</value>
   </data>
-
-
   <data name="Requests.PageTitle" xml:space="preserve">
     <value>Solicitações</value>
   </data>
@@ -2405,21 +2339,15 @@
   <data name="RequestStatus.Rejected" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Rejected</value>
   </data>
-
-
   <data name="RequestNew.HttpsPlaceholder" xml:space="preserve">
     <value>[NEEDS TRANSLATION] https://...</value>
   </data>
-
-
   <data name="RequestDetail.DeleteRequestConfirm" xml:space="preserve">
     <value>Tem certeza de que deseja excluir esta solicitação?</value>
   </data>
   <data name="RequestEdit.OnlyEditOwnRequests" xml:space="preserve">
     <value>Você só pode editar suas próprias solicitações</value>
   </data>
-
-
   <data name="RequestCategory.AddAlbum" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Add Album</value>
   </data>
@@ -2435,8 +2363,6 @@
   <data name="RequestCategory.General" xml:space="preserve">
     <value>Geral</value>
   </data>
-
-
   <data name="ArtistEdit.PageTitle" xml:space="preserve">
     <value>Adicionar/editar artista</value>
   </data>
@@ -2467,8 +2393,6 @@
   <data name="ArtistEdit.EnterValue" xml:space="preserve">
     <value>[NEEDS TRANSLATION] enter value</value>
   </data>
-
-
   <data name="AlbumEdit.PageTitle" xml:space="preserve">
     <value>Adicionar/editar álbum</value>
   </data>
@@ -2481,8 +2405,6 @@
   <data name="AlbumEdit.ExternalSearchDetails" xml:space="preserve">
     <value>[NEEDS TRANSLATION] This feature allows searching external providers for album information.</value>
   </data>
-
-
   <data name="LibraryEdit.PageTitle" xml:space="preserve">
     <value>Editar biblioteca</value>
   </data>
@@ -2546,8 +2468,6 @@
   <data name="LibraryType.Chart" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Chart</value>
   </data>
-
-
   <data name="UserEdit.PageTitle" xml:space="preserve">
     <value>Editar usuário</value>
   </data>
@@ -2581,8 +2501,6 @@
   <data name="Message.AvatarUpdated" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Avatar updated</value>
   </data>
-
-
   <data name="Charts.PageTitle" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Curated Charts</value>
   </data>
@@ -2610,8 +2528,6 @@
   <data name="Charts.DeleteCharts" xml:space="preserve">
     <value>Excluir rankings</value>
   </data>
-
-
   <data name="ChartsRankedReport.PageTitle" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Ranked Report</value>
   </data>
@@ -2648,8 +2564,6 @@
   <data name="ChartsRankedReport.NotFound" xml:space="preserve">
     <value>Não encontrado</value>
   </data>
-
-
   <data name="ChartsMissingReport.PageTitle" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Missing Report</value>
   </data>
@@ -2668,8 +2582,6 @@
   <data name="ChartsMissingReport.IdentifyMissingAlbum" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Identify Missing Album</value>
   </data>
-
-
   <data name="AdminDashboard.PageTitle" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Admin Dashboard</value>
   </data>
@@ -2757,8 +2669,6 @@
   <data name="AdminDashboard.APIDocs" xml:space="preserve">
     <value>[NEEDS TRANSLATION] API Docs</value>
   </data>
-
-
   <data name="AdminJobs.PageTitle" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Background Jobs</value>
   </data>
@@ -2933,8 +2843,6 @@
   <data name="AdminJobs.ErrorLoadingJobs" xml:space="preserve">
     <value>Erro ao carregar tarefas</value>
   </data>
-
-
   <data name="AdminSettings.PageTitle" xml:space="preserve">
     <value>Configurações</value>
   </data>
@@ -2953,8 +2861,6 @@
   <data name="AdminSettings.SuccessfullyUpdated" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Successfully updated setting!</value>
   </data>
-
-
   <data name="ChartEditor.EditChart" xml:space="preserve">
     <value>Editar ranking: {0}</value>
   </data>
@@ -3132,8 +3038,6 @@
   <data name="ChartEditor.ConfirmDeleteImageTitle" xml:space="preserve">
     <value>Confirmar Exclusão</value>
   </data>
-
-
   <data name="ChartDetail.PageTitle" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Chart Details</value>
   </data>
@@ -3173,8 +3077,6 @@
   <data name="ChartDetail.ChartItems" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Chart Items ({0})</value>
   </data>
-
-
   <data name="ChartImportDialog.JSONImportSchema" xml:space="preserve">
     <value>[NEEDS TRANSLATION] JSON Import Schema:</value>
   </data>
@@ -3220,8 +3122,6 @@
   <data name="ChartImportDialog.NA" xml:space="preserve">
     <value>[NEEDS TRANSLATION] N/A</value>
   </data>
-
-
   <data name="ChartItemResolveDialog.CurrentEntry" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Current Entry</value>
   </data>
@@ -3240,13 +3140,9 @@
   <data name="ChartItemResolveDialog.LinkedTo" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Linked to: {0} - {1}</value>
   </data>
-
-
   <data name="MissingAlbumIdentifyDialog.TypeToFilter" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Type to filter artists...</value>
   </data>
-
-
   <data name="MediaLibrary.PageTitle" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Media Albums</value>
   </data>
@@ -3316,8 +3212,6 @@
   <data name="MediaLibrary.Select" xml:space="preserve">
     <value>Selecionar</value>
   </data>
-
-
   <data name="MediaArtists.PageTitle" xml:space="preserve">
     <value>Artistas de Mídia</value>
   </data>
@@ -3327,8 +3221,6 @@
   <data name="MediaArtists.RefreshAlbums" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Refresh Albums</value>
   </data>
-
-
   <data name="MediaAlbumDetail.AddArtist" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Add Artist</value>
   </data>
@@ -3389,24 +3281,18 @@
   <data name="MediaAlbumDetail.NoImagesAdded" xml:space="preserve">
     <value>[NEEDS TRANSLATION] No images were added to the album. Likely the image you selected was invalid.</value>
   </data>
-
-
   <data name="MediaAlbumEdit.PageTitle" xml:space="preserve">
     <value>Adicionar/editar álbum de mídia</value>
   </data>
   <data name="MediaAlbumEdit.ImageSearch" xml:space="preserve">
     <value>Pesquisa de imagens do álbum de mídia</value>
   </data>
-
-
   <data name="MediaArtistEdit.PageTitle" xml:space="preserve">
     <value>Adicionar/editar artista de mídia</value>
   </data>
   <data name="MediaArtistEdit.MediaArtists" xml:space="preserve">
     <value>Artistas de Mídia</value>
   </data>
-
-
   <data name="Notification.RequestNotFound" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Request not found</value>
   </data>
@@ -3542,8 +3428,6 @@
   <data name="Notification.ScanningLibraryWarning" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Scanning a library updates the library with media found. This could overwrite artists, albums and songs.</value>
   </data>
-
-
   <data name="Charts.SelectAllItems" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Select all items</value>
   </data>
@@ -3565,8 +3449,6 @@
   <data name="Charts.ChartsDeleted" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Charts Deleted</value>
   </data>
-
-
   <data name="ChartsRankedReport.Header" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Ranked Albums Report</value>
   </data>
@@ -3579,8 +3461,6 @@
   <data name="AlbumEdit.Editing" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Editing</value>
   </data>
-
-
   <data name="UserDetail.PageTitle" xml:space="preserve">
     <value>[NEEDS TRANSLATION] User - {0}</value>
   </data>
@@ -3641,8 +3521,6 @@
   <data name="UserDetail.Description" xml:space="preserve">
     <value>Descrição</value>
   </data>
-
-
   <data name="UserDetail.Stats.ArtistsStarred" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Artists Starred</value>
   </data>
@@ -3676,8 +3554,6 @@
   <data name="UserDetail.Stats.Bookmarks" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Bookmarks</value>
   </data>
-
-
   <data name="UserRole.Admin" xml:space="preserve">
     <value>Administração</value>
   </data>
@@ -3720,16 +3596,12 @@
   <data name="UserRole.Share" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Share</value>
   </data>
-
-
   <data name="Message.ClearedCache" xml:space="preserve">
     <value>[NEEDS TRANSLATION] cleared cache</value>
   </data>
   <data name="Message.ClearedNowPlaying" xml:space="preserve">
     <value>[NEEDS TRANSLATION] cleared now playing</value>
   </data>
-
-
   <data name="ChartImportDialog.ValidationErrors" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Validation Errors:</value>
   </data>
@@ -3802,16 +3674,12 @@
   <data name="ChartImportDialog.ImageDownloadErrorDetail" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Could not download image from URL</value>
   </data>
-
-
   <data name="ChartItemResolveDialog.SearchAndSelect" xml:space="preserve">
     <value>Pesquisar e selecionar álbum</value>
   </data>
   <data name="ChartItemResolveDialog.FailedToLink" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Failed to link album</value>
   </data>
-
-
   <data name="MissingAlbumIdentifyDialog.Artists" xml:space="preserve">
     <value>Artistas</value>
   </data>
@@ -3830,8 +3698,6 @@
   <data name="MissingAlbumIdentifyDialog.FailedToIdentify" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Failed to identify album</value>
   </data>
-
-
   <data name="AlbumEdit.AddingAlbum" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Adding Album</value>
   </data>
@@ -3847,8 +3713,6 @@
   <data name="Message.Huzzah" xml:space="preserve">
     <value>[NEEDS TRANSLATION] HUZZAH!</value>
   </data>
-
-
   <data name="UploadAlbum.Title" xml:space="preserve">
     <value>Enviar álbum</value>
   </data>
@@ -3909,7 +3773,7 @@
   <data name="UploadAlbum.InvalidZip" xml:space="preserve">
     <value>O arquivo enviado não é um arquivo ZIP válido.</value>
   </data>
-    <data name="AdminSettings.AddNew" xml:space="preserve">
+  <data name="AdminSettings.AddNew" xml:space="preserve">
     <value>Adicionar nova configuração</value>
   </data>
   <data name="AdminSettings.AddNewSetting" xml:space="preserve">
@@ -4320,16 +4184,16 @@
   <data name="AdminDoctor.MusicBrainzDatabaseEmpty" xml:space="preserve">
     <value>O banco de dados MusicBrainz está vazio e precisa ser populado</value>
   </data>
-<data name="AdminDoctor.GenerateMusicBrainzDatabase" xml:space="preserve">
+  <data name="AdminDoctor.GenerateMusicBrainzDatabase" xml:space="preserve">
     <value>Gerar banco de dados MusicBrainz local</value>
   </data>
-<data name="AdminDoctor.MusicBrainzJobRunning" xml:space="preserve">
+  <data name="AdminDoctor.MusicBrainzJobRunning" xml:space="preserve">
     <value>Atualização do banco de dados MusicBrainz</value>
   </data>
-<data name="AdminDoctor.JobStarted" xml:space="preserve">
+  <data name="AdminDoctor.JobStarted" xml:space="preserve">
     <value>Tarefa iniciada com sucesso</value>
   </data>
-<data name="AdminDoctor.JobFailed" xml:space="preserve">
+  <data name="AdminDoctor.JobFailed" xml:space="preserve">
     <value>Falha ao iniciar a tarefa</value>
   </data>
   <data name="AdminDoctor.Check.DiskSpace" xml:space="preserve">
@@ -4848,6 +4712,276 @@
   <data name="ArtistLookup.SelectToMerge" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Select one or more results to merge their provider IDs</value>
   </data>
+  <data name="Navigation.Podcasts" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Podcasts</value>
+  </data>
+  <data name="Common.Actions" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Actions</value>
+  </data>
+  <data name="Common.Episodes" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Episodes</value>
+  </data>
+  <data name="Podcast.AddChannel" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Add Podcast Channel</value>
+  </data>
+  <data name="Podcast.FeedUrl" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Podcast Feed URL</value>
+  </data>
+  <data name="Podcast.LastSync" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Last Sync</value>
+  </data>
+  <data name="Podcast.FeatureDisabled" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Podcast feature is currently disabled. Please contact your administrator to enable it.</value>
+  </data>
+  <data name="Podcast.ChannelAdded" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Podcast channel added successfully</value>
+  </data>
+  <data name="Podcast.ChannelRefreshed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Podcast channel refreshed successfully</value>
+  </data>
+  <data name="Podcast.ChannelDeleted" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Podcast channel deleted successfully</value>
+  </data>
+  <data name="Podcast.AllChannelsRefreshed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] All podcast channels refreshed successfully</value>
+  </data>
+  <data name="Podcast.DeleteChannelConfirm" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Are you sure you want to delete this podcast channel? All downloaded episodes will be removed.</value>
+  </data>
+  <data name="Podcast.ChannelNotFound" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Podcast channel not found</value>
+  </data>
+  <data name="Podcast.VisitWebsite" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Visit Website</value>
+  </data>
+  <data name="Podcast.DeleteEpisodeConfirm" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Are you sure you want to delete this episode?</value>
+  </data>
+  <data name="Podcast.EpisodeDeleted" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Episode deleted successfully</value>
+  </data>
+  <data name="Podcast.EpisodeQueued" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Episode queued for download</value>
+  </data>
+  <data name="Podcast.StatusNone" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Not Downloaded</value>
+  </data>
+  <data name="Podcast.StatusQueued" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Queued</value>
+  </data>
+  <data name="Podcast.StatusDownloading" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Downloading</value>
+  </data>
+  <data name="Podcast.StatusDownloaded" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Downloaded</value>
+  </data>
+  <data name="Podcast.StatusFailed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed</value>
+  </data>
+  <data name="Podcast.UnplayedEpisodes" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Unplayed episodes</value>
+  </data>
+  <data name="Podcast.BookmarkPosition" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Bookmark Position</value>
+  </data>
+  <data name="Podcast.BookmarkTitle" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Bookmark Title</value>
+  </data>
+  <data name="Podcast.EpisodeNotPlayed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Not Played</value>
+  </data>
+  <data name="Podcast.EpisodePlayed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Played</value>
+  </data>
+  <data name="Podcast.EpisodePlayedCount" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Play Count</value>
+  </data>
+  <data name="Podcast.LastPlayedAt" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Last Played</value>
+  </data>
+  <data name="Podcast.NoBookmark" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No bookmark</value>
+  </data>
+  <data name="Podcast.NoPlayHistory" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No play history</value>
+  </data>
+  <data name="Podcast.PlayHistory" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Play History</value>
+  </data>
+  <data name="Podcast.Position" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Position</value>
+  </data>
+  <data name="Podcast.UnknownEpisode" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Unknown Episode</value>
+  </data>
+  <data name="Podcast.ViewBookmark" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] View Bookmark</value>
+  </data>
+  <data name="Podcast.AutoDownloadEnabled" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Auto-download new episodes</value>
+  </data>
+  <data name="Podcast.AutoDownloadDescription" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] When enabled, new episodes will be automatically downloaded when the channel is refreshed</value>
+  </data>
+  <data name="Podcast.RefreshIntervalHours" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Refresh interval (hours)</value>
+  </data>
+  <data name="Podcast.RefreshIntervalDescription" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] How often to check for new episodes (0 = use global schedule)</value>
+  </data>
+  <data name="Podcast.RefreshSettings" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Refresh Settings</value>
+  </data>
+  <data name="Podcast.MaxDownloadedEpisodes" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Max downloaded episodes</value>
+  </data>
+  <data name="Podcast.MaxStorageMB" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Max storage (MB)</value>
+  </data>
+  <data name="Podcast.StorageLimits" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Storage Limits</value>
+  </data>
+  <data name="Podcast.StorageLimitsDescription" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Limit the number of downloaded episodes and total storage used</value>
+  </data>
+  <data name="Podcast.ChannelSettings" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Channel Settings</value>
+  </data>
+  <data name="Podcast.Settings" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Settings</value>
+  </data>
+  <data name="Podcast.SettingsSaved" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Settings saved successfully</value>
+  </data>
+  <data name="Podcast.UseGlobalSchedule" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Use global schedule</value>
+  </data>
+  <data name="Common.Unlimited" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Unlimited</value>
+  </data>
+  <data name="Podcast.OpmlImportExport" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] OPML Import/Export</value>
+  </data>
+  <data name="Podcast.OpmlExport" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Export</value>
+  </data>
+  <data name="Podcast.OpmlImport" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Import</value>
+  </data>
+  <data name="Podcast.OpmlExportDescription" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Export all your podcast subscriptions to an OPML file</value>
+  </data>
+  <data name="Podcast.OpmlImportDescription" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Import podcast subscriptions from an OPML file or paste OPML content</value>
+  </data>
+  <data name="Podcast.DownloadOpml" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Download OPML</value>
+  </data>
+  <data name="Podcast.ImportOpml" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Import OPML</value>
+  </data>
+  <data name="Podcast.OpmlContent" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] OPML Content</value>
+  </data>
+  <data name="Podcast.OpmlPasteHere" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Paste OPML content here...</value>
+  </data>
+  <data name="Podcast.ChooseOpmlFile" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Choose OPML File</value>
+  </data>
+  <data name="Podcast.OpmlExported" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] OPML file exported successfully</value>
+  </data>
+  <data name="Podcast.OpmlImportedCount" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Successfully imported {0} podcast(s)</value>
+  </data>
+  <data name="Podcast.ImportResults" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Import Results</value>
+  </data>
+  <data name="Podcast.Imported" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Imported</value>
+  </data>
+  <data name="Podcast.Skipped" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Skipped</value>
+  </data>
+  <data name="Podcast.Failed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed</value>
+  </data>
+  <data name="Podcast.DuplicatesSkipped" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Duplicates skipped</value>
+  </data>
+  <data name="Podcast.Errors" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Errors</value>
+  </data>
+  <data name="Podcast.FileReadError" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Error reading file</value>
+  </data>
+  <data name="Podcast.Discover" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Discover</value>
+  </data>
+  <data name="Podcast.DiscoverPodcasts" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Discover Podcasts</value>
+  </data>
+  <data name="Podcast.DiscoverDescription" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Search the iTunes directory to find and subscribe to new podcasts</value>
+  </data>
+  <data name="Podcast.SearchPodcasts" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Search Podcasts</value>
+  </data>
+  <data name="Podcast.SearchPlaceholder" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Search for podcasts...</value>
+  </data>
+  <data name="Podcast.SearchResultsCount" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] {0} podcast(s) found</value>
+  </data>
+  <data name="Podcast.NoSearchResults" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No podcasts found</value>
+  </data>
+  <data name="Podcast.Searching" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Searching...</value>
+  </data>
+  <data name="Podcast.EpisodeCountFormat" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] {0} episodes</value>
+  </data>
+  <data name="Podcast.Subscribe" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Subscribe</value>
+  </data>
+  <data name="Podcast.Subscribed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Subscribed</value>
+  </data>
+  <data name="Podcast.SubscribedTo" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Subscribed to {0}</value>
+  </data>
+  <data name="Podcast.EpisodeSearch" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Episode Search</value>
+  </data>
+  <data name="Podcast.SearchEpisodes" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Search Episodes</value>
+  </data>
+  <data name="Podcast.SearchEpisodesPlaceholder" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Search episode titles and descriptions...</value>
+  </data>
+  <data name="Podcast.SearchEpisodesDescription" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Search across all episodes in your subscribed podcasts</value>
+  </data>
+  <data name="Podcast.SearchEpisodesHint" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Enter at least 3 characters to search</value>
+  </data>
+  <data name="Podcast.SearchResultsFound" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] {0} episode(s) found</value>
+  </data>
+  <data name="Podcast.NoEpisodesFound" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No episodes found</value>
+  </data>
+  <data name="Podcast.NoResultsFor" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No results for '{0}'</value>
+  </data>
+  <data name="Podcast.GoToChannel" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Go to Channel</value>
+  </data>
+  <data name="Podcast.Channel" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Channel</value>
+  </data>
   <data name="ArtistLookup.AllEnabledProviders" xml:space="preserve">
     <value>[NEEDS TRANSLATION] All enabled providers</value>
   </data>
@@ -4890,67 +5024,4 @@
   <data name="ArtistLookup.Title" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Artist Lookup</value>
   </data>
-  <data name="Navigation.Podcasts" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Podcasts</value>
-  </data>
-  <data name="Podcast.ChannelDeleted" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Podcast channel deleted successfully</value>
-  </data>
-  <data name="Common.Episodes" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Episodes</value>
-  </data>
-  <data name="Podcast.AllChannelsRefreshed" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] All podcast channels refreshed successfully</value>
-  </data>
-  <data name="Podcast.DeleteChannelConfirm" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Are you sure you want to delete this podcast channel? All downloaded episodes will be removed.</value>
-  </data>
-  <data name="Message.Success" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Success</value>
-  </data>
-  <data name="Actions.View" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] View</value>
-  </data>
-  <data name="Podcast.ChannelNotFound" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Podcast channel not found</value>
-  </data>
-  <data name="Podcast.VisitWebsite" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Visit Website</value>
-  </data>
-  <data name="Actions.OpenExternal" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Open in New Tab</value>
-  </data>
-  <data name="Message.Error" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Error</value>
-  </data>
-  <data name="Message.Warning" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Warning</value>
-  </data>
-  <data name="Podcast.DeleteEpisodeConfirm" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Are you sure you want to delete this episode?</value>
-  </data>
-  <data name="Podcast.EpisodeDeleted" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Episode deleted successfully</value>
-  </data>
-  <data name="Podcast.EpisodeQueued" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Episode queued for download</value>
-  </data>
-  <data name="Podcast.StatusNone" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Not Downloaded</value>
-  </data>
-  <data name="Podcast.StatusQueued" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Queued</value>
-  </data>
-  <data name="Podcast.StatusDownloading" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Downloading</value>
-  </data>
-  <data name="Podcast.StatusDownloaded" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Downloaded</value>
-  </data>
-  <data name="Podcast.StatusFailed" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Failed</value>
-  </data>
-  <data name="Podcast.UnplayedEpisodes" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Unplayed episodes</value>
-  </data>
-<data name="Common.Actions" xml:space="preserve"><value>[NEEDS TRANSLATION] Actions</value></data><data name="Podcast.AddChannel" xml:space="preserve"><value>[NEEDS TRANSLATION] Add Podcast Channel</value></data><data name="Podcast.FeedUrl" xml:space="preserve"><value>[NEEDS TRANSLATION] Podcast Feed URL</value></data><data name="Podcast.LastSync" xml:space="preserve"><value>[NEEDS TRANSLATION] Last Sync</value></data><data name="Podcast.FeatureDisabled" xml:space="preserve"><value>[NEEDS TRANSLATION] Podcast feature is currently disabled. Please contact your administrator to enable it.</value></data><data name="Podcast.ChannelAdded" xml:space="preserve"><value>[NEEDS TRANSLATION] Podcast channel added successfully</value></data><data name="Podcast.ChannelRefreshed" xml:space="preserve"><value>[NEEDS TRANSLATION] Podcast channel refreshed successfully</value></data><data name="Podcast.BookmarkPosition" xml:space="preserve"><value>[NEEDS TRANSLATION] Bookmark Position</value></data><data name="Podcast.BookmarkTitle" xml:space="preserve"><value>[NEEDS TRANSLATION] Bookmark Title</value></data><data name="Podcast.EpisodeNotPlayed" xml:space="preserve"><value>[NEEDS TRANSLATION] Not Played</value></data><data name="Podcast.EpisodePlayed" xml:space="preserve"><value>[NEEDS TRANSLATION] Played</value></data><data name="Podcast.EpisodePlayedCount" xml:space="preserve"><value>[NEEDS TRANSLATION] Play Count</value></data><data name="Podcast.LastPlayedAt" xml:space="preserve"><value>[NEEDS TRANSLATION] Last Played</value></data><data name="Podcast.NoBookmark" xml:space="preserve"><value>[NEEDS TRANSLATION] No bookmark</value></data><data name="Podcast.NoPlayHistory" xml:space="preserve"><value>[NEEDS TRANSLATION] No play history</value></data><data name="Podcast.PlayHistory" xml:space="preserve"><value>[NEEDS TRANSLATION] Play History</value></data><data name="Podcast.Position" xml:space="preserve"><value>[NEEDS TRANSLATION] Position</value></data><data name="Podcast.UnknownEpisode" xml:space="preserve"><value>[NEEDS TRANSLATION] Unknown Episode</value></data><data name="Podcast.ViewBookmark" xml:space="preserve"><value>[NEEDS TRANSLATION] View Bookmark</value></data></root>
+</root>

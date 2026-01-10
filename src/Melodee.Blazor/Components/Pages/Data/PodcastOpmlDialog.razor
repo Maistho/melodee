@@ -1,0 +1,226 @@
+@inherits MelodeeComponentBase
+
+@inject DialogService DialogService
+@inject PodcastOpmlService PodcastOpmlService
+@inject NotificationService NotificationService
+@inject IJSRuntime JsRuntime
+@inject ILogger Logger
+
+<RadzenStack Gap="1rem" Class="rz-p-4">
+    <RadzenTabs @bind-SelectedIndex="_selectedTabIndex">
+        <Tabs>
+            <RadzenTabsItem Text="@L("Podcast.OpmlExport")">
+                <RadzenStack Gap="1rem" Class="rz-p-3">
+                    <RadzenText TextStyle="TextStyle.Body2">
+                        @L("Podcast.OpmlExportDescription")
+                    </RadzenText>
+                    <RadzenButton Text="@L("Podcast.DownloadOpml")" Icon="download" ButtonStyle="ButtonStyle.Primary" 
+                                  Click="@ExportOpml" IsBusy="@_isExporting" Style="width: fit-content;" />
+                </RadzenStack>
+            </RadzenTabsItem>
+            <RadzenTabsItem Text="@L("Podcast.OpmlImport")">
+                <RadzenStack Gap="1rem" Class="rz-p-3">
+                    <RadzenText TextStyle="TextStyle.Body2">
+                        @L("Podcast.OpmlImportDescription")
+                    </RadzenText>
+                    <RadzenFormField Text="@L("Podcast.OpmlContent")" Variant="Variant.Outlined" Style="width: 100%;">
+                        <RadzenTextArea @bind-Value="_opmlContent" Rows="10" Placeholder="@L("Podcast.OpmlPasteHere")" Style="width: 100%; font-family: monospace;" />
+                    </RadzenFormField>
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                        <RadzenUpload Accept=".opml,.xml" 
+                                      ChooseText="@L("Podcast.ChooseOpmlFile")" 
+                                      InputAttributes="@(new Dictionary<string,object>{ { "aria-label", L("Podcast.ChooseOpmlFile") } })"
+                                      Change="@OnFileSelected"
+                                      Style="width: fit-content;" />
+                    </RadzenStack>
+                    
+                    @if (_importResult != null)
+                    {
+                        <RadzenCard>
+                            <RadzenStack Gap="0.5rem">
+                                <RadzenText TextStyle="TextStyle.Subtitle1">@L("Podcast.ImportResults")</RadzenText>
+                                <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem">
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="@($"{L("Podcast.Imported")}: {_importResult.Imported}")" />
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="@($"{L("Podcast.Skipped")}: {_importResult.Skipped}")" />
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Danger" Text="@($"{L("Podcast.Failed")}: {_importResult.Failed}")" />
+                                </RadzenStack>
+                                @if (_importResult.Duplicates.Count > 0)
+                                {
+                                    <RadzenText TextStyle="TextStyle.Caption" Class="rz-text-secondary-color">
+                                        @L("Podcast.DuplicatesSkipped"): @string.Join(", ", _importResult.Duplicates.Take(5))@(_importResult.Duplicates.Count > 5 ? "..." : "")
+                                    </RadzenText>
+                                }
+                                @if (_importResult.Errors.Count > 0)
+                                {
+                                    <RadzenText TextStyle="TextStyle.Caption" Class="rz-text-danger-color">
+                                        @L("Podcast.Errors"): @string.Join("; ", _importResult.Errors.Take(3))@(_importResult.Errors.Count > 3 ? "..." : "")
+                                    </RadzenText>
+                                }
+                            </RadzenStack>
+                        </RadzenCard>
+                    }
+
+                    <RadzenButton Text="@L("Podcast.ImportOpml")" Icon="upload" ButtonStyle="ButtonStyle.Primary" 
+                                  Click="@ImportOpml" IsBusy="@_isImporting" 
+                                  Disabled="@string.IsNullOrWhiteSpace(_opmlContent)"
+                                  Style="width: fit-content;" />
+                </RadzenStack>
+            </RadzenTabsItem>
+        </Tabs>
+    </RadzenTabs>
+
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+        <RadzenButton Text="@L("Actions.Close")" ButtonStyle="ButtonStyle.Light" Click="@Close" />
+    </RadzenStack>
+</RadzenStack>
+
+@code {
+    [Parameter] public int UserId { get; set; }
+
+    private int _selectedTabIndex;
+    private string _opmlContent = string.Empty;
+    private bool _isExporting;
+    private bool _isImporting;
+    private OpmlImportResult? _importResult;
+
+    private void Close()
+    {
+        DialogService.Close(_importResult?.Imported > 0);
+    }
+
+    private async Task ExportOpml()
+    {
+        _isExporting = true;
+
+        try
+        {
+            var result = await PodcastOpmlService.ExportAsync(UserId);
+
+            if (result.IsSuccess && !string.IsNullOrEmpty(result.Data))
+            {
+                var fileName = $"melodee-podcasts-{DateTime.Now:yyyyMMdd}.opml";
+                await DownloadFile(fileName, result.Data);
+                
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = L("Message.Success"),
+                    Detail = L("Podcast.OpmlExported"),
+                    Duration = 4000
+                });
+            }
+            else
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = L("Message.Error"),
+                    Detail = string.Join(", ", result.Messages ?? Array.Empty<string>()),
+                    Duration = 6000
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "[PodcastOpmlDialog] Error exporting OPML");
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = L("Message.Error"),
+                Detail = ex.Message,
+                Duration = 6000
+            });
+        }
+        finally
+        {
+            _isExporting = false;
+        }
+    }
+
+    private async Task ImportOpml()
+    {
+        if (string.IsNullOrWhiteSpace(_opmlContent))
+            return;
+
+        _isImporting = true;
+        _importResult = null;
+
+        try
+        {
+            var result = await PodcastOpmlService.ImportAsync(UserId, _opmlContent);
+
+            if (result.Data != null)
+            {
+                _importResult = result.Data;
+
+                if (result.IsSuccess && _importResult.Imported > 0)
+                {
+                    NotificationService.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Success,
+                        Summary = L("Message.Success"),
+                        Detail = string.Format(L("Podcast.OpmlImportedCount"), _importResult.Imported),
+                        Duration = 4000
+                    });
+                }
+                else if (!result.IsSuccess)
+                {
+                    NotificationService.Notify(new NotificationMessage
+                    {
+                        Severity = NotificationSeverity.Warning,
+                        Summary = L("Message.Warning"),
+                        Detail = string.Join(", ", result.Messages ?? Array.Empty<string>()),
+                        Duration = 6000
+                    });
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "[PodcastOpmlDialog] Error importing OPML");
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = L("Message.Error"),
+                Detail = ex.Message,
+                Duration = 6000
+            });
+        }
+        finally
+        {
+            _isImporting = false;
+        }
+    }
+
+    private async Task OnFileSelected(UploadChangeEventArgs args)
+    {
+        var file = args.Files?.FirstOrDefault();
+        if (file != null)
+        {
+            try
+            {
+                using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+                using var reader = new StreamReader(stream);
+                _opmlContent = await reader.ReadToEndAsync();
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "[PodcastOpmlDialog] Error reading OPML file");
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = L("Message.Error"),
+                    Detail = L("Podcast.FileReadError"),
+                    Duration = 6000
+                });
+            }
+        }
+    }
+
+    private async Task DownloadFile(string fileName, string content)
+    {
+        var bytes = System.Text.Encoding.UTF8.GetBytes(content);
+        var base64 = Convert.ToBase64String(bytes);
+        await JsRuntime.InvokeVoidAsync("downloadFile", fileName, "application/xml", base64);
+    }
+}

@@ -59,7 +59,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
 
-<data name="Navigation.Dashboard" xml:space="preserve">
+  <data name="Navigation.Dashboard" xml:space="preserve">
     <value>Панель управления</value>
   </data>
   <data name="Navigation.Artists" xml:space="preserve">
@@ -3713,8 +3713,6 @@
   <data name="Message.Huzzah" xml:space="preserve">
     <value>УРА!</value>
   </data>
-
-
   <data name="UploadAlbum.Title" xml:space="preserve">
     <value>Загрузить альбом</value>
   </data>
@@ -4186,16 +4184,16 @@
   <data name="AdminDoctor.MusicBrainzDatabaseEmpty" xml:space="preserve">
     <value>База данных MusicBrainz пуста и требует заполнения</value>
   </data>
-<data name="AdminDoctor.GenerateMusicBrainzDatabase" xml:space="preserve">
+  <data name="AdminDoctor.GenerateMusicBrainzDatabase" xml:space="preserve">
     <value>Создать локальную базу данных MusicBrainz</value>
   </data>
-<data name="AdminDoctor.MusicBrainzJobRunning" xml:space="preserve">
+  <data name="AdminDoctor.MusicBrainzJobRunning" xml:space="preserve">
     <value>Обновление базы данных MusicBrainz</value>
   </data>
-<data name="AdminDoctor.JobStarted" xml:space="preserve">
+  <data name="AdminDoctor.JobStarted" xml:space="preserve">
     <value>Задача успешно запущена</value>
   </data>
-<data name="AdminDoctor.JobFailed" xml:space="preserve">
+  <data name="AdminDoctor.JobFailed" xml:space="preserve">
     <value>Не удалось запустить задачу</value>
   </data>
   <data name="AdminDoctor.Check.DiskSpace" xml:space="preserve">
@@ -4714,6 +4712,276 @@
   <data name="ArtistLookup.SelectToMerge" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Select one or more results to merge their provider IDs</value>
   </data>
+  <data name="Navigation.Podcasts" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Podcasts</value>
+  </data>
+  <data name="Common.Actions" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Actions</value>
+  </data>
+  <data name="Common.Episodes" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Episodes</value>
+  </data>
+  <data name="Podcast.AddChannel" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Add Podcast Channel</value>
+  </data>
+  <data name="Podcast.FeedUrl" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Podcast Feed URL</value>
+  </data>
+  <data name="Podcast.LastSync" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Last Sync</value>
+  </data>
+  <data name="Podcast.FeatureDisabled" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Podcast feature is currently disabled. Please contact your administrator to enable it.</value>
+  </data>
+  <data name="Podcast.ChannelAdded" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Podcast channel added successfully</value>
+  </data>
+  <data name="Podcast.ChannelRefreshed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Podcast channel refreshed successfully</value>
+  </data>
+  <data name="Podcast.ChannelDeleted" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Podcast channel deleted successfully</value>
+  </data>
+  <data name="Podcast.AllChannelsRefreshed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] All podcast channels refreshed successfully</value>
+  </data>
+  <data name="Podcast.DeleteChannelConfirm" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Are you sure you want to delete this podcast channel? All downloaded episodes will be removed.</value>
+  </data>
+  <data name="Podcast.ChannelNotFound" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Podcast channel not found</value>
+  </data>
+  <data name="Podcast.VisitWebsite" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Visit Website</value>
+  </data>
+  <data name="Podcast.DeleteEpisodeConfirm" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Are you sure you want to delete this episode?</value>
+  </data>
+  <data name="Podcast.EpisodeDeleted" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Episode deleted successfully</value>
+  </data>
+  <data name="Podcast.EpisodeQueued" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Episode queued for download</value>
+  </data>
+  <data name="Podcast.StatusNone" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Not Downloaded</value>
+  </data>
+  <data name="Podcast.StatusQueued" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Queued</value>
+  </data>
+  <data name="Podcast.StatusDownloading" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Downloading</value>
+  </data>
+  <data name="Podcast.StatusDownloaded" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Downloaded</value>
+  </data>
+  <data name="Podcast.StatusFailed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed</value>
+  </data>
+  <data name="Podcast.UnplayedEpisodes" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Unplayed episodes</value>
+  </data>
+  <data name="Podcast.BookmarkPosition" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Bookmark Position</value>
+  </data>
+  <data name="Podcast.BookmarkTitle" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Bookmark Title</value>
+  </data>
+  <data name="Podcast.EpisodeNotPlayed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Not Played</value>
+  </data>
+  <data name="Podcast.EpisodePlayed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Played</value>
+  </data>
+  <data name="Podcast.EpisodePlayedCount" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Play Count</value>
+  </data>
+  <data name="Podcast.LastPlayedAt" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Last Played</value>
+  </data>
+  <data name="Podcast.NoBookmark" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No bookmark</value>
+  </data>
+  <data name="Podcast.NoPlayHistory" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No play history</value>
+  </data>
+  <data name="Podcast.PlayHistory" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Play History</value>
+  </data>
+  <data name="Podcast.Position" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Position</value>
+  </data>
+  <data name="Podcast.UnknownEpisode" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Unknown Episode</value>
+  </data>
+  <data name="Podcast.ViewBookmark" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] View Bookmark</value>
+  </data>
+  <data name="Podcast.AutoDownloadEnabled" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Auto-download new episodes</value>
+  </data>
+  <data name="Podcast.AutoDownloadDescription" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] When enabled, new episodes will be automatically downloaded when the channel is refreshed</value>
+  </data>
+  <data name="Podcast.RefreshIntervalHours" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Refresh interval (hours)</value>
+  </data>
+  <data name="Podcast.RefreshIntervalDescription" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] How often to check for new episodes (0 = use global schedule)</value>
+  </data>
+  <data name="Podcast.RefreshSettings" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Refresh Settings</value>
+  </data>
+  <data name="Podcast.MaxDownloadedEpisodes" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Max downloaded episodes</value>
+  </data>
+  <data name="Podcast.MaxStorageMB" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Max storage (MB)</value>
+  </data>
+  <data name="Podcast.StorageLimits" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Storage Limits</value>
+  </data>
+  <data name="Podcast.StorageLimitsDescription" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Limit the number of downloaded episodes and total storage used</value>
+  </data>
+  <data name="Podcast.ChannelSettings" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Channel Settings</value>
+  </data>
+  <data name="Podcast.Settings" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Settings</value>
+  </data>
+  <data name="Podcast.SettingsSaved" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Settings saved successfully</value>
+  </data>
+  <data name="Podcast.UseGlobalSchedule" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Use global schedule</value>
+  </data>
+  <data name="Common.Unlimited" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Unlimited</value>
+  </data>
+  <data name="Podcast.OpmlImportExport" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] OPML Import/Export</value>
+  </data>
+  <data name="Podcast.OpmlExport" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Export</value>
+  </data>
+  <data name="Podcast.OpmlImport" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Import</value>
+  </data>
+  <data name="Podcast.OpmlExportDescription" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Export all your podcast subscriptions to an OPML file</value>
+  </data>
+  <data name="Podcast.OpmlImportDescription" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Import podcast subscriptions from an OPML file or paste OPML content</value>
+  </data>
+  <data name="Podcast.DownloadOpml" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Download OPML</value>
+  </data>
+  <data name="Podcast.ImportOpml" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Import OPML</value>
+  </data>
+  <data name="Podcast.OpmlContent" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] OPML Content</value>
+  </data>
+  <data name="Podcast.OpmlPasteHere" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Paste OPML content here...</value>
+  </data>
+  <data name="Podcast.ChooseOpmlFile" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Choose OPML File</value>
+  </data>
+  <data name="Podcast.OpmlExported" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] OPML file exported successfully</value>
+  </data>
+  <data name="Podcast.OpmlImportedCount" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Successfully imported {0} podcast(s)</value>
+  </data>
+  <data name="Podcast.ImportResults" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Import Results</value>
+  </data>
+  <data name="Podcast.Imported" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Imported</value>
+  </data>
+  <data name="Podcast.Skipped" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Skipped</value>
+  </data>
+  <data name="Podcast.Failed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed</value>
+  </data>
+  <data name="Podcast.DuplicatesSkipped" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Duplicates skipped</value>
+  </data>
+  <data name="Podcast.Errors" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Errors</value>
+  </data>
+  <data name="Podcast.FileReadError" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Error reading file</value>
+  </data>
+  <data name="Podcast.Discover" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Discover</value>
+  </data>
+  <data name="Podcast.DiscoverPodcasts" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Discover Podcasts</value>
+  </data>
+  <data name="Podcast.DiscoverDescription" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Search the iTunes directory to find and subscribe to new podcasts</value>
+  </data>
+  <data name="Podcast.SearchPodcasts" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Search Podcasts</value>
+  </data>
+  <data name="Podcast.SearchPlaceholder" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Search for podcasts...</value>
+  </data>
+  <data name="Podcast.SearchResultsCount" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] {0} podcast(s) found</value>
+  </data>
+  <data name="Podcast.NoSearchResults" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No podcasts found</value>
+  </data>
+  <data name="Podcast.Searching" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Searching...</value>
+  </data>
+  <data name="Podcast.EpisodeCountFormat" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] {0} episodes</value>
+  </data>
+  <data name="Podcast.Subscribe" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Subscribe</value>
+  </data>
+  <data name="Podcast.Subscribed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Subscribed</value>
+  </data>
+  <data name="Podcast.SubscribedTo" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Subscribed to {0}</value>
+  </data>
+  <data name="Podcast.EpisodeSearch" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Episode Search</value>
+  </data>
+  <data name="Podcast.SearchEpisodes" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Search Episodes</value>
+  </data>
+  <data name="Podcast.SearchEpisodesPlaceholder" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Search episode titles and descriptions...</value>
+  </data>
+  <data name="Podcast.SearchEpisodesDescription" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Search across all episodes in your subscribed podcasts</value>
+  </data>
+  <data name="Podcast.SearchEpisodesHint" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Enter at least 3 characters to search</value>
+  </data>
+  <data name="Podcast.SearchResultsFound" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] {0} episode(s) found</value>
+  </data>
+  <data name="Podcast.NoEpisodesFound" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No episodes found</value>
+  </data>
+  <data name="Podcast.NoResultsFor" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No results for '{0}'</value>
+  </data>
+  <data name="Podcast.GoToChannel" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Go to Channel</value>
+  </data>
+  <data name="Podcast.Channel" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Channel</value>
+  </data>
   <data name="ArtistLookup.AllEnabledProviders" xml:space="preserve">
     <value>[NEEDS TRANSLATION] All enabled providers</value>
   </data>
@@ -4756,67 +5024,4 @@
   <data name="ArtistLookup.Title" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Artist Lookup</value>
   </data>
-  <data name="Navigation.Podcasts" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Podcasts</value>
-  </data>
-  <data name="Podcast.ChannelDeleted" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Podcast channel deleted successfully</value>
-  </data>
-  <data name="Common.Episodes" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Episodes</value>
-  </data>
-  <data name="Podcast.AllChannelsRefreshed" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] All podcast channels refreshed successfully</value>
-  </data>
-  <data name="Podcast.DeleteChannelConfirm" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Are you sure you want to delete this podcast channel? All downloaded episodes will be removed.</value>
-  </data>
-  <data name="Message.Success" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Success</value>
-  </data>
-  <data name="Actions.View" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] View</value>
-  </data>
-  <data name="Podcast.ChannelNotFound" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Podcast channel not found</value>
-  </data>
-  <data name="Podcast.VisitWebsite" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Visit Website</value>
-  </data>
-  <data name="Actions.OpenExternal" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Open in New Tab</value>
-  </data>
-  <data name="Message.Error" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Error</value>
-  </data>
-  <data name="Message.Warning" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Warning</value>
-  </data>
-  <data name="Podcast.DeleteEpisodeConfirm" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Are you sure you want to delete this episode?</value>
-  </data>
-  <data name="Podcast.EpisodeDeleted" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Episode deleted successfully</value>
-  </data>
-  <data name="Podcast.EpisodeQueued" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Episode queued for download</value>
-  </data>
-  <data name="Podcast.StatusNone" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Not Downloaded</value>
-  </data>
-  <data name="Podcast.StatusQueued" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Queued</value>
-  </data>
-  <data name="Podcast.StatusDownloading" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Downloading</value>
-  </data>
-  <data name="Podcast.StatusDownloaded" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Downloaded</value>
-  </data>
-  <data name="Podcast.StatusFailed" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Failed</value>
-  </data>
-  <data name="Podcast.UnplayedEpisodes" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Unplayed episodes</value>
-  </data>
-<data name="Common.Actions" xml:space="preserve"><value>[NEEDS TRANSLATION] Actions</value></data><data name="Podcast.AddChannel" xml:space="preserve"><value>[NEEDS TRANSLATION] Add Podcast Channel</value></data><data name="Podcast.FeedUrl" xml:space="preserve"><value>[NEEDS TRANSLATION] Podcast Feed URL</value></data><data name="Podcast.LastSync" xml:space="preserve"><value>[NEEDS TRANSLATION] Last Sync</value></data><data name="Podcast.FeatureDisabled" xml:space="preserve"><value>[NEEDS TRANSLATION] Podcast feature is currently disabled. Please contact your administrator to enable it.</value></data><data name="Podcast.ChannelAdded" xml:space="preserve"><value>[NEEDS TRANSLATION] Podcast channel added successfully</value></data><data name="Podcast.ChannelRefreshed" xml:space="preserve"><value>[NEEDS TRANSLATION] Podcast channel refreshed successfully</value></data><data name="Podcast.BookmarkPosition" xml:space="preserve"><value>[NEEDS TRANSLATION] Bookmark Position</value></data><data name="Podcast.BookmarkTitle" xml:space="preserve"><value>[NEEDS TRANSLATION] Bookmark Title</value></data><data name="Podcast.EpisodeNotPlayed" xml:space="preserve"><value>[NEEDS TRANSLATION] Not Played</value></data><data name="Podcast.EpisodePlayed" xml:space="preserve"><value>[NEEDS TRANSLATION] Played</value></data><data name="Podcast.EpisodePlayedCount" xml:space="preserve"><value>[NEEDS TRANSLATION] Play Count</value></data><data name="Podcast.LastPlayedAt" xml:space="preserve"><value>[NEEDS TRANSLATION] Last Played</value></data><data name="Podcast.NoBookmark" xml:space="preserve"><value>[NEEDS TRANSLATION] No bookmark</value></data><data name="Podcast.NoPlayHistory" xml:space="preserve"><value>[NEEDS TRANSLATION] No play history</value></data><data name="Podcast.PlayHistory" xml:space="preserve"><value>[NEEDS TRANSLATION] Play History</value></data><data name="Podcast.Position" xml:space="preserve"><value>[NEEDS TRANSLATION] Position</value></data><data name="Podcast.UnknownEpisode" xml:space="preserve"><value>[NEEDS TRANSLATION] Unknown Episode</value></data><data name="Podcast.ViewBookmark" xml:space="preserve"><value>[NEEDS TRANSLATION] View Bookmark</value></data></root>
+</root>

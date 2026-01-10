@@ -311,6 +311,96 @@ public sealed class PodcastService(
         }
     }
 
+    /// <summary>
+    /// Updates channel settings such as auto-download and refresh interval.
+    /// </summary>
+    public async Task<OperationResult<PodcastChannel>> UpdateChannelAsync(
+        int channelId,
+        int userId,
+        bool? autoDownloadEnabled = null,
+        int? refreshIntervalHours = null,
+        int? maxDownloadedEpisodes = null,
+        long? maxStorageBytes = null,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+            var channel = await context.PodcastChannels
+                .FirstOrDefaultAsync(x => x.Id == channelId && x.UserId == userId && !x.IsDeleted, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (channel == null)
+            {
+                return new OperationResult<PodcastChannel>(OperationResponseType.NotFound, "Channel not found") { Data = null! };
+            }
+
+            var updated = false;
+
+            if (autoDownloadEnabled.HasValue && channel.AutoDownloadEnabled != autoDownloadEnabled.Value)
+            {
+                channel.AutoDownloadEnabled = autoDownloadEnabled.Value;
+                updated = true;
+                Logger.Debug("[{ServiceName}] Updated AutoDownloadEnabled to {Value} for channel {ChannelId}",
+                    nameof(PodcastService), autoDownloadEnabled.Value, channelId);
+            }
+
+            if (refreshIntervalHours.HasValue)
+            {
+                // Validate refresh interval (minimum 1 hour, null means use global)
+                var newValue = refreshIntervalHours.Value <= 0 ? null : refreshIntervalHours;
+                if (channel.RefreshIntervalHours != newValue)
+                {
+                    channel.RefreshIntervalHours = newValue;
+                    updated = true;
+                    Logger.Debug("[{ServiceName}] Updated RefreshIntervalHours to {Value} for channel {ChannelId}",
+                        nameof(PodcastService), newValue, channelId);
+                }
+            }
+
+            if (maxDownloadedEpisodes.HasValue)
+            {
+                var newValue = maxDownloadedEpisodes.Value <= 0 ? null : maxDownloadedEpisodes;
+                if (channel.MaxDownloadedEpisodes != newValue)
+                {
+                    channel.MaxDownloadedEpisodes = newValue;
+                    updated = true;
+                    Logger.Debug("[{ServiceName}] Updated MaxDownloadedEpisodes to {Value} for channel {ChannelId}",
+                        nameof(PodcastService), newValue, channelId);
+                }
+            }
+
+            if (maxStorageBytes.HasValue)
+            {
+                var newValue = maxStorageBytes.Value <= 0 ? null : maxStorageBytes;
+                if (channel.MaxStorageBytes != newValue)
+                {
+                    channel.MaxStorageBytes = newValue;
+                    updated = true;
+                    Logger.Debug("[{ServiceName}] Updated MaxStorageBytes to {Value} for channel {ChannelId}",
+                        nameof(PodcastService), newValue, channelId);
+                }
+            }
+
+            if (updated)
+            {
+                channel.LastUpdatedAt = SystemClock.Instance.GetCurrentInstant();
+                await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+                Logger.Information("[{ServiceName}] Updated channel {ChannelId} settings for user {UserId}",
+                    nameof(PodcastService), channelId, userId);
+            }
+
+            return new OperationResult<PodcastChannel> { Data = channel };
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "[{ServiceName}] Error updating channel {ChannelId}", nameof(PodcastService), channelId);
+            return new OperationResult<PodcastChannel>(OperationResponseType.Error, ex.Message) { Data = null! };
+        }
+    }
+
     public async Task<OperationResult<IEnumerable<PodcastEpisode>>> ListEpisodesAsync(
         int channelId,
         int userId,
@@ -608,7 +698,11 @@ public sealed class PodcastService(
                 channel.LastSyncAt = SystemClock.Instance.GetCurrentInstant();
                 channel.LastSyncError = null;
                 channel.ConsecutiveFailureCount = 0;
-                channel.NextSyncAt = null;
+
+                // Set NextSyncAt based on per-channel interval, or null for global schedule
+                channel.NextSyncAt = channel.RefreshIntervalHours.HasValue && channel.RefreshIntervalHours.Value > 0
+                    ? SystemClock.Instance.GetCurrentInstant() + Duration.FromHours(channel.RefreshIntervalHours.Value)
+                    : null;
             }
             catch (Exception ex)
             {
@@ -691,6 +785,15 @@ public sealed class PodcastService(
                     EnclosureUrl = enclosure.Uri.ToString(),
                     CreatedAt = SystemClock.Instance.GetCurrentInstant()
                 };
+
+                // Auto-queue new episodes for download if channel has auto-download enabled
+                if (channel.AutoDownloadEnabled)
+                {
+                    episode.DownloadStatus = PodcastEpisodeDownloadStatus.Queued;
+                    episode.QueuedAt = SystemClock.Instance.GetCurrentInstant();
+                    Logger.Debug("[{ServiceName}] Auto-queued new episode '{EpisodeTitle}' for download", nameof(PodcastService), episode.Title);
+                }
+
                 context.PodcastEpisodes.Add(episode);
                 existingEpisodes[episodeKey] = episode;
             }
@@ -949,6 +1052,91 @@ public sealed class PodcastService(
                     .Count(h => h.UserId == userId && h.PodcastEpisodeId == x.Id && !h.IsNowPlaying)))
             .ToArrayAsync(cancellationToken)
             .ConfigureAwait(false);
+
+        return new PagedResult<PodcastEpisodeDataInfo>
+        {
+            TotalCount = totalCount,
+            TotalPages = request.TotalPages(totalCount),
+            Data = episodes
+        };
+    }
+
+    /// <summary>
+    /// Searches podcast episodes by title and description across all channels for a user.
+    /// </summary>
+    public async Task<PagedResult<PodcastEpisodeDataInfo>> SearchEpisodesAsync(
+        string query,
+        int userId,
+        PagedRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return new PagedResult<PodcastEpisodeDataInfo>
+            {
+                TotalCount = 0,
+                TotalPages = 0,
+                Data = []
+            };
+        }
+
+        await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var normalizedQuery = (query.ToNormalizedString() ?? query).ToLowerInvariant();
+
+        // Get channel IDs for this user
+        var channelIds = await context.PodcastChannels
+            .Where(c => c.UserId == userId && !c.IsDeleted)
+            .Select(c => c.Id)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        // Search episodes by normalized title or description containing the query (case-insensitive)
+        var episodeQuery = context.PodcastEpisodes
+            .Include(x => x.PodcastChannel)
+            .Where(e => channelIds.Contains(e.PodcastChannelId))
+            .Where(e =>
+                (e.TitleNormalized != null && e.TitleNormalized.ToLower().Contains(normalizedQuery)) ||
+                (e.Description != null && e.Description.ToLower().Contains(normalizedQuery)));
+
+        var totalCount = await episodeQuery.CountAsync(cancellationToken).ConfigureAwait(false);
+
+        // SQLite-compatible ordering - load then order in memory
+        var allMatchingEpisodes = await episodeQuery.ToListAsync(cancellationToken).ConfigureAwait(false);
+
+        var episodes = allMatchingEpisodes
+            .OrderByDescending(x => x.PublishDate)
+            .Skip(request.SkipValue)
+            .Take(request.TakeValue)
+            .Select(x => new PodcastEpisodeDataInfo(
+                x.Id,
+                x.ApiKey,
+                x.Title,
+                x.TitleNormalized ?? x.Title,
+                x.Description ?? string.Empty,
+                x.PublishDate,
+                x.Duration,
+                x.PodcastChannel?.Title ?? string.Empty,
+                x.PodcastChannel?.ApiKey ?? Guid.Empty,
+                x.DownloadStatus == PodcastEpisodeDownloadStatus.Downloaded,
+                x.CreatedAt,
+                string.Empty,
+                false,
+                0,
+                x.DownloadStatus,
+                x.DownloadError,
+                x.EnclosureUrl,
+                context.UserPodcastEpisodePlayHistories
+                    .Where(h => h.UserId == userId && h.PodcastEpisodeId == x.Id && !h.IsNowPlaying)
+                    .OrderByDescending(h => h.PlayedAt)
+                    .Select(h => (Instant?)h.PlayedAt)
+                    .FirstOrDefault(),
+                context.UserPodcastEpisodePlayHistories
+                    .Count(h => h.UserId == userId && h.PodcastEpisodeId == x.Id && !h.IsNowPlaying)))
+            .ToArray();
+
+        Logger.Information("[{ServiceName}] Episode search for '{Query}' found {Count} results for user {UserId}",
+            nameof(PodcastService), query, totalCount, userId);
 
         return new PagedResult<PodcastEpisodeDataInfo>
         {

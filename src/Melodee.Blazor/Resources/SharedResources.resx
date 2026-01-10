@@ -59,7 +59,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
 
-<data name="Navigation.Dashboard" xml:space="preserve">
+  <data name="Navigation.Dashboard" xml:space="preserve">
     <value>Dashboard</value>
   </data>
   <data name="Navigation.Library" xml:space="preserve">
@@ -152,8 +152,6 @@
   <data name="Admin.YouAreEditor" xml:space="preserve">
     <value>You are an editor!</value>
   </data>
-
-
   <data name="Actions.Save" xml:space="preserve">
     <value>Save</value>
   </data>
@@ -247,8 +245,6 @@
   <data name="Actions.No" xml:space="preserve">
     <value>No</value>
   </data>
-
-
   <data name="Common.Name" xml:space="preserve">
     <value>Name</value>
   </data>
@@ -330,8 +326,6 @@
   <data name="Common.Bitrate" xml:space="preserve">
     <value>Bitrate</value>
   </data>
-
-
   <data name="Auth.Login" xml:space="preserve">
     <value>Login</value>
   </data>
@@ -500,8 +494,6 @@
   <data name="Auth.EmailAddress" xml:space="preserve">
     <value>Email address</value>
   </data>
-
-
   <data name="Messages.Loading" xml:space="preserve">
     <value>Loading...</value>
   </data>
@@ -547,8 +539,6 @@
   <data name="Messages.UnsavedChanges" xml:space="preserve">
     <value>You have unsaved changes. Do you want to continue?</value>
   </data>
-
-
   <data name="Dashboard.Welcome" xml:space="preserve">
     <value>Welcome to Melodee</value>
   </data>
@@ -615,8 +605,6 @@
   <data name="Dashboard.When" xml:space="preserve">
     <value>When</value>
   </data>
-
-
   <data name="Library.BrowseArtists" xml:space="preserve">
     <value>Browse Artists</value>
   </data>
@@ -635,8 +623,6 @@
   <data name="Library.SortBy" xml:space="preserve">
     <value>Sort By</value>
   </data>
-
-
   <data name="Player.NowPlaying" xml:space="preserve">
     <value>Now Playing</value>
   </data>
@@ -655,8 +641,6 @@
   <data name="Player.ClearQueue" xml:space="preserve">
     <value>Clear Queue</value>
   </data>
-
-
   <data name="Settings.General" xml:space="preserve">
     <value>General</value>
   </data>
@@ -681,8 +665,6 @@
   <data name="Settings.Privacy" xml:space="preserve">
     <value>Privacy</value>
   </data>
-
-
   <data name="About.Title" xml:space="preserve">
     <value>About {0}</value>
   </data>
@@ -743,8 +725,6 @@
   <data name="About.GitHub" xml:space="preserve">
     <value>GitHub</value>
   </data>
-
-
   <data name="Data.Statistics" xml:space="preserve">
     <value>Statistics</value>
   </data>
@@ -1036,8 +1016,6 @@
   <data name="Profile.UnlinkingError" xml:space="preserve">
     <value>An error occurred while unlinking. Please try again.</value>
   </data>
-
-
   <data name="RequestNew.PageTitle" xml:space="preserve">
     <value>New Request</value>
   </data>
@@ -1062,8 +1040,6 @@
   <data name="RequestNew.ErrorCreatingRequest" xml:space="preserve">
     <value>Error creating request</value>
   </data>
-
-
   <data name="RequestDetail.PageTitle" xml:space="preserve">
     <value>Request Detail</value>
   </data>
@@ -1118,8 +1094,6 @@
   <data name="RequestDetail.ErrorPosting" xml:space="preserve">
     <value>Error posting comment</value>
   </data>
-
-
   <data name="RequestEdit.PageTitle" xml:space="preserve">
     <value>Edit Request</value>
   </data>
@@ -1150,8 +1124,6 @@
   <data name="RequestEdit.ErrorUpdating" xml:space="preserve">
     <value>Error updating request</value>
   </data>
-
-
   <data name="Validation.Required" xml:space="preserve">
     <value>This field is required</value>
   </data>
@@ -1164,8 +1136,6 @@
   <data name="Validation.PasswordsDoNotMatch" xml:space="preserve">
     <value>Passwords do not match</value>
   </data>
-
-
   <data name="Stats.PageTitle" xml:space="preserve">
     <value>Stats</value>
   </data>
@@ -1223,8 +1193,6 @@
   <data name="Stats.LibraryScansPerDay" xml:space="preserve">
     <value>Library scans per day</value>
   </data>
-
-
   <data name="Search.PageTitle" xml:space="preserve">
     <value>Search Results</value>
   </data>
@@ -1279,8 +1247,6 @@
   <data name="Search.MqlParseError" xml:space="preserve">
     <value>Failed to parse query</value>
   </data>
-
-
   <data name="NowPlaying.PageTitle" xml:space="preserve">
     <value>Now Playing</value>
   </data>
@@ -1290,8 +1256,6 @@
   <data name="NowPlaying.NoSongsPlaying" xml:space="preserve">
     <value>No songs are currently playing.</value>
   </data>
-
-
   <data name="Users.PageTitle" xml:space="preserve">
     <value>Users</value>
   </data>
@@ -1304,8 +1268,6 @@
   <data name="Users.Delete" xml:space="preserve">
     <value>Delete</value>
   </data>
-
-
   <data name="Shares.PageTitle" xml:space="preserve">
     <value>Shares</value>
   </data>
@@ -1318,8 +1280,6 @@
   <data name="Shares.Delete" xml:space="preserve">
     <value>Delete</value>
   </data>
-
-
   <data name="RadioStations.PageTitle" xml:space="preserve">
     <value>Radio Stations</value>
   </data>
@@ -1332,8 +1292,6 @@
   <data name="RadioStations.Delete" xml:space="preserve">
     <value>Delete</value>
   </data>
-
-
   <data name="Nav.Back" xml:space="preserve">
     <value>Back</value>
   </data>
@@ -1379,8 +1337,6 @@
   <data name="Nav.Libraries" xml:space="preserve">
     <value>Libraries</value>
   </data>
-
-
   <data name="Actions.SelectAll" xml:space="preserve">
     <value>Select All</value>
   </data>
@@ -1516,8 +1472,6 @@
   <data name="Actions.ViewAll" xml:space="preserve">
     <value>View All</value>
   </data>
-
-
   <data name="Label.Name" xml:space="preserve">
     <value>Name</value>
   </data>
@@ -1800,8 +1754,6 @@
   <data name="Status.Complete" xml:space="preserve">
     <value>Complete</value>
   </data>
-
-
   <data name="Dialog.AreYouSure" xml:space="preserve">
     <value>Are you sure?</value>
   </data>
@@ -1826,8 +1778,6 @@
   <data name="Dialog.StartScan" xml:space="preserve">
     <value>Start scan</value>
   </data>
-
-
   <data name="TableHeader.Hash" xml:space="preserve">
     <value>#</value>
   </data>
@@ -1936,8 +1886,6 @@
   <data name="TableHeader.SpotifyId" xml:space="preserve">
     <value>SpotifyId</value>
   </data>
-
-
   <data name="Message.DisplayingPage" xml:space="preserve">
     <value>Displaying page {0} of {1} (total {2} records)</value>
   </data>
@@ -1974,8 +1922,6 @@
   <data name="Message.DeletingLibraries" xml:space="preserve">
     <value>Deleting Libraries</value>
   </data>
-
-
   <data name="ArtistDetail.DeleteArtistWarning" xml:space="preserve">
     <value>Delete the artist, all artist albums, and all album files. BEWARE!</value>
   </data>
@@ -2090,8 +2036,6 @@
   <data name="ArtistDetail.DeletedArtistAlbums" xml:space="preserve">
     <value>deleted artist albums</value>
   </data>
-
-
   <data name="AlbumDetail.DeleteAlbum" xml:space="preserve">
     <value>Delete the album and all album files. BEWARE!</value>
   </data>
@@ -2194,13 +2138,9 @@
   <data name="AlbumDetail.SetSongRating" xml:space="preserve">
     <value>Set song rating</value>
   </data>
-
-
   <data name="SongDetail.DetailsGoHere" xml:space="preserve">
     <value>Details go here for {0}</value>
   </data>
-
-
   <data name="Libraries.PageTitle" xml:space="preserve">
     <value>Libraries</value>
   </data>
@@ -2213,8 +2153,6 @@
   <data name="Libraries.SelectItem" xml:space="preserve">
     <value>Select item</value>
   </data>
-
-
   <data name="LibraryDetail.CleanLibrary" xml:space="preserve">
     <value>Clean library, removing any empty folders.</value>
   </data>
@@ -2356,8 +2294,6 @@
   <data name="Message.UpdatedLibraryAggregates" xml:space="preserve">
     <value>updated library aggregates</value>
   </data>
-
-
   <data name="PlaylistDetail.UnlockPlaylist" xml:space="preserve">
     <value>Unlock playlist, will allow modifications.</value>
   </data>
@@ -2391,8 +2327,6 @@
   <data name="Message.TogglingPin" xml:space="preserve">
     <value>Toggling Pin</value>
   </data>
-
-
   <data name="Requests.PageTitle" xml:space="preserve">
     <value>Requests</value>
   </data>
@@ -2423,21 +2357,15 @@
   <data name="RequestStatus.Rejected" xml:space="preserve">
     <value>Rejected</value>
   </data>
-
-
   <data name="RequestNew.HttpsPlaceholder" xml:space="preserve">
     <value>https://...</value>
   </data>
-
-
   <data name="RequestDetail.DeleteRequestConfirm" xml:space="preserve">
     <value>Are you sure you want to delete this request?</value>
   </data>
   <data name="RequestEdit.OnlyEditOwnRequests" xml:space="preserve">
     <value>You can only edit your own requests</value>
   </data>
-
-
   <data name="RequestCategory.AddAlbum" xml:space="preserve">
     <value>Add Album</value>
   </data>
@@ -2453,8 +2381,6 @@
   <data name="RequestCategory.General" xml:space="preserve">
     <value>General</value>
   </data>
-
-
   <data name="ArtistEdit.PageTitle" xml:space="preserve">
     <value>Artist Add/Edit</value>
   </data>
@@ -2485,8 +2411,6 @@
   <data name="ArtistEdit.EnterValue" xml:space="preserve">
     <value>enter value</value>
   </data>
-
-
   <data name="AlbumEdit.PageTitle" xml:space="preserve">
     <value>Album Add/Edit</value>
   </data>
@@ -2499,8 +2423,6 @@
   <data name="AlbumEdit.ExternalSearchDetails" xml:space="preserve">
     <value>This feature allows searching external providers for album information.</value>
   </data>
-
-
   <data name="LibraryEdit.PageTitle" xml:space="preserve">
     <value>Edit Library</value>
   </data>
@@ -2564,8 +2486,6 @@
   <data name="LibraryType.Chart" xml:space="preserve">
     <value>Chart</value>
   </data>
-
-
   <data name="UserEdit.PageTitle" xml:space="preserve">
     <value>Edit User</value>
   </data>
@@ -2599,8 +2519,6 @@
   <data name="Message.AvatarUpdated" xml:space="preserve">
     <value>Avatar updated</value>
   </data>
-
-
   <data name="Charts.PageTitle" xml:space="preserve">
     <value>Curated Charts</value>
   </data>
@@ -2628,8 +2546,6 @@
   <data name="Charts.DeleteCharts" xml:space="preserve">
     <value>Delete Charts</value>
   </data>
-
-
   <data name="ChartsRankedReport.PageTitle" xml:space="preserve">
     <value>Ranked Report</value>
   </data>
@@ -2666,8 +2582,6 @@
   <data name="ChartsRankedReport.NotFound" xml:space="preserve">
     <value>Not Found</value>
   </data>
-
-
   <data name="ChartsMissingReport.PageTitle" xml:space="preserve">
     <value>Missing Report</value>
   </data>
@@ -2686,8 +2600,6 @@
   <data name="ChartsMissingReport.IdentifyMissingAlbum" xml:space="preserve">
     <value>Identify Missing Album</value>
   </data>
-
-
   <data name="AdminDashboard.PageTitle" xml:space="preserve">
     <value>Admin Dashboard</value>
   </data>
@@ -2775,8 +2687,6 @@
   <data name="AdminDashboard.APIDocs" xml:space="preserve">
     <value>API Docs</value>
   </data>
-
-
   <data name="AdminJobs.PageTitle" xml:space="preserve">
     <value>Background Jobs</value>
   </data>
@@ -2951,8 +2861,6 @@
   <data name="AdminJobs.ErrorLoadingJobs" xml:space="preserve">
     <value>Error loading jobs</value>
   </data>
-
-
   <data name="AdminSettings.PageTitle" xml:space="preserve">
     <value>Settings</value>
   </data>
@@ -3013,8 +2921,6 @@
   <data name="AdminSettings.SortOrder" xml:space="preserve">
     <value>Sort Order</value>
   </data>
-
-
   <data name="ChartEditor.EditChart" xml:space="preserve">
     <value>Edit Chart: {0}</value>
   </data>
@@ -3192,8 +3098,6 @@
   <data name="ChartEditor.ConfirmDeleteImageTitle" xml:space="preserve">
     <value>Confirm Delete</value>
   </data>
-
-
   <data name="ChartDetail.PageTitle" xml:space="preserve">
     <value>Chart Details</value>
   </data>
@@ -3233,8 +3137,6 @@
   <data name="ChartDetail.ChartItems" xml:space="preserve">
     <value>Chart Items ({0})</value>
   </data>
-
-
   <data name="ChartImportDialog.JSONImportSchema" xml:space="preserve">
     <value>JSON Import Schema:</value>
   </data>
@@ -3280,8 +3182,6 @@
   <data name="ChartImportDialog.NA" xml:space="preserve">
     <value>N/A</value>
   </data>
-
-
   <data name="ChartItemResolveDialog.CurrentEntry" xml:space="preserve">
     <value>Current Entry</value>
   </data>
@@ -3300,13 +3200,9 @@
   <data name="ChartItemResolveDialog.LinkedTo" xml:space="preserve">
     <value>Linked to: {0} - {1}</value>
   </data>
-
-
   <data name="MissingAlbumIdentifyDialog.TypeToFilter" xml:space="preserve">
     <value>Type to filter artists...</value>
   </data>
-
-
   <data name="MediaLibrary.PageTitle" xml:space="preserve">
     <value>Media Albums</value>
   </data>
@@ -3376,8 +3272,6 @@
   <data name="MediaLibrary.Select" xml:space="preserve">
     <value>Select</value>
   </data>
-
-
   <data name="MediaArtists.PageTitle" xml:space="preserve">
     <value>Media Artists</value>
   </data>
@@ -3387,8 +3281,6 @@
   <data name="MediaArtists.RefreshAlbums" xml:space="preserve">
     <value>Refresh Albums</value>
   </data>
-
-
   <data name="MediaAlbumDetail.AddArtist" xml:space="preserve">
     <value>Add Artist</value>
   </data>
@@ -3449,24 +3341,18 @@
   <data name="MediaAlbumDetail.NoImagesAdded" xml:space="preserve">
     <value>No images were added to the album. Likely the image you selected was invalid.</value>
   </data>
-
-
   <data name="MediaAlbumEdit.PageTitle" xml:space="preserve">
     <value>Media Album Add/Edit</value>
   </data>
   <data name="MediaAlbumEdit.ImageSearch" xml:space="preserve">
     <value>Media Album Image Search</value>
   </data>
-
-
   <data name="MediaArtistEdit.PageTitle" xml:space="preserve">
     <value>Media Artist Add/Edit</value>
   </data>
   <data name="MediaArtistEdit.MediaArtists" xml:space="preserve">
     <value>Media Artists</value>
   </data>
-
-
   <data name="Notification.RequestNotFound" xml:space="preserve">
     <value>Request not found</value>
   </data>
@@ -3602,8 +3488,6 @@
   <data name="Notification.ScanningLibraryWarning" xml:space="preserve">
     <value>Scanning a library updates the library with media found. This could overwrite artists, albums and songs.</value>
   </data>
-
-
   <data name="Charts.SelectAllItems" xml:space="preserve">
     <value>Select all items</value>
   </data>
@@ -3625,8 +3509,6 @@
   <data name="Charts.ChartsDeleted" xml:space="preserve">
     <value>Charts Deleted</value>
   </data>
-
-
   <data name="ChartsRankedReport.Header" xml:space="preserve">
     <value>Ranked Albums Report</value>
   </data>
@@ -3639,8 +3521,6 @@
   <data name="AlbumEdit.Editing" xml:space="preserve">
     <value>Editing</value>
   </data>
-
-
   <data name="UserDetail.PageTitle" xml:space="preserve">
     <value>User - {0}</value>
   </data>
@@ -3701,8 +3581,6 @@
   <data name="UserDetail.Description" xml:space="preserve">
     <value>Description</value>
   </data>
-
-
   <data name="UserDetail.Stats.ArtistsStarred" xml:space="preserve">
     <value>Artists Starred</value>
   </data>
@@ -3736,8 +3614,6 @@
   <data name="UserDetail.Stats.Bookmarks" xml:space="preserve">
     <value>Bookmarks</value>
   </data>
-
-
   <data name="UserRole.Admin" xml:space="preserve">
     <value>admin</value>
   </data>
@@ -3780,16 +3656,12 @@
   <data name="UserRole.Share" xml:space="preserve">
     <value>Share</value>
   </data>
-
-
   <data name="Message.ClearedCache" xml:space="preserve">
     <value>cleared cache</value>
   </data>
   <data name="Message.ClearedNowPlaying" xml:space="preserve">
     <value>cleared now playing</value>
   </data>
-
-
   <data name="ChartImportDialog.ValidationErrors" xml:space="preserve">
     <value>Validation Errors:</value>
   </data>
@@ -3862,16 +3734,12 @@
   <data name="ChartImportDialog.ImageDownloadErrorDetail" xml:space="preserve">
     <value>Could not download image from URL</value>
   </data>
-
-
   <data name="ChartItemResolveDialog.SearchAndSelect" xml:space="preserve">
     <value>Search &amp; Select Album</value>
   </data>
   <data name="ChartItemResolveDialog.FailedToLink" xml:space="preserve">
     <value>Failed to link album</value>
   </data>
-
-
   <data name="MissingAlbumIdentifyDialog.Artists" xml:space="preserve">
     <value>Artists</value>
   </data>
@@ -3890,8 +3758,6 @@
   <data name="MissingAlbumIdentifyDialog.FailedToIdentify" xml:space="preserve">
     <value>Failed to identify album</value>
   </data>
-
-
   <data name="AlbumEdit.AddingAlbum" xml:space="preserve">
     <value>Adding Album</value>
   </data>
@@ -3907,8 +3773,6 @@
   <data name="Message.Huzzah" xml:space="preserve">
     <value>HUZZAH!</value>
   </data>
-
-
   <data name="UploadAlbum.Title" xml:space="preserve">
     <value>Upload Album</value>
   </data>
@@ -4059,92 +3923,90 @@
   <data name="Auth.ResetPasswordError" xml:space="preserve">
     <value>An error occurred while resetting your password</value>
   </data>
-<data name="About.DocumentationSite" xml:space="preserve">
+  <data name="About.DocumentationSite" xml:space="preserve">
     <value>Melodee Documentation Site</value>
   </data>
-<data name="Actions.BackToChart" xml:space="preserve">
+  <data name="Actions.BackToChart" xml:space="preserve">
     <value>Back to Chart</value>
   </data>
-<data name="ChartsMissingReport.HeaderForChart" xml:space="preserve">
+  <data name="ChartsMissingReport.HeaderForChart" xml:space="preserve">
     <value>Missing Albums for {0}</value>
   </data>
-<data name="ArtistDetail.ValidateAlbums" xml:space="preserve">
+  <data name="ArtistDetail.ValidateAlbums" xml:space="preserve">
     <value>Validate all albums for this artist</value>
   </data>
-<data name="ArtistDetail.ValidateAlbumsTitle" xml:space="preserve">
+  <data name="ArtistDetail.ValidateAlbumsTitle" xml:space="preserve">
     <value>Album Validation: {0}</value>
   </data>
-<data name="ArtistValidation.ValidatingAlbums" xml:space="preserve">
+  <data name="ArtistValidation.ValidatingAlbums" xml:space="preserve">
     <value>Validating albums...</value>
   </data>
-<data name="ArtistValidation.TotalAlbums" xml:space="preserve">
+  <data name="ArtistValidation.TotalAlbums" xml:space="preserve">
     <value>Total Albums</value>
   </data>
-<data name="ArtistValidation.ValidAlbums" xml:space="preserve">
+  <data name="ArtistValidation.ValidAlbums" xml:space="preserve">
     <value>Valid</value>
   </data>
-<data name="ArtistValidation.InvalidAlbums" xml:space="preserve">
+  <data name="ArtistValidation.InvalidAlbums" xml:space="preserve">
     <value>Invalid</value>
   </data>
-<data name="ArtistValidation.AllValid" xml:space="preserve">
+  <data name="ArtistValidation.AllValid" xml:space="preserve">
     <value>All Valid</value>
   </data>
-<data name="ArtistValidation.IssuesFound" xml:space="preserve">
+  <data name="ArtistValidation.IssuesFound" xml:space="preserve">
     <value>Issues Found</value>
   </data>
-<data name="ArtistValidation.AlbumDetails" xml:space="preserve">
+  <data name="ArtistValidation.AlbumDetails" xml:space="preserve">
     <value>Album Details</value>
   </data>
-<data name="ArtistValidation.Directory" xml:space="preserve">
+  <data name="ArtistValidation.Directory" xml:space="preserve">
     <value>Directory</value>
   </data>
-<data name="ArtistValidation.Cover" xml:space="preserve">
+  <data name="ArtistValidation.Cover" xml:space="preserve">
     <value>Cover</value>
   </data>
-<data name="ArtistValidation.Issues" xml:space="preserve">
+  <data name="ArtistValidation.Issues" xml:space="preserve">
     <value>Issues</value>
   </data>
-<data name="ArtistValidation.Valid" xml:space="preserve">
+  <data name="ArtistValidation.Valid" xml:space="preserve">
     <value>Valid</value>
   </data>
-<data name="ArtistValidation.Invalid" xml:space="preserve">
+  <data name="ArtistValidation.Invalid" xml:space="preserve">
     <value>Invalid</value>
   </data>
-<data name="ArtistValidation.DirectoryExists" xml:space="preserve">
+  <data name="ArtistValidation.DirectoryExists" xml:space="preserve">
     <value>Directory exists</value>
   </data>
-<data name="ArtistValidation.DirectoryMissing" xml:space="preserve">
+  <data name="ArtistValidation.DirectoryMissing" xml:space="preserve">
     <value>Directory missing</value>
   </data>
-<data name="ArtistValidation.HasCoverImage" xml:space="preserve">
+  <data name="ArtistValidation.HasCoverImage" xml:space="preserve">
     <value>Has cover image</value>
   </data>
-<data name="ArtistValidation.NoCoverImage" xml:space="preserve">
+  <data name="ArtistValidation.NoCoverImage" xml:space="preserve">
     <value>No cover image</value>
   </data>
-<data name="ArtistValidation.MoreIssues" xml:space="preserve">
+  <data name="ArtistValidation.MoreIssues" xml:space="preserve">
     <value>+{0} more issues</value>
   </data>
-<data name="ArtistValidation.NoResults" xml:space="preserve">
+  <data name="ArtistValidation.NoResults" xml:space="preserve">
     <value>No validation results available.</value>
   </data>
-<data name="About.OpenSubsonicApiDocs" xml:space="preserve">
+  <data name="About.OpenSubsonicApiDocs" xml:space="preserve">
     <value>OpenSubsonic API Docs</value>
   </data>
-<data name="Stats.TopArtistsByPlays" xml:space="preserve">
+  <data name="Stats.TopArtistsByPlays" xml:space="preserve">
     <value>Top 10 Most Played Artists</value>
   </data>
-<data name="Stats.TopArtistsByAlbumCount" xml:space="preserve">
+  <data name="Stats.TopArtistsByAlbumCount" xml:space="preserve">
     <value>Top 10 Artists by Album Count</value>
   </data>
-<data name="Stats.ReleasesByYear" xml:space="preserve">
+  <data name="Stats.ReleasesByYear" xml:space="preserve">
     <value>Releases by Year</value>
   </data>
-<data name="Stats.ReleasesByGenre" xml:space="preserve">
+  <data name="Stats.ReleasesByGenre" xml:space="preserve">
     <value>Releases by Genre</value>
   </data>
-
-  
   <data name="AdminDoctor.PageTitle" xml:space="preserve">
     <value>System Doctor</value>
   </data>
@@ -4292,509 +4154,507 @@
   <data name="AdminDoctor.ServicesEnabled" xml:space="preserve">
     <value>{0}/{1} services enabled</value>
   </data>
-<data name="AdminDoctor.Writable" xml:space="preserve">
+  <data name="AdminDoctor.Writable" xml:space="preserve">
     <value>Writable</value>
   </data>
-<data name="AdminDoctor.PathNotWritable" xml:space="preserve">
+  <data name="AdminDoctor.PathNotWritable" xml:space="preserve">
     <value>Path is not writable</value>
   </data>
-<data name="AdminDoctor.PathOk" xml:space="preserve">
+  <data name="AdminDoctor.PathOk" xml:space="preserve">
     <value>OK</value>
   </data>
-<data name="AdminDoctor.LibraryPathsNotWritable" xml:space="preserve">
+  <data name="AdminDoctor.LibraryPathsNotWritable" xml:space="preserve">
     <value>Some library paths are not writable</value>
   </data>
-<data name="AdminDoctor.LibraryPathsMissingAndNotWritable" xml:space="preserve">
+  <data name="AdminDoctor.LibraryPathsMissingAndNotWritable" xml:space="preserve">
     <value>Some library paths are missing or not writable</value>
   </data>
-<data name="AdminDoctor.AllLibraryPathsOk" xml:space="preserve">
+  <data name="AdminDoctor.AllLibraryPathsOk" xml:space="preserve">
     <value>All library paths exist and are writable</value>
   </data>
-<data name="AdminDoctor.FileExists" xml:space="preserve">
+  <data name="AdminDoctor.FileExists" xml:space="preserve">
     <value>File Exists</value>
   </data>
-<data name="AdminDoctor.FileMissing" xml:space="preserve">
+  <data name="AdminDoctor.FileMissing" xml:space="preserve">
     <value>File Missing</value>
   </data>
-<data name="AdminDoctor.NotWritable" xml:space="preserve">
+  <data name="AdminDoctor.NotWritable" xml:space="preserve">
     <value>Not Writable</value>
   </data>
-<data name="AdminDoctor.Check.SerilogLogging" xml:space="preserve">
+  <data name="AdminDoctor.Check.SerilogLogging" xml:space="preserve">
     <value>Serilog Logging</value>
   </data>
-<data name="AdminDoctor.SerilogLogPaths" xml:space="preserve">
+  <data name="AdminDoctor.SerilogLogPaths" xml:space="preserve">
     <value>Serilog Log Paths</value>
   </data>
-<data name="AdminDoctor.DirectoryExists" xml:space="preserve">
+  <data name="AdminDoctor.DirectoryExists" xml:space="preserve">
     <value>Directory Exists</value>
   </data>
-<data name="AdminDoctor.DirectoryMissing" xml:space="preserve">
+  <data name="AdminDoctor.DirectoryMissing" xml:space="preserve">
     <value>Directory Missing</value>
   </data>
-<data name="AdminDoctor.NoFileLoggingConfigured" xml:space="preserve">
+  <data name="AdminDoctor.NoFileLoggingConfigured" xml:space="preserve">
     <value>No file logging configured</value>
   </data>
-<data name="AdminDoctor.SerilogPathIssues" xml:space="preserve">
+  <data name="AdminDoctor.SerilogPathIssues" xml:space="preserve">
     <value>Some log paths have issues</value>
   </data>
-<data name="AdminDoctor.SerilogPathsOk" xml:space="preserve">
+  <data name="AdminDoctor.SerilogPathsOk" xml:space="preserve">
     <value>All log paths are accessible</value>
   </data>
-<data name="AdminDoctor.MusicBrainzDatabaseEmpty" xml:space="preserve">
+  <data name="AdminDoctor.MusicBrainzDatabaseEmpty" xml:space="preserve">
     <value>MusicBrainz database is empty and needs to be populated</value>
   </data>
-<data name="AdminDoctor.GenerateMusicBrainzDatabase" xml:space="preserve">
+  <data name="AdminDoctor.GenerateMusicBrainzDatabase" xml:space="preserve">
     <value>Generate MusicBrainz Local Database</value>
   </data>
-<data name="AdminDoctor.MusicBrainzJobRunning" xml:space="preserve">
+  <data name="AdminDoctor.MusicBrainzJobRunning" xml:space="preserve">
     <value>MusicBrainz Database Update</value>
   </data>
-<data name="AdminDoctor.JobStarted" xml:space="preserve">
+  <data name="AdminDoctor.JobStarted" xml:space="preserve">
     <value>Job started successfully</value>
   </data>
-<data name="AdminDoctor.JobFailed" xml:space="preserve">
+  <data name="AdminDoctor.JobFailed" xml:space="preserve">
     <value>Failed to start job</value>
   </data>
-<data name="AdminDoctor.Check.DiskSpace" xml:space="preserve">
+  <data name="AdminDoctor.Check.DiskSpace" xml:space="preserve">
     <value>Disk Space</value>
   </data>
-<data name="AdminDoctor.Check.LibraryPathOverlap" xml:space="preserve">
+  <data name="AdminDoctor.Check.LibraryPathOverlap" xml:space="preserve">
     <value>Library Path Overlap</value>
   </data>
-<data name="AdminDoctor.Check.SearchEngineApiKeys" xml:space="preserve">
+  <data name="AdminDoctor.Check.SearchEngineApiKeys" xml:space="preserve">
     <value>Search Engine API Keys</value>
   </data>
-<data name="AdminDoctor.DiskSpace" xml:space="preserve">
+  <data name="AdminDoctor.DiskSpace" xml:space="preserve">
     <value>Disk Space</value>
   </data>
-<data name="AdminDoctor.DiskSpaceCritical" xml:space="preserve">
+  <data name="AdminDoctor.DiskSpaceCritical" xml:space="preserve">
     <value>Critical: Disk space critically low</value>
   </data>
-<data name="AdminDoctor.DiskSpaceWarning" xml:space="preserve">
+  <data name="AdminDoctor.DiskSpaceWarning" xml:space="preserve">
     <value>Warning: Disk space is running low</value>
   </data>
-<data name="AdminDoctor.DiskSpaceOk" xml:space="preserve">
+  <data name="AdminDoctor.DiskSpaceOk" xml:space="preserve">
     <value>All disks have adequate space</value>
   </data>
-<data name="AdminDoctor.DiskTotal" xml:space="preserve">
+  <data name="AdminDoctor.DiskTotal" xml:space="preserve">
     <value>Total</value>
   </data>
-<data name="AdminDoctor.DiskAvailable" xml:space="preserve">
+  <data name="AdminDoctor.DiskAvailable" xml:space="preserve">
     <value>Available</value>
   </data>
-<data name="AdminDoctor.DiskUsed" xml:space="preserve">
+  <data name="AdminDoctor.DiskUsed" xml:space="preserve">
     <value>Used</value>
   </data>
-<data name="AdminDoctor.SearchEngineApiKeys" xml:space="preserve">
+  <data name="AdminDoctor.SearchEngineApiKeys" xml:space="preserve">
     <value>Search Engine API Keys</value>
   </data>
-<data name="AdminDoctor.SearchEngineApiKeysMissing" xml:space="preserve">
+  <data name="AdminDoctor.SearchEngineApiKeysMissing" xml:space="preserve">
     <value>Some enabled search engines are missing API keys</value>
   </data>
-<data name="AdminDoctor.SearchEngineApiKeysOk" xml:space="preserve">
+  <data name="AdminDoctor.SearchEngineApiKeysOk" xml:space="preserve">
     <value>All enabled search engines have API keys configured</value>
   </data>
-<data name="AdminDoctor.LibraryPathOverlapDetected" xml:space="preserve">
+  <data name="AdminDoctor.LibraryPathOverlapDetected" xml:space="preserve">
     <value>Library path overlap detected - paths may conflict</value>
   </data>
-<data name="AdminDoctor.NoLibraryPathOverlap" xml:space="preserve">
+  <data name="AdminDoctor.NoLibraryPathOverlap" xml:space="preserve">
     <value>No library path overlaps</value>
   </data>
-<data name="AdminDoctor.MissingApiKey" xml:space="preserve">
+  <data name="AdminDoctor.MissingApiKey" xml:space="preserve">
     <value>Missing API Key</value>
   </data>
-<data name="AdminDoctor.Enabled" xml:space="preserve">
+  <data name="AdminDoctor.Enabled" xml:space="preserve">
     <value>Enabled</value>
   </data>
-<data name="AdminDoctor.Disabled" xml:space="preserve">
+  <data name="AdminDoctor.Disabled" xml:space="preserve">
     <value>Disabled</value>
   </data>
-<data name="AdminDoctor.Critical" xml:space="preserve">
+  <data name="AdminDoctor.Critical" xml:space="preserve">
     <value>Critical</value>
   </data>
-<data name="AdminDoctor.Warning" xml:space="preserve">
+  <data name="AdminDoctor.Warning" xml:space="preserve">
     <value>Warning</value>
   </data>
-<data name="AdminDoctor.Ok" xml:space="preserve">
+  <data name="AdminDoctor.Ok" xml:space="preserve">
     <value>OK</value>
   </data>
-<data name="AdminDoctor.Unknown" xml:space="preserve">
+  <data name="AdminDoctor.Unknown" xml:space="preserve">
     <value>Unknown</value>
   </data>
-<data name="Dashboard.IssuesDetected" xml:space="preserve">
+  <data name="Dashboard.IssuesDetected" xml:space="preserve">
     <value>Issues detected. Review the Doctor page for details.</value>
   </data>
-<data name="AdminDoctor.Check.SmtpConfiguration" xml:space="preserve">
+  <data name="AdminDoctor.Check.SmtpConfiguration" xml:space="preserve">
     <value>SMTP Configuration</value>
   </data>
-<data name="AdminDoctor.Check.JwtTokenStrength" xml:space="preserve">
+  <data name="AdminDoctor.Check.JwtTokenStrength" xml:space="preserve">
     <value>JWT Token Strength</value>
   </data>
-<data name="AdminDoctor.Check.HttpsSecurity" xml:space="preserve">
+  <data name="AdminDoctor.Check.HttpsSecurity" xml:space="preserve">
     <value>HTTPS Security</value>
   </data>
-<data name="AdminDoctor.Check.AdminPassword" xml:space="preserve">
+  <data name="AdminDoctor.Check.AdminPassword" xml:space="preserve">
     <value>Admin Password</value>
   </data>
-<data name="AdminDoctor.MusicBrainzJobDescription" xml:space="preserve">
+  <data name="AdminDoctor.MusicBrainzJobDescription" xml:space="preserve">
     <value>Downloads and updates the local MusicBrainz database for artist and album metadata lookups.</value>
   </data>
-<data name="Search.NoResultsFound" xml:space="preserve">
+  <data name="Search.NoResultsFound" xml:space="preserve">
     <value>No Results Found</value>
   </data>
-<data name="Search.NoResultsDescription" xml:space="preserve">
+  <data name="Search.NoResultsDescription" xml:space="preserve">
     <value>We couldn't find any artists, albums, or songs matching "{0}". Try a different search term or request the music you're looking for.</value>
   </data>
-<data name="Grid.NoRecordsToDisplay" xml:space="preserve">
+  <data name="Grid.NoRecordsToDisplay" xml:space="preserve">
     <value>No records to display</value>
   </data>
-<data name="Grid.PageSummary" xml:space="preserve">
+  <data name="Grid.PageSummary" xml:space="preserve">
     <value>Displaying Page {0} of {1} (total {2} records)</value>
   </data>
-<data name="Grid.ItemsPerPage" xml:space="preserve">
+  <data name="Grid.ItemsPerPage" xml:space="preserve">
     <value>items per page</value>
   </data>
-<data name="Common.UserName" xml:space="preserve">
+  <data name="Common.UserName" xml:space="preserve">
     <value>Username</value>
   </data>
-<data name="Common.Email" xml:space="preserve">
+  <data name="Common.Email" xml:space="preserve">
     <value>Email</value>
   </data>
-<data name="Common.LastLogin" xml:space="preserve">
+  <data name="Common.LastLogin" xml:space="preserve">
     <value>Last Login</value>
   </data>
-<data name="Common.LastActivity" xml:space="preserve">
+  <data name="Common.LastActivity" xml:space="preserve">
     <value>Last Activity</value>
   </data>
-<data name="Stats.TotalPlays" xml:space="preserve">
+  <data name="Stats.TotalPlays" xml:space="preserve">
     <value>Total Plays</value>
   </data>
-<data name="Stats.FavoritesSongs" xml:space="preserve">
+  <data name="Stats.FavoritesSongs" xml:space="preserve">
     <value>Favorites: Songs</value>
   </data>
-<data name="Stats.FavoritesAlbums" xml:space="preserve">
+  <data name="Stats.FavoritesAlbums" xml:space="preserve">
     <value>Favorites: Albums</value>
   </data>
-<data name="Stats.FavoritesArtists" xml:space="preserve">
+  <data name="Stats.FavoritesArtists" xml:space="preserve">
     <value>Favorites: Artists</value>
   </data>
-<data name="Stats.Albums" xml:space="preserve">
+  <data name="Stats.Albums" xml:space="preserve">
     <value>Albums</value>
   </data>
-<data name="Stats.Artists" xml:space="preserve">
+  <data name="Stats.Artists" xml:space="preserve">
     <value>Artists</value>
   </data>
-<data name="Stats.Songs" xml:space="preserve">
+  <data name="Stats.Songs" xml:space="preserve">
     <value>Songs</value>
   </data>
-<data name="Stats.Users" xml:space="preserve">
+  <data name="Stats.Users" xml:space="preserve">
     <value>Users</value>
   </data>
-<data name="Common.Normalized" xml:space="preserve">
+  <data name="Common.Normalized" xml:space="preserve">
     <value>Normalized</value>
   </data>
-<data name="Common.AlbumCount" xml:space="preserve">
+  <data name="Common.AlbumCount" xml:space="preserve">
     <value>Album Count</value>
   </data>
-<data name="Common.MusicBrainzId" xml:space="preserve">
+  <data name="Common.MusicBrainzId" xml:space="preserve">
     <value>MusicBrainz ID</value>
   </data>
-<data name="Common.SpotifyId" xml:space="preserve">
+  <data name="Common.SpotifyId" xml:space="preserve">
     <value>Spotify ID</value>
   </data>
-<data name="Common.StatusReasons" xml:space="preserve">
+  <data name="Common.StatusReasons" xml:space="preserve">
     <value>Status Reasons</value>
   </data>
-<data name="Common.Songs" xml:space="preserve">
+  <data name="Common.Songs" xml:space="preserve">
     <value>Songs</value>
   </data>
-<data name="Statistic.Albums" xml:space="preserve">
+  <data name="Statistic.Albums" xml:space="preserve">
     <value>Albums</value>
   </data>
-<data name="Statistic.Artists" xml:space="preserve">
+  <data name="Statistic.Artists" xml:space="preserve">
     <value>Artists</value>
   </data>
-<data name="Statistic.Contributors" xml:space="preserve">
+  <data name="Statistic.Contributors" xml:space="preserve">
     <value>Contributors</value>
   </data>
-<data name="Statistic.Genres" xml:space="preserve">
+  <data name="Statistic.Genres" xml:space="preserve">
     <value>Genres</value>
   </data>
-<data name="Statistic.Libraries" xml:space="preserve">
+  <data name="Statistic.Libraries" xml:space="preserve">
     <value>Libraries</value>
   </data>
-<data name="Statistic.Playlists" xml:space="preserve">
+  <data name="Statistic.Playlists" xml:space="preserve">
     <value>Playlists</value>
   </data>
-<data name="Statistic.RadioStations" xml:space="preserve">
+  <data name="Statistic.RadioStations" xml:space="preserve">
     <value>Radio Stations</value>
   </data>
-<data name="Statistic.Shares" xml:space="preserve">
+  <data name="Statistic.Shares" xml:space="preserve">
     <value>Shares</value>
   </data>
-<data name="Statistic.Songs" xml:space="preserve">
+  <data name="Statistic.Songs" xml:space="preserve">
     <value>Songs</value>
   </data>
-<data name="Statistic.SongsPlayedCount" xml:space="preserve">
+  <data name="Statistic.SongsPlayedCount" xml:space="preserve">
     <value>Songs: Played count</value>
   </data>
-<data name="Statistic.Users" xml:space="preserve">
+  <data name="Statistic.Users" xml:space="preserve">
     <value>Users</value>
   </data>
-<data name="Statistic.UsersFavoritedArtists" xml:space="preserve">
+  <data name="Statistic.UsersFavoritedArtists" xml:space="preserve">
     <value>Users: Favorited artists</value>
   </data>
-<data name="Statistic.UsersFavoritedAlbums" xml:space="preserve">
+  <data name="Statistic.UsersFavoritedAlbums" xml:space="preserve">
     <value>Users: Favorited albums</value>
   </data>
-<data name="Statistic.UsersFavoritedSongs" xml:space="preserve">
+  <data name="Statistic.UsersFavoritedSongs" xml:space="preserve">
     <value>Users: Favorited songs</value>
   </data>
-<data name="Statistic.UsersRatedSongs" xml:space="preserve">
+  <data name="Statistic.UsersRatedSongs" xml:space="preserve">
     <value>Users: Rated songs</value>
   </data>
-<data name="Statistic.TotalSongMb" xml:space="preserve">
+  <data name="Statistic.TotalSongMb" xml:space="preserve">
     <value>Total: Song Mb</value>
   </data>
-<data name="Statistic.TotalSongDuration" xml:space="preserve">
+  <data name="Statistic.TotalSongDuration" xml:space="preserve">
     <value>Total: Song Duration</value>
   </data>
-<data name="Statistic.YourFavoriteSongs" xml:space="preserve">
+  <data name="Statistic.YourFavoriteSongs" xml:space="preserve">
     <value>Your Favorite songs</value>
   </data>
-<data name="Statistic.YourRatedSongs" xml:space="preserve">
+  <data name="Statistic.YourRatedSongs" xml:space="preserve">
     <value>Your Rated songs</value>
   </data>
-<data name="Statistic.YourFavoriteAlbums" xml:space="preserve">
+  <data name="Statistic.YourFavoriteAlbums" xml:space="preserve">
     <value>Your Favorite albums</value>
   </data>
-<data name="Statistic.YourFavoriteArtists" xml:space="preserve">
+  <data name="Statistic.YourFavoriteArtists" xml:space="preserve">
     <value>Your Favorite artists</value>
   </data>
-<data name="Statistic.TotalPlays" xml:space="preserve">
+  <data name="Statistic.TotalPlays" xml:space="preserve">
     <value>Total plays</value>
   </data>
-<data name="Statistic.FavoritesSongs" xml:space="preserve">
+  <data name="Statistic.FavoritesSongs" xml:space="preserve">
     <value>Favorites: Songs</value>
   </data>
-<data name="Statistic.FavoritesAlbums" xml:space="preserve">
+  <data name="Statistic.FavoritesAlbums" xml:space="preserve">
     <value>Favorites: Albums</value>
   </data>
-<data name="Statistic.FavoritesArtists" xml:space="preserve">
+  <data name="Statistic.FavoritesArtists" xml:space="preserve">
     <value>Favorites: Artists</value>
   </data>
-<data name="Statistic.RatedSongs" xml:space="preserve">
+  <data name="Statistic.RatedSongs" xml:space="preserve">
     <value>Rated Songs</value>
   </data>
-<data name="Statistic.ArtistsMissingImages" xml:space="preserve">
+  <data name="Statistic.ArtistsMissingImages" xml:space="preserve">
     <value>Artists missing images</value>
   </data>
-<data name="Statistic.AlbumsMissingImages" xml:space="preserve">
+  <data name="Statistic.AlbumsMissingImages" xml:space="preserve">
     <value>Albums missing images</value>
   </data>
-<data name="Statistic.SongsMissingImages" xml:space="preserve">
+  <data name="Statistic.SongsMissingImages" xml:space="preserve">
     <value>Songs missing images</value>
   </data>
-<data name="Grid.DisplayingPage" xml:space="preserve">
+  <data name="Grid.DisplayingPage" xml:space="preserve">
     <value>Displaying page</value>
   </data>
-<data name="Grid.OfPages" xml:space="preserve">
+  <data name="Grid.OfPages" xml:space="preserve">
     <value>of</value>
   </data>
-<data name="Grid.TotalRecords" xml:space="preserve">
+  <data name="Grid.TotalRecords" xml:space="preserve">
     <value>total {0} records</value>
   </data>
-<data name="Dashboard.NoArtistsFound" xml:space="preserve">
+  <data name="Dashboard.NoArtistsFound" xml:space="preserve">
     <value>No artists found. Start by scanning your library.</value>
   </data>
-<data name="Dashboard.NoAlbumsFound" xml:space="preserve">
+  <data name="Dashboard.NoAlbumsFound" xml:space="preserve">
     <value>No albums found. Start by scanning your library.</value>
   </data>
-<data name="Stats.NoDataMessage" xml:space="preserve">
+  <data name="Stats.NoDataMessage" xml:space="preserve">
     <value>Add albums to see statistics</value>
   </data>
-<data name="Stats.NoDataHint" xml:space="preserve">
+  <data name="Stats.NoDataHint" xml:space="preserve">
     <value>Upload or scan music to get started</value>
   </data>
-<data name="AdminDoctor.Database" xml:space="preserve">
+  <data name="AdminDoctor.Database" xml:space="preserve">
     <value>Database</value>
   </data>
-<data name="AdminDoctor.Storage" xml:space="preserve">
+  <data name="AdminDoctor.Storage" xml:space="preserve">
     <value>Storage</value>
   </data>
-<data name="AdminJobs.QuartzVersion" xml:space="preserve">
+  <data name="AdminJobs.QuartzVersion" xml:space="preserve">
     <value>Quartz Version</value>
   </data>
-<data name="AdminJobs.ThreadPool" xml:space="preserve">
+  <data name="AdminJobs.ThreadPool" xml:space="preserve">
     <value>Thread Pool</value>
   </data>
-<data name="AdminJobs.Threads" xml:space="preserve">
+  <data name="AdminJobs.Threads" xml:space="preserve">
     <value>Threads</value>
   </data>
-<data name="AdminJobs.JobStore" xml:space="preserve">
+  <data name="AdminJobs.JobStore" xml:space="preserve">
     <value>Job Store</value>
   </data>
-<data name="AdminJobs.Persistent" xml:space="preserve">
+  <data name="AdminJobs.Persistent" xml:space="preserve">
     <value>Persistent</value>
   </data>
-<data name="AdminJobs.Clustered" xml:space="preserve">
+  <data name="AdminJobs.Clustered" xml:space="preserve">
     <value>Clustered</value>
   </data>
-<data name="AdminJobs.JobsExecutedSession" xml:space="preserve">
+  <data name="AdminJobs.JobsExecutedSession" xml:space="preserve">
     <value>Jobs Executed (Session)</value>
   </data>
-<data name="AdminJobs.StandbyMode" xml:space="preserve">
+  <data name="AdminJobs.StandbyMode" xml:space="preserve">
     <value>Standby Mode</value>
   </data>
-<data name="Status.Issues" xml:space="preserve">
+  <data name="Status.Issues" xml:space="preserve">
     <value>Issues Detected</value>
   </data>
-<data name="Status.Checking" xml:space="preserve">
+  <data name="Status.Checking" xml:space="preserve">
     <value>Checking...</value>
   </data>
-<data name="AdminDoctor.Check.Scheduler" xml:space="preserve">
+  <data name="AdminDoctor.Check.Scheduler" xml:space="preserve">
     <value>Background Job Scheduler</value>
   </data>
-<data name="AdminDoctor.Scheduler" xml:space="preserve">
+  <data name="AdminDoctor.Scheduler" xml:space="preserve">
     <value>Scheduler</value>
   </data>
-<data name="AdminDoctor.Check.FFmpeg" xml:space="preserve">
+  <data name="AdminDoctor.Check.FFmpeg" xml:space="preserve">
     <value>Media Conversion (FFmpeg)</value>
   </data>
-<data name="AdminDoctor.Check.Memory" xml:space="preserve">
+  <data name="AdminDoctor.Check.Memory" xml:space="preserve">
     <value>System Memory</value>
   </data>
-<data name="AdminDoctor.Check.TempDirectory" xml:space="preserve">
+  <data name="AdminDoctor.Check.TempDirectory" xml:space="preserve">
     <value>Temporary Directory</value>
   </data>
-<data name="AdminDoctor.Check.DatabaseLatency" xml:space="preserve">
+  <data name="AdminDoctor.Check.DatabaseLatency" xml:space="preserve">
     <value>Database Latency</value>
   </data>
-<data name="UploadAlbum.Directories" xml:space="preserve">
+  <data name="UploadAlbum.Directories" xml:space="preserve">
     <value>directories</value>
   </data>
-<data name="UploadAlbum.Successful" xml:space="preserve">
+  <data name="UploadAlbum.Successful" xml:space="preserve">
     <value>successful</value>
   </data>
-<data name="UploadAlbum.ProcessingFile" xml:space="preserve">
+  <data name="UploadAlbum.ProcessingFile" xml:space="preserve">
     <value>Processing file</value>
   </data>
-<data name="UploadAlbum.Processing" xml:space="preserve">
+  <data name="UploadAlbum.Processing" xml:space="preserve">
     <value>Processing</value>
   </data>
-<data name="UploadAlbum.FilesSelected" xml:space="preserve">
+  <data name="UploadAlbum.FilesSelected" xml:space="preserve">
     <value>files selected</value>
   </data>
-<data name="UploadAlbum.SelectedFiles" xml:space="preserve">
+  <data name="UploadAlbum.SelectedFiles" xml:space="preserve">
     <value>Selected Files</value>
   </data>
-<data name="UploadAlbum.UploadResults" xml:space="preserve">
+  <data name="UploadAlbum.UploadResults" xml:space="preserve">
     <value>Upload Results</value>
   </data>
-<data name="UploadAlbum.Files" xml:space="preserve">
+  <data name="UploadAlbum.Files" xml:space="preserve">
     <value>files</value>
   </data>
-<data name="DynamicPlaylistImportDialog.JSONImportSchema" xml:space="preserve">
+  <data name="DynamicPlaylistImportDialog.JSONImportSchema" xml:space="preserve">
     <value>JSON Import Schema</value>
   </data>
-<data name="DynamicPlaylistImportDialog.JSONContent" xml:space="preserve">
+  <data name="DynamicPlaylistImportDialog.JSONContent" xml:space="preserve">
     <value>JSON Content</value>
   </data>
-<data name="DynamicPlaylistImportDialog.PasteJSON" xml:space="preserve">
+  <data name="DynamicPlaylistImportDialog.PasteJSON" xml:space="preserve">
     <value>Paste or upload dynamic playlist JSON</value>
   </data>
-<data name="DynamicPlaylistImportDialog.UploadFile" xml:space="preserve">
+  <data name="DynamicPlaylistImportDialog.UploadFile" xml:space="preserve">
     <value>Upload File</value>
   </data>
-<data name="DynamicPlaylistImportDialog.ValidationErrors" xml:space="preserve">
+  <data name="DynamicPlaylistImportDialog.ValidationErrors" xml:space="preserve">
     <value>Validation Errors</value>
   </data>
-<data name="DynamicPlaylistImportDialog.SQLNotes" xml:space="preserve">
+  <data name="DynamicPlaylistImportDialog.SQLNotes" xml:space="preserve">
     <value>The songSelectionWhere and songSelectionOrder fields use PostgreSQL SQL syntax. Use table alias 's' for songs table.</value>
   </data>
-<data name="DynamicPlaylistImportDialog.IsEnabled" xml:space="preserve">
+  <data name="DynamicPlaylistImportDialog.IsEnabled" xml:space="preserve">
     <value>Enabled</value>
   </data>
-<data name="DynamicPlaylistImportDialog.IsPublic" xml:space="preserve">
+  <data name="DynamicPlaylistImportDialog.IsPublic" xml:space="preserve">
     <value>Public</value>
   </data>
-<data name="DynamicPlaylistImportDialog.ForUser" xml:space="preserve">
+  <data name="DynamicPlaylistImportDialog.ForUser" xml:space="preserve">
     <value>For User</value>
   </data>
-<data name="DynamicPlaylistImportDialog.SongLimit" xml:space="preserve">
+  <data name="DynamicPlaylistImportDialog.SongLimit" xml:space="preserve">
     <value>Song Limit</value>
   </data>
-<data name="DynamicPlaylistImportDialog.SQLWhere" xml:space="preserve">
+  <data name="DynamicPlaylistImportDialog.SQLWhere" xml:space="preserve">
     <value>SQL WHERE Clause</value>
   </data>
-<data name="DynamicPlaylistImportDialog.SQLOrderBy" xml:space="preserve">
+  <data name="DynamicPlaylistImportDialog.SQLOrderBy" xml:space="preserve">
     <value>SQL ORDER BY Clause</value>
   </data>
-<data name="DynamicPlaylistImportDialog.Error.JsonRequired" xml:space="preserve">
+  <data name="DynamicPlaylistImportDialog.Error.JsonRequired" xml:space="preserve">
     <value>JSON content is required</value>
   </data>
-<data name="DynamicPlaylistImportDialog.Error.ParseFailed" xml:space="preserve">
+  <data name="DynamicPlaylistImportDialog.Error.ParseFailed" xml:space="preserve">
     <value>Failed to parse JSON</value>
   </data>
-<data name="DynamicPlaylistImportDialog.Error.IdRequired" xml:space="preserve">
+  <data name="DynamicPlaylistImportDialog.Error.IdRequired" xml:space="preserve">
     <value>Playlist ID is required and must be a valid GUID</value>
   </data>
-<data name="DynamicPlaylistImportDialog.Error.NameRequired" xml:space="preserve">
+  <data name="DynamicPlaylistImportDialog.Error.NameRequired" xml:space="preserve">
     <value>Playlist name is required</value>
   </data>
-<data name="DynamicPlaylistImportDialog.Error.CommentRequired" xml:space="preserve">
+  <data name="DynamicPlaylistImportDialog.Error.CommentRequired" xml:space="preserve">
     <value>Playlist description (comment) is required</value>
   </data>
-<data name="DynamicPlaylistImportDialog.Error.WhereRequired" xml:space="preserve">
+  <data name="DynamicPlaylistImportDialog.Error.WhereRequired" xml:space="preserve">
     <value>SQL WHERE clause is required</value>
   </data>
-<data name="DynamicPlaylistImportDialog.Error.InvalidJson" xml:space="preserve">
+  <data name="DynamicPlaylistImportDialog.Error.InvalidJson" xml:space="preserve">
     <value>Invalid JSON: {0}</value>
   </data>
-<data name="DynamicPlaylistImportDialog.ImportFailed" xml:space="preserve">
+  <data name="DynamicPlaylistImportDialog.ImportFailed" xml:space="preserve">
     <value>Import Failed</value>
   </data>
-<data name="DynamicPlaylistImportDialog.Error.NoPlaylistLibrary" xml:space="preserve">
+  <data name="DynamicPlaylistImportDialog.Error.NoPlaylistLibrary" xml:space="preserve">
     <value>Playlist library not found</value>
   </data>
-<data name="DynamicPlaylistImportDialog.FileExists" xml:space="preserve">
+  <data name="DynamicPlaylistImportDialog.FileExists" xml:space="preserve">
     <value>File Already Exists</value>
   </data>
-<data name="DynamicPlaylistImportDialog.FileExistsDetail" xml:space="preserve">
+  <data name="DynamicPlaylistImportDialog.FileExistsDetail" xml:space="preserve">
     <value>A dynamic playlist with the same ID already exists: {0}</value>
   </data>
-<data name="DynamicPlaylistImportDialog.ImportSuccess" xml:space="preserve">
+  <data name="DynamicPlaylistImportDialog.ImportSuccess" xml:space="preserve">
     <value>Import Successful</value>
   </data>
-<data name="DynamicPlaylistImportDialog.ImportSuccessDetail" xml:space="preserve">
+  <data name="DynamicPlaylistImportDialog.ImportSuccessDetail" xml:space="preserve">
     <value>Dynamic playlist '{0}' has been imported as {1}</value>
   </data>
-<data name="Actions.ImportDynamicPlaylist" xml:space="preserve">
+  <data name="Actions.ImportDynamicPlaylist" xml:space="preserve">
     <value>Import Dynamic Playlist</value>
   </data>
-<data name="SettingDetail.BasicInformation" xml:space="preserve">
+  <data name="SettingDetail.BasicInformation" xml:space="preserve">
     <value>Basic Information</value>
   </data>
-<data name="SettingDetail.SetViaEnvironmentVariable" xml:space="preserve">
+  <data name="SettingDetail.SetViaEnvironmentVariable" xml:space="preserve">
     <value>This setting is currently overridden by an environment variable</value>
   </data>
-<data name="SettingDetail.Title" xml:space="preserve">
+  <data name="SettingDetail.Title" xml:space="preserve">
     <value>Setting Details</value>
   </data>
-<data name="SettingDetail.AuditInformation" xml:space="preserve">
+  <data name="SettingDetail.AuditInformation" xml:space="preserve">
     <value>Audit &amp; System Information</value>
   </data>
-<data name="SettingDetail.Category" xml:space="preserve">
+  <data name="SettingDetail.Category" xml:space="preserve">
     <value>Category</value>
   </data>
-<data name="SettingDetail.IsLocked" xml:space="preserve">
+  <data name="SettingDetail.IsLocked" xml:space="preserve">
     <value>Is Locked</value>
   </data>
-<data name="SettingDetail.ApiKey" xml:space="preserve">
+  <data name="SettingDetail.ApiKey" xml:space="preserve">
     <value>API Key</value>
   </data>
-  
-  
   <data name="SettingCategory.General" xml:space="preserve">
     <value>General</value>
   </data>
@@ -4840,7 +4700,7 @@
   <data name="SettingCategory.Jobs" xml:space="preserve">
     <value>Jobs</value>
   </data>
-<data name="Common.All" xml:space="preserve">
+  <data name="Common.All" xml:space="preserve">
     <value>All</value>
   </data>
   <data name="Common.Artists" xml:space="preserve">
@@ -4849,8 +4709,6 @@
   <data name="Common.Albums" xml:space="preserve">
     <value>Albums</value>
   </data>
-
-  
   <data name="ArtistLookup.Title" xml:space="preserve">
     <value>Artist Lookup</value>
   </data>
@@ -4893,70 +4751,277 @@
   <data name="ArtistLookup.AmghelpText" xml:space="preserve">
     <value>Enter an AMG Artist ID (digits only) to look up the artist</value>
   </data>
-<data name="ArtistLookup.SelectToMerge" xml:space="preserve">
+  <data name="ArtistLookup.SelectToMerge" xml:space="preserve">
     <value>Select one or more results to merge their provider IDs</value>
   </data>
-<data name="Navigation.Podcasts" xml:space="preserve">
+  <data name="Navigation.Podcasts" xml:space="preserve">
     <value>Podcasts</value>
   </data>
-<data name="Common.Actions" xml:space="preserve">
+  <data name="Common.Actions" xml:space="preserve">
     <value>Actions</value>
   </data>
-<data name="Common.Episodes" xml:space="preserve">
+  <data name="Common.Episodes" xml:space="preserve">
     <value>Episodes</value>
   </data>
-<data name="Podcast.AllChannelsRefreshed" xml:space="preserve">
+  <data name="Podcast.AddChannel" xml:space="preserve">
+    <value>Add Podcast Channel</value>
+  </data>
+  <data name="Podcast.FeedUrl" xml:space="preserve">
+    <value>Podcast Feed URL</value>
+  </data>
+  <data name="Podcast.LastSync" xml:space="preserve">
+    <value>Last Sync</value>
+  </data>
+  <data name="Podcast.FeatureDisabled" xml:space="preserve">
+    <value>Podcast feature is currently disabled. Please contact your administrator to enable it.</value>
+  </data>
+  <data name="Podcast.ChannelAdded" xml:space="preserve">
+    <value>Podcast channel added successfully</value>
+  </data>
+  <data name="Podcast.ChannelRefreshed" xml:space="preserve">
+    <value>Podcast channel refreshed successfully</value>
+  </data>
+  <data name="Podcast.ChannelDeleted" xml:space="preserve">
+    <value>Podcast channel deleted successfully</value>
+  </data>
+  <data name="Podcast.AllChannelsRefreshed" xml:space="preserve">
     <value>All podcast channels refreshed successfully</value>
   </data>
-<data name="Podcast.DeleteChannelConfirm" xml:space="preserve">
+  <data name="Podcast.DeleteChannelConfirm" xml:space="preserve">
     <value>Are you sure you want to delete this podcast channel? All downloaded episodes will be removed.</value>
   </data>
-<data name="Message.Success" xml:space="preserve">
-    <value>Success</value>
-  </data>
-<data name="Actions.View" xml:space="preserve">
-    <value>View</value>
-  </data>
-<data name="Podcast.ChannelNotFound" xml:space="preserve">
+  <data name="Podcast.ChannelNotFound" xml:space="preserve">
     <value>Podcast channel not found</value>
   </data>
-<data name="Podcast.VisitWebsite" xml:space="preserve">
+  <data name="Podcast.VisitWebsite" xml:space="preserve">
     <value>Visit Website</value>
   </data>
-<data name="Actions.OpenExternal" xml:space="preserve">
-    <value>Open in New Tab</value>
-  </data>
-<data name="Message.Error" xml:space="preserve">
-    <value>Error</value>
-  </data>
-<data name="Message.Warning" xml:space="preserve">
-    <value>Warning</value>
-  </data>
-<data name="Podcast.DeleteEpisodeConfirm" xml:space="preserve">
+  <data name="Podcast.DeleteEpisodeConfirm" xml:space="preserve">
     <value>Are you sure you want to delete this episode?</value>
   </data>
-<data name="Podcast.EpisodeDeleted" xml:space="preserve">
+  <data name="Podcast.EpisodeDeleted" xml:space="preserve">
     <value>Episode deleted successfully</value>
   </data>
-<data name="Podcast.EpisodeQueued" xml:space="preserve">
+  <data name="Podcast.EpisodeQueued" xml:space="preserve">
     <value>Episode queued for download</value>
   </data>
-<data name="Podcast.StatusNone" xml:space="preserve">
+  <data name="Podcast.StatusNone" xml:space="preserve">
     <value>Not Downloaded</value>
   </data>
-<data name="Podcast.StatusQueued" xml:space="preserve">
+  <data name="Podcast.StatusQueued" xml:space="preserve">
     <value>Queued</value>
   </data>
-<data name="Podcast.StatusDownloading" xml:space="preserve">
+  <data name="Podcast.StatusDownloading" xml:space="preserve">
     <value>Downloading</value>
   </data>
-<data name="Podcast.StatusDownloaded" xml:space="preserve">
+  <data name="Podcast.StatusDownloaded" xml:space="preserve">
     <value>Downloaded</value>
   </data>
-<data name="Podcast.StatusFailed" xml:space="preserve">
+  <data name="Podcast.StatusFailed" xml:space="preserve">
     <value>Failed</value>
   </data>
-<data name="Podcast.UnplayedEpisodes" xml:space="preserve">
+  <data name="Podcast.UnplayedEpisodes" xml:space="preserve">
     <value>Unplayed episodes</value>
   </data>
-<data name="Podcast.AddChannel" xml:space="preserve"><value>Add Podcast Channel</value></data><data name="Podcast.FeedUrl" xml:space="preserve"><value>Podcast Feed URL</value></data><data name="Podcast.LastSync" xml:space="preserve"><value>Last Sync</value></data><data name="Podcast.FeatureDisabled" xml:space="preserve"><value>Podcast feature is currently disabled. Please contact your administrator to enable it.</value></data><data name="Podcast.ChannelAdded" xml:space="preserve"><value>Podcast channel added successfully</value></data><data name="Podcast.ChannelRefreshed" xml:space="preserve"><value>Podcast channel refreshed successfully</value></data><data name="Podcast.ChannelDeleted" xml:space="preserve"><value>Podcast channel deleted successfully</value></data><data name="Podcast.BookmarkPosition" xml:space="preserve"><value>Bookmark Position</value></data><data name="Podcast.BookmarkTitle" xml:space="preserve"><value>Bookmark Title</value></data><data name="Podcast.EpisodeNotPlayed" xml:space="preserve"><value>Not Played</value></data><data name="Podcast.EpisodePlayed" xml:space="preserve"><value>Played</value></data><data name="Podcast.EpisodePlayedCount" xml:space="preserve"><value>Play Count</value></data><data name="Podcast.LastPlayedAt" xml:space="preserve"><value>Last Played</value></data><data name="Podcast.NoBookmark" xml:space="preserve"><value>No bookmark</value></data><data name="Podcast.NoPlayHistory" xml:space="preserve"><value>No play history</value></data><data name="Podcast.PlayHistory" xml:space="preserve"><value>Play History</value></data><data name="Podcast.Position" xml:space="preserve"><value>Position</value></data><data name="Podcast.UnknownEpisode" xml:space="preserve"><value>Unknown Episode</value></data><data name="Podcast.ViewBookmark" xml:space="preserve"><value>View Bookmark</value></data></root>
+  <data name="Podcast.BookmarkPosition" xml:space="preserve">
+    <value>Bookmark Position</value>
+  </data>
+  <data name="Podcast.BookmarkTitle" xml:space="preserve">
+    <value>Bookmark Title</value>
+  </data>
+  <data name="Podcast.EpisodeNotPlayed" xml:space="preserve">
+    <value>Not Played</value>
+  </data>
+  <data name="Podcast.EpisodePlayed" xml:space="preserve">
+    <value>Played</value>
+  </data>
+  <data name="Podcast.EpisodePlayedCount" xml:space="preserve">
+    <value>Play Count</value>
+  </data>
+  <data name="Podcast.LastPlayedAt" xml:space="preserve">
+    <value>Last Played</value>
+  </data>
+  <data name="Podcast.NoBookmark" xml:space="preserve">
+    <value>No bookmark</value>
+  </data>
+  <data name="Podcast.NoPlayHistory" xml:space="preserve">
+    <value>No play history</value>
+  </data>
+  <data name="Podcast.PlayHistory" xml:space="preserve">
+    <value>Play History</value>
+  </data>
+  <data name="Podcast.Position" xml:space="preserve">
+    <value>Position</value>
+  </data>
+  <data name="Podcast.UnknownEpisode" xml:space="preserve">
+    <value>Unknown Episode</value>
+  </data>
+  <data name="Podcast.ViewBookmark" xml:space="preserve">
+    <value>View Bookmark</value>
+  </data>
+  <data name="Podcast.AutoDownloadEnabled" xml:space="preserve">
+    <value>Auto-download new episodes</value>
+  </data>
+  <data name="Podcast.AutoDownloadDescription" xml:space="preserve">
+    <value>When enabled, new episodes will be automatically downloaded when the channel is refreshed</value>
+  </data>
+  <data name="Podcast.RefreshIntervalHours" xml:space="preserve">
+    <value>Refresh interval (hours)</value>
+  </data>
+  <data name="Podcast.RefreshIntervalDescription" xml:space="preserve">
+    <value>How often to check for new episodes (0 = use global schedule)</value>
+  </data>
+  <data name="Podcast.RefreshSettings" xml:space="preserve">
+    <value>Refresh Settings</value>
+  </data>
+  <data name="Podcast.MaxDownloadedEpisodes" xml:space="preserve">
+    <value>Max downloaded episodes</value>
+  </data>
+  <data name="Podcast.MaxStorageMB" xml:space="preserve">
+    <value>Max storage (MB)</value>
+  </data>
+  <data name="Podcast.StorageLimits" xml:space="preserve">
+    <value>Storage Limits</value>
+  </data>
+  <data name="Podcast.StorageLimitsDescription" xml:space="preserve">
+    <value>Limit the number of downloaded episodes and total storage used</value>
+  </data>
+  <data name="Podcast.ChannelSettings" xml:space="preserve">
+    <value>Channel Settings</value>
+  </data>
+  <data name="Podcast.Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Podcast.SettingsSaved" xml:space="preserve">
+    <value>Settings saved successfully</value>
+  </data>
+  <data name="Podcast.UseGlobalSchedule" xml:space="preserve">
+    <value>Use global schedule</value>
+  </data>
+  <data name="Common.Unlimited" xml:space="preserve">
+    <value>Unlimited</value>
+  </data>
+  <data name="Podcast.OpmlImportExport" xml:space="preserve">
+    <value>OPML Import/Export</value>
+  </data>
+  <data name="Podcast.OpmlExport" xml:space="preserve">
+    <value>Export</value>
+  </data>
+  <data name="Podcast.OpmlImport" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="Podcast.OpmlExportDescription" xml:space="preserve">
+    <value>Export all your podcast subscriptions to an OPML file</value>
+  </data>
+  <data name="Podcast.OpmlImportDescription" xml:space="preserve">
+    <value>Import podcast subscriptions from an OPML file or paste OPML content</value>
+  </data>
+  <data name="Podcast.DownloadOpml" xml:space="preserve">
+    <value>Download OPML</value>
+  </data>
+  <data name="Podcast.ImportOpml" xml:space="preserve">
+    <value>Import OPML</value>
+  </data>
+  <data name="Podcast.OpmlContent" xml:space="preserve">
+    <value>OPML Content</value>
+  </data>
+  <data name="Podcast.OpmlPasteHere" xml:space="preserve">
+    <value>Paste OPML content here...</value>
+  </data>
+  <data name="Podcast.ChooseOpmlFile" xml:space="preserve">
+    <value>Choose OPML File</value>
+  </data>
+  <data name="Podcast.OpmlExported" xml:space="preserve">
+    <value>OPML file exported successfully</value>
+  </data>
+  <data name="Podcast.OpmlImportedCount" xml:space="preserve">
+    <value>Successfully imported {0} podcast(s)</value>
+  </data>
+  <data name="Podcast.ImportResults" xml:space="preserve">
+    <value>Import Results</value>
+  </data>
+  <data name="Podcast.Imported" xml:space="preserve">
+    <value>Imported</value>
+  </data>
+  <data name="Podcast.Skipped" xml:space="preserve">
+    <value>Skipped</value>
+  </data>
+  <data name="Podcast.Failed" xml:space="preserve">
+    <value>Failed</value>
+  </data>
+  <data name="Podcast.DuplicatesSkipped" xml:space="preserve">
+    <value>Duplicates skipped</value>
+  </data>
+  <data name="Podcast.Errors" xml:space="preserve">
+    <value>Errors</value>
+  </data>
+  <data name="Podcast.FileReadError" xml:space="preserve">
+    <value>Error reading file</value>
+  </data>
+  <data name="Podcast.Discover" xml:space="preserve">
+    <value>Discover</value>
+  </data>
+  <data name="Podcast.DiscoverPodcasts" xml:space="preserve">
+    <value>Discover Podcasts</value>
+  </data>
+  <data name="Podcast.DiscoverDescription" xml:space="preserve">
+    <value>Search the iTunes directory to find and subscribe to new podcasts</value>
+  </data>
+  <data name="Podcast.SearchPodcasts" xml:space="preserve">
+    <value>Search Podcasts</value>
+  </data>
+  <data name="Podcast.SearchPlaceholder" xml:space="preserve">
+    <value>Search for podcasts...</value>
+  </data>
+  <data name="Podcast.SearchResultsCount" xml:space="preserve">
+    <value>{0} podcast(s) found</value>
+  </data>
+  <data name="Podcast.NoSearchResults" xml:space="preserve">
+    <value>No podcasts found</value>
+  </data>
+  <data name="Podcast.Searching" xml:space="preserve">
+    <value>Searching...</value>
+  </data>
+  <data name="Podcast.EpisodeCountFormat" xml:space="preserve">
+    <value>{0} episodes</value>
+  </data>
+  <data name="Podcast.Subscribe" xml:space="preserve">
+    <value>Subscribe</value>
+  </data>
+  <data name="Podcast.Subscribed" xml:space="preserve">
+    <value>Subscribed</value>
+  </data>
+  <data name="Podcast.SubscribedTo" xml:space="preserve">
+    <value>Subscribed to {0}</value>
+  </data>
+  <data name="Podcast.EpisodeSearch" xml:space="preserve">
+    <value>Episode Search</value>
+  </data>
+  <data name="Podcast.SearchEpisodes" xml:space="preserve">
+    <value>Search Episodes</value>
+  </data>
+  <data name="Podcast.SearchEpisodesPlaceholder" xml:space="preserve">
+    <value>Search episode titles and descriptions...</value>
+  </data>
+  <data name="Podcast.SearchEpisodesDescription" xml:space="preserve">
+    <value>Search across all episodes in your subscribed podcasts</value>
+  </data>
+  <data name="Podcast.SearchEpisodesHint" xml:space="preserve">
+    <value>Enter at least 3 characters to search</value>
+  </data>
+  <data name="Podcast.SearchResultsFound" xml:space="preserve">
+    <value>{0} episode(s) found</value>
+  </data>
+  <data name="Podcast.NoEpisodesFound" xml:space="preserve">
+    <value>No episodes found</value>
+  </data>
+  <data name="Podcast.NoResultsFor" xml:space="preserve">
+    <value>No results for '{0}'</value>
+  </data>
+  <data name="Podcast.GoToChannel" xml:space="preserve">
+    <value>Go to Channel</value>
+  </data>
+  <data name="Podcast.Channel" xml:space="preserve">
+    <value>Channel</value>
+  </data>
+</root>

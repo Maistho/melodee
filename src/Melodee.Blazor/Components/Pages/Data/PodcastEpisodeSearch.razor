@@ -1,0 +1,324 @@
+@page "/data/podcasts/search"
+@inherits MelodeeComponentBase
+@using Melodee.Common.Models.Collection
+@using Melodee.Common.Models
+@using Melodee.Common.Enums
+
+@inject MainLayoutProxyService MainLayoutProxyService
+@inject ILogger Logger
+@inject PodcastService PodcastService
+@inject PodcastPlaybackService PodcastPlaybackService
+@inject NotificationService NotificationService
+@inject NavigationManager NavigationManager
+
+<PageTitle>@L("Podcast.EpisodeSearch")</PageTitle>
+
+<RadzenStack Style="height: 100%">
+    <RadzenBreadCrumb Class="rz-pb-5">
+        <RadzenBreadCrumbItem Path="/" Text="@L("Navigation.Dashboard")" />
+        <RadzenBreadCrumbItem Path="/data/podcasts" Icon="podcasts" Text="@L("Navigation.Podcasts")" />
+        <RadzenBreadCrumbItem Icon="search" Text="@L("Podcast.EpisodeSearch")" />
+    </RadzenBreadCrumb>
+
+    <RadzenRow AlignItems="AlignItems.Center">
+        <RadzenColumn Size="12" SizeMD="8">
+            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.End">
+                <RadzenFormField Text="@L("Podcast.SearchEpisodes")" Variant="Variant.Outlined" Style="flex: 1;">
+                    <RadzenTextBox @bind-Value="_searchQuery" Placeholder="@L("Podcast.SearchEpisodesPlaceholder")" 
+                                   Style="width: 100%;" @onkeydown="@OnSearchKeyDown" />
+                </RadzenFormField>
+                <RadzenButton Icon="search" Text="@L("Actions.Search")" Click="@Search" IsBusy="@_isSearching" />
+                @if (!string.IsNullOrWhiteSpace(_searchQuery))
+                {
+                    <RadzenButton Icon="clear" ButtonStyle="ButtonStyle.Light" Click="@ClearSearch" title="@L("Actions.Clear")" />
+                }
+            </RadzenStack>
+        </RadzenColumn>
+    </RadzenRow>
+
+    @if (_hasSearched)
+    {
+        @if (_searchResults != null && _searchResults.Any())
+        {
+            <RadzenText TextStyle="TextStyle.Caption" Class="rz-text-secondary-color rz-mt-3">
+                @string.Format(L("Podcast.SearchResultsFound"), _totalCount, _searchQuery)
+            </RadzenText>
+
+            <RadzenDataGrid @ref="_grid"
+                            Style="height: calc(100% - 120px); margin-top: 1rem;"
+                            IsLoading="@_isLoading"
+                            Count="@_totalCount"
+                            Data="@_searchResults"
+                            LoadData="@LoadData"
+                            AllowSorting="false"
+                            AllowPaging="true"
+                            PageSize="@DefaultPageSize"
+                            PagerHorizontalAlign="HorizontalAlign.Center"
+                            ShowPagingSummary="true"
+                            PageSizeOptions="@PageSizeOptions"
+                            PagingSummaryFormat="@GridPagingSummaryFormat"
+                            PageSizeText="@GridPageSizeText"
+                            EmptyText="@L("Podcast.NoEpisodesFound")"
+                            ColumnWidth="200px">
+                <Columns>
+                    <RadzenDataGridColumn Property="@nameof(PodcastEpisodeDataInfo.ChannelTitle)" Title="@L("Podcast.Channel")" Width="180px">
+                        <Template Context="data">
+                            <RadzenLink Path="@($"/data/podcasts/{data.ChannelApiKey}")" Text="@data.ChannelTitle" />
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn Property="@nameof(PodcastEpisodeDataInfo.Title)" Title="@L("Common.Title")" Width="400px">
+                        <Template Context="data">
+                            <RadzenStack Gap="0.25rem">
+                                <RadzenText TextStyle="TextStyle.Body1">@HighlightMatch(data.Title)</RadzenText>
+                                @if (!string.IsNullOrEmpty(data.Description))
+                                {
+                                    <RadzenText TextStyle="TextStyle.Caption" Class="rz-text-secondary-color" 
+                                                Style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 400px;">
+                                        @HighlightMatch(data.Description.Length > 150 ? data.Description[..150] + "..." : data.Description)
+                                    </RadzenText>
+                                }
+                            </RadzenStack>
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn Property="@nameof(PodcastEpisodeDataInfo.PublishDate)" Title="@L("Common.Date")" Width="150px">
+                        <Template Context="data">
+                            @if (data.PublishDate.HasValue)
+                            {
+                                <RadzenText>@FormatDate(data.PublishDate.Value.ToDateTimeUtc())</RadzenText>
+                            }
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn Property="@nameof(PodcastEpisodeDataInfo.Duration)" Title="@L("Common.Duration")" Width="100px">
+                        <Template Context="data">
+                            @if (data.Duration.HasValue)
+                            {
+                                <RadzenText>@data.Duration.Value.ToString(@"hh\:mm\:ss")</RadzenText>
+                            }
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn Property="@nameof(PodcastEpisodeDataInfo.DownloadStatus)" Title="@L("Common.Status")" Width="120px">
+                        <Template Context="data">
+                            @switch (data.DownloadStatus)
+                            {
+                                case PodcastEpisodeDownloadStatus.None:
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="@L("Podcast.StatusNone")" />
+                                    break;
+                                case PodcastEpisodeDownloadStatus.Queued:
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Info" Text="@L("Podcast.StatusQueued")" />
+                                    break;
+                                case PodcastEpisodeDownloadStatus.Downloading:
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="@L("Podcast.StatusDownloading")" />
+                                    break;
+                                case PodcastEpisodeDownloadStatus.Downloaded:
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="@L("Podcast.StatusDownloaded")" />
+                                    break;
+                                case PodcastEpisodeDownloadStatus.Failed:
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Danger" Text="@L("Podcast.StatusFailed")" title="@data.DownloadError" />
+                                    break;
+                            }
+                        </Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn Title="@L("Common.Actions")" Width="150px" Sortable="false" Filterable="false">
+                        <Template Context="data">
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem">
+                                @if (data.DownloadStatus == PodcastEpisodeDownloadStatus.Downloaded)
+                                {
+                                    <RadzenButton Icon="play_arrow" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Success"
+                                                  Click="@(() => PlayEpisode(data))"
+                                                  title="@L("Actions.Play")" />
+                                }
+                                @if (data.DownloadStatus == PodcastEpisodeDownloadStatus.None || 
+                                     data.DownloadStatus == PodcastEpisodeDownloadStatus.Failed)
+                                {
+                                    <RadzenButton Icon="download" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Primary"
+                                                  Click="@(() => QueueDownload(data.Id))"
+                                                  title="@L("Actions.Download")" />
+                                }
+                                <RadzenButton Icon="open_in_new" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light"
+                                              Click="@(() => NavigationManager.NavigateTo($"/data/podcasts/{data.ChannelApiKey}"))"
+                                              title="@L("Podcast.GoToChannel")" />
+                            </RadzenStack>
+                        </Template>
+                    </RadzenDataGridColumn>
+                </Columns>
+            </RadzenDataGrid>
+        }
+        else
+        {
+            <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="flex: 1; padding-top: 4rem;">
+                <RadzenIcon Icon="search_off" Style="font-size: 64px; color: var(--rz-text-tertiary-color);" />
+                <RadzenText TextStyle="TextStyle.H6" Class="rz-text-secondary-color">@L("Podcast.NoEpisodesFound")</RadzenText>
+                <RadzenText TextStyle="TextStyle.Body2" Class="rz-text-tertiary-color">
+                    @string.Format(L("Podcast.NoResultsFor"), _searchQuery)
+                </RadzenText>
+            </RadzenStack>
+        }
+    }
+    else
+    {
+        <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="flex: 1; padding-top: 4rem;">
+            <RadzenIcon Icon="search" Style="font-size: 64px; color: var(--rz-text-tertiary-color);" />
+            <RadzenText TextStyle="TextStyle.H6" Class="rz-text-secondary-color">@L("Podcast.SearchEpisodesDescription")</RadzenText>
+            <RadzenText TextStyle="TextStyle.Body2" Class="rz-text-tertiary-color">@L("Podcast.SearchEpisodesHint")</RadzenText>
+        </RadzenStack>
+    }
+</RadzenStack>
+
+@code {
+    private RadzenDataGrid<PodcastEpisodeDataInfo>? _grid;
+    private IEnumerable<PodcastEpisodeDataInfo>? _searchResults;
+    private string _searchQuery = string.Empty;
+    private string _lastSearchQuery = string.Empty;
+    private int _totalCount;
+    private bool _isLoading;
+    private bool _isSearching;
+    private bool _hasSearched;
+
+    private async Task OnSearchKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await Search();
+        }
+    }
+
+    private async Task Search()
+    {
+        if (string.IsNullOrWhiteSpace(_searchQuery))
+            return;
+
+        _isSearching = true;
+        _hasSearched = true;
+        _lastSearchQuery = _searchQuery;
+
+        try
+        {
+            await LoadData(new LoadDataArgs { Skip = 0, Top = DefaultPageSize });
+            if (_grid != null)
+            {
+                await _grid.FirstPage();
+            }
+        }
+        finally
+        {
+            _isSearching = false;
+        }
+    }
+
+    private void ClearSearch()
+    {
+        _searchQuery = string.Empty;
+        _lastSearchQuery = string.Empty;
+        _searchResults = null;
+        _totalCount = 0;
+        _hasSearched = false;
+    }
+
+    private async Task LoadData(LoadDataArgs args)
+    {
+        if (string.IsNullOrWhiteSpace(_lastSearchQuery) || CurrentUsersId == 0)
+            return;
+
+        _isLoading = true;
+        MainLayoutProxyService.ToggleSpinnerVisible();
+
+        try
+        {
+            var request = new PagedRequest
+            {
+                Page = (args.Skip ?? 0) / (args.Top ?? DefaultPageSize) + 1,
+                PageSize = (short)(args.Top ?? DefaultPageSize)
+            };
+
+            var result = await PodcastService.SearchEpisodesAsync(_lastSearchQuery, CurrentUsersId, request);
+            
+            _searchResults = result.Data ?? Array.Empty<PodcastEpisodeDataInfo>();
+            _totalCount = result.TotalCount;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "[PodcastEpisodeSearch] Error searching episodes");
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = L("Message.Error"),
+                Detail = ex.Message,
+                Duration = ToastTime
+            });
+        }
+        finally
+        {
+            _isLoading = false;
+            MainLayoutProxyService.ToggleSpinnerVisible();
+        }
+    }
+
+    private async Task QueueDownload(int episodeId)
+    {
+        try
+        {
+            var result = await PodcastService.QueueDownloadAsync(episodeId, CurrentUsersId);
+            
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = result.IsSuccess ? NotificationSeverity.Success : NotificationSeverity.Warning,
+                Summary = result.IsSuccess ? L("Message.Success") : L("Message.Warning"),
+                Detail = result.IsSuccess ? L("Podcast.EpisodeQueued") : string.Join(", ", result.Messages ?? []),
+                Duration = ToastTime
+            });
+
+            if (result.IsSuccess && _grid != null)
+            {
+                await _grid.Reload();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "[PodcastEpisodeSearch] Error queuing download for episode {EpisodeId}", episodeId);
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = L("Message.Error"),
+                Detail = ex.Message,
+                Duration = ToastTime
+            });
+        }
+    }
+
+    private async Task PlayEpisode(PodcastEpisodeDataInfo episode)
+    {
+        try
+        {
+            await PodcastPlaybackService.NowPlayingAsync(CurrentUsersId, episode.Id, 0);
+            NavigationManager.NavigateTo($"/data/podcasts/{episode.ChannelApiKey}?play={episode.ApiKey}");
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "[PodcastEpisodeSearch] Error playing episode {EpisodeId}", episode.Id);
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = L("Message.Error"),
+                Detail = ex.Message,
+                Duration = ToastTime
+            });
+        }
+    }
+
+    private MarkupString HighlightMatch(string text)
+    {
+        if (string.IsNullOrEmpty(text) || string.IsNullOrWhiteSpace(_lastSearchQuery))
+            return new MarkupString(System.Web.HttpUtility.HtmlEncode(text));
+
+        var escaped = System.Web.HttpUtility.HtmlEncode(text);
+        var query = System.Web.HttpUtility.HtmlEncode(_lastSearchQuery);
+        
+        var highlighted = System.Text.RegularExpressions.Regex.Replace(
+            escaped,
+            System.Text.RegularExpressions.Regex.Escape(query),
+            $"<mark>$0</mark>",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        
+        return new MarkupString(highlighted);
+    }
+}

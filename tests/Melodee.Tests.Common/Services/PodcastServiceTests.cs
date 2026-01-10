@@ -560,4 +560,178 @@ public class PodcastServiceTests : IAsyncDisposable
         // Should only count completed plays (1), not the IsNowPlaying entry
         episodeData.PlayedCount.Should().Be(1);
     }
+
+    [Fact]
+    public async Task SearchEpisodesAsync_WithMatchingTitle_ReturnsEpisodes()
+    {
+        var service = CreateService();
+
+        await using var context = await _contextFactory.CreateDbContextAsync();
+
+        var user = new User
+        {
+            UserName = "SearchTestUser",
+            UserNameNormalized = "SEARCHTESTUSER",
+            Email = "test-searchepisodes@test.com",
+            EmailNormalized = "TEST-SEARCHEPISODES@TEST.COM",
+            PublicKey = Guid.NewGuid().ToString(),
+            PasswordEncrypted = "encrypted_password",
+            CreatedAt = SystemClock.Instance.GetCurrentInstant()
+        };
+        context.Users.Add(user);
+        await context.SaveChangesAsync();
+
+        var channel = new PodcastChannel
+        {
+            UserId = user.Id,
+            FeedUrl = "https://example.com/search-test",
+            Title = "Test Search Podcast",
+            CreatedAt = SystemClock.Instance.GetCurrentInstant()
+        };
+        context.PodcastChannels.Add(channel);
+        await context.SaveChangesAsync();
+
+        context.PodcastEpisodes.Add(new PodcastEpisode
+        {
+            PodcastChannelId = channel.Id,
+            EpisodeKey = "ep1",
+            Title = "Introduction to Programming",
+            TitleNormalized = "introduction to programming",
+            EnclosureUrl = "https://example.com/ep1.mp3",
+            PublishDate = Instant.FromUtc(2025, 1, 1, 0, 0),
+            CreatedAt = SystemClock.Instance.GetCurrentInstant()
+        });
+        context.PodcastEpisodes.Add(new PodcastEpisode
+        {
+            PodcastChannelId = channel.Id,
+            EpisodeKey = "ep2",
+            Title = "Advanced Topics",
+            TitleNormalized = "advanced topics",
+            EnclosureUrl = "https://example.com/ep2.mp3",
+            PublishDate = Instant.FromUtc(2025, 1, 2, 0, 0),
+            CreatedAt = SystemClock.Instance.GetCurrentInstant()
+        });
+        await context.SaveChangesAsync();
+
+        var request = new Melodee.Common.Models.PagedRequest { Page = 1, PageSize = 10 };
+        var result = await service.SearchEpisodesAsync("programming", user.Id, request);
+
+        result.Data.Should().HaveCount(1);
+        result.Data!.First().Title.Should().Be("Introduction to Programming");
+    }
+
+    [Fact]
+    public async Task SearchEpisodesAsync_WithEmptyQuery_ReturnsEmptyResult()
+    {
+        var service = CreateService();
+
+        var request = new Melodee.Common.Models.PagedRequest { Page = 1, PageSize = 10 };
+        var result = await service.SearchEpisodesAsync("", 1, request);
+
+        result.TotalCount.Should().Be(0);
+        result.Data.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task ChannelAutoDownloadEnabled_DefaultsFalse()
+    {
+        var service = CreateService();
+
+        var result = await service.CreateChannelAsync(1, "https://example.com/auto-download-test.rss");
+
+        result.IsSuccess.Should().BeTrue();
+        result.Data!.AutoDownloadEnabled.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ChannelRefreshIntervalHours_DefaultsNull()
+    {
+        var service = CreateService();
+
+        var result = await service.CreateChannelAsync(1, "https://example.com/refresh-interval-test.rss");
+
+        result.IsSuccess.Should().BeTrue();
+        result.Data!.RefreshIntervalHours.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task UpdateChannelAsync_WithValidSettings_UpdatesChannel()
+    {
+        var service = CreateService();
+
+        var createResult = await service.CreateChannelAsync(1, "https://example.com/update-test.rss");
+        createResult.IsSuccess.Should().BeTrue();
+        var channelId = createResult.Data!.Id;
+
+        var updateResult = await service.UpdateChannelAsync(
+            channelId,
+            userId: 1,
+            autoDownloadEnabled: true,
+            refreshIntervalHours: 6,
+            maxDownloadedEpisodes: 10,
+            maxStorageBytes: 1073741824);
+
+        updateResult.IsSuccess.Should().BeTrue();
+        updateResult.Data!.AutoDownloadEnabled.Should().BeTrue();
+        updateResult.Data.RefreshIntervalHours.Should().Be(6);
+        updateResult.Data.MaxDownloadedEpisodes.Should().Be(10);
+        updateResult.Data.MaxStorageBytes.Should().Be(1073741824);
+    }
+
+    [Fact]
+    public async Task UpdateChannelAsync_WithZeroRefreshInterval_SetsToNull()
+    {
+        var service = CreateService();
+
+        var createResult = await service.CreateChannelAsync(1, "https://example.com/update-zero-interval.rss");
+        var channelId = createResult.Data!.Id;
+
+        await service.UpdateChannelAsync(channelId, 1, refreshIntervalHours: 6);
+        var updateResult = await service.UpdateChannelAsync(channelId, 1, refreshIntervalHours: 0);
+
+        updateResult.IsSuccess.Should().BeTrue();
+        updateResult.Data!.RefreshIntervalHours.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task UpdateChannelAsync_WithWrongUser_ReturnsNotFound()
+    {
+        var service = CreateService();
+
+        var createResult = await service.CreateChannelAsync(1, "https://example.com/wrong-user-update.rss");
+        var channelId = createResult.Data!.Id;
+
+        var updateResult = await service.UpdateChannelAsync(channelId, userId: 999, autoDownloadEnabled: true);
+
+        updateResult.IsSuccess.Should().BeFalse();
+        updateResult.Type.Should().Be(Melodee.Common.Models.OperationResponseType.NotFound);
+    }
+
+    [Fact]
+    public async Task UpdateChannelAsync_WithNonExistentChannel_ReturnsNotFound()
+    {
+        var service = CreateService();
+
+        var updateResult = await service.UpdateChannelAsync(channelId: 99999, userId: 1, autoDownloadEnabled: true);
+
+        updateResult.IsSuccess.Should().BeFalse();
+        updateResult.Type.Should().Be(Melodee.Common.Models.OperationResponseType.NotFound);
+    }
+
+    [Fact]
+    public async Task UpdateChannelAsync_PartialUpdate_OnlyChangesSpecifiedFields()
+    {
+        var service = CreateService();
+
+        var createResult = await service.CreateChannelAsync(1, "https://example.com/partial-update.rss");
+        var channelId = createResult.Data!.Id;
+
+        await service.UpdateChannelAsync(channelId, 1, autoDownloadEnabled: true, refreshIntervalHours: 12);
+
+        var partialUpdate = await service.UpdateChannelAsync(channelId, 1, refreshIntervalHours: 24);
+
+        partialUpdate.IsSuccess.Should().BeTrue();
+        partialUpdate.Data!.AutoDownloadEnabled.Should().BeTrue();
+        partialUpdate.Data.RefreshIntervalHours.Should().Be(24);
+    }
 }

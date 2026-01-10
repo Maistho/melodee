@@ -28,6 +28,8 @@ public sealed class PodcastsController(
     UserService userService,
     PodcastService podcastService,
     PodcastPlaybackService? podcastPlaybackService,
+    PodcastOpmlService? podcastOpmlService,
+    PodcastDiscoveryService? podcastDiscoveryService,
     IConfiguration configuration,
     IMelodeeConfigurationFactory configurationFactory,
     ILogger<PodcastsController> logger) : ControllerBase(
@@ -134,6 +136,38 @@ public sealed class PodcastsController(
         if (!result.IsSuccess) return ApiBadRequest(result.Messages?.FirstOrDefault() ?? "Error deleting channel");
 
         return Ok();
+    }
+
+    /// <summary>
+    /// Update podcast channel settings.
+    /// </summary>
+    [HttpPatch]
+    [Route("channels/{id:int}")]
+    [ProducesResponseType(typeof(PodcastChannel), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateChannelAsync(int id, [FromBody] UpdateChannelRequest request, CancellationToken cancellationToken = default)
+    {
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null) return ApiUnauthorized();
+
+        var result = await podcastService.UpdateChannelAsync(
+            id,
+            user.Id,
+            request.AutoDownloadEnabled,
+            request.RefreshIntervalHours,
+            request.MaxDownloadedEpisodes,
+            request.MaxStorageBytes,
+            cancellationToken);
+
+        if (!result.IsSuccess)
+        {
+            if (result.Type == OperationResponseType.NotFound)
+                return ApiNotFound("Channel");
+            return ApiBadRequest(result.Messages?.FirstOrDefault() ?? "Error updating channel");
+        }
+
+        return Ok(result.Data);
     }
 
     /// <summary>
@@ -354,7 +388,201 @@ public sealed class PodcastsController(
 
         return Ok(result.Data);
     }
+
+    /// <summary>
+    /// Search podcast episodes by title and description.
+    /// </summary>
+    [HttpGet]
+    [Route("episodes/search")]
+    [ProducesResponseType(typeof(PagedResult<PodcastEpisodeDataInfo>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> SearchEpisodesAsync(
+        [FromQuery] string query,
+        [FromQuery] short page = 1,
+        [FromQuery] short pageSize = 50,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null) return ApiUnauthorized();
+        if (user.IsLocked) return ApiUserLocked();
+
+        if (string.IsNullOrWhiteSpace(query))
+            return ApiBadRequest("Search query is required");
+
+        if (!TryValidatePaging(page, pageSize, out var validatedPage, out var validatedPageSize, out var pagingError))
+            return pagingError!;
+
+        var pagedRequest = new PagedRequest
+        {
+            Page = validatedPage,
+            PageSize = validatedPageSize
+        };
+
+        var result = await podcastService.SearchEpisodesAsync(query, user.Id, pagedRequest, cancellationToken).ConfigureAwait(false);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Export podcast subscriptions to OPML format.
+    /// </summary>
+    [HttpGet]
+    [Route("opml/export")]
+    [Produces("application/xml")]
+    [ProducesResponseType(typeof(string), StatusCodes.Status200OK, "application/xml")]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ExportOpmlAsync(CancellationToken cancellationToken = default)
+    {
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null) return ApiUnauthorized();
+
+        if (podcastOpmlService == null)
+        {
+            return ApiBadRequest("OPML service is not configured");
+        }
+
+        var result = await podcastOpmlService.ExportAsync(user.Id, cancellationToken).ConfigureAwait(false);
+
+        if (!result.IsSuccess)
+            return ApiBadRequest(result.Messages?.FirstOrDefault() ?? "Error exporting OPML");
+
+        return Content(result.Data!, "application/xml");
+    }
+
+    /// <summary>
+    /// Import podcast subscriptions from OPML format.
+    /// </summary>
+    [HttpPost]
+    [Route("opml/import")]
+    [Consumes("application/xml", "text/xml")]
+    [ProducesResponseType(typeof(OpmlImportResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ImportOpmlAsync(CancellationToken cancellationToken = default)
+    {
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null) return ApiUnauthorized();
+
+        if (podcastOpmlService == null)
+        {
+            return ApiBadRequest("OPML service is not configured");
+        }
+
+        using var reader = new StreamReader(Request.Body);
+        var opmlContent = await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
+
+        if (string.IsNullOrWhiteSpace(opmlContent))
+            return ApiBadRequest("OPML content is required");
+
+        var result = await podcastOpmlService.ImportAsync(user.Id, opmlContent, cancellationToken).ConfigureAwait(false);
+
+        if (!result.IsSuccess)
+            return ApiBadRequest(result.Messages?.FirstOrDefault() ?? "Error importing OPML");
+
+        return Ok(result.Data);
+    }
+
+    /// <summary>
+    /// Search podcast directories for new podcasts to subscribe to.
+    /// Uses iTunes Search API.
+    /// </summary>
+    [HttpGet]
+    [Route("discover/search")]
+    [ProducesResponseType(typeof(PodcastSearchResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> DiscoverSearchAsync(
+        [FromQuery] string query,
+        [FromQuery] int limit = 25,
+        [FromQuery] string? country = "US",
+        CancellationToken cancellationToken = default)
+    {
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null) return ApiUnauthorized();
+
+        if (podcastDiscoveryService == null)
+        {
+            return ApiBadRequest("Podcast discovery service is not configured");
+        }
+
+        if (string.IsNullOrWhiteSpace(query))
+            return ApiBadRequest("Search query is required");
+
+        var result = await podcastDiscoveryService.SearchAsync(query, limit, country, cancellationToken).ConfigureAwait(false);
+
+        if (!result.IsSuccess)
+            return ApiBadRequest(result.Messages?.FirstOrDefault() ?? "Error searching podcasts");
+
+        return Ok(result.Data);
+    }
+
+    /// <summary>
+    /// Get trending/popular podcasts from directory.
+    /// </summary>
+    [HttpGet]
+    [Route("discover/trending")]
+    [ProducesResponseType(typeof(PodcastSearchResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> DiscoverTrendingAsync(
+        [FromQuery] int limit = 25,
+        [FromQuery] string? genre = null,
+        [FromQuery] string? country = "US",
+        CancellationToken cancellationToken = default)
+    {
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null) return ApiUnauthorized();
+
+        if (podcastDiscoveryService == null)
+        {
+            return ApiBadRequest("Podcast discovery service is not configured");
+        }
+
+        var result = await podcastDiscoveryService.GetTrendingAsync(limit, genre, country, cancellationToken).ConfigureAwait(false);
+
+        if (!result.IsSuccess)
+            return ApiBadRequest(result.Messages?.FirstOrDefault() ?? "Error getting trending podcasts");
+
+        return Ok(result.Data);
+    }
+
+    /// <summary>
+    /// Lookup a specific podcast by iTunes ID.
+    /// </summary>
+    [HttpGet]
+    [Route("discover/lookup/{itunesId}")]
+    [ProducesResponseType(typeof(PodcastSearchItem), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DiscoverLookupAsync(
+        string itunesId,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null) return ApiUnauthorized();
+
+        if (podcastDiscoveryService == null)
+        {
+            return ApiBadRequest("Podcast discovery service is not configured");
+        }
+
+        var result = await podcastDiscoveryService.LookupByItunesIdAsync(itunesId, cancellationToken).ConfigureAwait(false);
+
+        if (!result.IsSuccess)
+            return ApiBadRequest(result.Messages?.FirstOrDefault() ?? "Error looking up podcast");
+
+        if (result.Data == null)
+            return ApiNotFound("Podcast");
+
+        return Ok(result.Data);
+    }
 }
 
 public record CreateChannelRequest(string Url);
 public record SaveBookmarkRequest(int PositionSeconds, string? Comment = null);
+
+/// <summary>
+/// Request to update podcast channel settings.
+/// All fields are optional - only provided fields will be updated.
+/// </summary>
+public record UpdateChannelRequest(
+    bool? AutoDownloadEnabled = null,
+    int? RefreshIntervalHours = null,
+    int? MaxDownloadedEpisodes = null,
+    long? MaxStorageBytes = null);

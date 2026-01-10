@@ -72,6 +72,7 @@
                         }
                     </RadzenStack>
                     <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" Class="rz-mt-2">
+                        <RadzenButton Icon="settings" Text="@L("Podcast.Settings")" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" Click="@ShowSettingsDialog" />
                         <RadzenButton Icon="refresh" Text="@L("Actions.Refresh")" Size="ButtonSize.Small" Click="@RefreshChannel" />
                         <RadzenButton Icon="delete" Text="@L("Actions.Delete")" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Click="@DeleteChannel" />
                     </RadzenStack>
@@ -547,6 +548,34 @@
             {
                 MainLayoutProxyService.ToggleSpinnerVisible();
             }
+        }
+    }
+
+    private async Task ShowSettingsDialog()
+    {
+        if (_channel == null) return;
+
+        var channelResult = await PodcastService.GetChannelAsync(_channelId, CurrentUsersId);
+        if (!channelResult.IsSuccess || channelResult.Data == null) return;
+
+        var channel = channelResult.Data;
+        
+        var result = await DialogService.OpenAsync<PodcastChannelSettingsDialog>(
+            L("Podcast.ChannelSettings"),
+            new Dictionary<string, object>
+            {
+                { "ChannelId", _channelId },
+                { "UserId", CurrentUsersId },
+                { "AutoDownloadEnabled", channel.AutoDownloadEnabled },
+                { "RefreshIntervalHours", channel.RefreshIntervalHours ?? (object)0 },
+                { "MaxDownloadedEpisodes", channel.MaxDownloadedEpisodes ?? (object)0 },
+                { "MaxStorageBytes", channel.MaxStorageBytes ?? (object)0L }
+            },
+            new DialogOptions { Width = "500px", Height = "auto" });
+
+        if (result == true)
+        {
+            await LoadChannel();
         }
     }
 

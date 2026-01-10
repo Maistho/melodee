@@ -433,7 +433,16 @@ builder.Services
     .AddSingleton<ISsrfValidator, SsrfValidator>()
     .AddSingleton<PodcastHttpClient>()
     .AddScoped<PodcastService>()
-    .AddScoped<PodcastPlaybackService>();
+    .AddScoped<PodcastPlaybackService>()
+    .AddScoped<PodcastOpmlService>()
+    .AddScoped<PodcastDiscoveryService>();
+
+// Configure HttpClient for podcast discovery
+builder.Services.AddHttpClient("PodcastDiscovery", client =>
+{
+    client.DefaultRequestHeaders.Add("User-Agent", "Melodee/1.0 (Podcast Discovery)");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
 
 #endregion
 

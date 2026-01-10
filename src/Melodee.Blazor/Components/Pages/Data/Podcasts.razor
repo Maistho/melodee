@@ -6,6 +6,8 @@
 @inject MainLayoutProxyService MainLayoutProxyService
 @inject ILogger Logger
 @inject PodcastService PodcastService
+@inject PodcastOpmlService PodcastOpmlService
+@inject PodcastDiscoveryService PodcastDiscoveryService
 @inject NotificationService NotificationService
 @inject DialogService DialogService
 @inject NavigationManager NavigationManager
@@ -27,7 +29,20 @@
                 Orientation="Orientation.Horizontal"
                 AlignItems="AlignItems.Center"
                 JustifyContent="JustifyContent.End"
-                Gap="0.5rem">
+                Gap="0.5rem"
+                Wrap="FlexWrap.Wrap">
+                <RadzenButton Icon="explore" Text="@L("Podcast.Discover")"
+                              Size="ButtonSize.Small"
+                              ButtonStyle="ButtonStyle.Secondary"
+                              Click="@ShowDiscoveryDialog" />
+                <RadzenButton Icon="search" Text="@L("Podcast.SearchEpisodes")"
+                              Size="ButtonSize.Small"
+                              ButtonStyle="ButtonStyle.Light"
+                              Click="@(() => NavigationManager.NavigateTo("/data/podcasts/search"))" />
+                <RadzenButton Icon="import_export" Text="@L("Podcast.OpmlImportExport")"
+                              Size="ButtonSize.Small"
+                              ButtonStyle="ButtonStyle.Light"
+                              Click="@ShowOpmlDialog" />
                 <RadzenButton Icon="add_circle_outline" Text="@L("Podcast.AddChannel")"
                               Size="ButtonSize.Small"
                               Click="@ShowAddChannelDialog" />
@@ -369,6 +384,32 @@
             {
                 MainLayoutProxyService.ToggleSpinnerVisible();
             }
+        }
+    }
+
+    private async Task ShowOpmlDialog()
+    {
+        var result = await DialogService.OpenAsync<PodcastOpmlDialog>(
+            L("Podcast.OpmlImportExport"),
+            new Dictionary<string, object> { { "UserId", CurrentUsersId } },
+            new DialogOptions { Width = "700px", Height = "600px" });
+
+        if (result == true)
+        {
+            await _grid?.Reload()!;
+        }
+    }
+
+    private async Task ShowDiscoveryDialog()
+    {
+        var result = await DialogService.OpenAsync<PodcastDiscoveryDialog>(
+            L("Podcast.DiscoverPodcasts"),
+            new Dictionary<string, object> { { "UserId", CurrentUsersId } },
+            new DialogOptions { Width = "800px", Height = "700px" });
+
+        if (result == true)
+        {
+            await _grid?.Reload()!;
         }
     }
 }

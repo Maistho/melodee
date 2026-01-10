@@ -59,5 +59,17 @@ public class PodcastChannel : DataModelBase
     /// </summary>
     public long? MaxStorageBytes { get; set; }
 
+    /// <summary>
+    ///     When true, new episodes discovered during refresh are automatically queued for download.
+    ///     Default is false (manual download only).
+    /// </summary>
+    public bool AutoDownloadEnabled { get; set; }
+
+    /// <summary>
+    ///     Per-channel refresh interval in hours. Null means use the global job schedule.
+    ///     Allows high-frequency podcasts (e.g., news) to refresh more often than others.
+    /// </summary>
+    public int? RefreshIntervalHours { get; set; }
+
     public ICollection<PodcastEpisode> Episodes { get; set; } = new List<PodcastEpisode>();
 }

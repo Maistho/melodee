@@ -1,0 +1,247 @@
+@inherits MelodeeComponentBase
+
+@inject DialogService DialogService
+@inject PodcastDiscoveryService PodcastDiscoveryService
+@inject PodcastService PodcastService
+@inject NotificationService NotificationService
+@inject ILogger Logger
+
+<RadzenStack Gap="1rem" Class="rz-p-4" Style="min-height: 500px;">
+    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.End">
+        <RadzenFormField Text="@L("Podcast.SearchPodcasts")" Variant="Variant.Outlined" Style="flex: 1;">
+            <RadzenTextBox @bind-Value="_searchQuery" Placeholder="@L("Podcast.SearchPlaceholder")" 
+                           Style="width: 100%;" @onkeydown="@OnSearchKeyDown" />
+        </RadzenFormField>
+        <RadzenButton Icon="search" Text="@L("Actions.Search")" Click="@Search" IsBusy="@_isSearching" />
+    </RadzenStack>
+
+    @if (_searchResult != null && _searchResult.Results.Count > 0)
+    {
+        <RadzenText TextStyle="TextStyle.Caption" Class="rz-text-secondary-color">
+            @string.Format(L("Podcast.SearchResultsCount"), _searchResult.TotalResults, _searchResult.Query)
+        </RadzenText>
+
+        <RadzenDataList Data="@_searchResult.Results" Style="flex: 1; overflow: auto;">
+            <Template Context="podcast">
+                <RadzenCard Style="margin-bottom: 0.5rem;">
+                    <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" AlignItems="AlignItems.Start">
+                        @if (!string.IsNullOrEmpty(podcast.ImageUrl))
+                        {
+                            <RadzenImage Path="@podcast.ImageUrl" Style="width: 80px; height: 80px; border-radius: 4px; object-fit: cover;" 
+                                         AlternateText="@podcast.Title" onerror="this.style.display='none'" />
+                        }
+                        else
+                        {
+                            <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" 
+                                         Style="width: 80px; height: 80px; background: var(--rz-base-200); border-radius: 4px;">
+                                <RadzenIcon Icon="podcasts" Style="font-size: 32px; color: var(--rz-text-tertiary-color);" />
+                            </RadzenStack>
+                        }
+                        <RadzenStack Gap="0.25rem" Style="flex: 1; min-width: 0;">
+                            <RadzenText TextStyle="TextStyle.Body1" Style="margin: 0; font-weight: 600;">@podcast.Title</RadzenText>
+                            @if (!string.IsNullOrEmpty(podcast.Artist))
+                            {
+                                <RadzenText TextStyle="TextStyle.Caption" Class="rz-text-secondary-color" Style="margin: 0;">
+                                    @podcast.Artist
+                                </RadzenText>
+                            }
+                            @if (!string.IsNullOrEmpty(podcast.Genre))
+                            {
+                                <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="@podcast.Genre" Style="width: fit-content;" />
+                            }
+                            @if (!string.IsNullOrEmpty(podcast.Description))
+                            {
+                                <RadzenText TextStyle="TextStyle.Caption" Style="margin: 0; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
+                                    @(podcast.Description.Length > 150 ? podcast.Description[..150] + "..." : podcast.Description)
+                                </RadzenText>
+                            }
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+                                @if (podcast.EpisodeCount.HasValue)
+                                {
+                                    <RadzenText TextStyle="TextStyle.Caption" Class="rz-text-tertiary-color">
+                                        @string.Format(L("Podcast.EpisodeCountFormat"), podcast.EpisodeCount)
+                                    </RadzenText>
+                                }
+                                @if (_subscribedFeedUrls.Contains(podcast.FeedUrl?.ToLower() ?? string.Empty))
+                                {
+                                    <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="@L("Podcast.Subscribed")" />
+                                }
+                                else if (!string.IsNullOrEmpty(podcast.FeedUrl))
+                                {
+                                    <RadzenButton Text="@L("Podcast.Subscribe")" Icon="add" Size="ButtonSize.Small" 
+                                                  ButtonStyle="ButtonStyle.Primary"
+                                                  Click="@(() => Subscribe(podcast))"
+                                                  IsBusy="@(_subscribingFeedUrl == podcast.FeedUrl)" />
+                                }
+                            </RadzenStack>
+                        </RadzenStack>
+                    </RadzenStack>
+                </RadzenCard>
+            </Template>
+        </RadzenDataList>
+    }
+    else if (_searchResult != null && _searchResult.Results.Count == 0)
+    {
+        <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="flex: 1;">
+            <RadzenIcon Icon="search_off" Style="font-size: 48px; color: var(--rz-text-tertiary-color);" />
+            <RadzenText TextStyle="TextStyle.Body2" Class="rz-text-secondary-color">@L("Podcast.NoSearchResults")</RadzenText>
+        </RadzenStack>
+    }
+    else if (!_isSearching)
+    {
+        <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="flex: 1;">
+            <RadzenIcon Icon="explore" Style="font-size: 48px; color: var(--rz-text-tertiary-color);" />
+            <RadzenText TextStyle="TextStyle.Body2" Class="rz-text-secondary-color">@L("Podcast.DiscoverDescription")</RadzenText>
+        </RadzenStack>
+    }
+    else
+    {
+        <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Style="flex: 1;">
+            <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" />
+            <RadzenText TextStyle="TextStyle.Body2" Class="rz-text-secondary-color">@L("Podcast.Searching")</RadzenText>
+        </RadzenStack>
+    }
+
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+        <RadzenButton Text="@L("Actions.Close")" ButtonStyle="ButtonStyle.Light" Click="@Close" />
+    </RadzenStack>
+</RadzenStack>
+
+@code {
+    [Parameter] public int UserId { get; set; }
+
+    private string _searchQuery = string.Empty;
+    private bool _isSearching;
+    private PodcastSearchResult? _searchResult;
+    private HashSet<string> _subscribedFeedUrls = new(StringComparer.OrdinalIgnoreCase);
+    private string? _subscribingFeedUrl;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await LoadSubscribedFeeds();
+    }
+
+    private async Task LoadSubscribedFeeds()
+    {
+        try
+        {
+            var result = await PodcastService.ListChannelsAsync(UserId);
+            if (result.IsSuccess && result.Data != null)
+            {
+                _subscribedFeedUrls = result.Data.Select(c => c.FeedUrl.ToLower()).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "[PodcastDiscoveryDialog] Error loading subscribed feeds");
+        }
+    }
+
+    private void Close()
+    {
+        DialogService.Close(_subscribedFeedUrls.Count > 0);
+    }
+
+    private async Task OnSearchKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await Search();
+        }
+    }
+
+    private async Task Search()
+    {
+        if (string.IsNullOrWhiteSpace(_searchQuery))
+            return;
+
+        _isSearching = true;
+        _searchResult = null;
+
+        try
+        {
+            var result = await PodcastDiscoveryService.SearchAsync(_searchQuery, limit: 25);
+
+            if (result.IsSuccess && result.Data != null)
+            {
+                _searchResult = result.Data;
+            }
+            else
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Warning,
+                    Summary = L("Message.Warning"),
+                    Detail = string.Join(", ", result.Messages ?? Array.Empty<string>()),
+                    Duration = 6000
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "[PodcastDiscoveryDialog] Error searching podcasts");
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = L("Message.Error"),
+                Detail = ex.Message,
+                Duration = 6000
+            });
+        }
+        finally
+        {
+            _isSearching = false;
+        }
+    }
+
+    private async Task Subscribe(PodcastSearchItem podcast)
+    {
+        if (string.IsNullOrEmpty(podcast.FeedUrl))
+            return;
+
+        _subscribingFeedUrl = podcast.FeedUrl;
+
+        try
+        {
+            var result = await PodcastService.CreateChannelAsync(UserId, podcast.FeedUrl);
+
+            if (result.IsSuccess)
+            {
+                _subscribedFeedUrls.Add(podcast.FeedUrl.ToLower());
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = L("Message.Success"),
+                    Detail = string.Format(L("Podcast.SubscribedTo"), podcast.Title),
+                    Duration = 4000
+                });
+            }
+            else
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = L("Message.Error"),
+                    Detail = string.Join(", ", result.Messages ?? Array.Empty<string>()),
+                    Duration = 6000
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "[PodcastDiscoveryDialog] Error subscribing to podcast {FeedUrl}", podcast.FeedUrl);
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = L("Message.Error"),
+                Detail = ex.Message,
+                Duration = 6000
+            });
+        }
+        finally
+        {
+            _subscribingFeedUrl = null;
+        }
+    }
+}
