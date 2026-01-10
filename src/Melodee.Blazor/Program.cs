@@ -454,6 +454,8 @@ builder.Services.AddScoped<MelodeeApiAuthFilter>();
 builder.Services.Configure<GoogleAuthOptions>(builder.Configuration.GetSection(GoogleAuthOptions.SectionName));
 builder.Services.Configure<AuthPolicyOptions>(builder.Configuration.GetSection(AuthPolicyOptions.SectionName));
 builder.Services.Configure<TokenOptions>(builder.Configuration.GetSection(TokenOptions.SectionName));
+builder.Services.Configure<PartyModeOptions>(builder.Configuration.GetSection(PartyModeOptions.SectionName));
+builder.Services.Configure<JukeboxOptions>(builder.Configuration.GetSection(JukeboxOptions.SectionName));
 builder.Services.AddSingleton<IClock>(SystemClock.Instance);
 builder.Services.AddScoped<IGoogleTokenService, GoogleTokenService>();
 builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();

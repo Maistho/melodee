@@ -93,6 +93,16 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
 
     public DbSet<PodcastEpisodeBookmark> PodcastEpisodeBookmarks { get; set; }
 
+    public DbSet<PartySession> PartySessions { get; set; }
+
+    public DbSet<PartySessionParticipant> PartySessionParticipants { get; set; }
+
+    public DbSet<PartyQueueItem> PartyQueueItems { get; set; }
+
+    public DbSet<PartyPlaybackState> PartyPlaybackStates { get; set; }
+
+    public DbSet<PartySessionEndpoint> PartySessionEndpoints { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Use a fixed timestamp for seed data to prevent migration churn
@@ -1797,6 +1807,93 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
         //     .HasGeneratedTsVectorColumn(u => u.SearchVector, "english", u => new { u.Email, u.UserName })
         //     .HasIndex(u => u.Email)
         //     .HasMethod("GIN");
+
+        // Party Mode entities
+        modelBuilder.Entity<PartySession>(ps =>
+        {
+            ps.HasIndex(x => x.OwnerUserId);
+            ps.HasIndex(x => x.Status);
+            ps.HasIndex(x => x.ActiveEndpointId);
+        });
+
+        modelBuilder.Entity<PartySessionParticipant>(psp =>
+        {
+            psp.HasIndex(x => new { x.PartySessionId, x.UserId })
+                .IsUnique();
+
+            psp.HasIndex(x => x.UserId);
+            psp.HasIndex(x => x.Role);
+            psp.HasIndex(x => x.IsBanned);
+
+            psp.HasOne(x => x.PartySession)
+                .WithMany(s => s.Participants)
+                .HasForeignKey(x => x.PartySessionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            psp.HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<PartyQueueItem>(pqi =>
+        {
+            pqi.HasIndex(x => new { x.PartySessionId, x.SortOrder });
+
+            pqi.HasIndex(x => x.SongApiKey);
+            pqi.HasIndex(x => x.EnqueuedByUserId);
+            pqi.HasIndex(x => x.EnqueuedAt);
+
+            pqi.HasOne(x => x.PartySession)
+                .WithMany(s => s.QueueItems)
+                .HasForeignKey(x => x.PartySessionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            pqi.HasOne(x => x.EnqueuedByUser)
+                .WithMany()
+                .HasForeignKey(x => x.EnqueuedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<PartyPlaybackState>(pps =>
+        {
+            pps.HasIndex(x => x.PartySessionId)
+                .IsUnique();
+
+            pps.HasIndex(x => x.CurrentQueueItemApiKey);
+            pps.HasIndex(x => x.LastHeartbeatAt);
+            pps.HasIndex(x => x.IsPlaying);
+
+            pps.HasOne(x => x.PartySession)
+                .WithOne(s => s.PlaybackState)
+                .HasForeignKey<PartyPlaybackState>(x => x.PartySessionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            pps.HasOne(x => x.CurrentQueueItem)
+                .WithMany()
+                .HasForeignKey(x => x.CurrentQueueItemApiKey)
+                .HasPrincipalKey(x => x.ApiKey)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            pps.HasOne(x => x.UpdatedByUser)
+                .WithMany()
+                .HasForeignKey(x => x.UpdatedByUserId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<PartySessionEndpoint>(e =>
+        {
+            e.HasIndex(x => x.OwnerUserId);
+            e.HasIndex(x => x.LastSeenAt);
+            e.HasIndex(x => x.Type);
+            e.HasIndex(x => x.IsShared);
+            e.HasIndex(x => x.Room);
+
+            e.HasOne(x => x.OwnerUser)
+                .WithMany()
+                .HasForeignKey(x => x.OwnerUserId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

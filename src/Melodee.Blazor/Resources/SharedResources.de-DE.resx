@@ -5042,4 +5042,10 @@
   <data name="Actions.View" xml:space="preserve">
     <value>[NEEDS TRANSLATION] View</value>
   </data>
+  <data name="PartyMode.Title" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Party Mode</value>
+  </data>
+  <data name="Jukebox.Disabled" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Jukebox is disabled</value>
+  </data>
 </root>
