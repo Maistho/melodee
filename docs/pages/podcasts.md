@@ -17,6 +17,7 @@ The podcast feature in Melodee provides:
 - **Playback Tracking**: Resume playback exactly where you left off with automatic bookmarking
 - **Episode Search**: Search across all episodes in your subscribed podcasts
 - **OPML Import/Export**: Migrate your subscriptions to and from other podcast apps
+- **Dashboard Pinning**: Pin your favorite podcasts to the dashboard for quick access
 
 ## Getting Started
 
@@ -58,6 +59,26 @@ If you're migrating from another podcast app:
 Melodee will add all podcasts from the OPML file, skipping any duplicates.
 
 ## Managing Subscriptions
+
+### Pinning Podcasts to Dashboard
+
+You can pin your favorite podcasts to the dashboard for quick access:
+
+1. Navigate to the podcast channel detail page
+2. Click the **pin icon** in the channel header (next to the title)
+3. The podcast will appear in your Dashboard's pinned items section
+
+To unpin a podcast:
+
+1. Click the pin icon again on the channel detail page, or
+2. Remove it from your Dashboard pinned items
+
+Pinned podcasts show:
+- The podcast artwork
+- The podcast title
+- Direct link to the channel page
+
+This feature is user-specific—each user can pin different podcasts to their own dashboard.
 
 ### Channel Settings
 
