@@ -46,7 +46,7 @@
    - [6.4 Wear OS / Watch Support](#64-wear-os--watch-support)
    - [6.5 Desktop Widget / Menubar App](#65-desktop-widget--menubar-app)
 8. [Integration & Ecosystem](#7-integration--ecosystem)
-   - [7.1 Podcast Support](#71-podcast-support)
+   - [7.1 Podcast Support ✅](#71-podcast-support-) <!-- COMPLETED -->
    - [7.2 Audiobook Support](#72-audiobook-support)
    - [7.3 Home Assistant Integration](#73-home-assistant-integration)
    - [7.4 Discord Rich Presence](#74-discord-rich-presence)
@@ -971,32 +971,32 @@ Medium - Quality-of-life improvement for desktop users
 
 ## 7. Integration & Ecosystem
 
-### 7.1 Podcast Support
+### 7.1 Podcast Support ✅ COMPLETED
+
+**Status**: Fully implemented as of January 2026.
 
 **Problem Statement**  
 Users want one app for all audio content. Currently they need a separate podcast app.
 
-**Proposed Solution**  
-Native podcast support:
-- **RSS feed subscription**: Add podcasts by URL
-- **Directory integration**: Search Apple Podcasts, Spotify catalogs
-- **Episode management**: Auto-download, played tracking
-- **Variable speed playback**: 1x, 1.5x, 2x speeds
-- **Smart resume**: Remember position in long episodes
-- **Separate podcast library**: Don't mix with music
-
-**Technical Considerations**
-- RSS parser for podcast feeds
-- Episode storage (stream or download)
-- Different playback controls (skip 30s, speed)
-- Podcast-specific now playing UI
+**What Was Delivered**  
+Full podcast support including:
+- ✅ **RSS feed subscription**: Add podcasts by URL with automatic refresh
+- ✅ **Directory integration**: iTunes podcast directory search and discovery
+- ✅ **Episode management**: Auto-download with per-channel settings, played tracking
+- ✅ **Per-channel settings**: Custom refresh intervals, max downloaded episodes, storage limits
+- ✅ **Episode search**: Search across all episodes in subscribed podcasts
+- ✅ **OPML import/export**: Migrate subscriptions to/from other podcast apps
+- ✅ **Smart resume**: Automatic bookmarking, resume from last position
+- ✅ **Dashboard pinning**: Pin favorite podcasts for quick access
+- ✅ **OpenSubsonic API**: Full podcast endpoint support for compatible clients
+- ✅ **Background jobs**: PodcastRefreshJob, PodcastDownloadJob, PodcastCleanupJob, PodcastRecoveryJob
 
 **User Impact**  
 Medium-High - Broadens appeal, single solution for audio
 
-**Priority**: 🟠 Medium  
-**Effort**: Large (4-6 weeks)  
-**Dependencies**: New subsystem, podcast APIs
+**Priority**: ✅ COMPLETED  
+**Effort**: Large (4-6 weeks) - Delivered  
+**Dependencies**: Implemented
 
 ---
 
@@ -1581,7 +1581,7 @@ Based on user impact and effort, here's a recommended prioritization:
 | Lyrics Integration | Medium-High | Medium | Popular request |
 | Cross-Device Handoff | High | Large | Premium feel |
 | Two-Factor Authentication | Medium | Medium | Security |
-| Podcast Support | Medium-High | Large | Scope expansion |
+| ~~Podcast Support~~ | ✅ | COMPLETED | Implemented January 2026 |
 | Activity Feed | Medium | Medium | Social feature |
 
 ### Tier 4: Lower Priority (Future Consideration)

@@ -9,22 +9,31 @@ This document compares Melodee’s current feature set to other common self-host
 
 ### Where Melodee is behind typical expectations
 
-- **Podcasts / radio / “all audio types”** parity with Airsonic-Advanced / LMS ecosystems.
 - **Whole-home playback endpoints** (AirPlay/Chromecast/Snapcast/Sonos-style) compared to OwnTone/LMS/Volumio.
 - **Out-of-the-box ecosystem visibility** (e.g., Navidrome has widely-known “simple server” positioning and managed hosting options).
+
+### Where Melodee has closed the gap
+
+- **Podcasts** ✅ - Full podcast support implemented including RSS subscriptions, iTunes directory discovery, per-channel settings (auto-download, refresh intervals, storage limits), episode search, OPML import/export, playback tracking with bookmarks, and dashboard pinning. OpenSubsonic podcast endpoints fully supported.
 
 ## Opportunities (prioritized)
 
 ### 1) Close feature gaps that block switching
 
-#### 1.1 Add podcasts as an optional module (gap-closer)
+#### 1.1 ~~Add podcasts as an optional module~~ ✅ COMPLETED
 
-- Why it matters
-  - Airsonic-Advanced and several “audio hub” servers include podcasts; users migrating expect it.
-  - Even if Melodee stays “music-first,” a podcasts module reduces reasons to run a second server.
-- Scope idea
-  - Treat podcasts as a separate library type + ingestion pipeline stage (RSS ingestion → episodes → playback).
-  - Expose via: native API + (optionally) OpenSubsonic podcast endpoints.
+**Status**: Fully implemented as of January 2026.
+
+- **What was delivered**:
+  - RSS feed subscriptions with automatic refresh
+  - iTunes podcast directory discovery and search
+  - Per-channel settings: auto-download, custom refresh intervals, storage limits
+  - Episode-level search across all subscriptions
+  - OPML import/export for migration
+  - Playback tracking with automatic bookmarking
+  - Dashboard pinning for quick access
+  - Full OpenSubsonic podcast API support
+  - Background jobs for refresh, download, cleanup, and recovery
 
 #### 1.2 Jukebox / Party mode (gap-closer + differentiator if done well)
 
@@ -183,4 +192,4 @@ Melodee already has **Radio Stations** today; what’s missing is the broader �
 2. Library health scoring + remediation queue (turns “pipeline” into a daily-use advantage).
 3. Requests enhancements (voting/notifications) to lean into shared-library adoption.
 4. Internet radio (quick completeness win).
-5. Podcasts (optional module) to remove a common “I still need X” blocker.
+5. ~~Podcasts (optional module) to remove a common "I still need X" blocker.~~ ✅ COMPLETED
