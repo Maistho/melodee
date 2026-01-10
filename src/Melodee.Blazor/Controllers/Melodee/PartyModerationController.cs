@@ -5,7 +5,6 @@ using Melodee.Blazor.Filters;
 using Melodee.Common.Configuration;
 using Melodee.Common.Data;
 using Melodee.Common.Enums.PartyMode;
-using Melodee.Common.Models;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;

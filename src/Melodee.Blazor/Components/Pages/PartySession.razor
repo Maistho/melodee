@@ -1,9 +1,13 @@
 @page "/party/{SessionApiKey:guid}"
 @using Melodee.Blazor.Services
+@using Melodee.Common.Models.PartyMode
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop
 @inject PartyModeService PartyModeService
 @inject NavigationManager NavigationManager
 @inject ILogger<PartySession> Logger
 @inject IStringLocalizer<SharedResources> Localizer
+@inject IJSRuntime JSRuntime
 
 <div class="party-session-page">
     @if (IsLoading)
@@ -20,6 +24,10 @@
                 <div class="session-status">
                     <span class="status-indicator @(Session.Status == "Active" ? "active" : "ended")"></span>
                     @Session.Status
+                    @if (IsEndpointOffline)
+                    {
+                        <span class="offline-badge">@Localizer["PartyMode.Endpoint.Offline"]</span>
+                    }
                 </div>
             </div>
             <div class="session-actions">
@@ -32,17 +40,68 @@
             </div>
         </div>
 
+        @if (IsEndpointOffline)
+        {
+            <div class="endpoint-offline-banner">
+                <p>⚠️ @Localizer["PartyMode.Endpoint.OfflineMessage"]</p>
+            </div>
+        }
+        else if (!HasActiveEndpoint)
+        {
+            <div class="no-endpoint-banner">
+                <p>🎧 @Localizer["PartyMode.Endpoint.NoEndpointMessage"]</p>
+                <button class="btn btn-primary" @onclick="ShowEndpointSelector">
+                    @Localizer["PartyMode.Endpoint.Select"]
+                </button>
+            </div>
+        }
+
         <div class="party-session-content">
             <div class="party-main">
                 <PartyPlayer SessionApiKey="SessionApiKey" 
-                            OnTrackChanged="OnTrackChanged" />
+                            OnTrackChanged="OnTrackChanged"
+                            Capabilities="EndpointCapabilities" />
             </div>
             
             <div class="party-sidebar">
+                @if (ShowEndpointSelectorPanel)
+                {
+                    <div class="endpoint-selector-panel">
+                        <div class="panel-header">
+                            <h3>@Localizer["PartyMode.Endpoint.SelectTitle"]</h3>
+                            <button class="close-btn" @onclick="HideEndpointSelector">✕</button>
+                        </div>
+                         <PartySessionEndpointSelector SessionApiKey="SessionApiKey"
+                                         OnEndpointChanged="OnEndpointChanged"
+                                         CanDetach="CanDetachEndpoint" />
+                    </div>
+                }
+                else
+                {
+                    @if (ActiveEndpointName != null)
+                    {
+                        <div class="active-endpoint-info">
+                            <h4>@Localizer["PartyMode.Endpoint.Active"]</h4>
+                            <div class="endpoint-card">
+                                <span class="endpoint-icon">🎵</span>
+                                <span class="endpoint-name">@ActiveEndpointName</span>
+                                @if (IsCurrentUserEndpointOwner)
+                                {
+                                    <button class="btn btn-sm btn-secondary" @onclick="ShowEndpointSelector">
+                                        @Localizer["PartyMode.Endpoint.Change"]
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+
                 <PartyQueue SessionApiKey="SessionApiKey" 
                             OnQueueChanged="OnQueueChanged"
                             OnItemSelected="OnItemSelected"
-                            CurrentItemApiKey="CurrentItemApiKey" />
+                            CurrentItemApiKey="CurrentItemApiKey"
+                            IsQueueLocked="IsQueueLocked"
+                            CanModifyQueue="CanModifyQueue" />
                 
                 <div class="participants-section">
                     <h3>👥 @Localizer["PartyMode.Participants"] (@Participants.Count)</h3>
@@ -53,6 +112,14 @@
                                 <span class="participant-avatar">👤</span>
                                 <span class="participant-name">@GetUserDisplayName(participant)</span>
                                 <span class="participant-role" title="@participant.Role">@GetRoleIcon(participant.Role)</span>
+                                @if (IsOwner && participant.UserId != CurrentUserId)
+                                {
+                                    <div class="participant-actions">
+                                        <button class="btn btn-sm" @onclick="() => OpenParticipantMenu(participant)" title="@Localizer["PartyMode.Moderation.Manage"]">
+                                            ⋮
+                                        </button>
+                                    </div>
+                                }
                             </div>
                         }
                     </div>
@@ -74,8 +141,20 @@
 
     private PartySessionDto? Session { get; set; }
     private List<PartySessionParticipantDto> Participants { get; set; } = new();
+    private List<SessionEndpointDto> Endpoints { get; set; } = new();
     private Guid? CurrentItemApiKey { get; set; }
     private bool IsLoading { get; set; } = true;
+    private bool ShowEndpointSelectorPanel { get; set; }
+    private bool HasActiveEndpoint { get; set; }
+    private bool IsEndpointOffline { get; set; }
+    private bool IsQueueLocked { get; set; }
+    private bool CanModifyQueue { get; set; }
+    private bool IsOwner { get; set; }
+    private bool IsCurrentUserEndpointOwner { get; set; }
+    private bool CanDetachEndpoint { get; set; }
+    private string? ActiveEndpointName { get; set; }
+    private int CurrentUserId { get; set; }
+    private PartySessionEndpointCapabilities? EndpointCapabilities { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -93,6 +172,7 @@
             {
                 Session = sessionResult.Data;
                 await LoadParticipants();
+                await LoadEndpoints();
             }
             else
             {
@@ -126,6 +206,68 @@
         }
     }
 
+    private async Task LoadEndpoints()
+    {
+        try
+        {
+            var result = await PartyModeService.GetEndpointsForSessionAsync(SessionApiKey);
+            if (result?.IsSuccess == true && result.Data != null)
+            {
+                Endpoints = result.Data.ToList();
+                var activeEndpoint = Endpoints.FirstOrDefault(e => e.IsActive);
+                HasActiveEndpoint = activeEndpoint != null;
+                IsEndpointOffline = activeEndpoint?.IsStale ?? false;
+                ActiveEndpointName = activeEndpoint?.Name;
+                IsCurrentUserEndpointOwner = activeEndpoint?.IsOwner ?? false;
+                CanDetachEndpoint = activeEndpoint?.IsOwner ?? false;
+                EndpointCapabilities = ParseCapabilities(activeEndpoint?.CapabilitiesJson);
+            }
+            else
+            {
+                HasActiveEndpoint = false;
+                IsEndpointOffline = false;
+                EndpointCapabilities = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading endpoints");
+        }
+    }
+
+    private static PartySessionEndpointCapabilities? ParseCapabilities(string? capabilitiesJson)
+    {
+        if (string.IsNullOrEmpty(capabilitiesJson))
+        {
+            return null;
+        }
+
+        try
+        {
+            return System.Text.Json.JsonSerializer.Deserialize<PartySessionEndpointCapabilities>(capabilitiesJson);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private void ShowEndpointSelector()
+    {
+        ShowEndpointSelectorPanel = true;
+    }
+
+    private void HideEndpointSelector()
+    {
+        ShowEndpointSelectorPanel = false;
+    }
+
+    private async Task OnEndpointChanged()
+    {
+        ShowEndpointSelectorPanel = false;
+        await LoadEndpoints();
+    }
+
     private async Task OnTrackChanged(PartyPlayer.TrackInfo track)
     {
         // Could update current item if needed
@@ -140,6 +282,11 @@
     {
         CurrentItemApiKey = item.ApiKey;
         // Could trigger playback of this item
+    }
+
+    private void OpenParticipantMenu(PartySessionParticipantDto participant)
+    {
+        // Open moderation menu for participant
     }
 
     private async Task CopyInviteLink()

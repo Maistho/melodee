@@ -1,9 +1,10 @@
+using Melodee.Common.Configuration;
 using Melodee.Common.Data;
 using Melodee.Common.Data.Models;
-using Melodee.Common.Enums.PartyMode;
 using Melodee.Common.Models;
 using Melodee.Common.Services;
 using Microsoft.EntityFrameworkCore;
+using NUnit.Framework;
 
 namespace Melodee.Tests.Common.Services;
 

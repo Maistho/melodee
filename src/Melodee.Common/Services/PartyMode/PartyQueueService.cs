@@ -1,4 +1,3 @@
-using Melodee.Common.Configuration;
 using Melodee.Common.Data;
 using Melodee.Common.Data.Models;
 using Melodee.Common.Models;
@@ -15,11 +14,10 @@ namespace Melodee.Common.Services;
 public sealed class PartyQueueService(
     ILogger logger,
     ICacheManager cacheManager,
-    IDbContextFactory<MelodeeDbContext> contextFactory,
-    IMelodeeConfigurationFactory configurationFactory)
+    IDbContextFactory<MelodeeDbContext> contextFactory)
     : ServiceBase(logger, cacheManager, contextFactory), IPartyQueueService
 {
-    private const string CacheKeyTemplate = "urn:party:queue:{0}";
+    private const string QueueCacheKeyTemplate = "urn:party:queue:{0}";
 
     public async Task<OperationResult<(long Revision, IEnumerable<PartyQueueItem> Items)>> GetQueueAsync(
         Guid sessionApiKey,
@@ -36,28 +34,32 @@ public sealed class PartyQueueService(
         {
             return new OperationResult<(long, IEnumerable<PartyQueueItem>)>("Session not found.")
             {
-                Type = OperationResponseType.NotFound
+                Type = OperationResponseType.NotFound,
+                Data = (0, Enumerable.Empty<PartyQueueItem>())
             };
         }
 
-        var cacheKey = string.Format(CacheKeyTemplate, sessionApiKey);
-        if (CacheManager.TryGet(cacheKey, out (long Revision, IEnumerable<PartyQueueItem> Items)? cached))
+        var cacheKey = string.Format(QueueCacheKeyTemplate, sessionApiKey);
+        var result = await CacheManager.GetAsync(
+            cacheKey,
+            async () =>
+            {
+                var items = await scopedContext.PartyQueueItems
+                    .AsNoTracking()
+                    .Where(x => x.PartySessionId == session.Id)
+                    .OrderBy(x => x.SortOrder)
+                    .Include(x => x.EnqueuedByUser)
+                    .ToListAsync(cancellationToken)
+                    .ConfigureAwait(false);
+                return (session.QueueRevision, items.AsEnumerable());
+            },
+            cancellationToken,
+            TimeSpan.FromSeconds(30));
+
+        return new OperationResult<(long, IEnumerable<PartyQueueItem>)>
         {
-            return new OperationResult<(long, IEnumerable<PartyQueueItem>)>(cached.Value);
-        }
-
-        var items = await scopedContext.PartyQueueItems
-            .AsNoTracking()
-            .Where(x => x.PartySessionId == session.Id)
-            .OrderBy(x => x.SortOrder)
-            .Include(x => x.EnqueuedByUser)
-            .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
-
-        var result = (session.QueueRevision, items.AsEnumerable());
-        CacheManager.Set(cacheKey, result, TimeSpan.FromSeconds(30));
-
-        return new OperationResult<(long, IEnumerable<PartyQueueItem>)>(result);
+            Data = result
+        };
     }
 
     public async Task<OperationResult<(long NewRevision, IEnumerable<PartyQueueItem> AddedItems)>> AddItemsAsync(
@@ -79,7 +81,8 @@ public sealed class PartyQueueService(
         {
             return new OperationResult<(long, IEnumerable<PartyQueueItem>)>("Session not found.")
             {
-                Type = OperationResponseType.NotFound
+                Type = OperationResponseType.NotFound,
+                Data = (0, Enumerable.Empty<PartyQueueItem>())
             };
         }
 
@@ -88,7 +91,8 @@ public sealed class PartyQueueService(
             return new OperationResult<(long, IEnumerable<PartyQueueItem>)>(
                 $"Concurrent modification detected. Current revision: {session.QueueRevision}")
             {
-                Type = OperationResponseType.Conflict
+                Type = OperationResponseType.Conflict,
+                Data = (0, Enumerable.Empty<PartyQueueItem>())
             };
         }
 
@@ -97,7 +101,8 @@ public sealed class PartyQueueService(
         {
             return new OperationResult<(long, IEnumerable<PartyQueueItem>)>("No song API keys provided.")
             {
-                Type = OperationResponseType.BadRequest
+                Type = OperationResponseType.BadRequest,
+                Data = (0, Enumerable.Empty<PartyQueueItem>())
             };
         }
 
@@ -117,7 +122,8 @@ public sealed class PartyQueueService(
                 EnqueuedByUserId = enqueuedByUserId,
                 EnqueuedAt = enqueuedAt,
                 SortOrder = ++currentMaxSortOrder,
-                Source = source
+                Source = source,
+                CreatedAt = SystemClock.Instance.GetCurrentInstant()
             };
 
             scopedContext.PartyQueueItems.Add(item);
@@ -127,11 +133,15 @@ public sealed class PartyQueueService(
         session.QueueRevision++;
         await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        CacheManager.RemoveByPrefix(string.Format(CacheKeyTemplate, sessionApiKey));
+        var cacheKey = string.Format(QueueCacheKeyTemplate, sessionApiKey);
+        CacheManager.Remove(cacheKey);
 
         Logger.Information("[PartyQueueService] Added {Count} items to session {SessionId}", newItems.Count, session.Id);
 
-        return new OperationResult<(long, IEnumerable<PartyQueueItem>)>((session.QueueRevision, newItems));
+        return new OperationResult<(long, IEnumerable<PartyQueueItem>)>
+        {
+            Data = (session.QueueRevision, newItems)
+        };
     }
 
     public async Task<OperationResult<long>> RemoveItemAsync(
@@ -152,7 +162,8 @@ public sealed class PartyQueueService(
         {
             return new OperationResult<long>("Session not found.")
             {
-                Type = OperationResponseType.NotFound
+                Type = OperationResponseType.NotFound,
+                Data = 0
             };
         }
 
@@ -160,7 +171,8 @@ public sealed class PartyQueueService(
         {
             return new OperationResult<long>($"Concurrent modification detected. Current revision: {session.QueueRevision}")
             {
-                Type = OperationResponseType.Conflict
+                Type = OperationResponseType.Conflict,
+                Data = 0
             };
         }
 
@@ -169,7 +181,8 @@ public sealed class PartyQueueService(
         {
             return new OperationResult<long>("Queue item not found.")
             {
-                Type = OperationResponseType.NotFound
+                Type = OperationResponseType.NotFound,
+                Data = 0
             };
         }
 
@@ -188,11 +201,15 @@ public sealed class PartyQueueService(
         session.QueueRevision++;
         await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        CacheManager.RemoveByPrefix(string.Format(CacheKeyTemplate, sessionApiKey));
+        var cacheKey = string.Format(QueueCacheKeyTemplate, sessionApiKey);
+        CacheManager.Remove(cacheKey);
 
         Logger.Information("[PartyQueueService] Removed item {ItemApiKey} from session {SessionId}", itemApiKey, session.Id);
 
-        return new OperationResult<long>(session.QueueRevision);
+        return new OperationResult<long>
+        {
+            Data = session.QueueRevision
+        };
     }
 
     public async Task<OperationResult<long>> ReorderItemAsync(
@@ -214,7 +231,8 @@ public sealed class PartyQueueService(
         {
             return new OperationResult<long>("Session not found.")
             {
-                Type = OperationResponseType.NotFound
+                Type = OperationResponseType.NotFound,
+                Data = 0
             };
         }
 
@@ -222,7 +240,8 @@ public sealed class PartyQueueService(
         {
             return new OperationResult<long>($"Concurrent modification detected. Current revision: {session.QueueRevision}")
             {
-                Type = OperationResponseType.Conflict
+                Type = OperationResponseType.Conflict,
+                Data = 0
             };
         }
 
@@ -231,14 +250,18 @@ public sealed class PartyQueueService(
         {
             return new OperationResult<long>("Queue item not found.")
             {
-                Type = OperationResponseType.NotFound
+                Type = OperationResponseType.NotFound,
+                Data = 0
             };
         }
 
         var oldIndex = item.SortOrder;
         if (oldIndex == newIndex)
         {
-            return new OperationResult<long>(session.QueueRevision);
+            return new OperationResult<long>
+            {
+                Data = session.QueueRevision
+            };
         }
 
         if (newIndex < 0)
@@ -279,12 +302,16 @@ public sealed class PartyQueueService(
         session.QueueRevision++;
         await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        CacheManager.RemoveByPrefix(string.Format(CacheKeyTemplate, sessionApiKey));
+        var cacheKey = string.Format(QueueCacheKeyTemplate, sessionApiKey);
+        CacheManager.Remove(cacheKey);
 
         Logger.Information("[PartyQueueService] Reordered item {ItemApiKey} to index {NewIndex} in session {SessionId}",
             itemApiKey, newIndex, session.Id);
 
-        return new OperationResult<long>(session.QueueRevision);
+        return new OperationResult<long>
+        {
+            Data = session.QueueRevision
+        };
     }
 
     public async Task<OperationResult<long>> ClearAsync(
@@ -304,7 +331,8 @@ public sealed class PartyQueueService(
         {
             return new OperationResult<long>("Session not found.")
             {
-                Type = OperationResponseType.NotFound
+                Type = OperationResponseType.NotFound,
+                Data = 0
             };
         }
 
@@ -312,7 +340,8 @@ public sealed class PartyQueueService(
         {
             return new OperationResult<long>($"Concurrent modification detected. Current revision: {session.QueueRevision}")
             {
-                Type = OperationResponseType.Conflict
+                Type = OperationResponseType.Conflict,
+                Data = 0
             };
         }
 
@@ -322,11 +351,15 @@ public sealed class PartyQueueService(
         session.QueueRevision++;
         await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        CacheManager.RemoveByPrefix(string.Format(CacheKeyTemplate, sessionApiKey));
+        var cacheKey = string.Format(QueueCacheKeyTemplate, sessionApiKey);
+        CacheManager.Remove(cacheKey);
 
         Logger.Information("[PartyQueueService] Cleared queue for session {SessionId}", session.Id);
 
-        return new OperationResult<long>(session.QueueRevision);
+        return new OperationResult<long>
+        {
+            Data = session.QueueRevision
+        };
     }
 
     public async Task<OperationResult<PartyQueueItem?>> GetNextItemAsync(
@@ -344,7 +377,8 @@ public sealed class PartyQueueService(
         {
             return new OperationResult<PartyQueueItem?>("Session not found.")
             {
-                Type = OperationResponseType.NotFound
+                Type = OperationResponseType.NotFound,
+                Data = null
             };
         }
 
@@ -355,6 +389,9 @@ public sealed class PartyQueueService(
             .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        return new OperationResult<PartyQueueItem?>(nextItem);
+        return new OperationResult<PartyQueueItem?>
+        {
+            Data = nextItem
+        };
     }
 }

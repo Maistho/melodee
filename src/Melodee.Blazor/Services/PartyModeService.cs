@@ -1,6 +1,4 @@
-using Melodee.Blazor.Services;
 using Melodee.Common.Models;
-using System.Net.Http.Json;
 
 namespace Melodee.Blazor.Services;
 
@@ -62,8 +60,8 @@ public class PartyModeService
     public async Task<OperationResult<PartySessionParticipantDto>?> JoinSessionAsync(Guid sessionApiKey, string? joinCode = null)
     {
         try
-        = new { JoinCode = joinCode {
-            var request };
+        {
+            var request = new { JoinCode = joinCode };
             var response = await _httpClient.PostAsJsonAsync($"{BasePath}/{sessionApiKey}/join", request);
             if (response.IsSuccessStatusCode)
             {
@@ -344,6 +342,57 @@ public class PartyModeService
             return null;
         }
     }
+
+    // Endpoint Registry Methods
+
+    private const string EndpointsBasePath = "api/v1/endpoints";
+
+    public async Task<OperationResult<IEnumerable<SessionEndpointDto>>?> GetEndpointsForSessionAsync(Guid sessionApiKey)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"{EndpointsBasePath}/for-session/{sessionApiKey}");
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadFromJsonAsync<OperationResult<IEnumerable<SessionEndpointDto>>>();
+            }
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting endpoints for session {ApiKey}", sessionApiKey);
+            return null;
+        }
+    }
+
+    public async Task<bool> AttachEndpointAsync(Guid endpointApiKey, Guid sessionApiKey)
+    {
+        try
+        {
+            var request = new { SessionApiKey = sessionApiKey };
+            var response = await _httpClient.PostAsJsonAsync($"{EndpointsBasePath}/{endpointApiKey}/attach", request);
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error attaching endpoint {EndpointApiKey} to session {SessionApiKey}", endpointApiKey, sessionApiKey);
+            return false;
+        }
+    }
+
+    public async Task<bool> DetachEndpointAsync(Guid endpointApiKey)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsync($"{EndpointsBasePath}/{endpointApiKey}/detach", null);
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error detaching endpoint {EndpointApiKey}", endpointApiKey);
+            return false;
+        }
+    }
 }
 
 // DTO classes (simplified versions matching API responses)
@@ -353,3 +402,4 @@ public record QueueResponseDto(long Revision, IEnumerable<PartyQueueItemDto> Ite
 public record PartyQueueItemDto(Guid ApiKey, Guid SongApiKey, int EnqueuedByUserId, string EnqueuedAt, int SortOrder, string? Source);
 public record AddItemsResponseDto(long NewRevision, IEnumerable<PartyQueueItemDto> AddedItems);
 public record PartyPlaybackStateDto(Guid? CurrentQueueItemApiKey, double PositionSeconds, bool IsPlaying, double? Volume);
+public record SessionEndpointDto(Guid ApiKey, string Name, string Type, bool IsShared, string? Room, string? LastSeenAt, string? CapabilitiesJson, bool IsOwner, bool IsActive, bool IsStale);

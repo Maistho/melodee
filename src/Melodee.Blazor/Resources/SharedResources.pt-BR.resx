@@ -5261,6 +5261,87 @@
   <data name="PartyMode.GuestSkipAllowed" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Guest skip allowed</value>
   </data>
+  <data name="PartyMode.Endpoint.Title" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Playback Device</value>
+  </data>
+  <data name="PartyMode.Endpoint.NoEndpoint" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No playback device attached</value>
+  </data>
+  <data name="PartyMode.Endpoint.Attach" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Attach Device</value>
+  </data>
+  <data name="PartyMode.Endpoint.Detach" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Detach Device</value>
+  </data>
+  <data name="PartyMode.Endpoint.Attaching" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Attaching device...</value>
+  </data>
+  <data name="PartyMode.Endpoint.Detaching" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Detaching device...</value>
+  </data>
+  <data name="PartyMode.Endpoint.AttachSuccess" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Device attached successfully</value>
+  </data>
+  <data name="PartyMode.Endpoint.DetachSuccess" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Device detached</value>
+  </data>
+  <data name="PartyMode.Endpoint.AttachError" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to attach device</value>
+  </data>
+  <data name="PartyMode.Endpoint.DetachError" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to detach device</value>
+  </data>
+  <data name="PartyMode.Endpoint.Offline" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Offline</value>
+  </data>
+  <data name="PartyMode.Endpoint.Online" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Online</value>
+  </data>
+  <data name="PartyMode.Endpoint.Stale" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Connection unstable</value>
+  </data>
+  <data name="PartyMode.Endpoint.LastSeen" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Last seen</value>
+  </data>
+  <data name="PartyMode.Endpoint.Available" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Available Devices</value>
+  </data>
+  <data name="PartyMode.Endpoint.Current" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Current Device</value>
+  </data>
+  <data name="PartyMode.Endpoint.Capabilities" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Capabilities</value>
+  </data>
+  <data name="PartyMode.Endpoint.Capability.Play" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Play</value>
+  </data>
+  <data name="PartyMode.Endpoint.Capability.Pause" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Pause</value>
+  </data>
+  <data name="PartyMode.Endpoint.Capability.Skip" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Skip</value>
+  </data>
+  <data name="PartyMode.Endpoint.Capability.Seek" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Seek</value>
+  </data>
+  <data name="PartyMode.Endpoint.Capability.Volume" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Volume</value>
+  </data>
+  <data name="PartyMode.Endpoint.Capability.Position" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Position</value>
+  </data>
+  <data name="PartyMode.Endpoint.OfflineWarning" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Playback device is offline. Music may not play.</value>
+  </data>
+  <data name="PartyMode.Endpoint.SelectDevice" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Select a playback device</value>
+  </data>
+  <data name="PartyMode.Endpoint.WebPlayer" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Web Player</value>
+  </data>
+  <data name="PartyMode.Endpoint.SystemBackend" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] System Audio</value>
+  </data>
   <data name="Jukebox.Disabled" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Jukebox is disabled</value>
   </data>

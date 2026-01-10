@@ -54,6 +54,12 @@ public class PartySession : DataModelBase
     [Required]
     public bool IsQueueLocked { get; set; } = false;
 
+    /// <summary>
+    /// Whether the active endpoint is considered offline/stale.
+    /// </summary>
+    [Required]
+    public bool IsEndpointOffline { get; set; } = false;
+
     public ICollection<PartySessionParticipant> Participants { get; set; } = new List<PartySessionParticipant>();
 
     public ICollection<PartyQueueItem> QueueItems { get; set; } = new List<PartyQueueItem>();

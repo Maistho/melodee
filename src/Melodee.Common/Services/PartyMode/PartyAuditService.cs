@@ -54,7 +54,10 @@ public sealed class PartyAuditService(
         logger.Debug("Logged audit event {EventType} for session {SessionId} by user {UserId}",
             eventType, partySessionId, userId);
 
-        return new OperationResult<PartyAuditEvent>(auditEvent);
+        return new OperationResult<PartyAuditEvent>
+        {
+            Data = auditEvent
+        };
     }
 
     public async Task<OperationResult<IEnumerable<PartyAuditEvent>>> GetSessionAuditLogAsync(
@@ -73,11 +76,12 @@ public sealed class PartyAuditService(
         {
             return new OperationResult<IEnumerable<PartyAuditEvent>>("Session not found.")
             {
-                Type = OperationResponseType.NotFound
+                Type = OperationResponseType.NotFound,
+                Data = []
             };
         }
 
-        var query = scopedContext.PartyAuditEvents
+        IQueryable<PartyAuditEvent> query = scopedContext.PartyAuditEvents
             .AsNoTracking()
             .Where(x => x.PartySessionId == session.Id)
             .OrderByDescending(x => x.CreatedAt)
@@ -85,11 +89,14 @@ public sealed class PartyAuditService(
 
         if (take.HasValue)
         {
-            query = query.Take(take.Value) as IQueryable<PartyAuditEvent>;
+            query = query.Take(take.Value);
         }
 
         var events = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
 
-        return new OperationResult<IEnumerable<PartyAuditEvent>>(events);
+        return new OperationResult<IEnumerable<PartyAuditEvent>>
+        {
+            Data = events
+        };
     }
 }

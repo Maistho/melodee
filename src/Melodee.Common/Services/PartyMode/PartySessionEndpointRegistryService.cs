@@ -1,4 +1,3 @@
-using Melodee.Common.Configuration;
 using Melodee.Common.Data;
 using Melodee.Common.Data.Models;
 using Melodee.Common.Enums.PartyMode;
@@ -16,8 +15,7 @@ namespace Melodee.Common.Services;
 public sealed class PartySessionEndpointRegistryService(
     ILogger logger,
     ICacheManager cacheManager,
-    IDbContextFactory<MelodeeDbContext> contextFactory,
-    IMelodeeConfigurationFactory configurationFactory)
+    IDbContextFactory<MelodeeDbContext> contextFactory)
     : ServiceBase(logger, cacheManager, contextFactory), IPartySessionEndpointRegistryService
 {
     private const string CacheKeyTemplate = "urn:party:endpoint:{0}";
@@ -38,16 +36,17 @@ public sealed class PartySessionEndpointRegistryService(
             OwnerUserId = ownerUserId,
             CapabilitiesJson = capabilitiesJson,
             IsShared = type == PartySessionEndpointType.WebPlayer,
-            LastSeenAt = SystemClock.Instance.GetCurrentInstant()
+            LastSeenAt = SystemClock.Instance.GetCurrentInstant(),
+            CreatedAt = SystemClock.Instance.GetCurrentInstant()
         };
 
         scopedContext.PartySessionEndpoints.Add(endpoint);
         await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        Logger.Information("[PartySessionEndpointRegistryService] Registered endpoint {EndpointName} (ID: {EndpointId}) of type {EndpointType}",
+        logger.Information("[PartySessionEndpointRegistryService] Registered endpoint {EndpointName} (ID: {EndpointId}) of type {EndpointType}",
             name, endpoint.Id, type);
 
-        return new OperationResult<PartySessionEndpoint>(endpoint);
+        return new OperationResult<PartySessionEndpoint> { Data = endpoint };
     }
 
     public async Task<OperationResult<PartySessionEndpoint?>> GetAsync(
@@ -57,22 +56,20 @@ public sealed class PartySessionEndpointRegistryService(
         await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
 
         var cacheKey = string.Format(CacheKeyTemplate, endpointApiKey);
-        if (CacheManager.TryGet(cacheKey, out PartySessionEndpoint? cached))
-        {
-            return new OperationResult<PartySessionEndpoint?>(cached);
-        }
+        var cached = await cacheManager.GetAsync<PartySessionEndpoint?>(
+            cacheKey,
+            async () =>
+            {
+                var endpoint = await scopedContext.PartySessionEndpoints
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.ApiKey == endpointApiKey, cancellationToken)
+                    .ConfigureAwait(false);
+                return endpoint;
+            },
+            cancellationToken,
+            TimeSpan.FromMinutes(5));
 
-        var endpoint = await scopedContext.PartySessionEndpoints
-            .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.ApiKey == endpointApiKey, cancellationToken)
-            .ConfigureAwait(false);
-
-        if (endpoint != null)
-        {
-            CacheManager.Set(cacheKey, endpoint, TimeSpan.FromMinutes(5));
-        }
-
-        return new OperationResult<PartySessionEndpoint?>(endpoint);
+        return new OperationResult<PartySessionEndpoint?> { Data = cached };
     }
 
     public async Task<OperationResult<bool>> UpdateLastSeenAsync(
@@ -89,16 +86,18 @@ public sealed class PartySessionEndpointRegistryService(
         {
             return new OperationResult<bool>("Endpoint not found.")
             {
-                Type = OperationResponseType.NotFound
+                Type = OperationResponseType.NotFound,
+                Data = false
             };
         }
 
         endpoint.LastSeenAt = SystemClock.Instance.GetCurrentInstant();
         await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        CacheManager.RemoveByPrefix(string.Format(CacheKeyTemplate, endpointApiKey));
+        var cacheKey = string.Format(CacheKeyTemplate, endpointApiKey);
+        cacheManager.Remove(cacheKey);
 
-        return new OperationResult<bool>(true);
+        return new OperationResult<bool> { Data = true };
     }
 
     public async Task<OperationResult<bool>> AttachToSessionAsync(
@@ -116,7 +115,8 @@ public sealed class PartySessionEndpointRegistryService(
         {
             return new OperationResult<bool>("Endpoint not found.")
             {
-                Type = OperationResponseType.NotFound
+                Type = OperationResponseType.NotFound,
+                Data = false
             };
         }
 
@@ -128,7 +128,8 @@ public sealed class PartySessionEndpointRegistryService(
         {
             return new OperationResult<bool>("Session not found.")
             {
-                Type = OperationResponseType.NotFound
+                Type = OperationResponseType.NotFound,
+                Data = false
             };
         }
 
@@ -136,22 +137,23 @@ public sealed class PartySessionEndpointRegistryService(
         {
             return new OperationResult<bool>("Cannot attach to ended session.")
             {
-                Type = OperationResponseType.BadRequest
+                Type = OperationResponseType.ValidationFailure,
+                Data = false
             };
         }
 
-        session.ActiveEndpointId = endpoint.Id;
+        session.ActiveEndpointId = endpoint.ApiKey;
         endpoint.LastSeenAt = SystemClock.Instance.GetCurrentInstant();
 
         await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        CacheManager.RemoveByPrefix(string.Format(CacheKeyTemplate, endpointApiKey));
-        CacheManager.RemoveByPrefix($"urn:party:session:{sessionApiKey}");
+        cacheManager.Remove(string.Format(CacheKeyTemplate, endpointApiKey));
+        cacheManager.Remove($"urn:party:session:{sessionApiKey}");
 
-        Logger.Information("[PartySessionEndpointRegistryService] Attached endpoint {EndpointApiKey} to session {SessionApiKey}",
+        logger.Information("[PartySessionEndpointRegistryService] Attached endpoint {EndpointApiKey} to session {SessionApiKey}",
             endpointApiKey, sessionApiKey);
 
-        return new OperationResult<bool>(true);
+        return new OperationResult<bool> { Data = true };
     }
 
     public async Task<OperationResult<bool>> DetachAsync(
@@ -168,27 +170,27 @@ public sealed class PartySessionEndpointRegistryService(
         {
             return new OperationResult<bool>("Endpoint not found.")
             {
-                Type = OperationResponseType.NotFound
+                Type = OperationResponseType.NotFound,
+                Data = false
             };
         }
 
-        await using var scopedContext2 = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
-        var session = await scopedContext2.PartySessions
-            .FirstOrDefaultAsync(x => x.ActiveEndpointId == endpoint.Id, cancellationToken)
+        var session = await scopedContext.PartySessions
+            .FirstOrDefaultAsync(x => x.ActiveEndpointId == endpoint.ApiKey, cancellationToken)
             .ConfigureAwait(false);
 
         if (session != null)
         {
             session.ActiveEndpointId = null;
-            await scopedContext2.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            CacheManager.RemoveByPrefix($"urn:party:session:{session.ApiKey}");
+            await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            cacheManager.Remove($"urn:party:session:{session.ApiKey}");
         }
 
-        CacheManager.RemoveByPrefix(string.Format(CacheKeyTemplate, endpointApiKey));
+        cacheManager.Remove(string.Format(CacheKeyTemplate, endpointApiKey));
 
-        Logger.Information("[PartySessionEndpointRegistryService] Detached endpoint {EndpointApiKey}", endpointApiKey);
+        logger.Information("[PartySessionEndpointRegistryService] Detached endpoint {EndpointApiKey}", endpointApiKey);
 
-        return new OperationResult<bool>(true);
+        return new OperationResult<bool> { Data = true };
     }
 
     public async Task<OperationResult<IEnumerable<PartySessionEndpoint>>> GetStaleEndpointsAsync(
@@ -205,7 +207,7 @@ public sealed class PartySessionEndpointRegistryService(
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        return new OperationResult<IEnumerable<PartySessionEndpoint>>(staleEndpoints);
+        return new OperationResult<IEnumerable<PartySessionEndpoint>> { Data = staleEndpoints };
     }
 
     public async Task<OperationResult<IEnumerable<PartySessionEndpoint>>> GetEndpointsForUserAsync(
@@ -220,7 +222,7 @@ public sealed class PartySessionEndpointRegistryService(
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        return new OperationResult<IEnumerable<PartySessionEndpoint>>(endpoints);
+        return new OperationResult<IEnumerable<PartySessionEndpoint>> { Data = endpoints };
     }
 
     public async Task<OperationResult<PartySessionEndpoint>> UpdateCapabilitiesAsync(
@@ -238,17 +240,18 @@ public sealed class PartySessionEndpointRegistryService(
         {
             return new OperationResult<PartySessionEndpoint>("Endpoint not found.")
             {
-                Type = OperationResponseType.NotFound
+                Type = OperationResponseType.NotFound,
+                Data = null!
             };
         }
 
         endpoint.CapabilitiesJson = capabilitiesJson;
         await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        CacheManager.RemoveByPrefix(string.Format(CacheKeyTemplate, endpointApiKey));
+        cacheManager.Remove(string.Format(CacheKeyTemplate, endpointApiKey));
 
-        Logger.Information("[PartySessionEndpointRegistryService] Updated capabilities for endpoint {EndpointApiKey}", endpointApiKey);
+        logger.Information("[PartySessionEndpointRegistryService] Updated capabilities for endpoint {EndpointApiKey}", endpointApiKey);
 
-        return new OperationResult<PartySessionEndpoint>(endpoint);
+        return new OperationResult<PartySessionEndpoint> { Data = endpoint };
     }
 }

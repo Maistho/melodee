@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using Melodee.Common.Configuration;
+using Melodee.Common.Constants;
 using Melodee.Common.Data;
 using Melodee.Common.Data.Models;
 using Melodee.Common.Enums.PartyMode;
@@ -9,7 +10,6 @@ using Melodee.Common.Services.Caching;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using Serilog;
-using SerilogTimings;
 
 namespace Melodee.Common.Services;
 
@@ -23,7 +23,7 @@ public sealed class PartySessionService(
     IMelodeeConfigurationFactory configurationFactory)
     : ServiceBase(logger, cacheManager, contextFactory), IPartySessionService
 {
-    private const string CacheKeyTemplate = "urn:party:session:{0}";
+    private const string SessionCacheKeyTemplate = "urn:party:session:{0}";
 
     public async Task<OperationResult<PartySession>> CreateAsync(
         string name,
@@ -32,7 +32,7 @@ public sealed class PartySessionService(
         CancellationToken cancellationToken = default)
     {
         var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken);
-        if (!configuration.GetValue<bool>(PartyModeOptions.SectionName, x => x.Enabled))
+        if (!configuration.GetValue<bool>(SettingRegistry.PartyModeEnabled))
         {
             return new OperationResult<PartySession>("Party mode is not enabled.")
             {
@@ -48,7 +48,8 @@ public sealed class PartySessionService(
         {
             return new OperationResult<PartySession>($"User with ID {ownerUserId} not found.")
             {
-                Type = OperationResponseType.NotFound
+                Type = OperationResponseType.NotFound,
+                Data = null!
             };
         }
 
@@ -65,7 +66,8 @@ public sealed class PartySessionService(
             JoinCodeHash = joinCodeHash,
             Status = PartySessionStatus.Active,
             QueueRevision = 1,
-            PlaybackRevision = 1
+            PlaybackRevision = 1,
+            CreatedAt = SystemClock.Instance.GetCurrentInstant()
         };
 
         var participant = new PartySessionParticipant
@@ -83,7 +85,8 @@ public sealed class PartySessionService(
         {
             PartySessionId = session.Id,
             PositionSeconds = 0,
-            IsPlaying = false
+            IsPlaying = false,
+            CreatedAt = SystemClock.Instance.GetCurrentInstant()
         };
         scopedContext.PartyPlaybackStates.Add(playbackState);
 
@@ -92,7 +95,10 @@ public sealed class PartySessionService(
         Logger.Information("[PartySessionService] Created party session {SessionName} (ID: {SessionId}) for user {UserId}",
             name, session.Id, ownerUserId);
 
-        return new OperationResult<PartySession>(session);
+        return new OperationResult<PartySession>
+        {
+            Data = session
+        };
     }
 
     public async Task<OperationResult<PartySession?>> GetAsync(
@@ -101,23 +107,24 @@ public sealed class PartySessionService(
     {
         await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
 
-        var cacheKey = string.Format(CacheKeyTemplate, sessionApiKey);
-        if (CacheManager.TryGet(cacheKey, out PartySession? cached))
+        var cacheKey = string.Format(SessionCacheKeyTemplate, sessionApiKey);
+        var session = await CacheManager.GetAsync(
+            cacheKey,
+            async () =>
+            {
+                var s = await scopedContext.PartySessions
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.ApiKey == sessionApiKey, cancellationToken)
+                    .ConfigureAwait(false);
+                return s;
+            },
+            cancellationToken,
+            TimeSpan.FromMinutes(5));
+
+        return new OperationResult<PartySession?>
         {
-            return new OperationResult<PartySession?>(cached);
-        }
-
-        var session = await scopedContext.PartySessions
-            .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.ApiKey == sessionApiKey, cancellationToken)
-            .ConfigureAwait(false);
-
-        if (session != null)
-        {
-            CacheManager.Set(cacheKey, session, TimeSpan.FromMinutes(5));
-        }
-
-        return new OperationResult<PartySession?>(session);
+            Data = session
+        };
     }
 
     public async Task<OperationResult<PartySessionParticipant>> JoinAsync(
@@ -137,7 +144,8 @@ public sealed class PartySessionService(
         {
             return new OperationResult<PartySessionParticipant>("Session not found.")
             {
-                Type = OperationResponseType.NotFound
+                Type = OperationResponseType.NotFound,
+                Data = null!
             };
         }
 
@@ -145,7 +153,8 @@ public sealed class PartySessionService(
         {
             return new OperationResult<PartySessionParticipant>("Session has ended.")
             {
-                Type = OperationResponseType.BadRequest
+                Type = OperationResponseType.BadRequest,
+                Data = null!
             };
         }
 
@@ -154,7 +163,8 @@ public sealed class PartySessionService(
         {
             return new OperationResult<PartySessionParticipant>($"User with ID {userId} not found.")
             {
-                Type = OperationResponseType.NotFound
+                Type = OperationResponseType.NotFound,
+                Data = null!
             };
         }
 
@@ -164,7 +174,8 @@ public sealed class PartySessionService(
             {
                 return new OperationResult<PartySessionParticipant>("Invalid join code.")
                 {
-                    Type = OperationResponseType.Unauthorized
+                    Type = OperationResponseType.Unauthorized,
+                    Data = null!
                 };
             }
         }
@@ -172,7 +183,10 @@ public sealed class PartySessionService(
         var existingParticipant = session.Participants.FirstOrDefault(p => p.UserId == userId);
         if (existingParticipant != null)
         {
-            return new OperationResult<PartySessionParticipant>(existingParticipant);
+            return new OperationResult<PartySessionParticipant>
+            {
+                Data = existingParticipant
+            };
         }
 
         var participant = new PartySessionParticipant
@@ -186,11 +200,15 @@ public sealed class PartySessionService(
         session.Participants.Add(participant);
         await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        CacheManager.RemoveByPrefix(string.Format(CacheKeyTemplate, sessionApiKey));
+        var cacheKey = string.Format(SessionCacheKeyTemplate, sessionApiKey);
+        CacheManager.Remove(cacheKey);
 
         Logger.Information("[PartySessionService] User {UserId} joined session {SessionId}", userId, session.Id);
 
-        return new OperationResult<PartySessionParticipant>(participant);
+        return new OperationResult<PartySessionParticipant>
+        {
+            Data = participant
+        };
     }
 
     public async Task<OperationResult<bool>> LeaveAsync(
@@ -209,7 +227,8 @@ public sealed class PartySessionService(
         {
             return new OperationResult<bool>("Session not found.")
             {
-                Type = OperationResponseType.NotFound
+                Type = OperationResponseType.NotFound,
+                Data = false
             };
         }
 
@@ -218,7 +237,8 @@ public sealed class PartySessionService(
         {
             return new OperationResult<bool>("User is not a participant of this session.")
             {
-                Type = OperationResponseType.BadRequest
+                Type = OperationResponseType.BadRequest,
+                Data = false
             };
         }
 
@@ -226,18 +246,23 @@ public sealed class PartySessionService(
         {
             return new OperationResult<bool>("Owner cannot leave. Use EndSession instead.")
             {
-                Type = OperationResponseType.BadRequest
+                Type = OperationResponseType.BadRequest,
+                Data = false
             };
         }
 
         session.Participants.Remove(participant);
         await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        CacheManager.RemoveByPrefix(string.Format(CacheKeyTemplate, sessionApiKey));
+        var cacheKey = string.Format(SessionCacheKeyTemplate, sessionApiKey);
+        CacheManager.Remove(cacheKey);
 
         Logger.Information("[PartySessionService] User {UserId} left session {SessionId}", userId, session.Id);
 
-        return new OperationResult<bool>(true);
+        return new OperationResult<bool>
+        {
+            Data = true
+        };
     }
 
     public async Task<OperationResult<bool>> EndAsync(
@@ -256,7 +281,8 @@ public sealed class PartySessionService(
         {
             return new OperationResult<bool>("Session not found.")
             {
-                Type = OperationResponseType.NotFound
+                Type = OperationResponseType.NotFound,
+                Data = false
             };
         }
 
@@ -264,7 +290,8 @@ public sealed class PartySessionService(
         {
             return new OperationResult<bool>("Only the session owner can end the session.")
             {
-                Type = OperationResponseType.Forbidden
+                Type = OperationResponseType.Forbidden,
+                Data = false
             };
         }
 
@@ -272,18 +299,23 @@ public sealed class PartySessionService(
         {
             return new OperationResult<bool>("Session is already ended.")
             {
-                Type = OperationResponseType.BadRequest
+                Type = OperationResponseType.BadRequest,
+                Data = false
             };
         }
 
         session.Status = PartySessionStatus.Ended;
         await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        CacheManager.RemoveByPrefix(string.Format(CacheKeyTemplate, sessionApiKey));
+        var cacheKey = string.Format(SessionCacheKeyTemplate, sessionApiKey);
+        CacheManager.Remove(cacheKey);
 
         Logger.Information("[PartySessionService] Session {SessionId} ended by user {UserId}", session.Id, requestingUserId);
 
-        return new OperationResult<bool>(true);
+        return new OperationResult<bool>
+        {
+            Data = true
+        };
     }
 
     public async Task<OperationResult<IEnumerable<PartySessionParticipant>>> GetParticipantsAsync(
@@ -301,7 +333,8 @@ public sealed class PartySessionService(
         {
             return new OperationResult<IEnumerable<PartySessionParticipant>>("Session not found.")
             {
-                Type = OperationResponseType.NotFound
+                Type = OperationResponseType.NotFound,
+                Data = []
             };
         }
 
@@ -312,7 +345,10 @@ public sealed class PartySessionService(
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        return new OperationResult<IEnumerable<PartySessionParticipant>>(participants);
+        return new OperationResult<IEnumerable<PartySessionParticipant>>
+        {
+            Data = participants
+        };
     }
 
     public async Task<OperationResult<PartySessionParticipant?>> GetParticipantAsync(
@@ -331,7 +367,8 @@ public sealed class PartySessionService(
         {
             return new OperationResult<PartySessionParticipant?>("Session not found.")
             {
-                Type = OperationResponseType.NotFound
+                Type = OperationResponseType.NotFound,
+                Data = null
             };
         }
 
@@ -340,7 +377,10 @@ public sealed class PartySessionService(
             .FirstOrDefaultAsync(p => p.PartySessionId == session.Id && p.UserId == userId, cancellationToken)
             .ConfigureAwait(false);
 
-        return new OperationResult<PartySessionParticipant?>(participant);
+        return new OperationResult<PartySessionParticipant?>
+        {
+            Data = participant
+        };
     }
 
     public async Task<OperationResult<PartyRole?>> GetUserRoleAsync(
@@ -354,11 +394,15 @@ public sealed class PartySessionService(
         {
             return new OperationResult<PartyRole?>(participantResult.Errors?.FirstOrDefault()?.Message ?? "Error")
             {
-                Type = participantResult.Type
+                Type = participantResult.Type,
+                Data = null
             };
         }
 
-        return new OperationResult<PartyRole?>(participantResult.Data?.Role);
+        return new OperationResult<PartyRole?>
+        {
+            Data = participantResult.Data?.Role
+        };
     }
 
     private static string HashJoinCode(string joinCode)

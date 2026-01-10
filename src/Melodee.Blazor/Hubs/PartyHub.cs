@@ -20,7 +20,7 @@ public class PartyHub : Hub
     public async Task JoinPartySession(Guid sessionApiKey)
     {
         await Groups.AddToGroupAsync(Context.ConnectionId, $"party:{sessionApiKey}");
-        _logger.Information("Client {ConnectionId} joined party session {SessionApiKey}", Context.ConnectionId, sessionApiKey);
+        _logger.LogInformation("Client {ConnectionId} joined party session {SessionApiKey}", Context.ConnectionId, sessionApiKey);
     }
 
     /// <summary>
@@ -29,7 +29,7 @@ public class PartyHub : Hub
     public async Task LeavePartySession(Guid sessionApiKey)
     {
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"party:{sessionApiKey}");
-        _logger.Information("Client {ConnectionId} left party session {SessionApiKey}", Context.ConnectionId, sessionApiKey);
+        _logger.LogInformation("Client {ConnectionId} left party session {SessionApiKey}", Context.ConnectionId, sessionApiKey);
     }
 
     /// <summary>
@@ -37,7 +37,7 @@ public class PartyHub : Hub
     /// </summary>
     public override async Task OnConnectedAsync()
     {
-        _logger.Information("Client connected: {ConnectionId}", Context.ConnectionId);
+        _logger.LogInformation("Client connected: {ConnectionId}", Context.ConnectionId);
         await base.OnConnectedAsync();
     }
 
@@ -46,7 +46,7 @@ public class PartyHub : Hub
     /// </summary>
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        _logger.Information("Client disconnected: {ConnectionId}", Context.ConnectionId);
+        _logger.LogInformation("Client disconnected: {ConnectionId}", Context.ConnectionId);
         await base.OnDisconnectedAsync(exception);
     }
 }

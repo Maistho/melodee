@@ -1,5 +1,5 @@
 using Melodee.Common.Services.Caching;
-using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Logging;
 
 namespace Melodee.Common.Services;
 
@@ -38,7 +38,7 @@ public sealed class SkipCooldownService(
 
         if (!canSkip)
         {
-            logger.Debug("Skip blocked for user {UserId} in session {SessionId}. {TimeRemaining} seconds remaining.",
+            logger.LogDebug("Skip blocked for user {UserId} in session {SessionId}. {TimeRemaining} seconds remaining.",
                 userId, sessionId, (SkipCooldown - timeSinceLastSkip).TotalSeconds);
         }
 
@@ -54,6 +54,6 @@ public sealed class SkipCooldownService(
             cancellationToken,
             SkipCooldown);
 
-        logger.Debug("Skip recorded for user {UserId} in session {SessionId}", userId, sessionId);
+        logger.LogDebug("Skip recorded for user {UserId} in session {SessionId}", userId, sessionId);
     }
 }

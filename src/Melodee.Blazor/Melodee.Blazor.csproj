@@ -88,6 +88,12 @@
 
   <ItemGroup>
     <Compile Remove="Logs\**" />
+    <Compile Remove="Controllers\Melodee\PartyEndpointsController.cs" />
+    <Compile Remove="Controllers\Melodee\PartyModerationController.cs" />
+    <Compile Remove="Controllers\Melodee\PartyPlaybackController.cs" />
+    <Compile Remove="Controllers\Melodee\PartyQueueController.cs" />
+    <Compile Remove="Controllers\Melodee\PartySessionsController.cs" />
+    <Compile Remove="Controllers\Melodee\QueueController.cs" />
   </ItemGroup>
 
   <ItemGroup>

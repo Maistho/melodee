@@ -1,7 +1,10 @@
 @using Melodee.Blazor.Services
+@using Melodee.Common.Models.PartyMode
 @using System.Timers
+@using Microsoft.AspNetCore.Components.Web
 @inject PartyModeService PartyModeService
 @inject ILogger<PartyPlayer> Logger
+@inject IStringLocalizer<SharedResources> Localizer
 @implements IAsyncDisposable
 
 <div class="party-player-container">
@@ -45,19 +48,19 @@
             </div>
 
             <div class="controls">
-                <button class="control-btn" @onclick="PreviousTrack" disabled="@(!HasPreviousTrack)">
+                <button class="control-btn" @onclick="PreviousTrack" disabled="@(!HasPreviousTrack || !CanControl)">
                     <span class="icon">⏮</span>
                 </button>
-                <button class="control-btn" @onclick="RewindTenSec">
+                <button class="control-btn" @onclick="RewindTenSec" disabled="@(!CanSeek)">
                     <span class="icon">⏪</span>
                 </button>
-                <button class="control-btn play-pause-btn" @onclick="TogglePlayPause">
+                <button class="control-btn play-pause-btn" @onclick="TogglePlayPause" disabled="@(!CanPlayPause)">
                     <span class="icon">@(PlaybackState.IsPlaying ? "⏸" : "▶")</span>
                 </button>
-                <button class="control-btn" @onclick="SkipTrack" disabled="@(!HasNextTrack)">
+                <button class="control-btn" @onclick="SkipTrack" disabled="@(!HasNextTrack || !CanSkip)">
                     <span class="icon">⏭</span>
                 </button>
-                <button class="control-btn" @onclick="ForwardTenSec">
+                <button class="control-btn" @onclick="ForwardTenSec" disabled="@(!CanSeek)">
                     <span class="icon">⏩</span>
                 </button>
             </div>
@@ -68,6 +71,7 @@
                        min="0" max="1" step="0.01" 
                        value="@Volume" 
                        @oninput="OnVolumeChange" 
+                       disabled="@(!CanSetVolume)"
                        class="volume-slider" />
                 <span class="volume-value">@((int)(Volume * 100))%</span>
             </div>
@@ -84,6 +88,7 @@
 @code {
     [Parameter] public Guid SessionApiKey { get; set; }
     [Parameter] public EventCallback<TrackInfo> OnTrackChanged { get; set; }
+    [Parameter] public PartySessionEndpointCapabilities? Capabilities { get; set; }
     
     private PartyPlaybackStateDto? PlaybackState { get; set; }
     private double CurrentPosition { get; set; }
@@ -95,6 +100,12 @@
     private TrackInfo? CurrentTrackInfo { get; set; }
     private Timer? PollingTimer { get; set; }
     private Timer? ProgressTimer { get; set; }
+    
+    private bool CanControl => Capabilities?.CanControl(PlaybackControlType.Play) ?? true;
+    private bool CanPlayPause => Capabilities?.CanPause == true || Capabilities?.CanPlay == true;
+    private bool CanSkip => Capabilities?.CanSkip ?? true;
+    private bool CanSeek => Capabilities?.CanSeek ?? true;
+    private bool CanSetVolume => Capabilities?.CanSetVolume ?? true;
     
     private double ProgressPercentage => Duration > 0 ? (CurrentPosition / Duration) * 100 : 0;
 
@@ -167,14 +178,13 @@
     {
         // In a real implementation, this would fetch track details from the API
         // For now, we'll create a placeholder
-        CurrentTrackInfo = new TrackInfo
-        {
-            ApiKey = queueItemApiKey,
-            Title = "Unknown Track",
-            Artist = "Unknown Artist",
-            Album = "Unknown Album",
-            ImageUrl = "/images/default-album.png"
-        };
+        CurrentTrackInfo = new TrackInfo(
+            ApiKey: queueItemApiKey,
+            Title: "Unknown Track",
+            Artist: "Unknown Artist",
+            Album: "Unknown Album",
+            ImageUrl: "/images/default-album.png"
+        );
         
         await OnTrackChanged.InvokeAsync(CurrentTrackInfo);
     }
@@ -182,14 +192,17 @@
     private async Task TogglePlayPause()
     {
         if (PlaybackState == null) return;
+        if (!CanPlayPause) return;
 
         OperationResult<PartyPlaybackStateDto>? result;
         if (PlaybackState.IsPlaying)
         {
+            if (Capabilities?.CanPause != true) return;
             result = await PartyModeService.PauseAsync(SessionApiKey, CurrentPosition);
         }
         else
         {
+            if (Capabilities?.CanPlay != true) return;
             result = await PartyModeService.PlayAsync(SessionApiKey, CurrentPosition);
         }
 
@@ -202,6 +215,7 @@
 
     private async Task SkipTrack()
     {
+        if (!CanSkip) return;
         var result = await PartyModeService.SkipAsync(SessionApiKey, 1);
         if (result?.IsSuccess == true && result.Data != null)
         {
@@ -213,7 +227,7 @@
 
     private async Task PreviousTrack()
     {
-        // Previous track logic (restart current or go to previous)
+        if (!CanControl) return;
         if (CurrentPosition > 3)
         {
             await SeekToPosition(0);
@@ -226,24 +240,27 @@
 
     private async Task RewindTenSec()
     {
+        if (!CanSeek) return;
         var newPosition = Math.Max(0, CurrentPosition - 10);
         await SeekToPosition(newPosition);
     }
 
     private async Task ForwardTenSec()
     {
+        if (!CanSeek) return;
         var newPosition = Math.Min(Duration, CurrentPosition + 10);
         await SeekToPosition(newPosition);
     }
 
     private async Task SeekToPosition(MouseEventArgs args)
     {
-        // This would calculate position from click - simplified for now
+        if (!CanSeek) return;
         await SeekToPosition(CurrentPosition);
     }
 
     private async Task SeekToPosition(double position)
     {
+        if (!CanSeek) return;
         var result = await PartyModeService.SeekAsync(SessionApiKey, position, 1);
         if (result?.IsSuccess == true && result.Data != null)
         {
@@ -255,6 +272,7 @@
 
     private async Task OnVolumeChange(ChangeEventArgs args)
     {
+        if (!CanSetVolume) return;
         if (double.TryParse(args.Value?.ToString(), out var newVolume))
         {
             Volume = newVolume;

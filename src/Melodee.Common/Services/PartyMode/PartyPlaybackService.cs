@@ -1,4 +1,3 @@
-using Melodee.Common.Configuration;
 using Melodee.Common.Data;
 using Melodee.Common.Data.Models;
 using Melodee.Common.Models;
@@ -15,11 +14,10 @@ namespace Melodee.Common.Services;
 public sealed class PartyPlaybackService(
     ILogger logger,
     ICacheManager cacheManager,
-    IDbContextFactory<MelodeeDbContext> contextFactory,
-    IMelodeeConfigurationFactory configurationFactory)
+    IDbContextFactory<MelodeeDbContext> contextFactory)
     : ServiceBase(logger, cacheManager, contextFactory), IPartyPlaybackService
 {
-    private const string CacheKeyTemplate = "urn:party:playback:{0}";
+    private const string PlaybackStateCacheKeyTemplate = "urn:party:playback:{0}";
 
     public async Task<OperationResult<PartyPlaybackState?>> GetPlaybackStateAsync(
         Guid sessionApiKey,
@@ -36,28 +34,30 @@ public sealed class PartyPlaybackService(
         {
             return new OperationResult<PartyPlaybackState?>("Session not found.")
             {
-                Type = OperationResponseType.NotFound
+                Type = OperationResponseType.NotFound,
+                Data = null
             };
         }
 
-        var cacheKey = string.Format(CacheKeyTemplate, sessionApiKey);
-        if (CacheManager.TryGet(cacheKey, out PartyPlaybackState? cached))
+        var cacheKey = string.Format(PlaybackStateCacheKeyTemplate, sessionApiKey);
+        var playbackState = await CacheManager.GetAsync(
+            cacheKey,
+            async () =>
+            {
+                var state = await scopedContext.PartyPlaybackStates
+                    .AsNoTracking()
+                    .Include(x => x.CurrentQueueItem)
+                    .FirstOrDefaultAsync(x => x.PartySessionId == session.Id, cancellationToken)
+                    .ConfigureAwait(false);
+                return state;
+            },
+            cancellationToken,
+            TimeSpan.FromSeconds(5));
+
+        return new OperationResult<PartyPlaybackState?>
         {
-            return new OperationResult<PartyPlaybackState?>(cached);
-        }
-
-        var playbackState = await scopedContext.PartyPlaybackStates
-            .AsNoTracking()
-            .Include(x => x.CurrentQueueItem)
-            .FirstOrDefaultAsync(x => x.PartySessionId == session.Id, cancellationToken)
-            .ConfigureAwait(false);
-
-        if (playbackState != null)
-        {
-            CacheManager.Set(cacheKey, playbackState, TimeSpan.FromSeconds(5));
-        }
-
-        return new OperationResult<PartyPlaybackState?>(playbackState);
+            Data = playbackState
+        };
     }
 
     public async Task<OperationResult<PartyPlaybackState>> UpdateFromHeartbeatAsync(
@@ -80,7 +80,8 @@ public sealed class PartyPlaybackService(
         {
             return new OperationResult<PartyPlaybackState>("Session not found.")
             {
-                Type = OperationResponseType.NotFound
+                Type = OperationResponseType.NotFound,
+                Data = null!
             };
         }
 
@@ -88,7 +89,8 @@ public sealed class PartyPlaybackService(
         {
             return new OperationResult<PartyPlaybackState>("Playback state not found for session.")
             {
-                Type = OperationResponseType.NotFound
+                Type = OperationResponseType.NotFound,
+                Data = null!
             };
         }
 
@@ -101,12 +103,16 @@ public sealed class PartyPlaybackService(
 
         await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        CacheManager.RemoveByPrefix(string.Format(CacheKeyTemplate, sessionApiKey));
+        var cacheKey = string.Format(PlaybackStateCacheKeyTemplate, sessionApiKey);
+        CacheManager.Remove(cacheKey);
 
         Logger.Debug("[PartyPlaybackService] Updated playback state for session {SessionId}: position={Position}, playing={IsPlaying}",
             sessionApiKey, positionSeconds, isPlaying);
 
-        return new OperationResult<PartyPlaybackState>(session.PlaybackState);
+        return new OperationResult<PartyPlaybackState>
+        {
+            Data = session.PlaybackState
+        };
     }
 
     public async Task<OperationResult<PartyPlaybackState>> SetCurrentItemAsync(
@@ -125,7 +131,8 @@ public sealed class PartyPlaybackService(
         {
             return new OperationResult<PartyPlaybackState>("Session not found.")
             {
-                Type = OperationResponseType.NotFound
+                Type = OperationResponseType.NotFound,
+                Data = null!
             };
         }
 
@@ -133,7 +140,8 @@ public sealed class PartyPlaybackService(
         {
             return new OperationResult<PartyPlaybackState>("Playback state not found for session.")
             {
-                Type = OperationResponseType.NotFound
+                Type = OperationResponseType.NotFound,
+                Data = null!
             };
         }
 
@@ -143,12 +151,16 @@ public sealed class PartyPlaybackService(
 
         await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        CacheManager.RemoveByPrefix(string.Format(CacheKeyTemplate, sessionApiKey));
+        var cacheKey = string.Format(PlaybackStateCacheKeyTemplate, sessionApiKey);
+        CacheManager.Remove(cacheKey);
 
         Logger.Information("[PartyPlaybackService] Set current item to {ItemApiKey} for session {SessionId}",
             queueItemApiKey ?? Guid.Empty, sessionApiKey);
 
-        return new OperationResult<PartyPlaybackState>(session.PlaybackState);
+        return new OperationResult<PartyPlaybackState>
+        {
+            Data = session.PlaybackState
+        };
     }
 
     public async Task<OperationResult<PartyPlaybackState>> UpdateIntentAsync(
@@ -170,7 +182,8 @@ public sealed class PartyPlaybackService(
         {
             return new OperationResult<PartyPlaybackState>("Session not found.")
             {
-                Type = OperationResponseType.NotFound
+                Type = OperationResponseType.NotFound,
+                Data = null!
             };
         }
 
@@ -178,7 +191,8 @@ public sealed class PartyPlaybackService(
         {
             return new OperationResult<PartyPlaybackState>("Playback state not found for session.")
             {
-                Type = OperationResponseType.NotFound
+                Type = OperationResponseType.NotFound,
+                Data = null!
             };
         }
 
@@ -187,7 +201,8 @@ public sealed class PartyPlaybackService(
             return new OperationResult<PartyPlaybackState>(
                 $"Concurrent modification detected. Current revision: {session.PlaybackRevision}")
             {
-                Type = OperationResponseType.Conflict
+                Type = OperationResponseType.Conflict,
+                Data = null!
             };
         }
 
@@ -244,7 +259,8 @@ public sealed class PartyPlaybackService(
                 {
                     return new OperationResult<PartyPlaybackState>("Invalid seek position.")
                     {
-                        Type = OperationResponseType.BadRequest
+                        Type = OperationResponseType.BadRequest,
+                        Data = null!
                     };
                 }
                 break;
@@ -254,11 +270,15 @@ public sealed class PartyPlaybackService(
         session.PlaybackRevision++;
         await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        CacheManager.RemoveByPrefix(string.Format(CacheKeyTemplate, sessionApiKey));
+        var cacheKey = string.Format(PlaybackStateCacheKeyTemplate, sessionApiKey);
+        CacheManager.Remove(cacheKey);
 
         Logger.Information("[PartyPlaybackService] Applied intent {Intent} for session {SessionId} by user {UserId}",
             intent, sessionApiKey, requestingUserId);
 
-        return new OperationResult<PartyPlaybackState>(session.PlaybackState);
+        return new OperationResult<PartyPlaybackState>
+        {
+            Data = session.PlaybackState
+        };
     }
 }

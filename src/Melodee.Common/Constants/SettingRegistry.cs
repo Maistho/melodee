@@ -47,6 +47,7 @@ public static class SettingRegistry
     public const string OpenSubsonicServerLicenseEmail = "openSubsonicServer.openSubsonicServerLicenseEmail";
     public const string OpenSubsonicServerSupportedVersion = "openSubsonicServer.openSubsonic.serverSupportedVersion";
     public const string OpenSubsonicServerType = "openSubsonicServer.openSubsonicServer.type";
+    public const string PartyModeEnabled = "partyMode.enabled";
     public const string PlaylistDynamicPlaylistsDisabled = "playlist.dynamicPlaylist.disabled";
     public const string PlaylistMaximumAllowedPageSize = "playlist.maximumAllowedPageSize";
     public const string PluginEnabledCueSheet = "plugin.cueSheet.enabled";

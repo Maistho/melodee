@@ -1,6 +1,9 @@
 @using Melodee.Blazor.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Web
 @inject PartyModeService PartyModeService
 @inject ILogger<PartyQueue> Logger
+@inject IStringLocalizer<SharedResources> Localizer
 
 <div class="party-queue-container">
     <div class="queue-header">

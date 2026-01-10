@@ -1,7 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Melodee.Common.Data.Constants;
 using Melodee.Common.Data.Validators;
-using NodaTime;
 
 namespace Melodee.Common.Data.Models;
 
@@ -26,9 +25,6 @@ public class PartyAuditEvent : DataModelBase
 
     [MaxLength(MaxLengthDefinitions.MaxTextLength)]
     public string? PayloadJson { get; set; }
-
-    [Required]
-    public Instant CreatedAt { get; set; } = SystemClock.Instance.GetCurrentInstant();
 }
 
 /// <summary>

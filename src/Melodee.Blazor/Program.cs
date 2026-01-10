@@ -225,7 +225,9 @@ builder.Services.Configure<GzipCompressionProviderOptions>(options =>
     options.Level = CompressionLevel.Optimal;
 });
 
-// Configure HSTS options (addresses Lighthouse: HSTS security)
+// SignalR for real-time party mode updates
+builder.Services.AddSignalR();
+
 builder.Services.AddHsts(options =>
 {
     options.MaxAge = TimeSpan.FromDays(365);
@@ -361,7 +363,7 @@ builder.Services.AddRateLimiter(options =>
                 QueueLimit = 5
             });
     });
-    
+
     // Party mode rate limiting policies
     options.AddPolicy("party-queue-add", context =>
     {
@@ -376,7 +378,7 @@ builder.Services.AddRateLimiter(options =>
                 QueueLimit = 5
             });
     });
-    
+
     options.AddPolicy("party-playback-control", context =>
     {
         // Rate limit: max 30 playback control actions per minute per user per session
@@ -390,7 +392,7 @@ builder.Services.AddRateLimiter(options =>
                 QueueLimit = 10
             });
     });
-    
+
     options.AddPolicy("party-volume", context =>
     {
         // Rate limit: max 20 volume changes per minute per user per session
@@ -904,6 +906,9 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.UseMelodeeBlazorHeader();
+
+// Map SignalR hub for real-time party updates
+app.MapHub<Melodee.Blazor.Hubs.PartyHub>("/party-hub");
 
 app.MapControllers();
 
