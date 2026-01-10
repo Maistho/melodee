@@ -435,7 +435,11 @@ builder.Services
     .AddScoped<PodcastService>()
     .AddScoped<PodcastPlaybackService>()
     .AddScoped<PodcastOpmlService>()
-    .AddScoped<PodcastDiscoveryService>();
+    .AddScoped<PodcastDiscoveryService>()
+    .AddScoped<IPartySessionService, PartySessionService>()
+    .AddScoped<IPartyQueueService, PartyQueueService>()
+    .AddScoped<IPartyPlaybackService, PartyPlaybackService>()
+    .AddScoped<IPartySessionEndpointRegistryService, PartySessionEndpointRegistryService>();
 
 // Configure HttpClient for podcast discovery
 builder.Services.AddHttpClient("PodcastDiscovery", client =>

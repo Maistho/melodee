@@ -1,0 +1,181 @@
+@page "/party/{SessionApiKey:guid}"
+@using Melodee.Blazor.Services
+@inject PartyModeService PartyModeService
+@inject NavigationManager NavigationManager
+@inject ILogger<PartySession> Logger
+@inject IStringLocalizer<SharedResources> Localizer
+
+<div class="party-session-page">
+    @if (IsLoading)
+    {
+        <div class="loading-screen">
+            <p>@Localizer["PartyMode.Loading"]</p>
+        </div>
+    }
+    else if (Session != null)
+    {
+        <div class="party-session-header">
+            <div class="session-info">
+                <h1>🎉 @Session.Name</h1>
+                <div class="session-status">
+                    <span class="status-indicator @(Session.Status == "Active" ? "active" : "ended")"></span>
+                    @Session.Status
+                </div>
+            </div>
+            <div class="session-actions">
+                <button class="action-btn" @onclick="CopyInviteLink" title="@Localizer["PartyMode.CopyInviteLink"]">
+                    📋
+                </button>
+                <button class="action-btn leave-btn" @onclick="LeaveSession" title="@Localizer["PartyMode.LeaveSession"]">
+                    🚪
+                </button>
+            </div>
+        </div>
+
+        <div class="party-session-content">
+            <div class="party-main">
+                <PartyPlayer SessionApiKey="SessionApiKey" 
+                            OnTrackChanged="OnTrackChanged" />
+            </div>
+            
+            <div class="party-sidebar">
+                <PartyQueue SessionApiKey="SessionApiKey" 
+                            OnQueueChanged="OnQueueChanged"
+                            OnItemSelected="OnItemSelected"
+                            CurrentItemApiKey="CurrentItemApiKey" />
+                
+                <div class="participants-section">
+                    <h3>👥 @Localizer["PartyMode.Participants"] (@Participants.Count)</h3>
+                    <div class="participants-list">
+                        @foreach (var participant in Participants)
+                        {
+                            <div class="participant">
+                                <span class="participant-avatar">👤</span>
+                                <span class="participant-name">@GetUserDisplayName(participant)</span>
+                                <span class="participant-role" title="@participant.Role">@GetRoleIcon(participant.Role)</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="error-screen">
+            <p>@Localizer["PartyMode.SessionNotFound"]</p>
+            <button class="btn btn-primary" @onclick="GoHome">@Localizer["PartyMode.GoHome"]</button>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid SessionApiKey { get; set; }
+
+    private PartySessionDto? Session { get; set; }
+    private List<PartySessionParticipantDto> Participants { get; set; } = new();
+    private Guid? CurrentItemApiKey { get; set; }
+    private bool IsLoading { get; set; } = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSession();
+    }
+
+    private async Task LoadSession()
+    {
+        try
+        {
+            IsLoading = true;
+            
+            var sessionResult = await PartyModeService.GetSessionAsync(SessionApiKey);
+            if (sessionResult?.IsSuccess == true && sessionResult.Data != null)
+            {
+                Session = sessionResult.Data;
+                await LoadParticipants();
+            }
+            else
+            {
+                Session = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading party session {ApiKey}", SessionApiKey);
+            Session = null;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task LoadParticipants()
+    {
+        try
+        {
+            var result = await PartyModeService.GetParticipantsAsync(SessionApiKey);
+            if (result?.IsSuccess == true && result.Data != null)
+            {
+                Participants = result.Data.ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading participants");
+        }
+    }
+
+    private async Task OnTrackChanged(PartyPlayer.TrackInfo track)
+    {
+        // Could update current item if needed
+    }
+
+    private async Task OnQueueChanged(IEnumerable<PartyQueueItemDto> queue)
+    {
+        // Queue updated - could show notification
+    }
+
+    private async Task OnItemSelected(PartyQueueItemDto item)
+    {
+        CurrentItemApiKey = item.ApiKey;
+        // Could trigger playback of this item
+    }
+
+    private async Task CopyInviteLink()
+    {
+        var inviteUrl = $"{NavigationManager.BaseUri}party/{SessionApiKey}";
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", inviteUrl);
+        // Could show toast notification
+    }
+
+    private async Task LeaveSession()
+    {
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", Localizer["PartyMode.LeaveConfirm"].Value);
+        if (confirmed)
+        {
+            await PartyModeService.LeaveSessionAsync(SessionApiKey);
+            NavigationManager.NavigateTo("/");
+        }
+    }
+
+    private void GoHome()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+
+    private static string GetUserDisplayName(PartySessionParticipantDto participant)
+    {
+        return $"User {participant.UserId}";
+    }
+
+    private static string GetRoleIcon(string role)
+    {
+        return role switch
+        {
+            "Owner" => "👑",
+            "DJ" => "🎧",
+            _ => "🎵"
+        };
+    }
+}

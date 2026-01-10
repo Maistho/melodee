@@ -1,0 +1,280 @@
+@using Melodee.Blazor.Services
+@using System.Timers
+@inject PartyModeService PartyModeService
+@inject ILogger<PartyPlayer> Logger
+@implements IAsyncDisposable
+
+<div class="party-player-container">
+    @if (PlaybackState != null)
+    {
+        <div class="party-player">
+            <div class="player-header">
+                <h3>🎵 @Localizer["PartyMode.NowPlaying"]</h3>
+                <span class="connection-status @(IsConnected ? "connected" : "disconnected")">
+                    @(IsConnected ? "●" : "○")
+                </span>
+            </div>
+
+            <div class="current-track">
+                @if (CurrentTrackInfo != null)
+                {
+                    <div class="track-info">
+                        <img src="@CurrentTrackInfo.ImageUrl" alt="Album Art" class="album-art" />
+                        <div class="track-details">
+                            <h4>@CurrentTrackInfo.Title</h4>
+                            <p>@CurrentTrackInfo.Artist</p>
+                            <p class="album">@CurrentTrackInfo.Album</p>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="no-track">
+                        <p>@Localizer["PartyMode.NoTrackPlaying"]</p>
+                    </div>
+                }
+            </div>
+
+            <div class="progress-container" @onclick="SeekToPosition">
+                <div class="progress-bar" style="width: @ProgressPercentage%;"></div>
+            </div>
+
+            <div class="time-display">
+                <span>@FormatTime(CurrentPosition)</span>
+                <span>@FormatTime(Duration)</span>
+            </div>
+
+            <div class="controls">
+                <button class="control-btn" @onclick="PreviousTrack" disabled="@(!HasPreviousTrack)">
+                    <span class="icon">⏮</span>
+                </button>
+                <button class="control-btn" @onclick="RewindTenSec">
+                    <span class="icon">⏪</span>
+                </button>
+                <button class="control-btn play-pause-btn" @onclick="TogglePlayPause">
+                    <span class="icon">@(PlaybackState.IsPlaying ? "⏸" : "▶")</span>
+                </button>
+                <button class="control-btn" @onclick="SkipTrack" disabled="@(!HasNextTrack)">
+                    <span class="icon">⏭</span>
+                </button>
+                <button class="control-btn" @onclick="ForwardTenSec">
+                    <span class="icon">⏩</span>
+                </button>
+            </div>
+
+            <div class="volume-control">
+                <span class="volume-icon">🔊</span>
+                <input type="range" 
+                       min="0" max="1" step="0.01" 
+                       value="@Volume" 
+                       @oninput="OnVolumeChange" 
+                       class="volume-slider" />
+                <span class="volume-value">@((int)(Volume * 100))%</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="party-player disconnected">
+            <p>@Localizer["PartyMode.NotConnected"]</p>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid SessionApiKey { get; set; }
+    [Parameter] public EventCallback<TrackInfo> OnTrackChanged { get; set; }
+    
+    private PartyPlaybackStateDto? PlaybackState { get; set; }
+    private double CurrentPosition { get; set; }
+    private double Duration { get; set; }
+    private double Volume { get; set; } = 0.7;
+    private bool IsConnected { get; set; }
+    private bool HasPreviousTrack { get; set; }
+    private bool HasNextTrack { get; set; }
+    private TrackInfo? CurrentTrackInfo { get; set; }
+    private Timer? PollingTimer { get; set; }
+    private Timer? ProgressTimer { get; set; }
+    
+    private double ProgressPercentage => Duration > 0 ? (CurrentPosition / Duration) * 100 : 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await StartPolling();
+        await UpdatePlaybackState();
+    }
+
+    private async Task StartPolling()
+    {
+        PollingTimer = new Timer(5000); // Poll every 5 seconds
+        PollingTimer.Elapsed += async (sender, e) => await UpdatePlaybackState();
+        PollingTimer.Start();
+
+        ProgressTimer = new Timer(1000); // Update progress bar every second
+        ProgressTimer.Elapsed += (sender, e) => 
+        {
+            if (PlaybackState?.IsPlaying == true)
+            {
+                CurrentPosition = Math.Min(CurrentPosition + 1, Duration);
+                InvokeAsync(StateHasChanged);
+            }
+        };
+        ProgressTimer.Start();
+    }
+
+    private async Task UpdatePlaybackState()
+    {
+        try
+        {
+            var result = await PartyModeService.GetPlaybackStateAsync(SessionApiKey);
+            if (result?.IsSuccess == true && result.Data != null)
+            {
+                PlaybackState = result.Data;
+                Volume = PlaybackState.Volume ?? 0.7;
+                
+                if (PlaybackState.CurrentQueueItemApiKey.HasValue && 
+                    (CurrentTrackInfo == null || CurrentTrackInfo.ApiKey != PlaybackState.CurrentQueueItemApiKey.Value))
+                {
+                    // Load track info from queue item
+                    await LoadTrackInfo(PlaybackState.CurrentQueueItemApiKey.Value);
+                }
+
+                if (PlaybackState.IsPlaying && ProgressTimer != null && !ProgressTimer.Enabled)
+                {
+                    ProgressTimer.Start();
+                }
+                else if (!PlaybackState.IsPlaying && ProgressTimer != null)
+                {
+                    ProgressTimer.Stop();
+                }
+
+                IsConnected = true;
+                await InvokeAsync(StateHasChanged);
+            }
+            else
+            {
+                IsConnected = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error updating playback state");
+            IsConnected = false;
+        }
+    }
+
+    private async Task LoadTrackInfo(Guid queueItemApiKey)
+    {
+        // In a real implementation, this would fetch track details from the API
+        // For now, we'll create a placeholder
+        CurrentTrackInfo = new TrackInfo
+        {
+            ApiKey = queueItemApiKey,
+            Title = "Unknown Track",
+            Artist = "Unknown Artist",
+            Album = "Unknown Album",
+            ImageUrl = "/images/default-album.png"
+        };
+        
+        await OnTrackChanged.InvokeAsync(CurrentTrackInfo);
+    }
+
+    private async Task TogglePlayPause()
+    {
+        if (PlaybackState == null) return;
+
+        OperationResult<PartyPlaybackStateDto>? result;
+        if (PlaybackState.IsPlaying)
+        {
+            result = await PartyModeService.PauseAsync(SessionApiKey, CurrentPosition);
+        }
+        else
+        {
+            result = await PartyModeService.PlayAsync(SessionApiKey, CurrentPosition);
+        }
+
+        if (result?.IsSuccess == true && result.Data != null)
+        {
+            PlaybackState = result.Data;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task SkipTrack()
+    {
+        var result = await PartyModeService.SkipAsync(SessionApiKey, 1);
+        if (result?.IsSuccess == true && result.Data != null)
+        {
+            PlaybackState = result.Data;
+            CurrentPosition = 0;
+            await UpdatePlaybackState();
+        }
+    }
+
+    private async Task PreviousTrack()
+    {
+        // Previous track logic (restart current or go to previous)
+        if (CurrentPosition > 3)
+        {
+            await SeekToPosition(0);
+        }
+        else
+        {
+            await SkipTrack();
+        }
+    }
+
+    private async Task RewindTenSec()
+    {
+        var newPosition = Math.Max(0, CurrentPosition - 10);
+        await SeekToPosition(newPosition);
+    }
+
+    private async Task ForwardTenSec()
+    {
+        var newPosition = Math.Min(Duration, CurrentPosition + 10);
+        await SeekToPosition(newPosition);
+    }
+
+    private async Task SeekToPosition(MouseEventArgs args)
+    {
+        // This would calculate position from click - simplified for now
+        await SeekToPosition(CurrentPosition);
+    }
+
+    private async Task SeekToPosition(double position)
+    {
+        var result = await PartyModeService.SeekAsync(SessionApiKey, position, 1);
+        if (result?.IsSuccess == true && result.Data != null)
+        {
+            PlaybackState = result.Data;
+            CurrentPosition = position;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task OnVolumeChange(ChangeEventArgs args)
+    {
+        if (double.TryParse(args.Value?.ToString(), out var newVolume))
+        {
+            Volume = newVolume;
+            await PartyModeService.SetVolumeAsync(SessionApiKey, Volume);
+        }
+    }
+
+    private static string FormatTime(double seconds)
+    {
+        var timeSpan = TimeSpan.FromSeconds(seconds);
+        return $"{timeSpan:mm\\:ss}";
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        PollingTimer?.Stop();
+        PollingTimer?.Dispose();
+        ProgressTimer?.Stop();
+        ProgressTimer?.Dispose();
+    }
+
+    public record TrackInfo(Guid ApiKey, string Title, string Artist, string Album, string ImageUrl);
+}

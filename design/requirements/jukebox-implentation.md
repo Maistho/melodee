@@ -13,12 +13,12 @@ This guide breaks the **Melodee Jukebox / Party Mode** requirements into impleme
 ## Phase map (checklist)
 
 - [x] **Phase 0 — Foundations:** DB, domain models, auth policies, feature flags, scaffolding
-- [ ] **Phase 1 — Party Sessions + Shared Queue + Web Player Endpoint (MVP):** CRUD/join, queue, playback intent, heartbeat, polling UI
+- [x] **Phase 1 — Party Sessions + Shared Queue + Web Player Endpoint (MVP):** CRUD/join, queue, playback intent, heartbeat, polling UI
 - [ ] **Phase 2 — Real-time + Moderation + Anti-abuse:** SignalR events, rate limits, queue lock, kick/ban, audit
 - [ ] **Phase 3 — Endpoint Registry + Capability Model:** endpoints first-class, attach/detach, staleness, capability-driven UI
-- [ ] **Phase 4 — MPV Backend (Optional):** backend abstraction + MPV backend, config + health reporting
+- [ ] **Phase 4 — MPV Backend:** backend abstraction + MPV backend, config + health reporting
 - [ ] **Phase 5 — Subsonic/OpenSubsonic `jukeboxControl` (Backend-gated):** full mapping, tests, default 410
-- [ ] **Phase 6 — Additional Backends (Optional roadmap):** Snapcast or MPD (one), multi-room instances
+- [ ] **Phase 6 — Additional Backends:** MPD
 
 ---
 
@@ -392,7 +392,7 @@ Endpoint assign/reassign/offline banners and buttons.
 
 ---
 
-## Phase 4 — MPV Backend (Optional Tier)
+## Phase 4 — MPV Backend
 
 ### Objective
 Add a headless/server-side playback backend using MPV, behind explicit config.
@@ -480,12 +480,9 @@ Error and enablement messages if surfaced in UI.
 
 ---
 
-## Phase 6 — Additional Backends (Optional roadmap)
+## Phase 6 — Additional Backends
 
 ### Objective
-Add one additional backend (choose exactly one to avoid scope creep).
-
-### Decision removed (choose now)
 - Implement **MPD backend** next (common in homelabs).
 
 Deliverables:
@@ -505,8 +502,8 @@ Use this template verbatim; fill in `{PHASE_NUMBER}` and `{PHASE_NAME}` and past
 ```.aiignore
 You are a coding agent working in the Melodee repo.
 
-Goal: Implement Phase 1 — Party Sessions + Shared Queue + Web Player Endpoint (MVP):** CRUD/join, queue, playback intent, heartbeat, polling UI:
-- Melodee Jukebox / Party Mode — Phased Implementation Guide (this file)
+Goal: Implement Phase 2 — Real-time + Moderation + Anti-abuse:** SignalR events, rate limits, queue lock, kick/ban, audit
+- Melodee Jukebox / Party Mode — Phased Implementation Guide (/design/requirements/jukebox-implentation.md)
 - Follow “Global implementation rules” exactly. Do not invent new designs.
 
 Constraints:
@@ -563,7 +560,7 @@ Review objectives:
    - JukeboxControl returns 410 when disabled; works when enabled and configured
 
 2) Architecture & maintainability
-   - Clear separation between core Party Mode and optional Jukebox Backends
+   - Clear separation between core Party Mode and Jukebox Backends
    - Service layer boundaries make sense; no business logic in controllers/components
    - Capability model is consistent and used by UI
    - Error handling is consistent with the rest of Melodee

@@ -5045,6 +5045,222 @@
   <data name="PartyMode.Title" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Party Mode</value>
   </data>
+  <data name="PartyMode.NowPlaying" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Now Playing</value>
+  </data>
+  <data name="PartyMode.NoTrackPlaying" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No track playing</value>
+  </data>
+  <data name="PartyMode.NotConnected" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Not connected to party session</value>
+  </data>
+  <data name="PartyMode.Queue" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Queue</value>
+  </data>
+  <data name="PartyMode.Refresh" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Refresh queue</value>
+  </data>
+  <data name="PartyMode.ClearQueue" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Clear queue</value>
+  </data>
+  <data name="PartyMode.LoadingQueue" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Loading queue...</value>
+  </data>
+  <data name="PartyMode.QueueEmpty" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Queue is empty</value>
+  </data>
+  <data name="PartyMode.QueueEmptyHint" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Add songs to start the party!</value>
+  </data>
+  <data name="PartyMode.ByUser" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] by User</value>
+  </data>
+  <data name="PartyMode.Remove" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Remove from queue</value>
+  </data>
+  <data name="PartyMode.Participants" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Participants</value>
+  </data>
+  <data name="PartyMode.Loading" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Loading party session...</value>
+  </data>
+  <data name="PartyMode.SessionNotFound" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Party session not found</value>
+  </data>
+  <data name="PartyMode.GoHome" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Go to Home</value>
+  </data>
+  <data name="PartyMode.CopyInviteLink" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Copy invite link</value>
+  </data>
+  <data name="PartyMode.LeaveSession" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Leave session</value>
+  </data>
+  <data name="PartyMode.LeaveConfirm" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Are you sure you want to leave this party session?</value>
+  </data>
+  <data name="PartyMode.CreateSession" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Create Party Session</value>
+  </data>
+  <data name="PartyMode.JoinSession" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Join Party Session</value>
+  </data>
+  <data name="PartyMode.SessionName" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Session Name</value>
+  </data>
+  <data name="PartyMode.JoinCode" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Join Code (optional)</value>
+  </data>
+  <data name="PartyMode.Create" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Create</value>
+  </data>
+  <data name="PartyMode.Join" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Join</value>
+  </data>
+  <data name="PartyMode.EndSession" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] End Session</value>
+  </data>
+  <data name="PartyMode.EndSessionConfirm" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Are you sure you want to end this party session? This cannot be undone.</value>
+  </data>
+  <data name="PartyMode.InvalidJoinCode" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Invalid join code</value>
+  </data>
+  <data name="PartyMode.SessionEnded" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] This party session has ended</value>
+  </data>
+  <data name="PartyMode.Conflict" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Someone else modified the queue. Refreshing...</value>
+  </data>
+  <data name="PartyMode.AddToQueue" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Add to Queue</value>
+  </data>
+  <data name="PartyMode.AddSelectedToQueue" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Add Selected to Queue</value>
+  </data>
+  <data name="PartyMode.PlaybackControls" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Playback Controls</value>
+  </data>
+  <data name="PartyMode.Volume" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Volume</value>
+  </data>
+  <data name="PartyMode.Mute" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Mute</value>
+  </data>
+  <data name="PartyMode.Unmute" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Unmute</value>
+  </data>
+  <data name="PartyMode.ShareSession" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Share Party Session</value>
+  </data>
+  <data name="PartyMode.SessionCode" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Session Code</value>
+  </data>
+  <data name="PartyMode.ConnectedUsers" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Connected Users</value>
+  </data>
+  <data name="PartyMode.ErrorCreatingSession" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Error creating party session</value>
+  </data>
+  <data name="PartyMode.ErrorJoiningSession" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Error joining party session</value>
+  </data>
+  <data name="PartyMode.MaxParticipants" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Maximum participants reached</value>
+  </data>
+  <data name="PartyMode.PlaybackError" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Error controlling playback</value>
+  </data>
+  <data name="PartyMode.QueueError" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Error updating queue</value>
+  </data>
+  <data name="PartyMode.ReorderHint" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Drag to reorder</value>
+  </data>
+  <data name="PartyMode.PlayingNext" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Playing next</value>
+  </data>
+  <data name="PartyMode.AddMoreSongs" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Add more songs to keep the party going!</value>
+  </data>
+  <data name="PartyMode.HostControls" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Host Controls</value>
+  </data>
+  <data name="PartyMode.SkipTrack" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Skip Track</value>
+  </data>
+  <data name="PartyMode.PausePlayback" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Pause</value>
+  </data>
+  <data name="PartyMode.ResumePlayback" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Resume</value>
+  </data>
+  <data name="PartyMode.CurrentSession" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Current Party Session</value>
+  </data>
+  <data name="PartyMode.NoActiveSession" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No active party session</value>
+  </data>
+  <data name="PartyMode.StartParty" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Start a Party</value>
+  </data>
+  <data name="PartyMode.JoinParty" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Join a Party</value>
+  </data>
+  <data name="PartyMode.EnterSessionCode" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Enter session code</value>
+  </data>
+  <data name="PartyMode.OrSelectFromList" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Or select from recent sessions</value>
+  </data>
+  <data name="PartyMode.RecentSessions" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Recent Sessions</value>
+  </data>
+  <data name="PartyMode.SessionCreatedBy" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Created by</value>
+  </data>
+  <data name="PartyMode.SessionStartedAt" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Started at</value>
+  </data>
+  <data name="PartyMode.QuickAdd" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Quick Add</value>
+  </data>
+  <data name="PartyMode.SearchSongs" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Search for songs to add</value>
+  </data>
+  <data name="PartyMode.AddAllFromAlbum" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Add all from album</value>
+  </data>
+  <data name="PartyMode.AddAllFromArtist" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Add all from artist</value>
+  </data>
+  <data name="PartyMode.AddAllFromPlaylist" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Add all from playlist</value>
+  </data>
+  <data name="PartyMode.PrivateSession" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Private Session</value>
+  </data>
+  <data name="PartyMode.PublicSession" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Public Session</value>
+  </data>
+  <data name="PartyMode.RequireJoinCode" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Require join code</value>
+  </data>
+  <data name="PartyMode.SessionSettings" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Session Settings</value>
+  </data>
+  <data name="PartyMode.EnableVoting" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Enable voting</value>
+  </data>
+  <data name="PartyMode.VotingEnabled" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Voting enabled</value>
+  </data>
+  <data name="PartyMode.AllowGuestSkip" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Allow guests to skip</value>
+  </data>
+  <data name="PartyMode.GuestSkipAllowed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Guest skip allowed</value>
+  </data>
   <data name="Jukebox.Disabled" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Jukebox is disabled</value>
   </data>

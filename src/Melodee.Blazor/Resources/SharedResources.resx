@@ -5045,6 +5045,222 @@
   <data name="PartyMode.Title" xml:space="preserve">
     <value>Party Mode</value>
   </data>
+  <data name="PartyMode.NowPlaying" xml:space="preserve">
+    <value>Now Playing</value>
+  </data>
+  <data name="PartyMode.NoTrackPlaying" xml:space="preserve">
+    <value>No track playing</value>
+  </data>
+  <data name="PartyMode.NotConnected" xml:space="preserve">
+    <value>Not connected to party session</value>
+  </data>
+  <data name="PartyMode.Queue" xml:space="preserve">
+    <value>Queue</value>
+  </data>
+  <data name="PartyMode.Refresh" xml:space="preserve">
+    <value>Refresh queue</value>
+  </data>
+  <data name="PartyMode.ClearQueue" xml:space="preserve">
+    <value>Clear queue</value>
+  </data>
+  <data name="PartyMode.LoadingQueue" xml:space="preserve">
+    <value>Loading queue...</value>
+  </data>
+  <data name="PartyMode.QueueEmpty" xml:space="preserve">
+    <value>Queue is empty</value>
+  </data>
+  <data name="PartyMode.QueueEmptyHint" xml:space="preserve">
+    <value>Add songs to start the party!</value>
+  </data>
+  <data name="PartyMode.ByUser" xml:space="preserve">
+    <value>by User</value>
+  </data>
+  <data name="PartyMode.Remove" xml:space="preserve">
+    <value>Remove from queue</value>
+  </data>
+  <data name="PartyMode.Participants" xml:space="preserve">
+    <value>Participants</value>
+  </data>
+  <data name="PartyMode.Loading" xml:space="preserve">
+    <value>Loading party session...</value>
+  </data>
+  <data name="PartyMode.SessionNotFound" xml:space="preserve">
+    <value>Party session not found</value>
+  </data>
+  <data name="PartyMode.GoHome" xml:space="preserve">
+    <value>Go to Home</value>
+  </data>
+  <data name="PartyMode.CopyInviteLink" xml:space="preserve">
+    <value>Copy invite link</value>
+  </data>
+  <data name="PartyMode.LeaveSession" xml:space="preserve">
+    <value>Leave session</value>
+  </data>
+  <data name="PartyMode.LeaveConfirm" xml:space="preserve">
+    <value>Are you sure you want to leave this party session?</value>
+  </data>
+  <data name="PartyMode.CreateSession" xml:space="preserve">
+    <value>Create Party Session</value>
+  </data>
+  <data name="PartyMode.JoinSession" xml:space="preserve">
+    <value>Join Party Session</value>
+  </data>
+  <data name="PartyMode.SessionName" xml:space="preserve">
+    <value>Session Name</value>
+  </data>
+  <data name="PartyMode.JoinCode" xml:space="preserve">
+    <value>Join Code (optional)</value>
+  </data>
+  <data name="PartyMode.Create" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="PartyMode.Join" xml:space="preserve">
+    <value>Join</value>
+  </data>
+  <data name="PartyMode.EndSession" xml:space="preserve">
+    <value>End Session</value>
+  </data>
+  <data name="PartyMode.EndSessionConfirm" xml:space="preserve">
+    <value>Are you sure you want to end this party session? This cannot be undone.</value>
+  </data>
+  <data name="PartyMode.InvalidJoinCode" xml:space="preserve">
+    <value>Invalid join code</value>
+  </data>
+  <data name="PartyMode.SessionEnded" xml:space="preserve">
+    <value>This party session has ended</value>
+  </data>
+  <data name="PartyMode.Conflict" xml:space="preserve">
+    <value>Someone else modified the queue. Refreshing...</value>
+  </data>
+  <data name="PartyMode.AddToQueue" xml:space="preserve">
+    <value>Add to Queue</value>
+  </data>
+  <data name="PartyMode.AddSelectedToQueue" xml:space="preserve">
+    <value>Add Selected to Queue</value>
+  </data>
+  <data name="PartyMode.PlaybackControls" xml:space="preserve">
+    <value>Playback Controls</value>
+  </data>
+  <data name="PartyMode.Volume" xml:space="preserve">
+    <value>Volume</value>
+  </data>
+  <data name="PartyMode.Mute" xml:space="preserve">
+    <value>Mute</value>
+  </data>
+  <data name="PartyMode.Unmute" xml:space="preserve">
+    <value>Unmute</value>
+  </data>
+  <data name="PartyMode.ShareSession" xml:space="preserve">
+    <value>Share Party Session</value>
+  </data>
+  <data name="PartyMode.SessionCode" xml:space="preserve">
+    <value>Session Code</value>
+  </data>
+  <data name="PartyMode.ConnectedUsers" xml:space="preserve">
+    <value>Connected Users</value>
+  </data>
+  <data name="PartyMode.ErrorCreatingSession" xml:space="preserve">
+    <value>Error creating party session</value>
+  </data>
+  <data name="PartyMode.ErrorJoiningSession" xml:space="preserve">
+    <value>Error joining party session</value>
+  </data>
+  <data name="PartyMode.MaxParticipants" xml:space="preserve">
+    <value>Maximum participants reached</value>
+  </data>
+  <data name="PartyMode.PlaybackError" xml:space="preserve">
+    <value>Error controlling playback</value>
+  </data>
+  <data name="PartyMode.QueueError" xml:space="preserve">
+    <value>Error updating queue</value>
+  </data>
+  <data name="PartyMode.ReorderHint" xml:space="preserve">
+    <value>Drag to reorder</value>
+  </data>
+  <data name="PartyMode.PlayingNext" xml:space="preserve">
+    <value>Playing next</value>
+  </data>
+  <data name="PartyMode.AddMoreSongs" xml:space="preserve">
+    <value>Add more songs to keep the party going!</value>
+  </data>
+  <data name="PartyMode.HostControls" xml:space="preserve">
+    <value>Host Controls</value>
+  </data>
+  <data name="PartyMode.SkipTrack" xml:space="preserve">
+    <value>Skip Track</value>
+  </data>
+  <data name="PartyMode.PausePlayback" xml:space="preserve">
+    <value>Pause</value>
+  </data>
+  <data name="PartyMode.ResumePlayback" xml:space="preserve">
+    <value>Resume</value>
+  </data>
+  <data name="PartyMode.CurrentSession" xml:space="preserve">
+    <value>Current Party Session</value>
+  </data>
+  <data name="PartyMode.NoActiveSession" xml:space="preserve">
+    <value>No active party session</value>
+  </data>
+  <data name="PartyMode.StartParty" xml:space="preserve">
+    <value>Start a Party</value>
+  </data>
+  <data name="PartyMode.JoinParty" xml:space="preserve">
+    <value>Join a Party</value>
+  </data>
+  <data name="PartyMode.EnterSessionCode" xml:space="preserve">
+    <value>Enter session code</value>
+  </data>
+  <data name="PartyMode.OrSelectFromList" xml:space="preserve">
+    <value>Or select from recent sessions</value>
+  </data>
+  <data name="PartyMode.RecentSessions" xml:space="preserve">
+    <value>Recent Sessions</value>
+  </data>
+  <data name="PartyMode.SessionCreatedBy" xml:space="preserve">
+    <value>Created by</value>
+  </data>
+  <data name="PartyMode.SessionStartedAt" xml:space="preserve">
+    <value>Started at</value>
+  </data>
+  <data name="PartyMode.QuickAdd" xml:space="preserve">
+    <value>Quick Add</value>
+  </data>
+  <data name="PartyMode.SearchSongs" xml:space="preserve">
+    <value>Search for songs to add</value>
+  </data>
+  <data name="PartyMode.AddAllFromAlbum" xml:space="preserve">
+    <value>Add all from album</value>
+  </data>
+  <data name="PartyMode.AddAllFromArtist" xml:space="preserve">
+    <value>Add all from artist</value>
+  </data>
+  <data name="PartyMode.AddAllFromPlaylist" xml:space="preserve">
+    <value>Add all from playlist</value>
+  </data>
+  <data name="PartyMode.PrivateSession" xml:space="preserve">
+    <value>Private Session</value>
+  </data>
+  <data name="PartyMode.PublicSession" xml:space="preserve">
+    <value>Public Session</value>
+  </data>
+  <data name="PartyMode.RequireJoinCode" xml:space="preserve">
+    <value>Require join code</value>
+  </data>
+  <data name="PartyMode.SessionSettings" xml:space="preserve">
+    <value>Session Settings</value>
+  </data>
+  <data name="PartyMode.EnableVoting" xml:space="preserve">
+    <value>Enable voting</value>
+  </data>
+  <data name="PartyMode.VotingEnabled" xml:space="preserve">
+    <value>Voting enabled</value>
+  </data>
+  <data name="PartyMode.AllowGuestSkip" xml:space="preserve">
+    <value>Allow guests to skip</value>
+  </data>
+  <data name="PartyMode.GuestSkipAllowed" xml:space="preserve">
+    <value>Guest skip allowed</value>
+  </data>
   <data name="Jukebox.Disabled" xml:space="preserve">
     <value>Jukebox is disabled</value>
   </data>
