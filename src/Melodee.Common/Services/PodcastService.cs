@@ -171,13 +171,35 @@ public sealed class PodcastService(
                 return new OperationResult<bool>("Channel not found") { Data = false };
             }
 
+            // Get podcast library for file operations
+            var podcastLibraryResult = await libraryService.GetPodcastLibraryAsync(cancellationToken).ConfigureAwait(false);
+            var podcastLibrary = podcastLibraryResult.Data;
+
             if (softDelete)
             {
                 channel.IsDeleted = true;
                 channel.LastUpdatedAt = SystemClock.Instance.GetCurrentInstant();
 
+                // Delete downloaded episode files
                 foreach (var episode in channel.Episodes.Where(x => x.DownloadStatus == PodcastEpisodeDownloadStatus.Downloaded))
                 {
+                    if (podcastLibrary != null && !string.IsNullOrEmpty(episode.LocalPath))
+                    {
+                        var filePath = Path.Combine(podcastLibrary.Path, episode.LocalPath);
+                        if (File.Exists(filePath))
+                        {
+                            try
+                            {
+                                File.Delete(filePath);
+                                Logger.Debug("[{ServiceName}] Deleted episode file: {FilePath}", nameof(PodcastService), filePath);
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.Warning(ex, "[{ServiceName}] Failed to delete episode file: {FilePath}", nameof(PodcastService), filePath);
+                            }
+                        }
+                    }
+                    
                     episode.DownloadStatus = PodcastEpisodeDownloadStatus.None;
                     episode.LocalPath = null;
                     episode.LocalFileSize = null;
@@ -185,13 +207,69 @@ public sealed class PodcastService(
             }
             else
             {
+                // Hard delete - remove all episode files and channel folder
+                if (podcastLibrary != null)
+                {
+                    // Delete individual episode files first
+                    foreach (var episode in channel.Episodes.Where(x => !string.IsNullOrEmpty(x.LocalPath)))
+                    {
+                        var filePath = Path.Combine(podcastLibrary.Path, episode.LocalPath!);
+                        if (File.Exists(filePath))
+                        {
+                            try
+                            {
+                                File.Delete(filePath);
+                                Logger.Debug("[{ServiceName}] Deleted episode file: {FilePath}", nameof(PodcastService), filePath);
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.Warning(ex, "[{ServiceName}] Failed to delete episode file: {FilePath}", nameof(PodcastService), filePath);
+                            }
+                        }
+                    }
+
+                    // Delete channel folder (userId/channelId)
+                    var channelFolder = Path.Combine(podcastLibrary.Path, userId.ToString(), channelId.ToString());
+                    if (Directory.Exists(channelFolder))
+                    {
+                        try
+                        {
+                            Directory.Delete(channelFolder, recursive: true);
+                            Logger.Debug("[{ServiceName}] Deleted channel folder: {FolderPath}", nameof(PodcastService), channelFolder);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Warning(ex, "[{ServiceName}] Failed to delete channel folder: {FolderPath}", nameof(PodcastService), channelFolder);
+                        }
+                    }
+
+                    // Try to delete user folder if empty
+                    var userFolder = Path.Combine(podcastLibrary.Path, userId.ToString());
+                    if (Directory.Exists(userFolder))
+                    {
+                        try
+                        {
+                            if (!Directory.EnumerateFileSystemEntries(userFolder).Any())
+                            {
+                                Directory.Delete(userFolder);
+                                Logger.Debug("[{ServiceName}] Deleted empty user folder: {FolderPath}", nameof(PodcastService), userFolder);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Warning(ex, "[{ServiceName}] Failed to delete user folder: {FolderPath}", nameof(PodcastService), userFolder);
+                        }
+                    }
+                }
+
                 context.PodcastEpisodes.RemoveRange(channel.Episodes);
                 context.PodcastChannels.Remove(channel);
             }
 
             await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-            Logger.Information("[{ServiceName}] Deleted channel {ChannelId} for user {UserId}", nameof(PodcastService), channelId, userId);
+            Logger.Information("[{ServiceName}] Deleted channel {ChannelId} for user {UserId} (softDelete={SoftDelete})", 
+                nameof(PodcastService), channelId, userId, softDelete);
 
             return new OperationResult<bool> { Data = true };
         }
@@ -376,7 +454,15 @@ public sealed class PodcastService(
                     var filePath = Path.Combine(podcastLibrary.Path, episode.LocalPath);
                     if (File.Exists(filePath))
                     {
-                        File.Delete(filePath);
+                        try
+                        {
+                            File.Delete(filePath);
+                            Logger.Debug("[{ServiceName}] Deleted episode file: {FilePath}", nameof(PodcastService), filePath);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Warning(ex, "[{ServiceName}] Failed to delete episode file: {FilePath}", nameof(PodcastService), filePath);
+                        }
                     }
                 }
             }

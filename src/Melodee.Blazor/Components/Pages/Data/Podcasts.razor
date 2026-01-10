@@ -18,13 +18,6 @@
         <RadzenBreadCrumbItem Icon="podcasts" Text="@L("Navigation.Podcasts")" />
     </RadzenBreadCrumb>
     
-    @* DEBUG PANEL - Remove after fixing *@
-    <RadzenAlert AlertStyle="AlertStyle.Info" Shade="Shade.Lighter" AllowClose="false" Style="margin-bottom: 1rem;">
-        <RadzenText TextStyle="TextStyle.Caption">
-            <strong>DEBUG:</strong> PodcastEnabled=@_podcastEnabled | CurrentUsersId=@CurrentUsersId | Count=@_count | Channels=@(_channels?.Count() ?? 0) | IsLoading=@_isLoading
-        </RadzenText>
-    </RadzenAlert>
-    
     <RadzenRow AlignItems="AlignItems.Center">
         <RadzenColumn Size="12" SizeMD="6">
             <RadzenText Text="@L("Navigation.Podcasts")" TextStyle="TextStyle.DisplayH6" TagName="TagName.H1" style="margin: 0" />
