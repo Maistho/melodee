@@ -129,7 +129,7 @@ public abstract class ControllerBase(EtagRepository etagRepository, ISerializer 
             {
                 var cookieHash = HashHelper.CreateSha256(DateTime.UtcNow.ToString(MelodeeBlazorCookieMiddleware.DateFormat) + configuration.GetValue<string>(SettingRegistry.EncryptionPrivateKey)) ?? string.Empty;
                 requiresAuth = melodeeBlazorTokenCookie != cookieHash;
-                
+
                 Log.Debug("[OpenSubsonic Auth] Cookie auth check - Cookie present: {CookiePresent}, Cookie matches: {CookieMatches}, RequiresAuth: {RequiresAuth}, Path: {Path}",
                     !string.IsNullOrWhiteSpace(melodeeBlazorTokenCookie),
                     melodeeBlazorTokenCookie == cookieHash,

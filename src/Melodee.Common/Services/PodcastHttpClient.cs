@@ -93,7 +93,7 @@ public sealed class PodcastHttpClient : IDisposable
                         return PodcastHttpResult.Failed("Redirect without Location header");
                     }
 
-                    _logger.Debug("[PodcastHttpClient] Redirect {Count}/{Max}: {From} -> {To}", 
+                    _logger.Debug("[PodcastHttpClient] Redirect {Count}/{Max}: {From} -> {To}",
                         redirectCount + 1, maxRedirects, currentUrl, redirectLocation);
 
                     var redirectValidation = await _ssrfValidator.ValidateRedirectAsync(
@@ -105,7 +105,7 @@ public sealed class PodcastHttpClient : IDisposable
 
                     if (!redirectValidation.IsValid)
                     {
-                        _logger.Warning("[PodcastHttpClient] Redirect validation failed after {Count} redirects: {Error}", 
+                        _logger.Warning("[PodcastHttpClient] Redirect validation failed after {Count} redirects: {Error}",
                             redirectCount, redirectValidation.ErrorMessage);
                         return PodcastHttpResult.Failed(redirectValidation.ErrorMessage ?? "Redirect validation failed");
                     }

@@ -1,6 +1,8 @@
 @page "/data/podcasts/{ChannelApiKey}"
 @inherits MelodeeComponentBase
 @using Melodee.Common.Models.Collection
+@using Melodee.Common.Models
+@using Melodee.Common.Data.Models
 @using Melodee.Common.Enums
 
 @inject MainLayoutProxyService MainLayoutProxyService
@@ -142,6 +144,20 @@
                 EmptyText="@GridEmptyText"
                 ColumnWidth="200px">
                 <Columns>
+                    <RadzenDataGridColumn Width="50px" Sortable="false" Filterable="false">
+                        <Template Context="data">
+                            @if (data.PlayedCount > 0 || IsEpisodePlayed(data.Id))
+                            {
+                                <RadzenIcon Icon="check_circle" Style="color: var(--rz-success); font-size: 18px;"
+                                            title="@(data.PlayedCount > 1 ? string.Format(L("Podcast.EpisodePlayedCount"), data.PlayedCount) : L("Podcast.EpisodePlayed"))" />
+                            }
+                            else
+                            {
+                                <RadzenIcon Icon="radio_button_unchecked" Style="color: var(--rz-text-tertiary-color); font-size: 18px;"
+                                            title="@L("Podcast.EpisodeNotPlayed")" />
+                            }
+                        </Template>
+                    </RadzenDataGridColumn>
                     <RadzenDataGridColumn Property="@nameof(PodcastEpisodeDataInfo.Title)" Title="@L("Common.Title")" Width="400px">
                         <Template Context="data">
                             <RadzenStack Gap="0.25rem">
@@ -150,6 +166,13 @@
                                 {
                                     <RadzenText TextStyle="TextStyle.Caption" Class="rz-text-secondary-color" Style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 400px;">
                                         @(data.Description.Length > 150 ? data.Description[..150] + "..." : data.Description)
+                                    </RadzenText>
+                                }
+                                @if (data.LastPlayedAt.HasValue)
+                                {
+                                    <RadzenText TextStyle="TextStyle.Caption" Class="rz-text-success-color" Style="font-size: 11px;">
+                                        <RadzenIcon Icon="history" Style="font-size: 12px; margin-right: 4px;" />
+                                        @string.Format(L("Podcast.LastPlayedAt"), data.LastPlayedAt.Value.ToDateTimeUtc().ToLocalTime().ToString("g"))
                                     </RadzenText>
                                 }
                             </RadzenStack>
@@ -193,7 +216,7 @@
                             }
                         </Template>
                     </RadzenDataGridColumn>
-                    <RadzenDataGridColumn Title="@L("Common.Actions")" Width="150px" Sortable="false" Filterable="false">
+                    <RadzenDataGridColumn Title="@L("Common.Actions")" Width="180px" Sortable="false" Filterable="false">
                         <Template Context="data">
                             <RadzenStack Orientation="Orientation.Horizontal" Gap="0.25rem">
                                 @* Play button only available for downloaded episodes *@
@@ -237,12 +260,65 @@
                                                   Click="@(() => NavigationManager.NavigateTo(data.EnclosureUrl, true))"
                                                   title="@L("Actions.OpenExternal")" />
                                 }
+                                
+                                @* Bookmark button for downloaded episodes *@
+                                @if (data.DownloadStatus == Melodee.Common.Enums.PodcastEpisodeDownloadStatus.Downloaded)
+                                {
+                                    <RadzenButton Icon="bookmark_border" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light"
+                                                  Click="@(() => ShowBookmarkInfo(data))"
+                                                  title="@L("Podcast.ViewBookmark")" />
+                                }
                             </RadzenStack>
                         </Template>
                     </RadzenDataGridColumn>
                 </Columns>
             </RadzenDataGrid>
         </RadzenRow>
+        
+        @if (_playHistory?.Any() == true)
+        {
+            <RadzenCard Class="rz-mt-4">
+                <RadzenStack>
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+                        <RadzenText TextStyle="TextStyle.H6" Class="rz-m-0">@L("Podcast.PlayHistory")</RadzenText>
+                        <RadzenButton Icon="close" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Light" 
+                                      Click="@TogglePlayHistory" title="@L("Common.Close")" />
+                    </RadzenStack>
+                    <RadzenDataGrid Data="@_playHistory" AllowSorting="true" AllowPaging="true" PageSize="10"
+                                    EmptyText="@L("Podcast.NoPlayHistory")" Style="width: 100%;">
+                        <Columns>
+                            <RadzenDataGridColumn Title="@L("Common.Date")" Width="150px" Property="@nameof(UserPodcastEpisodePlayHistory.PlayedAt)">
+                                <Template Context="history">
+                                    @history.PlayedAt.ToDateTimeUtc().ToLocalTime().ToString("g")
+                                </Template>
+                            </RadzenDataGridColumn>
+                            <RadzenDataGridColumn Title="@L("Common.Title")" Sortable="false">
+                                <Template Context="history">
+                                    @if (history.PodcastEpisode != null)
+                                    {
+                                        <RadzenText>@history.PodcastEpisode.Title</RadzenText>
+                                    }
+                                    else
+                                    {
+                                        <RadzenText TextStyle="TextStyle.Caption">@L("Podcast.UnknownEpisode")</RadzenText>
+                                    }
+                                </Template>
+                            </RadzenDataGridColumn>
+                            <RadzenDataGridColumn Title="@L("Podcast.Position")" Width="100px">
+                                <Template Context="history">
+                                    @FormatTime(history.SecondsPlayed ?? 0)
+                                </Template>
+                            </RadzenDataGridColumn>
+                            <RadzenDataGridColumn Title="@L("Common.Client")" Width="120px">
+                                <Template Context="history">
+                                    @history.Client
+                                </Template>
+                            </RadzenDataGridColumn>
+                        </Columns>
+                    </RadzenDataGrid>
+                </RadzenStack>
+            </RadzenCard>
+        }
     }
 </RadzenStack>
 
@@ -322,6 +398,8 @@
             var result = await PodcastService.ListEpisodesAsync(request, CurrentUsersId, _channelId);
             _episodes = result.Data;
             _count = result.TotalCount;
+            
+            await LoadPlayHistory();
         }
         catch (Exception ex)
         {
@@ -331,6 +409,48 @@
         {
             _isLoading = false;
         }
+    }
+    
+    private async Task LoadPlayHistory()
+    {
+        try
+        {
+            var historyResult = await PodcastPlaybackService.GetPlayHistoryAsync(CurrentUsersId, limit: 100);
+            if (historyResult.IsSuccess && historyResult.Data != null)
+            {
+                _playHistory = historyResult.Data;
+                _playedEpisodeIds = historyResult.Data.Select(h => h.PodcastEpisodeId).ToHashSet();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "[PodcastDetail] Error loading play history");
+        }
+    }
+    
+    private bool IsEpisodePlayed(int episodeId)
+    {
+        return _playedEpisodeIds.Contains(episodeId);
+    }
+    
+    private async Task ShowBookmarkInfo(PodcastEpisodeDataInfo episode)
+    {
+        var bookmarkResult = await PodcastPlaybackService.GetBookmarkAsync(CurrentUsersId, episode.Id);
+        var bookmark = bookmarkResult.Data;
+        
+        var positionText = bookmark != null 
+            ? FormatTime(bookmark.PositionSeconds) 
+            : L("Podcast.NoBookmark");
+
+        await DialogService.Alert(
+            $"<strong>{episode.Title}</strong><br/><br/>{L("Podcast.BookmarkPosition")}: {positionText}",
+            L("Podcast.BookmarkTitle"),
+            new AlertOptions { OkButtonText = L("Common.Close") });
+    }
+    
+    private void TogglePlayHistory()
+    {
+        _showPlayHistory = !_showPlayHistory;
     }
 
     private async Task RefreshChannel()
@@ -519,6 +639,9 @@
     private System.Timers.Timer? _bookmarkTimer;
     private string _podcastLibraryPath = string.Empty;
     private bool _hasScrobbled;
+    private HashSet<int> _playedEpisodeIds = new();
+    private IEnumerable<UserPodcastEpisodePlayHistory>? _playHistory;
+    private bool _showPlayHistory;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

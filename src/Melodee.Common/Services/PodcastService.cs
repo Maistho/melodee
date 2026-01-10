@@ -81,8 +81,8 @@ public sealed class PodcastService(
             await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
 
             var count = await context.PodcastEpisodes
-                .Where(e => e.PodcastChannel != null 
-                         && e.PodcastChannel.UserId == userId 
+                .Where(e => e.PodcastChannel != null
+                         && e.PodcastChannel.UserId == userId
                          && !e.PodcastChannel.IsDeleted
                          && e.DownloadStatus == PodcastEpisodeDownloadStatus.Downloaded
                          && !context.UserPodcastEpisodePlayHistories
@@ -230,7 +230,7 @@ public sealed class PodcastService(
                             }
                         }
                     }
-                    
+
                     episode.DownloadStatus = PodcastEpisodeDownloadStatus.None;
                     episode.LocalPath = null;
                     episode.LocalFileSize = null;
@@ -299,7 +299,7 @@ public sealed class PodcastService(
 
             await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-            Logger.Information("[{ServiceName}] Deleted channel {ChannelId} for user {UserId} (softDelete={SoftDelete})", 
+            Logger.Information("[{ServiceName}] Deleted channel {ChannelId} for user {UserId} (softDelete={SoftDelete})",
                 nameof(PodcastService), channelId, userId, softDelete);
 
             return new OperationResult<bool> { Data = true };
@@ -824,7 +824,7 @@ public sealed class PodcastService(
     {
         await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
 
-        Log.Information("[PodcastService.ListChannelsAsync] Starting query for UserId={UserId}, Skip={Skip}, Take={Take}", 
+        Log.Information("[PodcastService.ListChannelsAsync] Starting query for UserId={UserId}, Skip={Skip}, Take={Take}",
             userId, request.SkipValue, request.TakeValue);
 
         var query = context.PodcastChannels
@@ -842,7 +842,7 @@ public sealed class PodcastService(
         }
 
         var totalCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);
-        
+
         Log.Information("[PodcastService.ListChannelsAsync] TotalCount={TotalCount} for UserId={UserId}", totalCount, userId);
 
         var channels = await query
@@ -867,13 +867,13 @@ public sealed class PodcastService(
                 x.Episodes.Count,
                 null,
                 0,
-                x.Episodes.Count(e => 
+                x.Episodes.Count(e =>
                     e.DownloadStatus == PodcastEpisodeDownloadStatus.Downloaded &&
                     !context.UserPodcastEpisodePlayHistories.Any(h => h.UserId == userId && h.PodcastEpisodeId == e.Id))))
             .ToArrayAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        Log.Information("[PodcastService.ListChannelsAsync] Returning {Count} channels out of {TotalCount} for UserId={UserId}", 
+        Log.Information("[PodcastService.ListChannelsAsync] Returning {Count} channels out of {TotalCount} for UserId={UserId}",
             channels.Length, totalCount, userId);
 
         return new PagedResult<PodcastChannelDataInfo>

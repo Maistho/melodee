@@ -426,12 +426,12 @@ public class PodcastController(
         CancellationToken cancellationToken = default)
     {
         var auth = await AuthenticateAsync(cancellationToken);
-        
+
         Log.Debug("[StreamPodcastEpisode] Auth result - IsSuccess: {IsSuccess}, UserId: {UserId}, Roles: {Roles}",
             auth.IsSuccess,
             auth.UserInfo?.Id ?? 0,
             string.Join(", ", auth.UserInfo?.Roles ?? []));
-        
+
         if (!auth.IsSuccess)
         {
             Log.Warning("[StreamPodcastEpisode] Authentication failed for episode ID: {EpisodeId}", id);
@@ -454,14 +454,14 @@ public class PodcastController(
                 string.Join(", ", userRoles));
             return StatusCode((int)HttpStatusCode.Forbidden, CreateResponse(new Error(10, "User role not allowed")));
         }
-        
+
         Log.Debug("[StreamPodcastEpisode] Role check passed. RequiresAuth: {RequiresAuth}, HasStreamRole: {HasStreamRole}",
             ApiRequest.RequiresAuthentication,
             userRoles.Contains("HasStreamRole"));
 
         var episodeId = ParsePodcastEpisodeId(id);
         Log.Debug("[StreamPodcastEpisode] Parsing episode ID: {RawId} -> {ParsedId}", id, episodeId);
-        
+
         if (episodeId == null)
         {
             return BadRequest(CreateResponse(new Error(0, "Invalid episode id")));
@@ -473,7 +473,7 @@ public class PodcastController(
             // Authentication is already handled at endpoint level (localhost/cookie auth)
             Log.Debug("[StreamPodcastEpisode] Fetching episode {EpisodeId} for streaming", episodeId.Value);
             var episodeResult = await podcastService.GetEpisodeForStreamingAsync(episodeId.Value, cancellationToken).ConfigureAwait(false);
-            
+
             Log.Debug("[StreamPodcastEpisode] Episode fetch result - IsSuccess: {IsSuccess}, HasData: {HasData}, Messages: {Messages}",
                 episodeResult.IsSuccess,
                 episodeResult.Data != null,

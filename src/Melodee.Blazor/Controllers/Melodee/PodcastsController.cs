@@ -27,6 +27,7 @@ public sealed class PodcastsController(
     EtagRepository etagRepository,
     UserService userService,
     PodcastService podcastService,
+    PodcastPlaybackService? podcastPlaybackService,
     IConfiguration configuration,
     IMelodeeConfigurationFactory configurationFactory,
     ILogger<PodcastsController> logger) : ControllerBase(
@@ -209,6 +210,151 @@ public sealed class PodcastsController(
 
         return Ok();
     }
+
+    /// <summary>
+    /// Update "now playing" status for a podcast episode (heartbeat mechanism).
+    /// </summary>
+    [HttpPost]
+    [Route("episodes/{id:int}/play")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> NowPlayingAsync(
+        int id,
+        [FromQuery] int? secondsPlayed = null,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null) return ApiUnauthorized();
+
+        if (podcastPlaybackService == null)
+        {
+            return ApiBadRequest("Podcast playback tracking is not configured");
+        }
+
+        var result = await podcastPlaybackService.NowPlayingAsync(
+            user.Id,
+            id,
+            secondsPlayed,
+            "Melodee.Blazor");
+
+        if (!result.IsSuccess)
+            return ApiBadRequest(result.Messages?.FirstOrDefault() ?? "Error updating now playing status");
+
+        return Ok();
+    }
+
+    /// <summary>
+    /// Get bookmark (resume position) for a podcast episode.
+    /// </summary>
+    [HttpGet]
+    [Route("episodes/{id:int}/bookmark")]
+    [ProducesResponseType(typeof(PodcastEpisodeBookmark), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetBookmarkAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null) return ApiUnauthorized();
+
+        if (podcastPlaybackService == null)
+        {
+            return ApiBadRequest("Podcast playback tracking is not configured");
+        }
+
+        var result = await podcastPlaybackService.GetBookmarkAsync(user.Id, id, cancellationToken);
+
+        if (!result.IsSuccess)
+            return ApiBadRequest(result.Messages?.FirstOrDefault() ?? "Error retrieving bookmark");
+
+        return Ok(result.Data);
+    }
+
+    /// <summary>
+    /// Create or update a bookmark (resume position) for a podcast episode.
+    /// </summary>
+    [HttpPut]
+    [Route("episodes/{id:int}/bookmark")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> SaveBookmarkAsync(
+        int id,
+        [FromBody] SaveBookmarkRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null) return ApiUnauthorized();
+
+        if (podcastPlaybackService == null)
+        {
+            return ApiBadRequest("Podcast playback tracking is not configured");
+        }
+
+        var result = await podcastPlaybackService.SaveBookmarkAsync(
+            user.Id,
+            id,
+            request.PositionSeconds,
+            request.Comment,
+            cancellationToken);
+
+        if (!result.IsSuccess)
+            return ApiBadRequest(result.Messages?.FirstOrDefault() ?? "Error saving bookmark");
+
+        return Ok();
+    }
+
+    /// <summary>
+    /// Delete a bookmark for a podcast episode.
+    /// </summary>
+    [HttpDelete]
+    [Route("episodes/{id:int}/bookmark")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> DeleteBookmarkAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null) return ApiUnauthorized();
+
+        if (podcastPlaybackService == null)
+        {
+            return ApiBadRequest("Podcast playback tracking is not configured");
+        }
+
+        var result = await podcastPlaybackService.DeleteBookmarkAsync(user.Id, id, cancellationToken);
+
+        if (!result.IsSuccess)
+            return ApiBadRequest(result.Messages?.FirstOrDefault() ?? "Error deleting bookmark");
+
+        return Ok();
+    }
+
+    /// <summary>
+    /// Get play history for podcast episodes.
+    /// </summary>
+    [HttpGet]
+    [Route("episodes/{id:int}/history")]
+    [ProducesResponseType(typeof(IEnumerable<UserPodcastEpisodePlayHistory>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetPlayHistoryAsync(
+        int id,
+        [FromQuery] int limit = 50,
+        [FromQuery] int offset = 0,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null) return ApiUnauthorized();
+
+        if (podcastPlaybackService == null)
+        {
+            return ApiBadRequest("Podcast playback tracking is not configured");
+        }
+
+        var result = await podcastPlaybackService.GetPlayHistoryAsync(user.Id, id, limit, offset, cancellationToken);
+
+        if (!result.IsSuccess)
+            return ApiBadRequest(result.Messages?.FirstOrDefault() ?? "Error retrieving play history");
+
+        return Ok(result.Data);
+    }
 }
 
 public record CreateChannelRequest(string Url);
+public record SaveBookmarkRequest(int PositionSeconds, string? Comment = null);
