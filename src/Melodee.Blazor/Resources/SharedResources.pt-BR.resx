@@ -5345,4 +5345,52 @@
   <data name="Jukebox.Disabled" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Jukebox is disabled</value>
   </data>
+  <data name="Jukebox.Backend.Mpv" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] MPV Audio Backend</value>
+  </data>
+  <data name="Jukebox.Backend.MpvNotFound" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] MPV executable not found. Please install MPV to use the audio backend.</value>
+  </data>
+  <data name="Jukebox.Backend.Status" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Backend Status</value>
+  </data>
+  <data name="Jukebox.Backend.Connected" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Connected</value>
+  </data>
+  <data name="Jukebox.Backend.Disconnected" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Disconnected</value>
+  </data>
+  <data name="Jukebox.Backend.Running" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Running</value>
+  </data>
+  <data name="Jukebox.Backend.NotRunning" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Not Running</value>
+  </data>
+  <data name="Jukebox.Backend.Error" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Error: {0}</value>
+  </data>
+  <data name="Jukebox.Backend.Initialize" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Initialize Backend</value>
+  </data>
+  <data name="Jukebox.Backend.Shutdown" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Shutdown Backend</value>
+  </data>
+  <data name="Jukebox.Backend.RegisterEndpoint" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Register as Endpoint</value>
+  </data>
+  <data name="Jukebox.Backend.EndpointRegistered" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Backend registered as system endpoint</value>
+  </data>
+  <data name="Jukebox.Backend.Initializing" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Initializing backend...</value>
+  </data>
+  <data name="Jukebox.Backend.ShuttingDown" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Shutting down backend...</value>
+  </data>
+  <data name="Jukebox.Backend.PlaybackInfo" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Now Playing: {0}</value>
+  </data>
+  <data name="Jukebox.Backend.Position" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Position: {0}</value>
+  </data>
 </root>

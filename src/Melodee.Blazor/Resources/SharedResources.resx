@@ -5345,4 +5345,52 @@
   <data name="Jukebox.Disabled" xml:space="preserve">
     <value>Jukebox is disabled</value>
   </data>
+  <data name="Jukebox.Backend.Mpv" xml:space="preserve">
+    <value>MPV Audio Backend</value>
+  </data>
+  <data name="Jukebox.Backend.MpvNotFound" xml:space="preserve">
+    <value>MPV executable not found. Please install MPV to use the audio backend.</value>
+  </data>
+  <data name="Jukebox.Backend.Status" xml:space="preserve">
+    <value>Backend Status</value>
+  </data>
+  <data name="Jukebox.Backend.Connected" xml:space="preserve">
+    <value>Connected</value>
+  </data>
+  <data name="Jukebox.Backend.Disconnected" xml:space="preserve">
+    <value>Disconnected</value>
+  </data>
+  <data name="Jukebox.Backend.Running" xml:space="preserve">
+    <value>Running</value>
+  </data>
+  <data name="Jukebox.Backend.NotRunning" xml:space="preserve">
+    <value>Not Running</value>
+  </data>
+  <data name="Jukebox.Backend.Error" xml:space="preserve">
+    <value>Error: {0}</value>
+  </data>
+  <data name="Jukebox.Backend.Initialize" xml:space="preserve">
+    <value>Initialize Backend</value>
+  </data>
+  <data name="Jukebox.Backend.Shutdown" xml:space="preserve">
+    <value>Shutdown Backend</value>
+  </data>
+  <data name="Jukebox.Backend.RegisterEndpoint" xml:space="preserve">
+    <value>Register as Endpoint</value>
+  </data>
+  <data name="Jukebox.Backend.EndpointRegistered" xml:space="preserve">
+    <value>Backend registered as system endpoint</value>
+  </data>
+  <data name="Jukebox.Backend.Initializing" xml:space="preserve">
+    <value>Initializing backend...</value>
+  </data>
+  <data name="Jukebox.Backend.ShuttingDown" xml:space="preserve">
+    <value>Shutting down backend...</value>
+  </data>
+  <data name="Jukebox.Backend.PlaybackInfo" xml:space="preserve">
+    <value>Now Playing: {0}</value>
+  </data>
+  <data name="Jukebox.Backend.Position" xml:space="preserve">
+    <value>Position: {0}</value>
+  </data>
 </root>
