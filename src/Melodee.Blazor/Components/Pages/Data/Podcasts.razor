@@ -285,9 +285,12 @@
         
         try
         {
-            foreach (var channel in _channels)
+            if (_channels is not null)
             {
-                await PodcastService.RefreshChannelAsync(channel.Id);
+                foreach (var channel in _channels)
+                {
+                    await PodcastService.RefreshChannelAsync(channel.Id);
+                }
             }
             
             NotificationService.Notify(new NotificationMessage

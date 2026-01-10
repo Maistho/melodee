@@ -446,17 +446,18 @@ public class PodcastController(
 
         // Only check for HasStreamRole if authentication was required (not localhost/cookie auth)
         // When authentication is bypassed (localhost or Blazor cookie auth), skip role check
-        if (ApiRequest.RequiresAuthentication && !(auth.UserInfo.Roles?.Contains("HasStreamRole") ?? false))
+        var userRoles = auth.UserInfo.Roles ?? [];
+        if (ApiRequest.RequiresAuthentication && !userRoles.Contains("HasStreamRole"))
         {
             Log.Warning("[StreamPodcastEpisode] User {UserId} does not have HasStreamRole. Roles: {Roles}",
                 auth.UserInfo.Id,
-                string.Join(", ", auth.UserInfo.Roles ?? []));
+                string.Join(", ", userRoles));
             return StatusCode((int)HttpStatusCode.Forbidden, CreateResponse(new Error(10, "User role not allowed")));
         }
         
         Log.Debug("[StreamPodcastEpisode] Role check passed. RequiresAuth: {RequiresAuth}, HasStreamRole: {HasStreamRole}",
             ApiRequest.RequiresAuthentication,
-            auth.UserInfo.Roles?.Contains("HasStreamRole") ?? false);
+            userRoles.Contains("HasStreamRole"));
 
         var episodeId = ParsePodcastEpisodeId(id);
         Log.Debug("[StreamPodcastEpisode] Parsing episode ID: {RawId} -> {ParsedId}", id, episodeId);
