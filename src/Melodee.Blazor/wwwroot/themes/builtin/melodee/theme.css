@@ -1,16 +1,16 @@
 :root {
     /* Melodee Design Tokens */
-    --md-surface-0: #FFFBFE;
-    --md-surface-1: #FFF5FB;
-    --md-surface-2: #FFECF8;
+    --md-surface-0: #FFFFFF;
+    --md-surface-1: #FAFAFA;
+    --md-surface-2: #F5F5F5;
 
-    --md-text-1: #3D2945;
-    --md-text-2: #6B4C7A;
+    --md-text-1: #1a1a2e;
+    --md-text-2: #4a4a5a;
     --md-text-inverse: #FFFFFF;
-    --md-muted: #A88BB4;
+    --md-muted: #9090a0;
 
-    --md-border: #FFCCE8;
-    --md-divider: #FFCCE8;
+    --md-border: #E0E0E0;
+    --md-divider: #E0E0E0;
 
     --md-primary: #E040FB;
     --md-primary-contrast: #FFFFFF;
@@ -25,11 +25,11 @@
     --md-error: #EF5350;
     --md-info: #FFA726;
 
-    --md-table-header-bg: #FFF5FB;
-    --md-table-header-text: #3D2945;
+    --md-table-header-bg: #FAFAFA;
+    --md-table-header-text: #1a1a2e;
 
-    --md-chip-bg: #FFCCE8;
-    --md-chip-text: #3D2945;
+    --md-chip-bg: #F0E6F6;
+    --md-chip-text: #1a1a2e;
 
     --md-font-family-base: 'Inter', sans-serif;
     --md-font-family-heading: 'Outfit', sans-serif;
@@ -72,38 +72,41 @@
     --rz-danger-dark: #E53935;
     --rz-danger-darker: #C62828;
 
-    --rz-base-50: #FFFBFE;
-    --rz-base-100: #FFF5FB;
-    --rz-base-200: #FFECF8;
-    --rz-base-300: #FFE0F2;
-    --rz-base-400: #FFCCE8;
-    --rz-base-500: #FFB3DC;
-    --rz-base-600: #E091C0;
-    --rz-base-700: #B06A96;
-    --rz-base-800: #804870;
-    --rz-base-900: #502A48;
+    /* Neutral base palette - white/gray scale */
+    --rz-base-50: #FFFFFF;
+    --rz-base-100: #FAFAFA;
+    --rz-base-200: #F5F5F5;
+    --rz-base-300: #EEEEEE;
+    --rz-base-400: #E0E0E0;
+    --rz-base-500: #BDBDBD;
+    --rz-base-600: #9E9E9E;
+    --rz-base-700: #757575;
+    --rz-base-800: #616161;
+    --rz-base-900: #424242;
 
-    --rz-base-background-color: #FFFBFE;
-    --rz-base-background-color-secondary: #FFF5FB;
+    --rz-base-background-color: #FFFFFF;
+    --rz-base-background-color-secondary: #FAFAFA;
+    --rz-body-background-color: #FFFFFF;
 
-    --rz-text-color: #3D2945;
-    --rz-text-secondary-color: #6B4C7A;
-    --rz-text-disabled-color: #A88BB4;
+    --rz-text-color: #1a1a2e;
+    --rz-text-secondary-color: #4a4a5a;
+    --rz-text-disabled-color: #9090a0;
     --rz-text-contrast-color: #FFFFFF;
 
-    --rz-border-color: #FFCCE8;
+    --rz-border-color: #E0E0E0;
     --rz-border-color-hover: #E040FB;
 
-    --rz-shadow-1: 0 2px 4px rgba(224, 64, 251, 0.1);
-    --rz-shadow-2: 0 4px 8px rgba(224, 64, 251, 0.12);
-    --rz-shadow-3: 0 8px 16px rgba(224, 64, 251, 0.14);
+    --rz-shadow-1: 0 2px 4px rgba(0, 0, 0, 0.08);
+    --rz-shadow-2: 0 4px 8px rgba(0, 0, 0, 0.10);
+    --rz-shadow-3: 0 8px 16px rgba(0, 0, 0, 0.12);
 
     --rz-gradient-primary: linear-gradient(135deg, #E040FB 0%, #FF7043 50%, #FFA726 100%);
 }
 
+/* Sidebar and navigation - clean white/gray */
 .rz-sidebar,
 .rz-panel-menu {
-    background: linear-gradient(180deg, #FFF5FB 0%, #FFECF8 100%);
+    background: #FAFAFA;
 }
 
 .rz-sidebar .rz-navigation-item,
@@ -115,7 +118,7 @@
 .rz-panel-menu .rz-navigation-item a,
 .rz-panel-menu .rz-panelmenu-header,
 .rz-panel-menu .rz-panelmenu-header a {
-    color: #3D2945 !important;
+    color: #1a1a2e !important;
 }
 
 .rz-sidebar .rz-navigation-item:hover,
@@ -138,20 +141,21 @@
 .rz-sidebar .material-symbols-outlined,
 .rz-panel-menu .rzi,
 .rz-panel-menu .material-symbols-outlined {
-    color: #6B4C7A !important;
+    color: #4a4a5a !important;
 }
 
+/* Header - clean white */
 .rz-header,
 .rz-layout-header,
 header {
-    background: linear-gradient(135deg, #FFF5FB 0%, #FFECF8 100%) !important;
-    color: #3D2945 !important;
-    border-bottom: 1px solid #FFCCE8;
+    background: #FFFFFF !important;
+    color: #1a1a2e !important;
+    border-bottom: 1px solid #E0E0E0;
 }
 
 .rz-header *,
 .rz-layout-header * {
-    color: #3D2945 !important;
+    color: #1a1a2e !important;
 }
 
 .rz-profile-menu,
@@ -170,16 +174,16 @@ header {
 
 .rz-profile-menu .rz-menu,
 .rz-profile-menu-dropdown {
-    background: #FFFBFE !important;
-    border: 1px solid #FFCCE8 !important;
-    box-shadow: 0 4px 12px rgba(224, 64, 251, 0.15) !important;
+    background: #FFFFFF !important;
+    border: 1px solid #E0E0E0 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
 }
 
 .rz-profile-menu .rz-menuitem,
 .rz-profile-menu .rz-menuitem a,
 .rz-profile-menu-dropdown .rz-menuitem,
 .rz-profile-menu-dropdown .rz-menuitem a {
-    color: #3D2945 !important;
+    color: #1a1a2e !important;
     background: transparent !important;
 }
 
@@ -190,32 +194,34 @@ header {
     color: #E040FB !important;
 }
 
+/* Body and content - white */
 .rz-body,
 .rz-layout-body,
 main,
 .page,
 .content {
-    background-color: #FFFBFE !important;
+    background-color: #FFFFFF !important;
 }
 
+/* Panel menu - clean gray */
 .rz-panelmenu,
 .rz-panelmenu-panel {
-    background-color: #FFF5FB !important;
+    background-color: #FAFAFA !important;
 }
 
 .rz-panelmenu-header {
-    background-color: #FFECF8 !important;
-    color: #3D2945 !important;
+    background-color: #F5F5F5 !important;
+    color: #1a1a2e !important;
 }
 
 .rz-panelmenu-content {
-    background-color: #FFF5FB !important;
+    background-color: #FAFAFA !important;
 }
 
 .rz-panelmenu-content .rz-menuitem,
 .rz-panelmenu-content .rz-menuitem a,
 .rz-panelmenu-content .rz-menuitem span {
-    color: #3D2945 !important;
+    color: #1a1a2e !important;
 }
 
 .rz-panelmenu-content .rz-menuitem:hover,
@@ -226,7 +232,7 @@ main,
 
 .rz-panelmenu .rz-panelmenu-panel .rz-panelmenu-content,
 .rz-panelmenu-panel .rz-panelmenu-panel {
-    background-color: #FFECF8 !important;
+    background-color: #F5F5F5 !important;
 }
 
 .rz-panelmenu .rz-navigation-item,
@@ -239,7 +245,7 @@ main,
 .rz-panelmenu .rz-menuitem-text,
 .rz-panelmenu-panel .rz-menuitem-link,
 .rz-panelmenu-panel .rz-menuitem-link span {
-    color: #3D2945 !important;
+    color: #1a1a2e !important;
     background-color: transparent !important;
 }
 
@@ -266,7 +272,7 @@ main,
 .rz-panelmenu .rz-navigation-item .rzi,
 .rz-panelmenu .rz-panelmenu-item .rzi,
 .rz-panelmenu .rz-menuitem .rzi {
-    color: #6B4C7A !important;
+    color: #4a4a5a !important;
 }
 
 .rz-panelmenu .rz-navigation-item:hover .rzi,
@@ -275,6 +281,7 @@ main,
     color: #E040FB !important;
 }
 
+/* Gradient primary buttons - keep the colorful gradient */
 .rz-button.rz-primary {
     background: var(--rz-gradient-primary);
     border: none;
@@ -286,11 +293,13 @@ main,
     box-shadow: 0 4px 12px rgba(224, 64, 251, 0.4);
 }
 
+/* Cards - clean with subtle border */
 .rz-card {
-    border: 1px solid #FFCCE8;
-    box-shadow: 0 2px 8px rgba(224, 64, 251, 0.08);
+    border: 1px solid #E0E0E0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
+/* Focus states - purple accent */
 .rz-textbox:focus,
 .rz-dropdown:focus,
 .rz-textarea:focus {
@@ -298,20 +307,24 @@ main,
     box-shadow: 0 0 0 3px rgba(224, 64, 251, 0.2);
 }
 
-.rz-datatable .rz-datatable-thead \u003e tr \u003e th {
-    background: linear-gradient(135deg, #FFF5FB 0%, #FFECF8 100%);
+/* Data table header - clean with purple accent */
+.rz-datatable .rz-datatable-thead > tr > th {
+    background: #FAFAFA;
     border-bottom: 2px solid #E040FB;
 }
 
+/* Progress bar - gradient */
 .rz-progressbar-value {
     background: var(--rz-gradient-primary);
 }
 
+/* Tab selection - purple accent */
 .rz-tabview-nav li.rz-tabview-selected a {
     border-bottom-color: #E040FB;
     color: #E040FB;
 }
 
+/* Links - purple */
 a,
 .rz-link {
     color: #E040FB;
@@ -322,7 +335,8 @@ a:hover,
     color: #AA00C7;
 }
 
+/* Text selection - light purple */
 ::selection {
     background: rgba(224, 64, 251, 0.3);
-    color: #3D2945;
+    color: #1a1a2e;
 }

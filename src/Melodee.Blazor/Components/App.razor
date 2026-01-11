@@ -1,8 +1,11 @@
 @* @rendermode must be InteractiveServer for RadzenTheme to work properly *@
 @implements IDisposable
+@using Melodee.Common.Configuration
+@using Melodee.Common.Constants
 @inject IHttpContextAccessor HttpContextAccessor
 @inject Radzen.ThemeService RadzenThemeService
 @inject Melodee.Common.Services.IThemeService ThemeService
+@inject IMelodeeConfigurationFactory ConfigurationFactory
 
 <!DOCTYPE html>
 <html lang="en">
@@ -76,28 +79,56 @@
 
 @code {
     private const string ThemeCookieName = "melodee_ui_theme";
+    private const string DefaultThemeId = "melodee-dark";  // Melodee Dark theme - dark base with purple accents
     
-    // Radzen built-in themes
+    // Radzen built-in themes - these work correctly out of the box
     private static readonly string[] RadzenThemes = 
     [
         "default", "standard", "humanistic", "software", "material",
-        "default-dark", "standard-dark", "humanistic-dark", "software-dark", "material-dark"
+        "dark", "standard-dark", "humanistic-dark", "software-dark", "material-dark"
     ];
     
-    private string _currentTheme = "default";
-    private string? _customCssPath;
-    private string _baseThemeName = "default-base";
+    private string _currentTheme = DefaultThemeId;
+    private string? _customCssPath = "/themes/builtin/melodee-dark/theme.css";  // Default to Melodee Dark custom CSS
+    private string _baseThemeName = "dark";
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
+        // Synchronously check for theme cookie during initial render
         var httpContext = HttpContextAccessor.HttpContext;
         if (httpContext?.Request.Cookies.TryGetValue(ThemeCookieName, out var cookieTheme) == true 
             && !string.IsNullOrEmpty(cookieTheme))
         {
             _currentTheme = cookieTheme;
-            await ResolveCustomThemeAsync(_currentTheme);
+            // If it's a Radzen theme, clear the custom CSS path
+            if (IsRadzenTheme(cookieTheme))
+            {
+                _customCssPath = null;
+            }
+            // For other themes, we'll resolve the CSS path in OnInitializedAsync
+        }
+        // else: use field defaults (dark theme)
+        
+        base.OnInitialized();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Get the system default theme from configuration if no cookie was set
+        var httpContext = HttpContextAccessor.HttpContext;
+        var hasCookie = httpContext?.Request.Cookies.TryGetValue(ThemeCookieName, out var cookieTheme) == true 
+                        && !string.IsNullOrEmpty(cookieTheme);
+        
+        if (!hasCookie)
+        {
+            // No cookie - get the configured system default
+            var config = await ConfigurationFactory.GetConfigurationAsync();
+            var systemDefaultTheme = config.GetValue<string>(SettingRegistry.SystemDefaultTheme) ?? DefaultThemeId;
+            _currentTheme = systemDefaultTheme;
         }
         
+        // Resolve the actual theme CSS path
+        await ResolveCustomThemeAsync(_currentTheme);
         RadzenThemeService.ThemeChanged += OnThemeChanged;
         await base.OnInitializedAsync();
     }
@@ -127,7 +158,9 @@
             if (theme != null)
             {
                 _customCssPath = theme.ThemeCssPath;
-                _baseThemeName = theme.Metadata?.BaseTheme == "dark" ? "dark-base" : "default-base";
+                // Use full theme CSS (dark.css/default.css) not base CSS (dark-base.css/default-base.css)
+                // The full theme CSS includes semantic variable assignments needed for proper styling
+                _baseThemeName = theme.Metadata?.BaseTheme == "dark" ? "dark" : "default";
             }
         }
     }

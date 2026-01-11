@@ -77,8 +77,8 @@ public sealed class ThemeClientService(IJSRuntime jsRuntime) : IThemeClientServi
         catch (Exception ex)
         {
             Console.WriteLine($"Error applying theme: {ex.Message}");
-            // Fallback to default theme on error
-            await jsRuntime.InvokeVoidAsync("melodeeTheme.loadTheme", CancellationToken.None, "/themes/builtin/melodee-dark/theme.css");
+            // For Radzen built-in themes, we don't load custom CSS - just reset to default
+            // The RadzenTheme component in App.razor handles built-in themes
         }
     }
 
