@@ -6,6 +6,7 @@ using Melodee.Common.Enums.PartyMode;
 using Melodee.Common.Models;
 using Melodee.Common.Models.OpenSubsonic.Responses.Jukebox;
 using Melodee.Common.Services.Caching;
+using Melodee.Common.Services.Playback;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using Serilog;
@@ -78,7 +79,8 @@ public sealed class SubsonicJukeboxService(
     IDbContextFactory<MelodeeDbContext> contextFactory,
     IMelodeeConfigurationFactory configurationFactory,
     IPartyQueueService partyQueueService,
-    IPartyPlaybackService partyPlaybackService)
+    IPartyPlaybackService partyPlaybackService,
+    IPlaybackBackendService playbackBackendService)
     : ServiceBase(logger, cacheManager, contextFactory), ISubsonicJukeboxService
 {
     // Use a fixed GUID for the system session
@@ -188,7 +190,16 @@ public sealed class SubsonicJukeboxService(
             cancellationToken
         ).ConfigureAwait(false);
 
-        return new OperationResult<bool> { Data = playbackResult.IsSuccess };
+        if (!playbackResult.IsSuccess)
+        {
+            return new OperationResult<bool>(playbackResult.Messages)
+            {
+                Type = playbackResult.Type,
+                Data = false
+            };
+        }
+
+        return new OperationResult<bool> { Data = true };
     }
 
     public async Task<OperationResult<bool>> StartAsync(int userId, CancellationToken cancellationToken = default)
@@ -213,16 +224,80 @@ public sealed class SubsonicJukeboxService(
             };
         }
 
+        var session = sessionResult.Data;
+
+        // Get current playback state to find the current song
+        var playbackState = await partyPlaybackService.GetPlaybackStateAsync(session.ApiKey, cancellationToken).ConfigureAwait(false);
+        
+        // Get the current queue item to find the song to play
+        Guid? songApiKey = null;
+        if (playbackState.Data?.CurrentQueueItemApiKey != null)
+        {
+            await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+            var queueItem = await scopedContext.PartyQueueItems
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.ApiKey == playbackState.Data.CurrentQueueItemApiKey, cancellationToken)
+                .ConfigureAwait(false);
+            songApiKey = queueItem?.SongApiKey;
+        }
+        else
+        {
+            // No current item set, try to get the first item in the queue
+            var queueResult = await partyQueueService.GetQueueAsync(session.ApiKey, cancellationToken).ConfigureAwait(false);
+            if (queueResult.IsSuccess && queueResult.Data.Items.Any())
+            {
+                var firstItem = queueResult.Data.Items.First();
+                songApiKey = firstItem.SongApiKey;
+                
+                // Set the first item as the current item
+                await partyPlaybackService.SetCurrentItemAsync(session.ApiKey, firstItem.ApiKey, cancellationToken).ConfigureAwait(false);
+            }
+        }
+
+        if (songApiKey == null)
+        {
+            return new OperationResult<bool>("No song in queue to play")
+            {
+                Type = OperationResponseType.ValidationFailure,
+                Data = false
+            };
+        }
+
+        // Update the playback intent in the party system
         var playbackResult = await partyPlaybackService.UpdateIntentAsync(
-            sessionResult.Data.ApiKey,
+            session.ApiKey,
             PlaybackIntent.Play,
             null,
             userId,
-            sessionResult.Data.PlaybackRevision,
+            session.PlaybackRevision,
             cancellationToken
         ).ConfigureAwait(false);
 
-        return new OperationResult<bool> { Data = playbackResult.IsSuccess };
+        if (!playbackResult.IsSuccess)
+        {
+            return new OperationResult<bool>(playbackResult.Messages)
+            {
+                Type = playbackResult.Type,
+                Data = false
+            };
+        }
+
+        // Actually play the song on the backend
+        var startPosition = playbackState.Data?.PositionSeconds ?? 0;
+        var backendResult = await playbackBackendService.PlaySongAsync(songApiKey.Value, startPosition, cancellationToken).ConfigureAwait(false);
+        
+        if (!backendResult.IsSuccess)
+        {
+            Logger.Warning("[SubsonicJukeboxService] Failed to play song on backend: {Messages}", string.Join(", ", backendResult.Messages ?? []));
+            return new OperationResult<bool>(backendResult.Messages)
+            {
+                Type = backendResult.Type,
+                Data = false
+            };
+        }
+
+        Logger.Information("[SubsonicJukeboxService] Started playback of song {SongApiKey} at position {Position}s", songApiKey, startPosition);
+        return new OperationResult<bool> { Data = true };
     }
 
     public async Task<OperationResult<bool>> StopAsync(int userId, CancellationToken cancellationToken = default)
@@ -256,7 +331,16 @@ public sealed class SubsonicJukeboxService(
             cancellationToken
         ).ConfigureAwait(false);
 
-        return new OperationResult<bool> { Data = playbackResult.IsSuccess };
+        if (!playbackResult.IsSuccess)
+        {
+            return new OperationResult<bool>(playbackResult.Messages)
+            {
+                Type = playbackResult.Type,
+                Data = false
+            };
+        }
+
+        return new OperationResult<bool> { Data = true };
     }
 
     public async Task<OperationResult<bool>> SkipAsync(int userId, int? index, int? offset, CancellationToken cancellationToken = default)
@@ -290,7 +374,16 @@ public sealed class SubsonicJukeboxService(
             cancellationToken
         ).ConfigureAwait(false);
 
-        return new OperationResult<bool> { Data = playbackResult.IsSuccess };
+        if (!playbackResult.IsSuccess)
+        {
+            return new OperationResult<bool>(playbackResult.Messages)
+            {
+                Type = playbackResult.Type,
+                Data = false
+            };
+        }
+
+        return new OperationResult<bool> { Data = true };
     }
 
     public async Task<OperationResult<bool>> AddAsync(int userId, IEnumerable<string> songIds, CancellationToken cancellationToken = default)
@@ -339,7 +432,16 @@ public sealed class SubsonicJukeboxService(
             cancellationToken
         ).ConfigureAwait(false);
 
-        return new OperationResult<bool> { Data = addResult.IsSuccess };
+        if (!addResult.IsSuccess)
+        {
+            return new OperationResult<bool>(addResult.Messages)
+            {
+                Type = addResult.Type,
+                Data = false
+            };
+        }
+
+        return new OperationResult<bool> { Data = true };
     }
 
     public async Task<OperationResult<bool>> ClearAsync(int userId, CancellationToken cancellationToken = default)
@@ -372,7 +474,16 @@ public sealed class SubsonicJukeboxService(
             cancellationToken
         ).ConfigureAwait(false);
 
-        return new OperationResult<bool> { Data = clearResult.IsSuccess };
+        if (!clearResult.IsSuccess)
+        {
+            return new OperationResult<bool>(clearResult.Messages)
+            {
+                Type = clearResult.Type,
+                Data = false
+            };
+        }
+
+        return new OperationResult<bool> { Data = true };
     }
 
     public async Task<OperationResult<bool>> RemoveAsync(int userId, int index, CancellationToken cancellationToken = default)
@@ -418,7 +529,16 @@ public sealed class SubsonicJukeboxService(
             cancellationToken
         ).ConfigureAwait(false);
 
-        return new OperationResult<bool> { Data = removeResult.IsSuccess };
+        if (!removeResult.IsSuccess)
+        {
+            return new OperationResult<bool>(removeResult.Messages)
+            {
+                Type = removeResult.Type,
+                Data = false
+            };
+        }
+
+        return new OperationResult<bool> { Data = true };
     }
 
     public async Task<OperationResult<bool>> ShuffleAsync(int userId, CancellationToken cancellationToken = default)
@@ -483,11 +603,27 @@ public sealed class SubsonicJukeboxService(
 
         var session = await scopedContext.PartySessions
             .Include(x => x.PlaybackState)
+            .Include(x => x.Participants)
             .FirstOrDefaultAsync(x => x.ApiKey == JukeboxSessionApiKey, cancellationToken)
             .ConfigureAwait(false);
 
         if (session != null)
         {
+            // Ensure user is a participant
+            if (!session.Participants.Any(p => p.UserId == userId))
+            {
+                var participant = new PartySessionParticipant
+                {
+                    PartySessionId = session.Id,
+                    UserId = userId,
+                    Role = PartyRole.DJ,
+                    JoinedAt = SystemClock.Instance.GetCurrentInstant(),
+                    IsBanned = false
+                };
+                scopedContext.PartySessionParticipants.Add(participant);
+                await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+                Logger.Debug("[SubsonicJukeboxService] Added user {UserId} as participant to jukebox session", userId);
+            }
             return new OperationResult<PartySession> { Data = session };
         }
 
@@ -514,6 +650,18 @@ public sealed class SubsonicJukeboxService(
         scopedContext.PartyPlaybackStates.Add(playbackState);
         session.PlaybackState = playbackState;
 
+        await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        // Add the owner as a participant with Owner role
+        var ownerParticipant = new PartySessionParticipant
+        {
+            PartySessionId = session.Id,
+            UserId = userId,
+            Role = PartyRole.Owner,
+            JoinedAt = SystemClock.Instance.GetCurrentInstant(),
+            IsBanned = false
+        };
+        scopedContext.PartySessionParticipants.Add(ownerParticipant);
         await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         Logger.Information("[SubsonicJukeboxService] Created jukebox session for user {UserId}", userId);

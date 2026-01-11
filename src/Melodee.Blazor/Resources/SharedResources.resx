@@ -5493,7 +5493,7 @@
     <value>Position</value>
   </data>
 <data name="Jukebox.NowPlaying" xml:space="preserve">
-    <value>NowPlaying</value>
+    <value>Now Playing</value>
   </data>
 <data name="Jukebox.Queue" xml:space="preserve">
     <value>Queue</value>
@@ -5632,5 +5632,29 @@
   </data>
 <data name="AlbumDetail.JukeboxError" xml:space="preserve">
     <value>Failed to add to Jukebox</value>
+  </data>
+<data name="Common.UnknownError" xml:space="preserve">
+    <value>An unknown error occurred</value>
+  </data>
+<data name="Jukebox.ClearQueue" xml:space="preserve">
+    <value>Clear Queue</value>
+  </data>
+<data name="Jukebox.PlaybackPaused" xml:space="preserve">
+    <value>Playback paused</value>
+  </data>
+<data name="Jukebox.PlaybackStarted" xml:space="preserve">
+    <value>Playback started</value>
+  </data>
+<data name="Jukebox.PlaybackStopped" xml:space="preserve">
+    <value>Playback stopped</value>
+  </data>
+<data name="Jukebox.QueueCleared" xml:space="preserve">
+    <value>Queue cleared</value>
+  </data>
+<data name="Jukebox.QueueShuffled" xml:space="preserve">
+    <value>Queue shuffled</value>
+  </data>
+<data name="Jukebox.Shuffle" xml:space="preserve">
+    <value>Shuffle</value>
   </data>
 </root>

@@ -5634,4 +5634,28 @@
   <data name="AlbumDetail.JukeboxError" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Failed to add to Jukebox</value>
   </data>
+  <data name="Common.UnknownError" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] An unknown error occurred</value>
+  </data>
+  <data name="Jukebox.ClearQueue" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Clear Queue</value>
+  </data>
+  <data name="Jukebox.PlaybackPaused" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Playback paused</value>
+  </data>
+  <data name="Jukebox.PlaybackStarted" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Playback started</value>
+  </data>
+  <data name="Jukebox.PlaybackStopped" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Playback stopped</value>
+  </data>
+  <data name="Jukebox.QueueCleared" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Queue cleared</value>
+  </data>
+  <data name="Jukebox.QueueShuffled" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Queue shuffled</value>
+  </data>
+  <data name="Jukebox.Shuffle" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Shuffle</value>
+  </data>
 </root>
