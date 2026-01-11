@@ -13,9 +13,20 @@ public interface IPlaybackBackend
     Task<BackendCapabilities> GetCapabilitiesAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Starts playback of a queue item.
+    /// Starts playback of a queue item. Note: Some backends (like MPV) cannot resolve file paths
+    /// from the PartyQueueItem and require the orchestrating service to call PlayFileAsync instead.
     /// </summary>
     Task PlayAsync(PartyQueueItem item, double startPositionSeconds = 0, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Starts playback of a file at the specified path. This is the preferred method for backends
+    /// that require direct file access (like MPV).
+    /// </summary>
+    /// <param name="filePath">The absolute file path to play.</param>
+    /// <param name="songApiKey">The API key of the song being played (for tracking).</param>
+    /// <param name="startPositionSeconds">Optional start position in seconds.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    Task PlayFileAsync(string filePath, Guid songApiKey, double startPositionSeconds = 0, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Pauses playback.

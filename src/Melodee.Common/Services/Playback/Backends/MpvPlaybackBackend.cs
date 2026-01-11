@@ -68,40 +68,26 @@ public sealed class MpvPlaybackBackend : IPlaybackBackend, IDisposable
     }
 
     /// <inheritdoc />
-    public async Task PlayAsync(PartyQueueItem item, double startPositionSeconds = 0, CancellationToken cancellationToken = default)
+    public Task PlayAsync(PartyQueueItem item, double startPositionSeconds = 0, CancellationToken cancellationToken = default)
     {
-        // Note: The PartyQueueItem contains a SongApiKey, not the file path directly.
-        // In a complete implementation, the orchestrating service (SubsonicJukeboxService) would:
-        // 1. Resolve the Song from SongApiKey using a SongService
-        // 2. Get the absolute file path from the library configuration
-        // 3. Pass that resolved path to the backend
-        // 
-        // For now, MPV expects the caller to have resolved the file path.
-        // This could be done by extending the interface or having a separate method.
-        // TODO: Implement proper file path resolution in the orchestrating service
-        
-        _logger.Warning("[MpvPlaybackBackend] PlayAsync called with PartyQueueItem {SongApiKey}. " +
-                       "File path resolution must be handled by the calling service.", item.SongApiKey);
-        
-        // For the demo, we'll just log and return - the actual file loading will need
-        // the orchestrating service to resolve the path and potentially use a different method
-        await Task.CompletedTask;
+        // MPV backend cannot resolve file paths from SongApiKey. The orchestrating service
+        // must call PlayFileAsync with the resolved file path instead.
+        _logger.Warning("[MpvPlaybackBackend] PlayAsync(PartyQueueItem) is not supported for MPV. " +
+                       "Use PlayFileAsync with the resolved file path. SongApiKey: {SongApiKey}", item.SongApiKey);
+
+        return Task.CompletedTask;
     }
 
-    /// <summary>
-    /// Plays a file at the specified path. This is the implementation method that should be called
-    /// after the orchestrating service has resolved the file path from the SongApiKey.
-    /// </summary>
-    /// <param name="filePath">The absolute file path to play.</param>
-    /// <param name="startPositionSeconds">Optional start position in seconds.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    public async Task PlayFileAsync(string filePath, double startPositionSeconds = 0, CancellationToken cancellationToken = default)
+    /// <inheritdoc />
+    public async Task PlayFileAsync(string filePath, Guid songApiKey, double startPositionSeconds = 0, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(filePath))
         {
             _logger.Warning("[MpvPlaybackBackend] Cannot play empty file path");
             return;
         }
+
+        _logger.Information("[MpvPlaybackBackend] Playing file: {FilePath} (SongApiKey: {SongApiKey})", filePath, songApiKey);
 
         await SendCommandAsync("loadfile", [filePath, "replace"], cancellationToken).ConfigureAwait(false);
 

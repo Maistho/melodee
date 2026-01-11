@@ -1,6 +1,5 @@
-using Microsoft.AspNetCore.SignalR;
-
 using Melodee.Common.Enums.PartyMode;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Melodee.Blazor.Hubs;
 /// <summary>

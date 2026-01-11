@@ -6,7 +6,6 @@ using Melodee.Common.Enums.PartyMode;
 using Melodee.Common.Models;
 using Melodee.Common.Models.PartyMode;
 using Melodee.Common.Services.Caching;
-using Melodee.Common.Services.Playback.Backends;
 using Melodee.Common.Services.Playback.Factory;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
@@ -48,6 +47,15 @@ public interface IPlaybackBackendService
     /// Updates the backend endpoint heartbeat.
     /// </summary>
     Task<OperationResult<bool>> UpdateBackendHeartbeatAsync(Guid sessionApiKey, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Plays a song by its API key. Resolves the file path from the database and plays it.
+    /// </summary>
+    /// <param name="songApiKey">The API key of the song to play.</param>
+    /// <param name="startPositionSeconds">Optional start position in seconds.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Operation result indicating success or failure.</returns>
+    Task<OperationResult<bool>> PlaySongAsync(Guid songApiKey, double startPositionSeconds = 0, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -280,6 +288,73 @@ public sealed class PlaybackBackendService(
 
         endpoint.LastSeenAt = SystemClock.Instance.GetCurrentInstant();
         await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        return new OperationResult<bool> { Data = true };
+    }
+
+    public async Task<OperationResult<bool>> PlaySongAsync(Guid songApiKey, double startPositionSeconds = 0, CancellationToken cancellationToken = default)
+    {
+        var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
+        if (!configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled))
+        {
+            return new OperationResult<bool>("Jukebox is not enabled")
+            {
+                Type = OperationResponseType.BadRequest,
+                Data = false
+            };
+        }
+
+        var backendType = configuration.GetValue<string>(SettingRegistry.JukeboxBackendType);
+        var backend = await GetBackendAsync(backendType, cancellationToken).ConfigureAwait(false);
+        if (backend == null)
+        {
+            return new OperationResult<bool>($"Failed to create {backendType} backend")
+            {
+                Type = OperationResponseType.Error,
+                Data = false
+            };
+        }
+
+        // Resolve the song from the database to get the file path
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var song = await scopedContext.Songs
+            .AsNoTracking()
+            .Include(s => s.Album)
+                .ThenInclude(a => a.Artist)
+                    .ThenInclude(ar => ar.Library)
+            .FirstOrDefaultAsync(s => s.ApiKey == songApiKey, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (song == null)
+        {
+            return new OperationResult<bool>($"Song not found: {songApiKey}")
+            {
+                Type = OperationResponseType.NotFound,
+                Data = false
+            };
+        }
+
+        // Build the full file path
+        var filePath = Path.Combine(
+            song.Album.Artist.Library.Path,
+            song.Album.Artist.Directory,
+            song.Album.Directory,
+            song.FileName);
+
+        if (!File.Exists(filePath))
+        {
+            Logger.Warning("[PlaybackBackendService] Song file not found: {FilePath}", filePath);
+            return new OperationResult<bool>($"Song file not found: {filePath}")
+            {
+                Type = OperationResponseType.NotFound,
+                Data = false
+            };
+        }
+
+        Logger.Information("[PlaybackBackendService] Playing song {SongApiKey}: {FilePath}", songApiKey, filePath);
+
+        await backend.PlayFileAsync(filePath, songApiKey, startPositionSeconds, cancellationToken).ConfigureAwait(false);
 
         return new OperationResult<bool> { Data = true };
     }

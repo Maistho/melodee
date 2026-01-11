@@ -43,7 +43,7 @@ public class JukeboxController(
         [FromQuery] string? ids = null,
         CancellationToken cancellationToken = default)
     {
-        var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
+        var configuration = await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
         var jukeboxEnabled = configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled);
         var backendType = configuration.GetValue<string>(SettingRegistry.JukeboxBackendType);
 

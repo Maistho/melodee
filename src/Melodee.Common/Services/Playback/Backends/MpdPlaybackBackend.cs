@@ -66,7 +66,30 @@ public sealed class MpdPlaybackBackend : IPlaybackBackend, IDisposable
     /// <inheritdoc />
     public Task PlayAsync(PartyQueueItem item, double startPositionSeconds = 0, CancellationToken cancellationToken = default)
     {
+        // MPD uses playlist indices - the SortOrder maps to the queue position
         return ExecuteCommandAsync($"play {item.SortOrder}", cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task PlayFileAsync(string filePath, Guid songApiKey, double startPositionSeconds = 0, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrEmpty(filePath))
+        {
+            _logger.Warning("[MpdPlaybackBackend] Cannot play empty file path");
+            return;
+        }
+
+        _logger.Information("[MpdPlaybackBackend] Adding and playing file: {FilePath} (SongApiKey: {SongApiKey})", filePath, songApiKey);
+
+        // Clear playlist and add the file, then play
+        await ExecuteCommandAsync("clear", cancellationToken).ConfigureAwait(false);
+        await ExecuteCommandAsync($"add \"{filePath}\"", cancellationToken).ConfigureAwait(false);
+        await ExecuteCommandAsync("play", cancellationToken).ConfigureAwait(false);
+
+        if (startPositionSeconds > 0)
+        {
+            await SeekAsync(startPositionSeconds, cancellationToken).ConfigureAwait(false);
+        }
     }
 
     /// <inheritdoc />

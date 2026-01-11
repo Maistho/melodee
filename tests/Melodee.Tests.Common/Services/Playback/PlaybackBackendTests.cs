@@ -26,14 +26,14 @@ public class PlaybackBackendFactoryTests
         bool mpdEnableDebugOutput = false)
     {
         var mockConfig = new Mock<IMelodeeConfiguration>();
-        
+
         mockConfig.Setup(x => x.GetValue<string>(SettingRegistry.MpvPath)).Returns(mpvPath);
         mockConfig.Setup(x => x.GetValue<string>(SettingRegistry.MpvAudioDevice)).Returns(mpvAudioDevice);
         mockConfig.Setup(x => x.GetValue<string>(SettingRegistry.MpvExtraArgs)).Returns(mpvExtraArgs);
         mockConfig.Setup(x => x.GetValue<string>(SettingRegistry.MpvSocketPath)).Returns(mpvSocketPath);
         mockConfig.Setup(x => x.GetValue<double>(SettingRegistry.MpvInitialVolume)).Returns(mpvInitialVolume);
         mockConfig.Setup(x => x.GetValue<bool>(SettingRegistry.MpvEnableDebugOutput)).Returns(mpvEnableDebugOutput);
-        
+
         mockConfig.Setup(x => x.GetValue<string>(SettingRegistry.MpdInstanceName)).Returns(mpdInstanceName);
         mockConfig.Setup(x => x.GetValue<string>(SettingRegistry.MpdHost)).Returns(mpdHost);
         mockConfig.Setup(x => x.GetValue<int>(SettingRegistry.MpdPort)).Returns(mpdPort);
