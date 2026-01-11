@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.SignalR;
 
-namespace Melodee.Blazor.Hubs;
+using Melodee.Common.Enums.PartyMode;
 
+namespace Melodee.Blazor.Hubs;
 /// <summary>
 /// SignalR hub for real-time party session updates.
 /// </summary>
@@ -56,16 +57,7 @@ public class PartyHub : Hub
 /// </summary>
 public record QueueChangedEvent(long Revision, QueueChangeType ChangeType, Guid? ItemApiKey, IEnumerable<PartyQueueItemDto> Items);
 
-/// <summary>
-/// Types of queue changes.
-/// </summary>
-public enum QueueChangeType
-{
-    Added = 1,
-    Removed = 2,
-    Reordered = 3,
-    Cleared = 4
-}
+
 
 /// <summary>
 /// DTO for queue items in SignalR events.

@@ -2,6 +2,7 @@ using Melodee.Common.Data;
 using Melodee.Common.Data.Models;
 using Melodee.Common.Models;
 using Melodee.Common.Services.Caching;
+using Melodee.Common.Services.PartyMode;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using Serilog;
@@ -14,10 +15,13 @@ namespace Melodee.Common.Services;
 public sealed class PartyPlaybackService(
     ILogger logger,
     ICacheManager cacheManager,
-    IDbContextFactory<MelodeeDbContext> contextFactory)
+    IDbContextFactory<MelodeeDbContext> contextFactory,
+    IPartyNotificationService notificationService)
     : ServiceBase(logger, cacheManager, contextFactory), IPartyPlaybackService
 {
     private const string PlaybackStateCacheKeyTemplate = "urn:party:playback:{0}";
+    private const string SkipCooldownCacheKeyTemplate = "urn:party:cooldown:skip:{0}";
+    private readonly IPartyNotificationService _notificationService = notificationService;
 
     public async Task<OperationResult<PartyPlaybackState?>> GetPlaybackStateAsync(
         Guid sessionApiKey,
@@ -109,6 +113,8 @@ public sealed class PartyPlaybackService(
         Logger.Debug("[PartyPlaybackService] Updated playback state for session {SessionId}: position={Position}, playing={IsPlaying}",
             sessionApiKey, positionSeconds, isPlaying);
 
+        await _notificationService.NotifyPlaybackChangedAsync(sessionApiKey, session.PlaybackState);
+
         return new OperationResult<PartyPlaybackState>
         {
             Data = session.PlaybackState
@@ -157,6 +163,8 @@ public sealed class PartyPlaybackService(
         Logger.Information("[PartyPlaybackService] Set current item to {ItemApiKey} for session {SessionId}",
             queueItemApiKey ?? Guid.Empty, sessionApiKey);
 
+        await _notificationService.NotifyPlaybackChangedAsync(sessionApiKey, session.PlaybackState);
+
         return new OperationResult<PartyPlaybackState>
         {
             Data = session.PlaybackState
@@ -175,6 +183,7 @@ public sealed class PartyPlaybackService(
 
         var session = await scopedContext.PartySessions
             .Include(x => x.PlaybackState)
+            .Include(x => x.Participants)
             .FirstOrDefaultAsync(x => x.ApiKey == sessionApiKey, cancellationToken)
             .ConfigureAwait(false);
 
@@ -183,6 +192,26 @@ public sealed class PartyPlaybackService(
             return new OperationResult<PartyPlaybackState>("Session not found.")
             {
                 Type = OperationResponseType.NotFound,
+                Data = null!
+            };
+        }
+
+        var participant = session.Participants.FirstOrDefault(p => p.UserId == requestingUserId);
+        if (participant == null || participant.IsBanned)
+        {
+            return new OperationResult<PartyPlaybackState>("User is not a valid participant or is banned.")
+            {
+                Type = OperationResponseType.Forbidden,
+                Data = null!
+            };
+        }
+
+        // Only Owner and DJ can control playback (Requirement 148, 209, 320 implied)
+        if (participant.Role == Melodee.Common.Enums.PartyMode.PartyRole.Listener)
+        {
+            return new OperationResult<PartyPlaybackState>("Listeners cannot control playback.")
+            {
+                Type = OperationResponseType.Forbidden,
                 Data = null!
             };
         }
@@ -225,6 +254,16 @@ public sealed class PartyPlaybackService(
                 break;
 
             case PlaybackIntent.Skip:
+                var skipCacheKey = string.Format(SkipCooldownCacheKeyTemplate, sessionApiKey);
+                if (await CacheManager.GetAsync<bool?>(skipCacheKey, () => Task.FromResult<bool?>(null), cancellationToken, TimeSpan.Zero) != null)
+                {
+                    return new OperationResult<PartyPlaybackState>("Skip cooldown active.")
+                    {
+                        Type = OperationResponseType.Conflict,
+                        Data = null!
+                    };
+                }
+
                 var queueItems = await scopedContext.PartyQueueItems
                     .Where(x => x.PartySessionId == session.Id)
                     .OrderBy(x => x.SortOrder)
@@ -248,6 +287,8 @@ public sealed class PartyPlaybackService(
                 session.PlaybackState.CurrentQueueItemApiKey = nextItem?.ApiKey;
                 session.PlaybackState.PositionSeconds = 0;
                 session.PlaybackState.IsPlaying = true;
+
+                await CacheManager.GetAsync(skipCacheKey, () => Task.FromResult(true), cancellationToken, TimeSpan.FromSeconds(10));
                 break;
 
             case PlaybackIntent.Seek:
@@ -275,6 +316,8 @@ public sealed class PartyPlaybackService(
 
         Logger.Information("[PartyPlaybackService] Applied intent {Intent} for session {SessionId} by user {UserId}",
             intent, sessionApiKey, requestingUserId);
+
+        await _notificationService.NotifyPlaybackChangedAsync(sessionApiKey, session.PlaybackState);
 
         return new OperationResult<PartyPlaybackState>
         {

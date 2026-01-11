@@ -5,7 +5,6 @@ using Melodee.Common.Enums.PartyMode;
 using Melodee.Common.Models;
 using Melodee.Common.Models.OpenSubsonic.Responses.Jukebox;
 using Melodee.Common.Services.Caching;
-using Melodee.Common.Services.Playback;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using NodaTime;
@@ -82,7 +81,8 @@ public sealed class SubsonicJukeboxService(
     IPartyPlaybackService partyPlaybackService)
     : ServiceBase(logger, cacheManager, contextFactory), ISubsonicJukeboxService
 {
-    private const string JukeboxSessionApiKey = "jukebox-system-session";
+    // Use a fixed GUID for the system session
+    private static readonly Guid JukeboxSessionApiKey = Guid.Parse("550e8400-e29b-41d4-a716-446655440000");
     private const int SystemUserId = 0;
 
     public async Task<OperationResult<JukeboxStatusResponse>> GetStatusAsync(CancellationToken cancellationToken = default)
@@ -474,7 +474,7 @@ public sealed class SubsonicJukeboxService(
 
         var session = await scopedContext.PartySessions
             .Include(x => x.PlaybackState)
-            .FirstOrDefaultAsync(x => x.ApiKey == Guid.Parse(JukeboxSessionApiKey), cancellationToken)
+            .FirstOrDefaultAsync(x => x.ApiKey == JukeboxSessionApiKey, cancellationToken)
             .ConfigureAwait(false);
 
         if (session != null)
@@ -484,7 +484,7 @@ public sealed class SubsonicJukeboxService(
 
         session = new PartySession
         {
-            ApiKey = Guid.Parse(JukeboxSessionApiKey),
+            ApiKey = JukeboxSessionApiKey,
             Name = "Subsonic Jukebox",
             OwnerUserId = SystemUserId,
             Status = PartySessionStatus.Active,
@@ -494,6 +494,17 @@ public sealed class SubsonicJukeboxService(
         };
 
         scopedContext.PartySessions.Add(session);
+
+        var playbackState = new PartyPlaybackState
+        {
+            PartySessionId = session.Id,
+            PositionSeconds = 0,
+            IsPlaying = false,
+            CreatedAt = SystemClock.Instance.GetCurrentInstant()
+        };
+        scopedContext.PartyPlaybackStates.Add(playbackState);
+        session.PlaybackState = playbackState;
+
         await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         Logger.Information("[SubsonicJukeboxService] Created jukebox session");
@@ -506,26 +517,78 @@ public sealed class SubsonicJukeboxService(
         var queueResult = await partyQueueService.GetQueueAsync(sessionApiKey, cancellationToken).ConfigureAwait(false);
         var items = queueResult.Data.Items.ToList();
 
+        if (!items.Any())
+        {
+            return new JukeboxPlaylistResponse(
+                Entries: [],
+                Username: "system",
+                Comment: null,
+                IsPublic: false,
+                SongCount: 0,
+                Duration: 0);
+        }
+
+        // Fetch song metadata
+        var songApiKeys = items.Select(x => x.SongApiKey).Distinct().ToList();
+
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        var songs = await scopedContext.Songs
+            .AsNoTracking()
+            .Include(x => x.Album)
+            .ThenInclude(x => x.Artist)
+            .Where(x => songApiKeys.Contains(x.ApiKey))
+            .ToDictionaryAsync(x => x.ApiKey, cancellationToken)
+            .ConfigureAwait(false);
+
         var entries = new List<JukeboxEntryResponse>();
+        double totalDuration = 0;
+
         foreach (var item in items.OrderBy(x => x.SortOrder))
         {
-            entries.Add(new JukeboxEntryResponse(
-                Id: item.SongApiKey.ToString(),
-                Parent: item.SongApiKey.ToString(),
-                Title: $"Song {item.SongApiKey:N}",
-                Artist: "Unknown Artist",
-                Album: "Unknown Album",
-                Year: 0,
-                Genre: null,
-                CoverArt: null,
-                Duration: 180,
-                BitRate: 320,
-                Path: $"/song/{item.SongApiKey}",
-                TranscodedContentType: null,
-                TranscodedSuffix: null,
-                IsDir: false,
-                IsVideo: false,
-                Type: "music"));
+            if (songs.TryGetValue(item.SongApiKey, out var song))
+            {
+                var entry = new JukeboxEntryResponse(
+                    Id: song.ApiKey.ToString(),
+                    Parent: song.Album?.ApiKey.ToString() ?? Guid.Empty.ToString(),
+                    Title: song.Title,
+                    Artist: song.Album?.Artist?.Name ?? "Unknown Artist",
+                    Album: song.Album?.Name ?? "Unknown Album",
+                    Year: song.Album?.ReleaseDate.Year ?? 0,
+                    Genre: null,
+                    CoverArt: song.Album?.ApiKey.ToString(),
+                    Duration: (int)song.Duration,
+                    BitRate: song.BitRate,
+                    Path: $"/song/{song.ApiKey}",
+                    TranscodedContentType: null,
+                    TranscodedSuffix: null,
+                    IsDir: false,
+                    IsVideo: false,
+                    Type: "music");
+
+                entries.Add(entry);
+                totalDuration += song.Duration;
+            }
+            else
+            {
+                // Fallback if song not found
+                entries.Add(new JukeboxEntryResponse(
+                    Id: item.SongApiKey.ToString(),
+                    Parent: item.SongApiKey.ToString(),
+                    Title: $"Song {item.SongApiKey:N}",
+                    Artist: "Unknown",
+                    Album: "Unknown",
+                    Year: 0,
+                    Genre: null,
+                    CoverArt: null,
+                    Duration: 0,
+                    BitRate: 0,
+                    Path: "",
+                    TranscodedContentType: null,
+                    TranscodedSuffix: null,
+                    IsDir: false,
+                    IsVideo: false,
+                    Type: "music"));
+            }
         }
 
         return new JukeboxPlaylistResponse(
@@ -534,7 +597,7 @@ public sealed class SubsonicJukeboxService(
             Comment: null,
             IsPublic: false,
             SongCount: entries.Count,
-            Duration: entries.Sum(e => e.Duration));
+            Duration: (int)totalDuration);
     }
 
     private static int FindCurrentIndex(List<JukeboxEntryResponse> entries, Guid currentItemApiKey)

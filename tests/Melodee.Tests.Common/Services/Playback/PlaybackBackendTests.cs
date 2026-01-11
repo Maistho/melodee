@@ -4,7 +4,6 @@ using Melodee.Common.Services.Playback.Backends;
 using Melodee.Common.Services.Playback.Factory;
 using Microsoft.Extensions.Options;
 using Serilog;
-using Xunit;
 
 namespace Melodee.Tests.Common.Services.Playback;
 

@@ -7,6 +7,7 @@ using Melodee.Common.Data.Models;
 using Melodee.Common.Enums.PartyMode;
 using Melodee.Common.Models;
 using Melodee.Common.Services.Caching;
+using Melodee.Common.Services.PartyMode;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using Serilog;
@@ -20,10 +21,12 @@ public sealed class PartySessionService(
     ILogger logger,
     ICacheManager cacheManager,
     IDbContextFactory<MelodeeDbContext> contextFactory,
-    IMelodeeConfigurationFactory configurationFactory)
+    IMelodeeConfigurationFactory configurationFactory,
+    IPartyNotificationService notificationService)
     : ServiceBase(logger, cacheManager, contextFactory), IPartySessionService
 {
     private const string SessionCacheKeyTemplate = "urn:party:session:{0}";
+    private readonly IPartyNotificationService _notificationService = notificationService;
 
     public async Task<OperationResult<PartySession>> CreateAsync(
         string name,
@@ -205,10 +208,14 @@ public sealed class PartySessionService(
 
         Logger.Information("[PartySessionService] User {UserId} joined session {SessionId}", userId, session.Id);
 
-        return new OperationResult<PartySessionParticipant>
+        var result = new OperationResult<PartySessionParticipant>
         {
             Data = participant
         };
+
+        await _notificationService.NotifyParticipantsChangedAsync(sessionApiKey, session.Participants);
+
+        return result;
     }
 
     public async Task<OperationResult<bool>> LeaveAsync(
@@ -259,10 +266,14 @@ public sealed class PartySessionService(
 
         Logger.Information("[PartySessionService] User {UserId} left session {SessionId}", userId, session.Id);
 
-        return new OperationResult<bool>
+        var result = new OperationResult<bool>
         {
             Data = true
         };
+
+        await _notificationService.NotifyParticipantsChangedAsync(sessionApiKey, session.Participants);
+
+        return result;
     }
 
     public async Task<OperationResult<bool>> EndAsync(
@@ -312,10 +323,14 @@ public sealed class PartySessionService(
 
         Logger.Information("[PartySessionService] Session {SessionId} ended by user {UserId}", session.Id, requestingUserId);
 
-        return new OperationResult<bool>
+        var result = new OperationResult<bool>
         {
             Data = true
         };
+
+        await _notificationService.NotifySessionEndedAsync(sessionApiKey);
+
+        return result;
     }
 
     public async Task<OperationResult<IEnumerable<PartySessionParticipant>>> GetParticipantsAsync(

@@ -1,5 +1,4 @@
 using Melodee.Common.Configuration;
-using Melodee.Common.Services.Playback;
 using Melodee.Common.Services.Playback.Backends;
 using Microsoft.Extensions.Options;
 using Serilog;

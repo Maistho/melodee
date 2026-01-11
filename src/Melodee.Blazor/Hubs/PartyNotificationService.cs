@@ -1,18 +1,9 @@
 using Melodee.Common.Data.Models;
+using Melodee.Common.Enums.PartyMode;
+using Melodee.Common.Services.PartyMode;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Melodee.Blazor.Hubs;
-
-/// <summary>
-/// Service for sending real-time notifications to party session clients via SignalR.
-/// </summary>
-public interface IPartyNotificationService
-{
-    Task NotifyQueueChangedAsync(Guid sessionApiKey, long revision, QueueChangeType changeType, Guid? itemApiKey, IEnumerable<PartyQueueItem> items);
-    Task NotifyPlaybackChangedAsync(Guid sessionApiKey, PartyPlaybackState playbackState);
-    Task NotifyParticipantsChangedAsync(Guid sessionApiKey, IEnumerable<PartySessionParticipant> participants);
-    Task NotifySessionEndedAsync(Guid sessionApiKey);
-}
 
 public sealed class PartyNotificationService(
     IHubContext<PartyHub> hubContext,

@@ -1,5 +1,4 @@
 using Melodee.Common.Data.Models;
-using Melodee.Common.Models;
 
 namespace Melodee.Common.Services.Playback;
 

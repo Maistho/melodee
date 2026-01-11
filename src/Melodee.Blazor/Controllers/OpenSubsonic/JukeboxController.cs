@@ -7,7 +7,6 @@ using Melodee.Common.Models.OpenSubsonic.Responses;
 using Melodee.Common.Models.OpenSubsonic.Responses.Jukebox;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services.Jukebox;
-using Melodee.Common.Services.Playback;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Serilog;
@@ -24,7 +23,8 @@ public class JukeboxController(
     EtagRepository etagRepository,
     IMelodeeConfigurationFactory configurationFactory,
     IOptions<JukeboxOptions> jukeboxOptions,
-    ISubsonicJukeboxService subsonicJukeboxService)
+    ISubsonicJukeboxService subsonicJukeboxService,
+    global::Melodee.Common.Services.OpenSubsonicApiService openSubsonicApiService)
     : ControllerBase(etagRepository, serializer, configurationFactory)
 {
     /// <summary>
@@ -48,6 +48,13 @@ public class JukeboxController(
         {
             HttpContext.Response.Headers.Append("Cache-Control", "no-cache");
             return StatusCode((int)HttpStatusCode.Gone);
+        }
+
+        // Auth check
+        var authResponse = await openSubsonicApiService.AuthenticateSubsonicApiAsync(ApiRequest, cancellationToken);
+        if (!authResponse.IsSuccess)
+        {
+            return await MakeResult(Task.FromResult(authResponse)).ConfigureAwait(false);
         }
 
         try

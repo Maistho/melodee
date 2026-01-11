@@ -2,8 +2,6 @@ using System.Net.Sockets;
 using System.Text;
 using Melodee.Common.Configuration;
 using Melodee.Common.Data.Models;
-using Melodee.Common.Models;
-using Melodee.Common.Services.Playback;
 using Serilog;
 
 namespace Melodee.Common.Services.Playback.Backends;

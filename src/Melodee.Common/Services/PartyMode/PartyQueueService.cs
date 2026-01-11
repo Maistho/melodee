@@ -1,7 +1,9 @@
 using Melodee.Common.Data;
 using Melodee.Common.Data.Models;
+using Melodee.Common.Enums.PartyMode;
 using Melodee.Common.Models;
 using Melodee.Common.Services.Caching;
+using Melodee.Common.Services.PartyMode;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using Serilog;
@@ -14,10 +16,12 @@ namespace Melodee.Common.Services;
 public sealed class PartyQueueService(
     ILogger logger,
     ICacheManager cacheManager,
-    IDbContextFactory<MelodeeDbContext> contextFactory)
+    IDbContextFactory<MelodeeDbContext> contextFactory,
+    IPartyNotificationService notificationService)
     : ServiceBase(logger, cacheManager, contextFactory), IPartyQueueService
 {
     private const string QueueCacheKeyTemplate = "urn:party:queue:{0}";
+    private readonly IPartyNotificationService _notificationService = notificationService;
 
     public async Task<OperationResult<(long Revision, IEnumerable<PartyQueueItem> Items)>> GetQueueAsync(
         Guid sessionApiKey,
@@ -74,6 +78,7 @@ public sealed class PartyQueueService(
 
         var session = await scopedContext.PartySessions
             .Include(x => x.QueueItems)
+            .Include(x => x.Participants)
             .FirstOrDefaultAsync(x => x.ApiKey == sessionApiKey, cancellationToken)
             .ConfigureAwait(false);
 
@@ -82,6 +87,25 @@ public sealed class PartyQueueService(
             return new OperationResult<(long, IEnumerable<PartyQueueItem>)>("Session not found.")
             {
                 Type = OperationResponseType.NotFound,
+                Data = (0, Enumerable.Empty<PartyQueueItem>())
+            };
+        }
+
+        var participant = session.Participants.FirstOrDefault(p => p.UserId == enqueuedByUserId);
+        if (participant == null || participant.IsBanned)
+        {
+            return new OperationResult<(long, IEnumerable<PartyQueueItem>)>("User is not a valid participant or is banned.")
+            {
+                Type = OperationResponseType.Forbidden,
+                Data = (0, Enumerable.Empty<PartyQueueItem>())
+            };
+        }
+
+        if (session.IsQueueLocked && participant.Role == Melodee.Common.Enums.PartyMode.PartyRole.Listener)
+        {
+            return new OperationResult<(long, IEnumerable<PartyQueueItem>)>("Queue is locked.")
+            {
+                Type = OperationResponseType.Forbidden,
                 Data = (0, Enumerable.Empty<PartyQueueItem>())
             };
         }
@@ -138,10 +162,19 @@ public sealed class PartyQueueService(
 
         Logger.Information("[PartyQueueService] Added {Count} items to session {SessionId}", newItems.Count, session.Id);
 
-        return new OperationResult<(long, IEnumerable<PartyQueueItem>)>
+        var result = new OperationResult<(long, IEnumerable<PartyQueueItem>)>
         {
             Data = (session.QueueRevision, newItems)
         };
+
+        await _notificationService.NotifyQueueChangedAsync(
+            sessionApiKey,
+            session.QueueRevision,
+            QueueChangeType.Added,
+            null,
+            newItems);
+
+        return result;
     }
 
     public async Task<OperationResult<long>> RemoveItemAsync(
@@ -155,6 +188,7 @@ public sealed class PartyQueueService(
 
         var session = await scopedContext.PartySessions
             .Include(x => x.QueueItems)
+            .Include(x => x.Participants)
             .FirstOrDefaultAsync(x => x.ApiKey == sessionApiKey, cancellationToken)
             .ConfigureAwait(false);
 
@@ -163,6 +197,25 @@ public sealed class PartyQueueService(
             return new OperationResult<long>("Session not found.")
             {
                 Type = OperationResponseType.NotFound,
+                Data = 0
+            };
+        }
+
+        var participant = session.Participants.FirstOrDefault(p => p.UserId == requestingUserId);
+        if (participant == null || participant.IsBanned)
+        {
+            return new OperationResult<long>("User is not a valid participant or is banned.")
+            {
+                Type = OperationResponseType.Forbidden,
+                Data = 0
+            };
+        }
+
+        if (session.IsQueueLocked && participant.Role == Melodee.Common.Enums.PartyMode.PartyRole.Listener)
+        {
+            return new OperationResult<long>("Queue is locked.")
+            {
+                Type = OperationResponseType.Forbidden,
                 Data = 0
             };
         }
@@ -206,6 +259,13 @@ public sealed class PartyQueueService(
 
         Logger.Information("[PartyQueueService] Removed item {ItemApiKey} from session {SessionId}", itemApiKey, session.Id);
 
+        await _notificationService.NotifyQueueChangedAsync(
+            sessionApiKey,
+            session.QueueRevision,
+            QueueChangeType.Removed,
+            itemApiKey,
+            []);
+
         return new OperationResult<long>
         {
             Data = session.QueueRevision
@@ -224,6 +284,7 @@ public sealed class PartyQueueService(
 
         var session = await scopedContext.PartySessions
             .Include(x => x.QueueItems)
+            .Include(x => x.Participants)
             .FirstOrDefaultAsync(x => x.ApiKey == sessionApiKey, cancellationToken)
             .ConfigureAwait(false);
 
@@ -232,6 +293,25 @@ public sealed class PartyQueueService(
             return new OperationResult<long>("Session not found.")
             {
                 Type = OperationResponseType.NotFound,
+                Data = 0
+            };
+        }
+
+        var participant = session.Participants.FirstOrDefault(p => p.UserId == requestingUserId);
+        if (participant == null || participant.IsBanned)
+        {
+            return new OperationResult<long>("User is not a valid participant or is banned.")
+            {
+                Type = OperationResponseType.Forbidden,
+                Data = 0
+            };
+        }
+
+        if (session.IsQueueLocked && participant.Role == Melodee.Common.Enums.PartyMode.PartyRole.Listener)
+        {
+            return new OperationResult<long>("Queue is locked.")
+            {
+                Type = OperationResponseType.Forbidden,
                 Data = 0
             };
         }
@@ -308,10 +388,25 @@ public sealed class PartyQueueService(
         Logger.Information("[PartyQueueService] Reordered item {ItemApiKey} to index {NewIndex} in session {SessionId}",
             itemApiKey, newIndex, session.Id);
 
-        return new OperationResult<long>
+        var result = new OperationResult<long>
         {
             Data = session.QueueRevision
         };
+
+        await _notificationService.NotifyQueueChangedAsync(
+            sessionApiKey,
+            session.QueueRevision,
+            QueueChangeType.Reordered,
+            itemApiKey,
+            // In reorder, we might want to send the moved item with its new SortOrder, 
+            // or just the full list. Usually full list is safer for clients to resync, 
+            // but for optimization we send empty and let client reload if revision mismatch. 
+            // However, SignalR contract implies we should send something. 
+            // The notification service sends PartyQueueItemDto.
+            // Let's send the single modified item.
+            [item]);
+
+        return result;
     }
 
     public async Task<OperationResult<long>> ClearAsync(
@@ -324,6 +419,7 @@ public sealed class PartyQueueService(
 
         var session = await scopedContext.PartySessions
             .Include(x => x.QueueItems)
+            .Include(x => x.Participants)
             .FirstOrDefaultAsync(x => x.ApiKey == sessionApiKey, cancellationToken)
             .ConfigureAwait(false);
 
@@ -332,6 +428,25 @@ public sealed class PartyQueueService(
             return new OperationResult<long>("Session not found.")
             {
                 Type = OperationResponseType.NotFound,
+                Data = 0
+            };
+        }
+
+        var participant = session.Participants.FirstOrDefault(p => p.UserId == requestingUserId);
+        if (participant == null || participant.IsBanned)
+        {
+            return new OperationResult<long>("User is not a valid participant or is banned.")
+            {
+                Type = OperationResponseType.Forbidden,
+                Data = 0
+            };
+        }
+
+        if (session.IsQueueLocked && participant.Role == Melodee.Common.Enums.PartyMode.PartyRole.Listener)
+        {
+            return new OperationResult<long>("Queue is locked.")
+            {
+                Type = OperationResponseType.Forbidden,
                 Data = 0
             };
         }
@@ -356,10 +471,19 @@ public sealed class PartyQueueService(
 
         Logger.Information("[PartyQueueService] Cleared queue for session {SessionId}", session.Id);
 
-        return new OperationResult<long>
+        var result = new OperationResult<long>
         {
             Data = session.QueueRevision
         };
+
+        await _notificationService.NotifyQueueChangedAsync(
+            sessionApiKey,
+            session.QueueRevision,
+            QueueChangeType.Cleared,
+            null,
+            []);
+
+        return result;
     }
 
     public async Task<OperationResult<PartyQueueItem?>> GetNextItemAsync(

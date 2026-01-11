@@ -5,7 +5,6 @@ using Melodee.Common.Enums.PartyMode;
 using Melodee.Common.Models;
 using Melodee.Common.Models.PartyMode;
 using Melodee.Common.Services.Caching;
-using Melodee.Common.Services.Playback;
 using Melodee.Common.Services.Playback.Factory;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;

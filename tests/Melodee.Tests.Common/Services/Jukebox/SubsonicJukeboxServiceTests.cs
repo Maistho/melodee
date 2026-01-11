@@ -1,6 +1,5 @@
 using Melodee.Common.Configuration;
 using Melodee.Common.Data;
-using Melodee.Common.Data.Models;
 using Melodee.Common.Models;
 using Melodee.Common.Services;
 using Melodee.Common.Services.Caching;
@@ -9,7 +8,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Moq;
 using Serilog;
-using Xunit;
 
 namespace Melodee.Tests.Common.Services.Jukebox;
 
