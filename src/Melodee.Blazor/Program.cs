@@ -29,6 +29,8 @@ using Melodee.Common.Serialization;
 using Melodee.Common.Services;
 using Melodee.Common.Services.Caching;
 using Melodee.Common.Services.PartyMode;
+using Melodee.Common.Services.Playback;
+using Melodee.Common.Services.Playback.Factory;
 using Melodee.Common.Services.Scanning;
 using Melodee.Common.Services.SearchEngines;
 using Melodee.Common.Services.Security;
@@ -284,6 +286,10 @@ builder.Services.AddScoped<Melodee.Blazor.Services.Email.IEmailTemplateService, 
 
 // Doctor service for health checks and diagnostics
 builder.Services.AddScoped<IDoctorService, DoctorService>();
+
+// Playback backend services for Jukebox
+builder.Services.AddSingleton<PlaybackBackendFactory>();
+builder.Services.AddScoped<IPlaybackBackendService, PlaybackBackendService>();
 
 // Rate limiting service for Blazor UI
 builder.Services.AddSingleton<IRateLimiterService, RateLimiterService>();

@@ -5523,4 +5523,10 @@
   <data name="Jukebox.AdminOnlyControls" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Playback controls are only available to administrators</value>
   </data>
+  <data name="AdminDoctor.Check.JukeboxConfiguration" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Jukebox Configuration</value>
+  </data>
+  <data name="AdminDoctor.Check.PodcastConfiguration" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Podcast Configuration</value>
+  </data>
 </root>
