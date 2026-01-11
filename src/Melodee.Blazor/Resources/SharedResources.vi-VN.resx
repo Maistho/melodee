@@ -5779,4 +5779,10 @@
   <data name="AdminThemes.LibraryCreateFailed" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Failed to create theme library</value>
   </data>
+  <data name="Common.Close" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Close</value>
+  </data>
+  <data name="Common.Success" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Success</value>
+  </data>
 </root>

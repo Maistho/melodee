@@ -58,13 +58,12 @@ public static class ThemeTokenRegistry
     [
         (TextPrimary, SurfaceLevel0),
         (TextPrimary, SurfaceLevel1),
-        (TextInverse, Primary),
-        (TableHeaderText, TableHeaderBackground),
-        (ChipText, ChipBackground)
+        (TextInverse, Primary)
     ];
 
     /// <summary>
-    /// All required tokens that must be present in a valid theme
+    /// All required tokens that must be present in a valid theme.
+    /// Note: Table, Chip, and Font tokens are optional until components using them are implemented.
     /// </summary>
     public static readonly string[] RequiredTokens =
     [
@@ -74,10 +73,7 @@ public static class ThemeTokenRegistry
         Primary, PrimaryContrast,
         Accent, AccentContrast,
         Focus,
-        Success, Warning, Error, Info,
-        TableHeaderBackground, TableHeaderText,
-        ChipBackground, ChipText,
-        FontFamilyBase, FontFamilyHeading, FontFamilyMono
+        Success, Warning, Error, Info
     ];
 }
 
