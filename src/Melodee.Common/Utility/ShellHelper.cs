@@ -28,30 +28,37 @@ public static class ShellHelper
             },
             EnableRaisingEvents = true
         };
-        process.Exited += (sender, args) =>
-        {
-            Trace.WriteLine(process.StandardError.ReadToEnd(), "Warning");
-            Trace.WriteLine(process.StandardOutput.ReadToEnd(), "Information");
-            if (process.ExitCode == 0)
-            {
-                source.SetResult(0);
-            }
-            else
-            {
-                source.SetException(new Exception($"Command `{cmd}` failed with exit code `{process.ExitCode}`"));
-            }
-
-            process.Dispose();
-        };
 
         try
         {
             process.Start();
+
+            process.Exited += (sender, args) =>
+            {
+                try
+                {
+                    Trace.WriteLine(process.StandardError.ReadToEnd(), "Warning");
+                    Trace.WriteLine(process.StandardOutput.ReadToEnd(), "Information");
+                    if (process.ExitCode == 0)
+                    {
+                        source.TrySetResult(0);
+                    }
+                    else
+                    {
+                        source.TrySetException(new Exception($"Command `{cmd}` failed with exit code `{process.ExitCode}`"));
+                    }
+                }
+                finally
+                {
+                    process.Dispose();
+                }
+            };
         }
         catch (Exception e)
         {
             Trace.WriteLine($"Command Line [{cmd}] Failed Error [{e}", "Error");
-            source.SetException(e);
+            source.TrySetException(e);
+            process.Dispose();
         }
 
         return source.Task;

@@ -182,4 +182,79 @@ public class ThemeServiceTests
             Assert.Contains(archive.Entries, e => e.Name == "theme.css");
         }
     }
+
+    [Fact]
+    public async Task DeleteThemePackAsync_ShouldRejectBuiltInThemes()
+    {
+        var service = CreateService();
+
+        var (successLight, errorLight) = await service.DeleteThemePackAsync("light");
+        var (successDark, errorDark) = await service.DeleteThemePackAsync("dark");
+
+        Assert.False(successLight);
+        Assert.Contains("built-in", errorLight, StringComparison.OrdinalIgnoreCase);
+        Assert.False(successDark);
+        Assert.Contains("built-in", errorDark, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task ValidateThemePackAsync_ShouldPass_WhenContrastIsGood()
+    {
+        var themeDir = Path.Combine(_testThemeLibraryPath, "good-contrast-theme");
+        Directory.CreateDirectory(themeDir);
+
+        var metadata = new ThemeMetadata { Id = "good-contrast", Name = "Good Contrast" };
+        await File.WriteAllTextAsync(Path.Combine(themeDir, "theme.json"), JsonSerializer.Serialize(metadata));
+
+        // Use high contrast colors (black text on white background)
+        var css = @"
+:root {
+  --md-surface-0: #ffffff; --md-surface-1: #f5f5f5; --md-surface-2: #eeeeee;
+  --md-text-1: #000000; --md-text-2: #333333; --md-text-inverse: #ffffff; --md-muted: #666666;
+  --md-border: #cccccc; --md-divider: #dddddd;
+  --md-primary: #0000ff; --md-primary-contrast: #ffffff;
+  --md-accent: #00aa00; --md-accent-contrast: #ffffff;
+  --md-focus: #0066ff;
+  --md-success: #00aa00; --md-warning: #ff9900; --md-error: #ff0000; --md-info: #0099ff;
+  --md-table-header-bg: #f0f0f0; --md-table-header-text: #000000;
+  --md-chip-bg: #e0e0e0; --md-chip-text: #000000;
+  --md-font-family-base: Arial; --md-font-family-heading: Arial; --md-font-family-mono: monospace;
+}";
+        await File.WriteAllTextAsync(Path.Combine(themeDir, "theme.css"), css);
+
+        var service = CreateService();
+        var (isValid, warnings) = await service.ValidateThemePackAsync(themeDir);
+
+        Assert.True(isValid);
+        Assert.DoesNotContain(warnings, w => w.Contains("Insufficient contrast"));
+    }
+
+    [Fact]
+    public void CalculateContrastRatio_ShouldReturnCorrectRatio_ForBlackOnWhite()
+    {
+        var service = CreateService();
+
+        var ratio = service.CalculateContrastRatio("#000000", "#ffffff");
+
+        // Black on white should have 21:1 contrast ratio (highest possible)
+        Assert.True(ratio >= 20 && ratio <= 22);
+    }
+
+    [Fact]
+    public void ExtractCssTokens_ShouldExtractAllTokens()
+    {
+        var service = CreateService();
+        var css = @"
+:root {
+  --md-surface-0: #ffffff;
+  --md-text-1: #000000;
+  --md-primary: rgb(0, 0, 255);
+}";
+
+        var tokens = service.ExtractCssTokens(css);
+
+        Assert.Equal("#ffffff", tokens["--md-surface-0"]);
+        Assert.Equal("#000000", tokens["--md-text-1"]);
+        Assert.Equal("rgb(0, 0, 255)", tokens["--md-primary"]);
+    }
 }

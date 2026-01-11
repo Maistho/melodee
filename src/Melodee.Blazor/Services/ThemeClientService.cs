@@ -78,7 +78,7 @@ public sealed class ThemeClientService(IJSRuntime jsRuntime) : IThemeClientServi
         {
             Console.WriteLine($"Error applying theme: {ex.Message}");
             // Fallback to default theme on error
-            await jsRuntime.InvokeVoidAsync("melodeeTheme.loadTheme", CancellationToken.None, "/themes/builtin/light.css");
+            await jsRuntime.InvokeVoidAsync("melodeeTheme.loadTheme", CancellationToken.None, "/themes/builtin/melodee-dark/theme.css");
         }
     }
 

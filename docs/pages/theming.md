@@ -2,6 +2,10 @@
 
 Melodee supports a powerful theming system that allows users to customize the visual appearance of the application. Themes can control colors, typography, and even the visibility of navigation menu items.
 
+## Default Theme
+
+The default system theme is **Melodee Dark**. When a user has not set a preferred theme in their profile, the application will use this system default. Administrators can change the system default theme in the Admin > Themes section.
+
 ## Theme Structure
 
 A theme is packaged as a folder containing at least two files:

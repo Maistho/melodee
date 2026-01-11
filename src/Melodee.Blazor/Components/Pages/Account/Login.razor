@@ -421,8 +421,9 @@ else
                     var user = await UserService.GetByApiKeyAsync(Guid.Parse(authResponse.User.ApiKey!));
                     if (user.IsSuccess && user.Data != null)
                     {
-                        // Apply user's preferred theme by setting cookie directly
-                        var theme = user.Data.PreferredTheme ?? "default";
+                        // Apply user's preferred theme by setting cookie directly, fallback to system default
+                        var systemDefaultTheme = config.GetValue<string>(Melodee.Common.Constants.SettingRegistry.SystemDefaultTheme) ?? "melodee-dark";
+                        var theme = user.Data.PreferredTheme ?? systemDefaultTheme;
                         await JsRuntime.InvokeVoidAsync("eval", 
                             $"document.cookie = 'melodee_ui_theme={theme}; path=/; max-age=31536000; samesite=lax'");
 
@@ -497,8 +498,10 @@ else
                 return;
             }
 
-            // Apply user's preferred theme by setting cookie directly
-            var theme = user.Data.PreferredTheme ?? "default";
+            // Apply user's preferred theme by setting cookie directly, fallback to system default
+            var config = await ConfigurationFactory.GetConfigurationAsync();
+            var systemDefaultTheme = config.GetValue<string>(Melodee.Common.Constants.SettingRegistry.SystemDefaultTheme) ?? "melodee-dark";
+            var theme = user.Data.PreferredTheme ?? systemDefaultTheme;
             await JsRuntime.InvokeVoidAsync("eval", 
                 $"document.cookie = 'melodee_ui_theme={theme}; path=/; max-age=31536000; samesite=lax'");
 

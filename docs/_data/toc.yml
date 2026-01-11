@@ -43,6 +43,8 @@
       url: "scrobbling"
     - title: "Shares"
       url: "shares"
+    - title: "Theming"
+      url: "theming"
 
 - title: Tools & Interfaces
   links:

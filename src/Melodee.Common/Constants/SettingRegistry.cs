@@ -203,7 +203,7 @@ public static class SettingRegistry
 
     // Theme settings
     public const string ThemeLibraryPath = "theme.libraryPath";
-    public const string ThemeDefaultThemeId = "theme.defaultThemeId";
+    public const string SystemDefaultTheme = "system.defaultTheme";
     public const string ThemeMaxUploadSizeMb = "theme.maxUploadSizeMb";
     public const string ThemeEnforceContrastValidation = "theme.enforceContrastValidation";
 }

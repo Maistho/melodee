@@ -1,0 +1,349 @@
+@page "/admin/themes"
+@inherits MelodeeComponentBase
+@using Melodee.Common.Configuration
+@using Melodee.Common.Constants
+@using Melodee.Common.Models
+@using Melodee.Common.Services
+@using Microsoft.JSInterop
+
+@inject IThemeService ThemeService
+@inject IMelodeeConfigurationFactory ConfigurationFactory
+@inject SettingService SettingService
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+@inject IJSRuntime JsRuntime
+
+@attribute [Authorize(Roles = "Administrator")]
+
+<PageTitle>@L("AdminThemes.PageTitle")</PageTitle>
+
+<RadzenStack Gap="1rem">
+    @* Header *@
+    <RadzenRow AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenText TextStyle="TextStyle.H4">
+                <RadzenIcon Icon="palette" class="rz-me-1"/>
+                @L("AdminThemes.Title")
+            </RadzenText>
+        </RadzenColumn>
+        <RadzenColumn Size="12" SizeMD="6">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                <RadzenButton Icon="refresh" Text="@L("Actions.Rescan")" Click="@RescanThemesAsync" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary" Disabled="@_isLoading"/>
+                <RadzenButton Icon="upload" Text="@L("AdminThemes.Import")" Click="@OpenImportDialog" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Primary" Disabled="@_isLoading"/>
+            </RadzenStack>
+        </RadzenColumn>
+    </RadzenRow>
+
+    @* Default Theme Setting *@
+    <RadzenCard>
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem">
+            <RadzenIcon Icon="star" Style="font-size: 1.5rem; color: var(--rz-warning);"/>
+            <RadzenText TextStyle="TextStyle.Body1" Style="flex: 1;">@L("AdminThemes.DefaultTheme")</RadzenText>
+            <RadzenDropDown @bind-Value="@_defaultThemeId"
+                            Data="@_themes"
+                            TextProperty="Name"
+                            ValueProperty="Id"
+                            Style="width: 200px;"
+                            Change="@OnDefaultThemeChangedAsync"
+                            Disabled="@_isLoading"/>
+        </RadzenStack>
+    </RadzenCard>
+
+    @* Theme List *@
+    @if (_isLoading)
+    {
+        <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large"/>
+    }
+    else if (_themes.Count == 0)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Info" Shade="Shade.Light" AllowClose="false">
+            @L("AdminThemes.NoThemes")
+        </RadzenAlert>
+    }
+    else
+    {
+        <RadzenDataGrid Data="@_themes" TItem="ThemePack" AllowSorting="true" AllowPaging="true" PageSize="10" 
+                        PagerHorizontalAlign="HorizontalAlign.Center" ShowPagingSummary="true">
+            <Columns>
+                <RadzenDataGridColumn Property="@nameof(ThemePack.Name)" Title="@L("AdminThemes.Name")" Width="200px">
+                    <Template Context="theme">
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                            @if (!string.IsNullOrEmpty(theme.PreviewImage))
+                            {
+                                <img src="@theme.PreviewImage" alt="@theme.Name" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;"/>
+                            }
+                            else
+                            {
+                                <RadzenIcon Icon="palette" Style="font-size: 1.5rem;"/>
+                            }
+                            <RadzenText>@theme.Name</RadzenText>
+                            @if (theme.Id == _defaultThemeId)
+                            {
+                                <RadzenBadge BadgeStyle="BadgeStyle.Warning" Text="@L("AdminThemes.Default")" Style="margin-left: 0.5rem;"/>
+                            }
+                        </RadzenStack>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(ThemePack.Author)" Title="@L("AdminThemes.Author")" Width="150px"/>
+                <RadzenDataGridColumn Property="@nameof(ThemePack.Version)" Title="@L("AdminThemes.Version")" Width="100px"/>
+                <RadzenDataGridColumn Property="@nameof(ThemePack.Description)" Title="@L("AdminThemes.Description")" Width="300px"/>
+                <RadzenDataGridColumn Property="@nameof(ThemePack.IsBuiltIn)" Title="@L("AdminThemes.Type")" Width="100px">
+                    <Template Context="theme">
+                        @if (theme.IsBuiltIn)
+                        {
+                            <RadzenBadge BadgeStyle="BadgeStyle.Info" Text="@L("AdminThemes.BuiltIn")"/>
+                        }
+                        else
+                        {
+                            <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="@L("AdminThemes.Custom")"/>
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Property="@nameof(ThemePack.HasWarnings)" Title="@L("AdminThemes.Status")" Width="120px">
+                    <Template Context="theme">
+                        @if (theme.HasWarnings)
+                        {
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem">
+                                <RadzenIcon Icon="warning" Style="color: var(--rz-warning);"/>
+                                <RadzenText Style="color: var(--rz-warning);">@L("AdminThemes.Warnings")</RadzenText>
+                            </RadzenStack>
+                        }
+                        else
+                        {
+                            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem">
+                                <RadzenIcon Icon="check_circle" Style="color: var(--rz-success);"/>
+                                <RadzenText Style="color: var(--rz-success);">@L("AdminThemes.Valid")</RadzenText>
+                            </RadzenStack>
+                        }
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn Title="@L("Common.Actions")" Width="180px" TextAlign="TextAlign.Center" Sortable="false" Filterable="false">
+                    <Template Context="theme">
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem" JustifyContent="JustifyContent.Center">
+                            @if (theme.HasWarnings && theme.WarningDetails?.Count > 0)
+                            {
+                                <RadzenButton Icon="info" ButtonStyle="ButtonStyle.Warning" Variant="Variant.Text" Size="ButtonSize.Small"
+                                              Click="@(() => ShowWarningsAsync(theme))" title="@L("AdminThemes.ViewWarnings")"/>
+                            }
+                            <RadzenButton Icon="download" ButtonStyle="ButtonStyle.Info" Variant="Variant.Text" Size="ButtonSize.Small"
+                                          Click="@(() => ExportThemeAsync(theme))" title="@L("AdminThemes.Export")"/>
+                            @if (!theme.IsBuiltIn)
+                            {
+                                <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Text" Size="ButtonSize.Small"
+                                              Click="@(() => DeleteThemeAsync(theme))" title="@L("Actions.Delete")"/>
+                            }
+                        </RadzenStack>
+                    </Template>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    }
+</RadzenStack>
+
+@* Import Dialog *@
+<RadzenDialog />
+
+@code {
+    private List<ThemePack> _themes = [];
+    private string _defaultThemeId = "melodee-dark";
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await LoadThemesAsync();
+    }
+
+    private async Task LoadThemesAsync()
+    {
+        _isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            var themes = await ThemeService.DiscoverThemePacksAsync();
+            _themes = themes.ToList();
+
+            var config = await ConfigurationFactory.GetConfigurationAsync();
+            _defaultThemeId = config.GetValue<string>(SettingRegistry.SystemDefaultTheme) ?? "melodee-dark";
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = L("Common.Error"),
+                Detail = ex.Message,
+                Duration = 5000
+            });
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task RescanThemesAsync()
+    {
+        await LoadThemesAsync();
+        NotificationService.Notify(new NotificationMessage
+        {
+            Severity = NotificationSeverity.Success,
+            Summary = L("Common.Success"),
+            Detail = L("AdminThemes.RescanComplete"),
+            Duration = 3000
+        });
+    }
+
+    private async Task OnDefaultThemeChangedAsync(object value)
+    {
+        if (value is not string newThemeId)
+        {
+            return;
+        }
+
+        try
+        {
+            await SettingService.SetAsync(SettingRegistry.SystemDefaultTheme, newThemeId);
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = L("Common.Success"),
+                Detail = L("AdminThemes.DefaultThemeUpdated"),
+                Duration = 3000
+            });
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = L("Common.Error"),
+                Detail = ex.Message,
+                Duration = 5000
+            });
+        }
+    }
+
+    private async Task OpenImportDialog()
+    {
+        var result = await DialogService.OpenAsync<ThemeImportDialog>(L("AdminThemes.Import"), 
+            new Dictionary<string, object>(),
+            new DialogOptions
+            {
+                Width = "500px",
+                Height = "300px",
+                Resizable = false,
+                Draggable = true
+            });
+
+        if (result is true)
+        {
+            await LoadThemesAsync();
+        }
+    }
+
+    private async Task ShowWarningsAsync(ThemePack theme)
+    {
+        var warningsHtml = string.Join("<br/>", theme.WarningDetails ?? []);
+        await DialogService.Alert(warningsHtml, $"{theme.Name} - {L("AdminThemes.Warnings")}", new AlertOptions
+        {
+            OkButtonText = L("Common.Close")
+        });
+    }
+
+    private async Task ExportThemeAsync(ThemePack theme)
+    {
+        try
+        {
+            var stream = await ThemeService.ExportThemePackAsync(theme.Id);
+            if (stream == null)
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = L("Common.Error"),
+                    Detail = L("AdminThemes.ExportFailed"),
+                    Duration = 5000
+                });
+                return;
+            }
+
+            // Trigger download via JS interop using DotNetStreamReference
+            using var streamRef = new DotNetStreamReference(stream);
+            await JsRuntime.InvokeVoidAsync("downloadFileFromStream", $"{theme.Id}.zip", streamRef);
+
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = L("Common.Success"),
+                Detail = L("AdminThemes.ExportSuccess"),
+                Duration = 3000
+            });
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = L("Common.Error"),
+                Detail = ex.Message,
+                Duration = 5000
+            });
+        }
+    }
+
+    private async Task DeleteThemeAsync(ThemePack theme)
+    {
+        var confirmed = await DialogService.Confirm(
+            L("AdminThemes.DeleteConfirmMessage", theme.Name),
+            L("AdminThemes.DeleteConfirmTitle"),
+            new ConfirmOptions
+            {
+                OkButtonText = L("Actions.Delete"),
+                CancelButtonText = L("Actions.Cancel")
+            });
+
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        try
+        {
+            var (success, error) = await ThemeService.DeleteThemePackAsync(theme.Id);
+            if (success)
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = L("Common.Success"),
+                    Detail = L("AdminThemes.DeleteSuccess"),
+                    Duration = 3000
+                });
+                await LoadThemesAsync();
+            }
+            else
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = L("Common.Error"),
+                    Detail = error ?? L("AdminThemes.DeleteFailed"),
+                    Duration = 5000
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = L("Common.Error"),
+                Detail = ex.Message,
+                Duration = 5000
+            });
+        }
+    }
+}

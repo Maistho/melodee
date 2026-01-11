@@ -5658,4 +5658,100 @@
   <data name="Jukebox.Shuffle" xml:space="preserve">
     <value>Mélanger</value>
   </data>
+  <data name="Navigation.Themes" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Themes</value>
+  </data>
+  <data name="AdminThemes.PageTitle" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Theme Management</value>
+  </data>
+  <data name="AdminThemes.Title" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Themes</value>
+  </data>
+  <data name="AdminThemes.DefaultTheme" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Site Default Theme</value>
+  </data>
+  <data name="AdminThemes.NoThemes" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No themes found.</value>
+  </data>
+  <data name="AdminThemes.Name" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Name</value>
+  </data>
+  <data name="AdminThemes.Author" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Author</value>
+  </data>
+  <data name="AdminThemes.Version" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Version</value>
+  </data>
+  <data name="AdminThemes.Description" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Description</value>
+  </data>
+  <data name="AdminThemes.Type" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Type</value>
+  </data>
+  <data name="AdminThemes.BuiltIn" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Built-in</value>
+  </data>
+  <data name="AdminThemes.Custom" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Custom</value>
+  </data>
+  <data name="AdminThemes.Status" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Status</value>
+  </data>
+  <data name="AdminThemes.Warnings" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Warnings</value>
+  </data>
+  <data name="AdminThemes.Valid" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Valid</value>
+  </data>
+  <data name="AdminThemes.Default" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Default</value>
+  </data>
+  <data name="AdminThemes.ViewWarnings" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] View Warnings</value>
+  </data>
+  <data name="AdminThemes.Export" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Export</value>
+  </data>
+  <data name="AdminThemes.Import" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Import Theme</value>
+  </data>
+  <data name="AdminThemes.ImportDescription" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Upload a theme pack (.zip) containing theme.json and theme.css files.</value>
+  </data>
+  <data name="AdminThemes.SelectFile" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Select File</value>
+  </data>
+  <data name="AdminThemes.InvalidFileType" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Please select a .zip file.</value>
+  </data>
+  <data name="AdminThemes.ImportSuccess" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Theme '{0}' imported successfully.</value>
+  </data>
+  <data name="AdminThemes.ImportFailed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to import theme.</value>
+  </data>
+  <data name="AdminThemes.ExportSuccess" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Theme exported successfully.</value>
+  </data>
+  <data name="AdminThemes.ExportFailed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to export theme.</value>
+  </data>
+  <data name="AdminThemes.DeleteConfirmTitle" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Delete Theme</value>
+  </data>
+  <data name="AdminThemes.DeleteConfirmMessage" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Are you sure you want to delete the theme '{0}'? This action cannot be undone.</value>
+  </data>
+  <data name="AdminThemes.DeleteSuccess" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Theme deleted successfully.</value>
+  </data>
+  <data name="AdminThemes.DeleteFailed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to delete theme.</value>
+  </data>
+  <data name="AdminThemes.RescanComplete" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Theme scan complete.</value>
+  </data>
+  <data name="AdminThemes.DefaultThemeUpdated" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Default theme updated.</value>
+  </data>
 </root>

@@ -1,6 +1,9 @@
+@using Melodee.Common.Configuration
+@using Melodee.Common.Constants
 @using Melodee.Common.Models
 @using Melodee.Common.Services
 @inject IThemeService ThemeService
+@inject IMelodeeConfigurationFactory ConfigurationFactory
 @inject Radzen.ThemeService RadzenThemeService
 @inject IThemeClientService ThemeClientService
 @implements IDisposable
@@ -17,7 +20,7 @@
     [Parameter] public string? Value { get; set; }
     [Parameter] public EventCallback<string?> ValueChanged { get; set; }
 
-    private string _selectedTheme = "light";
+    private string _selectedTheme = "melodee-dark";
     private bool _loading = true;
     private List<ThemeOption> _availableThemes = [];
 
@@ -55,8 +58,9 @@
             }
             else
             {
-                // Default to light theme
-                _selectedTheme = "light";
+                // Default to system default theme
+                var config = await ConfigurationFactory.GetConfigurationAsync();
+                _selectedTheme = config.GetValue<string>(SettingRegistry.SystemDefaultTheme) ?? "melodee-dark";
             }
         }
         catch (Exception ex)
@@ -64,6 +68,7 @@
             Console.WriteLine($"Error loading themes: {ex.Message}");
             // Fallback to built-in themes
             _availableThemes = [
+                new ThemeOption("melodee-dark", "Melodee Dark"),
                 new ThemeOption("light", "Light"),
                 new ThemeOption("dark", "Dark")
             ];

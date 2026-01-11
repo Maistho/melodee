@@ -89,7 +89,7 @@
     <value>در حال پخش</value>
   </data>
   <data name="Navigation.Statistics" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Statistics</value>
+    <value>آمار</value>
   </data>
   <data name="Navigation.Search" xml:space="preserve">
     <value>جستجو</value>
@@ -98,19 +98,19 @@
     <value>تنظیمات</value>
   </data>
   <data name="Navigation.Doctor" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Doctor</value>
+    <value>دکتر</value>
   </data>
   <data name="Navigation.Admin" xml:space="preserve">
     <value>مدیر</value>
   </data>
   <data name="Navigation.Jobs" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Jobs</value>
+    <value>وظایف</value>
   </data>
   <data name="Navigation.Users" xml:space="preserve">
     <value>کاربران</value>
   </data>
   <data name="Navigation.SystemSettings" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] System Settings</value>
+    <value>تنظیمات سیستم</value>
   </data>
   <data name="Navigation.Account" xml:space="preserve">
     <value>حساب کاربری</value>
@@ -122,40 +122,40 @@
     <value>خروج</value>
   </data>
   <data name="Navigation.Libraries" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Libraries</value>
+    <value>کتابخانه‌ها</value>
   </data>
   <data name="Navigation.Shares" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Shares</value>
+    <value>اشتراک‌ها</value>
   </data>
   <data name="Navigation.About" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] About</value>
+    <value>درباره</value>
   </data>
   <data name="Navigation.Media" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Media</value>
+    <value>رسانه</value>
   </data>
   <data name="Navigation.MediaArtists" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Media Artists</value>
+    <value>هنرمندان رسانه</value>
   </data>
   <data name="Navigation.Stats" xml:space="preserve">
     <value>آمار</value>
   </data>
   <data name="Auth.AboutMe" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] About Me</value>
+    <value>درباره من</value>
   </data>
   <data name="Common.Search" xml:space="preserve">
     <value>جستجو</value>
   </data>
   <data name="Admin.YouAreAdmin" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] You are an admin!</value>
+    <value>شما یک مدیر هستید!</value>
   </data>
   <data name="Admin.YouAreEditor" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] You are an editor!</value>
+    <value>شما یک ویراستار هستید!</value>
   </data>
   <data name="Actions.Save" xml:space="preserve">
     <value>ذخیره</value>
   </data>
   <data name="Actions.SaveChanges" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Save Changes</value>
+    <value>ذخیره تغییرات</value>
   </data>
   <data name="Actions.Cancel" xml:space="preserve">
     <value>لغو</value>
@@ -167,76 +167,76 @@
     <value>ویرایش</value>
   </data>
   <data name="Actions.Create" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Create</value>
+    <value>ایجاد</value>
   </data>
   <data name="Actions.Add" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Add</value>
+    <value>افزودن</value>
   </data>
   <data name="Actions.Remove" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Remove</value>
+    <value>حذف</value>
   </data>
   <data name="Actions.Update" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Update</value>
+    <value>به‌روزرسانی</value>
   </data>
   <data name="Actions.Submit" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Submit</value>
+    <value>ارسال</value>
   </data>
   <data name="Actions.Search" xml:space="preserve">
     <value>جستجو</value>
   </data>
   <data name="Actions.Clear" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Clear</value>
+    <value>پاک کردن</value>
   </data>
   <data name="Actions.Reset" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Reset</value>
+    <value>بازنشانی</value>
   </data>
   <data name="Actions.Apply" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Apply</value>
+    <value>اعمال</value>
   </data>
   <data name="Actions.Back" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Back</value>
+    <value>بازگشت</value>
   </data>
   <data name="Actions.Next" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Next</value>
+    <value>بعدی</value>
   </data>
   <data name="Actions.Previous" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Previous</value>
+    <value>قبلی</value>
   </data>
   <data name="Actions.Close" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Close</value>
+    <value>بستن</value>
   </data>
   <data name="Actions.Refresh" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Refresh</value>
+    <value>تازه‌سازی</value>
   </data>
   <data name="Actions.Upload" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Upload</value>
+    <value>بارگذاری</value>
   </data>
   <data name="Actions.Download" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Download</value>
+    <value>دانلود</value>
   </data>
   <data name="Actions.Export" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Export</value>
+    <value>صادرات</value>
   </data>
   <data name="Actions.Import" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Import</value>
+    <value>واردات</value>
   </data>
   <data name="Actions.Play" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Play</value>
+    <value>پخش</value>
   </data>
   <data name="Actions.Pause" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Pause</value>
+    <value>مکث</value>
   </data>
   <data name="Actions.Stop" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Stop</value>
+    <value>توقف</value>
   </data>
   <data name="Actions.AddToQueue" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Add to Queue</value>
+    <value>افزودن به صف</value>
   </data>
   <data name="Actions.AddToPlaylist" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Add to Playlist</value>
+    <value>افزودن به لیست پخش</value>
   </data>
   <data name="Actions.ViewDetails" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] View Details</value>
+    <value>مشاهده جزئیات</value>
   </data>
   <data name="Actions.Yes" xml:space="preserve">
     <value>بله</value>
@@ -245,67 +245,67 @@
     <value>خیر</value>
   </data>
   <data name="Common.Name" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Name</value>
+    <value>نام</value>
   </data>
   <data name="Common.Title" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Title</value>
+    <value>عنوان</value>
   </data>
   <data name="Common.Description" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Description</value>
+    <value>توضیحات</value>
   </data>
   <data name="Common.Artist" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Artist</value>
+    <value>هنرمند</value>
   </data>
   <data name="Common.Album" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Album</value>
+    <value>آلبوم</value>
   </data>
   <data name="Common.Song" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Song</value>
+    <value>آهنگ</value>
   </data>
   <data name="Common.Genre" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Genre</value>
+    <value>ژانر</value>
   </data>
   <data name="Common.Year" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Year</value>
+    <value>سال</value>
   </data>
   <data name="Common.Duration" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Duration</value>
+    <value>مدت زمان</value>
   </data>
   <data name="Common.Date" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Date</value>
+    <value>تاریخ</value>
   </data>
   <data name="Common.Type" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Type</value>
+    <value>نوع</value>
   </data>
   <data name="Common.Status" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Status</value>
+    <value>وضعیت</value>
   </data>
   <data name="Common.Tags" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Tags</value>
+    <value>برچسب‌ها</value>
   </data>
   <data name="Common.Rating" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Rating</value>
+    <value>رتبه‌بندی</value>
   </data>
   <data name="Common.PlayCount" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Play Count</value>
+    <value>تعداد پخش</value>
   </data>
   <data name="Common.LastPlayed" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Last Played</value>
+    <value>آخرین پخش</value>
   </data>
   <data name="Common.Created" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Created</value>
+    <value>ایجاد شده</value>
   </data>
   <data name="Common.CreatedAt" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Created At</value>
+    <value>ایجاد شده در</value>
   </data>
   <data name="Common.Modified" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Modified</value>
+    <value>اصلاح شده</value>
   </data>
   <data name="Common.LastUpdatedAt" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Last Updated At</value>
+    <value>آخرین به‌روزرسانی در</value>
   </data>
   <data name="Common.Never" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Never</value>
+    <value>هرگز</value>
   </data>
   <data name="Common.None" xml:space="preserve">
     <value>هیچکدام</value>
@@ -317,13 +317,13 @@
     <value>خیر</value>
   </data>
   <data name="Common.Size" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Size</value>
+    <value>اندازه</value>
   </data>
   <data name="Common.Format" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Format</value>
+    <value>فرمت</value>
   </data>
   <data name="Common.Bitrate" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Bitrate</value>
+    <value>نرخ بیت</value>
   </data>
   <data name="Auth.Login" xml:space="preserve">
     <value>ورود</value>
@@ -332,7 +332,7 @@
     <value>خروج</value>
   </data>
   <data name="Auth.Username" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Username</value>
+    <value>نام کاربری</value>
   </data>
   <data name="Auth.Email" xml:space="preserve">
     <value>ایمیل</value>
@@ -341,211 +341,211 @@
     <value>رمز عبور</value>
   </data>
   <data name="Auth.ConfirmPassword" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Confirm Password</value>
+    <value>تایید رمز عبور</value>
   </data>
   <data name="Auth.RememberMe" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Remember Me</value>
+    <value>مرا به خاطر بسپار</value>
   </data>
   <data name="Auth.ForgotPassword" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Forgot Password?</value>
+    <value>رمز عبور خود را فراموش کرده‌اید؟</value>
   </data>
   <data name="Auth.DontHaveAccount" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Don't have an account yet?</value>
+    <value>هنوز حساب کاربری ندارید؟</value>
   </data>
   <data name="Auth.ResetPassword" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Reset Password</value>
+    <value>بازنشانی رمز عبور</value>
   </data>
   <data name="Auth.Register" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Register</value>
+    <value>ثبت نام</value>
   </data>
   <data name="Auth.SignIn" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Sign In</value>
+    <value>ورود</value>
   </data>
   <data name="Auth.SignUp" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Sign Up</value>
+    <value>ثبت نام</value>
   </data>
   <data name="Auth.CreateAccount" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Create Account</value>
+    <value>ایجاد حساب کاربری</value>
   </data>
   <data name="Auth.JoinMelodee" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Join the Melodee community</value>
+    <value>عضویت در جامعه Melodee</value>
   </data>
   <data name="Auth.EnterEmail" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Enter your email</value>
+    <value>ایمیل خود را وارد کنید</value>
   </data>
   <data name="Auth.CreatingAccount" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Creating account...</value>
+    <value>در حال ایجاد حساب کاربری...</value>
   </data>
   <data name="Auth.AlreadyHaveAccount" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Already have an account?</value>
+    <value>قبلاً حساب کاربری دارید؟</value>
   </data>
   <data name="Auth.RegistrationClosedMessage" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Registration is currently closed. Please contact the administrator.</value>
+    <value>ثبت نام در حال حاضر بسته است. لطفاً با مدیر تماس بگیرید.</value>
   </data>
   <data name="Auth.InvalidCredentials" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Invalid email or password</value>
+    <value>ایمیل یا رمز عبور نامعتبر است</value>
   </data>
   <data name="Auth.LoginSuccess" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Successfully logged in!</value>
+    <value>با موفقیت وارد شدید!</value>
   </data>
   <data name="Auth.LogoutSuccess" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Successfully logged out</value>
+    <value>با موفقیت خارج شدید</value>
   </data>
   <data name="Auth.Welcome" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Welcome!</value>
+    <value>خوش آمدید!</value>
   </data>
   <data name="Auth.SignInToContinue" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Sign in to continue to Melodee</value>
+    <value>برای ادامه کار با Melodee وارد شوید</value>
   </data>
   <data name="Auth.EnterUsername" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Enter your username</value>
+    <value>نام کاربری خود را وارد کنید</value>
   </data>
   <data name="Auth.EnterPassword" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Enter your password</value>
+    <value>رمز عبور خود را وارد کنید</value>
   </data>
   <data name="Auth.UsernameRequired" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Username is required</value>
+    <value>نام کاربری الزامی است</value>
   </data>
   <data name="Auth.PasswordRequired" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Password is required</value>
+    <value>رمز عبور الزامی است</value>
   </data>
   <data name="Auth.Or" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] or</value>
+    <value>یا</value>
   </data>
   <data name="Auth.ContinueWithGoogle" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Continue with Google</value>
+    <value>ادامه با گوگل</value>
   </data>
   <data name="Auth.SigningIn" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Signing in...</value>
+    <value>در حال ورود...</value>
   </data>
   <data name="Auth.InvalidEmailOrPassword" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Invalid email or password.</value>
+    <value>ایمیل یا رمز عبور نامعتبر است.</value>
   </data>
   <data name="Auth.UnableToLogin" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Melodee is unable to log you in. perhaps you are banned?</value>
+    <value>Melodee نمی‌تواند شما را وارد کند. شاید مسدود شده باشید؟</value>
   </data>
   <data name="Auth.GoogleSignInUnavailable" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Google Sign-In is temporarily unavailable</value>
+    <value>ورود با گوگل موقتاً در دسترس نیست</value>
   </data>
   <data name="Auth.FailedToOpenGoogleSignIn" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Failed to open Google Sign-In</value>
+    <value>باز کردن ورود با گوگل ناموفق بود</value>
   </data>
   <data name="Auth.FailedToCompleteSignIn" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Failed to complete sign-in</value>
+    <value>تکمیل ورود ناموفق بود</value>
   </data>
   <data name="Auth.SignedInAs" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Signed in as {0}</value>
+    <value>وارد شده به عنوان {0}</value>
   </data>
   <data name="Auth.InvalidGoogleCredentials" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Invalid Google credentials. Please try again.</value>
+    <value>اطلاعات ورودی گوگل نامعتبر است. لطفاً دوباره امتحان کنید.</value>
   </data>
   <data name="Auth.GoogleSessionExpired" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Your Google session has expired. Please sign in again.</value>
+    <value>جلسه گوگل شما منقضی شده است. لطفاً دوباره وارد شوید.</value>
   </data>
   <data name="Auth.GoogleAccountNotLinked" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] This Google account is not linked to any Melodee account. Please sign in with your password and link your Google account from your profile.</value>
+    <value>این حساب گوگل به هیچ حساب Melodee ای متصل نیست. لطفاً با رمز عبور خود وارد شوید و حساب گوگل خود را از پروفایل خود متصل کنید.</value>
   </data>
   <data name="Auth.SignupDisabled" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] New account registration is currently disabled. Please contact an administrator.</value>
+    <value>ثبت نام حساب جدید در حال حاضر غیرفعال است. لطفاً با یک مدیر تماس بگیرید.</value>
   </data>
   <data name="Auth.ForbiddenTenant" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Your Google account domain is not allowed. Please use a different account.</value>
+    <value>دامنه حساب گوگل شما مجاز نیست. لطفاً از حساب دیگری استفاده کنید.</value>
   </data>
   <data name="Auth.AccountDisabled" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Your account has been disabled. Please contact support.</value>
+    <value>حساب شما غیرفعال شده است. لطفاً با پشتیبانی تماس بگیرید.</value>
   </data>
   <data name="Auth.GoogleSignInError" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] An error occurred during Google Sign-In. Please try again.</value>
+    <value>خطایی در حین ورود با گوگل رخ داد. لطفاً دوباره امتحان کنید.</value>
   </data>
   <data name="Auth.SignInErrorTryAgain" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] An error occurred during sign-in. Please try again.</value>
+    <value>خطایی در حین ورود رخ داد. لطفاً دوباره امتحان کنید.</value>
   </data>
   <data name="Auth.RegistrationClosed" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Registration is currently closed.</value>
+    <value>ثبت نام در حال حاضر بسته است.</value>
   </data>
   <data name="Auth.FillOutForm" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Fill out this form and click Register to create a new user account.</value>
+    <value>این فرم را تکمیل کنید و برای ایجاد یک حساب کاربری جدید روی ثبت نام کلیک کنید.</value>
   </data>
   <data name="Auth.AccessCode" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Access Code</value>
+    <value>کد دسترسی</value>
   </data>
   <data name="Auth.AccessCodeRequired" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Registering a new account requires an access code to be entered. Whoever invited you can provide this code to you.</value>
+    <value>ثبت نام یک حساب جدید نیازمند ورود یک کد دسترسی است. کسی که شما را دعوت کرده می‌تواند این کد را در اختیار شما قرار دهد.</value>
   </data>
   <data name="Auth.AccessCodeWarning" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] If you do not have the code, kindly go away 👉.</value>
+    <value>اگر کد را ندارید، لطفاً بروید 👉.</value>
   </data>
   <data name="Auth.UnableToRegister" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Unable to register.</value>
+    <value>ثبت نام امکان پذیر نیست.</value>
   </data>
   <data name="Auth.UnableToCreateAccount" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Melodee is unable to create a new user account for you.</value>
+    <value>Melodee نمی‌تواند یک حساب کاربری جدید برای شما ایجاد کند.</value>
   </data>
   <data name="Auth.PerhapsEmailBanned" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Perhaps your email is banned?</value>
+    <value>شاید ایمیل شما مسدود شده باشد؟</value>
   </data>
   <data name="Auth.SuccessfullyRegistered" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Successfully registered!</value>
+    <value>با موفقیت ثبت نام شد!</value>
   </data>
   <data name="Auth.RegistrationSuccess" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Registered new account, you should get an email, be sure and click the validate button.</value>
+    <value>حساب جدید ثبت شد، باید یک ایمیل دریافت کنید، حتماً روی دکمه تأیید کلیک کنید.</value>
   </data>
   <data name="Auth.EmailAddress" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Email address</value>
+    <value>آدرس ایمیل</value>
   </data>
   <data name="Messages.Loading" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Loading...</value>
+    <value>در حال بارگذاری...</value>
   </data>
   <data name="Messages.Saving" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Saving...</value>
+    <value>در حال ذخیره...</value>
   </data>
   <data name="Messages.Processing" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Processing...</value>
+    <value>در حال پردازش...</value>
   </data>
   <data name="Messages.Success" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Success</value>
+    <value>موفقیت</value>
   </data>
   <data name="Messages.Error" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Error</value>
+    <value>خطا</value>
   </data>
   <data name="Messages.Warning" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Warning</value>
+    <value>هشدار</value>
   </data>
   <data name="Messages.Info" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Info</value>
+    <value>اطلاعات</value>
   </data>
   <data name="Messages.SaveSuccess" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Changes saved successfully</value>
+    <value>تغییرات با موفقیت ذخیره شد</value>
   </data>
   <data name="Messages.SaveError" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Failed to save changes</value>
+    <value>ذخیره تغییرات ناموفق بود</value>
   </data>
   <data name="Messages.DeleteSuccess" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Deleted successfully</value>
+    <value>با موفقیت حذف شد</value>
   </data>
   <data name="Messages.DeleteError" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Failed to delete</value>
+    <value>حذف ناموفق بود</value>
   </data>
   <data name="Messages.NoResults" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] No results found</value>
+    <value>نتیجه‌ای یافت نشد</value>
   </data>
   <data name="Messages.NoData" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] No data available</value>
+    <value>داده‌ای موجود نیست</value>
   </data>
   <data name="Messages.ConfirmDelete" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Are you sure you want to delete this item?</value>
+    <value>آیا مطمئن هستید که می‌خواهید این مورد را حذف کنید؟</value>
   </data>
   <data name="Messages.UnsavedChanges" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] You have unsaved changes. Do you want to continue?</value>
+    <value>شما تغییرات ذخیره نشده دارید. آیا می‌خواهید ادامه دهید؟</value>
   </data>
   <data name="Dashboard.Welcome" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Welcome to Melodee</value>
+    <value>به Melodee خوش آمدید</value>
   </data>
   <data name="Dashboard.RecentlyPlayed" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Recently Played</value>
+    <value>اخیراً پخش شده</value>
   </data>
   <data name="Dashboard.TopArtists" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Top Artists</value>
+    <value>هنرمندان برتر</value>
   </data>
   <data name="Dashboard.TopAlbums" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Top Albums</value>
@@ -5655,5 +5655,101 @@
   </data>
   <data name="Jukebox.Shuffle" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Shuffle</value>
+  </data>
+  <data name="Navigation.Themes" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Themes</value>
+  </data>
+  <data name="AdminThemes.PageTitle" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Theme Management</value>
+  </data>
+  <data name="AdminThemes.Title" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Themes</value>
+  </data>
+  <data name="AdminThemes.DefaultTheme" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Site Default Theme</value>
+  </data>
+  <data name="AdminThemes.NoThemes" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No themes found.</value>
+  </data>
+  <data name="AdminThemes.Name" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Name</value>
+  </data>
+  <data name="AdminThemes.Author" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Author</value>
+  </data>
+  <data name="AdminThemes.Version" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Version</value>
+  </data>
+  <data name="AdminThemes.Description" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Description</value>
+  </data>
+  <data name="AdminThemes.Type" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Type</value>
+  </data>
+  <data name="AdminThemes.BuiltIn" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Built-in</value>
+  </data>
+  <data name="AdminThemes.Custom" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Custom</value>
+  </data>
+  <data name="AdminThemes.Status" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Status</value>
+  </data>
+  <data name="AdminThemes.Warnings" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Warnings</value>
+  </data>
+  <data name="AdminThemes.Valid" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Valid</value>
+  </data>
+  <data name="AdminThemes.Default" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Default</value>
+  </data>
+  <data name="AdminThemes.ViewWarnings" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] View Warnings</value>
+  </data>
+  <data name="AdminThemes.Export" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Export</value>
+  </data>
+  <data name="AdminThemes.Import" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Import Theme</value>
+  </data>
+  <data name="AdminThemes.ImportDescription" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Upload a theme pack (.zip) containing theme.json and theme.css files.</value>
+  </data>
+  <data name="AdminThemes.SelectFile" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Select File</value>
+  </data>
+  <data name="AdminThemes.InvalidFileType" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Please select a .zip file.</value>
+  </data>
+  <data name="AdminThemes.ImportSuccess" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Theme '{0}' imported successfully.</value>
+  </data>
+  <data name="AdminThemes.ImportFailed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to import theme.</value>
+  </data>
+  <data name="AdminThemes.ExportSuccess" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Theme exported successfully.</value>
+  </data>
+  <data name="AdminThemes.ExportFailed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to export theme.</value>
+  </data>
+  <data name="AdminThemes.DeleteConfirmTitle" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Delete Theme</value>
+  </data>
+  <data name="AdminThemes.DeleteConfirmMessage" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Are you sure you want to delete the theme '{0}'? This action cannot be undone.</value>
+  </data>
+  <data name="AdminThemes.DeleteSuccess" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Theme deleted successfully.</value>
+  </data>
+  <data name="AdminThemes.DeleteFailed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to delete theme.</value>
+  </data>
+  <data name="AdminThemes.RescanComplete" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Theme scan complete.</value>
+  </data>
+  <data name="AdminThemes.DefaultThemeUpdated" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Default theme updated.</value>
   </data>
 </root>
