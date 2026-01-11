@@ -340,6 +340,20 @@ public sealed class SubsonicJukeboxService(
             };
         }
 
+        // Actually pause on the backend
+        var backendResult = await playbackBackendService.PauseAsync(cancellationToken).ConfigureAwait(false);
+        
+        if (!backendResult.IsSuccess)
+        {
+            Logger.Warning("[SubsonicJukeboxService] Failed to pause on backend: {Messages}", string.Join(", ", backendResult.Messages ?? []));
+            return new OperationResult<bool>(backendResult.Messages)
+            {
+                Type = backendResult.Type,
+                Data = false
+            };
+        }
+
+        Logger.Information("[SubsonicJukeboxService] Paused playback");
         return new OperationResult<bool> { Data = true };
     }
 
@@ -698,12 +712,14 @@ public sealed class SubsonicJukeboxService(
             .ConfigureAwait(false);
 
         var entries = new List<JukeboxEntryResponse>();
-        double totalDuration = 0;
+        int totalDuration = 0;
 
         foreach (var item in items.OrderBy(x => x.SortOrder))
         {
             if (songs.TryGetValue(item.SongApiKey, out var song))
             {
+                // song.Duration is in milliseconds, convert to seconds for the API response
+                var durationSeconds = (int)(song.Duration / 1000);
                 var entry = new JukeboxEntryResponse(
                     Id: song.ApiKey.ToString(),
                     Parent: song.Album?.ApiKey.ToString() ?? Guid.Empty.ToString(),
@@ -713,7 +729,7 @@ public sealed class SubsonicJukeboxService(
                     Year: song.Album?.ReleaseDate.Year ?? 0,
                     Genre: null,
                     CoverArt: song.Album?.ApiKey.ToString(),
-                    Duration: (int)song.Duration,
+                    Duration: durationSeconds,
                     BitRate: song.BitRate,
                     Path: $"/song/{song.ApiKey}",
                     TranscodedContentType: null,
@@ -723,7 +739,7 @@ public sealed class SubsonicJukeboxService(
                     Type: "music");
 
                 entries.Add(entry);
-                totalDuration += song.Duration;
+                totalDuration += durationSeconds;
             }
             else
             {
@@ -754,7 +770,7 @@ public sealed class SubsonicJukeboxService(
             Comment: null,
             IsPublic: false,
             SongCount: entries.Count,
-            Duration: (int)totalDuration);
+            Duration: totalDuration);
     }
 
     private static int FindCurrentIndex(List<JukeboxEntryResponse> entries, Guid currentItemApiKey)

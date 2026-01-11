@@ -56,6 +56,20 @@ public interface IPlaybackBackendService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Operation result indicating success or failure.</returns>
     Task<OperationResult<bool>> PlaySongAsync(Guid songApiKey, double startPositionSeconds = 0, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Pauses playback on the backend.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Operation result indicating success or failure.</returns>
+    Task<OperationResult<bool>> PauseAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Stops playback on the backend.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Operation result indicating success or failure.</returns>
+    Task<OperationResult<bool>> StopAsync(CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -355,6 +369,64 @@ public sealed class PlaybackBackendService(
         Logger.Information("[PlaybackBackendService] Playing song {SongApiKey}: {FilePath}", songApiKey, filePath);
 
         await backend.PlayFileAsync(filePath, songApiKey, startPositionSeconds, cancellationToken).ConfigureAwait(false);
+
+        return new OperationResult<bool> { Data = true };
+    }
+
+    public async Task<OperationResult<bool>> PauseAsync(CancellationToken cancellationToken = default)
+    {
+        var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
+        if (!configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled))
+        {
+            return new OperationResult<bool>("Jukebox is not enabled")
+            {
+                Type = OperationResponseType.BadRequest,
+                Data = false
+            };
+        }
+
+        var backendType = configuration.GetValue<string>(SettingRegistry.JukeboxBackendType);
+        var backend = await GetBackendAsync(backendType, cancellationToken).ConfigureAwait(false);
+        if (backend == null)
+        {
+            return new OperationResult<bool>($"Failed to create {backendType} backend")
+            {
+                Type = OperationResponseType.Error,
+                Data = false
+            };
+        }
+
+        Logger.Information("[PlaybackBackendService] Pausing playback");
+        await backend.PauseAsync(cancellationToken).ConfigureAwait(false);
+
+        return new OperationResult<bool> { Data = true };
+    }
+
+    public async Task<OperationResult<bool>> StopAsync(CancellationToken cancellationToken = default)
+    {
+        var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
+        if (!configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled))
+        {
+            return new OperationResult<bool>("Jukebox is not enabled")
+            {
+                Type = OperationResponseType.BadRequest,
+                Data = false
+            };
+        }
+
+        var backendType = configuration.GetValue<string>(SettingRegistry.JukeboxBackendType);
+        var backend = await GetBackendAsync(backendType, cancellationToken).ConfigureAwait(false);
+        if (backend == null)
+        {
+            return new OperationResult<bool>($"Failed to create {backendType} backend")
+            {
+                Type = OperationResponseType.Error,
+                Data = false
+            };
+        }
+
+        Logger.Information("[PlaybackBackendService] Stopping playback");
+        await backend.StopAsync(cancellationToken).ConfigureAwait(false);
 
         return new OperationResult<bool> { Data = true };
     }
