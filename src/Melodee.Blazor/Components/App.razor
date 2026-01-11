@@ -84,11 +84,19 @@
     private const string DefaultThemeId = "dark";  // Radzen dark theme as fallback default
     
     // Radzen built-in themes - these work correctly out of the box
+    // Note: "light" and "dark" are Melodee aliases that map to Radzen's "default" and "dark" themes
     private static readonly string[] RadzenThemes = 
     [
         "default", "standard", "humanistic", "software", "material",
         "dark", "standard-dark", "humanistic-dark", "software-dark", "material-dark"
     ];
+    
+    // Melodee theme aliases - map user-friendly names to Radzen theme names
+    private static readonly Dictionary<string, string> ThemeAliases = new()
+    {
+        { "light", "default" },  // Melodee "light" = Radzen "default"
+        { "dark", "dark" }       // Melodee "dark" = Radzen "dark"
+    };
     
     private string _currentTheme = DefaultThemeId;
     private string? _customCssPath = null;  // No custom CSS by default - use Radzen theme
@@ -101,13 +109,17 @@
         if (httpContext?.Request.Cookies.TryGetValue(ThemeCookieName, out var cookieTheme) == true 
             && !string.IsNullOrEmpty(cookieTheme))
         {
-            _currentTheme = cookieTheme;
-            // If it's a Radzen theme, clear the custom CSS path
-            if (IsRadzenTheme(cookieTheme))
+            // If it's a built-in theme (Radzen or Melodee alias), map it to Radzen theme name
+            if (IsBuiltInTheme(cookieTheme))
             {
+                _currentTheme = GetRadzenThemeName(cookieTheme);
                 _customCssPath = null;
             }
-            // For other themes, we'll resolve the CSS path in OnInitializedAsync
+            else
+            {
+                _currentTheme = cookieTheme;
+            }
+            // For custom themes, we'll resolve the CSS path in OnInitializedAsync
         }
         // else: use field defaults (dark theme)
         
@@ -129,7 +141,7 @@
             _currentTheme = systemDefaultTheme;
         }
         
-        // Resolve the actual theme CSS path
+        // Resolve the actual theme CSS path (handles both built-in and custom themes)
         await ResolveCustomThemeAsync(_currentTheme);
         RadzenThemeService.ThemeChanged += OnThemeChanged;
         await base.OnInitializedAsync();
@@ -139,48 +151,58 @@
     {
         _currentTheme = RadzenThemeService.Theme ?? "default";
         
-        if (IsRadzenTheme(_currentTheme))
-        {
-            _customCssPath = null;
-        }
-        else
-        {
-            await ResolveCustomThemeAsync(_currentTheme);
-        }
+        // Resolve the theme (handles both built-in and custom themes)
+        await ResolveCustomThemeAsync(_currentTheme);
         
         await InvokeAsync(StateHasChanged);
     }
 
     private async Task ResolveCustomThemeAsync(string themeId)
     {
-        if (!IsRadzenTheme(themeId))
+        // Check if this is a built-in Radzen theme (including Melodee aliases like "light"/"dark")
+        if (IsBuiltInTheme(themeId))
         {
-            // All non-Radzen themes (including Light/Dark Melodee themes) are now dynamic
-            try
-            {
-                var theme = await ThemeService.GetThemePackAsync(themeId);
-                if (theme != null)
-                {
-                    _customCssPath = theme.ThemeCssPath;
-                    // Use full theme CSS (dark.css/default.css) not base CSS (dark-base.css/default-base.css)
-                    // The full theme CSS includes semantic variable assignments needed for proper styling
-                    _baseThemeName = theme.Metadata?.BaseTheme == "dark" ? "dark" : "default";
-                    return;
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.LogWarning(ex, "Failed to load theme {ThemeId}, falling back to Radzen dark theme", themeId);
-            }
-            
-            // Theme library not configured or theme not found - fall back to Radzen dark
+            // Map Melodee aliases to actual Radzen theme names
+            _currentTheme = GetRadzenThemeName(themeId);
             _customCssPath = null;
-            _currentTheme = "dark";
+            return;
         }
+        
+        // Not a built-in theme - try to load from Theme library
+        try
+        {
+            var theme = await ThemeService.GetThemePackAsync(themeId);
+            if (theme != null)
+            {
+                _customCssPath = theme.ThemeCssPath;
+                // Use full theme CSS (dark.css/default.css) not base CSS (dark-base.css/default-base.css)
+                // The full theme CSS includes semantic variable assignments needed for proper styling
+                _baseThemeName = theme.Metadata?.BaseTheme == "dark" ? "dark" : "default";
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Failed to load theme {ThemeId}, falling back to Radzen dark theme", themeId);
+        }
+        
+        // Theme library not configured or theme not found - fall back to Radzen dark
+        _customCssPath = null;
+        _currentTheme = "dark";
     }
     
-    private static bool IsRadzenTheme(string theme) => 
-        RadzenThemes.Contains(theme);
+    /// <summary>
+    /// Checks if a theme is a built-in Radzen theme or a Melodee alias for one.
+    /// </summary>
+    private static bool IsBuiltInTheme(string theme) => 
+        RadzenThemes.Contains(theme) || ThemeAliases.ContainsKey(theme);
+    
+    /// <summary>
+    /// Maps a theme name to the actual Radzen theme name.
+    /// Handles Melodee aliases like "light" -> "default".
+    /// </summary>
+    private static string GetRadzenThemeName(string theme) =>
+        ThemeAliases.TryGetValue(theme, out var radzenTheme) ? radzenTheme : theme;
 
     public void Dispose()
     {

@@ -1,8 +1,17 @@
-# Melodee Theme Library
+# Melodee Custom Themes
 
-This directory contains pre-built theme packs ready for administrators to import into their Melodee instance.
+This directory contains pre-built custom theme packs ready for administrators to import into their Melodee instance.
 
-📖 **Full documentation**: [melodee.org/themes](https://melodee.org/themes)
+> **Note**: Melodee includes built-in **Light** and **Dark** themes that work without any configuration. These custom themes provide additional styling options.
+
+📖 **Full documentation**: [melodee.org/theming](https://melodee.org/theming)
+
+## Prerequisites
+
+Custom themes require a **Theme library** to be configured in your Melodee instance:
+
+1. Go to **Admin > Libraries**
+2. Ensure a Theme library exists (default path: `/storage/themes/`)
 
 ## Available Themes
 
@@ -49,8 +58,6 @@ Theme packs follow semantic versioning (`MAJOR.MINOR.PATCH`). The version is spe
 - **MINOR**: New features, backward compatible
 - **PATCH**: Bug fixes, color adjustments
 
-When Melodee introduces breaking changes to the theming system, themes will need a major version bump.
-
 ## Creating Custom Themes
 
-See the [theming documentation](https://melodee.org/themes) for instructions on creating your own themes.
+See the [theming documentation](https://melodee.org/theming) for instructions on creating your own themes.

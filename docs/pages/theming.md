@@ -2,35 +2,30 @@
 
 Melodee supports a powerful theming system that allows users to customize the visual appearance of the application. Themes can control colors, typography, and even the visibility of navigation menu items.
 
-## Download Themes
-
-Pre-built theme packs are available in the [Melodee repository's `/themes` directory](https://github.com/sphildreth/melodee/tree/main/themes). Download any theme zip and import it via **Admin > Themes** in your Melodee instance.
-
 ## Built-in Themes
 
-Melodee includes several built-in themes:
-
-### Radzen Standard Themes
-
-These are the standard themes provided by the Radzen Blazor component library:
+Melodee includes two built-in themes that work out of the box without any configuration:
 
 | Theme | Description |
 |-------|-------------|
-| **light** | Clean, bright theme (Radzen default light) |
-| **dark** | Easy on the eyes for low-light environments (Radzen default dark) |
-| default | Standard Radzen light theme |
-| standard | Standard Radzen theme |
-| humanistic | Warm, friendly appearance |
-| software | Professional software look |
-| material | Material Design inspired |
-| standard-dark | Standard dark variant |
-| humanistic-dark | Humanistic dark variant |
-| software-dark | Software dark variant |
-| material-dark | Material dark variant |
+| **Dark** | Easy on the eyes for low-light environments (default) |
+| **Light** | Clean, bright theme for daytime use |
 
-### Melodee Custom Themes
+These built-in themes use Radzen's standard theme CSS and require no Theme library setup.
 
-These themes extend Radzen's base themes with Melodee's brand colors:
+## Custom Themes
+
+Custom themes allow you to personalize Melodee's appearance beyond the built-in options. Custom themes require a **Theme library** to be configured.
+
+### Setting Up the Theme Library
+
+1. Go to **Admin > Libraries**
+2. Ensure a Theme library exists (one is created by default at `/storage/themes/`)
+3. If needed, update the library path to your preferred location
+
+### Available Custom Themes
+
+Pre-built custom theme packs are available in the [Melodee repository's `/themes` directory](https://github.com/sphildreth/melodee/tree/main/themes):
 
 | Theme | Base | Description |
 |-------|------|-------------|
@@ -42,13 +37,29 @@ These themes extend Radzen's base themes with Melodee's brand colors:
 | Forest | light | Natural green earth tones |
 | Sunset Vibes | light | Warm orange and coral sunset colors |
 
-## Default Theme
+Download any theme zip and import it via **Admin > Themes** in your Melodee instance.
 
-The system default theme is **Radzen Dark**. If the Theme library is not configured or a custom theme fails to load, the application falls back to Radzen's built-in dark theme. Administrators can change the system default theme in **Admin > Themes**.
+### Additional Radzen Themes
 
-Users can select their preferred theme from the theme selector in the application header. The selected theme is stored in a cookie and persists across sessions.
+When a Theme library is configured, you can also use these additional Radzen themes by creating appropriate theme packs:
 
-## Theme Structure
+- standard, standard-dark
+- humanistic, humanistic-dark  
+- software, software-dark
+- material, material-dark
+
+## Default Theme Behavior
+
+- **System Default**: Radzen Dark theme
+- **No Theme Library**: Application uses built-in Light and Dark themes only
+- **Theme Not Found**: Falls back to Radzen Dark theme
+- **User Preference**: Stored in a browser cookie and persists across sessions
+
+Users can select their preferred theme from the theme selector in the application header.
+
+## Creating Custom Themes
+
+### Theme Structure
 
 A custom theme is packaged as a folder containing at least two files:
 
