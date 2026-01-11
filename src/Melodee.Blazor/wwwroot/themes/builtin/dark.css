@@ -1,0 +1,117 @@
+/* Melodee Dark Theme - Built-in
+ * Easy on the eyes theme for low-light environments
+ * WCAG AA compliant contrast ratios
+ */
+
+:root {
+  /* Typography */
+  --md-font-family-base: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --md-font-family-heading: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --md-font-family-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  /* Surface/Background Colors */
+  --md-surface-0: #0f172a;
+  --md-surface-1: #1e293b;
+  --md-surface-2: #334155;
+
+  /* Text Colors */
+  --md-text-1: #f1f5f9;
+  --md-text-2: #cbd5e1;
+  --md-text-inverse: #0f172a;
+  --md-muted: #94a3b8;
+
+  /* Borders & Dividers */
+  --md-border: #475569;
+  --md-divider: #334155;
+
+  /* Primary Colors - Blue (brighter for dark mode) */
+  --md-primary: #60a5fa;
+  --md-primary-contrast: #0f172a;
+
+  /* Accent Colors - Indigo (brighter for dark mode) */
+  --md-accent: #818cf8;
+  --md-accent-contrast: #0f172a;
+
+  /* Focus/Outline */
+  --md-focus: #60a5fa;
+
+  /* Status Colors (brighter for dark mode) */
+  --md-success: #34d399;
+  --md-warning: #fbbf24;
+  --md-error: #f87171;
+  --md-info: #38bdf8;
+
+  /* Table-specific */
+  --md-table-header-bg: #1e293b;
+  --md-table-header-text: #f1f5f9;
+
+  /* Chip/Badge/Pill */
+  --md-chip-bg: #334155;
+  --md-chip-text: #f1f5f9;
+}
+
+/* Global application of tokens */
+body {
+  font-family: var(--md-font-family-base);
+  background: var(--md-surface-0);
+  color: var(--md-text-1);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--md-font-family-heading);
+  color: var(--md-text-1);
+}
+
+code, pre, kbd, samp {
+  font-family: var(--md-font-family-mono);
+}
+
+/* Apply theme tokens to Radzen components */
+.rz-sidebar {
+  background-color: var(--md-surface-1);
+  color: var(--md-text-1);
+}
+
+.rz-header {
+  background-color: var(--md-surface-1);
+  color: var(--md-text-1);
+  border-bottom: 1px solid var(--md-divider);
+}
+
+.rz-panel-menu {
+  background-color: var(--md-surface-1);
+}
+
+.rz-panel-menu-item {
+  color: var(--md-text-1);
+}
+
+.rz-panel-menu-item:hover {
+  background-color: var(--md-primary);
+  color: var(--md-primary-contrast);
+}
+
+.rz-panel-menu-item-selected {
+  background-color: var(--md-primary);
+  color: var(--md-primary-contrast);
+}
+
+.rz-datatable-header {
+  background-color: var(--md-table-header-bg);
+  color: var(--md-table-header-text);
+}
+
+.rz-badge, .rz-chip {
+  background-color: var(--md-chip-bg);
+  color: var(--md-chip-text);
+}
+
+/* Focus states */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--md-focus);
+  outline-offset: 2px;
+}

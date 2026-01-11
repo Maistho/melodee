@@ -412,8 +412,8 @@ public sealed class ThemeService(
                 Version = "1.0.0",
                 Description = "Clean, bright theme for daytime use",
                 IsBuiltIn = true,
-                ThemeCssPath = "/builtin/light.css",
-                BaseDirectory = "/builtin/light",
+                ThemeCssPath = "/themes/builtin/light.css",
+                BaseDirectory = "wwwroot/themes/builtin/light",
                 HasWarnings = false
             },
             new ThemePack
@@ -424,8 +424,8 @@ public sealed class ThemeService(
                 Version = "1.0.0",
                 Description = "Easy on the eyes theme for low-light environments",
                 IsBuiltIn = true,
-                ThemeCssPath = "/builtin/dark.css",
-                BaseDirectory = "/builtin/dark",
+                ThemeCssPath = "/themes/builtin/dark.css",
+                BaseDirectory = "wwwroot/themes/builtin/dark",
                 HasWarnings = false
             }
         ];
