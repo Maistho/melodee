@@ -6,13 +6,6 @@ This directory contains pre-built theme packs ready for administrators to import
 
 ## Available Themes
 
-### Radzen Base Themes
-
-| Theme | Version | Description | Base |
-|-------|---------|-------------|------|
-| [dark.zip](dark.zip) | 1.0.0 | Easy on the eyes for low-light environments | dark |
-| [light.zip](light.zip) | 1.0.0 | Clean, bright Radzen default theme | light |
-
 ### Melodee Signature Themes
 
 | Theme | Version | Description | Base |
