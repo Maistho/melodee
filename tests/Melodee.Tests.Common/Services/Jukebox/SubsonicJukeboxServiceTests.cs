@@ -38,13 +38,16 @@ public class SubsonicJukeboxServiceTests
 
     private SubsonicJukeboxService CreateService()
     {
+        var playbackBackendServiceMock = new Mock<IPlaybackBackendService>();
+        
         return new SubsonicJukeboxService(
             _loggerMock.Object,
             _cacheManagerMock.Object,
             _contextFactoryMock.Object,
             _configurationFactoryMock.Object,
             _partyQueueServiceMock.Object,
-            _partyPlaybackServiceMock.Object);
+            _partyPlaybackServiceMock.Object,
+            playbackBackendServiceMock.Object);
     }
 
     [Fact]

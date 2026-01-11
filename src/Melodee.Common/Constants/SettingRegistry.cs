@@ -200,4 +200,10 @@ public static class SettingRegistry
     public const string JellyfinRateLimitApiRequestsPerPeriod = "jellyfin.rateLimit.apiRequestsPerPeriod";
     public const string JellyfinRateLimitApiPeriodSeconds = "jellyfin.rateLimit.apiPeriodSeconds";
     public const string JellyfinRateLimitStreamConcurrentPerUser = "jellyfin.rateLimit.streamConcurrentPerUser";
+
+    // Theme settings
+    public const string ThemeLibraryPath = "theme.libraryPath";
+    public const string ThemeDefaultThemeId = "theme.defaultThemeId";
+    public const string ThemeMaxUploadSizeMb = "theme.maxUploadSizeMb";
+    public const string ThemeEnforceContrastValidation = "theme.enforceContrastValidation";
 }

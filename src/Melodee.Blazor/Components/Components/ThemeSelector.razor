@@ -1,4 +1,8 @@
+@using Melodee.Common.Models
+@using Melodee.Common.Services
+@inject IThemeService ThemeService
 @inject Radzen.ThemeService RadzenThemeService
+@inject IThemeClientService ThemeClientService
 @implements IDisposable
 
 <RadzenDropDown @bind-Value="@_selectedTheme"
@@ -6,42 +10,21 @@
                 TextProperty="Text"
                 ValueProperty="Value"
                 Change="@OnThemeChangedAsync"
-                Style="width: 100%"/>
+                Style="width: 100%"
+                Loading="@_loading"/>
 
 @code {
     [Parameter] public string? Value { get; set; }
     [Parameter] public EventCallback<string?> ValueChanged { get; set; }
 
-    private string _selectedTheme = "default";
+    private string _selectedTheme = "light";
+    private bool _loading = true;
+    private List<ThemeOption> _availableThemes = [];
 
-    private static readonly List<ThemeOption> _availableThemes =
-    [
-        // Radzen Light themes
-        new("default", "Default"),
-        new("standard", "Standard"),
-        new("humanistic", "Humanistic"),
-        new("software", "Software"),
-        new("material", "Material"),
-        // Radzen Dark themes
-        new("default-dark", "Default Dark"),
-        new("standard-dark", "Standard Dark"),
-        new("humanistic-dark", "Humanistic Dark"),
-        new("software-dark", "Software Dark"),
-        new("material-dark", "Material Dark"),
-        // Custom Melodee themes
-        new("melodee", "🎵 Melodee"),
-        new("melodee-dark", "🎵 Melodee Dark"),
-        new("synthwave", "🌆 Synthwave"),
-        new("ocean-breeze", "🌊 Ocean Breeze"),
-        new("forest", "🌲 Forest"),
-        new("midnight-galaxy", "🌌 Midnight Galaxy"),
-        new("sunset-vibes", "🌅 Sunset Vibes")
-    ];
-
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        await LoadThemesAsync();
         RadzenThemeService.ThemeChanged += OnRadzenThemeChanged;
-        base.OnInitialized();
     }
 
     protected override void OnParametersSet()
@@ -53,6 +36,44 @@
         base.OnParametersSet();
     }
 
+    private async Task LoadThemesAsync()
+    {
+        try
+        {
+            _loading = true;
+            var themes = await ThemeService.DiscoverThemePacksAsync();
+            
+            _availableThemes = themes.Select(t => new ThemeOption(
+                t.Id,
+                t.Name + (t.HasWarnings ? " ⚠️" : "")
+            )).ToList();
+            
+            // Set current theme if available
+            if (!string.IsNullOrEmpty(Value))
+            {
+                _selectedTheme = Value;
+            }
+            else
+            {
+                // Default to light theme
+                _selectedTheme = "light";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading themes: {ex.Message}");
+            // Fallback to built-in themes
+            _availableThemes = [
+                new ThemeOption("light", "Light"),
+                new ThemeOption("dark", "Dark")
+            ];
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
     private async Task OnThemeChangedAsync(object value)
     {
         if (value is not string newTheme || string.IsNullOrEmpty(newTheme))
@@ -61,6 +82,14 @@
         }
 
         _selectedTheme = newTheme;
+        
+        // Load and apply the theme
+        var theme = await ThemeService.GetThemePackAsync(newTheme);
+        if (theme != null)
+        {
+            await ThemeClientService.ApplyThemeAsync(theme);
+        }
+        
         await ValueChanged.InvokeAsync(newTheme);
     }
 

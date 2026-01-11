@@ -280,6 +280,7 @@ builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
 builder.Services.AddScoped<ILocalizationService, LocalizationService>();
+builder.Services.AddScoped<IThemeClientService, ThemeClientService>();
 
 // Email services
 builder.Services.AddScoped<Melodee.Blazor.Services.Email.IEmailSender, Melodee.Blazor.Services.Email.SmtpEmailSender>();
@@ -478,6 +479,7 @@ builder.Services
     .AddScoped<RequestAutoCompletionService>()
     .AddScoped<RadioStationService>()
     .AddScoped<PlaylistService>()
+    .AddScoped<Melodee.Common.Services.IThemeService, Melodee.Common.Services.ThemeService>()
     .AddScoped<ChartService>()
     .AddScoped<MelodeeMetadataMaker>()
     .AddScoped<AlbumRescanEventHandler>()
