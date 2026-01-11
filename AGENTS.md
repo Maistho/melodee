@@ -112,5 +112,47 @@ See: [`.github/workflows/`](./.github/workflows/)
 - Avoid obvious performance regressions (see [`performance-optimization.instructions.md`](./.github/instructions/performance-optimization.instructions.md)).
 - Add/update tests for behavior changes, and run the smallest relevant test suite.
 
+### Documentation Guidelines
+
+**IMPORTANT**: The `/docs` directory is reserved for the Jekyll-based public documentation site (GitHub Pages). **DO NOT** place internal documentation, implementation notes, session summaries, or test guides in `/docs`.
+
+#### Where to Place Documentation
+
+| Document Type | Location | Notes |
+|---------------|----------|-------|
+| **Public user docs** | `/docs/pages/` | Jekyll-formatted, visible at melodee.org |
+| **Implementation notes** | `/design/docs/` | Internal technical documentation |
+| **Session summaries** | `/design/docs/` | AI session summaries and fix docs |
+| **Requirements specs** | `/design/requirements/` | Feature requirements and specifications |
+| **Testing guides** | `/design/testing/` | Manual test walkthroughs, coverage reports |
+| **Runbooks** | `/design/runbooks/` | Operational debugging guides |
+| **ADRs** | `/design/adr/` | Architecture Decision Records |
+| **Chart data** | `/design/charts/` | JSON data files for music charts |
+
+#### Public Documentation (Jekyll)
+
+When creating **public-facing documentation** (user guides, API docs):
+1. Create files in `/docs/pages/`
+2. Use Jekyll front matter format
+3. Update `/docs/_data/toc.yml` for navigation
+
+Example front matter:
+```yaml
+---
+title: Feature Name
+description: Brief description of the feature
+tags:
+  - feature
+  - configuration
+---
+```
+
+#### Internal Documentation
+
+When creating **internal documentation** (implementation notes, debugging guides):
+1. Create files in the appropriate `/design/` subdirectory
+2. Use standard Markdown (no Jekyll front matter required)
+3. Name files descriptively: `feature-name-description.md`
+
 ---
 *Auto-generated guide for AI collaboration.*

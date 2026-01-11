@@ -12,35 +12,37 @@ namespace Melodee.Common.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropIndex(
-                name: "IX_PartyAuditEvents_CreatedAt",
-                table: "PartyAuditEvents");
+            // Drop index if exists (safe for re-running)
+            migrationBuilder.Sql(@"
+                DROP INDEX IF EXISTS ""IX_PartyAuditEvents_CreatedAt"";
+            ");
 
-            migrationBuilder.DropColumn(
-                name: "Message",
-                table: "PartyAuditEvents");
+            // Drop column if exists
+            migrationBuilder.Sql(@"
+                ALTER TABLE ""PartyAuditEvents"" DROP COLUMN IF EXISTS ""Message"";
+            ");
 
-            migrationBuilder.RenameColumn(
-                name: "MetadataJson",
-                table: "PartyAuditEvents",
-                newName: "PayloadJson");
+            // Rename column if it exists and new name doesn't exist
+            migrationBuilder.Sql(@"
+                DO $$
+                BEGIN
+                    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'PartyAuditEvents' AND column_name = 'MetadataJson')
+                       AND NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'PartyAuditEvents' AND column_name = 'PayloadJson') THEN
+                        ALTER TABLE ""PartyAuditEvents"" RENAME COLUMN ""MetadataJson"" TO ""PayloadJson"";
+                    END IF;
+                END $$;
+            ");
 
-            migrationBuilder.AddColumn<bool>(
-                name: "IsQueueLocked",
-                table: "PartySessions",
-                type: "boolean",
-                nullable: false,
-                defaultValue: false);
+            // Add column if not exists
+            migrationBuilder.Sql(@"
+                ALTER TABLE ""PartySessions"" ADD COLUMN IF NOT EXISTS ""IsQueueLocked"" boolean NOT NULL DEFAULT false;
+            ");
 
-            migrationBuilder.AlterColumn<int>(
-                name: "UserId",
-                table: "PartyAuditEvents",
-                type: "integer",
-                nullable: false,
-                defaultValue: 0,
-                oldClrType: typeof(int),
-                oldType: "integer",
-                oldNullable: true);
+            // Alter column (UserId to not nullable) - this is idempotent
+            migrationBuilder.Sql(@"
+                ALTER TABLE ""PartyAuditEvents"" ALTER COLUMN ""UserId"" SET NOT NULL;
+                ALTER TABLE ""PartyAuditEvents"" ALTER COLUMN ""UserId"" SET DEFAULT 0;
+            ");
 
             migrationBuilder.InsertData(
                 table: "Settings",
@@ -51,21 +53,26 @@ namespace Melodee.Common.Migrations
                     { 1901, new Guid("4c886427-ffc2-d277-5950-6cf4b880b7be"), 16, "The type of backend to use for jukebox playback (e.g., 'mpv'). Leave empty for no backend.", NodaTime.Instant.FromUnixTimeTicks(0L), null, false, "jukebox.backendType", null, null, 0, null, "" }
                 });
 
-            migrationBuilder.AddForeignKey(
-                name: "FK_PartyAuditEvents_PartySessions_PartySessionId",
-                table: "PartyAuditEvents",
-                column: "PartySessionId",
-                principalTable: "PartySessions",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+            // Add foreign keys only if they don't exist
+            migrationBuilder.Sql(@"
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'FK_PartyAuditEvents_PartySessions_PartySessionId') THEN
+                        ALTER TABLE ""PartyAuditEvents"" ADD CONSTRAINT ""FK_PartyAuditEvents_PartySessions_PartySessionId"" 
+                            FOREIGN KEY (""PartySessionId"") REFERENCES ""PartySessions"" (""Id"") ON DELETE CASCADE;
+                    END IF;
+                END $$;
+            ");
 
-            migrationBuilder.AddForeignKey(
-                name: "FK_PartyAuditEvents_Users_UserId",
-                table: "PartyAuditEvents",
-                column: "UserId",
-                principalTable: "Users",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+            migrationBuilder.Sql(@"
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'FK_PartyAuditEvents_Users_UserId') THEN
+                        ALTER TABLE ""PartyAuditEvents"" ADD CONSTRAINT ""FK_PartyAuditEvents_Users_UserId"" 
+                            FOREIGN KEY (""UserId"") REFERENCES ""Users"" (""Id"") ON DELETE CASCADE;
+                    END IF;
+                END $$;
+            ");
         }
 
         /// <inheritdoc />
@@ -120,3 +127,4 @@ namespace Melodee.Common.Migrations
         }
     }
 }
+
