@@ -52,7 +52,7 @@ public class SubsonicJukeboxServiceTests
     {
         var service = CreateService();
 
-        var result = await service.GetStatusAsync();
+        var result = await service.GetStatusAsync(1);
 
         Assert.False(result.IsSuccess);
         Assert.Equal(OperationResponseType.BadRequest, result.Type);
@@ -63,7 +63,7 @@ public class SubsonicJukeboxServiceTests
     {
         var service = CreateService();
 
-        var result = await service.GetPlaylistAsync();
+        var result = await service.GetPlaylistAsync(1);
 
         Assert.False(result.IsSuccess);
         Assert.Equal(OperationResponseType.BadRequest, result.Type);
@@ -74,7 +74,7 @@ public class SubsonicJukeboxServiceTests
     {
         var service = CreateService();
 
-        var result = await service.SetGainAsync(0.8);
+        var result = await service.SetGainAsync(1, 0.8);
 
         Assert.False(result.IsSuccess);
         Assert.Equal(OperationResponseType.BadRequest, result.Type);
@@ -85,7 +85,7 @@ public class SubsonicJukeboxServiceTests
     {
         var service = CreateService();
 
-        var result = await service.StartAsync();
+        var result = await service.StartAsync(1);
 
         Assert.False(result.IsSuccess);
         Assert.Equal(OperationResponseType.BadRequest, result.Type);
@@ -96,7 +96,7 @@ public class SubsonicJukeboxServiceTests
     {
         var service = CreateService();
 
-        var result = await service.StopAsync();
+        var result = await service.StopAsync(1);
 
         Assert.False(result.IsSuccess);
         Assert.Equal(OperationResponseType.BadRequest, result.Type);
@@ -107,7 +107,7 @@ public class SubsonicJukeboxServiceTests
     {
         var service = CreateService();
 
-        var result = await service.SkipAsync(1, null);
+        var result = await service.SkipAsync(1, 1, null);
 
         Assert.False(result.IsSuccess);
         Assert.Equal(OperationResponseType.BadRequest, result.Type);
@@ -118,7 +118,7 @@ public class SubsonicJukeboxServiceTests
     {
         var service = CreateService();
 
-        var result = await service.AddAsync(new[] { "song1-id" });
+        var result = await service.AddAsync(1, new[] { "song1-id" });
 
         Assert.False(result.IsSuccess);
         Assert.Equal(OperationResponseType.BadRequest, result.Type);
@@ -129,7 +129,7 @@ public class SubsonicJukeboxServiceTests
     {
         var service = CreateService();
 
-        var result = await service.ClearAsync();
+        var result = await service.ClearAsync(1);
 
         Assert.False(result.IsSuccess);
         Assert.Equal(OperationResponseType.BadRequest, result.Type);
@@ -140,7 +140,7 @@ public class SubsonicJukeboxServiceTests
     {
         var service = CreateService();
 
-        var result = await service.RemoveAsync(0);
+        var result = await service.RemoveAsync(1, 0);
 
         Assert.False(result.IsSuccess);
         Assert.Equal(OperationResponseType.BadRequest, result.Type);
@@ -151,7 +151,7 @@ public class SubsonicJukeboxServiceTests
     {
         var service = CreateService();
 
-        var result = await service.ShuffleAsync();
+        var result = await service.ShuffleAsync(1);
 
         Assert.False(result.IsSuccess);
         Assert.Equal(OperationResponseType.BadRequest, result.Type);

@@ -41,18 +41,18 @@ public class PodcastController(
         var auth = await AuthenticateAsync(cancellationToken);
         if (!auth.IsSuccess)
         {
-            return AuthFailed();
+            return await AuthFailedAsync().ConfigureAwait(false);
         }
 
         var configuration = await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
         if (!configuration.GetValue<bool>(SettingRegistry.PodcastEnabled))
         {
-            return NotSupported();
+            return await NotSupportedAsync().ConfigureAwait(false);
         }
 
         if (!(auth.UserInfo.Roles?.Contains("HasPodcastRole") ?? false))
         {
-            return StatusCode((int)HttpStatusCode.Forbidden, CreateResponse(new Error(10, "User role not allowed")));
+            return StatusCode((int)HttpStatusCode.Forbidden, await CreateResponseAsync(Error.UserNotAuthorizedError).ConfigureAwait(false));
         }
 
         try
@@ -64,13 +64,13 @@ public class PodcastController(
                 var channelId = ParsePodcastChannelId(id!);
                 if (channelId == null)
                 {
-                    return BadRequest(CreateResponse(new Error(0, "Invalid channel id")));
+                    return BadRequest(await CreateResponseAsync(Error.GenericError("Invalid channel id")).ConfigureAwait(false));
                 }
 
                 var channelResult = await podcastService.GetChannelAsync(channelId.Value, auth.UserInfo.Id, cancellationToken).ConfigureAwait(false);
                 if (!channelResult.IsSuccess || channelResult.Data == null)
                 {
-                    return NotFound(CreateResponse(Error.DataNotFoundError));
+                    return NotFound(await CreateResponseAsync(Error.DataNotFoundError).ConfigureAwait(false));
                 }
 
                 channels = [channelResult.Data];
@@ -109,12 +109,12 @@ public class PodcastController(
                 Podcasts = new PodcastsContainer { Channel = podcasts }
             };
 
-            return Ok(CreateResponse(response));
+            return Ok(await CreateResponseAsync(response).ConfigureAwait(false));
         }
         catch (Exception ex)
         {
             Log.Error(ex, "[{Controller}] Error in GetPodcasts", nameof(PodcastController));
-            return StatusCode((int)HttpStatusCode.InternalServerError, CreateResponse(Error.GenericError("Internal server error")));
+            return StatusCode((int)HttpStatusCode.InternalServerError, await CreateResponseAsync(Error.GenericError("Internal server error")).ConfigureAwait(false));
         }
     }
 
@@ -130,18 +130,18 @@ public class PodcastController(
         var auth = await AuthenticateAsync(cancellationToken);
         if (!auth.IsSuccess)
         {
-            return AuthFailed();
+            return await AuthFailedAsync().ConfigureAwait(false);
         }
 
         var configuration = await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
         if (!configuration.GetValue<bool>(SettingRegistry.PodcastEnabled))
         {
-            return NotSupported();
+            return await NotSupportedAsync().ConfigureAwait(false);
         }
 
         if (!(auth.UserInfo.Roles?.Contains("HasPodcastRole") ?? false))
         {
-            return StatusCode((int)HttpStatusCode.Forbidden, CreateResponse(new Error(10, "User role not allowed")));
+            return StatusCode((int)HttpStatusCode.Forbidden, await CreateResponseAsync(Error.UserNotAuthorizedError).ConfigureAwait(false));
         }
 
         try
@@ -155,12 +155,12 @@ public class PodcastController(
                 NewestPodcasts = new NewestPodcastsContainer { Episode = episodes }
             };
 
-            return Ok(CreateResponse(response));
+            return Ok(await CreateResponseAsync(response).ConfigureAwait(false));
         }
         catch (Exception ex)
         {
             Log.Error(ex, "[{Controller}] Error in GetNewestPodcasts", nameof(PodcastController));
-            return StatusCode((int)HttpStatusCode.InternalServerError, CreateResponse(Error.GenericError("Internal server error")));
+            return StatusCode((int)HttpStatusCode.InternalServerError, await CreateResponseAsync(Error.GenericError("Internal server error")).ConfigureAwait(false));
         }
     }
 
@@ -173,18 +173,18 @@ public class PodcastController(
         var auth = await AuthenticateAsync(cancellationToken);
         if (!auth.IsSuccess)
         {
-            return AuthFailed();
+            return await AuthFailedAsync().ConfigureAwait(false);
         }
 
         var configuration = await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
         if (!configuration.GetValue<bool>(SettingRegistry.PodcastEnabled))
         {
-            return NotSupported();
+            return await NotSupportedAsync().ConfigureAwait(false);
         }
 
         if (!(auth.UserInfo.Roles?.Contains("HasPodcastRole") ?? false))
         {
-            return StatusCode((int)HttpStatusCode.Forbidden, CreateResponse(new Error(10, "User role not allowed")));
+            return StatusCode((int)HttpStatusCode.Forbidden, await CreateResponseAsync(Error.UserNotAuthorizedError).ConfigureAwait(false));
         }
 
         try
@@ -200,12 +200,12 @@ public class PodcastController(
 
             await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-            return Ok(CreateResponse(new StatusResponse { Status = "ok" }));
+            return Ok(await CreateResponseAsync(new StatusResponse { Status = "ok" }).ConfigureAwait(false));
         }
         catch (Exception ex)
         {
             Log.Error(ex, "[{Controller}] Error in RefreshPodcasts", nameof(PodcastController));
-            return StatusCode((int)HttpStatusCode.InternalServerError, CreateResponse(Error.GenericError("Internal server error")));
+            return StatusCode((int)HttpStatusCode.InternalServerError, await CreateResponseAsync(Error.GenericError("Internal server error")).ConfigureAwait(false));
         }
     }
 
@@ -220,23 +220,23 @@ public class PodcastController(
         var auth = await AuthenticateAsync(cancellationToken);
         if (!auth.IsSuccess)
         {
-            return AuthFailed();
+            return await AuthFailedAsync().ConfigureAwait(false);
         }
 
         var configuration = await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
         if (!configuration.GetValue<bool>(SettingRegistry.PodcastEnabled))
         {
-            return NotSupported();
+            return await NotSupportedAsync().ConfigureAwait(false);
         }
 
         if (!(auth.UserInfo.Roles?.Contains("HasPodcastRole") ?? false))
         {
-            return StatusCode((int)HttpStatusCode.Forbidden, CreateResponse(new Error(10, "User role not allowed")));
+            return StatusCode((int)HttpStatusCode.Forbidden, await CreateResponseAsync(Error.UserNotAuthorizedError).ConfigureAwait(false));
         }
 
         if (url.Nullify() == null)
         {
-            return BadRequest(CreateResponse(new Error(0, "Missing url parameter")));
+            return BadRequest(await CreateResponseAsync(Error.RequiredParameterMissingError).ConfigureAwait(false));
         }
 
         try
@@ -245,7 +245,7 @@ public class PodcastController(
 
             if (!result.IsSuccess)
             {
-                return BadRequest(CreateResponse(Error.GenericError(result.Messages?.FirstOrDefault() ?? "Unknown error")));
+                return BadRequest(await CreateResponseAsync(Error.GenericError(result.Messages?.FirstOrDefault() ?? "Unknown error")).ConfigureAwait(false));
             }
 
             var channel = result.Data!;
@@ -257,12 +257,12 @@ public class PodcastController(
                 Url = channel.FeedUrl
             };
 
-            return Ok(CreateResponse(response));
+            return Ok(await CreateResponseAsync(response).ConfigureAwait(false));
         }
         catch (Exception ex)
         {
             Log.Error(ex, "[{Controller}] Error in CreatePodcastChannel", nameof(PodcastController));
-            return StatusCode((int)HttpStatusCode.InternalServerError, CreateResponse(Error.GenericError("Internal server error")));
+            return StatusCode((int)HttpStatusCode.InternalServerError, await CreateResponseAsync(Error.GenericError("Internal server error")).ConfigureAwait(false));
         }
     }
 
@@ -277,24 +277,24 @@ public class PodcastController(
         var auth = await AuthenticateAsync(cancellationToken);
         if (!auth.IsSuccess)
         {
-            return AuthFailed();
+            return await AuthFailedAsync().ConfigureAwait(false);
         }
 
         var configuration = await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
         if (!configuration.GetValue<bool>(SettingRegistry.PodcastEnabled))
         {
-            return NotSupported();
+            return await NotSupportedAsync().ConfigureAwait(false);
         }
 
         if (!(auth.UserInfo.Roles?.Contains("HasPodcastRole") ?? false))
         {
-            return StatusCode((int)HttpStatusCode.Forbidden, CreateResponse(new Error(10, "User role not allowed")));
+            return StatusCode((int)HttpStatusCode.Forbidden, await CreateResponseAsync(Error.UserNotAuthorizedError).ConfigureAwait(false));
         }
 
         var channelId = ParsePodcastChannelId(id);
         if (channelId == null)
         {
-            return BadRequest(CreateResponse(new Error(0, "Invalid channel id")));
+            return BadRequest(await CreateResponseAsync(Error.GenericError("Invalid channel id")).ConfigureAwait(false));
         }
 
         try
@@ -305,15 +305,15 @@ public class PodcastController(
 
             if (!result.IsSuccess)
             {
-                return NotFound(CreateResponse(Error.GenericError(result.Messages?.FirstOrDefault() ?? "Unknown error")));
+                return NotFound(await CreateResponseAsync(Error.GenericError(result.Messages?.FirstOrDefault() ?? "Unknown error")).ConfigureAwait(false));
             }
 
-            return Ok(CreateResponse(new StatusResponse { Status = "ok" }));
+            return Ok(await CreateResponseAsync(new StatusResponse { Status = "ok" }).ConfigureAwait(false));
         }
         catch (Exception ex)
         {
             Log.Error(ex, "[{Controller}] Error in DeletePodcastChannel", nameof(PodcastController));
-            return StatusCode((int)HttpStatusCode.InternalServerError, CreateResponse(Error.GenericError("Internal server error")));
+            return StatusCode((int)HttpStatusCode.InternalServerError, await CreateResponseAsync(Error.GenericError("Internal server error")).ConfigureAwait(false));
         }
     }
 
@@ -328,24 +328,24 @@ public class PodcastController(
         var auth = await AuthenticateAsync(cancellationToken);
         if (!auth.IsSuccess)
         {
-            return AuthFailed();
+            return await AuthFailedAsync().ConfigureAwait(false);
         }
 
         var configuration = await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
         if (!configuration.GetValue<bool>(SettingRegistry.PodcastEnabled))
         {
-            return NotSupported();
+            return await NotSupportedAsync().ConfigureAwait(false);
         }
 
         if (!(auth.UserInfo.Roles?.Contains("HasPodcastRole") ?? false))
         {
-            return StatusCode((int)HttpStatusCode.Forbidden, CreateResponse(new Error(10, "User role not allowed")));
+            return StatusCode((int)HttpStatusCode.Forbidden, await CreateResponseAsync(Error.UserNotAuthorizedError).ConfigureAwait(false));
         }
 
         var episodeId = ParsePodcastEpisodeId(id);
         if (episodeId == null)
         {
-            return BadRequest(CreateResponse(new Error(0, "Invalid episode id")));
+            return BadRequest(await CreateResponseAsync(Error.GenericError("Invalid episode id")).ConfigureAwait(false));
         }
 
         try
@@ -354,15 +354,15 @@ public class PodcastController(
 
             if (!result.IsSuccess)
             {
-                return NotFound(CreateResponse(Error.GenericError(result.Messages?.FirstOrDefault() ?? "Unknown error")));
+                return NotFound(await CreateResponseAsync(Error.GenericError(result.Messages?.FirstOrDefault() ?? "Unknown error")).ConfigureAwait(false));
             }
 
-            return Ok(CreateResponse(new StatusResponse { Status = "ok" }));
+            return Ok(await CreateResponseAsync(new StatusResponse { Status = "ok" }).ConfigureAwait(false));
         }
         catch (Exception ex)
         {
             Log.Error(ex, "[{Controller}] Error in DeletePodcastEpisode", nameof(PodcastController));
-            return StatusCode((int)HttpStatusCode.InternalServerError, CreateResponse(Error.GenericError("Internal server error")));
+            return StatusCode((int)HttpStatusCode.InternalServerError, await CreateResponseAsync(Error.GenericError("Internal server error")).ConfigureAwait(false));
         }
     }
 
@@ -377,24 +377,24 @@ public class PodcastController(
         var auth = await AuthenticateAsync(cancellationToken);
         if (!auth.IsSuccess)
         {
-            return AuthFailed();
+            return await AuthFailedAsync().ConfigureAwait(false);
         }
 
         var configuration = await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
         if (!configuration.GetValue<bool>(SettingRegistry.PodcastEnabled))
         {
-            return NotSupported();
+            return await NotSupportedAsync().ConfigureAwait(false);
         }
 
         if (!(auth.UserInfo.Roles?.Contains("HasPodcastRole") ?? false))
         {
-            return StatusCode((int)HttpStatusCode.Forbidden, CreateResponse(new Error(10, "User role not allowed")));
+            return StatusCode((int)HttpStatusCode.Forbidden, await CreateResponseAsync(Error.UserNotAuthorizedError).ConfigureAwait(false));
         }
 
         var episodeId = ParsePodcastEpisodeId(id);
         if (episodeId == null)
         {
-            return BadRequest(CreateResponse(new Error(0, "Invalid episode id")));
+            return BadRequest(await CreateResponseAsync(Error.GenericError("Invalid episode id")).ConfigureAwait(false));
         }
 
         try
@@ -403,15 +403,15 @@ public class PodcastController(
 
             if (!result.IsSuccess)
             {
-                return BadRequest(CreateResponse(Error.GenericError(result.Messages?.FirstOrDefault() ?? "Unknown error")));
+                return BadRequest(await CreateResponseAsync(Error.GenericError(result.Messages?.FirstOrDefault() ?? "Unknown error")).ConfigureAwait(false));
             }
 
-            return Ok(CreateResponse(new StatusResponse { Status = "ok" }));
+            return Ok(await CreateResponseAsync(new StatusResponse { Status = "ok" }).ConfigureAwait(false));
         }
         catch (Exception ex)
         {
             Log.Error(ex, "[{Controller}] Error in DownloadPodcastEpisode", nameof(PodcastController));
-            return StatusCode((int)HttpStatusCode.InternalServerError, CreateResponse(Error.GenericError("Internal server error")));
+            return StatusCode((int)HttpStatusCode.InternalServerError, await CreateResponseAsync(Error.GenericError("Internal server error")).ConfigureAwait(false));
         }
     }
 
@@ -435,13 +435,13 @@ public class PodcastController(
         if (!auth.IsSuccess)
         {
             Log.Warning("[StreamPodcastEpisode] Authentication failed for episode ID: {EpisodeId}", id);
-            return AuthFailed();
+            return await AuthFailedAsync().ConfigureAwait(false);
         }
 
         var configuration = await ConfigurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
         if (!configuration.GetValue<bool>(SettingRegistry.PodcastEnabled))
         {
-            return NotSupported();
+            return await NotSupportedAsync().ConfigureAwait(false);
         }
 
         // Only check for HasStreamRole if authentication was required (not localhost/cookie auth)
@@ -452,7 +452,7 @@ public class PodcastController(
             Log.Warning("[StreamPodcastEpisode] User {UserId} does not have HasStreamRole. Roles: {Roles}",
                 auth.UserInfo.Id,
                 string.Join(", ", userRoles));
-            return StatusCode((int)HttpStatusCode.Forbidden, CreateResponse(new Error(10, "User role not allowed")));
+            return StatusCode((int)HttpStatusCode.Forbidden, await CreateResponseAsync(Error.UserNotAuthorizedError).ConfigureAwait(false));
         }
 
         Log.Debug("[StreamPodcastEpisode] Role check passed. RequiresAuth: {RequiresAuth}, HasStreamRole: {HasStreamRole}",
@@ -464,7 +464,7 @@ public class PodcastController(
 
         if (episodeId == null)
         {
-            return BadRequest(CreateResponse(new Error(0, "Invalid episode id")));
+            return BadRequest(await CreateResponseAsync(Error.GenericError("Invalid episode id")).ConfigureAwait(false));
         }
 
         try
@@ -481,7 +481,7 @@ public class PodcastController(
 
             if (!episodeResult.IsSuccess || episodeResult.Data == null)
             {
-                return NotFound(CreateResponse(Error.DataNotFoundError));
+                return NotFound(await CreateResponseAsync(Error.DataNotFoundError).ConfigureAwait(false));
             }
 
             var episode = episodeResult.Data;
@@ -493,20 +493,20 @@ public class PodcastController(
             {
                 Log.Warning("[StreamPodcastEpisode] Episode {EpisodeId} not ready for streaming: DownloadStatus={DownloadStatus}, HasLocalPath={HasLocalPath}",
                     episode.Id, episode.DownloadStatus, episode.LocalPath != null);
-                return BadRequest(CreateResponse(Error.GenericError("Episode not downloaded")));
+                return BadRequest(await CreateResponseAsync(Error.GenericError("Episode not downloaded")).ConfigureAwait(false));
             }
 
             var podcastLibraryResult = await libraryService.GetPodcastLibraryAsync(cancellationToken).ConfigureAwait(false);
             var podcastLibrary = podcastLibraryResult.Data;
             if (podcastLibrary == null)
             {
-                return NotFound(CreateResponse(Error.GenericError("Podcast library not configured")));
+                return NotFound(await CreateResponseAsync(Error.GenericError("Podcast library not configured")).ConfigureAwait(false));
             }
 
             var filePath = Path.Combine(podcastLibrary.Path, episode.LocalPath ?? string.Empty);
             if (!System.IO.File.Exists(filePath))
             {
-                return NotFound(CreateResponse(Error.GenericError("Episode file not found")));
+                return NotFound(await CreateResponseAsync(Error.GenericError("Episode file not found")).ConfigureAwait(false));
             }
 
             var fileInfo = new FileInfo(filePath);
@@ -578,7 +578,7 @@ public class PodcastController(
         catch (Exception ex)
         {
             Log.Error(ex, "[{Controller}] Error in StreamPodcastEpisode", nameof(PodcastController));
-            return StatusCode((int)HttpStatusCode.InternalServerError, CreateResponse(Error.GenericError("Internal server error")));
+            return StatusCode((int)HttpStatusCode.InternalServerError, await CreateResponseAsync(Error.GenericError("Internal server error")).ConfigureAwait(false));
         }
     }
 
@@ -615,28 +615,36 @@ public class PodcastController(
         public required string Status { get; init; }
     }
 
-    private ResponseModel CreateResponse(object data)
+    private async Task<ResponseModel> CreateResponseAsync(object data)
     {
         var isError = data is Error;
-        var dataPropertyName = "podcasts"; // Default
-        if (isError) dataPropertyName = "error";
-        else if (data is StatusResponse) dataPropertyName = "status";
-        else if (data.GetType().Name.Contains("Channel")) dataPropertyName = "podcastChannel";
-        else if (data.GetType().Name.Contains("Episode")) dataPropertyName = "podcastEpisode";
+        var dataPropertyName = "podcasts";
+        if (isError)
+        {
+            dataPropertyName = "error";
+        }
+        else if (data is StatusResponse)
+        {
+            dataPropertyName = "status";
+        }
+        else if (data.GetType().Name.Contains("Channel"))
+        {
+            dataPropertyName = "podcastChannel";
+        }
+        else if (data.GetType().Name.Contains("Episode"))
+        {
+            dataPropertyName = "podcastEpisode";
+        }
 
         return new ResponseModel
         {
             UserInfo = UserInfo.BlankUserInfo,
-            ResponseData = new ApiResponse
-            {
-                IsSuccess = !isError,
-                Version = "1.16.1",
-                ServerVersion = "1.0.0",
-                Type = "melodee",
-                DataPropertyName = dataPropertyName,
-                Data = isError ? null : data,
-                Error = isError ? (Error)data : null
-            }
+            ResponseData = await openSubsonicApiService.NewApiResponse(
+                !isError,
+                dataPropertyName,
+                string.Empty,
+                isError ? (Error)data : null,
+                isError ? null : data).ConfigureAwait(false)
         };
     }
 
@@ -645,14 +653,14 @@ public class PodcastController(
         return await openSubsonicApiService.AuthenticateSubsonicApiAsync(ApiRequest, cancellationToken);
     }
 
-    private IActionResult AuthFailed()
+    private async Task<IActionResult> AuthFailedAsync()
     {
-        return StatusCode((int)HttpStatusCode.Forbidden, CreateResponse(Error.AuthError));
+        return StatusCode((int)HttpStatusCode.Forbidden, await CreateResponseAsync(Error.AuthError).ConfigureAwait(false));
     }
 
-    private IActionResult NotSupported()
+    private async Task<IActionResult> NotSupportedAsync()
     {
-        return StatusCode((int)HttpStatusCode.BadRequest, CreateResponse(Error.GenericError("Podcasts are currently disabled.")));
+        return StatusCode((int)HttpStatusCode.BadRequest, await CreateResponseAsync(Error.GenericError("Podcasts are currently disabled.")).ConfigureAwait(false));
     }
 }
 

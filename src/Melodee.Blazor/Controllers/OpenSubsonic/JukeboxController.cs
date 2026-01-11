@@ -60,52 +60,54 @@ public class JukeboxController(
             return await MakeResult(Task.FromResult(authResponse)).ConfigureAwait(false);
         }
 
+        var userId = authResponse.UserInfo.Id;
+
         try
         {
             return action?.ToLowerInvariant() switch
             {
-                "get" => await GetJukeboxAsync(cancellationToken).ConfigureAwait(false),
-                "status" => await GetStatusAsync(cancellationToken).ConfigureAwait(false),
-                "set" => await SetGainAsync(gain ?? 0.8, cancellationToken).ConfigureAwait(false),
-                "start" => await StartAsync(cancellationToken).ConfigureAwait(false),
-                "stop" => await StopAsync(cancellationToken).ConfigureAwait(false),
-                "skip" => await SkipAsync(index, offset, cancellationToken).ConfigureAwait(false),
-                "add" => await AddAsync(id, ids, cancellationToken).ConfigureAwait(false),
-                "clear" => await ClearAsync(cancellationToken).ConfigureAwait(false),
-                "remove" => await RemoveAsync(index ?? 0, cancellationToken).ConfigureAwait(false),
-                "shuffle" => await ShuffleAsync(cancellationToken).ConfigureAwait(false),
-                _ => await GetStatusAsync(cancellationToken).ConfigureAwait(false)
+                "get" => await GetJukeboxAsync(userId, cancellationToken).ConfigureAwait(false),
+                "status" => await GetStatusAsync(userId, cancellationToken).ConfigureAwait(false),
+                "set" => await SetGainAsync(userId, gain ?? SettingDefaults.JukeboxDefaultGain, cancellationToken).ConfigureAwait(false),
+                "start" => await StartAsync(userId, cancellationToken).ConfigureAwait(false),
+                "stop" => await StopAsync(userId, cancellationToken).ConfigureAwait(false),
+                "skip" => await SkipAsync(userId, index, offset, cancellationToken).ConfigureAwait(false),
+                "add" => await AddAsync(userId, id, ids, cancellationToken).ConfigureAwait(false),
+                "clear" => await ClearAsync(userId, cancellationToken).ConfigureAwait(false),
+                "remove" => await RemoveAsync(userId, index ?? 0, cancellationToken).ConfigureAwait(false),
+                "shuffle" => await ShuffleAsync(userId, cancellationToken).ConfigureAwait(false),
+                _ => await GetStatusAsync(userId, cancellationToken).ConfigureAwait(false)
             };
         }
         catch (Exception ex)
         {
             Log.Warning(ex, "Error in jukeboxControl");
-            var errorResponse = CreateErrorResponse(70, "Jukebox operation failed: " + ex.Message);
+            var errorResponse = await CreateErrorResponseAsync(Error.DataNotFoundError.Code, "Jukebox operation failed: " + ex.Message).ConfigureAwait(false);
             return await MakeResult(Task.FromResult(errorResponse)).ConfigureAwait(false);
         }
     }
 
-    private async Task<IActionResult> GetStatusAsync(CancellationToken cancellationToken)
+    private async Task<IActionResult> GetStatusAsync(int userId, CancellationToken cancellationToken)
     {
-        var result = await subsonicJukeboxService.GetStatusAsync(cancellationToken).ConfigureAwait(false);
+        var result = await subsonicJukeboxService.GetStatusAsync(userId, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess || result.Data == null)
         {
-            var errorResponse = CreateErrorResponse(70, result.Errors?.FirstOrDefault()?.Message ?? "Failed to get jukebox status");
+            var errorResponse = await CreateErrorResponseAsync(Error.DataNotFoundError.Code, result.Errors?.FirstOrDefault()?.Message ?? "Failed to get jukebox status").ConfigureAwait(false);
             return await MakeResult(Task.FromResult(errorResponse)).ConfigureAwait(false);
         }
 
-        var response = CreateJukeboxStatusResponse(result.Data);
+        var response = await CreateJukeboxStatusResponseAsync(result.Data).ConfigureAwait(false);
         return await MakeResult(Task.FromResult(response)).ConfigureAwait(false);
     }
 
-    private async Task<IActionResult> GetJukeboxAsync(CancellationToken cancellationToken)
+    private async Task<IActionResult> GetJukeboxAsync(int userId, CancellationToken cancellationToken)
     {
-        var result = await subsonicJukeboxService.GetPlaylistAsync(cancellationToken).ConfigureAwait(false);
+        var result = await subsonicJukeboxService.GetPlaylistAsync(userId, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess || result.Data == null)
         {
-            var errorResponse = CreateErrorResponse(70, result.Errors?.FirstOrDefault()?.Message ?? "Failed to get jukebox playlist");
+            var errorResponse = await CreateErrorResponseAsync(Error.DataNotFoundError.Code, result.Errors?.FirstOrDefault()?.Message ?? "Failed to get jukebox playlist").ConfigureAwait(false);
             return await MakeResult(Task.FromResult(errorResponse)).ConfigureAwait(false);
         }
 
@@ -113,73 +115,65 @@ public class JukeboxController(
         {
             IsSuccess = true,
             UserInfo = UserInfo.BlankUserInfo,
-            ResponseData = new ApiResponse
-            {
-                IsSuccess = true,
-                Version = "1.16.1",
-                Type = "melodee",
-                ServerVersion = "1.0.0",
-                DataPropertyName = "jukeboxPlaylist",
-                Data = new JukeboxGetResponse(result.Data.Playlist)
-            }
+            ResponseData = await openSubsonicApiService.NewApiResponse(true, "jukeboxPlaylist", string.Empty, null, new JukeboxGetResponse(result.Data.Playlist)).ConfigureAwait(false)
         };
 
         return await MakeResult(Task.FromResult(response)).ConfigureAwait(false);
     }
 
-    private async Task<IActionResult> SetGainAsync(double gainValue, CancellationToken cancellationToken)
+    private async Task<IActionResult> SetGainAsync(int userId, double gainValue, CancellationToken cancellationToken)
     {
-        var result = await subsonicJukeboxService.SetGainAsync(gainValue, cancellationToken).ConfigureAwait(false);
+        var result = await subsonicJukeboxService.SetGainAsync(userId, gainValue, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
-            var errorResponse = CreateErrorResponse(70, result.Errors?.FirstOrDefault()?.Message ?? "Failed to set gain");
+            var errorResponse = await CreateErrorResponseAsync(Error.DataNotFoundError.Code, result.Errors?.FirstOrDefault()?.Message ?? "Failed to set gain").ConfigureAwait(false);
             return await MakeResult(Task.FromResult(errorResponse)).ConfigureAwait(false);
         }
 
-        return await GetStatusAsync(cancellationToken).ConfigureAwait(false);
+        return await GetStatusAsync(userId, cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task<IActionResult> StartAsync(CancellationToken cancellationToken)
+    private async Task<IActionResult> StartAsync(int userId, CancellationToken cancellationToken)
     {
-        var result = await subsonicJukeboxService.StartAsync(cancellationToken).ConfigureAwait(false);
+        var result = await subsonicJukeboxService.StartAsync(userId, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
-            var errorResponse = CreateErrorResponse(70, result.Errors?.FirstOrDefault()?.Message ?? "Failed to start playback");
+            var errorResponse = await CreateErrorResponseAsync(Error.DataNotFoundError.Code, result.Errors?.FirstOrDefault()?.Message ?? "Failed to start playback").ConfigureAwait(false);
             return await MakeResult(Task.FromResult(errorResponse)).ConfigureAwait(false);
         }
 
-        return await GetStatusAsync(cancellationToken).ConfigureAwait(false);
+        return await GetStatusAsync(userId, cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task<IActionResult> StopAsync(CancellationToken cancellationToken)
+    private async Task<IActionResult> StopAsync(int userId, CancellationToken cancellationToken)
     {
-        var result = await subsonicJukeboxService.StopAsync(cancellationToken).ConfigureAwait(false);
+        var result = await subsonicJukeboxService.StopAsync(userId, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
-            var errorResponse = CreateErrorResponse(70, result.Errors?.FirstOrDefault()?.Message ?? "Failed to stop playback");
+            var errorResponse = await CreateErrorResponseAsync(Error.DataNotFoundError.Code, result.Errors?.FirstOrDefault()?.Message ?? "Failed to stop playback").ConfigureAwait(false);
             return await MakeResult(Task.FromResult(errorResponse)).ConfigureAwait(false);
         }
 
-        return await GetStatusAsync(cancellationToken).ConfigureAwait(false);
+        return await GetStatusAsync(userId, cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task<IActionResult> SkipAsync(int? index, int? offset, CancellationToken cancellationToken)
+    private async Task<IActionResult> SkipAsync(int userId, int? index, int? offset, CancellationToken cancellationToken)
     {
-        var result = await subsonicJukeboxService.SkipAsync(index, offset, cancellationToken).ConfigureAwait(false);
+        var result = await subsonicJukeboxService.SkipAsync(userId, index, offset, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
-            var errorResponse = CreateErrorResponse(70, result.Errors?.FirstOrDefault()?.Message ?? "Failed to skip");
+            var errorResponse = await CreateErrorResponseAsync(Error.DataNotFoundError.Code, result.Errors?.FirstOrDefault()?.Message ?? "Failed to skip").ConfigureAwait(false);
             return await MakeResult(Task.FromResult(errorResponse)).ConfigureAwait(false);
         }
 
-        return await GetStatusAsync(cancellationToken).ConfigureAwait(false);
+        return await GetStatusAsync(userId, cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task<IActionResult> AddAsync(string? id, string? ids, CancellationToken cancellationToken)
+    private async Task<IActionResult> AddAsync(int userId, string? id, string? ids, CancellationToken cancellationToken)
     {
         var songIds = new List<string>();
 
@@ -195,93 +189,77 @@ public class JukeboxController(
 
         if (!songIds.Any())
         {
-            var errorResponse = CreateErrorResponse(70, "No song IDs provided");
+            var errorResponse = await CreateErrorResponseAsync(Error.DataNotFoundError.Code, "No song IDs provided").ConfigureAwait(false);
             return await MakeResult(Task.FromResult(errorResponse)).ConfigureAwait(false);
         }
 
-        var result = await subsonicJukeboxService.AddAsync(songIds, cancellationToken).ConfigureAwait(false);
+        var result = await subsonicJukeboxService.AddAsync(userId, songIds, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
-            var errorResponse = CreateErrorResponse(70, result.Errors?.FirstOrDefault()?.Message ?? "Failed to add songs");
+            var errorResponse = await CreateErrorResponseAsync(Error.DataNotFoundError.Code, result.Errors?.FirstOrDefault()?.Message ?? "Failed to add songs").ConfigureAwait(false);
             return await MakeResult(Task.FromResult(errorResponse)).ConfigureAwait(false);
         }
 
-        return await GetStatusAsync(cancellationToken).ConfigureAwait(false);
+        return await GetStatusAsync(userId, cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task<IActionResult> ClearAsync(CancellationToken cancellationToken)
+    private async Task<IActionResult> ClearAsync(int userId, CancellationToken cancellationToken)
     {
-        var result = await subsonicJukeboxService.ClearAsync(cancellationToken).ConfigureAwait(false);
+        var result = await subsonicJukeboxService.ClearAsync(userId, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
-            var errorResponse = CreateErrorResponse(70, result.Errors?.FirstOrDefault()?.Message ?? "Failed to clear playlist");
+            var errorResponse = await CreateErrorResponseAsync(Error.DataNotFoundError.Code, result.Errors?.FirstOrDefault()?.Message ?? "Failed to clear playlist").ConfigureAwait(false);
             return await MakeResult(Task.FromResult(errorResponse)).ConfigureAwait(false);
         }
 
-        return await GetStatusAsync(cancellationToken).ConfigureAwait(false);
+        return await GetStatusAsync(userId, cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task<IActionResult> RemoveAsync(int index, CancellationToken cancellationToken)
+    private async Task<IActionResult> RemoveAsync(int userId, int index, CancellationToken cancellationToken)
     {
-        var result = await subsonicJukeboxService.RemoveAsync(index, cancellationToken).ConfigureAwait(false);
+        var result = await subsonicJukeboxService.RemoveAsync(userId, index, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
-            var errorResponse = CreateErrorResponse(70, result.Errors?.FirstOrDefault()?.Message ?? "Failed to remove song");
+            var errorResponse = await CreateErrorResponseAsync(Error.DataNotFoundError.Code, result.Errors?.FirstOrDefault()?.Message ?? "Failed to remove song").ConfigureAwait(false);
             return await MakeResult(Task.FromResult(errorResponse)).ConfigureAwait(false);
         }
 
-        return await GetStatusAsync(cancellationToken).ConfigureAwait(false);
+        return await GetStatusAsync(userId, cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task<IActionResult> ShuffleAsync(CancellationToken cancellationToken)
+    private async Task<IActionResult> ShuffleAsync(int userId, CancellationToken cancellationToken)
     {
-        var result = await subsonicJukeboxService.ShuffleAsync(cancellationToken).ConfigureAwait(false);
+        var result = await subsonicJukeboxService.ShuffleAsync(userId, cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
         {
-            var errorResponse = CreateErrorResponse(70, result.Errors?.FirstOrDefault()?.Message ?? "Failed to shuffle playlist");
+            var errorResponse = await CreateErrorResponseAsync(Error.DataNotFoundError.Code, result.Errors?.FirstOrDefault()?.Message ?? "Failed to shuffle playlist").ConfigureAwait(false);
             return await MakeResult(Task.FromResult(errorResponse)).ConfigureAwait(false);
         }
 
-        return await GetStatusAsync(cancellationToken).ConfigureAwait(false);
+        return await GetStatusAsync(userId, cancellationToken).ConfigureAwait(false);
     }
 
-    private ResponseModel CreateJukeboxStatusResponse(JukeboxStatusResponse status)
+    private async Task<ResponseModel> CreateJukeboxStatusResponseAsync(JukeboxStatusResponse status)
     {
         return new ResponseModel
         {
             IsSuccess = true,
             UserInfo = UserInfo.BlankUserInfo,
-            ResponseData = new ApiResponse
-            {
-                IsSuccess = true,
-                Version = "1.16.1",
-                Type = "melodee",
-                ServerVersion = "1.0.0",
-                DataPropertyName = "jukeboxStatus",
-                Data = status
-            }
+            ResponseData = await openSubsonicApiService.NewApiResponse(true, "jukeboxStatus", string.Empty, null, status).ConfigureAwait(false)
         };
     }
 
-    private static ResponseModel CreateErrorResponse(short code, string message)
+    private async Task<ResponseModel> CreateErrorResponseAsync(short code, string message)
     {
         return new ResponseModel
         {
             IsSuccess = false,
             UserInfo = UserInfo.BlankUserInfo,
-            ResponseData = new ApiResponse
-            {
-                IsSuccess = false,
-                Version = "1.16.1",
-                Type = "melodee",
-                ServerVersion = "1.0.0",
-                DataPropertyName = "error",
-                Error = new Error(code, message)
-            }
+            ResponseData = await openSubsonicApiService.NewApiResponse(false, "error", string.Empty, new Error(code, message)).ConfigureAwait(false)
         };
     }
 }

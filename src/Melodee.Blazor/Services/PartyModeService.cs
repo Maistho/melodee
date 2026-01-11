@@ -210,7 +210,7 @@ public class PartyModeService
         string? source = null,
         long expectedRevision = 1)
     {
-        _logger.LogDebug("[PartyModeService] AddToQueueAsync: ApiKey={ApiKey}, SongCount={SongCount}, ExpectedRevision={ExpectedRevision}", 
+        _logger.LogDebug("[PartyModeService] AddToQueueAsync: ApiKey={ApiKey}, SongCount={SongCount}, ExpectedRevision={ExpectedRevision}",
             sessionApiKey, songApiKeys.Count(), expectedRevision);
         try
         {
@@ -264,7 +264,7 @@ public class PartyModeService
         int newIndex,
         long expectedRevision)
     {
-        _logger.LogDebug("[PartyModeService] ReorderQueueItemAsync: SessionApiKey={SessionApiKey}, ItemApiKey={ItemApiKey}, NewIndex={NewIndex}", 
+        _logger.LogDebug("[PartyModeService] ReorderQueueItemAsync: SessionApiKey={SessionApiKey}, ItemApiKey={ItemApiKey}, NewIndex={NewIndex}",
             sessionApiKey, itemApiKey, newIndex);
         try
         {
