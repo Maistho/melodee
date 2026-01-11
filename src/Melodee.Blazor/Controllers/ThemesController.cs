@@ -1,5 +1,5 @@
 using Asp.Versioning;
-using Melodee.Blazor.Controllers.Melodee;
+using MelodeeControllerBase = Melodee.Blazor.Controllers.Melodee.ControllerBase;
 using Melodee.Blazor.Filters;
 using Melodee.Common.Configuration;
 using Melodee.Common.Data;
@@ -8,9 +8,11 @@ using Melodee.Common.Extensions;
 using Melodee.Common.Models;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services;
+using Melodee.Common.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace Melodee.Blazor.Controllers;
 
@@ -24,7 +26,7 @@ public class ThemesController(
     IMelodeeConfigurationFactory configurationFactory,
     IThemeService themeService,
     IDbContextFactory<MelodeeDbContext> contextFactory) 
-    : ControllerBase(etagRepository, serializer, configuration, configurationFactory)
+    : MelodeeControllerBase(etagRepository, serializer, configuration, configurationFactory)
 {
     /// <summary>
     /// Get all available theme packs
@@ -58,7 +60,9 @@ public class ThemesController(
     [Authorize]
     public async Task<IActionResult> SetUserTheme([FromBody] SetUserThemeRequest request, CancellationToken cancellationToken)
     {
-        var userId = User.UserId();
+        var userIdStr = User.FindFirstValue(ClaimTypes.PrimarySid);
+        var userId = SafeParser.ToNumber<int>(userIdStr);
+        
         if (userId == 0)
         {
             return Unauthorized();
@@ -82,7 +86,7 @@ public class ThemesController(
         user.PreferredTheme = request.ThemeId;
         await context.SaveChangesAsync(cancellationToken);
 
-        return Ok(new { themeId = request.ThemeId, message = "Theme preference updated" });
+        return Ok(new { Message = "Theme preference updated", ThemeId = request.ThemeId });
     }
 
     /// <summary>

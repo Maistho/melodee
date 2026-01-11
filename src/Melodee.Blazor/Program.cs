@@ -479,7 +479,7 @@ builder.Services
     .AddScoped<RequestAutoCompletionService>()
     .AddScoped<RadioStationService>()
     .AddScoped<PlaylistService>()
-    .AddScoped<IThemeService, ThemeService>()
+    .AddScoped<Melodee.Common.Services.IThemeService, Melodee.Common.Services.ThemeService>()
     .AddScoped<ChartService>()
     .AddScoped<MelodeeMetadataMaker>()
     .AddScoped<AlbumRescanEventHandler>()

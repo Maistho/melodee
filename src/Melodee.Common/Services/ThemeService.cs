@@ -214,7 +214,7 @@ public sealed class ThemeService(
     {
         var config = await configurationFactory.GetConfigurationAsync();
         var themeLibraryPath = config.GetValue<string>(SettingRegistry.ThemeLibraryPath);
-        var maxUploadSizeMb = config.GetValue<int>(SettingRegistry.ThemeMaxUploadSizeMb, MaxThemeUploadSizeMb);
+        var maxUploadSizeMb = config.GetValue<int>(SettingRegistry.ThemeMaxUploadSizeMb, value => value <= 0 ? MaxThemeUploadSizeMb : value);
 
         if (string.IsNullOrEmpty(themeLibraryPath))
         {
