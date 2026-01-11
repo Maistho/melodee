@@ -280,7 +280,7 @@
                                     <thead>
                                     <tr>
                                         <th scope="col">@L("TableHeader.Hash")</th>
-                                        <th scope="col" style="width:90%;">@L("TableHeader.Title")</th>
+                                        <th scope="col" style="width:88%;">@L("TableHeader.Title")</th>
                                         <th scope="col">@L("Label.Duration")</th>
                                         <th scope="col" style="min-width:140px;">@L("TableHeader.Actions")</th>
                                     </tr>
@@ -608,7 +608,7 @@
         {
             _library = libraryResult.Data;
         }
-        
+
         var configuration = await ConfigurationFactory.GetConfigurationAsync();
         _jukeboxEnabled = configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled);
     }
@@ -1170,9 +1170,9 @@
         try
         {
             Logger.Debug("[AlbumDetail] Adding song to Jukebox queue: {SongApiKey} - {SongTitle}", song.ApiKey, song.Title);
-            
-            var result = await SubsonicJukeboxService.AddAsync([song.ApiKey.ToString()]);
-            
+
+            var result = await SubsonicJukeboxService.AddAsync(CurrentUsersId, [song.ApiKey.ToString()]);
+
             if (result.IsSuccess)
             {
                 Logger.Debug("[AlbumDetail] Successfully added song to Jukebox queue: {SongTitle}", song.Title);
@@ -1186,7 +1186,7 @@
             }
             else
             {
-                Logger.Warning("[AlbumDetail] Failed to add song to Jukebox queue: {SongTitle}, Messages: {Messages}", 
+                Logger.Warning("[AlbumDetail] Failed to add song to Jukebox queue: {SongTitle}, Messages: {Messages}",
                     song.Title, string.Join(", ", result.Messages ?? []));
                 NotificationService.Notify(new NotificationMessage
                 {

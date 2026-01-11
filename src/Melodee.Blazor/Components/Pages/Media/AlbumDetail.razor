@@ -297,7 +297,7 @@
                                 {
                                     var imageDir = image.DirectoryInfo ?? _album.Directory;
                                     var imageFullPath = image.FileInfo != null ? image.FileInfo.FullName(imageDir) : null;
-                                    
+
                                     <RadzenColumn Size="12" SizeMD="6" SizeLG="4" Class="rz-p-2">
                                         <RadzenCard Style="height: 100%;">
                                             <RadzenStack Gap="0.5rem">
@@ -386,7 +386,7 @@
     ShowItem _showItem = ShowItem.Overview;
 
     string _coverImage = string.Empty;
-    
+
     bool _jukeboxEnabled;
 
     private enum ShowItem
@@ -966,9 +966,9 @@
         try
         {
             Logger.Debug("[AlbumDetail] Adding song to Jukebox queue: {SongId} - {SongTitle}", song.Id, song.Title());
-            
-            var result = await SubsonicJukeboxService.AddAsync([song.Id.ToString()]);
-            
+
+            var result = await SubsonicJukeboxService.AddAsync(CurrentUsersId, [song.Id.ToString()]);
+
             if (result.IsSuccess)
             {
                 Logger.Debug("[AlbumDetail] Successfully added song to Jukebox queue: {SongTitle}", song.Title());
@@ -982,7 +982,7 @@
             }
             else
             {
-                Logger.Warning("[AlbumDetail] Failed to add song to Jukebox queue: {SongTitle}, Messages: {Messages}", 
+                Logger.Warning("[AlbumDetail] Failed to add song to Jukebox queue: {SongTitle}, Messages: {Messages}",
                     song.Title(), string.Join(", ", result.Messages ?? []));
                 NotificationService.Notify(new NotificationMessage
                 {

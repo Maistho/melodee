@@ -20,52 +20,52 @@ public interface ISubsonicJukeboxService
     /// <summary>
     /// Gets the jukebox status.
     /// </summary>
-    Task<OperationResult<JukeboxStatusResponse>> GetStatusAsync(CancellationToken cancellationToken = default);
+    Task<OperationResult<JukeboxStatusResponse>> GetStatusAsync(int userId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets the jukebox playlist.
     /// </summary>
-    Task<OperationResult<JukeboxGetResponse>> GetPlaylistAsync(CancellationToken cancellationToken = default);
+    Task<OperationResult<JukeboxGetResponse>> GetPlaylistAsync(int userId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Sets the jukebox gain (volume).
     /// </summary>
-    Task<OperationResult<bool>> SetGainAsync(double gain, CancellationToken cancellationToken = default);
+    Task<OperationResult<bool>> SetGainAsync(int userId, double gain, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Starts playback.
     /// </summary>
-    Task<OperationResult<bool>> StartAsync(CancellationToken cancellationToken = default);
+    Task<OperationResult<bool>> StartAsync(int userId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Stops playback.
     /// </summary>
-    Task<OperationResult<bool>> StopAsync(CancellationToken cancellationToken = default);
+    Task<OperationResult<bool>> StopAsync(int userId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Skips to a specific index or offset.
     /// </summary>
-    Task<OperationResult<bool>> SkipAsync(int? index, int? offset, CancellationToken cancellationToken = default);
+    Task<OperationResult<bool>> SkipAsync(int userId, int? index, int? offset, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Adds songs to the jukebox playlist.
     /// </summary>
-    Task<OperationResult<bool>> AddAsync(IEnumerable<string> songIds, CancellationToken cancellationToken = default);
+    Task<OperationResult<bool>> AddAsync(int userId, IEnumerable<string> songIds, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Clears the jukebox playlist.
     /// </summary>
-    Task<OperationResult<bool>> ClearAsync(CancellationToken cancellationToken = default);
+    Task<OperationResult<bool>> ClearAsync(int userId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Removes a song from the jukebox playlist by index.
     /// </summary>
-    Task<OperationResult<bool>> RemoveAsync(int index, CancellationToken cancellationToken = default);
+    Task<OperationResult<bool>> RemoveAsync(int userId, int index, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Shuffles the jukebox playlist.
     /// </summary>
-    Task<OperationResult<bool>> ShuffleAsync(CancellationToken cancellationToken = default);
+    Task<OperationResult<bool>> ShuffleAsync(int userId, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -83,9 +83,8 @@ public sealed class SubsonicJukeboxService(
 {
     // Use a fixed GUID for the system session
     private static readonly Guid JukeboxSessionApiKey = Guid.Parse("550e8400-e29b-41d4-a716-446655440000");
-    private const int SystemUserId = 0;
 
-    public async Task<OperationResult<JukeboxStatusResponse>> GetStatusAsync(CancellationToken cancellationToken = default)
+    public async Task<OperationResult<JukeboxStatusResponse>> GetStatusAsync(int userId, CancellationToken cancellationToken = default)
     {
         var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
         if (!configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled))
@@ -97,7 +96,7 @@ public sealed class SubsonicJukeboxService(
             };
         }
 
-        var sessionResult = await GetOrCreateJukeboxSessionAsync(cancellationToken).ConfigureAwait(false);
+        var sessionResult = await GetOrCreateJukeboxSessionAsync(userId, cancellationToken).ConfigureAwait(false);
         if (!sessionResult.IsSuccess || sessionResult.Data == null)
         {
             return new OperationResult<JukeboxStatusResponse>("Failed to get jukebox session")
@@ -126,7 +125,7 @@ public sealed class SubsonicJukeboxService(
         return new OperationResult<JukeboxStatusResponse> { Data = status };
     }
 
-    public async Task<OperationResult<JukeboxGetResponse>> GetPlaylistAsync(CancellationToken cancellationToken = default)
+    public async Task<OperationResult<JukeboxGetResponse>> GetPlaylistAsync(int userId, CancellationToken cancellationToken = default)
     {
         var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
         if (!configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled))
@@ -138,7 +137,7 @@ public sealed class SubsonicJukeboxService(
             };
         }
 
-        var sessionResult = await GetOrCreateJukeboxSessionAsync(cancellationToken).ConfigureAwait(false);
+        var sessionResult = await GetOrCreateJukeboxSessionAsync(userId, cancellationToken).ConfigureAwait(false);
         if (!sessionResult.IsSuccess || sessionResult.Data == null)
         {
             return new OperationResult<JukeboxGetResponse>("Failed to get jukebox session")
@@ -156,7 +155,7 @@ public sealed class SubsonicJukeboxService(
         };
     }
 
-    public async Task<OperationResult<bool>> SetGainAsync(double gain, CancellationToken cancellationToken = default)
+    public async Task<OperationResult<bool>> SetGainAsync(int userId, double gain, CancellationToken cancellationToken = default)
     {
         var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
         if (!configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled))
@@ -168,7 +167,7 @@ public sealed class SubsonicJukeboxService(
             };
         }
 
-        var sessionResult = await GetOrCreateJukeboxSessionAsync(cancellationToken).ConfigureAwait(false);
+        var sessionResult = await GetOrCreateJukeboxSessionAsync(userId, cancellationToken).ConfigureAwait(false);
         if (!sessionResult.IsSuccess || sessionResult.Data == null)
         {
             return new OperationResult<bool>("Failed to get jukebox session")
@@ -185,14 +184,14 @@ public sealed class SubsonicJukeboxService(
             0,
             false,
             volume01,
-            SystemUserId,
+            userId,
             cancellationToken
         ).ConfigureAwait(false);
 
         return new OperationResult<bool> { Data = playbackResult.IsSuccess };
     }
 
-    public async Task<OperationResult<bool>> StartAsync(CancellationToken cancellationToken = default)
+    public async Task<OperationResult<bool>> StartAsync(int userId, CancellationToken cancellationToken = default)
     {
         var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
         if (!configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled))
@@ -204,7 +203,7 @@ public sealed class SubsonicJukeboxService(
             };
         }
 
-        var sessionResult = await GetOrCreateJukeboxSessionAsync(cancellationToken).ConfigureAwait(false);
+        var sessionResult = await GetOrCreateJukeboxSessionAsync(userId, cancellationToken).ConfigureAwait(false);
         if (!sessionResult.IsSuccess || sessionResult.Data == null)
         {
             return new OperationResult<bool>("Failed to get jukebox session")
@@ -218,7 +217,7 @@ public sealed class SubsonicJukeboxService(
             sessionResult.Data.ApiKey,
             PlaybackIntent.Play,
             null,
-            SystemUserId,
+            userId,
             sessionResult.Data.PlaybackRevision,
             cancellationToken
         ).ConfigureAwait(false);
@@ -226,7 +225,7 @@ public sealed class SubsonicJukeboxService(
         return new OperationResult<bool> { Data = playbackResult.IsSuccess };
     }
 
-    public async Task<OperationResult<bool>> StopAsync(CancellationToken cancellationToken = default)
+    public async Task<OperationResult<bool>> StopAsync(int userId, CancellationToken cancellationToken = default)
     {
         var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
         if (!configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled))
@@ -238,7 +237,7 @@ public sealed class SubsonicJukeboxService(
             };
         }
 
-        var sessionResult = await GetOrCreateJukeboxSessionAsync(cancellationToken).ConfigureAwait(false);
+        var sessionResult = await GetOrCreateJukeboxSessionAsync(userId, cancellationToken).ConfigureAwait(false);
         if (!sessionResult.IsSuccess || sessionResult.Data == null)
         {
             return new OperationResult<bool>("Failed to get jukebox session")
@@ -252,7 +251,7 @@ public sealed class SubsonicJukeboxService(
             sessionResult.Data.ApiKey,
             PlaybackIntent.Pause,
             null,
-            SystemUserId,
+            userId,
             sessionResult.Data.PlaybackRevision,
             cancellationToken
         ).ConfigureAwait(false);
@@ -260,7 +259,7 @@ public sealed class SubsonicJukeboxService(
         return new OperationResult<bool> { Data = playbackResult.IsSuccess };
     }
 
-    public async Task<OperationResult<bool>> SkipAsync(int? index, int? offset, CancellationToken cancellationToken = default)
+    public async Task<OperationResult<bool>> SkipAsync(int userId, int? index, int? offset, CancellationToken cancellationToken = default)
     {
         var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
         if (!configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled))
@@ -272,7 +271,7 @@ public sealed class SubsonicJukeboxService(
             };
         }
 
-        var sessionResult = await GetOrCreateJukeboxSessionAsync(cancellationToken).ConfigureAwait(false);
+        var sessionResult = await GetOrCreateJukeboxSessionAsync(userId, cancellationToken).ConfigureAwait(false);
         if (!sessionResult.IsSuccess || sessionResult.Data == null)
         {
             return new OperationResult<bool>("Failed to get jukebox session")
@@ -286,7 +285,7 @@ public sealed class SubsonicJukeboxService(
             sessionResult.Data.ApiKey,
             PlaybackIntent.Skip,
             null,
-            SystemUserId,
+            userId,
             sessionResult.Data.PlaybackRevision,
             cancellationToken
         ).ConfigureAwait(false);
@@ -294,7 +293,7 @@ public sealed class SubsonicJukeboxService(
         return new OperationResult<bool> { Data = playbackResult.IsSuccess };
     }
 
-    public async Task<OperationResult<bool>> AddAsync(IEnumerable<string> songIds, CancellationToken cancellationToken = default)
+    public async Task<OperationResult<bool>> AddAsync(int userId, IEnumerable<string> songIds, CancellationToken cancellationToken = default)
     {
         var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
         if (!configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled))
@@ -306,7 +305,7 @@ public sealed class SubsonicJukeboxService(
             };
         }
 
-        var sessionResult = await GetOrCreateJukeboxSessionAsync(cancellationToken).ConfigureAwait(false);
+        var sessionResult = await GetOrCreateJukeboxSessionAsync(userId, cancellationToken).ConfigureAwait(false);
         if (!sessionResult.IsSuccess || sessionResult.Data == null)
         {
             return new OperationResult<bool>("Failed to get jukebox session")
@@ -334,7 +333,7 @@ public sealed class SubsonicJukeboxService(
         var addResult = await partyQueueService.AddItemsAsync(
             sessionResult.Data.ApiKey,
             songApiKeys,
-            SystemUserId,
+            userId,
             "subsonic",
             queueResult.Data.Revision,
             cancellationToken
@@ -343,7 +342,7 @@ public sealed class SubsonicJukeboxService(
         return new OperationResult<bool> { Data = addResult.IsSuccess };
     }
 
-    public async Task<OperationResult<bool>> ClearAsync(CancellationToken cancellationToken = default)
+    public async Task<OperationResult<bool>> ClearAsync(int userId, CancellationToken cancellationToken = default)
     {
         var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
         if (!configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled))
@@ -355,7 +354,7 @@ public sealed class SubsonicJukeboxService(
             };
         }
 
-        var sessionResult = await GetOrCreateJukeboxSessionAsync(cancellationToken).ConfigureAwait(false);
+        var sessionResult = await GetOrCreateJukeboxSessionAsync(userId, cancellationToken).ConfigureAwait(false);
         if (!sessionResult.IsSuccess || sessionResult.Data == null)
         {
             return new OperationResult<bool>("Failed to get jukebox session")
@@ -368,7 +367,7 @@ public sealed class SubsonicJukeboxService(
         var queueResult = await partyQueueService.GetQueueAsync(sessionResult.Data.ApiKey, cancellationToken).ConfigureAwait(false);
         var clearResult = await partyQueueService.ClearAsync(
             sessionResult.Data.ApiKey,
-            SystemUserId,
+            userId,
             queueResult.Data.Revision,
             cancellationToken
         ).ConfigureAwait(false);
@@ -376,7 +375,7 @@ public sealed class SubsonicJukeboxService(
         return new OperationResult<bool> { Data = clearResult.IsSuccess };
     }
 
-    public async Task<OperationResult<bool>> RemoveAsync(int index, CancellationToken cancellationToken = default)
+    public async Task<OperationResult<bool>> RemoveAsync(int userId, int index, CancellationToken cancellationToken = default)
     {
         var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
         if (!configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled))
@@ -388,7 +387,7 @@ public sealed class SubsonicJukeboxService(
             };
         }
 
-        var sessionResult = await GetOrCreateJukeboxSessionAsync(cancellationToken).ConfigureAwait(false);
+        var sessionResult = await GetOrCreateJukeboxSessionAsync(userId, cancellationToken).ConfigureAwait(false);
         if (!sessionResult.IsSuccess || sessionResult.Data == null)
         {
             return new OperationResult<bool>("Failed to get jukebox session")
@@ -414,7 +413,7 @@ public sealed class SubsonicJukeboxService(
         var removeResult = await partyQueueService.RemoveItemAsync(
             sessionResult.Data.ApiKey,
             itemToRemove.ApiKey,
-            SystemUserId,
+            userId,
             queueResult.Data.Revision,
             cancellationToken
         ).ConfigureAwait(false);
@@ -422,7 +421,7 @@ public sealed class SubsonicJukeboxService(
         return new OperationResult<bool> { Data = removeResult.IsSuccess };
     }
 
-    public async Task<OperationResult<bool>> ShuffleAsync(CancellationToken cancellationToken = default)
+    public async Task<OperationResult<bool>> ShuffleAsync(int userId, CancellationToken cancellationToken = default)
     {
         var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
         if (!configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled))
@@ -434,7 +433,7 @@ public sealed class SubsonicJukeboxService(
             };
         }
 
-        var sessionResult = await GetOrCreateJukeboxSessionAsync(cancellationToken).ConfigureAwait(false);
+        var sessionResult = await GetOrCreateJukeboxSessionAsync(userId, cancellationToken).ConfigureAwait(false);
         if (!sessionResult.IsSuccess || sessionResult.Data == null)
         {
             return new OperationResult<bool>("Failed to get jukebox session")
@@ -478,7 +477,7 @@ public sealed class SubsonicJukeboxService(
         return new OperationResult<bool> { Data = true };
     }
 
-    private async Task<OperationResult<PartySession>> GetOrCreateJukeboxSessionAsync(CancellationToken cancellationToken = default)
+    private async Task<OperationResult<PartySession>> GetOrCreateJukeboxSessionAsync(int userId, CancellationToken cancellationToken = default)
     {
         await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
 
@@ -496,7 +495,7 @@ public sealed class SubsonicJukeboxService(
         {
             ApiKey = JukeboxSessionApiKey,
             Name = "Subsonic Jukebox",
-            OwnerUserId = SystemUserId,
+            OwnerUserId = userId,
             Status = PartySessionStatus.Active,
             QueueRevision = 0,
             PlaybackRevision = 0,
@@ -517,7 +516,7 @@ public sealed class SubsonicJukeboxService(
 
         await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        Logger.Information("[SubsonicJukeboxService] Created jukebox session");
+        Logger.Information("[SubsonicJukeboxService] Created jukebox session for user {UserId}", userId);
 
         return new OperationResult<PartySession> { Data = session };
     }
