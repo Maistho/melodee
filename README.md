@@ -63,6 +63,8 @@ Experience Melodee before installing! Our official demo server is available at:
 - **🎬 Jellyfin API**: Compatible with Jellyfin music clients (Finamp, Feishin, Streamyfin)
 - **🌐 Melodee API**: Fast RESTful API for custom integrations
 - **🌐 Modern Web UI**: Blazor Server interface with Radzen UI components
+- **🎛️ Jukebox**: Server-side playback with queue/control support (OpenSubsonic jukeboxControl; MPV/MPD backends)
+- **🎉 Party Mode**: Shared listening sessions with a collaborative queue and DJ/Listener roles
 - **🐳 Container Ready**: Full Docker/Podman support with PostgreSQL
 
 ![Melodee Web Interface](graphics/Snapshot_2025-02-04_23-06-24.png)

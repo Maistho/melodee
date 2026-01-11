@@ -107,7 +107,7 @@ echo "Adding to base file (en-US)..."
 add_to_file "$BASE_FILE" "en-US" "$ENGLISH_VALUE"
 
 # Add to all translation files
-LANGUAGES=("de-DE" "es-ES" "fr-FR" "it-IT" "ja-JP" "pt-BR" "ru-RU" "zh-CN" "ar-SA")
+LANGUAGES=("de-DE" "es-ES" "fr-FR" "it-IT" "ja-JP" "pt-BR" "ru-RU" "zh-CN" "ar-SA" "nl-NL" "pl-PL" "tr-TR" "id-ID" "ko-KR" "vi-VN" "fa-IR" "uk-UA" "cs-CZ" "sv-SE")
 
 echo ""
 echo "Adding to translation files with [NEEDS TRANSLATION] prefix..."
@@ -122,14 +122,14 @@ done
 
 echo ""
 echo -e "${BLUE}================================================${NC}"
-echo -e "${GREEN}✓ Key added to all 10 language files!${NC}"
+echo -e "${GREEN}✓ Key added to all 20 language files!${NC}"
 echo -e "${BLUE}================================================${NC}"
 echo ""
 echo "Next steps:"
 echo "1. Review the changes in your editor"
 echo "2. Replace [NEEDS TRANSLATION] with proper translations if you know them"
 echo "3. Run validation: bash scripts/validate-resources.sh"
-echo "4. Commit all 10 resource files together"
+echo "4. Commit all 20 resource files together"
 echo ""
 echo -e "${YELLOW}Note: Translations marked with [NEEDS TRANSLATION] should be updated${NC}"
 echo -e "${YELLOW}by native speakers before release.${NC}"

@@ -32,14 +32,24 @@ src/Melodee.Blazor/Resources/
 |----------|------|------|--------|-------------|
 | English (US) | en-US | `SharedResources.resx` | ✅ 100% | No |
 | Japanese | ja-JP | `SharedResources.ja-JP.resx` | 🔄 99% | No |
-| Spanish | es-ES | `SharedResources.es-ES.resx` | 🔄 57% | No |
-| Portuguese (Brazil) | pt-BR | `SharedResources.pt-BR.resx` | 🔄 33% | No |
-| German | de-DE | `SharedResources.de-DE.resx` | 🔄 33% | No |
+| Spanish | es-ES | `SharedResources.es-ES.resx` | 🔄 56% | No |
+| Portuguese (Brazil) | pt-BR | `SharedResources.pt-BR.resx` | 🔄 32% | No |
+| German | de-DE | `SharedResources.de-DE.resx` | 🔄 32% | No |
 | Italian | it-IT | `SharedResources.it-IT.resx` | 🔄 32% | No |
-| Russian | ru-RU | `SharedResources.ru-RU.resx` | 🔄 30% | No |
-| Chinese (Simplified) | zh-CN | `SharedResources.zh-CN.resx` | 🔄 30% | No |
-| French | fr-FR | `SharedResources.fr-FR.resx` | 🔄 29% | No |
+| Russian | ru-RU | `SharedResources.ru-RU.resx` | 🔄 29% | No |
+| Chinese (Simplified) | zh-CN | `SharedResources.zh-CN.resx` | 🔄 29% | No |
+| French | fr-FR | `SharedResources.fr-FR.resx` | 🔄 28% | No |
 | Arabic (Saudi Arabia) | ar-SA | `SharedResources.ar-SA.resx` | 🔄 24% | Yes |
+| Dutch (Netherlands) | nl-NL | `SharedResources.nl-NL.resx` | 🔄 2% | No |
+| Polish (Poland) | pl-PL | `SharedResources.pl-PL.resx` | 🔄 2% | No |
+| Turkish (Turkey) | tr-TR | `SharedResources.tr-TR.resx` | 🔄 2% | No |
+| Indonesian (Indonesia) | id-ID | `SharedResources.id-ID.resx` | 🔄 2% | No |
+| Korean (Korea) | ko-KR | `SharedResources.ko-KR.resx` | 🔄 2% | No |
+| Vietnamese (Vietnam) | vi-VN | `SharedResources.vi-VN.resx` | 🔄 2% | No |
+| Persian (Iran) | fa-IR | `SharedResources.fa-IR.resx` | 🔄 2% | Yes |
+| Ukrainian (Ukraine) | uk-UA | `SharedResources.uk-UA.resx` | 🔄 2% | No |
+| Czech (Czechia) | cs-CZ | `SharedResources.cs-CZ.resx` | 🔄 2% | No |
+| Swedish (Sweden) | sv-SE | `SharedResources.sv-SE.resx` | 🔄 2% | No |
 
 ## Translation Status
 
@@ -254,7 +264,7 @@ A maintainer will review your translations. For languages maintainers don't spea
 
 ## For Developers: Adding New Keys
 
-**⚠️ CRITICAL**: When adding ANY new localization key, you **MUST** add it to ALL 10 language files in a SINGLE commit.
+**⚠️ CRITICAL**: When adding ANY new localization key, you **MUST** add it to ALL 20 language files in a SINGLE commit.
 
 ### Use the Helper Script (Recommended)
 
@@ -263,7 +273,7 @@ bash scripts/add-localization-key.sh "YourKey.Name" "English text here"
 ```
 
 This automatically:
-- Adds the key to all 10 resource files
+- Adds the key to all 20 resource files
 - Uses the English value for en-US
 - Adds `[NEEDS TRANSLATION]` prefix for other languages
 
@@ -271,15 +281,25 @@ This automatically:
 
 If adding manually, you must update ALL files:
 1. `SharedResources.resx` (English - base file)
-2. `SharedResources.de-DE.resx`
-3. `SharedResources.es-ES.resx`
-4. `SharedResources.fr-FR.resx`
-5. `SharedResources.it-IT.resx`
-6. `SharedResources.ja-JP.resx`
-7. `SharedResources.pt-BR.resx`
-8. `SharedResources.ru-RU.resx`
-9. `SharedResources.zh-CN.resx`
-10. `SharedResources.ar-SA.resx`
+2. `SharedResources.ar-SA.resx`
+3. `SharedResources.cs-CZ.resx`
+4. `SharedResources.de-DE.resx`
+5. `SharedResources.es-ES.resx`
+6. `SharedResources.fa-IR.resx`
+7. `SharedResources.fr-FR.resx`
+8. `SharedResources.id-ID.resx`
+9. `SharedResources.it-IT.resx`
+10. `SharedResources.ja-JP.resx`
+11. `SharedResources.ko-KR.resx`
+12. `SharedResources.nl-NL.resx`
+13. `SharedResources.pl-PL.resx`
+14. `SharedResources.pt-BR.resx`
+15. `SharedResources.ru-RU.resx`
+16. `SharedResources.sv-SE.resx`
+17. `SharedResources.tr-TR.resx`
+18. `SharedResources.uk-UA.resx`
+19. `SharedResources.vi-VN.resx`
+20. `SharedResources.zh-CN.resx`
 
 ### Validation
 

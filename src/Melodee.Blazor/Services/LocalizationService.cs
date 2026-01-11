@@ -27,7 +27,17 @@ public class LocalizationService : ILocalizationService
         new("pt-BR"), // Portuguese (Brazil)
         new("ru-RU"), // Russian (Russia)
         new("zh-CN"), // Chinese (Simplified, China)
-        new("ar-SA")  // Arabic (Saudi Arabia)
+        new("ar-SA"), // Arabic (Saudi Arabia)
+        new("nl-NL"), // Dutch (Netherlands)
+        new("pl-PL"), // Polish (Poland)
+        new("tr-TR"), // Turkish (Turkey)
+        new("id-ID"), // Indonesian (Indonesia)
+        new("ko-KR"), // Korean (Korea)
+        new("vi-VN"), // Vietnamese (Vietnam)
+        new("fa-IR"), // Persian (Iran)
+        new("uk-UA"), // Ukrainian (Ukraine)
+        new("cs-CZ"), // Czech (Czechia)
+        new("sv-SE")  // Swedish (Sweden)
     ];
 
     /// <summary>
