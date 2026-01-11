@@ -33,6 +33,9 @@ public sealed record ThemeMetadata
 
     [JsonPropertyName("navMenu")]
     public ThemeNavMenu? NavMenu { get; init; }
+
+    [JsonPropertyName("baseTheme")]
+    public string BaseTheme { get; init; } = "light";
 }
 
 /// <summary>
@@ -40,9 +43,6 @@ public sealed record ThemeMetadata
 /// </summary>
 public sealed record ThemeBranding
 {
-    [JsonPropertyName("appName")]
-    public string? AppName { get; init; }
-
     [JsonPropertyName("logoImage")]
     public string? LogoImage { get; init; }
 

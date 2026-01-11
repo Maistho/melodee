@@ -5,6 +5,7 @@ using Melodee.Common.Models;
 using Melodee.Common.Services;
 using Melodee.Common.Services.Caching;
 using Melodee.Common.Services.Jukebox;
+using Melodee.Common.Services.Playback;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Serilog;
@@ -39,7 +40,7 @@ public class SubsonicJukeboxServiceTests
     private SubsonicJukeboxService CreateService()
     {
         var playbackBackendServiceMock = new Mock<IPlaybackBackendService>();
-        
+
         return new SubsonicJukeboxService(
             _loggerMock.Object,
             _cacheManagerMock.Object,

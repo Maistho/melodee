@@ -412,9 +412,10 @@ public sealed class ThemeService(
                 Version = "1.0.0",
                 Description = "Clean, bright theme for daytime use",
                 IsBuiltIn = true,
-                ThemeCssPath = "/themes/builtin/light.css",
-                BaseDirectory = "wwwroot/themes/builtin/light",
-                HasWarnings = false
+                ThemeCssPath = "/themes/builtin/light/theme.css",
+                BaseDirectory = "src/Melodee.Blazor/wwwroot/themes/builtin/light",
+                HasWarnings = false,
+                Metadata = new ThemeMetadata { Id = "light", Name = "Light", BaseTheme = "light" }
             },
             new ThemePack
             {
@@ -424,9 +425,101 @@ public sealed class ThemeService(
                 Version = "1.0.0",
                 Description = "Easy on the eyes theme for low-light environments",
                 IsBuiltIn = true,
-                ThemeCssPath = "/themes/builtin/dark.css",
-                BaseDirectory = "wwwroot/themes/builtin/dark",
-                HasWarnings = false
+                ThemeCssPath = "/themes/builtin/dark/theme.css",
+                BaseDirectory = "src/Melodee.Blazor/wwwroot/themes/builtin/dark",
+                HasWarnings = false,
+                Metadata = new ThemeMetadata { Id = "dark", Name = "Dark", BaseTheme = "dark" }
+            },
+            new ThemePack
+            {
+                Id = "melodee",
+                Name = "Melodee Light",
+                Author = "Melodee",
+                Version = "1.0.0",
+                Description = "The official Melodee light theme",
+                IsBuiltIn = true,
+                ThemeCssPath = "/themes/builtin/melodee/theme.css",
+                BaseDirectory = "src/Melodee.Blazor/wwwroot/themes/builtin/melodee",
+                HasWarnings = false,
+                Metadata = new ThemeMetadata { Id = "melodee", Name = "Melodee Light", BaseTheme = "light" }
+            },
+            new ThemePack
+            {
+                Id = "melodee-dark",
+                Name = "Melodee Dark",
+                Author = "Melodee",
+                Version = "1.0.0",
+                Description = "The official Melodee dark theme",
+                IsBuiltIn = true,
+                ThemeCssPath = "/themes/builtin/melodee-dark/theme.css",
+                BaseDirectory = "src/Melodee.Blazor/wwwroot/themes/builtin/melodee-dark",
+                HasWarnings = false,
+                Metadata = new ThemeMetadata { Id = "melodee-dark", Name = "Melodee Dark", BaseTheme = "dark" }
+            },
+            new ThemePack
+            {
+                Id = "synthwave",
+                Name = "Synthwave",
+                Author = "Melodee",
+                Version = "1.0.0",
+                Description = "Retro 80s cyberpunk vibes",
+                IsBuiltIn = true,
+                ThemeCssPath = "/themes/builtin/synthwave/theme.css",
+                BaseDirectory = "src/Melodee.Blazor/wwwroot/themes/builtin/synthwave",
+                HasWarnings = false,
+                Metadata = new ThemeMetadata { Id = "synthwave", Name = "Synthwave", BaseTheme = "dark" }
+            },
+            new ThemePack
+            {
+                Id = "ocean-breeze",
+                Name = "Ocean Breeze",
+                Author = "Melodee",
+                Version = "1.0.0",
+                Description = "Calming ocean blues and teals",
+                IsBuiltIn = true,
+                ThemeCssPath = "/themes/builtin/ocean-breeze/theme.css",
+                BaseDirectory = "src/Melodee.Blazor/wwwroot/themes/builtin/ocean-breeze",
+                HasWarnings = false,
+                Metadata = new ThemeMetadata { Id = "ocean-breeze", Name = "Ocean Breeze", BaseTheme = "light" }
+            },
+            new ThemePack
+            {
+                Id = "forest",
+                Name = "Forest",
+                Author = "Melodee",
+                Version = "1.0.0",
+                Description = "Deep greens and earthy tones",
+                IsBuiltIn = true,
+                ThemeCssPath = "/themes/builtin/forest/theme.css",
+                BaseDirectory = "src/Melodee.Blazor/wwwroot/themes/builtin/forest",
+                HasWarnings = false,
+                Metadata = new ThemeMetadata { Id = "forest", Name = "Forest", BaseTheme = "light" }
+            },
+            new ThemePack
+            {
+                Id = "midnight-galaxy",
+                Name = "Midnight Galaxy",
+                Author = "Melodee",
+                Version = "1.0.0",
+                Description = "Deep space purples with starry accents",
+                IsBuiltIn = true,
+                ThemeCssPath = "/themes/builtin/midnight-galaxy/theme.css",
+                BaseDirectory = "src/Melodee.Blazor/wwwroot/themes/builtin/midnight-galaxy",
+                HasWarnings = false,
+                Metadata = new ThemeMetadata { Id = "midnight-galaxy", Name = "Midnight Galaxy", BaseTheme = "dark" }
+            },
+            new ThemePack
+            {
+                Id = "sunset-vibes",
+                Name = "Sunset Vibes",
+                Author = "Melodee",
+                Version = "1.0.0",
+                Description = "Warm sunset gradient colors",
+                IsBuiltIn = true,
+                ThemeCssPath = "/themes/builtin/sunset-vibes/theme.css",
+                BaseDirectory = "src/Melodee.Blazor/wwwroot/themes/builtin/sunset-vibes",
+                HasWarnings = false,
+                Metadata = new ThemeMetadata { Id = "sunset-vibes", Name = "Sunset Vibes", BaseTheme = "light" }
             }
         ];
     }
@@ -454,6 +547,30 @@ public sealed class ThemeService(
         // Validate theme pack
         var (isValid, warnings) = await ValidateThemePackAsync(themeDir, cancellationToken);
 
+        var previewImage = metadata.PreviewImage;
+        if (!string.IsNullOrEmpty(previewImage) && !previewImage.StartsWith('/') && !previewImage.StartsWith("http"))
+        {
+            previewImage = $"/api/v1/themes/{metadata.Id}/file/{previewImage}";
+        }
+
+        var branding = metadata.Branding;
+        if (branding != null)
+        {
+            var logo = branding.LogoImage;
+            if (!string.IsNullOrEmpty(logo) && !logo.StartsWith('/') && !logo.StartsWith("http"))
+            {
+                logo = $"/api/v1/themes/{metadata.Id}/file/{logo}";
+            }
+
+            var favicon = branding.Favicon;
+            if (!string.IsNullOrEmpty(favicon) && !favicon.StartsWith('/') && !favicon.StartsWith("http"))
+            {
+                favicon = $"/api/v1/themes/{metadata.Id}/file/{favicon}";
+            }
+
+            branding = branding with { LogoImage = logo, Favicon = favicon };
+        }
+
         return new ThemePack
         {
             Id = metadata.Id,
@@ -462,10 +579,10 @@ public sealed class ThemeService(
             Version = metadata.Version,
             Description = metadata.Description,
             IsBuiltIn = false,
-            PreviewImage = metadata.PreviewImage,
-            ThemeCssPath = themeCssPath,
+            PreviewImage = previewImage,
+            ThemeCssPath = $"/api/v1/themes/{metadata.Id}/file/{ThemeCssFileName}",
             BaseDirectory = themeDir,
-            Metadata = metadata,
+            Metadata = metadata with { Branding = branding, PreviewImage = previewImage },
             HasWarnings = warnings.Any(),
             WarningDetails = warnings.Any() ? warnings : null
         };

@@ -2,6 +2,7 @@
 @implements IDisposable
 @inject IHttpContextAccessor HttpContextAccessor
 @inject Radzen.ThemeService RadzenThemeService
+@inject Melodee.Common.Services.IThemeService ThemeService
 
 <!DOCTYPE html>
 <html lang="en">
@@ -22,11 +23,12 @@
     <link href="/_content/PSC.Blazor.Components.MarkdownEditor/css/easymde.min.css" rel="stylesheet"/>
     <link rel="icon" type="image/ico" href="favicon.ico"/>
     <title>Melodee - Music Library Management System</title>
-    @if (IsCustomTheme(_currentTheme))
+    
+    @if (!string.IsNullOrEmpty(_customCssPath))
     {
-        <!-- For custom themes: load Radzen base CSS + our custom overrides -->
-        <link rel="stylesheet" href="@($"_content/Radzen.Blazor/css/{GetBaseTheme(_currentTheme)}.css")" />
-        <link rel="stylesheet" href="@($"{_currentTheme}.css")" />
+        <!-- For custom or dynamic themes: load Radzen base CSS + our custom overrides -->
+        <link rel="stylesheet" href="@($"_content/Radzen.Blazor/css/{_baseThemeName}.css")" />
+        <link rel="stylesheet" href="@_customCssPath" />
     }
     else
     {
@@ -82,52 +84,59 @@
         "default-dark", "standard-dark", "humanistic-dark", "software-dark", "material-dark"
     ];
     
-    // Custom themes map to their Radzen base CSS file name (without .css extension)
-    private static readonly Dictionary<string, string> CustomThemes = new()
-    {
-        { "melodee", "default-base" },
-        { "melodee-dark", "dark-base" },
-        { "synthwave", "dark-base" },
-        { "ocean-breeze", "default-base" },
-        { "forest", "default-base" },
-        { "midnight-galaxy", "dark-base" },
-        { "sunset-vibes", "default-base" }
-    };
-    
     private string _currentTheme = "default";
+    private string? _customCssPath;
+    private string _baseThemeName = "default-base";
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         var httpContext = HttpContextAccessor.HttpContext;
         if (httpContext?.Request.Cookies.TryGetValue(ThemeCookieName, out var cookieTheme) == true 
-            && !string.IsNullOrEmpty(cookieTheme)
-            && IsValidTheme(cookieTheme))
+            && !string.IsNullOrEmpty(cookieTheme))
         {
             _currentTheme = cookieTheme;
+            await ResolveCustomThemeAsync(_currentTheme);
         }
         
         RadzenThemeService.ThemeChanged += OnThemeChanged;
-        base.OnInitialized();
+        await base.OnInitializedAsync();
     }
 
-    private void OnThemeChanged()
+    private async void OnThemeChanged()
     {
         _currentTheme = RadzenThemeService.Theme ?? "default";
-        StateHasChanged();
+        
+        if (IsRadzenTheme(_currentTheme))
+        {
+            _customCssPath = null;
+        }
+        else
+        {
+            await ResolveCustomThemeAsync(_currentTheme);
+        }
+        
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ResolveCustomThemeAsync(string themeId)
+    {
+        if (!IsRadzenTheme(themeId))
+        {
+            // All non-Radzen themes (including Light/Dark Melodee themes) are now dynamic
+            var theme = await ThemeService.GetThemePackAsync(themeId);
+            if (theme != null)
+            {
+                _customCssPath = theme.ThemeCssPath;
+                _baseThemeName = theme.Metadata?.BaseTheme == "dark" ? "dark-base" : "default-base";
+            }
+        }
     }
     
-    private static bool IsValidTheme(string theme) => 
-        RadzenThemes.Contains(theme) || CustomThemes.ContainsKey(theme);
-    
-    private static bool IsCustomTheme(string theme) => 
-        CustomThemes.ContainsKey(theme);
-    
-    private static string GetBaseTheme(string theme) => 
-        CustomThemes.TryGetValue(theme, out var baseTheme) ? baseTheme : "default-base";
+    private static bool IsRadzenTheme(string theme) => 
+        RadzenThemes.Contains(theme);
 
     public void Dispose()
     {
         RadzenThemeService.ThemeChanged -= OnThemeChanged;
     }
 }
-

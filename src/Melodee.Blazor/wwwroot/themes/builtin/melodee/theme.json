@@ -1,0 +1,8 @@
+{
+    "id": "melodee",
+    "name": "Melodee Light",
+    "author": "Melodee",
+    "version": "1.0.0",
+    "description": "The official Melodee light theme, featuring a vibrant magenta-coral-gold gradient.",
+    "baseTheme": "light"
+}

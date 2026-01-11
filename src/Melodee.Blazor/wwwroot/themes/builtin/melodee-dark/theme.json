@@ -1,0 +1,8 @@
+{
+    "id": "melodee-dark",
+    "name": "Melodee Dark",
+    "author": "Melodee",
+    "version": "1.0.0",
+    "description": "The official Melodee dark theme. Easy on the eyes with a warm magenta-coral-gold palette.",
+    "baseTheme": "dark"
+}

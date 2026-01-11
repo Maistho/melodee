@@ -228,7 +228,7 @@ public sealed class SubsonicJukeboxService(
 
         // Get current playback state to find the current song
         var playbackState = await partyPlaybackService.GetPlaybackStateAsync(session.ApiKey, cancellationToken).ConfigureAwait(false);
-        
+
         // Get the current queue item to find the song to play
         Guid? songApiKey = null;
         if (playbackState.Data?.CurrentQueueItemApiKey != null)
@@ -248,7 +248,7 @@ public sealed class SubsonicJukeboxService(
             {
                 var firstItem = queueResult.Data.Items.First();
                 songApiKey = firstItem.SongApiKey;
-                
+
                 // Set the first item as the current item
                 await partyPlaybackService.SetCurrentItemAsync(session.ApiKey, firstItem.ApiKey, cancellationToken).ConfigureAwait(false);
             }
@@ -285,7 +285,7 @@ public sealed class SubsonicJukeboxService(
         // Actually play the song on the backend
         var startPosition = playbackState.Data?.PositionSeconds ?? 0;
         var backendResult = await playbackBackendService.PlaySongAsync(songApiKey.Value, startPosition, cancellationToken).ConfigureAwait(false);
-        
+
         if (!backendResult.IsSuccess)
         {
             Logger.Warning("[SubsonicJukeboxService] Failed to play song on backend: {Messages}", string.Join(", ", backendResult.Messages ?? []));
@@ -342,7 +342,7 @@ public sealed class SubsonicJukeboxService(
 
         // Actually pause on the backend
         var backendResult = await playbackBackendService.PauseAsync(cancellationToken).ConfigureAwait(false);
-        
+
         if (!backendResult.IsSuccess)
         {
             Logger.Warning("[SubsonicJukeboxService] Failed to pause on backend: {Messages}", string.Join(", ", backendResult.Messages ?? []));

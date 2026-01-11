@@ -54,6 +54,23 @@ public sealed class ThemeClientService(IJSRuntime jsRuntime) : IThemeClientServi
                 }
             }
 
+            // Apply navigation visibility
+            await jsRuntime.InvokeVoidAsync("melodeeTheme.showAllNavMenuItems", cancellationToken);
+            if (theme.Metadata?.NavMenu?.Hidden != null && theme.Metadata.NavMenu.Hidden.Count > 0)
+            {
+                await jsRuntime.InvokeVoidAsync("melodeeTheme.hideNavMenuItems", cancellationToken, theme.Metadata.NavMenu.Hidden);
+            }
+
+            // Apply branding
+            if (theme.Metadata?.Branding != null)
+            {
+                await jsRuntime.InvokeVoidAsync("melodeeTheme.applyBranding", cancellationToken, theme.Metadata.Branding);
+            }
+            else
+            {
+                await jsRuntime.InvokeVoidAsync("melodeeTheme.resetBranding", cancellationToken);
+            }
+
             _currentThemeId = theme.Id;
             await SetCurrentThemeIdAsync(theme.Id);
         }
@@ -89,6 +106,7 @@ public sealed class ThemeClientService(IJSRuntime jsRuntime) : IThemeClientServi
         {
             _currentThemeId = themeId;
             await jsRuntime.InvokeVoidAsync("localStorage.setItem", CurrentThemeIdKey, themeId);
+            await jsRuntime.InvokeVoidAsync("eval", $"document.cookie = 'melodee_ui_theme={themeId}; path=/; max-age=31536000; samesite=lax'");
         }
         catch
         {

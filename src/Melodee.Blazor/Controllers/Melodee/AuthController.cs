@@ -7,6 +7,7 @@ using Melodee.Blazor.Controllers.Melodee.Models;
 using Melodee.Blazor.Filters;
 using Melodee.Blazor.Services;
 using Melodee.Common.Configuration;
+using Melodee.Common.Constants;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services;
 using Melodee.Common.Services.Security;
@@ -595,7 +596,9 @@ public class AuthController(
             Subject = new ClaimsIdentity([
                 new Claim(ClaimTypes.Email, user.Email),
                 new Claim(ClaimTypes.Name, user.UserName),
-                new Claim(ClaimTypes.Sid, user.ApiKey.ToString())
+                new Claim(ClaimTypes.Sid, user.ApiKey.ToString()),
+                new Claim(ClaimTypes.Role, user.IsAdmin ? RoleNameRegistry.Administrator : RoleNameRegistry.User),
+                new Claim(ClaimTypeRegistry.UserPreferredTheme, user.PreferredTheme ?? string.Empty)
             ]),
             Expires = expiresAt,
             Issuer = issuer,

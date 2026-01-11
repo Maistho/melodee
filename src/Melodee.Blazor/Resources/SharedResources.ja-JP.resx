@@ -1386,7 +1386,7 @@
     <value>リクエストを作成</value>
   </data>
   <data name="Actions.NewRequest" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] New Request</value>
+    <value>新しいリクエスト</value>
   </data>
   <data name="Actions.Reply" xml:space="preserve">
     <value>返信</value>
@@ -1485,7 +1485,7 @@
     <value>アルバム</value>
   </data>
   <data name="Label.Song" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Song</value>
+    <value>歌</value>
   </data>
   <data name="Label.Year" xml:space="preserve">
     <value>年</value>
@@ -1506,7 +1506,7 @@
     <value>実名</value>
   </data>
   <data name="Label.Directory" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Directory</value>
+    <value>ディレクトリ</value>
   </data>
   <data name="Label.SortName" xml:space="preserve">
     <value>ソート名</value>
@@ -1548,7 +1548,7 @@
     <value>バイオグラフィ</value>
   </data>
   <data name="Label.Locked" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Locked</value>
+    <value>ロックされています</value>
   </data>
   <data name="Label.Public" xml:space="preserve">
     <value>公開</value>
@@ -2340,7 +2340,7 @@
     <value>拒否</value>
   </data>
   <data name="RequestNew.HttpsPlaceholder" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] https://...</value>
+    <value>https://...</value>
   </data>
   <data name="RequestDetail.DeleteRequestConfirm" xml:space="preserve">
     <value>このリクエストを削除してもよろしいですか？</value>

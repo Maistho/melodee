@@ -1,52 +1,77 @@
-/*
- * Forest Theme - Deep greens and earthy tones
- * Natural, calming, organic feel
- */
-
 :root {
-    /* Primary - Forest Green */
+    /* Melodee Design Tokens */
+    --md-surface-0: #FEFEF8;
+    --md-surface-1: #FDFDF5;
+    --md-surface-2: #F5F5EB;
+
+    --md-text-1: #1B4332;
+    --md-text-2: #2D6A4F;
+    --md-text-inverse: #FEFEF8;
+    --md-muted: #95D5B2;
+
+    --md-border: #D8F3DC;
+    --md-divider: #D8F3DC;
+
+    --md-primary: #2D6A4F;
+    --md-primary-contrast: #FEFEF8;
+
+    --md-accent: #52B788;
+    --md-accent-contrast: #FEFEF8;
+
+    --md-focus: #1B4332;
+
+    --md-success: #74C69D;
+    --md-warning: #D4A373;
+    --md-error: #BC4749;
+    --md-info: #40916C;
+
+    --md-table-header-bg: #E8E8D5;
+    --md-table-header-text: #1B4332;
+
+    --md-chip-bg: #D8F3DC;
+    --md-chip-text: #1B4332;
+
+    --md-font-family-base: 'Inter', sans-serif;
+    --md-font-family-heading: 'Outfit', sans-serif;
+    --md-font-family-mono: 'monospace';
+
+    /* Radzen Compatibility Variables */
     --rz-primary: #2D6A4F;
     --rz-primary-light: #40916C;
     --rz-primary-lighter: #74C69D;
     --rz-primary-dark: #1B4332;
     --rz-primary-darker: #081C15;
-    
-    /* Secondary - Moss/Sage */
+
     --rz-secondary: #52B788;
     --rz-secondary-light: #74C69D;
     --rz-secondary-lighter: #B7E4C7;
     --rz-secondary-dark: #40916C;
     --rz-secondary-darker: #2D6A4F;
-    
-    /* Info - Teal */
+
     --rz-info: #40916C;
     --rz-info-light: #52B788;
     --rz-info-lighter: #95D5B2;
     --rz-info-dark: #2D6A4F;
     --rz-info-darker: #1B4332;
-    
-    /* Success - Bright Green */
+
     --rz-success: #74C69D;
     --rz-success-light: #95D5B2;
     --rz-success-lighter: #B7E4C7;
     --rz-success-dark: #52B788;
     --rz-success-darker: #40916C;
-    
-    /* Warning - Autumn Gold */
+
     --rz-warning: #D4A373;
     --rz-warning-light: #E6C9A8;
     --rz-warning-lighter: #FAEDCD;
     --rz-warning-dark: #BC8A5F;
     --rz-warning-darker: #A47148;
-    
-    /* Danger - Berry Red */
+
     --rz-danger: #BC4749;
     --rz-danger-light: #D4787A;
     --rz-danger-lighter: #E8A9AB;
     --rz-danger-dark: #9A3A3C;
     --rz-danger-darker: #782D2F;
-    
-    /* Base - Cream and light greens */
+
     --rz-base-50: #FEFEF8;
     --rz-base-100: #FDFDF5;
     --rz-base-200: #F5F5EB;
@@ -57,24 +82,22 @@
     --rz-base-700: #74C69D;
     --rz-base-800: #52B788;
     --rz-base-900: #40916C;
-    
+
     --rz-base-background-color: #FEFEF8;
     --rz-base-background-color-secondary: #FDFDF5;
-    
-    /* Text */
+
     --rz-text-color: #1B4332;
     --rz-text-secondary-color: #2D6A4F;
     --rz-text-disabled-color: #95D5B2;
     --rz-text-contrast-color: #FEFEF8;
-    
-    /* Border */
+
     --rz-border-color: #D8F3DC;
     --rz-border-color-hover: #40916C;
-    
+
     --rz-shadow-1: 0 2px 8px rgba(27, 67, 50, 0.1);
     --rz-shadow-2: 0 4px 16px rgba(27, 67, 50, 0.12);
     --rz-shadow-3: 0 8px 24px rgba(27, 67, 50, 0.15);
-    
+
     --rz-gradient-primary: linear-gradient(135deg, #1B4332 0%, #2D6A4F 50%, #40916C 100%);
 }
 
@@ -103,7 +126,6 @@ body {
     border-right: 1px solid #D8F3DC;
 }
 
-/* Sidebar navigation text */
 .rz-sidebar .rz-navigation-item,
 .rz-sidebar .rz-navigation-item a,
 .rz-sidebar .rz-panelmenu-header,
@@ -135,7 +157,6 @@ body {
     color: #2D6A4F !important;
 }
 
-/* Header */
 .rz-header,
 .rz-layout-header,
 header {
@@ -149,7 +170,6 @@ header {
     color: #1B4332 !important;
 }
 
-/* Main content */
 .rz-body,
 .rz-layout-body,
 main,
@@ -158,7 +178,6 @@ main,
     background-color: #FEFEF8 !important;
 }
 
-/* Panel menu */
 .rz-panelmenu,
 .rz-panelmenu-panel {
     background-color: #F5F5EB !important;
@@ -184,7 +203,6 @@ main,
     color: #40916C !important;
 }
 
-/* Nested panel menu items (Admin submenu) */
 .rz-panelmenu .rz-panelmenu-panel .rz-panelmenu-content,
 .rz-panelmenu-panel .rz-panelmenu-panel {
     background-color: #E8E8D5 !important;
@@ -225,7 +243,6 @@ main,
     color: #2D6A4F !important;
 }
 
-/* Profile menu styling */
 .rz-profile-menu,
 .rz-profile-menu-button {
     border: none !important;
@@ -260,7 +277,7 @@ main,
     color: #40916C !important;
 }
 
-.rz-datatable .rz-datatable-thead > tr > th {
+.rz-datatable .rz-datatable-thead \u003e tr \u003e th {
     background: linear-gradient(135deg, #E8E8D5 0%, #D8F3DC 100%);
     border-bottom: 2px solid #2D6A4F;
 }
@@ -275,11 +292,13 @@ main,
     background: var(--rz-gradient-primary);
 }
 
-a, .rz-link {
+a,
+.rz-link {
     color: #2D6A4F;
 }
 
-a:hover, .rz-link:hover {
+a:hover,
+.rz-link:hover {
     color: #1B4332;
 }
 

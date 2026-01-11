@@ -101,18 +101,6 @@ window.melodeeTheme = {
     applyBranding: function (branding) {
         if (!branding) return;
 
-        // Update page title if specified
-        if (branding.appName) {
-            // Store original title if not already stored
-            if (!this.originalTitle) {
-                this.originalTitle = document.title;
-            }
-            // Only update if different
-            if (document.title.indexOf(branding.appName) === -1) {
-                document.title = branding.appName;
-            }
-        }
-
         // Update favicon if specified
         if (branding.favicon) {
             let faviconLink = document.querySelector("link[rel~='icon']");
@@ -129,8 +117,7 @@ window.melodeeTheme = {
      * Reset branding to original values
      */
     resetBranding: function () {
-        if (this.originalTitle) {
-            document.title = this.originalTitle;
-        }
+        // Reserved for future use (e.g. resetting favicon)
     }
-};
+}
+    ;

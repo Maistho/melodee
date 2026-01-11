@@ -1,52 +1,77 @@
-/*
- * Ocean Breeze Theme - Calming ocean blues and teals
- * Light, airy, refreshing
- */
-
 :root {
-    /* Primary - Ocean Blue */
+    /* Melodee Design Tokens */
+    --md-surface-0: #FFFFFF;
+    --md-surface-1: #F8FDFF;
+    --md-surface-2: #EFF9FC;
+    
+    --md-text-1: #023E8A;
+    --md-text-2: #0077B6;
+    --md-text-inverse: #FFFFFF;
+    --md-muted: #90E0EF;
+    
+    --md-border: #CAF0F8;
+    --md-divider: #CAF0F8;
+    
+    --md-primary: #0077B6;
+    --md-primary-contrast: #FFFFFF;
+    
+    --md-accent: #48CAE4;
+    --md-accent-contrast: #FFFFFF;
+    
+    --md-focus: #005F8A;
+    
+    --md-success: #2A9D8F;
+    --md-warning: #E9C46A;
+    --md-error: #E76F51;
+    --md-info: #00B4D8;
+    
+    --md-table-header-bg: #E0F4F8;
+    --md-table-header-text: #023E8A;
+    
+    --md-chip-bg: #CAF0F8;
+    --md-chip-text: #023E8A;
+
+    --md-font-family-base: 'Inter', sans-serif;
+    --md-font-family-heading: 'Outfit', sans-serif;
+    --md-font-family-mono: 'monospace';
+
+    /* Radzen Compatibility Variables */
     --rz-primary: #0077B6;
     --rz-primary-light: #00B4D8;
     --rz-primary-lighter: #90E0EF;
     --rz-primary-dark: #005F8A;
     --rz-primary-darker: #003D5B;
     
-    /* Secondary - Coral/Seafoam */
     --rz-secondary: #48CAE4;
     --rz-secondary-light: #90E0EF;
     --rz-secondary-lighter: #CAF0F8;
     --rz-secondary-dark: #0096C7;
     --rz-secondary-darker: #0077B6;
     
-    /* Info - Sky Blue */
     --rz-info: #00B4D8;
     --rz-info-light: #48CAE4;
     --rz-info-lighter: #ADE8F4;
     --rz-info-dark: #0096C7;
     --rz-info-darker: #0077B6;
     
-    /* Success - Sea Green */
     --rz-success: #2A9D8F;
     --rz-success-light: #52C4B8;
     --rz-success-lighter: #A8E6CF;
     --rz-success-dark: #1F7A6F;
     --rz-success-darker: #14524A;
     
-    /* Warning - Sandy Gold */
     --rz-warning: #E9C46A;
     --rz-warning-light: #F4D59E;
     --rz-warning-lighter: #FAE8C8;
     --rz-warning-dark: #D4A84A;
     --rz-warning-darker: #B8892A;
     
-    /* Danger - Coral */
     --rz-danger: #E76F51;
     --rz-danger-light: #F4A090;
     --rz-danger-lighter: #FACFC7;
     --rz-danger-dark: #D45A3A;
     --rz-danger-darker: #B84528;
     
-    /* Base - Light sandy whites and pale blues */
     --rz-base-50: #FFFFFF;
     --rz-base-100: #F8FDFF;
     --rz-base-200: #EFF9FC;
@@ -61,13 +86,11 @@
     --rz-base-background-color: #FFFFFF;
     --rz-base-background-color-secondary: #F8FDFF;
     
-    /* Text */
     --rz-text-color: #023E8A;
     --rz-text-secondary-color: #0077B6;
     --rz-text-disabled-color: #90E0EF;
     --rz-text-contrast-color: #FFFFFF;
     
-    /* Border */
     --rz-border-color: #CAF0F8;
     --rz-border-color-hover: #00B4D8;
     
@@ -103,7 +126,6 @@ body {
     border-right: 1px solid #CAF0F8;
 }
 
-/* Sidebar navigation text */
 .rz-sidebar .rz-navigation-item,
 .rz-sidebar .rz-navigation-item a,
 .rz-sidebar .rz-panelmenu-header,
@@ -135,7 +157,6 @@ body {
     color: #0077B6 !important;
 }
 
-/* Header */
 .rz-header,
 .rz-layout-header,
 header {
@@ -149,7 +170,6 @@ header {
     color: #023E8A !important;
 }
 
-/* Main content */
 .rz-body,
 .rz-layout-body,
 main,
@@ -158,7 +178,6 @@ main,
     background-color: #FFFFFF !important;
 }
 
-/* Panel menu */
 .rz-panelmenu,
 .rz-panelmenu-panel {
     background-color: #EFF9FC !important;
@@ -184,7 +203,6 @@ main,
     color: #0077B6 !important;
 }
 
-/* Nested panel menu items (Admin submenu) */
 .rz-panelmenu .rz-panelmenu-panel .rz-panelmenu-content,
 .rz-panelmenu-panel .rz-panelmenu-panel {
     background-color: #E0F4F8 !important;
@@ -225,7 +243,6 @@ main,
     color: #0077B6 !important;
 }
 
-/* Profile menu styling */
 .rz-profile-menu,
 .rz-profile-menu-button {
     border: none !important;
@@ -260,7 +277,7 @@ main,
     color: #0077B6 !important;
 }
 
-.rz-datatable .rz-datatable-thead > tr > th {
+.rz-datatable .rz-datatable-thead \u003e tr \u003e th {
     background: linear-gradient(135deg, #EFF9FC 0%, #E0F4F8 100%);
     border-bottom: 2px solid #0077B6;
 }

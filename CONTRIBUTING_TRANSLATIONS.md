@@ -31,15 +31,15 @@ src/Melodee.Blazor/Resources/
 | Language | Code | File | Status | RTL Support |
 |----------|------|------|--------|-------------|
 | English (US) | en-US | `SharedResources.resx` | ✅ 100% | No |
-| Japanese | ja-JP | `SharedResources.ja-JP.resx` | 🔄 99% | No |
-| Spanish | es-ES | `SharedResources.es-ES.resx` | 🔄 56% | No |
-| Portuguese (Brazil) | pt-BR | `SharedResources.pt-BR.resx` | 🔄 32% | No |
-| German | de-DE | `SharedResources.de-DE.resx` | 🔄 32% | No |
+| Japanese | ja-JP | `SharedResources.ja-JP.resx` | ✅ 100% | No |
+| Spanish | es-ES | `SharedResources.es-ES.resx` | ✅ 100% | No |
+| Portuguese (Brazil) | pt-BR | `SharedResources.pt-BR.resx` | ✅ 100% | No |
+| German | de-DE | `SharedResources.de-DE.resx` | ✅ 100% | No |
 | Italian | it-IT | `SharedResources.it-IT.resx` | 🔄 32% | No |
-| Russian | ru-RU | `SharedResources.ru-RU.resx` | 🔄 29% | No |
-| Chinese (Simplified) | zh-CN | `SharedResources.zh-CN.resx` | 🔄 29% | No |
-| French | fr-FR | `SharedResources.fr-FR.resx` | 🔄 28% | No |
-| Arabic (Saudi Arabia) | ar-SA | `SharedResources.ar-SA.resx` | 🔄 24% | Yes |
+| Russian | ru-RU | `SharedResources.ru-RU.resx` | ✅ 100% | No |
+| Chinese (Simplified) | zh-CN | `SharedResources.zh-CN.resx` | ✅ 100% | No |
+| French | fr-FR | `SharedResources.fr-FR.resx` | ✅ 100% | No |
+| Arabic (Saudi Arabia) | ar-SA | `SharedResources.ar-SA.resx` | ✅ 100% | Yes |
 | Dutch (Netherlands) | nl-NL | `SharedResources.nl-NL.resx` | 🔄 2% | No |
 | Polish (Poland) | pl-PL | `SharedResources.pl-PL.resx` | 🔄 2% | No |
 | Turkish (Turkey) | tr-TR | `SharedResources.tr-TR.resx` | 🔄 2% | No |

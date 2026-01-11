@@ -1,52 +1,77 @@
-/*
- * Synthwave Theme - Retro 80s cyberpunk vibes
- * Neon pink, electric blue, and purple on dark background
- */
-
 :root {
-    /* Primary - Hot Pink/Magenta */
+    /* Melodee Design Tokens */
+    --md-surface-0: #0D0221;
+    --md-surface-1: #150535;
+    --md-surface-2: #1A0A40;
+
+    --md-text-1: #FFFFFF;
+    --md-text-2: #BAAAC6;
+    --md-text-inverse: #0D0221;
+    --md-muted: #5A4775;
+
+    --md-border: #3D2B5C;
+    --md-divider: #3D2B5C;
+
+    --md-primary: #FF00FF;
+    --md-primary-contrast: #FFFFFF;
+
+    --md-accent: #00FFFF;
+    --md-accent-contrast: #0D0221;
+
+    --md-focus: #CC00CC;
+
+    --md-success: #00FF7F;
+    --md-warning: #FFFF00;
+    --md-error: #FF3366;
+    --md-info: #00BFFF;
+
+    --md-table-header-bg: #1A0A40;
+    --md-table-header-text: #FFFFFF;
+
+    --md-chip-bg: #3D2B5C;
+    --md-chip-text: #FFFFFF;
+
+    --md-font-family-base: 'Inter', sans-serif;
+    --md-font-family-heading: 'Outfit', sans-serif;
+    --md-font-family-mono: 'monospace';
+
+    /* Radzen Compatibility Variables */
     --rz-primary: #FF00FF;
     --rz-primary-light: #FF66FF;
     --rz-primary-lighter: #FFAAFF;
     --rz-primary-dark: #CC00CC;
     --rz-primary-darker: #990099;
-    
-    /* Secondary - Electric Cyan */
+
     --rz-secondary: #00FFFF;
     --rz-secondary-light: #66FFFF;
     --rz-secondary-lighter: #AAFFFF;
     --rz-secondary-dark: #00CCCC;
     --rz-secondary-darker: #009999;
-    
-    /* Info - Electric Blue */
+
     --rz-info: #00BFFF;
     --rz-info-light: #66D9FF;
     --rz-info-lighter: #B3ECFF;
     --rz-info-dark: #0099CC;
     --rz-info-darker: #007399;
-    
-    /* Success - Neon Green */
+
     --rz-success: #00FF7F;
     --rz-success-light: #66FFAA;
     --rz-success-lighter: #B3FFD4;
     --rz-success-dark: #00CC66;
     --rz-success-darker: #00994C;
-    
-    /* Warning - Neon Yellow */
+
     --rz-warning: #FFFF00;
     --rz-warning-light: #FFFF66;
     --rz-warning-lighter: #FFFFAA;
     --rz-warning-dark: #CCCC00;
     --rz-warning-darker: #999900;
-    
-    /* Danger - Neon Red/Orange */
+
     --rz-danger: #FF3366;
     --rz-danger-light: #FF7799;
     --rz-danger-lighter: #FFBBCC;
     --rz-danger-dark: #CC2952;
     --rz-danger-darker: #991F3D;
-    
-    /* Base/Background - Deep purple/black */
+
     --rz-base-50: #0D0221;
     --rz-base-100: #150535;
     --rz-base-200: #1A0A40;
@@ -57,25 +82,22 @@
     --rz-base-700: #9A88AB;
     --rz-base-800: #BAAAC6;
     --rz-base-900: #DACCE1;
-    
+
     --rz-base-background-color: #0D0221;
     --rz-base-background-color-secondary: #150535;
-    
-    /* Text */
+
     --rz-text-color: #FFFFFF;
     --rz-text-secondary-color: #BAAAC6;
     --rz-text-disabled-color: #5A4775;
     --rz-text-contrast-color: #0D0221;
-    
-    /* Border */
+
     --rz-border-color: #3D2B5C;
     --rz-border-color-hover: #FF00FF;
-    
-    /* Neon glow shadows */
+
     --rz-shadow-1: 0 0 10px rgba(255, 0, 255, 0.3);
     --rz-shadow-2: 0 0 20px rgba(255, 0, 255, 0.4);
     --rz-shadow-3: 0 0 30px rgba(255, 0, 255, 0.5);
-    
+
     --rz-gradient-primary: linear-gradient(135deg, #FF00FF 0%, #00FFFF 100%);
 }
 
@@ -83,7 +105,6 @@ body {
     background: linear-gradient(135deg, #0D0221 0%, #1A0A40 50%, #150535 100%);
 }
 
-/* Neon glow effects */
 .rz-button.rz-primary {
     background: var(--rz-gradient-primary);
     border: none;
@@ -107,22 +128,20 @@ body {
     box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
 }
 
-.rz-datatable .rz-datatable-thead > tr > th {
+.rz-datatable .rz-datatable-thead \u003e tr \u003e th {
     background: linear-gradient(90deg, rgba(255, 0, 255, 0.2) 0%, rgba(0, 255, 255, 0.2) 100%);
     border-bottom: 2px solid #FF00FF;
     text-shadow: 0 0 10px rgba(255, 0, 255, 0.8);
 }
 
-/* Grid lines effect */
 .rz-sidebar {
-    background: 
+    background:
         linear-gradient(rgba(255, 0, 255, 0.03) 1px, transparent 1px),
         linear-gradient(90deg, rgba(255, 0, 255, 0.03) 1px, transparent 1px),
         linear-gradient(135deg, #150535 0%, #1A0A40 100%);
     background-size: 20px 20px, 20px 20px, 100% 100%;
 }
 
-/* Sidebar navigation text */
 .rz-sidebar .rz-navigation-item,
 .rz-sidebar .rz-navigation-item a,
 .rz-sidebar .rz-panelmenu-header,
@@ -157,7 +176,6 @@ body {
     color: #00FFFF !important;
 }
 
-/* Header */
 .rz-header,
 .rz-layout-header,
 header {
@@ -172,7 +190,6 @@ header {
     color: #FFFFFF !important;
 }
 
-/* Main content */
 .rz-body,
 .rz-layout-body,
 main,
@@ -182,7 +199,6 @@ main,
     color: #FFFFFF !important;
 }
 
-/* Panel menu */
 .rz-panelmenu,
 .rz-panelmenu-panel {
     background-color: #150535 !important;
@@ -208,7 +224,6 @@ main,
     color: #00FFFF !important;
 }
 
-/* Nested panel menu items (Admin submenu) */
 .rz-panelmenu .rz-panelmenu-panel .rz-panelmenu-content,
 .rz-panelmenu-panel .rz-panelmenu-panel {
     background-color: #0D0221 !important;
@@ -251,7 +266,6 @@ main,
     color: #00FFFF !important;
 }
 
-/* Profile menu styling */
 .rz-profile-menu,
 .rz-profile-menu-button {
     border: none !important;
@@ -286,7 +300,6 @@ main,
     color: #00FFFF !important;
 }
 
-/* Input styling - comprehensive coverage */
 .rz-textbox,
 .rz-dropdown,
 .rz-textarea,
@@ -335,23 +348,21 @@ input::placeholder,
     color: #7A6690 !important;
 }
 
-/* Cards */
 .rz-card {
     background: rgba(26, 10, 64, 0.8) !important;
     color: #FFFFFF !important;
 }
 
-/* DataGrid */
 .rz-datatable {
     background: #150535 !important;
 }
 
-.rz-datatable .rz-datatable-tbody > tr {
+.rz-datatable .rz-datatable-tbody \u003e tr {
     background: #150535 !important;
     color: #FFFFFF !important;
 }
 
-.rz-datatable .rz-datatable-tbody > tr:hover {
+.rz-datatable .rz-datatable-tbody \u003e tr:hover {
     background: rgba(255, 0, 255, 0.1) !important;
 }
 
@@ -360,12 +371,14 @@ input::placeholder,
     box-shadow: 0 0 10px rgba(255, 0, 255, 0.8);
 }
 
-a, .rz-link {
+a,
+.rz-link {
     color: #00FFFF;
     text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
 }
 
-a:hover, .rz-link:hover {
+a:hover,
+.rz-link:hover {
     color: #FF00FF;
     text-shadow: 0 0 10px rgba(255, 0, 255, 0.8);
 }

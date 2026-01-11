@@ -1,10 +1,8 @@
+using System.Security.Claims;
 using Asp.Versioning;
-using MelodeeControllerBase = Melodee.Blazor.Controllers.Melodee.ControllerBase;
 using Melodee.Blazor.Filters;
 using Melodee.Common.Configuration;
 using Melodee.Common.Data;
-using Melodee.Common.Data.Models;
-using Melodee.Common.Extensions;
 using Melodee.Common.Models;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services;
@@ -12,7 +10,7 @@ using Melodee.Common.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
+using MelodeeControllerBase = Melodee.Blazor.Controllers.Melodee.ControllerBase;
 
 namespace Melodee.Blazor.Controllers;
 
@@ -25,7 +23,7 @@ public class ThemesController(
     IConfiguration configuration,
     IMelodeeConfigurationFactory configurationFactory,
     IThemeService themeService,
-    IDbContextFactory<MelodeeDbContext> contextFactory) 
+    IDbContextFactory<MelodeeDbContext> contextFactory)
     : MelodeeControllerBase(etagRepository, serializer, configuration, configurationFactory)
 {
     /// <summary>
@@ -36,7 +34,7 @@ public class ThemesController(
     public async Task<ActionResult<IEnumerable<ThemePackInfo>>> GetThemes(CancellationToken cancellationToken)
     {
         var themes = await themeService.DiscoverThemePacksAsync(cancellationToken);
-        
+
         var themeInfos = themes.Select(t => new ThemePackInfo
         {
             Id = t.Id,
@@ -62,7 +60,7 @@ public class ThemesController(
     {
         var userIdStr = User.FindFirstValue(ClaimTypes.PrimarySid);
         var userId = SafeParser.ToNumber<int>(userIdStr);
-        
+
         if (userId == 0)
         {
             return Unauthorized();
@@ -77,7 +75,7 @@ public class ThemesController(
 
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
         var user = await context.Users.FindAsync([userId], cancellationToken);
-        
+
         if (user == null)
         {
             return NotFound(new { error = "User not found" });
@@ -98,7 +96,7 @@ public class ThemesController(
     {
         // Discovery happens on each call, so just return the current list
         var themes = await themeService.DiscoverThemePacksAsync(cancellationToken);
-        
+
         var themeInfos = themes.Select(t => new ThemePackInfo
         {
             Id = t.Id,
@@ -175,5 +173,54 @@ public class ThemesController(
         }
 
         return Ok(new { message = $"Theme '{themeId}' deleted successfully" });
+    }
+
+    /// <summary>
+    /// Serve files from a theme library directory
+    /// </summary>
+    [HttpGet("{themeId}/file/{*fileName}")]
+    [AllowAnonymous]
+    [ResponseCache(Duration = 31536000, Location = ResponseCacheLocation.Any)]
+    public async Task<IActionResult> GetThemeFile(string themeId, string fileName, CancellationToken cancellationToken)
+    {
+        var theme = await themeService.GetThemePackAsync(themeId, cancellationToken);
+        if (theme == null)
+        {
+            return NotFound();
+        }
+
+        // Security check: prevent directory traversal
+        if (fileName.Contains("..") || Path.IsPathRooted(fileName))
+        {
+            return BadRequest("Invalid file name");
+        }
+
+        var filePath = Path.Combine(theme.BaseDirectory, fileName);
+        if (!System.IO.File.Exists(filePath))
+        {
+            return NotFound();
+        }
+
+        var extension = Path.GetExtension(fileName).ToLowerInvariant();
+        var allowedExtensions = new[] { ".css", ".json", ".png", ".jpg", ".jpeg", ".ico", ".woff", ".woff2", ".svg" };
+        if (!allowedExtensions.Contains(extension))
+        {
+            return BadRequest("File type not allowed");
+        }
+
+        var contentType = extension switch
+        {
+            ".css" => "text/css",
+            ".json" => "application/json",
+            ".png" => "image/png",
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".ico" => "image/x-icon",
+            ".woff" => "font/woff",
+            ".woff2" => "font/woff2",
+            ".svg" => "image/svg+xml",
+            _ => "application/octet-stream"
+        };
+
+        return PhysicalFile(Path.GetFullPath(filePath), contentType);
     }
 }

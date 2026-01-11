@@ -1,56 +1,77 @@
-/*
- * Melodee Dark Theme
- * Based on the Melodee logo gradient: Magenta → Coral → Gold
- * On dark charcoal background (#3C3C3C) like the logo
- * Primary: #E040FB (Magenta/Pink)
- * Secondary: #FF7043 (Coral)
- * Accent: #FFA726 (Gold/Orange)
- */
-
 :root {
-    /* Primary Colors - Magenta/Pink - more vibrant for dark mode */
+    /* Melodee Design Tokens */
+    --md-surface-0: #2A2A2A;
+    --md-surface-1: #323232;
+    --md-surface-2: #3C3C3C;
+
+    --md-text-1: #F5F5F5;
+    --md-text-2: #BDBDBD;
+    --md-text-inverse: #2A2A2A;
+    --md-muted: #757575;
+
+    --md-border: #484848;
+    --md-divider: #484848;
+
+    --md-primary: #E040FB;
+    --md-primary-contrast: #FFFFFF;
+
+    --md-accent: #FF7043;
+    --md-accent-contrast: #FFFFFF;
+
+    --md-focus: #C020DB;
+
+    --md-success: #4DB6AC;
+    --md-warning: #FFCA28;
+    --md-error: #FF5252;
+    --md-info: #FFA726;
+
+    --md-table-header-bg: #3C3C3C;
+    --md-table-header-text: #F5F5F5;
+
+    --md-chip-bg: #484848;
+    --md-chip-text: #F5F5F5;
+
+    --md-font-family-base: 'Inter', sans-serif;
+    --md-font-family-heading: 'Outfit', sans-serif;
+    --md-font-family-mono: 'monospace';
+
+    /* Radzen Compatibility Variables */
     --rz-primary: #E040FB;
     --rz-primary-light: #F06EFF;
     --rz-primary-lighter: #F8A8FF;
     --rz-primary-dark: #C020DB;
     --rz-primary-darker: #9C00B7;
-    
-    /* Secondary Colors - Coral */
+
     --rz-secondary: #FF7043;
     --rz-secondary-light: #FF9A76;
     --rz-secondary-lighter: #FFCCB8;
     --rz-secondary-dark: #F4511E;
     --rz-secondary-darker: #E64A19;
-    
-    /* Info - Gold/Orange from logo */
+
     --rz-info: #FFA726;
     --rz-info-light: #FFCC80;
     --rz-info-lighter: #FFE4B8;
     --rz-info-dark: #FB8C00;
     --rz-info-darker: #EF6C00;
-    
-    /* Success - Bright teal for dark mode visibility */
+
     --rz-success: #4DB6AC;
     --rz-success-light: #80CBC4;
     --rz-success-lighter: #B2DFDB;
     --rz-success-dark: #26A69A;
     --rz-success-darker: #00897B;
-    
-    /* Warning - Bright amber */
+
     --rz-warning: #FFCA28;
     --rz-warning-light: #FFD54F;
     --rz-warning-lighter: #FFECB3;
     --rz-warning-dark: #FFB300;
     --rz-warning-darker: #FFA000;
-    
-    /* Danger - Bright coral red */
+
     --rz-danger: #FF5252;
     --rz-danger-light: #FF8A80;
     --rz-danger-lighter: #FFCDD2;
     --rz-danger-dark: #FF1744;
     --rz-danger-darker: #D50000;
-    
-    /* Base/Background Colors - Dark charcoal like logo background */
+
     --rz-base-50: #2A2A2A;
     --rz-base-100: #323232;
     --rz-base-200: #3C3C3C;
@@ -61,36 +82,30 @@
     --rz-base-700: #BDBDBD;
     --rz-base-800: #E0E0E0;
     --rz-base-900: #F5F5F5;
-    
+
     --rz-base-background-color: #2A2A2A;
     --rz-base-background-color-secondary: #323232;
-    
-    /* Text Colors - Light for dark backgrounds */
+
     --rz-text-color: #F5F5F5;
     --rz-text-secondary-color: #BDBDBD;
     --rz-text-disabled-color: #757575;
     --rz-text-contrast-color: #2A2A2A;
-    
-    /* Border Colors */
+
     --rz-border-color: #484848;
     --rz-border-color-hover: #E040FB;
-    
-    /* Shadows with magenta glow */
+
     --rz-shadow-1: 0 2px 4px rgba(0, 0, 0, 0.3);
     --rz-shadow-2: 0 4px 8px rgba(0, 0, 0, 0.35);
     --rz-shadow-3: 0 8px 16px rgba(0, 0, 0, 0.4);
-    
-    /* Gradients using logo colors */
+
     --rz-gradient-primary: linear-gradient(135deg, #E040FB 0%, #FF7043 50%, #FFA726 100%);
 }
 
-/* Body/Base background */
 body {
     background-color: #2A2A2A;
     color: #F5F5F5;
 }
 
-/* Main content area */
 .rz-body,
 .rz-layout-body,
 main,
@@ -101,17 +116,15 @@ main,
     border: none !important;
 }
 
-/* Remove any white borders on panels and content areas */
 .rz-panel,
 .rz-card,
 .rz-content,
 .rz-layout,
-.rz-layout > *,
-.rz-body > * {
+.rz-layout \u003e *,
+.rz-body \u003e * {
     border-color: #484848 !important;
 }
 
-/* Header/Top bar styling */
 .rz-header,
 .rz-layout-header,
 header {
@@ -126,14 +139,12 @@ header * {
     color: #F5F5F5 !important;
 }
 
-/* Profile menu in header - remove any separator lines */
 .rz-profile-menu,
 .rz-profile-menu-button {
     border: none !important;
     background: transparent !important;
 }
 
-/* Remove any vertical borders/lines between header elements */
 .rz-header .rzi,
 .rz-header .material-symbols-outlined,
 .rz-header .rz-profile-menu {
@@ -142,7 +153,6 @@ header * {
     margin-left: 0.5rem;
 }
 
-/* Profile menu dropdown styling */
 .rz-profile-menu .rz-menu,
 .rz-profile-menu-dropdown {
     background: #323232 !important;
@@ -165,19 +175,16 @@ header * {
     color: #F06EFF !important;
 }
 
-/* Header/Navigation styling */
 .rz-sidebar,
 .rz-panel-menu {
     background: linear-gradient(180deg, #323232 0%, #2A2A2A 100%);
     border-right: 1px solid #484848;
 }
 
-/* Sidebar navigation - ensure readable light text on dark background */
 .rz-sidebar .rz-navigation-item,
 .rz-sidebar .rz-navigation-item a,
 .rz-sidebar .rz-panelmenu-header,
-.rz-sidebar .rz-panelmenu-header a,
-.rz-sidebar .rz-panelmenu-header-text,
+.rz-sidebar .rz-navigation-item-text,
 .rz-panel-menu .rz-navigation-item,
 .rz-panel-menu .rz-navigation-item a,
 .rz-panel-menu .rz-panelmenu-header,
@@ -206,7 +213,6 @@ header * {
     background-color: rgba(224, 64, 251, 0.2) !important;
 }
 
-/* Sidebar icons */
 .rz-sidebar .rzi,
 .rz-sidebar .material-symbols-outlined,
 .rz-panel-menu .rzi,
@@ -214,7 +220,6 @@ header * {
     color: #BDBDBD !important;
 }
 
-/* Panel menu / Admin menu items */
 .rz-panelmenu,
 .rz-panelmenu-panel {
     background-color: #323232 !important;
@@ -225,15 +230,10 @@ header * {
     color: #E0E0E0 !important;
 }
 
-.rz-panelmenu-header:hover {
-    background-color: rgba(224, 64, 251, 0.15) !important;
-}
-
 .rz-panelmenu-content {
     background-color: #323232 !important;
 }
 
-/* CRITICAL: Override Radzen menu base styles that cause white backgrounds */
 .rz-menu,
 .rz-menu-list,
 .rz-submenu,
@@ -248,7 +248,6 @@ header * {
     background: #323232 !important;
 }
 
-/* All submenu content areas */
 .rz-panelmenu ul,
 .rz-panelmenu li,
 .rz-panelmenu .rz-panelmenu-root-list,
@@ -271,13 +270,11 @@ header * {
     color: #F06EFF !important;
 }
 
-/* Nested panel menu items (Admin submenu) - CRITICAL FOR READABILITY */
 .rz-panelmenu .rz-panelmenu-panel .rz-panelmenu-content,
 .rz-panelmenu-panel .rz-panelmenu-panel {
     background-color: #2A2A2A !important;
 }
 
-/* All nested menu items in panel menu */
 .rz-panelmenu .rz-navigation-item,
 .rz-panelmenu .rz-navigation-item a,
 .rz-panelmenu .rz-navigation-item span,
@@ -292,7 +289,6 @@ header * {
     background-color: transparent !important;
 }
 
-/* Nested items hover state */
 .rz-panelmenu .rz-navigation-item:hover,
 .rz-panelmenu .rz-navigation-item:hover a,
 .rz-panelmenu .rz-navigation-item:hover span,
@@ -304,7 +300,6 @@ header * {
     background-color: rgba(224, 64, 251, 0.15) !important;
 }
 
-/* Active/selected state for nested items */
 .rz-panelmenu .rz-navigation-item-active,
 .rz-panelmenu .rz-navigation-item-active a,
 .rz-panelmenu .rz-navigation-item-active span,
@@ -314,20 +309,12 @@ header * {
     background-color: rgba(224, 64, 251, 0.2) !important;
 }
 
-/* Panel menu icons in nested items */
 .rz-panelmenu .rz-navigation-item .rzi,
 .rz-panelmenu .rz-panelmenu-item .rzi,
 .rz-panelmenu .rz-menuitem .rzi {
     color: #9E9E9E !important;
 }
 
-.rz-panelmenu .rz-navigation-item:hover .rzi,
-.rz-panelmenu .rz-panelmenu-item:hover .rzi,
-.rz-panelmenu .rz-menuitem:hover .rzi {
-    color: #F06EFF !important;
-}
-
-/* Button gradients for primary actions */
 .rz-button.rz-primary {
     background: var(--rz-gradient-primary);
     border: none;
@@ -340,88 +327,28 @@ header * {
     box-shadow: 0 4px 20px rgba(224, 64, 251, 0.5);
 }
 
-/* Card styling with subtle glow */
 .rz-card {
     background: #323232;
     border: 1px solid #484848;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-.rz-card:hover {
-    border-color: rgba(224, 64, 251, 0.3);
-    box-shadow: 0 4px 16px rgba(224, 64, 251, 0.15);
-}
-
-/* Input styling - comprehensive coverage for all form elements */
 .rz-textbox,
 .rz-dropdown,
 .rz-textarea,
 .rz-inputtext,
 .rz-autocomplete input,
-.rz-autocomplete-panel,
 .rz-multiselect,
 .rz-chips,
-.rz-chips ul,
-.rz-colorpicker-panel,
 .rz-datepicker,
-.rz-datepicker-panel,
-.rz-datepicker-calendar,
-.rz-timepicker,
 .rz-numeric,
 .rz-password input,
-.rz-listbox,
-.rz-picklist,
-select,
-input[type="text"],
-input[type="password"],
-input[type="email"],
-input[type="number"],
-input[type="search"],
-input[type="tel"],
-input[type="url"] {
+.rz-listbox {
     background: #3C3C3C !important;
-    background-color: #3C3C3C !important;
     border-color: #5C5C5C !important;
     color: #F5F5F5 !important;
 }
 
-/* Dropdown panels and list styling */
-.rz-dropdown-panel,
-.rz-dropdown-items,
-.rz-dropdown-item,
-.rz-listbox-list,
-.rz-listbox-item,
-.rz-autocomplete-items,
-.rz-autocomplete-item,
-.rz-multiselect-panel,
-.rz-multiselect-items {
-    background: #3C3C3C !important;
-    background-color: #3C3C3C !important;
-    color: #F5F5F5 !important;
-}
-
-.rz-dropdown-item:hover,
-.rz-listbox-item:hover,
-.rz-autocomplete-item:hover,
-.rz-multiselect-item:hover {
-    background: #484848 !important;
-    background-color: #484848 !important;
-    color: #F06EFF !important;
-}
-
-.rz-dropdown-item.rz-state-highlight,
-.rz-listbox-item.rz-state-highlight {
-    background: rgba(224, 64, 251, 0.2) !important;
-    color: #E040FB !important;
-}
-
-/* Input placeholder text */
-.rz-textbox::placeholder,
-input::placeholder {
-    color: #9E9E9E !important;
-}
-
-/* Input focus states with gradient glow */
 .rz-textbox:focus,
 .rz-dropdown:focus,
 .rz-textarea:focus,
@@ -430,51 +357,14 @@ input:focus {
     box-shadow: 0 0 0 3px rgba(224, 64, 251, 0.25) !important;
 }
 
-/* DataGrid styling */
-.rz-datatable {
-    background: #323232;
-}
-
-.rz-datatable .rz-datatable-thead > tr > th {
+.rz-datatable .rz-datatable-thead \u003e tr \u003e th {
     background: linear-gradient(135deg, #3C3C3C 0%, #323232 100%);
     border-bottom: 2px solid #E040FB;
     color: #F5F5F5;
 }
 
-.rz-datatable .rz-datatable-tbody > tr {
-    background: #323232;
-    border-bottom: 1px solid #484848;
-}
-
-.rz-datatable .rz-datatable-tbody > tr:hover {
-    background: #3C3C3C;
-}
-
-.rz-datatable .rz-datatable-tbody > tr.rz-state-highlight {
-    background: rgba(224, 64, 251, 0.15);
-}
-
-/* Progress bar gradient */
-.rz-progressbar {
-    background: #3C3C3C;
-}
-
 .rz-progressbar-value {
     background: var(--rz-gradient-primary);
-}
-
-/* Tab styling */
-.rz-tabview {
-    background: #323232;
-}
-
-.rz-tabview-nav {
-    background: #3C3C3C;
-    border-bottom: 1px solid #484848;
-}
-
-.rz-tabview-nav li a {
-    color: #BDBDBD;
 }
 
 .rz-tabview-nav li.rz-tabview-selected a {
@@ -482,86 +372,12 @@ input:focus {
     color: #E040FB;
 }
 
-/* Panel/Accordion styling */
-.rz-panel {
-    background: #323232;
-    border-color: #484848;
-}
-
-.rz-panel-header {
-    background: #3C3C3C;
-    border-bottom-color: #484848;
-}
-
-/* Link colors */
-a, .rz-link {
+a,
+.rz-link {
     color: #F06EFF;
 }
 
-a:hover, .rz-link:hover {
-    color: #E040FB;
-}
-
-/* Menu styling */
-.rz-menu {
-    background: #323232;
-}
-
-.rz-menuitem:hover {
-    background: rgba(224, 64, 251, 0.1);
-}
-
-/* Dialog/Modal styling */
-.rz-dialog {
-    background: #323232;
-    border: 1px solid #484848;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-}
-
-.rz-dialog-titlebar {
-    background: linear-gradient(135deg, #3C3C3C 0%, #323232 100%);
-    border-bottom: 1px solid #E040FB;
-}
-
-/* Notification styling */
-.rz-notification {
-    background: #3C3C3C;
-    border-left: 4px solid #E040FB;
-}
-
-/* Scrollbar styling */
-::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-}
-
-::-webkit-scrollbar-track {
-    background: #2A2A2A;
-}
-
-::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, #E040FB 0%, #FF7043 100%);
-    border-radius: 5px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, #F06EFF 0%, #FF9A76 100%);
-}
-
-/* Selection highlight */
 ::selection {
     background: rgba(224, 64, 251, 0.4);
     color: #FFFFFF;
-}
-
-/* Tooltip */
-.rz-tooltip {
-    background: #3C3C3C;
-    border: 1px solid #E040FB;
-    color: #F5F5F5;
-}
-
-/* Badge with gradient */
-.rz-badge.rz-primary {
-    background: var(--rz-gradient-primary);
 }

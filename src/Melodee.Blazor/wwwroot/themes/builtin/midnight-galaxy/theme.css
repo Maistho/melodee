@@ -1,52 +1,77 @@
-/*
- * Midnight Galaxy Theme - Deep space purples with starry accents
- * Dark, mysterious, cosmic
- */
-
 :root {
-    /* Primary - Nebula Purple */
+    /* Melodee Design Tokens */
+    --md-surface-0: #0A0A12;
+    --md-surface-1: #10101B;
+    --md-surface-2: #1A1A2E;
+
+    --md-text-1: #F8ECFF;
+    --md-text-2: #C77DFF;
+    --md-text-inverse: #0A0A12;
+    --md-muted: #5A189A;
+
+    --md-border: #3C096C;
+    --md-divider: #3C096C;
+
+    --md-primary: #7B2CBF;
+    --md-primary-contrast: #FFFFFF;
+
+    --md-accent: #E0AAFF;
+    --md-accent-contrast: #0A0A12;
+
+    --md-focus: #5A189A;
+
+    --md-success: #06D6A0;
+    --md-warning: #FFD166;
+    --md-error: #EF476F;
+    --md-info: #4895EF;
+
+    --md-table-header-bg: #1A1A2E;
+    --md-table-header-text: #F8ECFF;
+
+    --md-chip-bg: #3C096C;
+    --md-chip-text: #F8ECFF;
+
+    --md-font-family-base: 'Inter', sans-serif;
+    --md-font-family-heading: 'Outfit', sans-serif;
+    --md-font-family-mono: 'monospace';
+
+    /* Radzen Compatibility Variables */
     --rz-primary: #7B2CBF;
     --rz-primary-light: #9D4EDD;
     --rz-primary-lighter: #C77DFF;
     --rz-primary-dark: #5A189A;
     --rz-primary-darker: #3C096C;
-    
-    /* Secondary - Cosmic Pink */
+
     --rz-secondary: #E0AAFF;
     --rz-secondary-light: #F0D6FF;
     --rz-secondary-lighter: #F8ECFF;
     --rz-secondary-dark: #C77DFF;
     --rz-secondary-darker: #9D4EDD;
-    
-    /* Info - Starlight Blue */
+
     --rz-info: #4895EF;
     --rz-info-light: #7EB3F4;
     --rz-info-lighter: #B4D1F9;
     --rz-info-dark: #3F7DD8;
     --rz-info-darker: #2A5DB0;
-    
-    /* Success - Aurora Green */
+
     --rz-success: #06D6A0;
     --rz-success-light: #4DE8C2;
     --rz-success-lighter: #99F2DD;
     --rz-success-dark: #05B386;
     --rz-success-darker: #04906C;
-    
-    /* Warning - Comet Gold */
+
     --rz-warning: #FFD166;
     --rz-warning-light: #FFE099;
     --rz-warning-lighter: #FFF0CC;
     --rz-warning-dark: #EFB82A;
     --rz-warning-darker: #D9A000;
-    
-    /* Danger - Mars Red */
+
     --rz-danger: #EF476F;
     --rz-danger-light: #F47D98;
     --rz-danger-lighter: #F9B3C1;
     --rz-danger-dark: #D63358;
     --rz-danger-darker: #B82548;
-    
-    /* Base - Deep space */
+
     --rz-base-50: #0A0A12;
     --rz-base-100: #10101B;
     --rz-base-200: #1A1A2E;
@@ -57,24 +82,22 @@
     --rz-base-700: #9D4EDD;
     --rz-base-800: #C77DFF;
     --rz-base-900: #E0AAFF;
-    
+
     --rz-base-background-color: #0A0A12;
     --rz-base-background-color-secondary: #10101B;
-    
-    /* Text */
+
     --rz-text-color: #F8ECFF;
     --rz-text-secondary-color: #C77DFF;
     --rz-text-disabled-color: #5A189A;
     --rz-text-contrast-color: #0A0A12;
-    
-    /* Border */
+
     --rz-border-color: #3C096C;
     --rz-border-color-hover: #9D4EDD;
-    
+
     --rz-shadow-1: 0 2px 8px rgba(157, 78, 221, 0.2);
     --rz-shadow-2: 0 4px 16px rgba(157, 78, 221, 0.25);
     --rz-shadow-3: 0 8px 24px rgba(157, 78, 221, 0.3);
-    
+
     --rz-gradient-primary: linear-gradient(135deg, #3C096C 0%, #7B2CBF 50%, #9D4EDD 100%);
 }
 
@@ -82,9 +105,8 @@ body {
     background: radial-gradient(ellipse at top, #1A1A2E 0%, #0A0A12 100%);
 }
 
-/* Starfield effect for sidebar */
 .rz-sidebar {
-    background: 
+    background:
         radial-gradient(1px 1px at 20px 30px, #E0AAFF, transparent),
         radial-gradient(1px 1px at 40px 70px, #C77DFF, transparent),
         radial-gradient(1px 1px at 50px 160px, #9D4EDD, transparent),
@@ -95,7 +117,6 @@ body {
     background-size: 200px 200px, 200px 200px, 200px 200px, 200px 200px, 200px 200px, 200px 200px, 100% 100%;
 }
 
-/* Sidebar navigation text */
 .rz-sidebar .rz-navigation-item,
 .rz-sidebar .rz-navigation-item a,
 .rz-sidebar .rz-panelmenu-header,
@@ -127,7 +148,6 @@ body {
     color: #C77DFF !important;
 }
 
-/* Header */
 .rz-header,
 .rz-layout-header,
 header {
@@ -141,7 +161,6 @@ header {
     color: #F8ECFF !important;
 }
 
-/* Main content */
 .rz-body,
 .rz-layout-body,
 main,
@@ -151,7 +170,6 @@ main,
     color: #F8ECFF !important;
 }
 
-/* Panel menu */
 .rz-panelmenu,
 .rz-panelmenu-panel {
     background-color: #10101B !important;
@@ -177,7 +195,6 @@ main,
     color: #C77DFF !important;
 }
 
-/* Nested panel menu items (Admin submenu) */
 .rz-panelmenu .rz-panelmenu-panel .rz-panelmenu-content,
 .rz-panelmenu-panel .rz-panelmenu-panel {
     background-color: #0A0A12 !important;
@@ -218,7 +235,6 @@ main,
     color: #C77DFF !important;
 }
 
-/* Profile menu styling */
 .rz-profile-menu,
 .rz-profile-menu-button {
     border: none !important;
@@ -253,7 +269,6 @@ main,
     color: #C77DFF !important;
 }
 
-/* Input styling - comprehensive coverage */
 .rz-textbox,
 .rz-dropdown,
 .rz-textarea,
@@ -302,17 +317,16 @@ input::placeholder,
     color: #5A189A !important;
 }
 
-/* DataGrid */
 .rz-datatable {
     background: #10101B !important;
 }
 
-.rz-datatable .rz-datatable-tbody > tr {
+.rz-datatable .rz-datatable-tbody \u003e tr {
     background: #10101B !important;
     color: #F8ECFF !important;
 }
 
-.rz-datatable .rz-datatable-tbody > tr:hover {
+.rz-datatable .rz-datatable-tbody \u003e tr:hover {
     background: rgba(157, 78, 221, 0.1) !important;
 }
 
@@ -338,23 +352,9 @@ input::placeholder,
     box-shadow: 0 0 25px rgba(157, 78, 221, 0.25);
 }
 
-.rz-datatable .rz-datatable-thead > tr > th {
+.rz-datatable .rz-datatable-thead \u003e tr \u003e th {
     background: linear-gradient(135deg, #1A1A2E 0%, #240046 100%);
     border-bottom: 2px solid #7B2CBF;
-}
-
-.rz-textbox,
-.rz-dropdown,
-.rz-textarea {
-    background: #1A1A2E;
-    border-color: #3C096C;
-    color: #F8ECFF;
-}
-
-.rz-textbox:focus,
-.rz-dropdown:focus {
-    border-color: #9D4EDD;
-    box-shadow: 0 0 15px rgba(157, 78, 221, 0.4);
 }
 
 .rz-progressbar {
@@ -366,11 +366,13 @@ input::placeholder,
     box-shadow: 0 0 10px rgba(157, 78, 221, 0.6);
 }
 
-a, .rz-link {
+a,
+.rz-link {
     color: #C77DFF;
 }
 
-a:hover, .rz-link:hover {
+a:hover,
+.rz-link:hover {
     color: #E0AAFF;
     text-shadow: 0 0 10px rgba(224, 170, 255, 0.5);
 }
