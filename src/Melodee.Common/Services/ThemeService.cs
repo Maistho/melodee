@@ -82,7 +82,8 @@ public sealed class ThemeService(
 
         if (string.IsNullOrEmpty(themeLibraryPath) || !Directory.Exists(themeLibraryPath))
         {
-            logger.LogWarning("Theme library path not configured or does not exist: {Path}", themeLibraryPath);
+            // Theme library is optional - just return built-in themes
+            logger.LogDebug("Theme library not configured, using built-in themes only");
             return themePacks;
         }
 
@@ -557,15 +558,7 @@ public sealed class ThemeService(
 
     private async Task<string?> GetThemeLibraryPathAsync(CancellationToken cancellationToken)
     {
-        try
-        {
-            var libraryResult = await libraryService.GetThemeLibraryAsync(cancellationToken);
-            return libraryResult.Data?.Path;
-        }
-        catch (Exception ex)
-        {
-            logger.LogWarning(ex, "Theme library not configured");
-            return null;
-        }
+        var libraryResult = await libraryService.GetThemeLibraryAsync(cancellationToken);
+        return libraryResult.Data?.Path;
     }
 }

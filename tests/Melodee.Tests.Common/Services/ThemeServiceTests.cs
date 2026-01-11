@@ -32,7 +32,7 @@ public class ThemeServiceTests
 
         _libraryServiceMock = new Mock<LibraryService>();
         _libraryServiceMock.Setup(x => x.GetThemeLibraryAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new OperationResult<Library>
+            .ReturnsAsync(new OperationResult<Library?>
             {
                 Data = new Library
                 {

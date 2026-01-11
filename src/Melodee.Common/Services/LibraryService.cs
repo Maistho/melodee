@@ -208,22 +208,13 @@ public class LibraryService : ServiceBase
         };
     }
 
-    public virtual async Task<MelodeeModels.OperationResult<Library>> GetThemeLibraryAsync(CancellationToken cancellationToken = default)
+    public virtual async Task<MelodeeModels.OperationResult<Library?>> GetThemeLibraryAsync(CancellationToken cancellationToken = default)
     {
         const int libraryType = (int)LibraryType.Theme;
-        var result = await CacheManager.GetAsync(CacheKeyDetailLibraryByType.FormatSmart(libraryType), async () =>
+        var library = await LibraryByType(libraryType, cancellationToken);
+        return new MelodeeModels.OperationResult<Library?>
         {
-            var library = await LibraryByType(libraryType, cancellationToken);
-            if (library == null)
-            {
-                throw new Exception("Theme library not found. A Library record must be setup with a type of '9' (Theme).");
-            }
-
-            return library;
-        }, cancellationToken).ConfigureAwait(false);
-        return new MelodeeModels.OperationResult<Library>
-        {
-            Data = result
+            Data = library
         };
     }
 
