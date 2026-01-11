@@ -5435,4 +5435,43 @@
   <data name="Jukebox.Error.OperationFailed" xml:space="preserve">
     <value>Jukebox operation failed: {0}</value>
   </data>
+  <data name="Jukebox.Backend.Mpd" xml:space="preserve">
+    <value>MPD</value>
+  </data>
+  <data name="Jukebox.Backend.MpdHost" xml:space="preserve">
+    <value>MPD Host</value>
+  </data>
+  <data name="Jukebox.Backend.MpdPort" xml:space="preserve">
+    <value>MPD Port</value>
+  </data>
+  <data name="Jukebox.Backend.MpdPassword" xml:space="preserve">
+    <value>MPD Password</value>
+  </data>
+  <data name="Jukebox.Backend.MpdInstanceName" xml:space="preserve">
+    <value>Instance Name</value>
+  </data>
+  <data name="Jukebox.Backend.MpdConnecting" xml:space="preserve">
+    <value>Connecting to MPD...</value>
+  </data>
+  <data name="Jukebox.Backend.MpdConnected" xml:space="preserve">
+    <value>Connected to MPD</value>
+  </data>
+  <data name="Jukebox.Backend.MpdDisconnected" xml:space="preserve">
+    <value>Disconnected from MPD</value>
+  </data>
+  <data name="Jukebox.Backend.MpdConnectionFailed" xml:space="preserve">
+    <value>Failed to connect to MPD</value>
+  </data>
+  <data name="Jukebox.Backend.MpdVersion" xml:space="preserve">
+    <value>MPD Version: {0}</value>
+  </data>
+  <data name="Jukebox.Backend.MpdAuthFailed" xml:space="preserve">
+    <value>MPD authentication failed</value>
+  </data>
+  <data name="Jukebox.Backend.MpdTimeout" xml:space="preserve">
+    <value>MPD connection timeout</value>
+  </data>
+  <data name="Jukebox.Backend.MpdError" xml:space="preserve">
+    <value>MPD error: {0}</value>
+  </data>
 </root>

@@ -1,0 +1,404 @@
+using System.Net.Sockets;
+using System.Text;
+using Melodee.Common.Configuration;
+using Melodee.Common.Data.Models;
+using Melodee.Common.Models;
+using Melodee.Common.Services.Playback;
+using Serilog;
+
+namespace Melodee.Common.Services.Playback.Backends;
+
+/// <summary>
+/// MPD (Music Player Daemon) playback backend implementation using TCP socket communication.
+/// </summary>
+public sealed class MpdPlaybackBackend : IPlaybackBackend, IDisposable
+{
+    private readonly ILogger _logger;
+    private readonly MpdOptions _options;
+    private TcpClient? _tcpClient;
+    private NetworkStream? _networkStream;
+    private bool _disposed;
+    private bool _isInitialized;
+    private readonly object _lock = new();
+    private string? _mpdVersion;
+
+    public MpdPlaybackBackend(ILogger logger, MpdOptions options)
+    {
+        _logger = logger;
+        _options = options;
+    }
+
+    /// <inheritdoc />
+    public Task<BackendCapabilities> GetCapabilitiesAsync(CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(new BackendCapabilities
+        {
+            CanPlay = true,
+            CanPause = true,
+            CanStop = true,
+            CanSeek = true,
+            CanSkip = true,
+            CanSetVolume = true,
+            CanReportPosition = true,
+            IsAvailable = IsConnected(),
+            BackendInfo = _mpdVersion
+        });
+    }
+
+    /// <inheritdoc />
+    public Task PlayAsync(PartyQueueItem item, double startPositionSeconds = 0, CancellationToken cancellationToken = default)
+    {
+        return ExecuteCommandAsync($"play {item.SortOrder}", cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task PauseAsync(CancellationToken cancellationToken = default)
+    {
+        return ExecuteCommandAsync("pause 1", cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task ResumeAsync(CancellationToken cancellationToken = default)
+    {
+        return ExecuteCommandAsync("pause 0", cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task StopAsync(CancellationToken cancellationToken = default)
+    {
+        return ExecuteCommandAsync("stop", cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task SeekAsync(double positionSeconds, CancellationToken cancellationToken = default)
+    {
+        return ExecuteCommandAsync($"seekcur {positionSeconds:F3}", cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task SetVolumeAsync(double volume01, CancellationToken cancellationToken = default)
+    {
+        var volumePercent = (int)(volume01 * 100);
+        return ExecuteCommandAsync($"setvol {volumePercent}", cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task SkipNextAsync(CancellationToken cancellationToken = default)
+    {
+        return ExecuteCommandAsync("next", cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task SkipPreviousAsync(CancellationToken cancellationToken = default)
+    {
+        return ExecuteCommandAsync("previous", cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task<BackendStatus> GetStatusAsync(CancellationToken cancellationToken = default)
+    {
+        var isConnected = IsConnected();
+
+        if (!isConnected)
+        {
+            return Task.FromResult(new BackendStatus
+            {
+                IsPlaying = false,
+                PositionSeconds = 0,
+                Volume = _options.InitialVolume,
+                CurrentItemApiKey = null,
+                IsConnected = false,
+                StatusMessage = "Not connected to MPD",
+                ErrorMessage = null
+            });
+        }
+
+        try
+        {
+            var statusResponse = ExecuteCommand("status", out var isError);
+            if (isError || string.IsNullOrEmpty(statusResponse))
+            {
+                return Task.FromResult(new BackendStatus
+                {
+                    IsPlaying = false,
+                    PositionSeconds = 0,
+                    Volume = _options.InitialVolume,
+                    CurrentItemApiKey = null,
+                    IsConnected = true,
+                    StatusMessage = "Error getting status",
+                    ErrorMessage = null
+                });
+            }
+
+            var statusLines = statusResponse.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            var isPlaying = false;
+            var positionSeconds = 0.0;
+            var volume = _options.InitialVolume;
+            Guid? currentItemApiKey = null;
+
+            foreach (var line in statusLines)
+            {
+                if (line.StartsWith("state: "))
+                {
+                    var state = line["state: ".Length..].Trim();
+                    isPlaying = state.Equals("play", StringComparison.OrdinalIgnoreCase);
+                }
+                else if (line.StartsWith("time: "))
+                {
+                    var timePart = line["time: ".Length..].Trim();
+                    var parts = timePart.Split(':');
+                    if (parts.Length >= 2 && double.TryParse(parts[0], out var position))
+                    {
+                        positionSeconds = position;
+                    }
+                }
+                else if (line.StartsWith("volume: "))
+                {
+                    var volumePart = line["volume: ".Length..].Trim();
+                    if (int.TryParse(volumePart, out var vol) && vol >= 0)
+                    {
+                        volume = vol / 100.0;
+                    }
+                }
+                else if (line.StartsWith("songid: "))
+                {
+                    var songId = line["songid: ".Length..].Trim();
+                    if (Guid.TryParse(songId, out var apiKey))
+                    {
+                        currentItemApiKey = apiKey;
+                    }
+                }
+            }
+
+            return Task.FromResult(new BackendStatus
+            {
+                IsPlaying = isPlaying,
+                PositionSeconds = positionSeconds,
+                Volume = volume,
+                CurrentItemApiKey = currentItemApiKey,
+                IsConnected = true,
+                StatusMessage = isPlaying ? "Playing" : "Connected",
+                ErrorMessage = null
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.Warning(ex, "[MpdPlaybackBackend] Error getting MPD status");
+            return Task.FromResult(new BackendStatus
+            {
+                IsPlaying = false,
+                PositionSeconds = 0,
+                Volume = _options.InitialVolume,
+                CurrentItemApiKey = null,
+                IsConnected = false,
+                StatusMessage = "Error",
+                ErrorMessage = "Failed to get MPD status"
+            });
+        }
+    }
+
+    /// <inheritdoc />
+    public Task InitializeAsync(CancellationToken cancellationToken = default)
+    {
+        if (_isInitialized)
+        {
+            return Task.CompletedTask;
+        }
+
+        lock (_lock)
+        {
+            if (_isInitialized)
+            {
+                return Task.CompletedTask;
+            }
+
+            try
+            {
+                _logger.Information("[MpdPlaybackBackend] Connecting to MPD at {Host}:{Port}",
+                    _options.Host, _options.Port);
+
+                _tcpClient = new TcpClient
+                {
+                    ReceiveTimeout = _options.TimeoutMs,
+                    SendTimeout = _options.TimeoutMs
+                };
+
+                _tcpClient.Connect(_options.Host, _options.Port);
+                _networkStream = _tcpClient.GetStream();
+
+                var welcomeResponse = ReadResponse();
+                if (welcomeResponse.StartsWith("OK MPD "))
+                {
+                    _mpdVersion = welcomeResponse["OK MPD ".Length..].Trim();
+                    _logger.Information("[MpdPlaybackBackend] Connected to MPD version: {Version}", _mpdVersion);
+                }
+                else
+                {
+                    _logger.Warning("[MpdPlaybackBackend] Unexpected MPD welcome response: {Response}", welcomeResponse);
+                }
+
+                if (!string.IsNullOrEmpty(_options.Password))
+                {
+                    var passwordResponse = ExecuteCommand($"password {_options.Password}", out var isError);
+                    if (isError)
+                    {
+                        _logger.Error("[MpdPlaybackBackend] Failed to authenticate with MPD");
+                        throw new InvalidOperationException("MPD authentication failed");
+                    }
+                    _logger.Information("[MpdPlaybackBackend] Authenticated with MPD");
+                }
+
+                _isInitialized = true;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "[MpdPlaybackBackend] Failed to initialize MPD backend");
+                Cleanup();
+            }
+
+            return Task.CompletedTask;
+        }
+    }
+
+    /// <inheritdoc />
+    public Task ShutdownAsync(CancellationToken cancellationToken = default)
+    {
+        lock (_lock)
+        {
+            Cleanup();
+            _isInitialized = false;
+            return Task.CompletedTask;
+        }
+    }
+
+    private bool IsConnected()
+    {
+        return _tcpClient?.Connected == true && _networkStream != null;
+    }
+
+    private Task ExecuteCommandAsync(string command, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (!IsConnected())
+            {
+                _logger.Warning("[MpdPlaybackBackend] Not connected to MPD, cannot execute command: {Command}", command);
+                return Task.CompletedTask;
+            }
+
+            var fullCommand = $"{command}\n";
+            var commandBytes = Encoding.UTF8.GetBytes(fullCommand);
+            _networkStream!.Write(commandBytes, 0, commandBytes.Length);
+
+            if (_options.EnableDebugOutput)
+            {
+                _logger.Debug("[MpdPlaybackBackend] Sent command: {Command}", command);
+            }
+
+            var response = ReadResponse();
+            if (response.StartsWith("ACK"))
+            {
+                _logger.Warning("[MpdPlaybackBackend] MPD command failed: {Command} -> {Response}", command, response);
+            }
+            else if (_options.EnableDebugOutput)
+            {
+                _logger.Debug("[MpdPlaybackBackend] Command response: {Response}", response);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "[MpdPlaybackBackend] Error executing command: {Command}", command);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private string ExecuteCommand(string command, out bool isError)
+    {
+        isError = false;
+        try
+        {
+            if (!IsConnected())
+            {
+                _logger.Warning("[MpdPlaybackBackend] Not connected to MPD, cannot execute command: {Command}", command);
+                return string.Empty;
+            }
+
+            var fullCommand = $"{command}\n";
+            var commandBytes = Encoding.UTF8.GetBytes(fullCommand);
+            _networkStream!.Write(commandBytes, 0, commandBytes.Length);
+
+            var response = ReadResponse();
+            isError = response.StartsWith("ACK");
+            return response;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "[MpdPlaybackBackend] Error executing command: {Command}", command);
+            isError = true;
+            return string.Empty;
+        }
+    }
+
+    private string ReadResponse()
+    {
+        var buffer = new MemoryStream();
+        var bufferBytes = new byte[1024];
+        int bytesRead;
+
+        while ((bytesRead = _networkStream!.Read(bufferBytes, 0, bufferBytes.Length)) > 0)
+        {
+            buffer.Write(bufferBytes, 0, bytesRead);
+            var content = Encoding.UTF8.GetString(buffer.ToArray());
+            if (content.Contains("OK") || content.Contains("ACK"))
+            {
+                break;
+            }
+        }
+
+        return Encoding.UTF8.GetString(buffer.ToArray()).Trim();
+    }
+
+    private void Cleanup()
+    {
+        try
+        {
+            if (_networkStream != null)
+            {
+                _networkStream.Close();
+                _networkStream.Dispose();
+                _networkStream = null;
+            }
+
+            if (_tcpClient != null)
+            {
+                _tcpClient.Close();
+                _tcpClient.Dispose();
+                _tcpClient = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.Warning(ex, "[MpdPlaybackBackend] Error during cleanup");
+        }
+    }
+
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        try
+        {
+            _ = ShutdownAsync().ConfigureAwait(false);
+        }
+        catch
+        {
+            // Ignore dispose errors
+        }
+
+        _disposed = true;
+    }
+}

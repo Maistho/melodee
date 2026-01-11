@@ -13,5 +13,10 @@ public enum PartySessionEndpointType
     /// <summary>
     /// An MPV backend endpoint for server-side playback.
     /// </summary>
-    MpvBackend = 1
+    MpvBackend = 1,
+
+    /// <summary>
+    /// An MPD (Music Player Daemon) backend endpoint.
+    /// </summary>
+    MpdBackend = 2
 }

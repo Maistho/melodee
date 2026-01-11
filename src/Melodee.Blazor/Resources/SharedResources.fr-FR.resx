@@ -5436,4 +5436,43 @@
   <data name="Jukebox.NotConfigured" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Jukebox is not configured. Enable Jukebox in settings to use this feature.</value>
   </data>
+  <data name="Jukebox.Backend.Mpd" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] MPD</value>
+  </data>
+  <data name="Jukebox.Backend.MpdHost" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] MPD Host</value>
+  </data>
+  <data name="Jukebox.Backend.MpdPort" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] MPD Port</value>
+  </data>
+  <data name="Jukebox.Backend.MpdPassword" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] MPD Password</value>
+  </data>
+  <data name="Jukebox.Backend.MpdInstanceName" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Instance Name</value>
+  </data>
+  <data name="Jukebox.Backend.MpdConnecting" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Connecting to MPD...</value>
+  </data>
+  <data name="Jukebox.Backend.MpdConnected" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Connected to MPD</value>
+  </data>
+  <data name="Jukebox.Backend.MpdDisconnected" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Disconnected from MPD</value>
+  </data>
+  <data name="Jukebox.Backend.MpdConnectionFailed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to connect to MPD</value>
+  </data>
+  <data name="Jukebox.Backend.MpdVersion" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] MPD Version: {0}</value>
+  </data>
+  <data name="Jukebox.Backend.MpdAuthFailed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] MPD authentication failed</value>
+  </data>
+  <data name="Jukebox.Backend.MpdTimeout" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] MPD connection timeout</value>
+  </data>
+  <data name="Jukebox.Backend.MpdError" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] MPD error: {0}</value>
+  </data>
 </root>
