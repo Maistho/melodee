@@ -12,13 +12,17 @@ namespace Melodee.Common.Services;
 /// <summary>
 /// Service for managing party session endpoint registry operations.
 /// </summary>
-public sealed class PartySessionEndpointRegistryService(
-    ILogger logger,
-    ICacheManager cacheManager,
-    IDbContextFactory<MelodeeDbContext> contextFactory)
-    : ServiceBase(logger, cacheManager, contextFactory), IPartySessionEndpointRegistryService
+public sealed class PartySessionEndpointRegistryService : ServiceBase, IPartySessionEndpointRegistryService
 {
     private const string CacheKeyTemplate = "urn:party:endpoint:{0}";
+
+    public PartySessionEndpointRegistryService(
+        ILogger logger,
+        ICacheManager cacheManager,
+        IDbContextFactory<MelodeeDbContext> contextFactory)
+        : base(logger, cacheManager, contextFactory)
+    {
+    }
 
     public async Task<OperationResult<PartySessionEndpoint>> RegisterAsync(
         string name,
@@ -43,7 +47,7 @@ public sealed class PartySessionEndpointRegistryService(
         scopedContext.PartySessionEndpoints.Add(endpoint);
         await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        logger.Information("[PartySessionEndpointRegistryService] Registered endpoint {EndpointName} (ID: {EndpointId}) of type {EndpointType}",
+        Logger.Information("[PartySessionEndpointRegistryService] Registered endpoint {EndpointName} (ID: {EndpointId}) of type {EndpointType}",
             name, endpoint.Id, type);
 
         return new OperationResult<PartySessionEndpoint> { Data = endpoint };
@@ -56,7 +60,7 @@ public sealed class PartySessionEndpointRegistryService(
         await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
 
         var cacheKey = string.Format(CacheKeyTemplate, endpointApiKey);
-        var cached = await cacheManager.GetAsync<PartySessionEndpoint?>(
+        var cached = await CacheManager.GetAsync<PartySessionEndpoint?>(
             cacheKey,
             async () =>
             {
@@ -95,7 +99,7 @@ public sealed class PartySessionEndpointRegistryService(
         await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         var cacheKey = string.Format(CacheKeyTemplate, endpointApiKey);
-        cacheManager.Remove(cacheKey);
+        CacheManager.Remove(cacheKey);
 
         return new OperationResult<bool> { Data = true };
     }
@@ -147,10 +151,10 @@ public sealed class PartySessionEndpointRegistryService(
 
         await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        cacheManager.Remove(string.Format(CacheKeyTemplate, endpointApiKey));
-        cacheManager.Remove($"urn:party:session:{sessionApiKey}");
+        CacheManager.Remove(string.Format(CacheKeyTemplate, endpointApiKey));
+        CacheManager.Remove($"urn:party:session:{sessionApiKey}");
 
-        logger.Information("[PartySessionEndpointRegistryService] Attached endpoint {EndpointApiKey} to session {SessionApiKey}",
+        Logger.Information("[PartySessionEndpointRegistryService] Attached endpoint {EndpointApiKey} to session {SessionApiKey}",
             endpointApiKey, sessionApiKey);
 
         return new OperationResult<bool> { Data = true };
@@ -183,12 +187,12 @@ public sealed class PartySessionEndpointRegistryService(
         {
             session.ActiveEndpointId = null;
             await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            cacheManager.Remove($"urn:party:session:{session.ApiKey}");
+            CacheManager.Remove($"urn:party:session:{session.ApiKey}");
         }
 
-        cacheManager.Remove(string.Format(CacheKeyTemplate, endpointApiKey));
+        CacheManager.Remove(string.Format(CacheKeyTemplate, endpointApiKey));
 
-        logger.Information("[PartySessionEndpointRegistryService] Detached endpoint {EndpointApiKey}", endpointApiKey);
+        Logger.Information("[PartySessionEndpointRegistryService] Detached endpoint {EndpointApiKey}", endpointApiKey);
 
         return new OperationResult<bool> { Data = true };
     }
@@ -248,9 +252,9 @@ public sealed class PartySessionEndpointRegistryService(
         endpoint.CapabilitiesJson = capabilitiesJson;
         await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        cacheManager.Remove(string.Format(CacheKeyTemplate, endpointApiKey));
+        CacheManager.Remove(string.Format(CacheKeyTemplate, endpointApiKey));
 
-        logger.Information("[PartySessionEndpointRegistryService] Updated capabilities for endpoint {EndpointApiKey}", endpointApiKey);
+        Logger.Information("[PartySessionEndpointRegistryService] Updated capabilities for endpoint {EndpointApiKey}", endpointApiKey);
 
         return new OperationResult<PartySessionEndpoint> { Data = endpoint };
     }

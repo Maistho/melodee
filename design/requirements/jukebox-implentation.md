@@ -17,7 +17,7 @@ This guide breaks the **Melodee Jukebox / Party Mode** requirements into impleme
 - [x] **Phase 2 — Real-time + Moderation + Anti-abuse:** SignalR events, rate limits, queue lock, kick/ban, audit
 - [x] **Phase 3 — Endpoint Registry + Capability Model:** endpoints first-class, attach/detach, staleness, capability-driven UI
 - [x] **Phase 4 — MPV Backend:** backend abstraction + MPV backend, config + health reporting
-- [ ] **Phase 5 — Subsonic/OpenSubsonic `jukeboxControl` (Backend-gated):** full mapping, tests, default 410
+- [x] **Phase 5 — Subsonic/OpenSubsonic `jukeboxControl` (Backend-gated):** full mapping, tests, default 410
 - [ ] **Phase 6 — Additional Backends:** MPD
 
 ---
@@ -502,7 +502,7 @@ Use this template verbatim; fill in `{PHASE_NUMBER}` and `{PHASE_NAME}` and past
 ```.aiignore
 You are a coding agent working in the Melodee repo.
 
-Goal: Implement Phase 5 — Subsonic/OpenSubsonic `jukeboxControl` (Backend-gated):** full mapping, tests, default 410
+Goal: Implement Phase 6 — Additional Backends:** MPD
 - Melodee Jukebox / Party Mode — Phased Implementation Guide (/design/requirements/jukebox-implentation.md)
 - Follow “Global implementation rules” exactly. Do not invent new designs.
 
@@ -544,7 +544,7 @@ Use this after Phase 1–5 are merged (and Phase 6 if implemented).
 You are a strict code review agent for the Melodee repo.
 
 Review scope:
-- Party Mode / Jukebox implementation across Phases 0–5 (and Phase 6 if present).
+- Party Mode / Jukebox implementation across Phases 0–5 (and Phase 6 if present) (/design/requirements/jukebox-implentation.md).
 - The requirements are defined in:
   1) Melodee Jukebox / Party Mode — Comprehensive Requirements & Implementation Phases
   2) Melodee Jukebox / Party Mode — Phased Implementation Guide

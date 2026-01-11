@@ -19,7 +19,9 @@ public sealed class MpvPlaybackBackend : IPlaybackBackend, IDisposable
     private string? _socketPath;
     private readonly object _lock = new();
     private bool _isInitialized;
+#pragma warning disable CS0649
     private string? _mpvVersion;
+#pragma warning restore CS0649
 
     public MpvPlaybackBackend(ILogger logger, MpvOptions options)
     {

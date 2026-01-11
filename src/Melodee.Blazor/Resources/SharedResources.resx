@@ -5393,4 +5393,46 @@
   <data name="Jukebox.Backend.Position" xml:space="preserve">
     <value>Position: {0}</value>
   </data>
+  <data name="Jukebox.NotConfigured" xml:space="preserve">
+    <value>Jukebox is not configured. Enable Jukebox in settings to use this feature.</value>
+  </data>
+  <data name="Jukebox.Error.FailedToGetStatus" xml:space="preserve">
+    <value>Failed to get jukebox status</value>
+  </data>
+  <data name="Jukebox.Error.FailedToGetPlaylist" xml:space="preserve">
+    <value>Failed to get jukebox playlist</value>
+  </data>
+  <data name="Jukebox.Error.FailedToSetGain" xml:space="preserve">
+    <value>Failed to set volume</value>
+  </data>
+  <data name="Jukebox.Error.FailedToStart" xml:space="preserve">
+    <value>Failed to start playback</value>
+  </data>
+  <data name="Jukebox.Error.FailedToStop" xml:space="preserve">
+    <value>Failed to stop playback</value>
+  </data>
+  <data name="Jukebox.Error.FailedToSkip" xml:space="preserve">
+    <value>Failed to skip to track</value>
+  </data>
+  <data name="Jukebox.Error.FailedToAddSongs" xml:space="preserve">
+    <value>Failed to add songs to jukebox</value>
+  </data>
+  <data name="Jukebox.Error.FailedToClear" xml:space="preserve">
+    <value>Failed to clear jukebox playlist</value>
+  </data>
+  <data name="Jukebox.Error.FailedToRemove" xml:space="preserve">
+    <value>Failed to remove song from jukebox</value>
+  </data>
+  <data name="Jukebox.Error.FailedToShuffle" xml:space="preserve">
+    <value>Failed to shuffle jukebox playlist</value>
+  </data>
+  <data name="Jukebox.Error.InvalidIndex" xml:space="preserve">
+    <value>Invalid track index</value>
+  </data>
+  <data name="Jukebox.Error.NoSongIds" xml:space="preserve">
+    <value>No song IDs provided</value>
+  </data>
+  <data name="Jukebox.Error.OperationFailed" xml:space="preserve">
+    <value>Jukebox operation failed: {0}</value>
+  </data>
 </root>
