@@ -5,7 +5,6 @@ using Melodee.Common.Constants;
 using Melodee.Common.Models;
 using Melodee.Common.Services;
 using Moq;
-using Serilog;
 
 namespace Melodee.Tests.Common.Services;
 
@@ -104,7 +103,7 @@ public class ThemeServiceTests
 
         var metadata = new ThemeMetadata { Id = "low-contrast", Name = "Low Contrast" };
         await File.WriteAllTextAsync(Path.Combine(themeDir, "theme.json"), JsonSerializer.Serialize(metadata));
-        
+
         // Use very similar colors for text and surface
         var css = ":root { --md-text-1: #000000; --md-surface-0: #000001; --md-surface-1: #000002; --md-primary: #000000; --md-text-inverse: #000001; --md-table-header-text: #000000; --md-table-header-bg: #000001; --md-chip-text: #000000; --md-chip-bg: #000001; }";
         await File.WriteAllTextAsync(Path.Combine(themeDir, "theme.css"), css);
@@ -164,7 +163,7 @@ public class ThemeServiceTests
         ZipFile.CreateFromDirectory(themeDir, zipPath);
 
         var service = CreateService();
-        
+
         // Import
         using (var importStream = File.OpenRead(zipPath))
         {

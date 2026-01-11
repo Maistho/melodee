@@ -77,16 +77,16 @@
     <value>لیست‌های پخش</value>
   </data>
   <data name="Navigation.RadioStations" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Radio Stations</value>
+    <value>ایستگاه‌های رادیویی</value>
   </data>
   <data name="Navigation.Charts" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Charts</value>
+    <value>نمودارها</value>
   </data>
   <data name="Navigation.Requests" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Requests</value>
+    <value>درخواست‌ها</value>
   </data>
   <data name="Navigation.NowPlaying" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Now Playing</value>
+    <value>در حال پخش</value>
   </data>
   <data name="Navigation.Statistics" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Statistics</value>
@@ -101,25 +101,25 @@
     <value>[NEEDS TRANSLATION] Doctor</value>
   </data>
   <data name="Navigation.Admin" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Admin</value>
+    <value>مدیر</value>
   </data>
   <data name="Navigation.Jobs" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Jobs</value>
   </data>
   <data name="Navigation.Users" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Users</value>
+    <value>کاربران</value>
   </data>
   <data name="Navigation.SystemSettings" xml:space="preserve">
     <value>[NEEDS TRANSLATION] System Settings</value>
   </data>
   <data name="Navigation.Account" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Account</value>
+    <value>حساب کاربری</value>
   </data>
   <data name="Navigation.Profile" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Profile</value>
+    <value>پروفایل</value>
   </data>
   <data name="Navigation.Logout" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Logout</value>
+    <value>خروج</value>
   </data>
   <data name="Navigation.Libraries" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Libraries</value>
@@ -137,7 +137,7 @@
     <value>[NEEDS TRANSLATION] Media Artists</value>
   </data>
   <data name="Navigation.Stats" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Stats</value>
+    <value>آمار</value>
   </data>
   <data name="Auth.AboutMe" xml:space="preserve">
     <value>[NEEDS TRANSLATION] About Me</value>
@@ -164,7 +164,7 @@
     <value>حذف</value>
   </data>
   <data name="Actions.Edit" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Edit</value>
+    <value>ویرایش</value>
   </data>
   <data name="Actions.Create" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Create</value>
@@ -239,10 +239,10 @@
     <value>[NEEDS TRANSLATION] View Details</value>
   </data>
   <data name="Actions.Yes" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Yes</value>
+    <value>بله</value>
   </data>
   <data name="Actions.No" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] No</value>
+    <value>خیر</value>
   </data>
   <data name="Common.Name" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Name</value>
@@ -308,13 +308,13 @@
     <value>[NEEDS TRANSLATION] Never</value>
   </data>
   <data name="Common.None" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] None</value>
+    <value>هیچکدام</value>
   </data>
   <data name="Common.Yes" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Yes</value>
+    <value>بله</value>
   </data>
   <data name="Common.No" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] No</value>
+    <value>خیر</value>
   </data>
   <data name="Common.Size" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Size</value>
@@ -326,19 +326,19 @@
     <value>[NEEDS TRANSLATION] Bitrate</value>
   </data>
   <data name="Auth.Login" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Login</value>
+    <value>ورود</value>
   </data>
   <data name="Auth.Logout" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Logout</value>
+    <value>خروج</value>
   </data>
   <data name="Auth.Username" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Username</value>
   </data>
   <data name="Auth.Email" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Email</value>
+    <value>ایمیل</value>
   </data>
   <data name="Auth.Password" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Password</value>
+    <value>رمز عبور</value>
   </data>
   <data name="Auth.ConfirmPassword" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Confirm Password</value>
@@ -614,22 +614,22 @@
     <value>[NEEDS TRANSLATION] Browse Songs</value>
   </data>
   <data name="Library.FilterByGenre" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Filter by Genre</value>
+    <value>فیلتر بر اساس ژانر</value>
   </data>
   <data name="Library.FilterByYear" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Filter by Year</value>
+    <value>فیلتر بر اساس سال</value>
   </data>
   <data name="Library.SortBy" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Sort By</value>
+    <value>مرتب سازی بر اساس</value>
   </data>
   <data name="Player.NowPlaying" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Now Playing</value>
+    <value>در حال پخش</value>
   </data>
   <data name="Player.Queue" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Queue</value>
+    <value>صف</value>
   </data>
   <data name="Player.Volume" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Volume</value>
+    <value>حجم صدا</value>
   </data>
   <data name="Player.Repeat" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Repeat</value>
@@ -638,16 +638,16 @@
     <value>[NEEDS TRANSLATION] Shuffle</value>
   </data>
   <data name="Player.ClearQueue" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Clear Queue</value>
+    <value>پاک کردن صف</value>
   </data>
   <data name="Settings.General" xml:space="preserve">
     <value>[NEEDS TRANSLATION] General</value>
   </data>
   <data name="Settings.Appearance" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Appearance</value>
+    <value>ظاهر</value>
   </data>
   <data name="Settings.Language" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Language</value>
+    <value>زبان</value>
   </data>
   <data name="Settings.Theme" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Theme</value>
@@ -656,13 +656,13 @@
     <value>[NEEDS TRANSLATION] Preferences</value>
   </data>
   <data name="Settings.Account" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Account</value>
+    <value>حساب کاربری</value>
   </data>
   <data name="Settings.Security" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Security</value>
+    <value>امنیت</value>
   </data>
   <data name="Settings.Privacy" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Privacy</value>
+    <value>حریم خصوصی</value>
   </data>
   <data name="About.Title" xml:space="preserve">
     <value>[NEEDS TRANSLATION] About {0}</value>
@@ -905,7 +905,7 @@
     <value>[NEEDS TRANSLATION] Username is required</value>
   </data>
   <data name="Profile.Email" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Email</value>
+    <value>ایمیل</value>
   </data>
   <data name="Profile.EmailRequired" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Email is required</value>
@@ -923,7 +923,7 @@
     <value>[NEEDS TRANSLATION] Defaults to UTC.</value>
   </data>
   <data name="Profile.Language" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Language</value>
+    <value>زبان</value>
   </data>
   <data name="Profile.LanguageDefault" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Default (English)</value>
@@ -1136,7 +1136,7 @@
     <value>[NEEDS TRANSLATION] Passwords do not match</value>
   </data>
   <data name="Stats.PageTitle" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Stats</value>
+    <value>آمار</value>
   </data>
   <data name="Stats.Statistics" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Statistics</value>
@@ -1247,19 +1247,19 @@
     <value>[NEEDS TRANSLATION] Failed to parse query</value>
   </data>
   <data name="NowPlaying.PageTitle" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Now Playing</value>
+    <value>در حال پخش</value>
   </data>
   <data name="NowPlaying.Header" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Now Playing</value>
+    <value>در حال پخش</value>
   </data>
   <data name="NowPlaying.NoSongsPlaying" xml:space="preserve">
     <value>[NEEDS TRANSLATION] No songs are currently playing.</value>
   </data>
   <data name="Users.PageTitle" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Users</value>
+    <value>کاربران</value>
   </data>
   <data name="Users.Header" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Users</value>
+    <value>کاربران</value>
   </data>
   <data name="Users.Add" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Add</value>
@@ -1280,10 +1280,10 @@
     <value>حذف</value>
   </data>
   <data name="RadioStations.PageTitle" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Radio Stations</value>
+    <value>ایستگاه‌های رادیویی</value>
   </data>
   <data name="RadioStations.Header" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Radio Stations</value>
+    <value>ایستگاه‌های رادیویی</value>
   </data>
   <data name="RadioStations.Add" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Add</value>
@@ -1322,16 +1322,16 @@
     <value>[NEEDS TRANSLATION] Home</value>
   </data>
   <data name="Nav.Charts" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Charts</value>
+    <value>نمودارها</value>
   </data>
   <data name="Nav.Requests" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Requests</value>
+    <value>درخواست‌ها</value>
   </data>
   <data name="Nav.Settings" xml:space="preserve">
     <value>تنظیمات</value>
   </data>
   <data name="Nav.Users" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Users</value>
+    <value>کاربران</value>
   </data>
   <data name="Nav.Libraries" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Libraries</value>
@@ -1601,10 +1601,10 @@
     <value>[NEEDS TRANSLATION] Username</value>
   </data>
   <data name="Label.Email" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Email</value>
+    <value>ایمیل</value>
   </data>
   <data name="Label.Password" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Password</value>
+    <value>رمز عبور</value>
   </data>
   <data name="Label.AlbumType" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Album Type</value>
@@ -1859,7 +1859,7 @@
     <value>[NEEDS TRANSLATION] Confidence</value>
   </data>
   <data name="TableHeader.Charts" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Charts</value>
+    <value>نمودارها</value>
   </data>
   <data name="TableHeader.ChartCount" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Chart Count</value>
@@ -2327,7 +2327,7 @@
     <value>[NEEDS TRANSLATION] Toggling Pin</value>
   </data>
   <data name="Requests.PageTitle" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Requests</value>
+    <value>درخواست‌ها</value>
   </data>
   <data name="Requests.SearchRequests" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Search requests...</value>
@@ -2489,13 +2489,13 @@
     <value>[NEEDS TRANSLATION] Edit User</value>
   </data>
   <data name="UserEdit.RoleNone" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] None</value>
+    <value>هیچکدام</value>
   </data>
   <data name="UserEdit.RoleEditor" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Editor</value>
   </data>
   <data name="UserEdit.RoleAdmin" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Admin</value>
+    <value>مدیر</value>
   </data>
   <data name="UserEdit.Adding" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Adding</value>
@@ -2507,10 +2507,10 @@
     <value>[NEEDS TRANSLATION] Username</value>
   </data>
   <data name="UserEdit.EmailPlaceholder" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Email</value>
+    <value>ایمیل</value>
   </data>
   <data name="UserEdit.PasswordPlaceholder" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Password</value>
+    <value>رمز عبور</value>
   </data>
   <data name="Message.UserSaved" xml:space="preserve">
     <value>[NEEDS TRANSLATION] User saved</value>
@@ -3563,7 +3563,7 @@
     <value>[NEEDS TRANSLATION] Pinned Items</value>
   </data>
   <data name="UserDetail.Email" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Email</value>
+    <value>ایمیل</value>
   </data>
   <data name="UserDetail.TimeZone" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Time Zone</value>
@@ -4319,7 +4319,7 @@
     <value>[NEEDS TRANSLATION] Username</value>
   </data>
   <data name="Common.Email" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Email</value>
+    <value>ایمیل</value>
   </data>
   <data name="Common.LastLogin" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Last Login</value>
@@ -4349,7 +4349,7 @@
     <value>آهنگ‌ها</value>
   </data>
   <data name="Stats.Users" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Users</value>
+    <value>کاربران</value>
   </data>
   <data name="Common.Normalized" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Normalized</value>
@@ -4388,7 +4388,7 @@
     <value>لیست‌های پخش</value>
   </data>
   <data name="Statistic.RadioStations" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Radio Stations</value>
+    <value>ایستگاه‌های رادیویی</value>
   </data>
   <data name="Statistic.Shares" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Shares</value>
@@ -4400,7 +4400,7 @@
     <value>[NEEDS TRANSLATION] Songs: Played count</value>
   </data>
   <data name="Statistic.Users" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Users</value>
+    <value>کاربران</value>
   </data>
   <data name="Statistic.UsersFavoritedArtists" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Users: Favorited artists</value>
@@ -5045,7 +5045,7 @@
     <value>[NEEDS TRANSLATION] Party Mode</value>
   </data>
   <data name="PartyMode.NowPlaying" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Now Playing</value>
+    <value>در حال پخش</value>
   </data>
   <data name="PartyMode.NoTrackPlaying" xml:space="preserve">
     <value>[NEEDS TRANSLATION] No track playing</value>
@@ -5054,7 +5054,7 @@
     <value>[NEEDS TRANSLATION] Not connected to party session</value>
   </data>
   <data name="PartyMode.Queue" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Queue</value>
+    <value>صف</value>
   </data>
   <data name="PartyMode.Refresh" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Refresh queue</value>
@@ -5141,7 +5141,7 @@
     <value>[NEEDS TRANSLATION] Playback Controls</value>
   </data>
   <data name="PartyMode.Volume" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Volume</value>
+    <value>حجم صدا</value>
   </data>
   <data name="PartyMode.Mute" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Mute</value>
@@ -5324,7 +5324,7 @@
     <value>[NEEDS TRANSLATION] Seek</value>
   </data>
   <data name="PartyMode.Endpoint.Capability.Volume" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Volume</value>
+    <value>حجم صدا</value>
   </data>
   <data name="PartyMode.Endpoint.Capability.Position" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Position</value>
@@ -5486,16 +5486,16 @@
     <value>[NEEDS TRANSLATION] Backend</value>
   </data>
   <data name="Jukebox.Volume" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Volume</value>
+    <value>حجم صدا</value>
   </data>
   <data name="Jukebox.Position" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Position</value>
   </data>
   <data name="Jukebox.NowPlaying" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Now Playing</value>
+    <value>در حال پخش</value>
   </data>
   <data name="Jukebox.Queue" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Queue</value>
+    <value>صف</value>
   </data>
   <data name="Jukebox.NotEnabled" xml:space="preserve">
     <value>[NEEDS TRANSLATION] NotEnabled</value>
@@ -5636,7 +5636,7 @@
     <value>[NEEDS TRANSLATION] An unknown error occurred</value>
   </data>
   <data name="Jukebox.ClearQueue" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Clear Queue</value>
+    <value>پاک کردن صف</value>
   </data>
   <data name="Jukebox.PlaybackPaused" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Playback paused</value>

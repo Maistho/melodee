@@ -111,7 +111,7 @@
     <value>Impostazioni di sistema</value>
   </data>
   <data name="Navigation.Account" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Account</value>
+    <value>Account</value>
   </data>
   <data name="Navigation.Profile" xml:space="preserve">
     <value>Profilo</value>
@@ -240,7 +240,7 @@
     <value>Sì</value>
   </data>
   <data name="Actions.No" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] No</value>
+    <value>No</value>
   </data>
   <data name="Common.Name" xml:space="preserve">
     <value>Nome</value>
@@ -306,13 +306,13 @@
     <value>[NEEDS TRANSLATION] Never</value>
   </data>
   <data name="Common.None" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] None</value>
+    <value>Nessuno</value>
   </data>
   <data name="Common.Yes" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Yes</value>
+    <value>Sì</value>
   </data>
   <data name="Common.No" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] No</value>
+    <value>No</value>
   </data>
   <data name="Common.Size" xml:space="preserve">
     <value>Dimensione</value>
@@ -333,10 +333,10 @@
     <value>Nome utente</value>
   </data>
   <data name="Auth.Email" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Email</value>
+    <value>Email</value>
   </data>
   <data name="Auth.Password" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Password</value>
+    <value>Password</value>
   </data>
   <data name="Auth.ConfirmPassword" xml:space="preserve">
     <value>Conferma password</value>
@@ -618,10 +618,10 @@
     <value>[NEEDS TRANSLATION] Browse Songs</value>
   </data>
   <data name="Library.FilterByGenre" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Filter by Genre</value>
+    <value>Filtra per genere</value>
   </data>
   <data name="Library.FilterByYear" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Filter by Year</value>
+    <value>Filtra per anno</value>
   </data>
   <data name="Library.SortBy" xml:space="preserve">
     <value>Ordina per</value>
@@ -633,7 +633,7 @@
     <value>Coda</value>
   </data>
   <data name="Player.Volume" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Volume</value>
+    <value>Volume</value>
   </data>
   <data name="Player.Repeat" xml:space="preserve">
     <value>Ripeti</value>
@@ -642,16 +642,16 @@
     <value>Casuale</value>
   </data>
   <data name="Player.ClearQueue" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Clear Queue</value>
+    <value>Svuota coda</value>
   </data>
   <data name="Settings.General" xml:space="preserve">
     <value>Generale</value>
   </data>
   <data name="Settings.Appearance" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Appearance</value>
+    <value>Aspetto</value>
   </data>
   <data name="Settings.Language" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Language</value>
+    <value>Lingua</value>
   </data>
   <data name="Settings.Theme" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Theme</value>
@@ -660,13 +660,13 @@
     <value>Preferenze</value>
   </data>
   <data name="Settings.Account" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Account</value>
+    <value>Account</value>
   </data>
   <data name="Settings.Security" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Security</value>
+    <value>Sicurezza</value>
   </data>
   <data name="Settings.Privacy" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Privacy</value>
+    <value>Privacy</value>
   </data>
   <data name="About.Title" xml:space="preserve">
     <value>[NEEDS TRANSLATION] About {0}</value>
@@ -909,7 +909,7 @@
     <value>[NEEDS TRANSLATION] Username is required</value>
   </data>
   <data name="Profile.Email" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Email</value>
+    <value>Email</value>
   </data>
   <data name="Profile.EmailRequired" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Email is required</value>
@@ -1584,10 +1584,10 @@
     <value>Nome utente</value>
   </data>
   <data name="Label.Email" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Email</value>
+    <value>Email</value>
   </data>
   <data name="Label.Password" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Password</value>
+    <value>Password</value>
   </data>
   <data name="Label.AlbumType" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Album Type</value>
@@ -2490,10 +2490,10 @@
     <value>Nome utente</value>
   </data>
   <data name="UserEdit.EmailPlaceholder" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Email</value>
+    <value>Email</value>
   </data>
   <data name="UserEdit.PasswordPlaceholder" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Password</value>
+    <value>Password</value>
   </data>
   <data name="Message.UserSaved" xml:space="preserve">
     <value>[NEEDS TRANSLATION] User saved</value>
@@ -3504,7 +3504,7 @@
     <value>[NEEDS TRANSLATION] Pinned Items</value>
   </data>
   <data name="UserDetail.Email" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Email</value>
+    <value>Email</value>
   </data>
   <data name="UserDetail.TimeZone" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Time Zone</value>
@@ -4299,7 +4299,7 @@
     <value>[NEEDS TRANSLATION] Username</value>
   </data>
   <data name="Common.Email" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Email</value>
+    <value>Email</value>
   </data>
   <data name="Common.LastLogin" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Last Login</value>
@@ -4320,16 +4320,16 @@
     <value>[NEEDS TRANSLATION] Favorites: Artists</value>
   </data>
   <data name="Stats.Albums" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Albums</value>
+    <value>Album</value>
   </data>
   <data name="Stats.Artists" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Artists</value>
+    <value>Artisti</value>
   </data>
   <data name="Stats.Songs" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Songs</value>
+    <value>Brani</value>
   </data>
   <data name="Stats.Users" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Users</value>
+    <value>Utenti</value>
   </data>
   <data name="Common.Normalized" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Normalized</value>
@@ -4347,13 +4347,13 @@
     <value>[NEEDS TRANSLATION] Status Reasons</value>
   </data>
   <data name="Common.Songs" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Songs</value>
+    <value>Brani</value>
   </data>
   <data name="Statistic.Albums" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Albums</value>
+    <value>Album</value>
   </data>
   <data name="Statistic.Artists" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Artists</value>
+    <value>Artisti</value>
   </data>
   <data name="Statistic.Contributors" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Contributors</value>
@@ -4365,22 +4365,22 @@
     <value>[NEEDS TRANSLATION] Libraries</value>
   </data>
   <data name="Statistic.Playlists" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Playlists</value>
+    <value>Playlist</value>
   </data>
   <data name="Statistic.RadioStations" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Radio Stations</value>
+    <value>Stazioni radio</value>
   </data>
   <data name="Statistic.Shares" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Shares</value>
   </data>
   <data name="Statistic.Songs" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Songs</value>
+    <value>Brani</value>
   </data>
   <data name="Statistic.SongsPlayedCount" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Songs: Played count</value>
   </data>
   <data name="Statistic.Users" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Users</value>
+    <value>Utenti</value>
   </data>
   <data name="Statistic.UsersFavoritedArtists" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Users: Favorited artists</value>
@@ -4704,10 +4704,10 @@
     <value>[NEEDS TRANSLATION] All</value>
   </data>
   <data name="Common.Artists" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Artists</value>
+    <value>Artisti</value>
   </data>
   <data name="Common.Albums" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Albums</value>
+    <value>Album</value>
   </data>
   <data name="ArtistLookup.SelectToMerge" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Select one or more results to merge their provider IDs</value>
@@ -4848,7 +4848,7 @@
     <value>[NEEDS TRANSLATION] Channel Settings</value>
   </data>
   <data name="Podcast.Settings" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Settings</value>
+    <value>Impostazioni</value>
   </data>
   <data name="Podcast.SettingsSaved" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Settings saved successfully</value>
@@ -5046,7 +5046,7 @@
     <value>[NEEDS TRANSLATION] Party Mode</value>
   </data>
   <data name="PartyMode.NowPlaying" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Now Playing</value>
+    <value>In riproduzione</value>
   </data>
   <data name="PartyMode.NoTrackPlaying" xml:space="preserve">
     <value>[NEEDS TRANSLATION] No track playing</value>
@@ -5055,7 +5055,7 @@
     <value>[NEEDS TRANSLATION] Not connected to party session</value>
   </data>
   <data name="PartyMode.Queue" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Queue</value>
+    <value>Coda</value>
   </data>
   <data name="PartyMode.Refresh" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Refresh queue</value>
@@ -5142,7 +5142,7 @@
     <value>[NEEDS TRANSLATION] Playback Controls</value>
   </data>
   <data name="PartyMode.Volume" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Volume</value>
+    <value>Volume</value>
   </data>
   <data name="PartyMode.Mute" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Mute</value>
@@ -5325,7 +5325,7 @@
     <value>[NEEDS TRANSLATION] Seek</value>
   </data>
   <data name="PartyMode.Endpoint.Capability.Volume" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Volume</value>
+    <value>Volume</value>
   </data>
   <data name="PartyMode.Endpoint.Capability.Position" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Position</value>
@@ -5488,7 +5488,7 @@
     <value>[NEEDS TRANSLATION] Backend</value>
   </data>
   <data name="Jukebox.Volume" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Volume</value>
+    <value>Volume</value>
   </data>
   <data name="Jukebox.Position" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Position</value>
@@ -5497,7 +5497,7 @@
     <value>[NEEDS TRANSLATION] NowPlaying</value>
   </data>
   <data name="Jukebox.Queue" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Queue</value>
+    <value>Coda</value>
   </data>
   <data name="Jukebox.NotEnabled" xml:space="preserve">
     <value>[NEEDS TRANSLATION] NotEnabled</value>
@@ -5638,7 +5638,7 @@
     <value>[NEEDS TRANSLATION] An unknown error occurred</value>
   </data>
   <data name="Jukebox.ClearQueue" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Clear Queue</value>
+    <value>Svuota coda</value>
   </data>
   <data name="Jukebox.PlaybackPaused" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Playback paused</value>

@@ -35,21 +35,21 @@ src/Melodee.Blazor/Resources/
 | Spanish | es-ES | `SharedResources.es-ES.resx` | ✅ 100% | No |
 | Portuguese (Brazil) | pt-BR | `SharedResources.pt-BR.resx` | ✅ 100% | No |
 | German | de-DE | `SharedResources.de-DE.resx` | ✅ 100% | No |
-| Italian | it-IT | `SharedResources.it-IT.resx` | 🔄 32% | No |
+| Italian | it-IT | `SharedResources.it-IT.resx` | 🔄 35% | No |
 | Russian | ru-RU | `SharedResources.ru-RU.resx` | ✅ 100% | No |
 | Chinese (Simplified) | zh-CN | `SharedResources.zh-CN.resx` | ✅ 100% | No |
 | French | fr-FR | `SharedResources.fr-FR.resx` | ✅ 100% | No |
 | Arabic (Saudi Arabia) | ar-SA | `SharedResources.ar-SA.resx` | ✅ 100% | Yes |
-| Dutch (Netherlands) | nl-NL | `SharedResources.nl-NL.resx` | 🔄 2% | No |
-| Polish (Poland) | pl-PL | `SharedResources.pl-PL.resx` | 🔄 2% | No |
-| Turkish (Turkey) | tr-TR | `SharedResources.tr-TR.resx` | 🔄 2% | No |
-| Indonesian (Indonesia) | id-ID | `SharedResources.id-ID.resx` | 🔄 2% | No |
-| Korean (Korea) | ko-KR | `SharedResources.ko-KR.resx` | 🔄 2% | No |
-| Vietnamese (Vietnam) | vi-VN | `SharedResources.vi-VN.resx` | 🔄 2% | No |
-| Persian (Iran) | fa-IR | `SharedResources.fa-IR.resx` | 🔄 2% | Yes |
-| Ukrainian (Ukraine) | uk-UA | `SharedResources.uk-UA.resx` | 🔄 2% | No |
-| Czech (Czechia) | cs-CZ | `SharedResources.cs-CZ.resx` | 🔄 2% | No |
-| Swedish (Sweden) | sv-SE | `SharedResources.sv-SE.resx` | 🔄 2% | No |
+| Dutch (Netherlands) | nl-NL | `SharedResources.nl-NL.resx` | 🔄 6% | No |
+| Polish (Poland) | pl-PL | `SharedResources.pl-PL.resx` | 🔄 6% | No |
+| Turkish (Turkey) | tr-TR | `SharedResources.tr-TR.resx` | 🔄 6% | No |
+| Indonesian (Indonesia) | id-ID | `SharedResources.id-ID.resx` | 🔄 6% | No |
+| Korean (Korea) | ko-KR | `SharedResources.ko-KR.resx` | 🔄 6% | No |
+| Vietnamese (Vietnam) | vi-VN | `SharedResources.vi-VN.resx` | 🔄 6% | No |
+| Persian (Iran) | fa-IR | `SharedResources.fa-IR.resx` | 🔄 6% | Yes |
+| Ukrainian (Ukraine) | uk-UA | `SharedResources.uk-UA.resx` | 🔄 6% | No |
+| Czech (Czechia) | cs-CZ | `SharedResources.cs-CZ.resx` | 🔄 6% | No |
+| Swedish (Sweden) | sv-SE | `SharedResources.sv-SE.resx` | 🔄 6% | No |
 
 ## Translation Status
 

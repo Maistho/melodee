@@ -11,6 +11,6 @@ public static class ClaimTypeRegistry
     public const string UserPublicKey = "urn:token:publickey";
 
     public const string UserTimeZoneId = "urn:user:timezone";
-    
+
     public const string UserPreferredTheme = "urn:user:theme";
 }
