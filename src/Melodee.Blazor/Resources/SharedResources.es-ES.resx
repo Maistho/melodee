@@ -5622,4 +5622,16 @@
   <data name="Jukebox.Stop" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Stop</value>
   </data>
+  <data name="AlbumDetail.AddToJukebox" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Add to Jukebox queue</value>
+  </data>
+  <data name="AlbumDetail.AddedToJukebox" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Added to Jukebox</value>
+  </data>
+  <data name="AlbumDetail.AddedToQueue" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] added to the queue</value>
+  </data>
+  <data name="AlbumDetail.JukeboxError" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to add to Jukebox</value>
+  </data>
 </root>
