@@ -159,7 +159,7 @@
                             <RadzenButton Icon="refresh" 
                                           ButtonStyle="ButtonStyle.Light" 
                                           Size="ButtonSize.Small"
-                                          Click="@RefreshStatusAsync"
+                                          Click="@OnRefreshClickAsync"
                                           title="@L("Actions.Refresh")"/>
                         </RadzenStack>
                         
@@ -225,47 +225,100 @@
     {
         await base.OnInitializedAsync();
 
+        Logger.LogDebug("[Jukebox] OnInitializedAsync starting");
+        
         _jukeboxEnabled = Configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled);
         _backendType = Configuration.GetValue<string>(SettingRegistry.JukeboxBackendType);
 
+        Logger.LogDebug("[Jukebox] JukeboxEnabled={JukeboxEnabled}, BackendType={BackendType}", _jukeboxEnabled, _backendType);
+
         if (_jukeboxEnabled)
         {
-            await InitializeBackendAsync();
-            await RefreshStatusAsync();
+            // Use a timeout to prevent hanging if backend initialization fails
+            Logger.LogDebug("[Jukebox] Starting backend initialization with 10s timeout");
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            try
+            {
+                await InitializeBackendAsync(cts.Token);
+                await RefreshStatusAsync(cts.Token);
+                Logger.LogDebug("[Jukebox] Backend initialization completed successfully");
+            }
+            catch (OperationCanceledException)
+            {
+                Logger.LogWarning("[Jukebox] Backend initialization timed out after 10 seconds");
+                _status = new BackendStatus 
+                { 
+                    IsConnected = false, 
+                    ErrorMessage = "Initialization timed out - check backend configuration" 
+                };
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "[Jukebox] Error during backend initialization");
+                _status = new BackendStatus 
+                { 
+                    IsConnected = false, 
+                    ErrorMessage = ex.Message 
+                };
+            }
             
-            _refreshTimer = new Timer(_ => _ = InvokeAsync(RefreshStatusAsync), null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5));
+            Logger.LogDebug("[Jukebox] Starting status refresh timer (5s interval)");
+            _refreshTimer = new Timer(_ => _ = InvokeAsync(() => RefreshStatusAsync(CancellationToken.None)), null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5));
+        }
+        else
+        {
+            Logger.LogDebug("[Jukebox] Jukebox is disabled, skipping backend initialization");
         }
 
         _isLoading = false;
+        Logger.LogDebug("[Jukebox] OnInitializedAsync completed, IsLoading={IsLoading}", _isLoading);
     }
 
-    private async Task InitializeBackendAsync()
+    private async Task InitializeBackendAsync(CancellationToken cancellationToken = default)
     {
+        Logger.LogDebug("[Jukebox] InitializeBackendAsync starting");
         try
         {
-            var initResult = await PlaybackBackendService.InitializeBackendAsync();
+            var initResult = await PlaybackBackendService.InitializeBackendAsync(cancellationToken);
             if (!initResult.IsSuccess)
             {
-                Logger.LogWarning("Failed to initialize backend: {Messages}", string.Join(", ", initResult.Messages ?? []));
+                Logger.LogWarning("[Jukebox] Backend initialization failed: {Messages}", string.Join(", ", initResult.Messages ?? []));
             }
+            else
+            {
+                Logger.LogDebug("[Jukebox] Backend initialization succeeded");
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            Logger.LogDebug("[Jukebox] InitializeBackendAsync cancelled");
+            throw; // Re-throw to let caller handle timeout
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error initializing backend");
+            Logger.LogError(ex, "[Jukebox] Exception in InitializeBackendAsync");
         }
     }
 
-    private async Task RefreshStatusAsync()
+    private async Task RefreshStatusAsync(CancellationToken cancellationToken = default)
     {
+        Logger.LogDebug("[Jukebox] RefreshStatusAsync starting");
         try
         {
-            var statusTask = PlaybackBackendService.GetBackendStatusAsync();
-            var capabilitiesTask = PlaybackBackendService.GetBackendCapabilitiesAsync();
+            // Use a short timeout for status refresh to prevent blocking
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            cts.CancelAfter(TimeSpan.FromSeconds(5));
+            
+            var statusTask = PlaybackBackendService.GetBackendStatusAsync(cts.Token);
+            var capabilitiesTask = PlaybackBackendService.GetBackendCapabilitiesAsync(cts.Token);
 
             await Task.WhenAll(statusTask, capabilitiesTask);
 
             _status = statusTask.Result.Data;
             _capabilities = capabilitiesTask.Result.Data;
+
+            Logger.LogDebug("[Jukebox] Status refresh completed: IsConnected={IsConnected}, IsPlaying={IsPlaying}, BackendInfo={BackendInfo}", 
+                _status?.IsConnected, _status?.IsPlaying, _capabilities?.BackendInfo);
 
             if (_status?.Volume.HasValue == true)
             {
@@ -274,10 +327,19 @@
 
             await InvokeAsync(StateHasChanged);
         }
+        catch (OperationCanceledException)
+        {
+            Logger.LogDebug("[Jukebox] Status refresh cancelled or timed out");
+        }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error refreshing status");
+            Logger.LogError(ex, "[Jukebox] Error refreshing status");
         }
+    }
+
+    private async Task OnRefreshClickAsync()
+    {
+        await RefreshStatusAsync(CancellationToken.None);
     }
 
     private void OnPlayAsync()

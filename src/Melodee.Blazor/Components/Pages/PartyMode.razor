@@ -160,6 +160,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        Logger.LogDebug("[PartyMode] OnInitializedAsync starting");
         await LoadDataAsync();
     }
 
@@ -168,12 +169,16 @@
         try
         {
             _isLoading = true;
+            Logger.LogDebug("[PartyMode] LoadDataAsync starting");
             
             var configuration = await ConfigurationFactory.GetConfigurationAsync();
             _partyModeEnabled = configuration.GetValue<bool>(SettingRegistry.PartyModeEnabled);
             
+            Logger.LogDebug("[PartyMode] PartyModeEnabled={PartyModeEnabled}", _partyModeEnabled);
+            
             if (_partyModeEnabled)
             {
+                Logger.LogDebug("[PartyMode] Loading sessions...");
                 var mySessionsTask = PartyModeService.GetMySessionsAsync();
                 var activeSessionsTask = PartyModeService.GetActiveSessionsAsync();
                 
@@ -183,16 +188,24 @@
                 _activeSessions = (activeSessionsTask.Result ?? [])
                     .Where(s => !_mySessions.Any(m => m.ApiKey == s.ApiKey))
                     .ToList();
+                
+                Logger.LogDebug("[PartyMode] Loaded {MySessionCount} user sessions, {ActiveSessionCount} active public sessions", 
+                    _mySessions.Count, _activeSessions.Count);
+            }
+            else
+            {
+                Logger.LogDebug("[PartyMode] Party Mode is disabled, skipping session load");
             }
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error loading party mode data");
+            Logger.LogError(ex, "[PartyMode] Error loading party mode data");
             NotificationService.Notify(NotificationSeverity.Error, L("Common.Error"), L("PartyMode.LoadError"));
         }
         finally
         {
             _isLoading = false;
+            Logger.LogDebug("[PartyMode] LoadDataAsync completed, IsLoading={IsLoading}", _isLoading);
         }
     }
 
@@ -200,12 +213,15 @@
     {
         if (string.IsNullOrWhiteSpace(_newSessionName))
         {
+            Logger.LogDebug("[PartyMode] CreateSessionAsync: Empty session name, aborting");
             return;
         }
         
         try
         {
             _isCreating = true;
+            Logger.LogDebug("[PartyMode] Creating session: Name={SessionName}, RequireJoinCode={RequireJoinCode}", 
+                _newSessionName, _requireJoinCode);
             
             var result = await PartyModeService.CreateSessionAsync(
                 _newSessionName, 
@@ -213,17 +229,20 @@
             
             if (result?.IsSuccess == true && result.Data != null)
             {
+                Logger.LogInformation("[PartyMode] Session created successfully: ApiKey={SessionApiKey}", result.Data.ApiKey);
                 NotificationService.Notify(NotificationSeverity.Success, L("Common.Success"), L("PartyMode.SessionCreated"));
                 NavigationManager.NavigateTo($"/party/{result.Data.ApiKey}");
             }
             else
             {
+                Logger.LogWarning("[PartyMode] Session creation failed: {Messages}", 
+                    result?.Messages != null ? string.Join(", ", result.Messages) : "No details");
                 NotificationService.Notify(NotificationSeverity.Error, L("Common.Error"), L("PartyMode.CreateFailed"));
             }
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error creating party session");
+            Logger.LogError(ex, "[PartyMode] Exception creating party session");
             NotificationService.Notify(NotificationSeverity.Error, L("Common.Error"), L("PartyMode.CreateFailed"));
         }
         finally
@@ -236,11 +255,15 @@
     {
         if (string.IsNullOrWhiteSpace(_joinSessionCode))
         {
+            Logger.LogDebug("[PartyMode] JoinByCodeAsync: Empty session code, aborting");
             return;
         }
         
+        Logger.LogDebug("[PartyMode] Attempting to join session by code: {JoinCode}", _joinSessionCode);
+        
         if (!Guid.TryParse(_joinSessionCode, out var sessionApiKey))
         {
+            Logger.LogWarning("[PartyMode] Invalid session code format: {JoinCode}", _joinSessionCode);
             NotificationService.Notify(NotificationSeverity.Warning, L("Common.Warning"), L("PartyMode.InvalidSessionCode"));
             return;
         }
@@ -253,21 +276,25 @@
         try
         {
             _isJoining = true;
+            Logger.LogDebug("[PartyMode] Joining session: ApiKey={SessionApiKey}", sessionApiKey);
             
             var result = await PartyModeService.JoinSessionAsync(sessionApiKey);
             
             if (result?.IsSuccess == true)
             {
+                Logger.LogInformation("[PartyMode] Successfully joined session: ApiKey={SessionApiKey}", sessionApiKey);
                 NavigationManager.NavigateTo($"/party/{sessionApiKey}");
             }
             else
             {
+                Logger.LogWarning("[PartyMode] Failed to join session: ApiKey={SessionApiKey}, Messages={Messages}", 
+                    sessionApiKey, result?.Messages != null ? string.Join(", ", result.Messages) : "No details");
                 NotificationService.Notify(NotificationSeverity.Error, L("Common.Error"), L("PartyMode.JoinFailed"));
             }
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error joining party session");
+            Logger.LogError(ex, "[PartyMode] Exception joining party session: ApiKey={SessionApiKey}", sessionApiKey);
             NotificationService.Notify(NotificationSeverity.Error, L("Common.Error"), L("PartyMode.JoinFailed"));
         }
         finally
@@ -278,6 +305,7 @@
 
     private void NavigateToSession(Guid sessionApiKey)
     {
+        Logger.LogDebug("[PartyMode] Navigating to session: ApiKey={SessionApiKey}", sessionApiKey);
         NavigationManager.NavigateTo($"/party/{sessionApiKey}");
     }
 }

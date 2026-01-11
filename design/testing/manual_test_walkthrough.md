@@ -7,17 +7,20 @@ This guide outlines the steps to manually verify the Party Mode and Jukebox func
 1.  **Configuration**: Party Mode and Jukebox are **separate features** with independent enable settings. Configure them through the admin UI or directly in the database:
 
     **Party Mode Settings:**
+
     | Setting Key | Description | Example Value |
     |-------------|-------------|---------------|
     | `partyMode.enabled` | Enable/disable Party Mode | `true` |
 
     **Jukebox Settings:**
+
     | Setting Key | Description | Example Value |
     |-------------|-------------|---------------|
     | `jukebox.enabled` | Enable/disable Jukebox | `true` |
     | `jukebox.backendType` | Backend type (`mpv` or `mpd`) | `mpv` |
     
     **For MPV backend**, also configure:
+
     | Setting Key | Description | Example Value |
     |-------------|-------------|---------------|
     | `mpv.path` | Path to MPV executable | `/usr/bin/mpv` |
@@ -26,6 +29,7 @@ This guide outlines the steps to manually verify the Party Mode and Jukebox func
     | `mpv.initialVolume` | Initial volume (0.0-1.0) | `0.8` |
     
     **For MPD backend**, configure:
+
     | Setting Key | Description | Example Value |
     |-------------|-------------|---------------|
     | `mpd.host` | MPD server hostname | `localhost` |

@@ -20,131 +20,153 @@ public class PartyModeService
 
     public async Task<OperationResult<PartySessionDto>?> CreateSessionAsync(string name, string? joinCode = null)
     {
+        _logger.LogDebug("[PartyModeService] CreateSessionAsync: Name={Name}, HasJoinCode={HasJoinCode}", name, joinCode != null);
         try
         {
             var request = new { Name = name, JoinCode = joinCode };
             var response = await _httpClient.PostAsJsonAsync(BasePath, request);
             if (response.IsSuccessStatusCode)
             {
-                return await response.Content.ReadFromJsonAsync<OperationResult<PartySessionDto>>();
+                var result = await response.Content.ReadFromJsonAsync<OperationResult<PartySessionDto>>();
+                _logger.LogDebug("[PartyModeService] CreateSessionAsync succeeded: ApiKey={ApiKey}", result?.Data?.ApiKey);
+                return result;
             }
-            _logger.LogWarning("Failed to create party session: {StatusCode}", response.StatusCode);
+            _logger.LogWarning("[PartyModeService] CreateSessionAsync failed: StatusCode={StatusCode}", response.StatusCode);
             return null;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating party session");
+            _logger.LogError(ex, "[PartyModeService] Exception in CreateSessionAsync");
             return null;
         }
     }
 
     public async Task<IEnumerable<PartySessionDto>?> GetMySessionsAsync()
     {
+        _logger.LogDebug("[PartyModeService] GetMySessionsAsync starting");
         try
         {
             var response = await _httpClient.GetAsync($"{BasePath}/my");
             if (response.IsSuccessStatusCode)
             {
-                return await response.Content.ReadFromJsonAsync<IEnumerable<PartySessionDto>>();
+                var result = await response.Content.ReadFromJsonAsync<IEnumerable<PartySessionDto>>();
+                _logger.LogDebug("[PartyModeService] GetMySessionsAsync succeeded: Count={Count}", result?.Count() ?? 0);
+                return result;
             }
-            _logger.LogWarning("Failed to get my party sessions: {StatusCode}", response.StatusCode);
+            _logger.LogWarning("[PartyModeService] GetMySessionsAsync failed: StatusCode={StatusCode}", response.StatusCode);
             return null;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting my party sessions");
+            _logger.LogError(ex, "[PartyModeService] Exception in GetMySessionsAsync");
             return null;
         }
     }
 
     public async Task<IEnumerable<PartySessionDto>?> GetActiveSessionsAsync()
     {
+        _logger.LogDebug("[PartyModeService] GetActiveSessionsAsync starting");
         try
         {
             var response = await _httpClient.GetAsync($"{BasePath}/active");
             if (response.IsSuccessStatusCode)
             {
-                return await response.Content.ReadFromJsonAsync<IEnumerable<PartySessionDto>>();
+                var result = await response.Content.ReadFromJsonAsync<IEnumerable<PartySessionDto>>();
+                _logger.LogDebug("[PartyModeService] GetActiveSessionsAsync succeeded: Count={Count}", result?.Count() ?? 0);
+                return result;
             }
-            _logger.LogWarning("Failed to get active party sessions: {StatusCode}", response.StatusCode);
+            _logger.LogWarning("[PartyModeService] GetActiveSessionsAsync failed: StatusCode={StatusCode}", response.StatusCode);
             return null;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting active party sessions");
+            _logger.LogError(ex, "[PartyModeService] Exception in GetActiveSessionsAsync");
             return null;
         }
     }
 
     public async Task<OperationResult<PartySessionDto>?> GetSessionAsync(Guid sessionApiKey)
     {
+        _logger.LogDebug("[PartyModeService] GetSessionAsync: ApiKey={ApiKey}", sessionApiKey);
         try
         {
             var response = await _httpClient.GetAsync($"{BasePath}/{sessionApiKey}");
             if (response.IsSuccessStatusCode)
             {
-                return await response.Content.ReadFromJsonAsync<OperationResult<PartySessionDto>>();
+                var result = await response.Content.ReadFromJsonAsync<OperationResult<PartySessionDto>>();
+                _logger.LogDebug("[PartyModeService] GetSessionAsync succeeded: Name={Name}", result?.Data?.Name);
+                return result;
             }
-            _logger.LogWarning("Failed to get party session {ApiKey}: {StatusCode}", sessionApiKey, response.StatusCode);
+            _logger.LogWarning("[PartyModeService] GetSessionAsync failed: ApiKey={ApiKey}, StatusCode={StatusCode}", sessionApiKey, response.StatusCode);
             return null;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting party session {ApiKey}", sessionApiKey);
+            _logger.LogError(ex, "[PartyModeService] Exception in GetSessionAsync: ApiKey={ApiKey}", sessionApiKey);
             return null;
         }
     }
 
     public async Task<OperationResult<PartySessionParticipantDto>?> JoinSessionAsync(Guid sessionApiKey, string? joinCode = null)
     {
+        _logger.LogDebug("[PartyModeService] JoinSessionAsync: ApiKey={ApiKey}, HasJoinCode={HasJoinCode}", sessionApiKey, joinCode != null);
         try
         {
             var request = new { JoinCode = joinCode };
             var response = await _httpClient.PostAsJsonAsync($"{BasePath}/{sessionApiKey}/join", request);
             if (response.IsSuccessStatusCode)
             {
-                return await response.Content.ReadFromJsonAsync<OperationResult<PartySessionParticipantDto>>();
+                var result = await response.Content.ReadFromJsonAsync<OperationResult<PartySessionParticipantDto>>();
+                _logger.LogDebug("[PartyModeService] JoinSessionAsync succeeded: ApiKey={ApiKey}", sessionApiKey);
+                return result;
             }
-            _logger.LogWarning("Failed to join party session {ApiKey}: {StatusCode}", sessionApiKey, response.StatusCode);
+            _logger.LogWarning("[PartyModeService] JoinSessionAsync failed: ApiKey={ApiKey}, StatusCode={StatusCode}", sessionApiKey, response.StatusCode);
             return null;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error joining party session {ApiKey}", sessionApiKey);
+            _logger.LogError(ex, "[PartyModeService] Exception in JoinSessionAsync: ApiKey={ApiKey}", sessionApiKey);
             return null;
         }
     }
 
     public async Task<bool> LeaveSessionAsync(Guid sessionApiKey)
     {
+        _logger.LogDebug("[PartyModeService] LeaveSessionAsync: ApiKey={ApiKey}", sessionApiKey);
         try
         {
             var response = await _httpClient.PostAsync($"{BasePath}/{sessionApiKey}/leave", null);
-            return response.IsSuccessStatusCode;
+            var success = response.IsSuccessStatusCode;
+            _logger.LogDebug("[PartyModeService] LeaveSessionAsync: ApiKey={ApiKey}, Success={Success}", sessionApiKey, success);
+            return success;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error leaving party session {ApiKey}", sessionApiKey);
+            _logger.LogError(ex, "[PartyModeService] Exception in LeaveSessionAsync: ApiKey={ApiKey}", sessionApiKey);
             return false;
         }
     }
 
     public async Task<bool> EndSessionAsync(Guid sessionApiKey)
     {
+        _logger.LogDebug("[PartyModeService] EndSessionAsync: ApiKey={ApiKey}", sessionApiKey);
         try
         {
             var response = await _httpClient.PostAsync($"{BasePath}/{sessionApiKey}/end", null);
-            return response.IsSuccessStatusCode;
+            var success = response.IsSuccessStatusCode;
+            _logger.LogDebug("[PartyModeService] EndSessionAsync: ApiKey={ApiKey}, Success={Success}", sessionApiKey, success);
+            return success;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error ending party session {ApiKey}", sessionApiKey);
+            _logger.LogError(ex, "[PartyModeService] Exception in EndSessionAsync: ApiKey={ApiKey}", sessionApiKey);
             return false;
         }
     }
 
     public async Task<OperationResult<IEnumerable<PartySessionParticipantDto>>?> GetParticipantsAsync(Guid sessionApiKey)
     {
+        _logger.LogDebug("[PartyModeService] GetParticipantsAsync: ApiKey={ApiKey}", sessionApiKey);
         try
         {
             var response = await _httpClient.GetAsync($"{BasePath}/{sessionApiKey}/participants");
@@ -152,17 +174,19 @@ public class PartyModeService
             {
                 return await response.Content.ReadFromJsonAsync<OperationResult<IEnumerable<PartySessionParticipantDto>>>();
             }
+            _logger.LogWarning("[PartyModeService] GetParticipantsAsync failed: ApiKey={ApiKey}, StatusCode={StatusCode}", sessionApiKey, response.StatusCode);
             return null;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting participants for session {ApiKey}", sessionApiKey);
+            _logger.LogError(ex, "[PartyModeService] Exception in GetParticipantsAsync: ApiKey={ApiKey}", sessionApiKey);
             return null;
         }
     }
 
     public async Task<OperationResult<QueueResponseDto>?> GetQueueAsync(Guid sessionApiKey)
     {
+        _logger.LogDebug("[PartyModeService] GetQueueAsync: ApiKey={ApiKey}", sessionApiKey);
         try
         {
             var response = await _httpClient.GetAsync($"{BasePath}/{sessionApiKey}/queue");
@@ -170,11 +194,12 @@ public class PartyModeService
             {
                 return await response.Content.ReadFromJsonAsync<OperationResult<QueueResponseDto>>();
             }
+            _logger.LogWarning("[PartyModeService] GetQueueAsync failed: ApiKey={ApiKey}, StatusCode={StatusCode}", sessionApiKey, response.StatusCode);
             return null;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting queue for session {ApiKey}", sessionApiKey);
+            _logger.LogError(ex, "[PartyModeService] Exception in GetQueueAsync: ApiKey={ApiKey}", sessionApiKey);
             return null;
         }
     }
@@ -185,6 +210,8 @@ public class PartyModeService
         string? source = null,
         long expectedRevision = 1)
     {
+        _logger.LogDebug("[PartyModeService] AddToQueueAsync: ApiKey={ApiKey}, SongCount={SongCount}, ExpectedRevision={ExpectedRevision}", 
+            sessionApiKey, songApiKeys.Count(), expectedRevision);
         try
         {
             var request = new { SongApiKeys = songApiKeys, Source = source, ExpectedRevision = expectedRevision };
@@ -195,19 +222,24 @@ public class PartyModeService
             }
             if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
             {
-                _logger.LogWarning("Queue conflict when adding items to session {ApiKey}", sessionApiKey);
+                _logger.LogWarning("[PartyModeService] AddToQueueAsync conflict (revision mismatch): ApiKey={ApiKey}", sessionApiKey);
+            }
+            else
+            {
+                _logger.LogWarning("[PartyModeService] AddToQueueAsync failed: ApiKey={ApiKey}, StatusCode={StatusCode}", sessionApiKey, response.StatusCode);
             }
             return null;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error adding items to queue for session {ApiKey}", sessionApiKey);
+            _logger.LogError(ex, "[PartyModeService] Exception in AddToQueueAsync: ApiKey={ApiKey}", sessionApiKey);
             return null;
         }
     }
 
     public async Task<OperationResult<long>?> RemoveFromQueueAsync(Guid sessionApiKey, Guid itemApiKey, long expectedRevision)
     {
+        _logger.LogDebug("[PartyModeService] RemoveFromQueueAsync: SessionApiKey={SessionApiKey}, ItemApiKey={ItemApiKey}", sessionApiKey, itemApiKey);
         try
         {
             var response = await _httpClient.DeleteAsync(
@@ -216,11 +248,12 @@ public class PartyModeService
             {
                 return await response.Content.ReadFromJsonAsync<OperationResult<long>>();
             }
+            _logger.LogWarning("[PartyModeService] RemoveFromQueueAsync failed: SessionApiKey={SessionApiKey}, StatusCode={StatusCode}", sessionApiKey, response.StatusCode);
             return null;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error removing item from queue for session {ApiKey}", sessionApiKey);
+            _logger.LogError(ex, "[PartyModeService] Exception in RemoveFromQueueAsync: SessionApiKey={SessionApiKey}", sessionApiKey);
             return null;
         }
     }
@@ -231,6 +264,8 @@ public class PartyModeService
         int newIndex,
         long expectedRevision)
     {
+        _logger.LogDebug("[PartyModeService] ReorderQueueItemAsync: SessionApiKey={SessionApiKey}, ItemApiKey={ItemApiKey}, NewIndex={NewIndex}", 
+            sessionApiKey, itemApiKey, newIndex);
         try
         {
             var request = new { NewIndex = newIndex, ExpectedRevision = expectedRevision };
@@ -240,17 +275,19 @@ public class PartyModeService
             {
                 return await response.Content.ReadFromJsonAsync<OperationResult<long>>();
             }
+            _logger.LogWarning("[PartyModeService] ReorderQueueItemAsync failed: SessionApiKey={SessionApiKey}, StatusCode={StatusCode}", sessionApiKey, response.StatusCode);
             return null;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error reordering queue item for session {ApiKey}", sessionApiKey);
+            _logger.LogError(ex, "[PartyModeService] Exception in ReorderQueueItemAsync: SessionApiKey={SessionApiKey}", sessionApiKey);
             return null;
         }
     }
 
     public async Task<OperationResult<long>?> ClearQueueAsync(Guid sessionApiKey, long expectedRevision)
     {
+        _logger.LogDebug("[PartyModeService] ClearQueueAsync: SessionApiKey={SessionApiKey}, ExpectedRevision={ExpectedRevision}", sessionApiKey, expectedRevision);
         try
         {
             var response = await _httpClient.PostAsync(
@@ -259,17 +296,19 @@ public class PartyModeService
             {
                 return await response.Content.ReadFromJsonAsync<OperationResult<long>>();
             }
+            _logger.LogWarning("[PartyModeService] ClearQueueAsync failed: SessionApiKey={SessionApiKey}, StatusCode={StatusCode}", sessionApiKey, response.StatusCode);
             return null;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error clearing queue for session {ApiKey}", sessionApiKey);
+            _logger.LogError(ex, "[PartyModeService] Exception in ClearQueueAsync: SessionApiKey={SessionApiKey}", sessionApiKey);
             return null;
         }
     }
 
     public async Task<OperationResult<PartyPlaybackStateDto>?> GetPlaybackStateAsync(Guid sessionApiKey)
     {
+        _logger.LogDebug("[PartyModeService] GetPlaybackStateAsync: ApiKey={ApiKey}", sessionApiKey);
         try
         {
             var response = await _httpClient.GetAsync($"{BasePath}/{sessionApiKey}/playback");
@@ -277,17 +316,19 @@ public class PartyModeService
             {
                 return await response.Content.ReadFromJsonAsync<OperationResult<PartyPlaybackStateDto>>();
             }
+            _logger.LogWarning("[PartyModeService] GetPlaybackStateAsync failed: ApiKey={ApiKey}, StatusCode={StatusCode}", sessionApiKey, response.StatusCode);
             return null;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting playback state for session {ApiKey}", sessionApiKey);
+            _logger.LogError(ex, "[PartyModeService] Exception in GetPlaybackStateAsync: ApiKey={ApiKey}", sessionApiKey);
             return null;
         }
     }
 
     public async Task<OperationResult<PartyPlaybackStateDto>?> PlayAsync(Guid sessionApiKey, double? position = null, long expectedRevision = 0)
     {
+        _logger.LogDebug("[PartyModeService] PlayAsync: ApiKey={ApiKey}, Position={Position}", sessionApiKey, position);
         try
         {
             var request = new { PositionSeconds = position, ExpectedRevision = expectedRevision };
@@ -296,17 +337,19 @@ public class PartyModeService
             {
                 return await response.Content.ReadFromJsonAsync<OperationResult<PartyPlaybackStateDto>>();
             }
+            _logger.LogWarning("[PartyModeService] PlayAsync failed: ApiKey={ApiKey}, StatusCode={StatusCode}", sessionApiKey, response.StatusCode);
             return null;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error playing session {ApiKey}", sessionApiKey);
+            _logger.LogError(ex, "[PartyModeService] Exception in PlayAsync: ApiKey={ApiKey}", sessionApiKey);
             return null;
         }
     }
 
     public async Task<OperationResult<PartyPlaybackStateDto>?> PauseAsync(Guid sessionApiKey, double? position = null, long expectedRevision = 0)
     {
+        _logger.LogDebug("[PartyModeService] PauseAsync: ApiKey={ApiKey}, Position={Position}", sessionApiKey, position);
         try
         {
             var request = new { PositionSeconds = position, ExpectedRevision = expectedRevision };
@@ -315,17 +358,19 @@ public class PartyModeService
             {
                 return await response.Content.ReadFromJsonAsync<OperationResult<PartyPlaybackStateDto>>();
             }
+            _logger.LogWarning("[PartyModeService] PauseAsync failed: ApiKey={ApiKey}, StatusCode={StatusCode}", sessionApiKey, response.StatusCode);
             return null;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error pausing session {ApiKey}", sessionApiKey);
+            _logger.LogError(ex, "[PartyModeService] Exception in PauseAsync: ApiKey={ApiKey}", sessionApiKey);
             return null;
         }
     }
 
     public async Task<OperationResult<PartyPlaybackStateDto>?> SkipAsync(Guid sessionApiKey, long expectedRevision)
     {
+        _logger.LogDebug("[PartyModeService] SkipAsync: ApiKey={ApiKey}, ExpectedRevision={ExpectedRevision}", sessionApiKey, expectedRevision);
         try
         {
             var request = new { ExpectedRevision = expectedRevision };
@@ -334,17 +379,19 @@ public class PartyModeService
             {
                 return await response.Content.ReadFromJsonAsync<OperationResult<PartyPlaybackStateDto>>();
             }
+            _logger.LogWarning("[PartyModeService] SkipAsync failed: ApiKey={ApiKey}, StatusCode={StatusCode}", sessionApiKey, response.StatusCode);
             return null;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error skipping in session {ApiKey}", sessionApiKey);
+            _logger.LogError(ex, "[PartyModeService] Exception in SkipAsync: ApiKey={ApiKey}", sessionApiKey);
             return null;
         }
     }
 
     public async Task<OperationResult<PartyPlaybackStateDto>?> SeekAsync(Guid sessionApiKey, double position, long expectedRevision)
     {
+        _logger.LogDebug("[PartyModeService] SeekAsync: ApiKey={ApiKey}, Position={Position}", sessionApiKey, position);
         try
         {
             var request = new { PositionSeconds = position, ExpectedRevision = expectedRevision };
@@ -353,17 +400,19 @@ public class PartyModeService
             {
                 return await response.Content.ReadFromJsonAsync<OperationResult<PartyPlaybackStateDto>>();
             }
+            _logger.LogWarning("[PartyModeService] SeekAsync failed: ApiKey={ApiKey}, StatusCode={StatusCode}", sessionApiKey, response.StatusCode);
             return null;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error seeking in session {ApiKey}", sessionApiKey);
+            _logger.LogError(ex, "[PartyModeService] Exception in SeekAsync: ApiKey={ApiKey}", sessionApiKey);
             return null;
         }
     }
 
     public async Task<OperationResult<PartyPlaybackStateDto>?> SetVolumeAsync(Guid sessionApiKey, double volume)
     {
+        _logger.LogDebug("[PartyModeService] SetVolumeAsync: ApiKey={ApiKey}, Volume={Volume}", sessionApiKey, volume);
         try
         {
             var request = new { Volume = volume };
@@ -372,11 +421,12 @@ public class PartyModeService
             {
                 return await response.Content.ReadFromJsonAsync<OperationResult<PartyPlaybackStateDto>>();
             }
+            _logger.LogWarning("[PartyModeService] SetVolumeAsync failed: ApiKey={ApiKey}, StatusCode={StatusCode}", sessionApiKey, response.StatusCode);
             return null;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error setting volume for session {ApiKey}", sessionApiKey);
+            _logger.LogError(ex, "[PartyModeService] Exception in SetVolumeAsync: ApiKey={ApiKey}", sessionApiKey);
             return null;
         }
     }
@@ -387,6 +437,7 @@ public class PartyModeService
 
     public async Task<OperationResult<IEnumerable<SessionEndpointDto>>?> GetEndpointsForSessionAsync(Guid sessionApiKey)
     {
+        _logger.LogDebug("[PartyModeService] GetEndpointsForSessionAsync: ApiKey={ApiKey}", sessionApiKey);
         try
         {
             var response = await _httpClient.GetAsync($"{EndpointsBasePath}/for-session/{sessionApiKey}");
@@ -394,40 +445,47 @@ public class PartyModeService
             {
                 return await response.Content.ReadFromJsonAsync<OperationResult<IEnumerable<SessionEndpointDto>>>();
             }
+            _logger.LogWarning("[PartyModeService] GetEndpointsForSessionAsync failed: ApiKey={ApiKey}, StatusCode={StatusCode}", sessionApiKey, response.StatusCode);
             return null;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting endpoints for session {ApiKey}", sessionApiKey);
+            _logger.LogError(ex, "[PartyModeService] Exception in GetEndpointsForSessionAsync: ApiKey={ApiKey}", sessionApiKey);
             return null;
         }
     }
 
     public async Task<bool> AttachEndpointAsync(Guid endpointApiKey, Guid sessionApiKey)
     {
+        _logger.LogDebug("[PartyModeService] AttachEndpointAsync: EndpointApiKey={EndpointApiKey}, SessionApiKey={SessionApiKey}", endpointApiKey, sessionApiKey);
         try
         {
             var request = new { SessionApiKey = sessionApiKey };
             var response = await _httpClient.PostAsJsonAsync($"{EndpointsBasePath}/{endpointApiKey}/attach", request);
-            return response.IsSuccessStatusCode;
+            var success = response.IsSuccessStatusCode;
+            _logger.LogDebug("[PartyModeService] AttachEndpointAsync: Success={Success}", success);
+            return success;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error attaching endpoint {EndpointApiKey} to session {SessionApiKey}", endpointApiKey, sessionApiKey);
+            _logger.LogError(ex, "[PartyModeService] Exception in AttachEndpointAsync: EndpointApiKey={EndpointApiKey}", endpointApiKey);
             return false;
         }
     }
 
     public async Task<bool> DetachEndpointAsync(Guid endpointApiKey)
     {
+        _logger.LogDebug("[PartyModeService] DetachEndpointAsync: EndpointApiKey={EndpointApiKey}", endpointApiKey);
         try
         {
             var response = await _httpClient.PostAsync($"{EndpointsBasePath}/{endpointApiKey}/detach", null);
-            return response.IsSuccessStatusCode;
+            var success = response.IsSuccessStatusCode;
+            _logger.LogDebug("[PartyModeService] DetachEndpointAsync: Success={Success}", success);
+            return success;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error detaching endpoint {EndpointApiKey}", endpointApiKey);
+            _logger.LogError(ex, "[PartyModeService] Exception in DetachEndpointAsync: EndpointApiKey={EndpointApiKey}", endpointApiKey);
             return false;
         }
     }
