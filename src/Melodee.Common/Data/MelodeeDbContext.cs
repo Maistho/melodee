@@ -1613,6 +1613,159 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
                     Comment = "Delete downloaded episodes after they have been played. false to disable.",
                     Value = "false",
                     CreatedAt = seedDataTimestamp
+                },
+                // Jukebox settings
+                new Setting
+                {
+                    Id = 1900,
+                    ApiKey = SeedGuid("Setting", 1900),
+                    Category = (int)SettingCategory.Jukebox,
+                    Key = SettingRegistry.JukeboxEnabled,
+                    Comment = "Enable Jukebox support for server-side playback.",
+                    Value = "false",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1901,
+                    ApiKey = SeedGuid("Setting", 1901),
+                    Category = (int)SettingCategory.Jukebox,
+                    Key = SettingRegistry.JukeboxBackendType,
+                    Comment = "The type of backend to use for jukebox playback (e.g., 'mpv', 'mpd'). Leave empty for no backend.",
+                    Value = "",
+                    CreatedAt = seedDataTimestamp
+                },
+                // MPV Backend settings
+                new Setting
+                {
+                    Id = 1910,
+                    ApiKey = SeedGuid("Setting", 1910),
+                    Category = (int)SettingCategory.Jukebox,
+                    Key = SettingRegistry.MpvPath,
+                    Comment = "Path to the MPV executable. Leave empty to use system PATH.",
+                    Value = "",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1911,
+                    ApiKey = SeedGuid("Setting", 1911),
+                    Category = (int)SettingCategory.Jukebox,
+                    Key = SettingRegistry.MpvAudioDevice,
+                    Comment = "Audio device to use for MPV playback. Leave empty for default device.",
+                    Value = "",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1912,
+                    ApiKey = SeedGuid("Setting", 1912),
+                    Category = (int)SettingCategory.Jukebox,
+                    Key = SettingRegistry.MpvExtraArgs,
+                    Comment = "Extra command-line arguments to pass to MPV.",
+                    Value = "",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1913,
+                    ApiKey = SeedGuid("Setting", 1913),
+                    Category = (int)SettingCategory.Jukebox,
+                    Key = SettingRegistry.MpvSocketPath,
+                    Comment = "Path for the MPV IPC socket. Leave empty for auto temp directory.",
+                    Value = "",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1914,
+                    ApiKey = SeedGuid("Setting", 1914),
+                    Category = (int)SettingCategory.Jukebox,
+                    Key = SettingRegistry.MpvInitialVolume,
+                    Comment = "Initial volume level for MPV (0.0 to 1.0). Default is 0.8.",
+                    Value = "0.8",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1915,
+                    ApiKey = SeedGuid("Setting", 1915),
+                    Category = (int)SettingCategory.Jukebox,
+                    Key = SettingRegistry.MpvEnableDebugOutput,
+                    Comment = "Enable verbose debug output for MPV.",
+                    Value = "false",
+                    CreatedAt = seedDataTimestamp
+                },
+                // MPD Backend settings
+                new Setting
+                {
+                    Id = 1920,
+                    ApiKey = SeedGuid("Setting", 1920),
+                    Category = (int)SettingCategory.Jukebox,
+                    Key = SettingRegistry.MpdInstanceName,
+                    Comment = "Unique name/identifier for this MPD instance (for multi-instance support).",
+                    Value = "",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1921,
+                    ApiKey = SeedGuid("Setting", 1921),
+                    Category = (int)SettingCategory.Jukebox,
+                    Key = SettingRegistry.MpdHost,
+                    Comment = "Hostname or IP address of the MPD server.",
+                    Value = "localhost",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1922,
+                    ApiKey = SeedGuid("Setting", 1922),
+                    Category = (int)SettingCategory.Jukebox,
+                    Key = SettingRegistry.MpdPort,
+                    Comment = "Port number for MPD connection.",
+                    Value = "6600",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1923,
+                    ApiKey = SeedGuid("Setting", 1923),
+                    Category = (int)SettingCategory.Jukebox,
+                    Key = SettingRegistry.MpdPassword,
+                    Comment = "Password for MPD authentication. Leave empty if no password.",
+                    Value = "",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1924,
+                    ApiKey = SeedGuid("Setting", 1924),
+                    Category = (int)SettingCategory.Jukebox,
+                    Key = SettingRegistry.MpdTimeoutMs,
+                    Comment = "Timeout for MPD TCP connection and operations in milliseconds.",
+                    Value = "10000",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1925,
+                    ApiKey = SeedGuid("Setting", 1925),
+                    Category = (int)SettingCategory.Jukebox,
+                    Key = SettingRegistry.MpdInitialVolume,
+                    Comment = "Initial volume level for MPD (0.0 to 1.0). Default is 0.8.",
+                    Value = "0.8",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1926,
+                    ApiKey = SeedGuid("Setting", 1926),
+                    Category = (int)SettingCategory.Jukebox,
+                    Key = SettingRegistry.MpdEnableDebugOutput,
+                    Comment = "Enable debug logging for MPD commands.",
+                    Value = "false",
+                    CreatedAt = seedDataTimestamp
                 }
             );
         });

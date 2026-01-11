@@ -1,6 +1,7 @@
 using System.Net;
 using Melodee.Blazor.Filters;
 using Melodee.Common.Configuration;
+using Melodee.Common.Constants;
 using Melodee.Common.Models;
 using Melodee.Common.Models.OpenSubsonic;
 using Melodee.Common.Models.OpenSubsonic.Responses;
@@ -8,7 +9,6 @@ using Melodee.Common.Models.OpenSubsonic.Responses.Jukebox;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services.Jukebox;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using Serilog;
 
 namespace Melodee.Blazor.Controllers.OpenSubsonic;
@@ -22,7 +22,6 @@ public class JukeboxController(
     ISerializer serializer,
     EtagRepository etagRepository,
     IMelodeeConfigurationFactory configurationFactory,
-    IOptions<JukeboxOptions> jukeboxOptions,
     ISubsonicJukeboxService subsonicJukeboxService,
     global::Melodee.Common.Services.OpenSubsonicApiService openSubsonicApiService)
     : ControllerBase(etagRepository, serializer, configurationFactory)
@@ -44,7 +43,11 @@ public class JukeboxController(
         [FromQuery] string? ids = null,
         CancellationToken cancellationToken = default)
     {
-        if (!jukeboxOptions.Value.Enabled || string.IsNullOrEmpty(jukeboxOptions.Value.BackendType))
+        var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
+        var jukeboxEnabled = configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled);
+        var backendType = configuration.GetValue<string>(SettingRegistry.JukeboxBackendType);
+
+        if (!jukeboxEnabled || string.IsNullOrEmpty(backendType))
         {
             HttpContext.Response.Headers.Append("Cache-Control", "no-cache");
             return StatusCode((int)HttpStatusCode.Gone);

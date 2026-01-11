@@ -36,6 +36,21 @@ namespace Melodee.Common.Migrations
                     b.Property<Instant>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("ApiKey")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(62000)
+                        .HasColumnType("character varying(62000)");
+
+
+
+                    b.Property<bool>("IsLocked")
+                        .HasColumnType("boolean");
+
+                    b.Property<Instant?>("LastUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<int>("EventType")
                         .HasColumnType("integer");
 
@@ -47,11 +62,19 @@ namespace Melodee.Common.Migrations
                         .HasMaxLength(62000)
                         .HasColumnType("character varying(62000)");
 
+                    b.Property<string>("Notes")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
                     b.Property<int>("PartySessionId")
                         .HasColumnType("integer");
 
                     b.Property<int>("SortOrder")
                         .HasColumnType("integer");
+
+                    b.Property<string>("Tags")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
 
                     b.Property<int?>("UserId")
                         .HasColumnType("integer");

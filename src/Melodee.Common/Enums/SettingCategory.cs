@@ -32,5 +32,7 @@ public enum SettingCategory
 
     Jobs,
 
-    Podcast
+    Podcast,
+
+    Jukebox
 }

@@ -1,11 +1,11 @@
 using Melodee.Common.Configuration;
+using Melodee.Common.Constants;
 using Melodee.Common.Data;
 using Melodee.Common.Models;
 using Melodee.Common.Services;
 using Melodee.Common.Services.Caching;
 using Melodee.Common.Services.Jukebox;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Moq;
 using Serilog;
 
@@ -16,7 +16,7 @@ public class SubsonicJukeboxServiceTests
     private readonly Mock<ILogger> _loggerMock;
     private readonly Mock<ICacheManager> _cacheManagerMock;
     private readonly Mock<IDbContextFactory<MelodeeDbContext>> _contextFactoryMock;
-    private readonly Mock<IOptions<JukeboxOptions>> _jukeboxOptionsMock;
+    private readonly Mock<IMelodeeConfigurationFactory> _configurationFactoryMock;
     private readonly Mock<IPartyQueueService> _partyQueueServiceMock;
     private readonly Mock<IPartyPlaybackService> _partyPlaybackServiceMock;
 
@@ -25,8 +25,13 @@ public class SubsonicJukeboxServiceTests
         _loggerMock = new Mock<ILogger>();
         _cacheManagerMock = new Mock<ICacheManager>();
         _contextFactoryMock = new Mock<IDbContextFactory<MelodeeDbContext>>();
-        _jukeboxOptionsMock = new Mock<IOptions<JukeboxOptions>>();
-        _jukeboxOptionsMock.Setup(x => x.Value).Returns(new JukeboxOptions { Enabled = false });
+        _configurationFactoryMock = new Mock<IMelodeeConfigurationFactory>();
+
+        var configMock = new Mock<IMelodeeConfiguration>();
+        configMock.Setup(x => x.GetValue<bool>(SettingRegistry.JukeboxEnabled)).Returns(false);
+        _configurationFactoryMock.Setup(x => x.GetConfigurationAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(configMock.Object);
+
         _partyQueueServiceMock = new Mock<IPartyQueueService>();
         _partyPlaybackServiceMock = new Mock<IPartyPlaybackService>();
     }
@@ -37,7 +42,7 @@ public class SubsonicJukeboxServiceTests
             _loggerMock.Object,
             _cacheManagerMock.Object,
             _contextFactoryMock.Object,
-            _jukeboxOptionsMock.Object,
+            _configurationFactoryMock.Object,
             _partyQueueServiceMock.Object,
             _partyPlaybackServiceMock.Object);
     }

@@ -1,4 +1,5 @@
 using Melodee.Common.Configuration;
+using Melodee.Common.Constants;
 using Melodee.Common.Data;
 using Melodee.Common.Data.Models;
 using Melodee.Common.Enums.PartyMode;
@@ -6,7 +7,6 @@ using Melodee.Common.Models;
 using Melodee.Common.Models.OpenSubsonic.Responses.Jukebox;
 using Melodee.Common.Services.Caching;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using NodaTime;
 using Serilog;
 
@@ -76,7 +76,7 @@ public sealed class SubsonicJukeboxService(
     ILogger logger,
     ICacheManager cacheManager,
     IDbContextFactory<MelodeeDbContext> contextFactory,
-    IOptions<JukeboxOptions> jukeboxOptions,
+    IMelodeeConfigurationFactory configurationFactory,
     IPartyQueueService partyQueueService,
     IPartyPlaybackService partyPlaybackService)
     : ServiceBase(logger, cacheManager, contextFactory), ISubsonicJukeboxService
@@ -87,7 +87,8 @@ public sealed class SubsonicJukeboxService(
 
     public async Task<OperationResult<JukeboxStatusResponse>> GetStatusAsync(CancellationToken cancellationToken = default)
     {
-        if (!jukeboxOptions.Value.Enabled)
+        var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
+        if (!configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled))
         {
             return new OperationResult<JukeboxStatusResponse>("Jukebox is not enabled")
             {
@@ -127,7 +128,8 @@ public sealed class SubsonicJukeboxService(
 
     public async Task<OperationResult<JukeboxGetResponse>> GetPlaylistAsync(CancellationToken cancellationToken = default)
     {
-        if (!jukeboxOptions.Value.Enabled)
+        var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
+        if (!configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled))
         {
             return new OperationResult<JukeboxGetResponse>("Jukebox is not enabled")
             {
@@ -156,7 +158,8 @@ public sealed class SubsonicJukeboxService(
 
     public async Task<OperationResult<bool>> SetGainAsync(double gain, CancellationToken cancellationToken = default)
     {
-        if (!jukeboxOptions.Value.Enabled)
+        var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
+        if (!configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled))
         {
             return new OperationResult<bool>("Jukebox is not enabled")
             {
@@ -191,7 +194,8 @@ public sealed class SubsonicJukeboxService(
 
     public async Task<OperationResult<bool>> StartAsync(CancellationToken cancellationToken = default)
     {
-        if (!jukeboxOptions.Value.Enabled)
+        var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
+        if (!configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled))
         {
             return new OperationResult<bool>("Jukebox is not enabled")
             {
@@ -224,7 +228,8 @@ public sealed class SubsonicJukeboxService(
 
     public async Task<OperationResult<bool>> StopAsync(CancellationToken cancellationToken = default)
     {
-        if (!jukeboxOptions.Value.Enabled)
+        var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
+        if (!configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled))
         {
             return new OperationResult<bool>("Jukebox is not enabled")
             {
@@ -257,7 +262,8 @@ public sealed class SubsonicJukeboxService(
 
     public async Task<OperationResult<bool>> SkipAsync(int? index, int? offset, CancellationToken cancellationToken = default)
     {
-        if (!jukeboxOptions.Value.Enabled)
+        var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
+        if (!configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled))
         {
             return new OperationResult<bool>("Jukebox is not enabled")
             {
@@ -290,7 +296,8 @@ public sealed class SubsonicJukeboxService(
 
     public async Task<OperationResult<bool>> AddAsync(IEnumerable<string> songIds, CancellationToken cancellationToken = default)
     {
-        if (!jukeboxOptions.Value.Enabled)
+        var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
+        if (!configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled))
         {
             return new OperationResult<bool>("Jukebox is not enabled")
             {
@@ -338,7 +345,8 @@ public sealed class SubsonicJukeboxService(
 
     public async Task<OperationResult<bool>> ClearAsync(CancellationToken cancellationToken = default)
     {
-        if (!jukeboxOptions.Value.Enabled)
+        var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
+        if (!configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled))
         {
             return new OperationResult<bool>("Jukebox is not enabled")
             {
@@ -370,7 +378,8 @@ public sealed class SubsonicJukeboxService(
 
     public async Task<OperationResult<bool>> RemoveAsync(int index, CancellationToken cancellationToken = default)
     {
-        if (!jukeboxOptions.Value.Enabled)
+        var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
+        if (!configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled))
         {
             return new OperationResult<bool>("Jukebox is not enabled")
             {
@@ -415,7 +424,8 @@ public sealed class SubsonicJukeboxService(
 
     public async Task<OperationResult<bool>> ShuffleAsync(CancellationToken cancellationToken = default)
     {
-        if (!jukeboxOptions.Value.Enabled)
+        var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
+        if (!configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled))
         {
             return new OperationResult<bool>("Jukebox is not enabled")
             {

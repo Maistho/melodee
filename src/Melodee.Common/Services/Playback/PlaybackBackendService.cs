@@ -1,13 +1,14 @@
 using Melodee.Common.Configuration;
+using Melodee.Common.Constants;
 using Melodee.Common.Data;
 using Melodee.Common.Data.Models;
 using Melodee.Common.Enums.PartyMode;
 using Melodee.Common.Models;
 using Melodee.Common.Models.PartyMode;
 using Melodee.Common.Services.Caching;
+using Melodee.Common.Services.Playback.Backends;
 using Melodee.Common.Services.Playback.Factory;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using NodaTime;
 using Serilog;
 
@@ -56,7 +57,7 @@ public sealed class PlaybackBackendService(
     ILogger logger,
     ICacheManager cacheManager,
     IDbContextFactory<MelodeeDbContext> contextFactory,
-    IOptions<JukeboxOptions> jukeboxOptions,
+    IMelodeeConfigurationFactory configurationFactory,
     PlaybackBackendFactory backendFactory)
     : ServiceBase(logger, cacheManager, contextFactory), IPlaybackBackendService
 {
@@ -65,7 +66,11 @@ public sealed class PlaybackBackendService(
 
     public async Task<OperationResult<BackendStatus>> GetBackendStatusAsync(CancellationToken cancellationToken = default)
     {
-        if (!jukeboxOptions.Value.Enabled || string.IsNullOrEmpty(jukeboxOptions.Value.BackendType))
+        var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
+        var jukeboxEnabled = configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled);
+        var backendType = configuration.GetValue<string>(SettingRegistry.JukeboxBackendType);
+
+        if (!jukeboxEnabled || string.IsNullOrEmpty(backendType))
         {
             return new OperationResult<BackendStatus>("Jukebox is not enabled")
             {
@@ -74,10 +79,10 @@ public sealed class PlaybackBackendService(
             };
         }
 
-        var backend = backendFactory.GetOrCreateMpvBackend();
+        var backend = await GetBackendAsync(backendType, cancellationToken).ConfigureAwait(false);
         if (backend == null)
         {
-            return new OperationResult<BackendStatus>("Failed to create MPV backend")
+            return new OperationResult<BackendStatus>($"Failed to create {backendType} backend")
             {
                 Type = OperationResponseType.Error,
                 Data = new BackendStatus { IsConnected = false }
@@ -91,7 +96,11 @@ public sealed class PlaybackBackendService(
 
     public async Task<OperationResult<BackendCapabilities>> GetBackendCapabilitiesAsync(CancellationToken cancellationToken = default)
     {
-        if (!jukeboxOptions.Value.Enabled || string.IsNullOrEmpty(jukeboxOptions.Value.BackendType))
+        var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
+        var jukeboxEnabled = configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled);
+        var backendType = configuration.GetValue<string>(SettingRegistry.JukeboxBackendType);
+
+        if (!jukeboxEnabled || string.IsNullOrEmpty(backendType))
         {
             return new OperationResult<BackendCapabilities>("Jukebox is not enabled")
             {
@@ -100,10 +109,10 @@ public sealed class PlaybackBackendService(
             };
         }
 
-        var backend = backendFactory.GetOrCreateMpvBackend();
+        var backend = await GetBackendAsync(backendType, cancellationToken).ConfigureAwait(false);
         if (backend == null)
         {
-            return new OperationResult<BackendCapabilities>("Failed to create MPV backend")
+            return new OperationResult<BackendCapabilities>($"Failed to create {backendType} backend")
             {
                 Type = OperationResponseType.Error,
                 Data = new BackendCapabilities { IsAvailable = false }
@@ -117,7 +126,8 @@ public sealed class PlaybackBackendService(
 
     public async Task<OperationResult<bool>> InitializeBackendAsync(CancellationToken cancellationToken = default)
     {
-        if (!jukeboxOptions.Value.Enabled)
+        var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
+        if (!configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled))
         {
             return new OperationResult<bool>("Jukebox is not enabled")
             {
@@ -126,10 +136,11 @@ public sealed class PlaybackBackendService(
             };
         }
 
-        var backend = backendFactory.GetOrCreateMpvBackend();
+        var backendType = configuration.GetValue<string>(SettingRegistry.JukeboxBackendType);
+        var backend = await GetBackendAsync(backendType, cancellationToken).ConfigureAwait(false);
         if (backend == null)
         {
-            return new OperationResult<bool>("Failed to create MPV backend")
+            return new OperationResult<bool>($"Failed to create {backendType} backend")
             {
                 Type = OperationResponseType.Error,
                 Data = false
@@ -139,28 +150,28 @@ public sealed class PlaybackBackendService(
         await backend.InitializeAsync(cancellationToken).ConfigureAwait(false);
         var capabilities = await backend.GetCapabilitiesAsync(cancellationToken).ConfigureAwait(false);
 
-        Logger.Information("[PlaybackBackendService] MPV backend initialized. Available: {IsAvailable}, Info: {BackendInfo}",
-            capabilities.IsAvailable, capabilities.BackendInfo);
+        Logger.Information("[PlaybackBackendService] {BackendType} backend initialized. Available: {IsAvailable}, Info: {BackendInfo}",
+            backendType, capabilities.IsAvailable, capabilities.BackendInfo);
 
         return new OperationResult<bool> { Data = capabilities.IsAvailable };
     }
 
-    public async Task<OperationResult<bool>> ShutdownBackendAsync(CancellationToken cancellationToken = default)
+    public Task<OperationResult<bool>> ShutdownBackendAsync(CancellationToken cancellationToken = default)
     {
         try
         {
             backendFactory.DisposeBackend();
-            Logger.Information("[PlaybackBackendService] MPV backend shutdown complete");
-            return new OperationResult<bool> { Data = true };
+            Logger.Information("[PlaybackBackendService] Playback backend shutdown complete");
+            return Task.FromResult(new OperationResult<bool> { Data = true });
         }
         catch (Exception ex)
         {
             Logger.Error(ex, "[PlaybackBackendService] Error during backend shutdown");
-            return new OperationResult<bool>("Error shutting down backend")
+            return Task.FromResult(new OperationResult<bool>("Error shutting down backend")
             {
                 Type = OperationResponseType.Error,
                 Data = false
-            };
+            });
         }
     }
 
@@ -184,10 +195,13 @@ public sealed class PlaybackBackendService(
             return new OperationResult<PartySessionEndpoint?> { Data = existingEndpoint };
         }
 
-        var backend = backendFactory.GetOrCreateMpvBackend();
+        var configuration = await configurationFactory.GetConfigurationAsync(cancellationToken).ConfigureAwait(false);
+        var backendType = configuration.GetValue<string>(SettingRegistry.JukeboxBackendType);
+
+        var backend = await GetBackendAsync(backendType, cancellationToken).ConfigureAwait(false);
         if (backend == null)
         {
-            return new OperationResult<PartySessionEndpoint?>("Failed to create MPV backend")
+            return new OperationResult<PartySessionEndpoint?>($"Failed to create {backendType} backend")
             {
                 Type = OperationResponseType.Error,
                 Data = null
@@ -207,7 +221,7 @@ public sealed class PlaybackBackendService(
 
         var endpoint = new PartySessionEndpoint
         {
-            Name = "MPV Backend",
+            Name = $"{backendType?.ToUpperInvariant() ?? "Unknown"} Backend",
             Type = PartySessionEndpointType.MpvBackend,
             OwnerUserId = null,
             CapabilitiesJson = capabilitiesJson,
@@ -220,7 +234,7 @@ public sealed class PlaybackBackendService(
         await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         _backendEndpoint = endpoint;
-        Logger.Information("[PlaybackBackendService] Registered MPV backend endpoint {EndpointId}", endpoint.Id);
+        Logger.Information("[PlaybackBackendService] Registered {BackendType} backend endpoint {EndpointId}", backendType, endpoint.Id);
 
         return new OperationResult<PartySessionEndpoint?> { Data = endpoint };
     }
@@ -268,5 +282,15 @@ public sealed class PlaybackBackendService(
         await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return new OperationResult<bool> { Data = true };
+    }
+
+    private async Task<IPlaybackBackend?> GetBackendAsync(string? backendType, CancellationToken cancellationToken)
+    {
+        return backendType?.ToLowerInvariant() switch
+        {
+            "mpv" => await backendFactory.GetOrCreateMpvBackendAsync(cancellationToken).ConfigureAwait(false),
+            "mpd" => await backendFactory.GetOrCreateMpdBackendAsync(cancellationToken).ConfigureAwait(false),
+            _ => null
+        };
     }
 }

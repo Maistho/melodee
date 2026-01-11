@@ -3,6 +3,7 @@ using System;
 using Melodee.Common.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NodaTime;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Melodee.Common.Migrations
 {
     [DbContext(typeof(MelodeeDbContext))]
-    partial class MelodeeDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260111141134_AddJukeboxSettings")]
+    partial class AddJukeboxSettings
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -4090,168 +4093,12 @@ namespace Melodee.Common.Migrations
                             Id = 1901,
                             ApiKey = new Guid("4c886427-ffc2-d277-5950-6cf4b880b7be"),
                             Category = 16,
-                            Comment = "The type of backend to use for jukebox playback (e.g., 'mpv', 'mpd'). Leave empty for no backend.",
+                            Comment = "The type of backend to use for jukebox playback (e.g., 'mpv'). Leave empty for no backend.",
                             CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
                             IsLocked = false,
                             Key = "jukebox.backendType",
                             SortOrder = 0,
                             Value = ""
-                        },
-                        new
-                        {
-                            Id = 1910,
-                            ApiKey = new Guid("e39d8312-cae1-ee40-266d-533077dbfdbb"),
-                            Category = 16,
-                            Comment = "Path to the MPV executable. Leave empty to use system PATH.",
-                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
-                            IsLocked = false,
-                            Key = "mpv.path",
-                            SortOrder = 0,
-                            Value = ""
-                        },
-                        new
-                        {
-                            Id = 1911,
-                            ApiKey = new Guid("945df58f-0546-2e6c-ccc8-210b41e719b7"),
-                            Category = 16,
-                            Comment = "Audio device to use for MPV playback. Leave empty for default device.",
-                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
-                            IsLocked = false,
-                            Key = "mpv.audioDevice",
-                            SortOrder = 0,
-                            Value = ""
-                        },
-                        new
-                        {
-                            Id = 1912,
-                            ApiKey = new Guid("7b99ed1d-9c95-3a2a-9aa7-aca68cda0223"),
-                            Category = 16,
-                            Comment = "Extra command-line arguments to pass to MPV.",
-                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
-                            IsLocked = false,
-                            Key = "mpv.extraArgs",
-                            SortOrder = 0,
-                            Value = ""
-                        },
-                        new
-                        {
-                            Id = 1913,
-                            ApiKey = new Guid("45dfa023-d926-4364-33d1-245a9623dece"),
-                            Category = 16,
-                            Comment = "Path for the MPV IPC socket. Leave empty for auto temp directory.",
-                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
-                            IsLocked = false,
-                            Key = "mpv.socketPath",
-                            SortOrder = 0,
-                            Value = ""
-                        },
-                        new
-                        {
-                            Id = 1914,
-                            ApiKey = new Guid("ac4199ff-57a6-9ded-7a8b-037b9df29a7f"),
-                            Category = 16,
-                            Comment = "Initial volume level for MPV (0.0 to 1.0). Default is 0.8.",
-                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
-                            IsLocked = false,
-                            Key = "mpv.initialVolume",
-                            SortOrder = 0,
-                            Value = "0.8"
-                        },
-                        new
-                        {
-                            Id = 1915,
-                            ApiKey = new Guid("7893e826-0cc8-a0a2-12dc-5c2556212c4a"),
-                            Category = 16,
-                            Comment = "Enable verbose debug output for MPV.",
-                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
-                            IsLocked = false,
-                            Key = "mpv.enableDebugOutput",
-                            SortOrder = 0,
-                            Value = "false"
-                        },
-                        new
-                        {
-                            Id = 1920,
-                            ApiKey = new Guid("bfcce639-8b21-dcc7-b54f-ce1d3ad074f0"),
-                            Category = 16,
-                            Comment = "Unique name/identifier for this MPD instance (for multi-instance support).",
-                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
-                            IsLocked = false,
-                            Key = "mpd.instanceName",
-                            SortOrder = 0,
-                            Value = ""
-                        },
-                        new
-                        {
-                            Id = 1921,
-                            ApiKey = new Guid("275a59ef-fe5d-c2b8-28df-a7bc4a04abdb"),
-                            Category = 16,
-                            Comment = "Hostname or IP address of the MPD server.",
-                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
-                            IsLocked = false,
-                            Key = "mpd.host",
-                            SortOrder = 0,
-                            Value = "localhost"
-                        },
-                        new
-                        {
-                            Id = 1922,
-                            ApiKey = new Guid("515116f0-99ba-30cc-4b18-d722da60cd7f"),
-                            Category = 16,
-                            Comment = "Port number for MPD connection.",
-                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
-                            IsLocked = false,
-                            Key = "mpd.port",
-                            SortOrder = 0,
-                            Value = "6600"
-                        },
-                        new
-                        {
-                            Id = 1923,
-                            ApiKey = new Guid("dbc39d88-00c0-0710-201e-dd387d745589"),
-                            Category = 16,
-                            Comment = "Password for MPD authentication. Leave empty if no password.",
-                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
-                            IsLocked = false,
-                            Key = "mpd.password",
-                            SortOrder = 0,
-                            Value = ""
-                        },
-                        new
-                        {
-                            Id = 1924,
-                            ApiKey = new Guid("d1d4df5f-fb55-011e-ad6a-c29db5896073"),
-                            Category = 16,
-                            Comment = "Timeout for MPD TCP connection and operations in milliseconds.",
-                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
-                            IsLocked = false,
-                            Key = "mpd.timeoutMs",
-                            SortOrder = 0,
-                            Value = "10000"
-                        },
-                        new
-                        {
-                            Id = 1925,
-                            ApiKey = new Guid("416030fd-3e69-d30e-789f-9203464ebc86"),
-                            Category = 16,
-                            Comment = "Initial volume level for MPD (0.0 to 1.0). Default is 0.8.",
-                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
-                            IsLocked = false,
-                            Key = "mpd.initialVolume",
-                            SortOrder = 0,
-                            Value = "0.8"
-                        },
-                        new
-                        {
-                            Id = 1926,
-                            ApiKey = new Guid("5819d3ec-0b14-1731-2179-69ab1328140b"),
-                            Category = 16,
-                            Comment = "Enable debug logging for MPD commands.",
-                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
-                            IsLocked = false,
-                            Key = "mpd.enableDebugOutput",
-                            SortOrder = 0,
-                            Value = "false"
                         });
                 });
 

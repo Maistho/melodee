@@ -48,6 +48,28 @@ public static class SettingRegistry
     public const string OpenSubsonicServerSupportedVersion = "openSubsonicServer.openSubsonic.serverSupportedVersion";
     public const string OpenSubsonicServerType = "openSubsonicServer.openSubsonicServer.type";
     public const string PartyModeEnabled = "partyMode.enabled";
+
+    // Jukebox settings
+    public const string JukeboxEnabled = "jukebox.enabled";
+    public const string JukeboxBackendType = "jukebox.backendType";
+
+    // MPV Backend settings
+    public const string MpvPath = "mpv.path";
+    public const string MpvAudioDevice = "mpv.audioDevice";
+    public const string MpvExtraArgs = "mpv.extraArgs";
+    public const string MpvSocketPath = "mpv.socketPath";
+    public const string MpvInitialVolume = "mpv.initialVolume";
+    public const string MpvEnableDebugOutput = "mpv.enableDebugOutput";
+
+    // MPD Backend settings
+    public const string MpdInstanceName = "mpd.instanceName";
+    public const string MpdHost = "mpd.host";
+    public const string MpdPort = "mpd.port";
+    public const string MpdPassword = "mpd.password";
+    public const string MpdTimeoutMs = "mpd.timeoutMs";
+    public const string MpdInitialVolume = "mpd.initialVolume";
+    public const string MpdEnableDebugOutput = "mpd.enableDebugOutput";
+
     public const string PlaylistDynamicPlaylistsDisabled = "playlist.dynamicPlaylist.disabled";
     public const string PlaylistMaximumAllowedPageSize = "playlist.maximumAllowedPageSize";
     public const string PluginEnabledCueSheet = "plugin.cueSheet.enabled";

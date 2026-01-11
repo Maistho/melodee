@@ -1,0 +1,361 @@
+@page "/jukebox"
+@using Melodee.Common.Services.Playback
+@inherits MelodeeComponentBase
+@implements IDisposable
+
+@inject IPlaybackBackendService PlaybackBackendService
+@inject NotificationService NotificationService
+@inject ILogger<Jukebox> Logger
+
+<PageTitle>@L("Jukebox.Title")</PageTitle>
+
+<RadzenStack Gap="1rem">
+    <RadzenText TextStyle="TextStyle.H4">@L("Jukebox.Title")</RadzenText>
+
+    @if (_isLoading)
+    {
+        <RadzenProgressBarCircular ShowValue="true" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large"/>
+    }
+    else if (!_jukeboxEnabled)
+    {
+        <RadzenCard>
+            <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Gap="1rem" Style="padding: 2rem;">
+                <RadzenIcon Icon="speaker" Style="font-size: 4rem; color: var(--rz-text-disabled-color);"/>
+                <RadzenText TextStyle="TextStyle.H6" Style="color: var(--rz-text-disabled-color);">@L("Jukebox.NotEnabled")</RadzenText>
+                <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-disabled-color);">@L("Jukebox.NotEnabledHint")</RadzenText>
+            </RadzenStack>
+        </RadzenCard>
+    }
+    else
+    {
+        <RadzenRow>
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenCard>
+                    <RadzenStack Gap="1rem">
+                        <RadzenText TextStyle="TextStyle.H6">@L("Jukebox.Status")</RadzenText>
+                        
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                            @if (_status?.IsConnected == true)
+                            {
+                                <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="@L("Jukebox.Connected")" IsPill="true"/>
+                            }
+                            else
+                            {
+                                <RadzenBadge BadgeStyle="BadgeStyle.Danger" Text="@L("Jukebox.Disconnected")" IsPill="true"/>
+                            }
+                            
+                            @if (_status?.IsPlaying == true)
+                            {
+                                <RadzenBadge BadgeStyle="BadgeStyle.Info" Text="@L("Jukebox.Playing")" IsPill="true"/>
+                            }
+                            else if (_status?.IsConnected == true)
+                            {
+                                <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="@L("Jukebox.Stopped")" IsPill="true"/>
+                            }
+                        </RadzenStack>
+
+                        @if (!string.IsNullOrEmpty(_capabilities?.BackendInfo))
+                        {
+                            <RadzenStack Gap="0.25rem">
+                                <RadzenText TextStyle="TextStyle.Overline">@L("Jukebox.Backend")</RadzenText>
+                                <RadzenText TextStyle="TextStyle.Body2">@_backendType?.ToUpperInvariant() - @_capabilities.BackendInfo</RadzenText>
+                            </RadzenStack>
+                        }
+
+                        @if (!string.IsNullOrEmpty(_status?.ErrorMessage))
+                        {
+                            <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" Shade="Shade.Lighter" ShowIcon="true">
+                                @_status.ErrorMessage
+                            </RadzenAlert>
+                        }
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenCard>
+                    <RadzenStack Gap="1rem">
+                        <RadzenText TextStyle="TextStyle.H6">@L("Jukebox.Controls")</RadzenText>
+                        
+                        @if (CurrentUser?.IsAdmin() == true)
+                        {
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.Center">
+                                <RadzenButton Icon="skip_previous" 
+                                              ButtonStyle="ButtonStyle.Secondary" 
+                                              Size="ButtonSize.Large"
+                                              Disabled="@(!_canControl)"
+                                              title="@L("Jukebox.Previous")"
+                                              Click="@OnPreviousAsync"/>
+                                
+                                @if (_status?.IsPlaying == true)
+                                {
+                                    <RadzenButton Icon="pause" 
+                                                  ButtonStyle="ButtonStyle.Primary" 
+                                                  Size="ButtonSize.Large"
+                                                  Disabled="@(!_canControl)"
+                                                  title="@L("Jukebox.Pause")"
+                                                  Click="@OnPauseAsync"/>
+                                }
+                                else
+                                {
+                                    <RadzenButton Icon="play_arrow" 
+                                                  ButtonStyle="ButtonStyle.Primary" 
+                                                  Size="ButtonSize.Large"
+                                                  Disabled="@(!_canControl)"
+                                                  title="@L("Jukebox.Play")"
+                                                  Click="@OnPlayAsync"/>
+                                }
+                                
+                                <RadzenButton Icon="stop" 
+                                              ButtonStyle="ButtonStyle.Secondary" 
+                                              Size="ButtonSize.Large"
+                                              Disabled="@(!_canControl)"
+                                              title="@L("Jukebox.Stop")"
+                                              Click="@OnStopAsync"/>
+                                
+                                <RadzenButton Icon="skip_next" 
+                                              ButtonStyle="ButtonStyle.Secondary" 
+                                              Size="ButtonSize.Large"
+                                              Disabled="@(!_canControl)"
+                                              title="@L("Jukebox.Next")"
+                                              Click="@OnNextAsync"/>
+                            </RadzenStack>
+
+                            @if (_capabilities?.CanSetVolume == true)
+                            {
+                                <RadzenStack Gap="0.5rem">
+                                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                                        <RadzenIcon Icon="volume_down"/>
+                                        <RadzenSlider @bind-Value="_volume" 
+                                                      Min="0" 
+                                                      Max="100" 
+                                                      Step="1"
+                                                      Style="flex: 1;"
+                                                      Disabled="@(!_canControl)"
+                                                      Change="@((double value) => OnVolumeChange(value))"/>
+                                        <RadzenIcon Icon="volume_up"/>
+                                        <RadzenText TextStyle="TextStyle.Body2" Style="width: 40px; text-align: right;">@(_volume)%</RadzenText>
+                                    </RadzenStack>
+                                </RadzenStack>
+                            }
+                        }
+                        else
+                        {
+                            <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-disabled-color);">
+                                @L("Jukebox.AdminOnlyControls")
+                            </RadzenText>
+                        }
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+        </RadzenRow>
+
+        <RadzenRow>
+            <RadzenColumn Size="12">
+                <RadzenCard>
+                    <RadzenStack Gap="1rem">
+                        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                            <RadzenText TextStyle="TextStyle.H6">@L("Jukebox.NowPlaying")</RadzenText>
+                            <RadzenButton Icon="refresh" 
+                                          ButtonStyle="ButtonStyle.Light" 
+                                          Size="ButtonSize.Small"
+                                          Click="@RefreshStatusAsync"
+                                          title="@L("Actions.Refresh")"/>
+                        </RadzenStack>
+                        
+                        @if (_status?.CurrentItemApiKey != null)
+                        {
+                            <RadzenStack Gap="0.5rem">
+                                <RadzenText TextStyle="TextStyle.Body1">@L("Jukebox.CurrentTrack"): @_status.CurrentItemApiKey</RadzenText>
+                                @if (_capabilities?.CanReportPosition == true)
+                                {
+                                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                                        <RadzenText TextStyle="TextStyle.Body2" Style="width: 60px;">@FormatTime(_status.PositionSeconds)</RadzenText>
+                                        <RadzenProgressBar Value="@(_status.PositionSeconds)" Max="100" ShowValue="false" Style="flex: 1;"/>
+                                    </RadzenStack>
+                                }
+                            </RadzenStack>
+                        }
+                        else
+                        {
+                            <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-disabled-color);">
+                                @L("Jukebox.NoTrackPlaying")
+                            </RadzenText>
+                        }
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+        </RadzenRow>
+
+        <RadzenCard>
+            <RadzenStack Gap="0.5rem">
+                <RadzenText TextStyle="TextStyle.H6">@L("Jukebox.Capabilities")</RadzenText>
+                <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="0.5rem">
+                    <RadzenBadge BadgeStyle="@(_capabilities?.CanPlay == true ? BadgeStyle.Success : BadgeStyle.Light)" 
+                                 Text="@L("Jukebox.Play")" IsPill="true"/>
+                    <RadzenBadge BadgeStyle="@(_capabilities?.CanPause == true ? BadgeStyle.Success : BadgeStyle.Light)" 
+                                 Text="@L("Jukebox.Pause")" IsPill="true"/>
+                    <RadzenBadge BadgeStyle="@(_capabilities?.CanStop == true ? BadgeStyle.Success : BadgeStyle.Light)" 
+                                 Text="@L("Jukebox.Stop")" IsPill="true"/>
+                    <RadzenBadge BadgeStyle="@(_capabilities?.CanSeek == true ? BadgeStyle.Success : BadgeStyle.Light)" 
+                                 Text="Seek" IsPill="true"/>
+                    <RadzenBadge BadgeStyle="@(_capabilities?.CanSkip == true ? BadgeStyle.Success : BadgeStyle.Light)" 
+                                 Text="Skip" IsPill="true"/>
+                    <RadzenBadge BadgeStyle="@(_capabilities?.CanSetVolume == true ? BadgeStyle.Success : BadgeStyle.Light)" 
+                                 Text="Volume" IsPill="true"/>
+                    <RadzenBadge BadgeStyle="@(_capabilities?.CanReportPosition == true ? BadgeStyle.Success : BadgeStyle.Light)" 
+                                 Text="Position" IsPill="true"/>
+                </RadzenStack>
+            </RadzenStack>
+        </RadzenCard>
+    }
+</RadzenStack>
+
+@code {
+    private bool _isLoading = true;
+    private bool _jukeboxEnabled;
+    private string? _backendType;
+    private BackendStatus? _status;
+    private BackendCapabilities? _capabilities;
+    private double _volume = 50;
+    private bool _canControl => _status?.IsConnected == true && _capabilities?.IsAvailable == true;
+    private Timer? _refreshTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        _jukeboxEnabled = Configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled);
+        _backendType = Configuration.GetValue<string>(SettingRegistry.JukeboxBackendType);
+
+        if (_jukeboxEnabled)
+        {
+            await InitializeBackendAsync();
+            await RefreshStatusAsync();
+            
+            _refreshTimer = new Timer(_ => _ = InvokeAsync(RefreshStatusAsync), null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5));
+        }
+
+        _isLoading = false;
+    }
+
+    private async Task InitializeBackendAsync()
+    {
+        try
+        {
+            var initResult = await PlaybackBackendService.InitializeBackendAsync();
+            if (!initResult.IsSuccess)
+            {
+                Logger.LogWarning("Failed to initialize backend: {Messages}", string.Join(", ", initResult.Messages ?? []));
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error initializing backend");
+        }
+    }
+
+    private async Task RefreshStatusAsync()
+    {
+        try
+        {
+            var statusTask = PlaybackBackendService.GetBackendStatusAsync();
+            var capabilitiesTask = PlaybackBackendService.GetBackendCapabilitiesAsync();
+
+            await Task.WhenAll(statusTask, capabilitiesTask);
+
+            _status = statusTask.Result.Data;
+            _capabilities = capabilitiesTask.Result.Data;
+
+            if (_status?.Volume.HasValue == true)
+            {
+                _volume = _status.Volume.Value * 100;
+            }
+
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error refreshing status");
+        }
+    }
+
+    private void OnPlayAsync()
+    {
+        NotificationService.Notify(new NotificationMessage
+        {
+            Severity = NotificationSeverity.Info,
+            Summary = L("Jukebox.Play"),
+            Detail = "Use Subsonic API or Party Mode to play tracks",
+            Duration = ToastTime
+        });
+    }
+
+    private void OnPauseAsync()
+    {
+        NotificationService.Notify(new NotificationMessage
+        {
+            Severity = NotificationSeverity.Info,
+            Summary = L("Jukebox.Pause"),
+            Detail = "Use Subsonic API to control playback",
+            Duration = ToastTime
+        });
+    }
+
+    private void OnStopAsync()
+    {
+        NotificationService.Notify(new NotificationMessage
+        {
+            Severity = NotificationSeverity.Info,
+            Summary = L("Jukebox.Stop"),
+            Detail = "Use Subsonic API to control playback",
+            Duration = ToastTime
+        });
+    }
+
+    private void OnPreviousAsync()
+    {
+        NotificationService.Notify(new NotificationMessage
+        {
+            Severity = NotificationSeverity.Info,
+            Summary = L("Jukebox.Previous"),
+            Detail = "Use Subsonic API to control playback",
+            Duration = ToastTime
+        });
+    }
+
+    private void OnNextAsync()
+    {
+        NotificationService.Notify(new NotificationMessage
+        {
+            Severity = NotificationSeverity.Info,
+            Summary = L("Jukebox.Next"),
+            Detail = "Use Subsonic API to control playback",
+            Duration = ToastTime
+        });
+    }
+
+    private void OnVolumeChange(double value)
+    {
+        NotificationService.Notify(new NotificationMessage
+        {
+            Severity = NotificationSeverity.Info,
+            Summary = "Volume",
+            Detail = $"Volume set to {value:F0}% - Use Subsonic API to control playback",
+            Duration = ToastTime
+        });
+    }
+
+    private static string FormatTime(double seconds)
+    {
+        var ts = TimeSpan.FromSeconds(seconds);
+        return ts.Hours > 0 
+            ? $"{ts.Hours}:{ts.Minutes:D2}:{ts.Seconds:D2}" 
+            : $"{ts.Minutes}:{ts.Seconds:D2}";
+    }
+
+    public void Dispose()
+    {
+        _refreshTimer?.Dispose();
+    }
+}

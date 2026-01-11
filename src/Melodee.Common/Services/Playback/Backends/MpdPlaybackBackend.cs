@@ -1,6 +1,5 @@
 using System.Net.Sockets;
 using System.Text;
-using Melodee.Common.Configuration;
 using Melodee.Common.Data.Models;
 using Serilog;
 
@@ -12,7 +11,14 @@ namespace Melodee.Common.Services.Playback.Backends;
 public sealed class MpdPlaybackBackend : IPlaybackBackend, IDisposable
 {
     private readonly ILogger _logger;
-    private readonly MpdOptions _options;
+    private readonly string? _instanceName;
+    private readonly string _host;
+    private readonly int _port;
+    private readonly string? _password;
+    private readonly int _timeoutMs;
+    private readonly double _initialVolume;
+    private readonly bool _enableDebugOutput;
+
     private TcpClient? _tcpClient;
     private NetworkStream? _networkStream;
     private bool _disposed;
@@ -20,10 +26,24 @@ public sealed class MpdPlaybackBackend : IPlaybackBackend, IDisposable
     private readonly object _lock = new();
     private string? _mpdVersion;
 
-    public MpdPlaybackBackend(ILogger logger, MpdOptions options)
+    public MpdPlaybackBackend(
+        ILogger logger,
+        string? instanceName,
+        string host,
+        int port,
+        string? password,
+        int timeoutMs,
+        double initialVolume,
+        bool enableDebugOutput)
     {
         _logger = logger;
-        _options = options;
+        _instanceName = instanceName;
+        _host = host;
+        _port = port;
+        _password = password;
+        _timeoutMs = timeoutMs;
+        _initialVolume = initialVolume > 0 ? initialVolume : 0.8;
+        _enableDebugOutput = enableDebugOutput;
     }
 
     /// <inheritdoc />
@@ -103,7 +123,7 @@ public sealed class MpdPlaybackBackend : IPlaybackBackend, IDisposable
             {
                 IsPlaying = false,
                 PositionSeconds = 0,
-                Volume = _options.InitialVolume,
+                Volume = _initialVolume,
                 CurrentItemApiKey = null,
                 IsConnected = false,
                 StatusMessage = "Not connected to MPD",
@@ -120,7 +140,7 @@ public sealed class MpdPlaybackBackend : IPlaybackBackend, IDisposable
                 {
                     IsPlaying = false,
                     PositionSeconds = 0,
-                    Volume = _options.InitialVolume,
+                    Volume = _initialVolume,
                     CurrentItemApiKey = null,
                     IsConnected = true,
                     StatusMessage = "Error getting status",
@@ -131,7 +151,7 @@ public sealed class MpdPlaybackBackend : IPlaybackBackend, IDisposable
             var statusLines = statusResponse.Split('\n', StringSplitOptions.RemoveEmptyEntries);
             var isPlaying = false;
             var positionSeconds = 0.0;
-            var volume = _options.InitialVolume;
+            var volume = _initialVolume;
             Guid? currentItemApiKey = null;
 
             foreach (var line in statusLines)
@@ -186,7 +206,7 @@ public sealed class MpdPlaybackBackend : IPlaybackBackend, IDisposable
             {
                 IsPlaying = false,
                 PositionSeconds = 0,
-                Volume = _options.InitialVolume,
+                Volume = _initialVolume,
                 CurrentItemApiKey = null,
                 IsConnected = false,
                 StatusMessage = "Error",
@@ -213,15 +233,15 @@ public sealed class MpdPlaybackBackend : IPlaybackBackend, IDisposable
             try
             {
                 _logger.Information("[MpdPlaybackBackend] Connecting to MPD at {Host}:{Port}",
-                    _options.Host, _options.Port);
+                    _host, _port);
 
                 _tcpClient = new TcpClient
                 {
-                    ReceiveTimeout = _options.TimeoutMs,
-                    SendTimeout = _options.TimeoutMs
+                    ReceiveTimeout = _timeoutMs,
+                    SendTimeout = _timeoutMs
                 };
 
-                _tcpClient.Connect(_options.Host, _options.Port);
+                _tcpClient.Connect(_host, _port);
                 _networkStream = _tcpClient.GetStream();
 
                 var welcomeResponse = ReadResponse();
@@ -235,9 +255,9 @@ public sealed class MpdPlaybackBackend : IPlaybackBackend, IDisposable
                     _logger.Warning("[MpdPlaybackBackend] Unexpected MPD welcome response: {Response}", welcomeResponse);
                 }
 
-                if (!string.IsNullOrEmpty(_options.Password))
+                if (!string.IsNullOrEmpty(_password))
                 {
-                    var passwordResponse = ExecuteCommand($"password {_options.Password}", out var isError);
+                    var passwordResponse = ExecuteCommand($"password {_password}", out var isError);
                     if (isError)
                     {
                         _logger.Error("[MpdPlaybackBackend] Failed to authenticate with MPD");
@@ -288,7 +308,7 @@ public sealed class MpdPlaybackBackend : IPlaybackBackend, IDisposable
             var commandBytes = Encoding.UTF8.GetBytes(fullCommand);
             _networkStream!.Write(commandBytes, 0, commandBytes.Length);
 
-            if (_options.EnableDebugOutput)
+            if (_enableDebugOutput)
             {
                 _logger.Debug("[MpdPlaybackBackend] Sent command: {Command}", command);
             }
@@ -298,7 +318,7 @@ public sealed class MpdPlaybackBackend : IPlaybackBackend, IDisposable
             {
                 _logger.Warning("[MpdPlaybackBackend] MPD command failed: {Command} -> {Response}", command, response);
             }
-            else if (_options.EnableDebugOutput)
+            else if (_enableDebugOutput)
             {
                 _logger.Debug("[MpdPlaybackBackend] Command response: {Response}", response);
             }

@@ -91,6 +91,7 @@
                     <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Libraries")" Path="/data/libraries" Icon="library_music"
                                          Visible="@AuthService.IsAdmin"/>
                     <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.NowPlaying")" Path="/activity/nowplaying" Icon="sound_sampler"/>
+                    <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Jukebox")" Path="/jukebox" Icon="speaker" Visible="@_jukeboxEnabled"/>
                     <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Playlists")" Path="/data/playlists" Icon="playlist_play"/>
                     <RadzenPanelMenuItem Path="/data/podcasts" Icon="podcasts" Visible="@_podcastEnabled">
                       <Template>
@@ -150,6 +151,7 @@
     Timer? _activityTimer;
     bool _isRtl = false;
     bool _podcastEnabled = false;
+    bool _jukeboxEnabled = false;
 
     string _debounceInputValue = "";
 
@@ -234,6 +236,7 @@
         var configuration = await MelodeeConfigurationFactory.GetConfigurationAsync();
         _siteTitle = configuration.GetValue<string>(SettingRegistry.SystemSiteName) ?? SettingDefaults.DefaultSiteName;
         _podcastEnabled = configuration.GetValue<bool>(SettingRegistry.PodcastEnabled);
+        _jukeboxEnabled = configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled);
     }
 
     private async Task CheckActivityAsync()

@@ -8,6 +8,7 @@ using Blazored.SessionStorage;
 using Melodee.Blazor.Components;
 using Melodee.Blazor.Constants;
 using Melodee.Blazor.Filters;
+using Melodee.Blazor.Hubs;
 using Melodee.Blazor.Middleware;
 using Melodee.Blazor.Services;
 using Melodee.Common.Configuration;
@@ -27,6 +28,7 @@ using Melodee.Common.Plugins.SearchEngine.Spotify;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services;
 using Melodee.Common.Services.Caching;
+using Melodee.Common.Services.PartyMode;
 using Melodee.Common.Services.Scanning;
 using Melodee.Common.Services.SearchEngines;
 using Melodee.Common.Services.Security;
@@ -485,6 +487,7 @@ builder.Services
     .AddScoped<IPartySessionService, PartySessionService>()
     .AddScoped<IPartyQueueService, PartyQueueService>()
     .AddScoped<IPartyPlaybackService, PartyPlaybackService>()
+    .AddScoped<IPartyNotificationService, PartyNotificationService>()
     .AddScoped<IPartySessionEndpointRegistryService, PartySessionEndpointRegistryService>();
 
 // Configure HttpClient for podcast discovery
@@ -505,7 +508,6 @@ builder.Services.Configure<GoogleAuthOptions>(builder.Configuration.GetSection(G
 builder.Services.Configure<AuthPolicyOptions>(builder.Configuration.GetSection(AuthPolicyOptions.SectionName));
 builder.Services.Configure<TokenOptions>(builder.Configuration.GetSection(TokenOptions.SectionName));
 builder.Services.Configure<PartyModeOptions>(builder.Configuration.GetSection(PartyModeOptions.SectionName));
-builder.Services.Configure<JukeboxOptions>(builder.Configuration.GetSection(JukeboxOptions.SectionName));
 builder.Services.AddSingleton<IClock>(SystemClock.Instance);
 builder.Services.AddScoped<IGoogleTokenService, GoogleTokenService>();
 builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();

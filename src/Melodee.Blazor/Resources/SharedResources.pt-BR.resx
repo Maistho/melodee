@@ -5475,4 +5475,52 @@
   <data name="Jukebox.Backend.MpdError" xml:space="preserve">
     <value>[NEEDS TRANSLATION] MPD error: {0}</value>
   </data>
+  <data name="Navigation.Jukebox" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Jukebox</value>
+  </data>
+  <data name="Jukebox.Title" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Jukebox Control</value>
+  </data>
+  <data name="Jukebox.Status" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Status</value>
+  </data>
+  <data name="Jukebox.Backend" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Backend</value>
+  </data>
+  <data name="Jukebox.Volume" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Volume</value>
+  </data>
+  <data name="Jukebox.Position" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Position</value>
+  </data>
+  <data name="Jukebox.NowPlaying" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] NowPlaying</value>
+  </data>
+  <data name="Jukebox.Queue" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Queue</value>
+  </data>
+  <data name="Jukebox.NotEnabled" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] NotEnabled</value>
+  </data>
+  <data name="Jukebox.NotConnected" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] NotConnected</value>
+  </data>
+  <data name="Jukebox.Connected" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Connected</value>
+  </data>
+  <data name="Jukebox.Playing" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Playing</value>
+  </data>
+  <data name="Jukebox.Paused" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Paused</value>
+  </data>
+  <data name="Jukebox.Stopped" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Stopped</value>
+  </data>
+  <data name="Jukebox.Idle" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Idle</value>
+  </data>
+  <data name="Jukebox.AdminOnlyControls" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Playback controls are only available to administrators</value>
+  </data>
 </root>

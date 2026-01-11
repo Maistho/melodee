@@ -1,185 +1,182 @@
 using Melodee.Common.Configuration;
+using Melodee.Common.Constants;
 using Melodee.Common.Services.Playback;
 using Melodee.Common.Services.Playback.Backends;
 using Melodee.Common.Services.Playback.Factory;
-using Microsoft.Extensions.Options;
+using Moq;
 using Serilog;
 
 namespace Melodee.Tests.Common.Services.Playback;
 
 public class PlaybackBackendFactoryTests
 {
-    [Fact]
-    public void CreateBackend_WithNullBackendType_ReturnsNull()
+    private static IMelodeeConfigurationFactory CreateMockConfigurationFactory(
+        string? mpvPath = null,
+        string? mpvAudioDevice = null,
+        string? mpvExtraArgs = null,
+        string? mpvSocketPath = null,
+        double mpvInitialVolume = 0.8,
+        bool mpvEnableDebugOutput = false,
+        string? mpdInstanceName = null,
+        string mpdHost = "localhost",
+        int mpdPort = 6600,
+        string? mpdPassword = null,
+        int mpdTimeoutMs = 10000,
+        double mpdInitialVolume = 0.8,
+        bool mpdEnableDebugOutput = false)
     {
-        // Arrange
+        var mockConfig = new Mock<IMelodeeConfiguration>();
+        
+        mockConfig.Setup(x => x.GetValue<string>(SettingRegistry.MpvPath)).Returns(mpvPath);
+        mockConfig.Setup(x => x.GetValue<string>(SettingRegistry.MpvAudioDevice)).Returns(mpvAudioDevice);
+        mockConfig.Setup(x => x.GetValue<string>(SettingRegistry.MpvExtraArgs)).Returns(mpvExtraArgs);
+        mockConfig.Setup(x => x.GetValue<string>(SettingRegistry.MpvSocketPath)).Returns(mpvSocketPath);
+        mockConfig.Setup(x => x.GetValue<double>(SettingRegistry.MpvInitialVolume)).Returns(mpvInitialVolume);
+        mockConfig.Setup(x => x.GetValue<bool>(SettingRegistry.MpvEnableDebugOutput)).Returns(mpvEnableDebugOutput);
+        
+        mockConfig.Setup(x => x.GetValue<string>(SettingRegistry.MpdInstanceName)).Returns(mpdInstanceName);
+        mockConfig.Setup(x => x.GetValue<string>(SettingRegistry.MpdHost)).Returns(mpdHost);
+        mockConfig.Setup(x => x.GetValue<int>(SettingRegistry.MpdPort)).Returns(mpdPort);
+        mockConfig.Setup(x => x.GetValue<string>(SettingRegistry.MpdPassword)).Returns(mpdPassword);
+        mockConfig.Setup(x => x.GetValue<int>(SettingRegistry.MpdTimeoutMs)).Returns(mpdTimeoutMs);
+        mockConfig.Setup(x => x.GetValue<double>(SettingRegistry.MpdInitialVolume)).Returns(mpdInitialVolume);
+        mockConfig.Setup(x => x.GetValue<bool>(SettingRegistry.MpdEnableDebugOutput)).Returns(mpdEnableDebugOutput);
+
+        var mockConfigFactory = new Mock<IMelodeeConfigurationFactory>();
+        mockConfigFactory.Setup(x => x.GetConfigurationAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mockConfig.Object);
+
+        return mockConfigFactory.Object;
+    }
+
+    [Fact]
+    public async Task CreateBackendAsync_WithNullBackendType_ReturnsNull()
+    {
         var logger = new LoggerConfiguration().CreateLogger();
-        var mpvOptions = Options.Create(new MpvOptions());
-        var mpdOptions = Options.Create(new MpdOptions());
-        var factory = new PlaybackBackendFactory(logger, mpvOptions, mpdOptions);
+        var configFactory = CreateMockConfigurationFactory();
+        var factory = new PlaybackBackendFactory(logger, configFactory);
 
-        // Act
-        var backend = factory.CreateBackend(null);
+        var backend = await factory.CreateBackendAsync(null);
 
-        // Assert
         Assert.Null(backend);
     }
 
     [Fact]
-    public void CreateBackend_WithEmptyBackendType_ReturnsNull()
+    public async Task CreateBackendAsync_WithEmptyBackendType_ReturnsNull()
     {
-        // Arrange
         var logger = new LoggerConfiguration().CreateLogger();
-        var mpvOptions = Options.Create(new MpvOptions());
-        var mpdOptions = Options.Create(new MpdOptions());
-        var factory = new PlaybackBackendFactory(logger, mpvOptions, mpdOptions);
+        var configFactory = CreateMockConfigurationFactory();
+        var factory = new PlaybackBackendFactory(logger, configFactory);
 
-        // Act
-        var backend = factory.CreateBackend("");
+        var backend = await factory.CreateBackendAsync("");
 
-        // Assert
         Assert.Null(backend);
     }
 
     [Fact]
-    public void CreateBackend_WithMpvType_CreatesMpvBackend()
+    public async Task CreateBackendAsync_WithMpvType_CreatesMpvBackend()
     {
-        // Arrange
         var logger = new LoggerConfiguration().CreateLogger();
-        var mpvOptions = Options.Create(new MpvOptions());
-        var mpdOptions = Options.Create(new MpdOptions());
-        var factory = new PlaybackBackendFactory(logger, mpvOptions, mpdOptions);
+        var configFactory = CreateMockConfigurationFactory();
+        var factory = new PlaybackBackendFactory(logger, configFactory);
 
-        // Act
-        var backend = factory.CreateBackend("mpv");
+        var backend = await factory.CreateBackendAsync("mpv");
 
-        // Assert
         Assert.NotNull(backend);
         Assert.IsType<MpvPlaybackBackend>(backend);
     }
 
     [Fact]
-    public void CreateBackend_WithMpvUppercase_CreatesMpvBackend()
+    public async Task CreateBackendAsync_WithMpvUppercase_CreatesMpvBackend()
     {
-        // Arrange
         var logger = new LoggerConfiguration().CreateLogger();
-        var mpvOptions = Options.Create(new MpvOptions());
-        var mpdOptions = Options.Create(new MpdOptions());
-        var factory = new PlaybackBackendFactory(logger, mpvOptions, mpdOptions);
+        var configFactory = CreateMockConfigurationFactory();
+        var factory = new PlaybackBackendFactory(logger, configFactory);
 
-        // Act
-        var backend = factory.CreateBackend("MPV");
+        var backend = await factory.CreateBackendAsync("MPV");
 
-        // Assert
         Assert.NotNull(backend);
         Assert.IsType<MpvPlaybackBackend>(backend);
     }
 
     [Fact]
-    public void CreateBackend_WithMpdType_CreatesMpdBackend()
+    public async Task CreateBackendAsync_WithMpdType_CreatesMpdBackend()
     {
-        // Arrange
         var logger = new LoggerConfiguration().CreateLogger();
-        var mpvOptions = Options.Create(new MpvOptions());
-        var mpdOptions = Options.Create(new MpdOptions());
-        var factory = new PlaybackBackendFactory(logger, mpvOptions, mpdOptions);
+        var configFactory = CreateMockConfigurationFactory();
+        var factory = new PlaybackBackendFactory(logger, configFactory);
 
-        // Act
-        var backend = factory.CreateBackend("mpd");
+        var backend = await factory.CreateBackendAsync("mpd");
 
-        // Assert
         Assert.NotNull(backend);
         Assert.IsType<MpdPlaybackBackend>(backend);
     }
 
     [Fact]
-    public void CreateBackend_WithMpdUppercase_CreatesMpdBackend()
+    public async Task CreateBackendAsync_WithMpdUppercase_CreatesMpdBackend()
     {
-        // Arrange
         var logger = new LoggerConfiguration().CreateLogger();
-        var mpvOptions = Options.Create(new MpvOptions());
-        var mpdOptions = Options.Create(new MpdOptions());
-        var factory = new PlaybackBackendFactory(logger, mpvOptions, mpdOptions);
+        var configFactory = CreateMockConfigurationFactory();
+        var factory = new PlaybackBackendFactory(logger, configFactory);
 
-        // Act
-        var backend = factory.CreateBackend("MPD");
+        var backend = await factory.CreateBackendAsync("MPD");
 
-        // Assert
         Assert.NotNull(backend);
         Assert.IsType<MpdPlaybackBackend>(backend);
     }
 
     [Fact]
-    public void CreateBackend_WithUnknownType_ReturnsNull()
+    public async Task CreateBackendAsync_WithUnknownType_ReturnsNull()
     {
-        // Arrange
         var logger = new LoggerConfiguration().CreateLogger();
-        var mpvOptions = Options.Create(new MpvOptions());
-        var mpdOptions = Options.Create(new MpdOptions());
-        var factory = new PlaybackBackendFactory(logger, mpvOptions, mpdOptions);
+        var configFactory = CreateMockConfigurationFactory();
+        var factory = new PlaybackBackendFactory(logger, configFactory);
 
-        // Act
-        var backend = factory.CreateBackend("unknown");
+        var backend = await factory.CreateBackendAsync("unknown");
 
-        // Assert
         Assert.Null(backend);
     }
 
     [Fact]
-    public void GetOrCreateMpvBackend_CalledTwice_ReturnsSameInstance()
+    public async Task GetOrCreateMpvBackendAsync_CalledTwice_ReturnsSameInstance()
     {
-        // Arrange
         var logger = new LoggerConfiguration().CreateLogger();
-        var mpvOptions = Options.Create(new MpvOptions());
-        var mpdOptions = Options.Create(new MpdOptions());
-        var factory = new PlaybackBackendFactory(logger, mpvOptions, mpdOptions);
+        var configFactory = CreateMockConfigurationFactory();
+        var factory = new PlaybackBackendFactory(logger, configFactory);
 
-        // Act
-        var backend1 = factory.GetOrCreateMpvBackend();
-        var backend2 = factory.GetOrCreateMpvBackend();
+        var backend1 = await factory.GetOrCreateMpvBackendAsync();
+        var backend2 = await factory.GetOrCreateMpvBackendAsync();
 
-        // Assert
         Assert.NotNull(backend1);
         Assert.NotNull(backend2);
         Assert.Same(backend1, backend2);
     }
 
     [Fact]
-    public void GetOrCreateMpdBackend_CalledTwice_ReturnsSameInstance()
+    public async Task GetOrCreateMpdBackendAsync_CalledTwice_ReturnsSameInstance()
     {
-        // Arrange
         var logger = new LoggerConfiguration().CreateLogger();
-        var mpvOptions = Options.Create(new MpvOptions());
-        var mpdOptions = Options.Create(new MpdOptions());
-        var factory = new PlaybackBackendFactory(logger, mpvOptions, mpdOptions);
+        var configFactory = CreateMockConfigurationFactory();
+        var factory = new PlaybackBackendFactory(logger, configFactory);
 
-        // Act
-        var backend1 = factory.GetOrCreateMpdBackend();
-        var backend2 = factory.GetOrCreateMpdBackend();
+        var backend1 = await factory.GetOrCreateMpdBackendAsync();
+        var backend2 = await factory.GetOrCreateMpdBackendAsync();
 
-        // Assert
         Assert.NotNull(backend1);
         Assert.NotNull(backend2);
         Assert.Same(backend1, backend2);
     }
 
     [Fact]
-    public void DisposeBackend_DisposesCachedBackend()
+    public async Task DisposeBackend_DisposesCachedBackend()
     {
-        // Arrange
         var logger = new LoggerConfiguration().CreateLogger();
-        var mpvOptions = Options.Create(new MpvOptions());
-        var mpdOptions = Options.Create(new MpdOptions());
-        var factory = new PlaybackBackendFactory(logger, mpvOptions, mpdOptions);
+        var configFactory = CreateMockConfigurationFactory();
+        var factory = new PlaybackBackendFactory(logger, configFactory);
 
-        var backend = factory.GetOrCreateMpvBackend();
+        var backend = await factory.GetOrCreateMpvBackendAsync();
         Assert.NotNull(backend);
 
-        // Act
         factory.DisposeBackend();
-
-        // Note: We can't easily verify the backend was disposed without more complex setup
-        // This test at least verifies the method doesn't throw
     }
 }
 
@@ -188,10 +185,8 @@ public class BackendCapabilitiesTests
     [Fact]
     public void DefaultCapabilities_HaveExpectedValues()
     {
-        // Arrange & Act
         var capabilities = new BackendCapabilities();
 
-        // Assert
         Assert.True(capabilities.CanPlay);
         Assert.True(capabilities.CanPause);
         Assert.True(capabilities.CanStop);
@@ -206,7 +201,6 @@ public class BackendCapabilitiesTests
     [Fact]
     public void Capabilities_CanBeSetWithInitializer()
     {
-        // Arrange & Act
         var capabilities = new BackendCapabilities
         {
             CanPlay = false,
@@ -217,7 +211,6 @@ public class BackendCapabilitiesTests
             BackendInfo = "Test Backend v1.0"
         };
 
-        // Assert
         Assert.False(capabilities.CanPlay);
         Assert.False(capabilities.CanPause);
         Assert.False(capabilities.CanSeek);
@@ -232,10 +225,8 @@ public class BackendStatusTests
     [Fact]
     public void DefaultStatus_HasExpectedValues()
     {
-        // Arrange & Act
         var status = new BackendStatus();
 
-        // Assert
         Assert.False(status.IsPlaying);
         Assert.Equal(0, status.PositionSeconds);
         Assert.Null(status.Volume);
@@ -248,7 +239,6 @@ public class BackendStatusTests
     [Fact]
     public void Status_CanBeSetWithInitializer()
     {
-        // Arrange & Act
         var currentItemId = Guid.NewGuid();
         var status = new BackendStatus
         {
@@ -261,7 +251,6 @@ public class BackendStatusTests
             ErrorMessage = null
         };
 
-        // Assert
         Assert.True(status.IsPlaying);
         Assert.Equal(120.5, status.PositionSeconds);
         Assert.Equal(0.8, status.Volume);
@@ -272,90 +261,42 @@ public class BackendStatusTests
     }
 }
 
-public class MpdOptionsTests
-{
-    [Fact]
-    public void DefaultMpdOptions_HasExpectedValues()
-    {
-        // Arrange & Act
-        var options = new MpdOptions();
-
-        // Assert
-        Assert.Null(options.InstanceName);
-        Assert.Equal("localhost", options.Host);
-        Assert.Equal(6600, options.Port);
-        Assert.Null(options.Password);
-        Assert.Equal(10000, options.TimeoutMs);
-        Assert.Equal(0.8, options.InitialVolume);
-        Assert.False(options.EnableDebugOutput);
-    }
-
-    [Fact]
-    public void MpdOptions_CanBeSetWithInitializer()
-    {
-        // Arrange & Act
-        var options = new MpdOptions
-        {
-            InstanceName = "Living Room",
-            Host = "192.168.1.100",
-            Port = 6660,
-            Password = "secret",
-            TimeoutMs = 5000,
-            InitialVolume = 0.5,
-            EnableDebugOutput = true
-        };
-
-        // Assert
-        Assert.Equal("Living Room", options.InstanceName);
-        Assert.Equal("192.168.1.100", options.Host);
-        Assert.Equal(6660, options.Port);
-        Assert.Equal("secret", options.Password);
-        Assert.Equal(5000, options.TimeoutMs);
-        Assert.Equal(0.5, options.InitialVolume);
-        Assert.True(options.EnableDebugOutput);
-    }
-
-    [Fact]
-    public void MpdOptions_SectionName_IsCorrect()
-    {
-        // Assert
-        Assert.Equal("Mpd", MpdOptions.SectionName);
-    }
-}
-
 public class MpdPlaybackBackendTests
 {
     [Fact]
-    public void MpdPlaybackBackend_CanBeCreated_WithValidOptions()
+    public void MpdPlaybackBackend_CanBeCreated_WithValidParameters()
     {
-        // Arrange
         var logger = new LoggerConfiguration().CreateLogger();
-        var options = new MpdOptions
-        {
-            Host = "localhost",
-            Port = 6600,
-            InitialVolume = 0.8
-        };
 
-        // Act
-        var backend = new MpdPlaybackBackend(logger, options);
+        var backend = new MpdPlaybackBackend(
+            logger,
+            instanceName: null,
+            host: "localhost",
+            port: 6600,
+            password: null,
+            timeoutMs: 10000,
+            initialVolume: 0.8,
+            enableDebugOutput: false);
 
-        // Assert
         Assert.NotNull(backend);
     }
 
     [Fact]
     public async Task MpdPlaybackBackend_GetCapabilities_ReturnsExpectedCapabilities()
     {
-        // Arrange
         var logger = new LoggerConfiguration().CreateLogger();
-        var options = new MpdOptions();
-        var backend = new MpdPlaybackBackend(logger, options);
+        var backend = new MpdPlaybackBackend(
+            logger,
+            instanceName: null,
+            host: "localhost",
+            port: 6600,
+            password: null,
+            timeoutMs: 10000,
+            initialVolume: 0.8,
+            enableDebugOutput: false);
 
-        // Act
         var capabilities = await backend.GetCapabilitiesAsync();
 
-        // Assert
         Assert.True(capabilities.CanPlay);
         Assert.True(capabilities.CanPause);
         Assert.True(capabilities.CanStop);
@@ -363,26 +304,30 @@ public class MpdPlaybackBackendTests
         Assert.True(capabilities.CanSkip);
         Assert.True(capabilities.CanSetVolume);
         Assert.True(capabilities.CanReportPosition);
-        Assert.False(capabilities.IsAvailable); // Not connected initially
+        Assert.False(capabilities.IsAvailable);
         Assert.Null(capabilities.BackendInfo);
     }
 
     [Fact]
     public async Task MpdPlaybackBackend_GetStatus_ReturnsDisconnectedStatus_WhenNotInitialized()
     {
-        // Arrange
         var logger = new LoggerConfiguration().CreateLogger();
-        var options = new MpdOptions();
-        var backend = new MpdPlaybackBackend(logger, options);
+        var backend = new MpdPlaybackBackend(
+            logger,
+            instanceName: null,
+            host: "localhost",
+            port: 6600,
+            password: null,
+            timeoutMs: 10000,
+            initialVolume: 0.8,
+            enableDebugOutput: false);
 
-        // Act
         var status = await backend.GetStatusAsync();
 
-        // Assert
         Assert.False(status.IsConnected);
         Assert.False(status.IsPlaying);
         Assert.Equal(0, status.PositionSeconds);
-        Assert.Equal(0.8, status.Volume); // Initial volume
+        Assert.Equal(0.8, status.Volume);
         Assert.Equal("Not connected to MPD", status.StatusMessage);
         Assert.Null(status.ErrorMessage);
     }
@@ -390,24 +335,135 @@ public class MpdPlaybackBackendTests
     [Fact]
     public async Task MpdPlaybackBackend_Shutdown_DoesNotThrow_WhenNotInitialized()
     {
-        // Arrange
         var logger = new LoggerConfiguration().CreateLogger();
-        var options = new MpdOptions();
-        var backend = new MpdPlaybackBackend(logger, options);
+        var backend = new MpdPlaybackBackend(
+            logger,
+            instanceName: null,
+            host: "localhost",
+            port: 6600,
+            password: null,
+            timeoutMs: 10000,
+            initialVolume: 0.8,
+            enableDebugOutput: false);
 
-        // Act & Assert
-        await backend.ShutdownAsync(); // Should not throw
+        await backend.ShutdownAsync();
     }
 
     [Fact]
-    public async Task MpdPlaybackBackend_Dispose_DoesNotThrow()
+    public void MpdPlaybackBackend_Dispose_DoesNotThrow()
     {
-        // Arrange
         var logger = new LoggerConfiguration().CreateLogger();
-        var options = new MpdOptions();
-        var backend = new MpdPlaybackBackend(logger, options);
+        var backend = new MpdPlaybackBackend(
+            logger,
+            instanceName: null,
+            host: "localhost",
+            port: 6600,
+            password: null,
+            timeoutMs: 10000,
+            initialVolume: 0.8,
+            enableDebugOutput: false);
 
-        // Act & Assert
-        backend.Dispose(); // Should not throw
+        backend.Dispose();
+    }
+}
+
+public class MpvPlaybackBackendTests
+{
+    [Fact]
+    public void MpvPlaybackBackend_CanBeCreated_WithValidParameters()
+    {
+        var logger = new LoggerConfiguration().CreateLogger();
+
+        var backend = new MpvPlaybackBackend(
+            logger,
+            mpvPath: null,
+            audioDevice: null,
+            extraArgs: null,
+            socketPath: null,
+            initialVolume: 0.8,
+            enableDebugOutput: false);
+
+        Assert.NotNull(backend);
+    }
+
+    [Fact]
+    public async Task MpvPlaybackBackend_GetCapabilities_ReturnsExpectedCapabilities()
+    {
+        var logger = new LoggerConfiguration().CreateLogger();
+        var backend = new MpvPlaybackBackend(
+            logger,
+            mpvPath: null,
+            audioDevice: null,
+            extraArgs: null,
+            socketPath: null,
+            initialVolume: 0.8,
+            enableDebugOutput: false);
+
+        var capabilities = await backend.GetCapabilitiesAsync();
+
+        Assert.True(capabilities.CanPlay);
+        Assert.True(capabilities.CanPause);
+        Assert.True(capabilities.CanStop);
+        Assert.True(capabilities.CanSeek);
+        Assert.True(capabilities.CanSkip);
+        Assert.True(capabilities.CanSetVolume);
+        Assert.True(capabilities.CanReportPosition);
+        Assert.False(capabilities.IsAvailable);
+        Assert.Null(capabilities.BackendInfo);
+    }
+
+    [Fact]
+    public async Task MpvPlaybackBackend_GetStatus_ReturnsDisconnectedStatus_WhenNotInitialized()
+    {
+        var logger = new LoggerConfiguration().CreateLogger();
+        var backend = new MpvPlaybackBackend(
+            logger,
+            mpvPath: null,
+            audioDevice: null,
+            extraArgs: null,
+            socketPath: null,
+            initialVolume: 0.8,
+            enableDebugOutput: false);
+
+        var status = await backend.GetStatusAsync();
+
+        Assert.False(status.IsConnected);
+        Assert.False(status.IsPlaying);
+        Assert.Equal(0, status.PositionSeconds);
+        Assert.Equal(0.8, status.Volume);
+        Assert.Equal("MPV process not running or IPC not connected", status.StatusMessage);
+        Assert.Null(status.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task MpvPlaybackBackend_Shutdown_DoesNotThrow_WhenNotInitialized()
+    {
+        var logger = new LoggerConfiguration().CreateLogger();
+        var backend = new MpvPlaybackBackend(
+            logger,
+            mpvPath: null,
+            audioDevice: null,
+            extraArgs: null,
+            socketPath: null,
+            initialVolume: 0.8,
+            enableDebugOutput: false);
+
+        await backend.ShutdownAsync();
+    }
+
+    [Fact]
+    public void MpvPlaybackBackend_Dispose_DoesNotThrow()
+    {
+        var logger = new LoggerConfiguration().CreateLogger();
+        var backend = new MpvPlaybackBackend(
+            logger,
+            mpvPath: null,
+            audioDevice: null,
+            extraArgs: null,
+            socketPath: null,
+            initialVolume: 0.8,
+            enableDebugOutput: false);
+
+        backend.Dispose();
     }
 }
