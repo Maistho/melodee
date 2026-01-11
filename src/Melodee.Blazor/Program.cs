@@ -28,6 +28,7 @@ using Melodee.Common.Plugins.SearchEngine.Spotify;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services;
 using Melodee.Common.Services.Caching;
+using Melodee.Common.Services.Jukebox;
 using Melodee.Common.Services.PartyMode;
 using Melodee.Common.Services.Playback;
 using Melodee.Common.Services.Playback.Factory;
@@ -290,6 +291,7 @@ builder.Services.AddScoped<IDoctorService, DoctorService>();
 // Playback backend services for Jukebox
 builder.Services.AddSingleton<PlaybackBackendFactory>();
 builder.Services.AddScoped<IPlaybackBackendService, PlaybackBackendService>();
+builder.Services.AddScoped<ISubsonicJukeboxService, SubsonicJukeboxService>();
 
 // Rate limiting service for Blazor UI
 builder.Services.AddSingleton<IRateLimiterService, RateLimiterService>();

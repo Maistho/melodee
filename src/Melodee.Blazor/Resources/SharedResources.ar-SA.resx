@@ -5589,4 +5589,37 @@
   <data name="PartyMode.JoinFailed" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Failed to join session</value>
   </data>
+  <data name="Jukebox.Capabilities" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Capabilities</value>
+  </data>
+  <data name="Jukebox.Controls" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Controls</value>
+  </data>
+  <data name="Jukebox.CurrentTrack" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Current Track</value>
+  </data>
+  <data name="Jukebox.Disconnected" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Disconnected</value>
+  </data>
+  <data name="Jukebox.Next" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Next</value>
+  </data>
+  <data name="Jukebox.NotEnabledHint" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Enable Jukebox in Settings to use server-side playback.</value>
+  </data>
+  <data name="Jukebox.NoTrackPlaying" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No track currently playing</value>
+  </data>
+  <data name="Jukebox.Pause" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Pause</value>
+  </data>
+  <data name="Jukebox.Play" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Play</value>
+  </data>
+  <data name="Jukebox.Previous" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Previous</value>
+  </data>
+  <data name="Jukebox.Stop" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Stop</value>
+  </data>
 </root>

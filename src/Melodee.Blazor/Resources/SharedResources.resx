@@ -5588,4 +5588,37 @@
 <data name="PartyMode.JoinFailed" xml:space="preserve">
     <value>Failed to join session</value>
   </data>
+<data name="Jukebox.Capabilities" xml:space="preserve">
+    <value>Capabilities</value>
+  </data>
+<data name="Jukebox.Controls" xml:space="preserve">
+    <value>Controls</value>
+  </data>
+<data name="Jukebox.CurrentTrack" xml:space="preserve">
+    <value>Current Track</value>
+  </data>
+<data name="Jukebox.Disconnected" xml:space="preserve">
+    <value>Disconnected</value>
+  </data>
+<data name="Jukebox.Next" xml:space="preserve">
+    <value>Next</value>
+  </data>
+<data name="Jukebox.NotEnabledHint" xml:space="preserve">
+    <value>Enable Jukebox in Settings to use server-side playback.</value>
+  </data>
+<data name="Jukebox.NoTrackPlaying" xml:space="preserve">
+    <value>No track currently playing</value>
+  </data>
+<data name="Jukebox.Pause" xml:space="preserve">
+    <value>Pause</value>
+  </data>
+<data name="Jukebox.Play" xml:space="preserve">
+    <value>Play</value>
+  </data>
+<data name="Jukebox.Previous" xml:space="preserve">
+    <value>Previous</value>
+  </data>
+<data name="Jukebox.Stop" xml:space="preserve">
+    <value>Stop</value>
+  </data>
 </root>
