@@ -4,8 +4,14 @@ This guide outlines the steps to manually verify the Party Mode and Jukebox func
 
 ## Prerequisites
 
-1.  **Configuration**: Jukebox settings are now stored in the database via the Settings service. Configure them through the admin UI or directly in the database:
-    
+1.  **Configuration**: Party Mode and Jukebox are **separate features** with independent enable settings. Configure them through the admin UI or directly in the database:
+
+    **Party Mode Settings:**
+    | Setting Key | Description | Example Value |
+    |-------------|-------------|---------------|
+    | `partyMode.enabled` | Enable/disable Party Mode | `true` |
+
+    **Jukebox Settings:**
     | Setting Key | Description | Example Value |
     |-------------|-------------|---------------|
     | `jukebox.enabled` | Enable/disable Jukebox | `true` |
@@ -43,20 +49,24 @@ This guide outlines the steps to manually verify the Party Mode and Jukebox func
 
 ### 1. Create a Party Session (Host)
 1.  Log in as **User A** (Host).
-2.  Navigate to the **Party Mode** dashboard (usually via the main menu or `/party`).
-3.  Click **Create Session**.
-4.  Enter a session name (e.g., "Friday Vibes").
-5.  **Verify**:
+2.  Ensure `partyMode.enabled` is set to `true` in the admin settings.
+3.  Navigate to the **Party Mode** dashboard:
+    *   Click **"Party Mode"** in the main navigation menu (visible when Party Mode is enabled), or
+    *   Go directly to `/party`.
+4.  On the Party Mode dashboard, click **Create Session**.
+5.  Enter a session name (e.g., "Friday Vibes").
+6.  **Verify**:
     *   You are redirected to the Party Session view.
     *   Status shows "Active".
     *   You are listed as "Owner".
 
 ### 2. Join a Session (Guest & Security Check)
 1.  Open a new browser window (Incognito) and log in as **User B**.
-2.  Navigate to **Party Mode**.
-3.  Click **Join Session**.
-4.  Enter the **Session Code** from User A's screen.
-5.  **Verify**:
+2.  Navigate to the **Party Mode** dashboard (`/party`).
+3.  Either:
+    *   Enter the **Session Code** in the "Join Session" input and click **Join**, or
+    *   Find the session in the "Active Sessions" list and click **Join**.
+4.  **Verify**:
     *   User B joins successfully.
     *   **SignalR Check**: User A's screen immediately updates the "Participants" list *without* a page refresh.
 
@@ -154,18 +164,25 @@ This tests the "Server-side Jukebox" functionality typically used by Subsonic cl
 
 ## Validation Checklist
 
+- [ ] **Party Mode Navigation**: Party Mode nav item appears when `partyMode.enabled` is `true`.
+- [ ] **Party Dashboard**: `/party` shows dashboard with create, join, my sessions, and active sessions.
 - [ ] **Crash Test**: Jukebox service starts without crashing (Fixed Guid session).
 - [ ] **Real-time**: Queue updates appear on all clients without refresh.
 - [ ] **Security**: Listeners cannot Skip/Pause in Party Mode.
 - [ ] **Admin Controls**: Jukebox UI controls only visible to admins.
 - [ ] **Data**: Jukebox playlist shows real Song/Artist names.
-- [ ] **Settings**: All Jukebox/MPV/MPD settings are read from database (not appsettings.json).
+- [ ] **Settings**: All Party Mode/Jukebox/MPV/MPD settings are read from database (not appsettings.json).
 - [ ] **MPV IPC**: MPV backend connects via Unix socket and responds to commands.
 - [ ] **File Resolution**: `PlaySongAsync` correctly resolves file paths from SongApiKey.
 
 ---
 
 ## Troubleshooting
+
+### Party Mode not in Navigation Menu
+- Check `partyMode.enabled` setting in the database Settings table.
+- Verify the setting value is `true` (string).
+- Refresh the page after changing the setting.
 
 ### Jukebox shows "Not Enabled"
 - Check `jukebox.enabled` setting in the database Settings table.

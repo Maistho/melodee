@@ -5528,4 +5528,64 @@
 <data name="AdminDoctor.Check.PodcastConfiguration" xml:space="preserve">
     <value>Podcast Configuration</value>
   </data>
+<data name="Navigation.PartyMode" xml:space="preserve">
+    <value>Party Mode</value>
+  </data>
+<data name="PartyMode.NotEnabled" xml:space="preserve">
+    <value>Party Mode is not enabled</value>
+  </data>
+<data name="PartyMode.NotEnabledHint" xml:space="preserve">
+    <value>Contact your administrator to enable Party Mode</value>
+  </data>
+<data name="PartyMode.CreateSessionDescription" xml:space="preserve">
+    <value>Create a new party session and invite friends to listen together</value>
+  </data>
+<data name="PartyMode.SessionNamePlaceholder" xml:space="preserve">
+    <value>Enter session name...</value>
+  </data>
+<data name="PartyMode.JoinCodePlaceholder" xml:space="preserve">
+    <value>Enter join code...</value>
+  </data>
+<data name="PartyMode.CreateButton" xml:space="preserve">
+    <value>Create Session</value>
+  </data>
+<data name="PartyMode.JoinSessionDescription" xml:space="preserve">
+    <value>Join an existing session using a session code</value>
+  </data>
+<data name="PartyMode.JoinButton" xml:space="preserve">
+    <value>Join</value>
+  </data>
+<data name="PartyMode.MySessions" xml:space="preserve">
+    <value>My Sessions</value>
+  </data>
+<data name="PartyMode.ActiveSessions" xml:space="preserve">
+    <value>Public Sessions</value>
+  </data>
+<data name="PartyMode.ActiveSessionsDescription" xml:space="preserve">
+    <value>Join a public session that anyone can participate in</value>
+  </data>
+<data name="PartyMode.Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+<data name="PartyMode.Actions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+<data name="PartyMode.OpenSession" xml:space="preserve">
+    <value>Open session</value>
+  </data>
+<data name="PartyMode.LoadError" xml:space="preserve">
+    <value>Failed to load party mode data</value>
+  </data>
+<data name="PartyMode.SessionCreated" xml:space="preserve">
+    <value>Session created successfully</value>
+  </data>
+<data name="PartyMode.CreateFailed" xml:space="preserve">
+    <value>Failed to create session</value>
+  </data>
+<data name="PartyMode.InvalidSessionCode" xml:space="preserve">
+    <value>Invalid session code format</value>
+  </data>
+<data name="PartyMode.JoinFailed" xml:space="preserve">
+    <value>Failed to join session</value>
+  </data>
 </root>

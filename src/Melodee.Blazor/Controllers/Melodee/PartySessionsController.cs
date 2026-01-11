@@ -79,6 +79,39 @@ public sealed class PartySessionsController(
     }
 
     /// <summary>
+    /// Gets active sessions for the current user (sessions they own or participate in).
+    /// </summary>
+    [HttpGet]
+    [Route("my")]
+    [ProducesResponseType(typeof(IEnumerable<Models.PartySession>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetMySessions(CancellationToken cancellationToken = default)
+    {
+        var user = HttpContext.User;
+        var userIdStr = user.FindFirstValue(ClaimTypes.Sid);
+        if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out var userId))
+        {
+            return ApiUnauthorized();
+        }
+
+        var result = await partySessionService.GetUserSessionsAsync(userId, cancellationToken).ConfigureAwait(false);
+
+        return Ok(result.Data);
+    }
+
+    /// <summary>
+    /// Gets all active public sessions that can be joined.
+    /// </summary>
+    [HttpGet]
+    [Route("active")]
+    [ProducesResponseType(typeof(IEnumerable<Models.PartySession>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetActiveSessions(CancellationToken cancellationToken = default)
+    {
+        var result = await partySessionService.GetActiveSessionsAsync(cancellationToken).ConfigureAwait(false);
+
+        return Ok(result.Data);
+    }
+
+    /// <summary>
     /// Gets a party session by ID.
     /// </summary>
     [HttpGet]

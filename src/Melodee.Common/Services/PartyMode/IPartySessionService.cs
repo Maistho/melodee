@@ -20,6 +20,16 @@ public interface IPartySessionService
     Task<OperationResult<PartySession?>> GetAsync(Guid sessionApiKey, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets active sessions for a user (sessions they own or are participating in).
+    /// </summary>
+    Task<OperationResult<IEnumerable<PartySession>>> GetUserSessionsAsync(int userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all active public sessions that can be joined.
+    /// </summary>
+    Task<OperationResult<IEnumerable<PartySession>>> GetActiveSessionsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Joins a party session.
     /// </summary>
     Task<OperationResult<PartySessionParticipant>> JoinAsync(Guid sessionApiKey, int userId, string? joinCode, CancellationToken cancellationToken = default);

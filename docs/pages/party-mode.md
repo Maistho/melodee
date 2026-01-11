@@ -49,10 +49,32 @@ An endpoint is where the music plays. Party Mode supports:
 | **Server Jukebox** | Audio plays through the server's audio output (requires [Jukebox](/jukebox/)) |
 | **External** | Reserved for future integrations |
 
+## Enabling Party Mode
+
+Party Mode must be enabled by an administrator:
+
+1. Go to **Admin** → **Settings**
+2. Find the `partyMode.enabled` setting
+3. Set the value to `true`
+4. Save changes
+
+Once enabled, **Party Mode** appears in the main navigation menu for all users.
+
+> **Note**: Party Mode and [Jukebox](/jukebox/) are separate features with independent settings. You can enable one without the other.
+
 ## Getting Started
 
 ### Creating a Session
 
+**From the Party Mode Dashboard:**
+1. Click **Party Mode** in the main navigation menu (or go to `/party`)
+2. On the dashboard, click **Create Session**
+3. Enter a session name (e.g., "Friday Night Vibes")
+4. Click **Create**
+5. You'll be redirected to your new session
+6. Share the session code or URL with participants
+
+**From Albums/Artists/Playlists:**
 1. Navigate to any album, artist, or playlist in Melodee
 2. Click the **Party Mode** button (🎉) or select **Start Party** from the menu
 3. Configure session options:
@@ -69,9 +91,14 @@ An endpoint is where the music plays. Party Mode supports:
 2. Sign in if prompted (or join as guest if allowed)
 3. You're now a participant!
 
+**Via Session Code:**
+1. Click **Party Mode** in the main navigation menu (or go to `/party`)
+2. Enter the session code in the "Join Session" field
+3. Click **Join**
+
 **Via Session Browser:**
-1. Navigate to **Party Mode** in the main menu
-2. Browse active public sessions
+1. Click **Party Mode** in the main navigation menu (or go to `/party`)
+2. Browse the **Active Sessions** list for public sessions
 3. Click **Join** on any session
 
 ### Adding Songs
@@ -254,6 +281,12 @@ The party interface shows connection status:
 
 ## Troubleshooting
 
+### Party Mode Not in Navigation Menu
+
+1. **Feature Disabled**: An admin must set `partyMode.enabled` to `true`
+2. **Refresh Page**: After changing settings, refresh the browser
+3. **Check Settings**: Verify the setting in Admin → Settings
+
 ### Can't Join Session
 
 1. **Check URL**: Ensure you have the correct session link
@@ -292,80 +325,83 @@ The party interface shows connection status:
 
 ```
 # Create session
-POST /api/v1/party/sessions
+POST /api/v1/party-sessions
 Body: { "name": "My Party", "isPublic": true }
 
 # Get session
-GET /api/v1/party/sessions/{apiKey}
+GET /api/v1/party-sessions/{apiKey}
 
 # Update session
-PATCH /api/v1/party/sessions/{apiKey}
+PATCH /api/v1/party-sessions/{apiKey}
 Body: { "name": "New Name", "isQueueLocked": true }
 
 # Delete session
-DELETE /api/v1/party/sessions/{apiKey}
+DELETE /api/v1/party-sessions/{apiKey}
 
-# List public sessions
-GET /api/v1/party/sessions?publicOnly=true
+# List your sessions
+GET /api/v1/party-sessions/my
+
+# List active public sessions
+GET /api/v1/party-sessions/active
 ```
 
 ### Participants
 
 ```
 # Join session
-POST /api/v1/party/sessions/{apiKey}/join
+POST /api/v1/party-sessions/{apiKey}/join
 
 # Leave session
-POST /api/v1/party/sessions/{apiKey}/leave
+POST /api/v1/party-sessions/{apiKey}/leave
 
 # Get participants
-GET /api/v1/party/sessions/{apiKey}/participants
+GET /api/v1/party-sessions/{apiKey}/participants
 
 # Update participant role
-PATCH /api/v1/party/sessions/{apiKey}/participants/{userId}
+PATCH /api/v1/party-sessions/{apiKey}/participants/{userId}
 Body: { "role": "DJ" }
 
 # Kick participant
-DELETE /api/v1/party/sessions/{apiKey}/participants/{userId}
+DELETE /api/v1/party-sessions/{apiKey}/participants/{userId}
 ```
 
 ### Queue
 
 ```
 # Get queue
-GET /api/v1/party/sessions/{apiKey}/queue
+GET /api/v1/party-sessions/{apiKey}/queue
 
 # Add to queue
-POST /api/v1/party/sessions/{apiKey}/queue
+POST /api/v1/party-sessions/{apiKey}/queue
 Body: { "songId": 12345 }
 
 # Remove from queue
-DELETE /api/v1/party/sessions/{apiKey}/queue/{itemApiKey}
+DELETE /api/v1/party-sessions/{apiKey}/queue/{itemApiKey}
 
 # Reorder queue
-POST /api/v1/party/sessions/{apiKey}/queue/reorder
+POST /api/v1/party-sessions/{apiKey}/queue/reorder
 Body: { "itemApiKey": "...", "newIndex": 5 }
 
 # Clear queue
-DELETE /api/v1/party/sessions/{apiKey}/queue
+DELETE /api/v1/party-sessions/{apiKey}/queue
 ```
 
 ### Playback
 
 ```
 # Get playback state
-GET /api/v1/party/sessions/{apiKey}/playback
+GET /api/v1/party-sessions/{apiKey}/playback
 
 # Update playback
-POST /api/v1/party/sessions/{apiKey}/playback
+POST /api/v1/party-sessions/{apiKey}/playback
 Body: { "action": "play" | "pause" | "stop" | "next" | "previous" }
 
 # Seek
-POST /api/v1/party/sessions/{apiKey}/playback/seek
+POST /api/v1/party-sessions/{apiKey}/playback/seek
 Body: { "positionSeconds": 120 }
 
 # Set volume
-POST /api/v1/party/sessions/{apiKey}/playback/volume
+POST /api/v1/party-sessions/{apiKey}/playback/volume
 Body: { "volume": 0.75 }
 ```
 
@@ -373,13 +409,13 @@ Body: { "volume": 0.75 }
 
 ```
 # Get available endpoints
-GET /api/v1/party/sessions/{apiKey}/endpoints
+GET /api/v1/party-sessions/{apiKey}/endpoints
 
 # Set active endpoint
-POST /api/v1/party/sessions/{apiKey}/endpoints/{endpointApiKey}/activate
+POST /api/v1/party-sessions/{apiKey}/endpoints/{endpointApiKey}/activate
 
 # Detach endpoint
-POST /api/v1/party/sessions/{apiKey}/endpoints/{endpointApiKey}/detach
+POST /api/v1/party-sessions/{apiKey}/endpoints/{endpointApiKey}/detach
 ```
 
 ---

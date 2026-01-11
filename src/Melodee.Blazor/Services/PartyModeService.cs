@@ -38,6 +38,44 @@ public class PartyModeService
         }
     }
 
+    public async Task<IEnumerable<PartySessionDto>?> GetMySessionsAsync()
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"{BasePath}/my");
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadFromJsonAsync<IEnumerable<PartySessionDto>>();
+            }
+            _logger.LogWarning("Failed to get my party sessions: {StatusCode}", response.StatusCode);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting my party sessions");
+            return null;
+        }
+    }
+
+    public async Task<IEnumerable<PartySessionDto>?> GetActiveSessionsAsync()
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"{BasePath}/active");
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadFromJsonAsync<IEnumerable<PartySessionDto>>();
+            }
+            _logger.LogWarning("Failed to get active party sessions: {StatusCode}", response.StatusCode);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting active party sessions");
+            return null;
+        }
+    }
+
     public async Task<OperationResult<PartySessionDto>?> GetSessionAsync(Guid sessionApiKey)
     {
         try

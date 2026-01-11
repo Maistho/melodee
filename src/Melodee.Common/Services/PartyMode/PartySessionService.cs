@@ -130,6 +130,50 @@ public sealed class PartySessionService(
         };
     }
 
+    public async Task<OperationResult<IEnumerable<PartySession>>> GetUserSessionsAsync(
+        int userId,
+        CancellationToken cancellationToken = default)
+    {
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var sessions = await scopedContext.PartySessions
+            .AsNoTracking()
+            .Where(s => s.Status == PartySessionStatus.Active &&
+                        (s.OwnerUserId == userId ||
+                         s.Participants.Any(p => p.UserId == userId)))
+            .Include(s => s.OwnerUser)
+            .Include(s => s.Participants)
+            .OrderByDescending(s => s.CreatedAt)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return new OperationResult<IEnumerable<PartySession>>
+        {
+            Data = sessions
+        };
+    }
+
+    public async Task<OperationResult<IEnumerable<PartySession>>> GetActiveSessionsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var sessions = await scopedContext.PartySessions
+            .AsNoTracking()
+            .Where(s => s.Status == PartySessionStatus.Active && s.JoinCodeHash == null)
+            .Include(s => s.OwnerUser)
+            .Include(s => s.Participants)
+            .OrderByDescending(s => s.CreatedAt)
+            .Take(50)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return new OperationResult<IEnumerable<PartySession>>
+        {
+            Data = sessions
+        };
+    }
+
     public async Task<OperationResult<PartySessionParticipant>> JoinAsync(
         Guid sessionApiKey,
         int userId,

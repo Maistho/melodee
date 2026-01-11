@@ -1,0 +1,283 @@
+@page "/party"
+@using Melodee.Blazor.Services
+@using Melodee.Common.Constants
+@inherits MelodeeComponentBase
+
+@inject PartyModeService PartyModeService
+@inject IMelodeeConfigurationFactory ConfigurationFactory
+@inject NavigationManager NavigationManager
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+@inject ILogger<PartyMode> Logger
+
+<PageTitle>@L("PartyMode.Title")</PageTitle>
+
+<RadzenStack Gap="1rem">
+    <RadzenText TextStyle="TextStyle.H4">@L("PartyMode.Title")</RadzenText>
+
+    @if (_isLoading)
+    {
+        <RadzenProgressBarCircular ShowValue="true" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large"/>
+    }
+    else if (!_partyModeEnabled)
+    {
+        <RadzenCard>
+            <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Gap="1rem" Style="padding: 2rem;">
+                <RadzenIcon Icon="celebration" Style="font-size: 4rem; color: var(--rz-text-disabled-color);"/>
+                <RadzenText TextStyle="TextStyle.H6" Style="color: var(--rz-text-disabled-color);">@L("PartyMode.NotEnabled")</RadzenText>
+                <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-disabled-color);">@L("PartyMode.NotEnabledHint")</RadzenText>
+            </RadzenStack>
+        </RadzenCard>
+    }
+    else
+    {
+        <RadzenRow Gap="1rem">
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenCard>
+                    <RadzenStack Gap="1rem">
+                        <RadzenText TextStyle="TextStyle.H6">@L("PartyMode.CreateSession")</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Body2">@L("PartyMode.CreateSessionDescription")</RadzenText>
+                        
+                        <RadzenTextBox @bind-Value="_newSessionName" 
+                                       Placeholder="@L("PartyMode.SessionNamePlaceholder")" 
+                                       Style="width: 100%;" />
+                        
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                            <RadzenCheckBox @bind-Value="_requireJoinCode" />
+                            <RadzenLabel Text="@L("PartyMode.RequireJoinCode")" />
+                        </RadzenStack>
+                        
+                        @if (_requireJoinCode)
+                        {
+                            <RadzenTextBox @bind-Value="_joinCode" 
+                                           Placeholder="@L("PartyMode.JoinCodePlaceholder")" 
+                                           Style="width: 100%;" />
+                        }
+                        
+                        <RadzenButton Text="@L("PartyMode.CreateButton")" 
+                                      Icon="add" 
+                                      ButtonStyle="ButtonStyle.Primary" 
+                                      Click="CreateSessionAsync"
+                                      Disabled="@(string.IsNullOrWhiteSpace(_newSessionName) || _isCreating)" />
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+            
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenCard>
+                    <RadzenStack Gap="1rem">
+                        <RadzenText TextStyle="TextStyle.H6">@L("PartyMode.JoinSession")</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Body2">@L("PartyMode.JoinSessionDescription")</RadzenText>
+                        
+                        <RadzenTextBox @bind-Value="_joinSessionCode" 
+                                       Placeholder="@L("PartyMode.EnterSessionCode")" 
+                                       Style="width: 100%;" />
+                        
+                        <RadzenButton Text="@L("PartyMode.JoinButton")" 
+                                      Icon="login" 
+                                      ButtonStyle="ButtonStyle.Secondary" 
+                                      Click="JoinByCodeAsync"
+                                      Disabled="@(string.IsNullOrWhiteSpace(_joinSessionCode) || _isJoining)" />
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+        </RadzenRow>
+
+        @if (_mySessions.Any())
+        {
+            <RadzenCard class="rz-mt-4">
+                <RadzenStack Gap="1rem">
+                    <RadzenText TextStyle="TextStyle.H6">@L("PartyMode.MySessions")</RadzenText>
+                    
+                    <RadzenDataGrid Data="@_mySessions" TItem="PartySessionDto" AllowSorting="false">
+                        <Columns>
+                            <RadzenDataGridColumn Title="@L("PartyMode.SessionName")" Width="200px">
+                                <Template Context="session">
+                                    <RadzenLink Path="@($"/party/{session.ApiKey}")" Text="@session.Name" />
+                                </Template>
+                            </RadzenDataGridColumn>
+                            <RadzenDataGridColumn Property="@nameof(PartySessionDto.Status)" Title="@L("PartyMode.Status")" Width="100px">
+                                <Template Context="session">
+                                    <RadzenBadge BadgeStyle="@(session.Status == "Active" ? BadgeStyle.Success : BadgeStyle.Light)" 
+                                                 Text="@session.Status" IsPill="true" />
+                                </Template>
+                            </RadzenDataGridColumn>
+                            <RadzenDataGridColumn Title="@L("PartyMode.Actions")" Width="120px">
+                                <Template Context="session">
+                                    <RadzenButton Icon="play_arrow" 
+                                                  ButtonStyle="ButtonStyle.Light" 
+                                                  Size="ButtonSize.Small"
+                                                  Click="@(() => NavigateToSession(session.ApiKey))"
+                                                  title="@L("PartyMode.OpenSession")" />
+                                </Template>
+                            </RadzenDataGridColumn>
+                        </Columns>
+                    </RadzenDataGrid>
+                </RadzenStack>
+            </RadzenCard>
+        }
+
+        @if (_activeSessions.Any())
+        {
+            <RadzenCard class="rz-mt-4">
+                <RadzenStack Gap="1rem">
+                    <RadzenText TextStyle="TextStyle.H6">@L("PartyMode.ActiveSessions")</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Body2">@L("PartyMode.ActiveSessionsDescription")</RadzenText>
+                    
+                    <RadzenDataGrid Data="@_activeSessions" TItem="PartySessionDto" AllowSorting="false">
+                        <Columns>
+                            <RadzenDataGridColumn Property="@nameof(PartySessionDto.Name)" Title="@L("PartyMode.SessionName")" Width="200px" />
+                            <RadzenDataGridColumn Title="@L("PartyMode.Actions")" Width="120px">
+                                <Template Context="session">
+                                    <RadzenButton Text="@L("PartyMode.JoinButton")" 
+                                                  Icon="login" 
+                                                  ButtonStyle="ButtonStyle.Primary" 
+                                                  Size="ButtonSize.Small"
+                                                  Click="@(() => JoinSessionAsync(session.ApiKey))" />
+                                </Template>
+                            </RadzenDataGridColumn>
+                        </Columns>
+                    </RadzenDataGrid>
+                </RadzenStack>
+            </RadzenCard>
+        }
+    }
+</RadzenStack>
+
+@code {
+    private bool _isLoading = true;
+    private bool _partyModeEnabled;
+    private bool _isCreating;
+    private bool _isJoining;
+    
+    private string _newSessionName = string.Empty;
+    private bool _requireJoinCode;
+    private string _joinCode = string.Empty;
+    private string _joinSessionCode = string.Empty;
+    
+    private List<PartySessionDto> _mySessions = [];
+    private List<PartySessionDto> _activeSessions = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        try
+        {
+            _isLoading = true;
+            
+            var configuration = await ConfigurationFactory.GetConfigurationAsync();
+            _partyModeEnabled = configuration.GetValue<bool>(SettingRegistry.PartyModeEnabled);
+            
+            if (_partyModeEnabled)
+            {
+                var mySessionsTask = PartyModeService.GetMySessionsAsync();
+                var activeSessionsTask = PartyModeService.GetActiveSessionsAsync();
+                
+                await Task.WhenAll(mySessionsTask, activeSessionsTask);
+                
+                _mySessions = (mySessionsTask.Result ?? []).ToList();
+                _activeSessions = (activeSessionsTask.Result ?? [])
+                    .Where(s => !_mySessions.Any(m => m.ApiKey == s.ApiKey))
+                    .ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading party mode data");
+            NotificationService.Notify(NotificationSeverity.Error, L("Common.Error"), L("PartyMode.LoadError"));
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task CreateSessionAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_newSessionName))
+        {
+            return;
+        }
+        
+        try
+        {
+            _isCreating = true;
+            
+            var result = await PartyModeService.CreateSessionAsync(
+                _newSessionName, 
+                _requireJoinCode ? _joinCode : null);
+            
+            if (result?.IsSuccess == true && result.Data != null)
+            {
+                NotificationService.Notify(NotificationSeverity.Success, L("Common.Success"), L("PartyMode.SessionCreated"));
+                NavigationManager.NavigateTo($"/party/{result.Data.ApiKey}");
+            }
+            else
+            {
+                NotificationService.Notify(NotificationSeverity.Error, L("Common.Error"), L("PartyMode.CreateFailed"));
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error creating party session");
+            NotificationService.Notify(NotificationSeverity.Error, L("Common.Error"), L("PartyMode.CreateFailed"));
+        }
+        finally
+        {
+            _isCreating = false;
+        }
+    }
+
+    private async Task JoinByCodeAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_joinSessionCode))
+        {
+            return;
+        }
+        
+        if (!Guid.TryParse(_joinSessionCode, out var sessionApiKey))
+        {
+            NotificationService.Notify(NotificationSeverity.Warning, L("Common.Warning"), L("PartyMode.InvalidSessionCode"));
+            return;
+        }
+        
+        await JoinSessionAsync(sessionApiKey);
+    }
+
+    private async Task JoinSessionAsync(Guid sessionApiKey)
+    {
+        try
+        {
+            _isJoining = true;
+            
+            var result = await PartyModeService.JoinSessionAsync(sessionApiKey);
+            
+            if (result?.IsSuccess == true)
+            {
+                NavigationManager.NavigateTo($"/party/{sessionApiKey}");
+            }
+            else
+            {
+                NotificationService.Notify(NotificationSeverity.Error, L("Common.Error"), L("PartyMode.JoinFailed"));
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error joining party session");
+            NotificationService.Notify(NotificationSeverity.Error, L("Common.Error"), L("PartyMode.JoinFailed"));
+        }
+        finally
+        {
+            _isJoining = false;
+        }
+    }
+
+    private void NavigateToSession(Guid sessionApiKey)
+    {
+        NavigationManager.NavigateTo($"/party/{sessionApiKey}");
+    }
+}
