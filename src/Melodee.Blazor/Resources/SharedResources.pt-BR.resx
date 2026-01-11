@@ -5754,4 +5754,31 @@
   <data name="AdminThemes.DefaultThemeUpdated" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Default theme updated.</value>
   </data>
+  <data name="AdminThemes.NoLibraryTitle" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Theme Library Not Configured</value>
+  </data>
+  <data name="AdminThemes.NoLibraryMessage" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No Theme library has been set up. Without a Theme library, only the built-in Light and Dark themes are available. To use custom themes, create a Theme library.</value>
+  </data>
+  <data name="AdminThemes.CreateLibrary" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Create Theme Library</value>
+  </data>
+  <data name="AdminThemes.CreateLibraryTitle" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Create Theme Library</value>
+  </data>
+  <data name="AdminThemes.CreateLibraryPrompt" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Enter the path where custom themes will be stored:</value>
+  </data>
+  <data name="AdminThemes.LibraryPath" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Library Path</value>
+  </data>
+  <data name="AdminThemes.PathRequired" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Please enter a valid path</value>
+  </data>
+  <data name="AdminThemes.LibraryCreated" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Theme library created successfully</value>
+  </data>
+  <data name="AdminThemes.LibraryCreateFailed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to create theme library</value>
+  </data>
 </root>

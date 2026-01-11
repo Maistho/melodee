@@ -2,11 +2,14 @@
 @inherits MelodeeComponentBase
 @using Melodee.Common.Configuration
 @using Melodee.Common.Constants
+@using Melodee.Common.Data.Models
+@using Melodee.Common.Enums
 @using Melodee.Common.Models
 @using Melodee.Common.Services
 @using Microsoft.JSInterop
 
 @inject IThemeService ThemeService
+@inject LibraryService LibraryService
 @inject IMelodeeConfigurationFactory ConfigurationFactory
 @inject SettingService SettingService
 @inject NotificationService NotificationService
@@ -28,11 +31,28 @@
         </RadzenColumn>
         <RadzenColumn Size="12" SizeMD="6">
             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.End" Gap="0.5rem">
-                <RadzenButton Icon="refresh" Text="@L("Actions.Rescan")" Click="@RescanThemesAsync" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary" Disabled="@_isLoading"/>
-                <RadzenButton Icon="upload" Text="@L("AdminThemes.Import")" Click="@OpenImportDialog" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Primary" Disabled="@_isLoading"/>
+                <RadzenButton Icon="refresh" Text="@L("Actions.Rescan")" Click="@RescanThemesAsync" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Secondary" Disabled="@(_isLoading || !_hasThemeLibrary)"/>
+                <RadzenButton Icon="upload" Text="@L("AdminThemes.Import")" Click="@OpenImportDialog" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Primary" Disabled="@(_isLoading || !_hasThemeLibrary)"/>
             </RadzenStack>
         </RadzenColumn>
     </RadzenRow>
+
+    @* Theme Library Missing Banner *@
+    @if (!_hasThemeLibrary && !_isLoading)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Warning" Shade="Shade.Light" AllowClose="false" Size="AlertSize.Large">
+            <RadzenStack Gap="0.75rem">
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                    <RadzenIcon Icon="folder_off" Style="font-size: 1.5rem;"/>
+                    <RadzenText TextStyle="TextStyle.Subtitle1" Style="font-weight: 600;">@L("AdminThemes.NoLibraryTitle")</RadzenText>
+                </RadzenStack>
+                <RadzenText>@L("AdminThemes.NoLibraryMessage")</RadzenText>
+                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem" Style="margin-top: 0.5rem;">
+                    <RadzenButton Icon="create_new_folder" Text="@L("AdminThemes.CreateLibrary")" Click="@OpenCreateLibraryDialog" ButtonStyle="ButtonStyle.Primary"/>
+                </RadzenStack>
+            </RadzenStack>
+        </RadzenAlert>
+    }
 
     @* Default Theme Setting *@
     <RadzenCard>
@@ -145,13 +165,22 @@
 
 @code {
     private List<ThemePack> _themes = [];
-    private string _defaultThemeId = "melodee-dark";
+    private string _defaultThemeId = "dark";
     private bool _isLoading = true;
+    private bool _hasThemeLibrary;
+    private string _newLibraryPath = "/storage/themes";
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
+        await CheckThemeLibraryAsync();
         await LoadThemesAsync();
+    }
+
+    private async Task CheckThemeLibraryAsync()
+    {
+        var result = await LibraryService.GetThemeLibraryAsync();
+        _hasThemeLibrary = result.Data != null;
     }
 
     private async Task LoadThemesAsync()
@@ -165,7 +194,7 @@
             _themes = themes.ToList();
 
             var config = await ConfigurationFactory.GetConfigurationAsync();
-            _defaultThemeId = config.GetValue<string>(SettingRegistry.SystemDefaultTheme) ?? "melodee-dark";
+            _defaultThemeId = config.GetValue<string>(SettingRegistry.SystemDefaultTheme) ?? "dark";
         }
         catch (Exception ex)
         {
@@ -181,6 +210,95 @@
         {
             _isLoading = false;
             StateHasChanged();
+        }
+    }
+
+    private async Task OpenCreateLibraryDialog()
+    {
+        var result = await DialogService.OpenAsync(L("AdminThemes.CreateLibraryTitle"), ds =>
+            @<RadzenStack Gap="1.5rem" Style="padding: 1rem;">
+                <RadzenText>@L("AdminThemes.CreateLibraryPrompt")</RadzenText>
+                <RadzenFormField Text="@L("AdminThemes.LibraryPath")" Style="width: 100%;">
+                    <RadzenTextBox @bind-Value="_newLibraryPath" Style="width: 100%;" Placeholder="/storage/themes"/>
+                </RadzenFormField>
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+                    <RadzenButton Text="@L("Actions.Cancel")" Click="@(() => ds.Close(false))" ButtonStyle="ButtonStyle.Light"/>
+                    <RadzenButton Text="@L("Actions.Create")" Click="@(() => ds.Close(true))" ButtonStyle="ButtonStyle.Primary"/>
+                </RadzenStack>
+            </RadzenStack>,
+            new DialogOptions
+            {
+                Width = "450px",
+                Resizable = false,
+                Draggable = true
+            });
+
+        if (result is true)
+        {
+            await CreateThemeLibraryAsync();
+        }
+    }
+
+    private async Task CreateThemeLibraryAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_newLibraryPath))
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Warning,
+                Summary = L("Common.Warning"),
+                Detail = L("AdminThemes.PathRequired"),
+                Duration = 4000
+            });
+            return;
+        }
+
+        try
+        {
+            var library = new Library
+            {
+                Name = "Themes",
+                Path = _newLibraryPath.Trim(),
+                Type = (int)LibraryType.Theme,
+                Description = "Custom theme packs for Melodee",
+                SortOrder = 99,
+                CreatedAt = NodaTime.SystemClock.Instance.GetCurrentInstant()
+            };
+
+            var result = await LibraryService.CreateAsync(library);
+            if (result.IsSuccess && result.Data != null)
+            {
+                _hasThemeLibrary = true;
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = L("Common.Success"),
+                    Detail = L("AdminThemes.LibraryCreated"),
+                    Duration = 3000
+                });
+                await LoadThemesAsync();
+            }
+            else
+            {
+                var errorMessage = result.Messages?.FirstOrDefault() ?? L("AdminThemes.LibraryCreateFailed");
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = L("Common.Error"),
+                    Detail = errorMessage,
+                    Duration = 5000
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = L("Common.Error"),
+                Detail = ex.Message,
+                Duration = 5000
+            });
         }
     }
 
