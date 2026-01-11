@@ -39,10 +39,8 @@
 <body>
 <Routes @rendermode="InteractiveServer"/>
 
-<!-- Load Blazor framework first without defer to ensure it's available for reconnect script -->
+<!-- Blazor framework - handles reconnection automatically -->
 <script src="_framework/blazor.web.js"></script>
-<!-- Load reconnect script with defer - it will wait for Blazor to be initialized -->
-<script src="js/blazorReconnect.js" defer></script>
 <script defer>
     window.getUserAgent = () => {
         return navigator.userAgent;
