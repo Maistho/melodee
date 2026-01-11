@@ -548,70 +548,70 @@
     <value>هنرمندان برتر</value>
   </data>
   <data name="Dashboard.TopAlbums" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Top Albums</value>
+    <value>آلبوم‌های برتر</value>
   </data>
   <data name="Dashboard.TopSongs" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Top Songs</value>
+    <value>آهنگ‌های برتر</value>
   </data>
   <data name="Dashboard.Statistics" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Statistics</value>
+    <value>آمار</value>
   </data>
   <data name="Dashboard.TotalArtists" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Total Artists</value>
+    <value>مجموع هنرمندان</value>
   </data>
   <data name="Dashboard.TotalAlbums" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Total Albums</value>
+    <value>مجموع آلبوم‌ها</value>
   </data>
   <data name="Dashboard.TotalSongs" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Total Songs</value>
+    <value>مجموع آهنگ‌ها</value>
   </data>
   <data name="Dashboard.YourPins" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Your pins</value>
+    <value>سنجاق‌های شما</value>
   </data>
   <data name="Dashboard.YourPlaysLast30Days" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Your plays (last 30 days)</value>
+    <value>پخش‌های شما (30 روز گذشته)</value>
   </data>
   <data name="Dashboard.Date" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Date</value>
+    <value>تاریخ</value>
   </data>
   <data name="Dashboard.Plays" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Plays</value>
+    <value>پخش‌ها</value>
   </data>
   <data name="Dashboard.TopPlayedSongsLast30Days" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Top played songs (last 30 days)</value>
+    <value>آهنگ‌های پرپخش (30 روز گذشته)</value>
   </data>
   <data name="Dashboard.NoPlayHistoryYet" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] No play history yet. Start listening to see your top songs!</value>
+    <value>هنوز سابقه پخشی وجود ندارد. برای مشاهده آهنگ‌های برتر خود، شروع به گوش دادن کنید!</value>
   </data>
   <data name="Dashboard.RecentlyAddedArtists" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Recently added artists</value>
+    <value>هنرمندان اخیراً اضافه شده</value>
   </data>
   <data name="Dashboard.RecentlyAddedAlbums" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Recently added albums</value>
+    <value>آلبوم‌های اخیراً اضافه شده</value>
   </data>
   <data name="Dashboard.RequestActivity" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Request Activity</value>
+    <value>فعالیت درخواست</value>
   </data>
   <data name="Dashboard.Category" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Category</value>
+    <value>دسته‌بندی</value>
   </data>
   <data name="Dashboard.Description" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Description</value>
+    <value>توضیحات</value>
   </data>
   <data name="Dashboard.Activity" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Activity</value>
+    <value>فعالیت</value>
   </data>
   <data name="Dashboard.When" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] When</value>
+    <value>چه زمانی</value>
   </data>
   <data name="Library.BrowseArtists" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Browse Artists</value>
+    <value>مرور هنرمندان</value>
   </data>
   <data name="Library.BrowseAlbums" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Browse Albums</value>
+    <value>مرور آلبوم‌ها</value>
   </data>
   <data name="Library.BrowseSongs" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Browse Songs</value>
+    <value>مرور آهنگ‌ها</value>
   </data>
   <data name="Library.FilterByGenre" xml:space="preserve">
     <value>فیلتر بر اساس ژانر</value>
