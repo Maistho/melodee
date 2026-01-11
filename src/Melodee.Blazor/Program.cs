@@ -478,6 +478,7 @@ builder.Services
     .AddScoped<RequestAutoCompletionService>()
     .AddScoped<RadioStationService>()
     .AddScoped<PlaylistService>()
+    .AddScoped<IThemeService, ThemeService>()
     .AddScoped<ChartService>()
     .AddScoped<MelodeeMetadataMaker>()
     .AddScoped<AlbumRescanEventHandler>()
