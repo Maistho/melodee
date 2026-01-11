@@ -2,6 +2,10 @@
 
 Melodee supports a powerful theming system that allows users to customize the visual appearance of the application. Themes can control colors, typography, and even the visibility of navigation menu items.
 
+## Download Themes
+
+Pre-built theme packs are available in the [Melodee repository's `/themes` directory](https://github.com/sphildreth/melodee/tree/main/themes). Download any theme zip and import it via **Admin > Themes** in your Melodee instance.
+
 ## Built-in Themes
 
 Melodee includes several built-in themes:
@@ -40,7 +44,7 @@ These themes extend Radzen's base themes with Melodee's brand colors:
 
 ## Default Theme
 
-The system default theme is **Melodee Dark**. When a user has not set a preferred theme in their profile, the application will use this system default. Administrators can change the system default theme in **Admin > Themes**.
+The system default theme is **Radzen Dark**. If the Theme library is not configured or a custom theme fails to load, the application falls back to Radzen's built-in dark theme. Administrators can change the system default theme in **Admin > Themes**.
 
 Users can select their preferred theme from the theme selector in the application header. The selected theme is stored in a cookie and persists across sessions.
 
