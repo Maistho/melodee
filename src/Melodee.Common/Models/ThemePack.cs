@@ -86,8 +86,8 @@ public sealed record ThemePack
     public string? Description { get; init; }
     public bool IsBuiltIn { get; init; }
     public string? PreviewImage { get; init; }
-    public required string ThemeCssPath { get; init; }
-    public required string BaseDirectory { get; init; }
+    public string? ThemeCssPath { get; init; }
+    public string? BaseDirectory { get; init; }
     public ThemeMetadata? Metadata { get; init; }
     public bool HasWarnings { get; init; }
     public List<string>? WarningDetails { get; init; }

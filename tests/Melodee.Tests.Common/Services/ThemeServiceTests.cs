@@ -2,6 +2,7 @@ using System.IO.Compression;
 using System.Text.Json;
 using Melodee.Common.Configuration;
 using Melodee.Common.Constants;
+using Melodee.Common.Data.Models;
 using Melodee.Common.Models;
 using Melodee.Common.Services;
 using Moq;
@@ -12,6 +13,7 @@ public class ThemeServiceTests
 {
     private readonly Mock<IMelodeeConfigurationFactory> _configurationFactoryMock;
     private readonly Mock<IMelodeeConfiguration> _configurationMock;
+    private readonly Mock<LibraryService> _libraryServiceMock;
     private readonly string _testThemeLibraryPath;
 
     public ThemeServiceTests()
@@ -20,8 +22,6 @@ public class ThemeServiceTests
         Directory.CreateDirectory(_testThemeLibraryPath);
 
         _configurationMock = new Mock<IMelodeeConfiguration>();
-        _configurationMock.Setup(x => x.GetValue<string>(SettingRegistry.ThemeLibraryPath, It.IsAny<Func<string?, string>>())).Returns(_testThemeLibraryPath);
-        _configurationMock.Setup(x => x.GetValue<string>(SettingRegistry.ThemeLibraryPath, It.IsAny<Func<string?, string>>())).Returns(_testThemeLibraryPath);
         _configurationMock.Setup(x => x.GetValue<int>(SettingRegistry.ThemeMaxUploadSizeMb, It.IsAny<Func<int, int>>()))
             .Returns((string k, Func<int, int> cb) => cb != null ? cb(0) : 50);
         _configurationMock.Setup(x => x.GetValue<bool>(SettingRegistry.ThemeEnforceContrastValidation, It.IsAny<Func<bool, bool>>())).Returns(false);
@@ -29,12 +29,26 @@ public class ThemeServiceTests
         _configurationFactoryMock = new Mock<IMelodeeConfigurationFactory>();
         _configurationFactoryMock.Setup(x => x.GetConfigurationAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(_configurationMock.Object);
+
+        _libraryServiceMock = new Mock<LibraryService>();
+        _libraryServiceMock.Setup(x => x.GetThemeLibraryAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new OperationResult<Library>
+            {
+                Data = new Library
+                {
+                    Id = 8,
+                    Name = "Themes",
+                    Path = _testThemeLibraryPath,
+                    Type = (int)Melodee.Common.Enums.LibraryType.Theme,
+                    CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0)
+                }
+            });
     }
 
     private ThemeService CreateService()
     {
         var loggerMock = new Mock<Microsoft.Extensions.Logging.ILogger<ThemeService>>();
-        return new ThemeService(loggerMock.Object, _configurationFactoryMock.Object);
+        return new ThemeService(loggerMock.Object, _configurationFactoryMock.Object, _libraryServiceMock.Object);
     }
 
     [Fact]

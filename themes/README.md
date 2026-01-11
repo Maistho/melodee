@@ -1,0 +1,1 @@
+This directory holds example themes ready for an admin to import into their Melodee instance.

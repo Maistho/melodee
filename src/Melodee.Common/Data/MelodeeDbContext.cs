@@ -198,6 +198,16 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
                     Path = "/storage/podcasts/",
                     Type = (int)LibraryType.Podcast,
                     CreatedAt = seedDataTimestamp
+                },
+                new Library
+                {
+                    Id = 8,
+                    ApiKey = SeedGuid("Library", 8),
+                    Name = "Themes",
+                    Description = "Library where custom theme packs are stored.",
+                    Path = "/storage/themes/",
+                    Type = (int)LibraryType.Theme,
+                    CreatedAt = seedDataTimestamp
                 });
         });
 

@@ -2,10 +2,12 @@
 @implements IDisposable
 @using Melodee.Common.Configuration
 @using Melodee.Common.Constants
+@using Microsoft.Extensions.Logging
 @inject IHttpContextAccessor HttpContextAccessor
 @inject Radzen.ThemeService RadzenThemeService
 @inject Melodee.Common.Services.IThemeService ThemeService
 @inject IMelodeeConfigurationFactory ConfigurationFactory
+@inject ILogger<App> Logger
 
 <!DOCTYPE html>
 <html lang="en">
@@ -79,7 +81,7 @@
 
 @code {
     private const string ThemeCookieName = "melodee_ui_theme";
-    private const string DefaultThemeId = "melodee-dark";  // Melodee Dark theme - dark base with purple accents
+    private const string DefaultThemeId = "dark";  // Radzen dark theme as fallback default
     
     // Radzen built-in themes - these work correctly out of the box
     private static readonly string[] RadzenThemes = 
@@ -89,7 +91,7 @@
     ];
     
     private string _currentTheme = DefaultThemeId;
-    private string? _customCssPath = "/themes/builtin/melodee-dark/theme.css";  // Default to Melodee Dark custom CSS
+    private string? _customCssPath = null;  // No custom CSS by default - use Radzen theme
     private string _baseThemeName = "dark";
 
     protected override void OnInitialized()
@@ -154,14 +156,26 @@
         if (!IsRadzenTheme(themeId))
         {
             // All non-Radzen themes (including Light/Dark Melodee themes) are now dynamic
-            var theme = await ThemeService.GetThemePackAsync(themeId);
-            if (theme != null)
+            try
             {
-                _customCssPath = theme.ThemeCssPath;
-                // Use full theme CSS (dark.css/default.css) not base CSS (dark-base.css/default-base.css)
-                // The full theme CSS includes semantic variable assignments needed for proper styling
-                _baseThemeName = theme.Metadata?.BaseTheme == "dark" ? "dark" : "default";
+                var theme = await ThemeService.GetThemePackAsync(themeId);
+                if (theme != null)
+                {
+                    _customCssPath = theme.ThemeCssPath;
+                    // Use full theme CSS (dark.css/default.css) not base CSS (dark-base.css/default-base.css)
+                    // The full theme CSS includes semantic variable assignments needed for proper styling
+                    _baseThemeName = theme.Metadata?.BaseTheme == "dark" ? "dark" : "default";
+                    return;
+                }
             }
+            catch (Exception ex)
+            {
+                Logger.LogWarning(ex, "Failed to load theme {ThemeId}, falling back to Radzen dark theme", themeId);
+            }
+            
+            // Theme library not configured or theme not found - fall back to Radzen dark
+            _customCssPath = null;
+            _currentTheme = "dark";
         }
     }
     

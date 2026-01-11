@@ -184,7 +184,7 @@ public class ThemesController(
     public async Task<IActionResult> GetThemeFile(string themeId, string fileName, CancellationToken cancellationToken)
     {
         var theme = await themeService.GetThemePackAsync(themeId, cancellationToken);
-        if (theme == null)
+        if (theme == null || string.IsNullOrEmpty(theme.BaseDirectory))
         {
             return NotFound();
         }

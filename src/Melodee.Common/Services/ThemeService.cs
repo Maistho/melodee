@@ -57,7 +57,8 @@ public interface IThemeService
 
 public sealed class ThemeService(
     ILogger<ThemeService> logger,
-    IMelodeeConfigurationFactory configurationFactory) : IThemeService
+    IMelodeeConfigurationFactory configurationFactory,
+    LibraryService libraryService) : IThemeService
 {
     private const string ThemeJsonFileName = "theme.json";
     private const string ThemeCssFileName = "theme.css";
@@ -77,8 +78,7 @@ public sealed class ThemeService(
         themePacks.AddRange(GetBuiltInThemes());
 
         // Discover custom themes from library path
-        var config = await configurationFactory.GetConfigurationAsync();
-        var themeLibraryPath = config.GetValue<string>(SettingRegistry.ThemeLibraryPath);
+        var themeLibraryPath = await GetThemeLibraryPathAsync(cancellationToken);
 
         if (string.IsNullOrEmpty(themeLibraryPath) || !Directory.Exists(themeLibraryPath))
         {
@@ -212,13 +212,13 @@ public sealed class ThemeService(
 
     public async Task<(bool Success, string? ThemeId, string? Error)> ImportThemePackAsync(Stream zipStream, CancellationToken cancellationToken = default)
     {
+        var themeLibraryPath = await GetThemeLibraryPathAsync(cancellationToken);
         var config = await configurationFactory.GetConfigurationAsync();
-        var themeLibraryPath = config.GetValue<string>(SettingRegistry.ThemeLibraryPath);
         var maxUploadSizeMb = config.GetValue<int>(SettingRegistry.ThemeMaxUploadSizeMb, value => value <= 0 ? MaxThemeUploadSizeMb : value);
 
         if (string.IsNullOrEmpty(themeLibraryPath))
         {
-            return (false, null, "Theme library path not configured");
+            return (false, null, "Theme library not configured");
         }
 
         Directory.CreateDirectory(themeLibraryPath);
@@ -402,18 +402,19 @@ public sealed class ThemeService(
 
     private static IEnumerable<ThemePack> GetBuiltInThemes()
     {
+        // Radzen built-in themes - these don't have custom CSS files, they use RadzenTheme component
         return
         [
             new ThemePack
             {
                 Id = "light",
                 Name = "Light",
-                Author = "Melodee",
+                Author = "Radzen",
                 Version = "1.0.0",
-                Description = "Clean, bright theme for daytime use",
+                Description = "Clean, bright theme for daytime use (Radzen default)",
                 IsBuiltIn = true,
-                ThemeCssPath = "/themes/builtin/light/theme.css",
-                BaseDirectory = "src/Melodee.Blazor/wwwroot/themes/builtin/light",
+                ThemeCssPath = null, // Uses RadzenTheme component
+                BaseDirectory = null,
                 HasWarnings = false,
                 Metadata = new ThemeMetadata { Id = "light", Name = "Light", BaseTheme = "light" }
             },
@@ -421,105 +422,14 @@ public sealed class ThemeService(
             {
                 Id = "dark",
                 Name = "Dark",
-                Author = "Melodee",
+                Author = "Radzen",
                 Version = "1.0.0",
-                Description = "Easy on the eyes theme for low-light environments",
+                Description = "Easy on the eyes theme for low-light environments (Radzen dark)",
                 IsBuiltIn = true,
-                ThemeCssPath = "/themes/builtin/dark/theme.css",
-                BaseDirectory = "src/Melodee.Blazor/wwwroot/themes/builtin/dark",
+                ThemeCssPath = null, // Uses RadzenTheme component
+                BaseDirectory = null,
                 HasWarnings = false,
                 Metadata = new ThemeMetadata { Id = "dark", Name = "Dark", BaseTheme = "dark" }
-            },
-            new ThemePack
-            {
-                Id = "melodee",
-                Name = "Melodee Light",
-                Author = "Melodee",
-                Version = "1.0.0",
-                Description = "The official Melodee light theme",
-                IsBuiltIn = true,
-                ThemeCssPath = "/themes/builtin/melodee/theme.css",
-                BaseDirectory = "src/Melodee.Blazor/wwwroot/themes/builtin/melodee",
-                HasWarnings = false,
-                Metadata = new ThemeMetadata { Id = "melodee", Name = "Melodee Light", BaseTheme = "light" }
-            },
-            new ThemePack
-            {
-                Id = "melodee-dark",
-                Name = "Melodee Dark",
-                Author = "Melodee",
-                Version = "1.0.0",
-                Description = "The official Melodee dark theme",
-                IsBuiltIn = true,
-                ThemeCssPath = "/themes/builtin/melodee-dark/theme.css",
-                BaseDirectory = "src/Melodee.Blazor/wwwroot/themes/builtin/melodee-dark",
-                HasWarnings = false,
-                Metadata = new ThemeMetadata { Id = "melodee-dark", Name = "Melodee Dark", BaseTheme = "dark" }
-            },
-            new ThemePack
-            {
-                Id = "synthwave",
-                Name = "Synthwave",
-                Author = "Melodee",
-                Version = "1.0.0",
-                Description = "Retro 80s cyberpunk vibes",
-                IsBuiltIn = true,
-                ThemeCssPath = "/themes/builtin/synthwave/theme.css",
-                BaseDirectory = "src/Melodee.Blazor/wwwroot/themes/builtin/synthwave",
-                HasWarnings = false,
-                Metadata = new ThemeMetadata { Id = "synthwave", Name = "Synthwave", BaseTheme = "dark" }
-            },
-            new ThemePack
-            {
-                Id = "ocean-breeze",
-                Name = "Ocean Breeze",
-                Author = "Melodee",
-                Version = "1.0.0",
-                Description = "Calming ocean blues and teals",
-                IsBuiltIn = true,
-                ThemeCssPath = "/themes/builtin/ocean-breeze/theme.css",
-                BaseDirectory = "src/Melodee.Blazor/wwwroot/themes/builtin/ocean-breeze",
-                HasWarnings = false,
-                Metadata = new ThemeMetadata { Id = "ocean-breeze", Name = "Ocean Breeze", BaseTheme = "light" }
-            },
-            new ThemePack
-            {
-                Id = "forest",
-                Name = "Forest",
-                Author = "Melodee",
-                Version = "1.0.0",
-                Description = "Deep greens and earthy tones",
-                IsBuiltIn = true,
-                ThemeCssPath = "/themes/builtin/forest/theme.css",
-                BaseDirectory = "src/Melodee.Blazor/wwwroot/themes/builtin/forest",
-                HasWarnings = false,
-                Metadata = new ThemeMetadata { Id = "forest", Name = "Forest", BaseTheme = "light" }
-            },
-            new ThemePack
-            {
-                Id = "midnight-galaxy",
-                Name = "Midnight Galaxy",
-                Author = "Melodee",
-                Version = "1.0.0",
-                Description = "Deep space purples with starry accents",
-                IsBuiltIn = true,
-                ThemeCssPath = "/themes/builtin/midnight-galaxy/theme.css",
-                BaseDirectory = "src/Melodee.Blazor/wwwroot/themes/builtin/midnight-galaxy",
-                HasWarnings = false,
-                Metadata = new ThemeMetadata { Id = "midnight-galaxy", Name = "Midnight Galaxy", BaseTheme = "dark" }
-            },
-            new ThemePack
-            {
-                Id = "sunset-vibes",
-                Name = "Sunset Vibes",
-                Author = "Melodee",
-                Version = "1.0.0",
-                Description = "Warm sunset gradient colors",
-                IsBuiltIn = true,
-                ThemeCssPath = "/themes/builtin/sunset-vibes/theme.css",
-                BaseDirectory = "src/Melodee.Blazor/wwwroot/themes/builtin/sunset-vibes",
-                HasWarnings = false,
-                Metadata = new ThemeMetadata { Id = "sunset-vibes", Name = "Sunset Vibes", BaseTheme = "light" }
             }
         ];
     }
@@ -643,5 +553,19 @@ public sealed class ThemeService(
         return component <= 0.03928
             ? component / 12.92
             : Math.Pow((component + 0.055) / 1.055, 2.4);
+    }
+
+    private async Task<string?> GetThemeLibraryPathAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var libraryResult = await libraryService.GetThemeLibraryAsync(cancellationToken);
+            return libraryResult.Data?.Path;
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Theme library not configured");
+            return null;
+        }
     }
 }

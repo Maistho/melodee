@@ -196,7 +196,7 @@ To create a theme pack for distribution:
 
 ## Importing Themes
 
-Administrators can import theme packs via **Admin > Themes** in the web interface, or by placing the theme folder directly into the configured `ThemeLibraryPath` directory.
+Administrators can import theme packs via **Admin > Themes** in the web interface, or by placing the theme folder directly into the Themes library directory (configured in **Admin > Libraries**).
 
 ## Accessibility (Contrast Ratio)
 

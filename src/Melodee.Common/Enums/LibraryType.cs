@@ -42,5 +42,10 @@ public enum LibraryType
     /// <summary>
     ///     Holds podcast media files, should be 1
     /// </summary>
-    Podcast
+    Podcast,
+
+    /// <summary>
+    ///     Holds custom theme packs, should be 1
+    /// </summary>
+    Theme
 }
