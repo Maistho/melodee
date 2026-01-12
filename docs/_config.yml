@@ -47,11 +47,11 @@ version_params:
 
   # Allow these versions to be searched
   search_versions:
-    - Previous
-  latest: Current
+    - 1.7.0
+  latest: 1.8.0
   versions:
-    - Current
-    - Previous
+    - 1.8.0
+    - 1.7.0
 
 # Should there be feedback buttons at the bottom of pages?
 feedback: true
