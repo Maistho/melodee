@@ -1,3 +1,8 @@
+---
+title: Theming
+permalink: /theming/
+---
+
 # Theming Melodee
 
 Melodee supports a powerful theming system that allows users to customize the visual appearance of the application. Themes can control colors, typography, and even the visibility of navigation menu items.
