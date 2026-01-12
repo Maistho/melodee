@@ -59,7 +59,7 @@ Curated album charts updated automatically.
 
 ## Upgrading
 
-To upgrade to 1.8.0, follow the [upgrade guide](/docs/upgrading/).
+To upgrade to 1.8.0, follow the [upgrade guide](/upgrade/).
 
 Database migrations will run automatically on startup.
 
