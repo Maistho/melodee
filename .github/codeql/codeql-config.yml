@@ -13,6 +13,15 @@ query-filters:
   - exclude:
       id: cs/web/cookie-secure-not-set
       # MelodeeBlazorCookieMiddleware.cs already sets Secure=true (line 29)
+  
+  # Exclude log-forging alerts for code using LogSanitizer
+  # LogSanitizer.Sanitize() properly sanitizes log input by replacing newlines,
+  # but CodeQL's log-forging query doesn't recognize custom sanitizer methods.
+  # The sanitizer implementation (src/Melodee.Common/Utility/LogSanitizer.cs)
+  # uses String.Replace to remove CR, LF, NEL, LS, and PS characters.
+  # See: https://github.com/github/codeql/issues/15824
+  - exclude:
+      id: cs/log-forging
 
 # For JavaScript/TypeScript, only analyze application code in src directory
 # Exclude documentation, vendored libraries, and other non-application code
