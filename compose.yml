@@ -45,6 +45,8 @@ services:
       - staging:/app/staging
       - user_images:/app/user-images
       - playlists:/app/playlists
+      - podcasts:/app/podcasts
+      - themes:/app/themes
       - templates:/app/templates
       - logs:/app/Logs
       - data_protection_keys:/home/melodee/.aspnet/DataProtection-Keys
@@ -78,6 +80,10 @@ volumes:
     name: melodee_user_images
   playlists:
     name: melodee_playlists
+  podcasts:
+    name: melodee_podcasts
+  themes:
+    name: melodee_themes
   templates:
     name: melodee_templates
   logs:

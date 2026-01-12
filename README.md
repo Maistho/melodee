@@ -49,7 +49,7 @@ Experience Melodee before installing! Our official demo server is available at:
 - ⚠️ **Limited Concurrent Users**: Maximum 100 simultaneous connections
 - 🔄 **24-Hour Reset**: All user accounts and data are deleted daily
 
-> **Note**: The demo server is for testing only. For production use, please [install Melodee](docs/pages/setup/installation.md) on your own infrastructure.
+> **Note**: The demo server is for testing only. For production use, please [install Melodee](https://melodee.org/installing/) on your own infrastructure.
 
 ### Key Capabilities
 
@@ -162,15 +162,17 @@ Melodee uses several persistent volumes for data storage:
 
 | Volume | Purpose | Description |
 |--------|---------|-------------|
-| `melodee_db_data` | Database | PostgreSQL data |
-| `melodee_storage` | Music Library | Processed and organized music files |
-| `melodee_inbound` | Incoming Media | New media files to be processed |
-| `melodee_staging` | Staging Area | Media ready for manual review |
-| `melodee_user_images` | User Content | User-uploaded avatars |
-| `melodee_playlists` | Playlists | Admin-defined (JSON-based) dynamic playlists |
-| `melodee_templates` | Templates | Email and notification templates |
-| `melodee_logs` | Logs | Application log files |
 | `melodee_data_protection_keys` | Security | ASP.NET Core data protection keys |
+| `melodee_db_data` | Database | PostgreSQL data |
+| `melodee_inbound` | Incoming Media | New media files to be processed |
+| `melodee_logs` | Logs | Application log files |
+| `melodee_playlists` | Playlists | Admin-defined (JSON-based) dynamic playlists |
+| `melodee_podcasts` | Podcasts | Downloaded podcast episodes |
+| `melodee_staging` | Staging Area | Media ready for manual review |
+| `melodee_storage` | Music Library | Processed and organized music files |
+| `melodee_templates` | Templates | Email and notification templates |
+| `melodee_themes` | Themes | Custom theme packs |
+| `melodee_user_images` | User Content | User-uploaded avatars |
 
 To backup your data:
 ```bash
@@ -211,18 +213,18 @@ Melodee includes a comprehensive job scheduling system powered by Quartz.NET:
 
 | Job | Purpose | Default Schedule |
 |-----|---------|------------------|
-| **LibraryInboundProcessJob** | Scans inbound, processes files to staging | Every 10 minutes |
-| **StagingAutoMoveJob** | Moves "Ok" albums from staging to storage | Every 15 minutes (+ chained) |
-| **LibraryInsertJob** | Indexes storage albums into database | Daily at midnight (+ chained) |
 | **ArtistHousekeepingJob** | Cleans up artist data and relationships | Daily at midnight |
 | **ArtistSearchEngineHousekeepingJob** | Updates artist search index | Daily at midnight |
 | **ChartUpdateJob** | Links chart entries to albums | Daily at 2 AM |
+| **LibraryInboundProcessJob** | Scans inbound, processes files to staging | Every 10 minutes |
+| **LibraryInsertJob** | Indexes storage albums into database | Daily at midnight (+ chained) |
 | **MusicBrainzUpdateDatabaseJob** | Updates local MusicBrainz cache | Monthly |
 | **NowPlayingCleanupJob** | Cleans stale now-playing entries | Every 5 minutes |
-| **PodcastRefreshJob** | Fetches new episodes from subscribed podcasts | Every 30 minutes |
-| **PodcastDownloadJob** | Downloads queued podcast episodes | Every 5 minutes |
 | **PodcastCleanupJob** | Enforces retention policies on downloaded episodes | Daily at 3 AM |
+| **PodcastDownloadJob** | Downloads queued podcast episodes | Every 5 minutes |
 | **PodcastRecoveryJob** | Resets stuck downloads and cleans orphaned files | Every hour |
+| **PodcastRefreshJob** | Fetches new episodes from subscribed podcasts | Every 30 minutes |
+| **StagingAutoMoveJob** | Moves "Ok" albums from staging to storage | Every 15 minutes (+ chained) |
 
 Jobs can be manually triggered, paused, or monitored from the admin UI at `/admin/jobs`.
 
@@ -317,7 +319,7 @@ Full compatibility with Subsonic 1.16.1 and OpenSubsonic specifications:
 
 ### 🎬 Jellyfin API
 
-Melodee provides a Jellyfin-compatible API wit that allows popular Jellyfin music clients to connect:
+Melodee provides a Jellyfin-compatible API that allows popular Jellyfin music clients to connect:
 
 - Full media browsing (artists, albums, songs)
 - Streaming with transcoding support
