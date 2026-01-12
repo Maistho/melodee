@@ -5,6 +5,7 @@ using Melodee.Common.Constants;
 using Melodee.Common.Data;
 using Melodee.Common.Models;
 using Melodee.Common.Services.Caching;
+using Melodee.Common.Utility;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -67,7 +68,7 @@ public sealed class PodcastDiscoveryService(
         }
         catch (HttpRequestException ex)
         {
-            Logger.Error(ex, "[{ServiceName}] HTTP error searching podcasts for '{Query}'", nameof(PodcastDiscoveryService), query);
+            Logger.Error(ex, "[{ServiceName}] HTTP error searching podcasts for '{Query}'", nameof(PodcastDiscoveryService), LogSanitizer.Sanitize(query));
             return new OperationResult<PodcastSearchResult>(OperationResponseType.Error, $"Error connecting to podcast directory: {ex.Message}")
             {
                 Data = new PodcastSearchResult { Query = query }
@@ -75,7 +76,7 @@ public sealed class PodcastDiscoveryService(
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "[{ServiceName}] Error searching podcasts for '{Query}'", nameof(PodcastDiscoveryService), query);
+            Logger.Error(ex, "[{ServiceName}] Error searching podcasts for '{Query}'", nameof(PodcastDiscoveryService), LogSanitizer.Sanitize(query));
             return new OperationResult<PodcastSearchResult>(OperationResponseType.Error, ex.Message)
             {
                 Data = new PodcastSearchResult { Query = query }
@@ -121,7 +122,7 @@ public sealed class PodcastDiscoveryService(
         };
 
         Logger.Information("[{ServiceName}] Found {Count} podcasts for query '{Query}'",
-            nameof(PodcastDiscoveryService), result.TotalResults, query);
+            nameof(PodcastDiscoveryService), result.TotalResults, LogSanitizer.Sanitize(query));
 
         return result;
     }
@@ -171,7 +172,7 @@ public sealed class PodcastDiscoveryService(
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "[{ServiceName}] Error looking up podcast {ItunesId}", nameof(PodcastDiscoveryService), itunesId);
+            Logger.Error(ex, "[{ServiceName}] Error looking up podcast {ItunesId}", nameof(PodcastDiscoveryService), LogSanitizer.Sanitize(itunesId));
             return new OperationResult<PodcastSearchItem?>(OperationResponseType.Error, ex.Message) { Data = null };
         }
     }

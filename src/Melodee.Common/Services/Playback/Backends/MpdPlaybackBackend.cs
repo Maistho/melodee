@@ -1,6 +1,7 @@
 using System.Net.Sockets;
 using System.Text;
 using Melodee.Common.Data.Models;
+using Melodee.Common.Utility;
 using Serilog;
 
 namespace Melodee.Common.Services.Playback.Backends;
@@ -271,11 +272,11 @@ public sealed class MpdPlaybackBackend : IPlaybackBackend, IDisposable
                 if (welcomeResponse.StartsWith("OK MPD "))
                 {
                     _mpdVersion = welcomeResponse["OK MPD ".Length..].Trim();
-                    _logger.Information("[MpdPlaybackBackend] Connected to MPD version: {Version}", _mpdVersion);
+                    _logger.Information("[MpdPlaybackBackend] Connected to MPD version: {Version}", LogSanitizer.Sanitize(_mpdVersion));
                 }
                 else
                 {
-                    _logger.Warning("[MpdPlaybackBackend] Unexpected MPD welcome response: {Response}", welcomeResponse);
+                    _logger.Warning("[MpdPlaybackBackend] Unexpected MPD welcome response: {Response}", LogSanitizer.Sanitize(welcomeResponse));
                 }
 
                 if (!string.IsNullOrEmpty(_password))
@@ -357,11 +358,15 @@ public sealed class MpdPlaybackBackend : IPlaybackBackend, IDisposable
     private string ExecuteCommand(string command, out bool isError)
     {
         isError = false;
+        // Mask password commands to avoid logging sensitive data
+        var safeCommand = command.StartsWith("password ", StringComparison.OrdinalIgnoreCase)
+            ? "password ***"
+            : LogSanitizer.Sanitize(command);
         try
         {
             if (!IsConnected())
             {
-                _logger.Warning("[MpdPlaybackBackend] Not connected to MPD, cannot execute command: {Command}", command);
+                _logger.Warning("[MpdPlaybackBackend] Not connected to MPD, cannot execute command: {Command}", safeCommand);
                 return string.Empty;
             }
 
@@ -375,7 +380,7 @@ public sealed class MpdPlaybackBackend : IPlaybackBackend, IDisposable
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "[MpdPlaybackBackend] Error executing command: {Command}", command);
+            _logger.Error(ex, "[MpdPlaybackBackend] Error executing command: {Command}", safeCommand);
             isError = true;
             return string.Empty;
         }

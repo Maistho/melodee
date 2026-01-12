@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Sockets;
 using Melodee.Common.Configuration;
 using Melodee.Common.Constants;
+using Melodee.Common.Utility;
 using Serilog;
 
 namespace Melodee.Common.Services.Security;
@@ -132,7 +133,7 @@ public sealed class SsrfValidator(ILogger logger, IMelodeeConfigurationFactory c
             {
                 if (IsPrivateOrReservedAddress(address))
                 {
-                    logger.Warning("[SsrfValidator] Blocked request to private/reserved IP: {Host} -> {IP}", host, address);
+                    logger.Warning("[SsrfValidator] Blocked request to private/reserved IP: {Host} -> {IP}", LogSanitizer.Sanitize(host), address);
                     return SsrfValidationResult.Invalid($"Access to private/reserved IP addresses is not allowed ({address})");
                 }
             }
@@ -141,7 +142,7 @@ public sealed class SsrfValidator(ILogger logger, IMelodeeConfigurationFactory c
         }
         catch (SocketException ex)
         {
-            logger.Warning(ex, "[SsrfValidator] DNS resolution failed for {Host}", host);
+            logger.Warning(ex, "[SsrfValidator] DNS resolution failed for {Host}", LogSanitizer.Sanitize(host));
             return SsrfValidationResult.Invalid($"DNS resolution failed: {ex.Message}");
         }
     }

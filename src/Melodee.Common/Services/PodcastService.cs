@@ -10,6 +10,7 @@ using Melodee.Common.Models;
 using Melodee.Common.Models.Collection;
 using Melodee.Common.Services.Caching;
 using Melodee.Common.Services.Security;
+using Melodee.Common.Utility;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using Serilog;
@@ -1136,7 +1137,7 @@ public sealed class PodcastService(
             .ToArray();
 
         Logger.Information("[{ServiceName}] Episode search for '{Query}' found {Count} results for user {UserId}",
-            nameof(PodcastService), query, totalCount, userId);
+            nameof(PodcastService), LogSanitizer.Sanitize(query), totalCount, userId);
 
         return new PagedResult<PodcastEpisodeDataInfo>
         {

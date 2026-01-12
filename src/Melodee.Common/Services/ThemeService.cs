@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using Melodee.Common.Configuration;
 using Melodee.Common.Constants;
 using Melodee.Common.Models;
+using Melodee.Common.Utility;
 using Microsoft.Extensions.Logging;
 
 namespace Melodee.Common.Services;
@@ -330,7 +331,7 @@ public sealed class ThemeService(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to export theme pack: {ThemeId}", themeId);
+            logger.LogError(ex, "Failed to export theme pack: {ThemeId}", LogSanitizer.Sanitize(themeId));
             memoryStream.Dispose();
             return null;
         }
@@ -361,12 +362,12 @@ public sealed class ThemeService(
                 Directory.Delete(themePack.BaseDirectory, true);
             }
 
-            logger.LogInformation("Deleted theme pack: {ThemeId}", themeId);
+            logger.LogInformation("Deleted theme pack: {ThemeId}", LogSanitizer.Sanitize(themeId));
             return (true, null);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to delete theme pack: {ThemeId}", themeId);
+            logger.LogError(ex, "Failed to delete theme pack: {ThemeId}", LogSanitizer.Sanitize(themeId));
             return (false, ex.Message);
         }
     }
