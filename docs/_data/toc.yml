@@ -14,6 +14,8 @@
   links:
     - title: "Homelab Deployment"
       url: "homelab"
+    - title: "Upgrade Guide"
+      url: "upgrade"
     - title: "Hardware & Performance"
       url: "hardware"
     - title: "Backup & Recovery"

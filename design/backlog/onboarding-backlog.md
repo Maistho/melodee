@@ -216,7 +216,7 @@ Publish pre-built images to GitHub Container Registry so users can pull instead 
 **Proposed Usage**:
 ```bash
 # Instead of building locally
-podman pull ghcr.io/sphildreth/melodee:latest
+podman pull ghcr.io/melodee-project/melodee:latest
 podman compose up -d
 ```
 
@@ -232,7 +232,7 @@ podman compose up -d
 - Manual dispatch for testing
 
 **Acceptance Criteria**:
-- [ ] Images published to ghcr.io/sphildreth/melodee
+- [ ] Images published to ghcr.io/melodee-project/melodee
 - [ ] amd64 and arm64 architectures supported
 - [ ] compose.yml updated to pull from GHCR
 - [ ] Local build still works as fallback

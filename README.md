@@ -121,84 +121,19 @@ Before installing, test drive Melodee on our demo server:
 
 👉 **[https://demo.melodee.org](https://demo.melodee.org)** (Username: `demo`, Password: `Mel0deeR0cks!`)
 
-### Prerequisites
-
-- [Podman](https://podman.io/) or Docker
-- [Podman Compose](https://github.com/containers/podman-compose) (for Podman users)
-- Python 3 (for setup script)
-
-### 🐍 Automated Setup (Recommended)
+### Automated Setup (Recommended)
 
 ```bash
-# Clone the repository
-git clone https://github.com/sphildreth/melodee.git
+git clone https://github.com/melodee-project/melodee.git
 cd melodee
-
-# Run the setup script with auto-start
 python3 scripts/run-container-setup.py --start
 ```
 
-The script will:
-- Run preflight checks (disk space, memory, ports, required files)
-- Detect your container runtime (Podman or Docker)
-- Generate a secure `.env` file with random passwords and JWT tokens
-- Build the container image
-- Start the containers and wait for health checks
-- Provide you with the URL to access Melodee
+The script handles preflight checks, runtime detection, secure configuration, building, and startup.
 
-#### Setup Script Options
-
-```bash
-python3 scripts/run-container-setup.py --check-only  # Just run checks
-python3 scripts/run-container-setup.py --start       # Setup and start containers
-python3 scripts/run-container-setup.py --update      # Update existing deployment
-python3 scripts/run-container-setup.py --update -y   # Update without prompts (CI/CD)
-```
-
-### 🐳 Manual Deploy with Podman
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/sphildreth/melodee.git
-   cd melodee
-   ```
-
-2. **Configure environment variables**
-   ```bash
-   # Copy and edit the example environment file
-   cp example.env .env
-   nano .env
-   ```
-
-   Update the following variables in `.env`:
-   ```bash
-   # Database password (change this!)
-   DB_PASSWORD=your_secure_password_here
-
-   # Port configuration
-   MELODEE_PORT=8080
-   ```
-
-3. **Build and deploy**
-   ```bash
-   # Using Podman (build first, then start)
-   podman compose build
-   podman compose up -d
-
-   # Or using Docker Compose
-   docker compose up -d --build
-   ```
-
-4. **Access the application**
-   - 📚 Read the [documentation](https://melodee.org) on how to get started
-   - Web Interface: http://localhost:8080
-   - Register as a new user, the first user will be setup as administrator
-   - Configure clients to connect to your server
-   - Enjoy an ad-free and self-hosted music streaming service 🎉
+📖 **Full installation guide**: [melodee.org/installing](https://melodee.org/installing/)
 
 ### 📦 Updating Melodee
-
-The safest way to update is using the setup script:
 
 ```bash
 cd melodee
@@ -206,20 +141,9 @@ git pull
 python3 scripts/run-container-setup.py --update
 ```
 
-This preserves all your data volumes while updating the application code. For automated/CI deployments:
+Your data (database, music library, playlists) is preserved during updates. Database migrations run automatically.
 
-```bash
-git pull && python3 scripts/run-container-setup.py --update --yes
-```
-
-**Manual update:**
-```bash
-git pull origin main
-podman compose build      # Rebuild with new code
-podman compose up -d      # Recreate containers (volumes preserved)
-```
-
-> **Note**: Database migrations run automatically during container startup. Your data (database, music library, playlists) is preserved during updates.
+📖 **Full upgrade guide**: [melodee.org/upgrade](https://melodee.org/upgrade/)
 
 ## 🏠 Homelab Deployment
 
@@ -230,7 +154,7 @@ Melodee is designed to run in homelab environments with support for various hard
 - **NAS Integration**: Mount external storage for large music collections
 - **Container Orchestration**: Docker Compose, Podman Compose, or Docker Swarm
 
-For detailed homelab deployment guides, check out our [documentation](https://melodee.org).
+📖 **Deployment guides**: [melodee.org/installing](https://melodee.org/installing/) | [melodee.org/upgrade](https://melodee.org/upgrade/)
 
 ### 🗂️ Volume Management
 

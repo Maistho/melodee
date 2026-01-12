@@ -225,7 +225,7 @@ python3 create-demo-user.py --connection-string "Host=localhost;Port=5432;Databa
 ## Support
 
 For issues or questions:
-- GitHub Issues: https://github.com/sphildreth/melodee/issues
+- GitHub Issues: https://github.com/melodee-project/melodee/issues
 - Documentation: https://melodee.org/docs
 - Demo Server: https://demo.melodee.org
 

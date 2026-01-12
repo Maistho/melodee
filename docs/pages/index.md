@@ -33,18 +33,23 @@ This server has sample permissively licensed music files for testing purposes. T
 
 ## Feature Highlights
 
-- Media normalization & configurable tag rewrite rules.
-- Regex driven cleanup (featuring/with removal, numbering fixes, stray tokens).
-- Multi‑stage pipeline (Inbound ➜ Staging ➜ Storage).
-- Pluggable metadata & artwork fetch (MusicBrainz local cache, Last.FM, Spotify, iTunes).
-- Real‑time transcoding (MP3, Ogg, Opus, etc.) with range & partial streaming.
-- Cron‑like job scheduler (scans, enrichment, cleanup, background sync).
-- Multi‑library federation (spread storage across NAS / mounts).
-- Blazor Server UI for metadata, artwork, users, config & monitoring.
-- OpenSubsonic compatibility (tested against several popular clients).
-- Native REST API (versioned) for custom integrations.
-- User features: starring, ratings, scrobbling, play tracking.
-- Concurrency‑aware streaming limiter & optional buffered responses.
+- Media normalization & configurable tag rewrite rules
+- Regex driven cleanup (featuring/with removal, numbering fixes, stray tokens)
+- Multi‑stage pipeline (Inbound ➜ Staging ➜ Storage)
+- Pluggable metadata & artwork fetch (MusicBrainz local cache, Last.FM, Spotify, iTunes, Deezer)
+- Real‑time transcoding (MP3, Ogg, Opus, etc.) with range & partial streaming
+- Cron‑like job scheduler (scans, enrichment, cleanup, background sync)
+- Multi‑library federation (spread storage across NAS / mounts)
+- Blazor Server UI for metadata, artwork, users, config & monitoring
+- [Party Mode](/party-mode/) - Collaborative listening with shared queues
+- [Jukebox](/jukebox/) - Server-side audio playback via MPV/MPD
+- [Podcasts](/podcasts/) - Subscribe, download, and stream podcasts
+- [Custom Theming](/theming/) - Personalize colors, fonts, and branding
+- [Music Charts](/charts/) - Curated album charts from Billboard and more
+- [Scrobbling](/scrobbling/) - Last.fm integration for play tracking
+- OpenSubsonic & Jellyfin API compatibility
+- Native REST API (versioned) for custom integrations
+- User features: starring, ratings, playlists, play history
 
 ## Tested OpenSubsonic Clients
 
@@ -58,12 +63,12 @@ This server has sample permissively licensed music files for testing purposes. T
 
 ## Quick Links
 
-- Installation: /installing/
-- Configuration: /configuration/
-- Libraries Concept: /libraries/
-- API Reference (OpenSubsonic + Native): /api/
-- Changelog / News: /news/
-- About & Project Direction: /about/
+- [Installation](/installing/) - Get Melodee up and running
+- [Configuration](/configuration/) - Tune settings for your environment
+- [Libraries](/libraries/) - Understand the library concept
+- [API Reference](/api/) - OpenSubsonic + Native API documentation
+- [News](/news/) - Changelog and announcements
+- [About](/about/) - Project direction and philosophy
 
 ## Contributing
 

@@ -93,6 +93,6 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
     CMD curl -fsS http://localhost:8080/health || exit 1
 
 # OCI Labels
-LABEL org.opencontainers.image.source="https://github.com/sphildreth/melodee"
+LABEL org.opencontainers.image.source="https://github.com/melodee-project/melodee"
 LABEL org.opencontainers.image.description="Melodee music server"
 LABEL org.opencontainers.image.licenses="MIT"

@@ -30,7 +30,7 @@ Custom themes allow you to personalize Melodee's appearance beyond the built-in 
 
 ### Available Custom Themes
 
-Pre-built custom theme packs are available in the [Melodee repository's `/themes` directory](https://github.com/sphildreth/melodee/tree/main/themes):
+Pre-built custom theme packs are available in the [Melodee repository's `/themes` directory](https://github.com/melodee-project/melodee/tree/main/themes):
 
 | Theme | Base | Description |
 |-------|------|-------------|

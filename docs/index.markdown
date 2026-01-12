@@ -16,10 +16,16 @@ New to Melodee? Start with our [Quick Start Guide for Homelabs](/quickstart/) to
 ## Key Features
 
 - **Scalable Architecture**: Handle millions of tracks with efficient background processing
-- **Dual API Support**: OpenSubsonic compatibility and native REST API
+- **Multi-API Support**: OpenSubsonic, Jellyfin, and native REST API compatibility
 - **Advanced Media Processing**: Automatic format conversion, metadata normalization, and validation
 - **Staging Workflow**: Review and edit metadata before publishing to your library
-- **Multiple Client Support**: Compatible with popular Subsonic clients plus official desktop and mobile apps
+- **Party Mode**: Collaborative listening sessions with shared queues and playback control
+- **Jukebox Mode**: Server-side audio playback via MPV/MPD for whole-home audio
+- **Podcast Support**: Subscribe, download, and stream podcasts with full playback tracking
+- **Custom Theming**: Personalize the UI with custom color schemes, fonts, and branding
+- **Music Charts**: Curated album charts updated automatically from Billboard and other sources
+- **Scrobbling**: Last.fm integration for play history tracking
+- **Multiple Client Support**: Compatible with popular Subsonic/Jellyfin clients
 
 ## Homelab Focus
 
@@ -31,15 +37,35 @@ Melodee is designed with homelab enthusiasts in mind:
 
 ## Documentation Sections
 
+### Getting Started
 - [Quick Start for Homelabs](/quickstart/) - Fast path to your first deployment
 - [Installation](/installing/) - Detailed setup instructions
 - [Configuration](/configuration/) - Tuning and optimization
 - [Configuration Reference](/configuration-reference/) - Comprehensive configuration options
-- [API Overview](/apis/) - Comparison of API options and interactive documentation
+
+### Features
+- [Libraries](/libraries/) - Managing your music collection
+- [Charts](/charts/) - Curated album charts
+- [Playlists](/playlists/) - Creating and managing playlists
+- [Jukebox](/jukebox/) - Server-side audio playback
+- [Party Mode](/party-mode/) - Collaborative listening sessions
+- [Podcasts](/podcasts/) - Podcast subscription and playback
+- [Theming](/theming/) - Customize the UI appearance
+- [Requests](/requests/) - User music requests
+- [Scrobbling](/scrobbling/) - Last.fm integration
+- [Shares](/shares/) - Sharing music with others
+- [Query Language (MQL)](/mql/) - Advanced search queries
+
+### Deployment & Operations
 - [Homelab Deployment](/homelab/) - Homelab-specific guidance
 - [Hardware & Performance](/hardware/) - Hardware recommendations and optimization
 - [Backup & Recovery](/backup/) - Data protection strategies
-- [API Documentation](/api/) - Native API reference
+- [Background Jobs](/jobs/) - Scheduled task management
+- [Command Line Interface](/cli/) - CLI tools and utilities
+
+### API & Integration
+- [API Overview](/apis/) - Comparison of API options
+- [API Documentation](/api/) - Native REST API reference
 
 ## Community
 
