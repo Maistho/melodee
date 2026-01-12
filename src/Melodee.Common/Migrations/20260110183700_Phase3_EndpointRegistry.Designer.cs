@@ -12,7 +12,7 @@ using Melodee.Common.Data;
 namespace Melodee.Common.Migrations
 {
     [DbContext(typeof(MelodeeDbContext))]
-    [Migration("20260110180000_Phase3_EndpointRegistry")]
+    [Migration("20260110183700_Phase3_EndpointRegistry")]
     partial class Phase3_EndpointRegistry
     {
         /// <inheritdoc />
