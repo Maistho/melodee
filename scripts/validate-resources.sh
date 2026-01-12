@@ -12,7 +12,7 @@ echo ""
 
 RESOURCE_DIR="src/Melodee.Blazor/Resources"
 BASE_FILE="$RESOURCE_DIR/SharedResources.resx"
-LANGUAGES=("de-DE" "es-ES" "fr-FR" "it-IT" "ja-JP" "pt-BR" "ru-RU" "zh-CN" "ar-SA")
+LANGUAGES=("de-DE" "es-ES" "fr-FR" "it-IT" "ja-JP" "pt-BR" "ru-RU" "zh-CN" "ar-SA" "nl-NL" "pl-PL" "tr-TR" "id-ID" "ko-KR" "vi-VN" "fa-IR" "uk-UA" "cs-CZ" "sv-SE")
 
 # Colors for output
 RED='\033[0;31m'

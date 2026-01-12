@@ -137,6 +137,18 @@ public sealed class DoctorService(
             return true;
         }
 
+        // Check Jukebox configuration if enabled
+        if (await HasJukeboxConfigurationIssuesAsync(cancellationToken))
+        {
+            return true;
+        }
+
+        // Check Podcast configuration if enabled
+        if (await HasPodcastConfigurationIssuesAsync(cancellationToken))
+        {
+            return true;
+        }
+
         return false;
     }
 
@@ -249,6 +261,10 @@ public sealed class DoctorService(
         checks.Add(RunMemoryCheck());
         checks.Add(RunTempDirectoryCheck());
         checks.Add(await RunDatabaseLatencyCheckAsync(cancellationToken));
+
+        // Optional feature checks (Jukebox and Podcast)
+        checks.Add(await RunJukeboxConfigurationCheckAsync(cancellationToken));
+        checks.Add(await RunPodcastConfigurationCheckAsync(cancellationToken));
 
         // Gather connection string info
         connectionStrings.AddRange(GatherConnectionStringInfo());
@@ -1700,4 +1716,432 @@ public sealed class DoctorService(
             return new DoctorCheckResult("DatabaseLatency", false, $"Latency check failed: {ex.Message}", sw.Elapsed);
         }
     }
+
+    #region Jukebox Configuration Checks
+
+    private async Task<bool> HasJukeboxConfigurationIssuesAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await using var db = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+            var relevantKeys = new[]
+            {
+                SettingRegistry.JukeboxEnabled,
+                SettingRegistry.JukeboxBackendType,
+                SettingRegistry.MpvPath,
+                SettingRegistry.MpdHost,
+                SettingRegistry.MpdPort
+            };
+
+            var settings = await db.Settings
+                .Where(s => relevantKeys.Contains(s.Key))
+                .ToDictionaryAsync(s => s.Key, s => s.Value, StringComparer.OrdinalIgnoreCase, cancellationToken);
+
+            var jukeboxEnabled = settings.TryGetValue(SettingRegistry.JukeboxEnabled, out var je)
+                && bool.TryParse(je, out var jeb) && jeb;
+
+            if (!jukeboxEnabled)
+            {
+                return false;
+            }
+
+            var backendType = settings.TryGetValue(SettingRegistry.JukeboxBackendType, out var bt) ? bt?.ToLowerInvariant() : "";
+
+            if (string.IsNullOrWhiteSpace(backendType) || (backendType != "mpv" && backendType != "mpd"))
+            {
+                return true;
+            }
+
+            if (backendType == "mpv")
+            {
+                var mpvPath = settings.TryGetValue(SettingRegistry.MpvPath, out var mp) ? mp : "";
+                if (!string.IsNullOrWhiteSpace(mpvPath) && !File.Exists(mpvPath))
+                {
+                    return true;
+                }
+
+                if (string.IsNullOrWhiteSpace(mpvPath))
+                {
+                    var foundPath = FindExecutable("mpv");
+                    if (string.IsNullOrEmpty(foundPath))
+                    {
+                        return true;
+                    }
+                }
+            }
+            else if (backendType == "mpd")
+            {
+                var mpdHost = settings.TryGetValue(SettingRegistry.MpdHost, out var host) ? host : "";
+                var mpdPort = settings.TryGetValue(SettingRegistry.MpdPort, out var port) ? port : "";
+
+                if (string.IsNullOrWhiteSpace(mpdHost))
+                {
+                    return true;
+                }
+
+                if (string.IsNullOrWhiteSpace(mpdPort) || !int.TryParse(mpdPort, out var portNum) || portNum <= 0 || portNum > 65535)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+        catch
+        {
+            return true;
+        }
+    }
+
+    private async Task<DoctorCheckResult> RunJukeboxConfigurationCheckAsync(CancellationToken cancellationToken)
+    {
+        var sw = Stopwatch.StartNew();
+
+        try
+        {
+            await using var db = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+            var relevantKeys = new[]
+            {
+                SettingRegistry.JukeboxEnabled,
+                SettingRegistry.JukeboxBackendType,
+                SettingRegistry.MpvPath,
+                SettingRegistry.MpvAudioDevice,
+                SettingRegistry.MpvSocketPath,
+                SettingRegistry.MpvInitialVolume,
+                SettingRegistry.MpdHost,
+                SettingRegistry.MpdPort,
+                SettingRegistry.MpdInstanceName,
+                SettingRegistry.MpdTimeoutMs,
+                SettingRegistry.MpdInitialVolume
+            };
+
+            var settings = await db.Settings
+                .Where(s => relevantKeys.Contains(s.Key))
+                .ToDictionaryAsync(s => s.Key, s => s.Value, StringComparer.OrdinalIgnoreCase, cancellationToken);
+
+            var jukeboxEnabled = settings.TryGetValue(SettingRegistry.JukeboxEnabled, out var je)
+                && bool.TryParse(je, out var jeb) && jeb;
+
+            if (!jukeboxEnabled)
+            {
+                return new DoctorCheckResult("JukeboxConfiguration", true, "Jukebox is disabled", sw.Elapsed);
+            }
+
+            var backendType = settings.TryGetValue(SettingRegistry.JukeboxBackendType, out var bt) ? bt?.ToLowerInvariant() : "";
+            var issues = new List<string>();
+
+            if (string.IsNullOrWhiteSpace(backendType))
+            {
+                issues.Add("Backend type not configured");
+            }
+            else if (backendType != "mpv" && backendType != "mpd")
+            {
+                issues.Add($"Invalid backend type '{backendType}' (must be 'mpv' or 'mpd')");
+            }
+
+            if (backendType == "mpv")
+            {
+                var mpvPath = settings.TryGetValue(SettingRegistry.MpvPath, out var mp) ? mp : "";
+
+                if (!string.IsNullOrWhiteSpace(mpvPath))
+                {
+                    if (!File.Exists(mpvPath))
+                    {
+                        issues.Add($"MPV path '{mpvPath}' does not exist");
+                    }
+                }
+                else
+                {
+                    var foundPath = FindExecutable("mpv");
+                    if (string.IsNullOrEmpty(foundPath))
+                    {
+                        issues.Add("MPV not found in PATH and mpv.path not configured");
+                    }
+                }
+
+                var initialVolume = settings.TryGetValue(SettingRegistry.MpvInitialVolume, out var vol) ? vol : "";
+                if (!string.IsNullOrWhiteSpace(initialVolume) && double.TryParse(initialVolume, out var volNum))
+                {
+                    if (volNum < 0 || volNum > 1)
+                    {
+                        issues.Add($"MPV initial volume {volNum} is out of range (0.0-1.0)");
+                    }
+                }
+            }
+            else if (backendType == "mpd")
+            {
+                var mpdHost = settings.TryGetValue(SettingRegistry.MpdHost, out var host) ? host : "";
+                var mpdPort = settings.TryGetValue(SettingRegistry.MpdPort, out var port) ? port : "";
+
+                if (string.IsNullOrWhiteSpace(mpdHost))
+                {
+                    issues.Add("MPD host not configured");
+                }
+
+                if (string.IsNullOrWhiteSpace(mpdPort))
+                {
+                    issues.Add("MPD port not configured");
+                }
+                else if (!int.TryParse(mpdPort, out var portNum) || portNum <= 0 || portNum > 65535)
+                {
+                    issues.Add($"MPD port '{mpdPort}' is invalid");
+                }
+
+                var timeoutMs = settings.TryGetValue(SettingRegistry.MpdTimeoutMs, out var timeout) ? timeout : "";
+                if (!string.IsNullOrWhiteSpace(timeoutMs) && int.TryParse(timeoutMs, out var timeoutNum) && timeoutNum < 1000)
+                {
+                    issues.Add($"MPD timeout {timeoutNum}ms may be too short (recommended: 10000ms)");
+                }
+
+                var initialVolume = settings.TryGetValue(SettingRegistry.MpdInitialVolume, out var vol) ? vol : "";
+                if (!string.IsNullOrWhiteSpace(initialVolume) && double.TryParse(initialVolume, out var volNum))
+                {
+                    if (volNum < 0 || volNum > 1)
+                    {
+                        issues.Add($"MPD initial volume {volNum} is out of range (0.0-1.0)");
+                    }
+                }
+            }
+
+            if (issues.Count > 0)
+            {
+                return new DoctorCheckResult("JukeboxConfiguration", false,
+                    $"Jukebox enabled ({backendType}) but: {string.Join("; ", issues)}", sw.Elapsed);
+            }
+
+            var details = backendType == "mpv"
+                ? $"MPV backend configured"
+                : $"MPD backend configured ({settings.GetValueOrDefault(SettingRegistry.MpdHost, "localhost")}:{settings.GetValueOrDefault(SettingRegistry.MpdPort, "6600")})";
+
+            return new DoctorCheckResult("JukeboxConfiguration", true, details, sw.Elapsed);
+        }
+        catch (Exception ex)
+        {
+            return new DoctorCheckResult("JukeboxConfiguration", false, ex.Message, sw.Elapsed);
+        }
+    }
+
+    #endregion
+
+    #region Podcast Configuration Checks
+
+    private async Task<bool> HasPodcastConfigurationIssuesAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await using var db = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+            var relevantKeys = new[]
+            {
+                SettingRegistry.PodcastEnabled,
+                SettingRegistry.PodcastHttpTimeoutSeconds,
+                SettingRegistry.PodcastHttpMaxRedirects,
+                SettingRegistry.PodcastDownloadMaxConcurrentGlobal,
+                SettingRegistry.PodcastDownloadMaxConcurrentPerUser
+            };
+
+            var settings = await db.Settings
+                .Where(s => relevantKeys.Contains(s.Key))
+                .ToDictionaryAsync(s => s.Key, s => s.Value, StringComparer.OrdinalIgnoreCase, cancellationToken);
+
+            var podcastEnabled = settings.TryGetValue(SettingRegistry.PodcastEnabled, out var pe)
+                && bool.TryParse(pe, out var peb) && peb;
+
+            if (!podcastEnabled)
+            {
+                return false;
+            }
+
+            var timeoutSeconds = settings.TryGetValue(SettingRegistry.PodcastHttpTimeoutSeconds, out var ts) ? ts : "";
+            if (!string.IsNullOrWhiteSpace(timeoutSeconds) && int.TryParse(timeoutSeconds, out var timeoutNum) && timeoutNum < 5)
+            {
+                return true;
+            }
+
+            var maxRedirects = settings.TryGetValue(SettingRegistry.PodcastHttpMaxRedirects, out var mr) ? mr : "";
+            if (!string.IsNullOrWhiteSpace(maxRedirects) && int.TryParse(maxRedirects, out var redirectNum) && redirectNum < 0)
+            {
+                return true;
+            }
+
+            var maxConcurrentGlobal = settings.TryGetValue(SettingRegistry.PodcastDownloadMaxConcurrentGlobal, out var mcg) ? mcg : "";
+            if (!string.IsNullOrWhiteSpace(maxConcurrentGlobal) && int.TryParse(maxConcurrentGlobal, out var mcgNum) && mcgNum <= 0)
+            {
+                return true;
+            }
+
+            var maxConcurrentPerUser = settings.TryGetValue(SettingRegistry.PodcastDownloadMaxConcurrentPerUser, out var mcu) ? mcu : "";
+            if (!string.IsNullOrWhiteSpace(maxConcurrentPerUser) && int.TryParse(maxConcurrentPerUser, out var mcuNum) && mcuNum <= 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+        catch
+        {
+            return true;
+        }
+    }
+
+    private async Task<DoctorCheckResult> RunPodcastConfigurationCheckAsync(CancellationToken cancellationToken)
+    {
+        var sw = Stopwatch.StartNew();
+
+        try
+        {
+            await using var db = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+            var relevantKeys = new[]
+            {
+                SettingRegistry.PodcastEnabled,
+                SettingRegistry.PodcastHttpAllowHttp,
+                SettingRegistry.PodcastHttpTimeoutSeconds,
+                SettingRegistry.PodcastHttpMaxRedirects,
+                SettingRegistry.PodcastHttpMaxFeedBytes,
+                SettingRegistry.PodcastRefreshMaxItemsPerChannel,
+                SettingRegistry.PodcastDownloadMaxConcurrentGlobal,
+                SettingRegistry.PodcastDownloadMaxConcurrentPerUser,
+                SettingRegistry.PodcastDownloadMaxEnclosureBytes,
+                SettingRegistry.PodcastQuotaMaxBytesPerUser,
+                SettingRegistry.PodcastRetentionDownloadedEpisodesInDays,
+                SettingRegistry.PodcastRetentionKeepLastNEpisodes,
+                SettingRegistry.JobsPodcastRefreshCronExpression,
+                SettingRegistry.JobsPodcastDownloadCronExpression,
+                SettingRegistry.JobsPodcastCleanupCronExpression,
+                SettingRegistry.JobsPodcastRecoveryCronExpression
+            };
+
+            var settings = await db.Settings
+                .Where(s => relevantKeys.Contains(s.Key))
+                .ToDictionaryAsync(s => s.Key, s => s.Value, StringComparer.OrdinalIgnoreCase, cancellationToken);
+
+            var podcastEnabled = settings.TryGetValue(SettingRegistry.PodcastEnabled, out var pe)
+                && bool.TryParse(pe, out var peb) && peb;
+
+            if (!podcastEnabled)
+            {
+                return new DoctorCheckResult("PodcastConfiguration", true, "Podcasts are disabled", sw.Elapsed);
+            }
+
+            var issues = new List<string>();
+            var warnings = new List<string>();
+
+            var allowHttp = settings.TryGetValue(SettingRegistry.PodcastHttpAllowHttp, out var ah)
+                && bool.TryParse(ah, out var ahb) && ahb;
+            if (allowHttp)
+            {
+                warnings.Add("HTTP allowed (security risk)");
+            }
+
+            var timeoutSeconds = settings.TryGetValue(SettingRegistry.PodcastHttpTimeoutSeconds, out var ts) ? ts : "";
+            if (!string.IsNullOrWhiteSpace(timeoutSeconds) && int.TryParse(timeoutSeconds, out var timeoutNum))
+            {
+                if (timeoutNum < 5)
+                {
+                    issues.Add($"HTTP timeout {timeoutNum}s is too short (minimum: 5s)");
+                }
+                else if (timeoutNum > 120)
+                {
+                    warnings.Add($"HTTP timeout {timeoutNum}s is very long");
+                }
+            }
+
+            var maxRedirects = settings.TryGetValue(SettingRegistry.PodcastHttpMaxRedirects, out var mr) ? mr : "";
+            if (!string.IsNullOrWhiteSpace(maxRedirects) && int.TryParse(maxRedirects, out var redirectNum))
+            {
+                if (redirectNum < 0)
+                {
+                    issues.Add("Max redirects cannot be negative");
+                }
+                else if (redirectNum == 0)
+                {
+                    warnings.Add("Redirects disabled (may break some feeds)");
+                }
+            }
+
+            var maxConcurrentGlobal = settings.TryGetValue(SettingRegistry.PodcastDownloadMaxConcurrentGlobal, out var mcg) ? mcg : "";
+            if (!string.IsNullOrWhiteSpace(maxConcurrentGlobal) && int.TryParse(maxConcurrentGlobal, out var mcgNum))
+            {
+                if (mcgNum <= 0)
+                {
+                    issues.Add("Global max concurrent downloads must be positive");
+                }
+                else if (mcgNum > 20)
+                {
+                    warnings.Add($"High global concurrency ({mcgNum}) may impact performance");
+                }
+            }
+
+            var maxConcurrentPerUser = settings.TryGetValue(SettingRegistry.PodcastDownloadMaxConcurrentPerUser, out var mcu) ? mcu : "";
+            if (!string.IsNullOrWhiteSpace(maxConcurrentPerUser) && int.TryParse(maxConcurrentPerUser, out var mcuNum))
+            {
+                if (mcuNum <= 0)
+                {
+                    issues.Add("Per-user max concurrent downloads must be positive");
+                }
+            }
+
+            var maxFeedBytes = settings.TryGetValue(SettingRegistry.PodcastHttpMaxFeedBytes, out var mfb) ? mfb : "";
+            if (!string.IsNullOrWhiteSpace(maxFeedBytes) && long.TryParse(maxFeedBytes, out var mfbNum))
+            {
+                if (mfbNum < 100_000)
+                {
+                    warnings.Add($"Max feed size {FormatFileSize(mfbNum)} may be too small for some feeds");
+                }
+            }
+
+            var maxEnclosureBytes = settings.TryGetValue(SettingRegistry.PodcastDownloadMaxEnclosureBytes, out var meb) ? meb : "";
+            if (!string.IsNullOrWhiteSpace(maxEnclosureBytes) && long.TryParse(maxEnclosureBytes, out var mebNum))
+            {
+                if (mebNum < 10_000_000)
+                {
+                    warnings.Add($"Max enclosure size {FormatFileSize(mebNum)} may be too small for podcast episodes");
+                }
+            }
+
+            var refreshCron = settings.TryGetValue(SettingRegistry.JobsPodcastRefreshCronExpression, out var rc) ? rc : "";
+            var downloadCron = settings.TryGetValue(SettingRegistry.JobsPodcastDownloadCronExpression, out var dc) ? dc : "";
+            var cleanupCron = settings.TryGetValue(SettingRegistry.JobsPodcastCleanupCronExpression, out var cc) ? cc : "";
+
+            if (string.IsNullOrWhiteSpace(refreshCron))
+            {
+                warnings.Add("Podcast refresh job not scheduled");
+            }
+            if (string.IsNullOrWhiteSpace(downloadCron))
+            {
+                warnings.Add("Podcast download job not scheduled");
+            }
+            if (string.IsNullOrWhiteSpace(cleanupCron))
+            {
+                warnings.Add("Podcast cleanup job not scheduled");
+            }
+
+            if (issues.Count > 0)
+            {
+                var detail = $"Podcasts enabled but: {string.Join("; ", issues)}";
+                if (warnings.Count > 0)
+                {
+                    detail += $" | Warnings: {string.Join("; ", warnings)}";
+                }
+                return new DoctorCheckResult("PodcastConfiguration", false, detail, sw.Elapsed);
+            }
+
+            if (warnings.Count > 0)
+            {
+                return new DoctorCheckResult("PodcastConfiguration", true,
+                    $"Podcasts configured with warnings: {string.Join("; ", warnings)}", sw.Elapsed);
+            }
+
+            return new DoctorCheckResult("PodcastConfiguration", true, "Podcasts configured correctly", sw.Elapsed);
+        }
+        catch (Exception ex)
+        {
+            return new DoctorCheckResult("PodcastConfiguration", false, ex.Message, sw.Elapsed);
+        }
+    }
+
+    #endregion
 }

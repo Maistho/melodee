@@ -54,7 +54,15 @@ public static class JobRegistry
 
         [JobKeyRegistry.StagingAlbumRevalidationJobKey] = new(
             "Re-validates albums with invalid artists in staging",
-            SettingRegistry.JobsStagingAlbumRevalidationCronExpression)
+            SettingRegistry.JobsStagingAlbumRevalidationCronExpression),
+
+        [JobKeyRegistry.PodcastRefreshJobKey] = new(
+            "Refreshes podcast channel feeds",
+            SettingRegistry.JobsPodcastRefreshCronExpression),
+
+        [JobKeyRegistry.PodcastDownloadJobKey] = new(
+            "Downloads queued podcast episodes",
+            SettingRegistry.JobsPodcastDownloadCronExpression)
     };
 
     /// <summary>

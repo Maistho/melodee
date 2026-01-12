@@ -119,6 +119,7 @@ public abstract class ControllerBase(EtagRepository etagRepository, ISerializer 
             context.HttpContext.IsImageRequest() ||
             $"{Request.Scheme}://{Request.Host}".ToNormalizedString() == configuration.GetValue<string>(SettingRegistry.SystemBaseUrl).ToNormalizedString())
         {
+            Log.Debug("[OpenSubsonic Auth] Request from localhost or baseUrl, bypassing authentication. Path: {Path}", context.HttpContext.Request.Path);
             requiresAuth = false;
         }
         else
@@ -128,6 +129,16 @@ public abstract class ControllerBase(EtagRepository etagRepository, ISerializer 
             {
                 var cookieHash = HashHelper.CreateSha256(DateTime.UtcNow.ToString(MelodeeBlazorCookieMiddleware.DateFormat) + configuration.GetValue<string>(SettingRegistry.EncryptionPrivateKey)) ?? string.Empty;
                 requiresAuth = melodeeBlazorTokenCookie != cookieHash;
+
+                Log.Debug("[OpenSubsonic Auth] Cookie auth check - Cookie present: {CookiePresent}, Cookie matches: {CookieMatches}, RequiresAuth: {RequiresAuth}, Path: {Path}",
+                    !string.IsNullOrWhiteSpace(melodeeBlazorTokenCookie),
+                    melodeeBlazorTokenCookie == cookieHash,
+                    requiresAuth,
+                    context.HttpContext.Request.Path);
+            }
+            else
+            {
+                Log.Debug("[OpenSubsonic Auth] No melodee_blazor_token cookie found. Path: {Path}", context.HttpContext.Request.Path);
             }
         }
 

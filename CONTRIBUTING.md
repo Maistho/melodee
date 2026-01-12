@@ -65,22 +65,9 @@ Looking for a place to start? Check out issues labeled [`good first issue`](http
 
 Melodee supports 10 languages and we welcome translation contributions! This is a great way to contribute without writing code.
 
-#### Current Translation Status
+**📖 See [CONTRIBUTING_TRANSLATIONS.md](CONTRIBUTING_TRANSLATIONS.md) for the complete translation guide.**
 
-| Language | Code | Status |
-|----------|------|--------|
-| English (US) | en-US | ✅ 100% |
-| Portuguese (Brazil) | pt-BR | 🔄 42% |
-| German | de-DE | 🔄 41% |
-| Italian | it-IT | 🔄 41% |
-| Spanish | es-ES | 🔄 38% |
-| Russian | ru-RU | 🔄 38% |
-| Chinese (Simplified) | zh-CN | 🔄 38% |
-| French | fr-FR | 🔄 37% |
-| Japanese | ja-JP | 🔄 37% |
-| Arabic | ar-SA | 🔄 31% |
-
-#### How to Contribute Translations
+#### Quick Start
 
 1. **Find your language file**: `src/Melodee.Blazor/Resources/SharedResources.<code>.resx`
 2. **Search for** `[NEEDS TRANSLATION]` entries
@@ -100,16 +87,7 @@ Melodee supports 10 languages and we welcome translation contributions! This is 
 </data>
 ```
 
-Resource files are standard .NET `.resx` XML format. You can edit them with:
-- Any text editor
-- Visual Studio's resource editor
-- VS Code with an XML extension
-
-**Tips for translators:**
-- Keep translations concise (UI space is limited)
-- Preserve any placeholders like `{0}`, `{1}` in the translation
-- Test your translations by running the app locally if possible
-- Feel free to submit partial translations—every bit helps!
+**Supported languages**: English, German, Spanish, French, Italian, Japanese, Portuguese (Brazil), Russian, Chinese (Simplified), Arabic
 
 ### Improving Documentation
 

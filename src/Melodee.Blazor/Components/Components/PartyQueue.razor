@@ -1,0 +1,208 @@
+@using Melodee.Blazor.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Web
+@inject PartyModeService PartyModeService
+@inject ILogger<PartyQueue> Logger
+@inject IStringLocalizer<SharedResources> Localizer
+
+<div class="party-queue-container">
+    <div class="queue-header">
+        <h3>📋 @Localizer["PartyMode.Queue"]</h3>
+        <div class="queue-actions">
+            <button class="action-btn" @onclick="RefreshQueue" title="@Localizer["PartyMode.Refresh"]">
+                🔄
+            </button>
+            <button class="action-btn" @onclick="ClearQueue" title="@Localizer["PartyMode.ClearQueue"]" disabled="@(!QueueItems.Any())">
+                🗑️
+            </button>
+        </div>
+    </div>
+
+    @if (IsLoading)
+    {
+        <div class="queue-loading">
+            <p>@Localizer["PartyMode.LoadingQueue"]</p>
+        </div>
+    }
+    else if (QueueItems.Any())
+    {
+        <div class="queue-list">
+            @foreach (var (item, index) in QueueItems.Select((value, i) => (value, i)))
+            {
+                <div class="queue-item @(item.ApiKey == CurrentItemApiKey ? "playing" : "")"
+                     draggable="true"
+                     @ondragstart="(e) => OnDragStart(e, item)"
+                     @ondragover="OnDragOver"
+                     @ondrop="(e) => OnDrop(e, item)"
+                     @onclick="() => PlayItem(item)">
+                    
+                    <div class="item-number">@(index + 1)</div>
+                    <div class="item-info">
+                        <div class="item-title">@GetSongTitle(item)</div>
+                        <div class="item-meta">
+                            @if (!string.IsNullOrEmpty(item.Source))
+                            {
+                                <span class="item-source">@item.Source</span>
+                            }
+                            <span class="item-enqueued-by">@Localizer["PartyMode.ByUser"] @item.EnqueuedByUserId</span>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="item-btn" @onclick:stopPropagation @onclick="() => RemoveItem(item)" title="@Localizer["PartyMode.Remove"]">
+                            ✕
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="queue-empty">
+            <p>@Localizer["PartyMode.QueueEmpty"]</p>
+            <p class="hint">@Localizer["PartyMode.QueueEmptyHint"]</p>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid SessionApiKey { get; set; }
+    [Parameter] public EventCallback<IEnumerable<PartyQueueItemDto>> OnQueueChanged { get; set; }
+    [Parameter] public EventCallback<PartyQueueItemDto> OnItemSelected { get; set; }
+    [Parameter] public Guid? CurrentItemApiKey { get; set; }
+
+    private List<PartyQueueItemDto> QueueItems { get; set; } = new();
+    private long CurrentRevision { get; set; } = 1;
+    private bool IsLoading { get; set; }
+    private PartyQueueItemDto? DraggedItem { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadQueue();
+    }
+
+    public async Task RefreshQueue()
+    {
+        await LoadQueue();
+    }
+
+    private async Task LoadQueue()
+    {
+        try
+        {
+            IsLoading = true;
+            var result = await PartyModeService.GetQueueAsync(SessionApiKey);
+            if (result?.IsSuccess == true && result.Data != null)
+            {
+                QueueItems = result.Data.Items.ToList();
+                CurrentRevision = result.Data.Revision;
+                await OnQueueChanged.InvokeAsync(QueueItems);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading queue");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task PlayItem(PartyQueueItemDto item)
+    {
+        await OnItemSelected.InvokeAsync(item);
+    }
+
+    private async Task RemoveItem(PartyQueueItemDto item)
+    {
+        try
+        {
+            var result = await PartyModeService.RemoveFromQueueAsync(SessionApiKey, item.ApiKey, CurrentRevision);
+            if (result?.IsSuccess == true)
+            {
+                CurrentRevision = result.Data;
+                QueueItems.Remove(item);
+                await OnQueueChanged.InvokeAsync(QueueItems);
+            }
+            else if (result == null)
+            {
+                // Revision conflict - reload queue
+                await LoadQueue();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error removing queue item");
+        }
+    }
+
+    private async Task ClearQueue()
+    {
+        if (!QueueItems.Any()) return;
+
+        try
+        {
+            var result = await PartyModeService.ClearQueueAsync(SessionApiKey, CurrentRevision);
+            if (result?.IsSuccess == true)
+            {
+                CurrentRevision = result.Data;
+                QueueItems.Clear();
+                await OnQueueChanged.InvokeAsync(QueueItems);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error clearing queue");
+        }
+    }
+
+    private void OnDragStart(DragEventArgs args, PartyQueueItemDto item)
+    {
+        DraggedItem = item;
+    }
+
+    private void OnDragOver(DragEventArgs args)
+    {
+        // Allow dropping
+    }
+
+    private async Task OnDrop(DragEventArgs args, PartyQueueItemDto targetItem)
+    {
+        if (DraggedItem == null || DraggedItem.ApiKey == targetItem.ApiKey) return;
+
+        var oldIndex = QueueItems.FindIndex(x => x.ApiKey == DraggedItem.ApiKey);
+        var newIndex = QueueItems.FindIndex(x => x.ApiKey == targetItem.ApiKey);
+        
+        if (oldIndex != newIndex)
+        {
+            QueueItems.RemoveAt(oldIndex);
+            QueueItems.Insert(newIndex, DraggedItem);
+
+            var result = await PartyModeService.ReorderQueueItemAsync(
+                SessionApiKey, 
+                DraggedItem.ApiKey, 
+                newIndex, 
+                CurrentRevision);
+
+            if (result?.IsSuccess == true)
+            {
+                CurrentRevision = result.Data;
+                await OnQueueChanged.InvokeAsync(QueueItems);
+            }
+            else
+            {
+                // Revert and reload on failure
+                await LoadQueue();
+            }
+        }
+
+        DraggedItem = null;
+    }
+
+    private static string GetSongTitle(PartyQueueItemDto item)
+    {
+        // In a real implementation, this would resolve the song API key to a title
+        return $"Song {item.SongApiKey.ToString().Substring(0, 8)}";
+    }
+}

@@ -30,6 +30,7 @@ public class UserServicePasswordResetTests : ServiceTestBase
             GetAlbumService(),
             GetSongService(),
             GetPlaylistService(),
+            GetPodcastService(),
             bus ?? MockBus());
     }
 

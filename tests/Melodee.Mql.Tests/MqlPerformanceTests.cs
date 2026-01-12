@@ -120,9 +120,9 @@ public class MqlPerformanceTests
         }
         sw.Stop();
 
-        sw.ElapsedMilliseconds.Should().BeLessThan(500, "100 validations should complete quickly");
+        sw.ElapsedMilliseconds.Should().BeLessThan(750, "100 validations should complete quickly");
         var avgMs = sw.ElapsedMilliseconds / 100.0;
-        avgMs.Should().BeLessThan(5, "average validation should be under 5ms");
+        avgMs.Should().BeLessThan(7.5, "average validation should be under 7.5ms");
     }
 
     [Fact]

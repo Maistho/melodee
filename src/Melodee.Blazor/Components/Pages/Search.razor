@@ -9,6 +9,7 @@
 @using Album = Melodee.Common.Data.Models.Album
 @using Artist = Melodee.Common.Data.Models.Artist
 @using Song = Melodee.Common.Data.Models.Song
+@using PodcastEpisode = Melodee.Common.Data.Models.PodcastEpisode
 @inject SearchService SearchService
 @inject MainLayoutProxyService MainLayoutProxyService
 @inject IMelodeeConfigurationFactory ConfigurationFactory
@@ -209,10 +210,45 @@
                 </RadzenTable>
             </ChildContent>
         </RadzenPanel>
+        
+        @* MQL Podcast Results *@
+        <RadzenPanel AllowCollapse="true" Visible="_mqlPodcastResults.Any()">
+            <HeaderTemplate>
+                <RadzenText TextStyle="TextStyle.Subtitle2" class="rz-display-flex rz-m-0">
+                    <RadzenIcon Icon="podcasts" class="rz-me-1"/>
+                    @L("Search.PodcastEpisodesCount", _mqlPodcastResults.Length)
+                </RadzenText>
+            </HeaderTemplate>
+            <ChildContent>
+                <RadzenTable AllowAlternatingRows="true">
+                    <RadzenTableHeader>
+                        <RadzenTableHeaderRow>
+                            <RadzenTableHeaderCell>@L("Common.Title")</RadzenTableHeaderCell>
+                            <RadzenTableHeaderCell>@L("Common.Channel")</RadzenTableHeaderCell>
+                            <RadzenTableHeaderCell>@L("Common.Date")</RadzenTableHeaderCell>
+                        </RadzenTableHeaderRow>
+                    </RadzenTableHeader>
+                    <RadzenTableBody>
+                        @foreach (var episode in _mqlPodcastResults)
+                        {
+                            <RadzenTableRow>
+                                <RadzenTableCell>
+                                    <RadzenLink Path="@($"/podcasts/{episode.PodcastChannel?.ApiKey}/episodes/{episode.ApiKey}")">@episode.Title</RadzenLink>
+                                </RadzenTableCell>
+                                <RadzenTableCell>
+                                    <RadzenLink Path="@($"/podcasts/{episode.PodcastChannel?.ApiKey}")">@episode.PodcastChannel?.Title</RadzenLink>
+                                </RadzenTableCell>
+                                <RadzenTableCell>@episode.PublishDate</RadzenTableCell>
+                            </RadzenTableRow>
+                        }
+                    </RadzenTableBody>
+                </RadzenTable>
+            </ChildContent>
+        </RadzenPanel>
     }
     
     @* Simple Search Results *@
-    @if (!_advancedMode && !_searchResult.Artists.Any() && !_searchResult.Albums.Any() && !_searchResult.Songs.Any())
+    @if (!_advancedMode && !_searchResult.Artists.Any() && !_searchResult.Albums.Any() && !_searchResult.Songs.Any() && !_searchResult.PodcastChannels.Any() && !_searchResult.PodcastEpisodes.Any())
     {
         <RadzenCard class="rz-mt-4">
             <RadzenStack AlignItems="AlignItems.Center" Gap="1rem" class="rz-p-4">
@@ -355,6 +391,70 @@
 
         </ChildContent>
     </RadzenPanel>
+    <RadzenPanel AllowCollapse="true" Visible="@(!_advancedMode && _searchResult.PodcastChannels.Any())">
+        <HeaderTemplate>
+            <RadzenText TextStyle="TextStyle.Subtitle2" class="rz-display-flex rz-m-0">
+                <RadzenIcon Icon="podcasts" class="rz-me-1"/>
+                @L("Search.PodcastChannelsCount", _searchResult.PodcastChannels.Length)
+            </RadzenText>
+        </HeaderTemplate>
+        <ChildContent>
+            <RadzenStack
+                Orientation="Orientation.Horizontal"
+                Wrap="FlexWrap.Wrap"
+                JustifyContent="JustifyContent.Left"
+                class="rz-p-2"
+                Gap="10px">
+                @foreach (var channel in _searchResult.PodcastChannels)
+                {
+                    <RadzenCard>
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem">
+                            <RadzenLink Path="@($"/podcasts/{channel.Id}")">
+                                <RadzenImage Path="@(channel.ImageUrl)" Style="width: 50px; height: 50px; border-radius: 4px;" />
+                            </RadzenLink>
+                            <RadzenStack Gap="0">
+                                <RadzenLink Path="@($"/podcasts/{channel.Id}")" Text="@channel.Title" />
+                                <RadzenText TextStyle="TextStyle.Caption">@channel.InfoLineData</RadzenText>
+                            </RadzenStack>
+                        </RadzenStack>
+                    </RadzenCard>
+                }
+            </RadzenStack>
+        </ChildContent>
+    </RadzenPanel>
+    <RadzenPanel AllowCollapse="true" Visible="@(!_advancedMode && _searchResult.PodcastEpisodes.Any())">
+        <HeaderTemplate>
+            <RadzenText TextStyle="TextStyle.Subtitle2" class="rz-display-flex rz-m-0">
+                <RadzenIcon Icon="play_circle" class="rz-me-1"/>
+                @L("Search.PodcastEpisodesCount", _searchResult.PodcastEpisodes.Length)
+            </RadzenText>
+        </HeaderTemplate>
+        <ChildContent>
+            <RadzenTable AllowAlternatingRows="true">
+                <RadzenTableHeader>
+                    <RadzenTableHeaderRow>
+                        <RadzenTableHeaderCell>@L("Common.Title")</RadzenTableHeaderCell>
+                        <RadzenTableHeaderCell>@L("Common.Channel")</RadzenTableHeaderCell>
+                        <RadzenTableHeaderCell>@L("Common.Date")</RadzenTableHeaderCell>
+                    </RadzenTableHeaderRow>
+                </RadzenTableHeader>
+                <RadzenTableBody>
+                    @foreach (var episode in _searchResult.PodcastEpisodes)
+                    {
+                        <RadzenTableRow>
+                            <RadzenTableCell>
+                                <RadzenLink Path="@($"/podcasts/{episode.ChannelApiKey}/episodes/{episode.ApiKey}")">@episode.Title</RadzenLink>
+                            </RadzenTableCell>
+                            <RadzenTableCell>
+                                <RadzenLink Path="@($"/podcasts/{episode.ChannelApiKey}")">@episode.ChannelTitle</RadzenLink>
+                            </RadzenTableCell>
+                            <RadzenTableCell>@episode.PublishDate</RadzenTableCell>
+                        </RadzenTableRow>
+                    }
+                </RadzenTableBody>
+            </RadzenTable>
+        </ChildContent>
+    </RadzenPanel>
 </RadzenStack>
 
 @code {
@@ -370,6 +470,7 @@
     private Song[] _mqlSongResults = [];
     private Album[] _mqlAlbumResults = [];
     private Artist[] _mqlArtistResults = [];
+    private PodcastEpisode[] _mqlPodcastResults = [];
     
     private List<EntityType> _entityTypes = [];
     
@@ -377,7 +478,7 @@
 
     [Parameter] public string? Query { get; set; }
 
-    SearchResult _searchResult = new([], 0, [], 0, [], 0, [], 0, [], 0);
+    SearchResult _searchResult = new([], 0, [], 0, [], 0, [], 0, [], 0, [], 0, [], 0);
     private short _defaultMaxResults;
 
     protected override async Task OnParametersSetAsync()
@@ -415,6 +516,9 @@
         await base.OnInitializedAsync();
         _userAgent = await JsRuntime.InvokeAsync<string>("getUserAgent", []);
 
+        var configuration = await ConfigurationFactory.GetConfigurationAsync();
+        var podcastEnabled = configuration.GetValue<bool>(SettingRegistry.PodcastEnabled);
+        
         _entityTypes =
         [
             new EntityType("all", L("Common.All")),
@@ -422,8 +526,12 @@
             new EntityType("albums", L("Common.Albums")),
             new EntityType("artists", L("Common.Artists"))
         ];
+        
+        if (podcastEnabled)
+        {
+            _entityTypes.Add(new EntityType("podcasts", L("Common.Podcasts")));
+        }
 
-        var configuration = await ConfigurationFactory.GetConfigurationAsync();
         _defaultMaxResults = configuration.GetValue<short?>(SettingRegistry.SearchResultsDefaultPageSize) ??
                              configuration.GetValue<short?>(SettingRegistry.DefaultsPageSize) ??
                              50;
@@ -485,6 +593,7 @@
         _mqlSongResults = [];
         _mqlAlbumResults = [];
         _mqlArtistResults = [];
+        _mqlPodcastResults = [];
     }
     
     private void SetMqlExample(string example)
@@ -513,6 +622,7 @@
         _mqlSongResults = [];
         _mqlAlbumResults = [];
         _mqlArtistResults = [];
+        _mqlPodcastResults = [];
         _mqlSearchPerformed = false;
         
         MainLayoutProxyService.ToggleSpinnerVisible();
@@ -529,6 +639,7 @@
                     _mqlSongResults = allResult.Songs.Data.ToArray();
                     _mqlAlbumResults = allResult.Albums.Data.ToArray();
                     _mqlArtistResults = allResult.Artists.Data.ToArray();
+                    _mqlPodcastResults = allResult.PodcastEpisodes.Data.ToArray();
                     if (!allResult.IsValid)
                     {
                         _mqlErrors.AddRange(allResult.Errors);
@@ -572,6 +683,19 @@
                     else
                     {
                         _mqlErrors.AddRange(artistResult.Errors);
+                    }
+                    break;
+
+                case "podcasts":
+                    var podcastResult = await MqlSearchService.SearchPodcastsAsync(_mqlQuery, userId, paging);
+                    if (podcastResult.IsValid)
+                    {
+                        _mqlPodcastResults = podcastResult.Results.Data.ToArray();
+                        _mqlErrors.AddRange(podcastResult.Warnings);
+                    }
+                    else
+                    {
+                        _mqlErrors.AddRange(podcastResult.Errors);
                     }
                     break;
             }

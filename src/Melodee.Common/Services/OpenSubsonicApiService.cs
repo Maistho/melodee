@@ -64,7 +64,8 @@ public class OpenSubsonicApiService(
     UserQueueService userQueueService,
     StatisticsService statisticsService,
     IBus bus,
-    ILyricPlugin lyricPlugin
+    ILyricPlugin lyricPlugin,
+    PodcastPlaybackService podcastPlaybackService
 )
     : ServiceBase(logger, cacheManager, contextFactory)
 {
@@ -105,6 +106,39 @@ public class OpenSubsonicApiService(
     private static bool IsApiIdForDynamicPlaylist(string? id)
     {
         return id.Nullify() != null && (id?.StartsWith($"dpl{OpenSubsonicServer.ApiIdSeparator}") ?? false);
+    }
+
+    private static bool IsApiIdForPodcastChannel(string? id)
+    {
+        return id.Nullify() != null && (id?.StartsWith("podcast:channel:") ?? false);
+    }
+
+    private static int? PodcastChannelIdFromId(string? id)
+    {
+        if (id.Nullify() == null)
+        {
+            return null;
+        }
+
+        if (id!.StartsWith("podcast:channel:", StringComparison.OrdinalIgnoreCase))
+        {
+            var idPart = id["podcast:channel:".Length..];
+            if (int.TryParse(idPart, out var channelId))
+            {
+                return channelId;
+            }
+        }
+
+        return null;
+    }
+
+    private static bool IsPodcastEpisodeId(string? id) =>
+        id?.StartsWith("podcast:episode:", StringComparison.OrdinalIgnoreCase) == true;
+
+    private static int? ParsePodcastEpisodeIdFromApiId(string? id)
+    {
+        if (!IsPodcastEpisodeId(id)) return null;
+        return int.TryParse(id!.Substring("podcast:episode:".Length), out var episodeId) ? episodeId : null;
     }
 
     private static Guid? ApiKeyFromId(string? id)
@@ -1244,10 +1278,48 @@ public class OpenSubsonicApiService(
                 }
                 else if (IsApiIdForChart(apiId))
                 {
-                    var chartImageBytesAndEtab = await chartService.GetChartImageBytesAndEtagAsync(apiKey.Value, size, cancellationToken).ConfigureAwait(false);
+                    var chartImageBytesAndEtab = await chartService.GetChartImageBytesAndEtagAsync(apiKey.Value, size, cancellationToken);
                     result = chartImageBytesAndEtab.Bytes ?? defaultImages.ChartImageBytes;
                     eTag = chartImageBytesAndEtab.Etag ?? badEtag;
                     imageBytesAndEtag = new ImageBytesAndEtag(result, eTag);
+                }
+                else if (IsApiIdForPodcastChannel(apiId))
+                {
+                    var channelId = PodcastChannelIdFromId(apiId);
+                    if (channelId.HasValue)
+                    {
+                        await using var context = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+                        var channel = await context.PodcastChannels
+                            .FirstOrDefaultAsync(x => x.Id == channelId.Value, cancellationToken)
+                            .ConfigureAwait(false);
+
+                        if (channel != null && !string.IsNullOrEmpty(channel.CoverArtLocalPath))
+                        {
+                            var podcastLibraryResult = await libraryService.GetPodcastLibraryAsync(cancellationToken).ConfigureAwait(false);
+                            var podcastLibrary = podcastLibraryResult.Data;
+                            if (podcastLibrary != null)
+                            {
+                                var coverArtPath = Path.Combine(podcastLibrary.Path, channel.CoverArtLocalPath);
+                                var coverArtFileInfo = new FileInfo(coverArtPath);
+                                if (coverArtFileInfo.Exists)
+                                {
+                                    result = await File.ReadAllBytesAsync(coverArtFileInfo.FullName, cancellationToken).ConfigureAwait(false);
+                                    eTag = coverArtFileInfo.LastWriteTimeUtc.ToEtag();
+                                }
+                            }
+                        }
+
+                        if (result == null)
+                        {
+                            result = defaultImages.PlaylistImageBytes;
+                            eTag = badEtag;
+                        }
+                        imageBytesAndEtag = new ImageBytesAndEtag(result, eTag);
+                    }
+                    else
+                    {
+                        imageBytesAndEtag = new ImageBytesAndEtag(null, null);
+                    }
                 }
                 else if (isUserImageRequest)
                 {
@@ -1505,9 +1577,18 @@ public class OpenSubsonicApiService(
             var user = apiRequest.Username == null
                 ? null
                 : await userService.GetByUsernameAsync(apiRequest.Username, cancellationToken).ConfigureAwait(false);
+
+            var userInfo = user?.Data?.ToUserInfo() ?? UserInfo.BlankUserInfo;
+
+            Logger.Debug("[{MethodName}] Authentication bypassed (cookie auth). Username: {Username}, UserInfo: {UserInfo}, Roles: {Roles}",
+                nameof(AuthenticateSubsonicApiAsync),
+                apiRequest.Username ?? "null",
+                userInfo.Id,
+                string.Join(", ", userInfo.Roles ?? []));
+
             return new ResponseModel
             {
-                UserInfo = user?.Data?.ToUserInfo() ?? UserInfo.BlankUserInfo,
+                UserInfo = userInfo,
                 ResponseData = await NewApiResponse(true, string.Empty, string.Empty)
             };
         }
@@ -1789,37 +1870,75 @@ public class OpenSubsonicApiService(
         {
             foreach (var idAndIndex in ids.Select((id, index) => new { id, index }))
             {
-                await scrobbleService.NowPlaying(authResponse.UserInfo, ApiKeyFromId(idAndIndex.id) ?? Guid.Empty,
-                    times?.Length > idAndIndex.index ? times[idAndIndex.index] : null,
-                    apiRequest.ApiRequestPlayer?.Client ?? string.Empty,
-                    apiRequest.ApiRequestPlayer?.UserAgent,
-                    apiRequest.IpAddress,
-                    cancellationToken).ConfigureAwait(false);
+                if (IsPodcastEpisodeId(idAndIndex.id))
+                {
+                    var episodeId = ParsePodcastEpisodeIdFromApiId(idAndIndex.id);
+                    if (episodeId.HasValue)
+                    {
+                        await podcastPlaybackService.NowPlayingAsync(
+                            authResponse.UserInfo.Id,
+                            episodeId.Value,
+                            times?.Length > idAndIndex.index ? (int?)times[idAndIndex.index] : null,
+                            apiRequest.ApiRequestPlayer?.Client,
+                            apiRequest.ApiRequestPlayer?.UserAgent,
+                            apiRequest.IpAddress,
+                            cancellationToken
+                        ).ConfigureAwait(false);
+                    }
+                }
+                else
+                {
+                    await scrobbleService.NowPlaying(authResponse.UserInfo, ApiKeyFromId(idAndIndex.id) ?? Guid.Empty,
+                        times?.Length > idAndIndex.index ? times[idAndIndex.index] : null,
+                        apiRequest.ApiRequestPlayer?.Client ?? string.Empty,
+                        apiRequest.ApiRequestPlayer?.UserAgent,
+                        apiRequest.IpAddress,
+                        cancellationToken).ConfigureAwait(false);
+                }
             }
         }
         else
         {
             foreach (var idAndIndex in ids.Select((id, index) => new { id, index }))
             {
-                var id = ApiKeyFromId(idAndIndex.id) ?? Guid.Empty;
-                var uniqueId = SafeParser.Hash(authResponse.UserInfo.ApiKey.ToString(), id.ToString());
-                var nowPlayingInfo =
-                    (await scrobbleService.GetNowPlaying(cancellationToken).ConfigureAwait(false)).Data
-                    .FirstOrDefault(x => x.UniqueId == uniqueId);
-                if (nowPlayingInfo != null)
+                if (IsPodcastEpisodeId(idAndIndex.id))
                 {
-                    await scrobbleService.Scrobble(authResponse.UserInfo,
-                            id,
-                            false,
-                            apiRequest.ApiRequestPlayer?.Client ?? string.Empty,
+                    var episodeId = ParsePodcastEpisodeIdFromApiId(idAndIndex.id);
+                    if (episodeId.HasValue)
+                    {
+                        await podcastPlaybackService.ScrobbleAsync(
+                            authResponse.UserInfo.Id,
+                            episodeId.Value,
+                            times?.Length > idAndIndex.index ? (int?)times[idAndIndex.index] : null,
+                            apiRequest.ApiRequestPlayer?.Client,
                             apiRequest.ApiRequestPlayer?.UserAgent,
                             apiRequest.IpAddress,
-                            cancellationToken)
-                        .ConfigureAwait(false);
+                            cancellationToken
+                        ).ConfigureAwait(false);
+                    }
                 }
                 else
                 {
-                    Logger.Debug("Scrobble: Ignoring duplicate scrobble submission for [{UniqueId}]", uniqueId);
+                    var id = ApiKeyFromId(idAndIndex.id) ?? Guid.Empty;
+                    var uniqueId = SafeParser.Hash(authResponse.UserInfo.ApiKey.ToString(), id.ToString());
+                    var nowPlayingInfo =
+                        (await scrobbleService.GetNowPlaying(cancellationToken).ConfigureAwait(false)).Data
+                        .FirstOrDefault(x => x.UniqueId == uniqueId);
+                    if (nowPlayingInfo != null)
+                    {
+                        await scrobbleService.Scrobble(authResponse.UserInfo,
+                                id,
+                                false,
+                                apiRequest.ApiRequestPlayer?.Client ?? string.Empty,
+                                apiRequest.ApiRequestPlayer?.UserAgent,
+                                apiRequest.IpAddress,
+                                cancellationToken)
+                            .ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        Logger.Debug("Scrobble: Ignoring duplicate scrobble submission for [{UniqueId}]", uniqueId);
+                    }
                 }
             }
         }
@@ -2022,6 +2141,66 @@ public class OpenSubsonicApiService(
                     nowPlayingSong.ApiKey.ToString());
                 data.Add(nowPlayingSong.ToApiChild(album, userSong,
                     nowPlaying.Data.FirstOrDefault(x => x.UniqueId == nowPlayingSongUniqueId)));
+            }
+        }
+
+        var podcastNowPlaying = await podcastPlaybackService.GetNowPlayingAsync(authResponse.UserInfo.Id, cancellationToken).ConfigureAwait(false);
+        if (podcastNowPlaying.IsSuccess && podcastNowPlaying.Data != null)
+        {
+            foreach (var nowPlayingHistory in podcastNowPlaying.Data)
+            {
+                var episode = nowPlayingHistory.PodcastEpisode;
+                if (episode == null) continue;
+
+                var episodeApiId = $"podcast:episode:{episode.Id}";
+                var child = new Child(
+                    episodeApiId,
+                    $"podcast:channel:{episode.PodcastChannelId}",
+                    false,
+                    episode.Title,
+                    null,
+                    null,
+                    null,
+                    episode.PublishDate?.InUtc().Year ?? 0,
+                    null,
+                    episode.LocalFileSize ?? 0,
+                    episode.MimeType ?? "audio/mpeg",
+                    episode.MimeType?.Split('/').LastOrDefault() ?? "mp3",
+                    null,
+                    (int?)(episode.Duration?.TotalSeconds ?? 0),
+                    0,
+                    null,
+                    null,
+                    null,
+                    episode.LocalPath,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+                );
+                data.Add(child);
             }
         }
 
@@ -2871,12 +3050,76 @@ public class OpenSubsonicApiService(
             return authResponse with { UserInfo = UserInfo.BlankUserInfo };
         }
 
-        var bookmarksResult = await userService.GetBookmarksAsync(authResponse.UserInfo.Id, cancellationToken).ConfigureAwait(false);
+        var data = new List<Bookmark>();
 
-        Bookmark[] data = [];
-        if (bookmarksResult.IsSuccess)
+        var bookmarksResult = await userService.GetBookmarksAsync(authResponse.UserInfo.Id, cancellationToken).ConfigureAwait(false);
+        if (bookmarksResult.IsSuccess && bookmarksResult.Data != null)
         {
-            data = bookmarksResult.Data.Select(x => x.ToApiBookmark()).ToArray();
+            data.AddRange(bookmarksResult.Data.Select(x => x.ToApiBookmark()));
+        }
+
+        var podcastBookmarksResult = await podcastPlaybackService.GetAllBookmarksAsync(authResponse.UserInfo.Id, cancellationToken).ConfigureAwait(false);
+        if (podcastBookmarksResult.IsSuccess && podcastBookmarksResult.Data != null)
+        {
+            foreach (var bookmark in podcastBookmarksResult.Data)
+            {
+                var bookmarkEntry = new Child(
+                    $"podcast:episode:{bookmark.PodcastEpisodeId}",
+                    null,
+                    false,
+                    null,
+                    null,
+                    null,
+                    null,
+                    0,
+                    null,
+                    0,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+                );
+                data.Add(new Bookmark(
+                    bookmark.PositionSeconds,
+                    authResponse.UserInfo.UserName,
+                    bookmark.Comment,
+                    bookmark.CreatedAt.InUtc().ToDateTimeUtc().ToString("O"),
+                    bookmark.UpdatedAt.InUtc().ToDateTimeUtc().ToString("O"),
+                    bookmarkEntry
+                ));
+            }
         }
 
         return new ResponseModel
@@ -2884,7 +3127,7 @@ public class OpenSubsonicApiService(
             UserInfo = authResponse.UserInfo,
             ResponseData = await DefaultApiResponse() with
             {
-                Data = data,
+                Data = data.ToArray(),
                 DataPropertyName = "bookmarks",
                 DataDetailPropertyName = "bookmark"
             }
@@ -2898,6 +3141,19 @@ public class OpenSubsonicApiService(
         if (!authResponse.IsSuccess)
         {
             return authResponse with { UserInfo = UserInfo.BlankUserInfo };
+        }
+
+        var podcastEpisodeId = ParsePodcastEpisodeIdFromApiId(id);
+        if (podcastEpisodeId.HasValue)
+        {
+            var podcastSaveResult = await podcastPlaybackService.SaveBookmarkAsync(authResponse.UserInfo.Id, podcastEpisodeId.Value, position, comment, cancellationToken).ConfigureAwait(false);
+            return new ResponseModel
+            {
+                UserInfo = UserInfo.BlankUserInfo,
+                IsSuccess = podcastSaveResult.IsSuccess,
+                ResponseData = await NewApiResponse(podcastSaveResult.IsSuccess, string.Empty, string.Empty,
+                    podcastSaveResult.IsSuccess ? null : Error.InvalidApiKeyError)
+            };
         }
 
         var apiKey = ApiKeyFromId(id);
@@ -2931,6 +3187,19 @@ public class OpenSubsonicApiService(
         if (!authResponse.IsSuccess)
         {
             return authResponse with { UserInfo = UserInfo.BlankUserInfo };
+        }
+
+        var podcastEpisodeId = ParsePodcastEpisodeIdFromApiId(id);
+        if (podcastEpisodeId.HasValue)
+        {
+            var podcastDeleteResult = await podcastPlaybackService.DeleteBookmarkAsync(authResponse.UserInfo.Id, podcastEpisodeId.Value, cancellationToken).ConfigureAwait(false);
+            return new ResponseModel
+            {
+                UserInfo = UserInfo.BlankUserInfo,
+                IsSuccess = podcastDeleteResult.IsSuccess,
+                ResponseData = await NewApiResponse(podcastDeleteResult.IsSuccess, string.Empty, string.Empty,
+                    podcastDeleteResult.IsSuccess ? null : Error.InvalidApiKeyError)
+            };
         }
 
         var apiKey = ApiKeyFromId(id);

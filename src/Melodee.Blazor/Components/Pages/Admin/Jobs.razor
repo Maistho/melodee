@@ -122,7 +122,7 @@
         {
             @* Jobs Data Grid *@
             <RadzenCard>
-                <RadzenDataGrid TItem="JobStatusDetail" 
+                <RadzenDataGrid @ref="_jobsGrid" TItem="JobStatusDetail" 
                                 Data="@_jobs" 
                                 AllowPaging="false" 
                                 AllowSorting="true" 
@@ -451,7 +451,8 @@
 </style>
 
 @code {
-    private readonly List<JobStatusDetail> _jobs = [];
+    private List<JobStatusDetail> _jobs = [];
+    private RadzenDataGrid<JobStatusDetail>? _jobsGrid;
     private bool _isLoading;
     private bool _schedulerStarted;
     private bool _schedulerInStandby;
@@ -481,10 +482,10 @@
         _isLoading = true;
         StateHasChanged();
 
+        var newJobs = new List<JobStatusDetail>();
+        
         try
         {
-            _jobs.Clear();
-
             var scheduler = await SchedulerFactory.GetScheduler();
             var metadata = await scheduler.GetMetaData();
             
@@ -533,6 +534,9 @@
 
             var jobGroups = await scheduler.GetJobGroupNames();
             _pausedJobsCount = 0;
+            
+            Log.Debug("[Jobs UI] Scheduler started: {Started}, In standby: {Standby}, Job groups: {Groups}", 
+                metadata.Started, metadata.InStandbyMode, string.Join(", ", jobGroups));
 
             foreach (var group in jobGroups)
             {
@@ -609,7 +613,7 @@
                             .FirstOrDefault();
                     }
 
-                    _jobs.Add(new JobStatusDetail
+                    newJobs.Add(new JobStatusDetail
                     {
                         JobName = jobKey.Name,
                         JobGroup = jobKey.Group,
@@ -645,7 +649,7 @@
             }
 
             // Add known jobs from JobRegistry that aren't currently scheduled
-            var scheduledJobNames = _jobs.Select(j => j.JobName).ToHashSet();
+            var scheduledJobNames = newJobs.Select(j => j.JobName).ToHashSet();
             foreach (var (jobKey, jobInfo) in JobRegistry.Jobs)
             {
                 if (scheduledJobNames.Contains(jobKey.Name)) continue;
@@ -653,7 +657,7 @@
                 // Check if this job has any history even though it's not currently scheduled
                 jobHistoryStats.TryGetValue(jobKey.Name, out var stats);
 
-                _jobs.Add(new JobStatusDetail
+                newJobs.Add(new JobStatusDetail
                 {
                     JobName = jobKey.Name,
                     JobGroup = jobKey.Group,
@@ -686,9 +690,15 @@
                     LastFailureTime = stats?.LastFailure?.CompletedAt?.ToDateTimeOffset()
                 });
             }
+            
+            // Assign the new list to trigger change detection
+            _jobs = newJobs;
+            
+            Log.Debug("[Jobs UI] Finished loading jobs. Total jobs loaded: {Count}", _jobs.Count);
         }
         catch (Exception ex)
         {
+            Log.Error(ex, "[Jobs UI] Error loading jobs");
             NotificationService.Notify(new NotificationMessage
             {
                 Severity = NotificationSeverity.Error,

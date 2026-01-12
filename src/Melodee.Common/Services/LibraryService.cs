@@ -189,6 +189,35 @@ public class LibraryService : ServiceBase
         };
     }
 
+    public virtual async Task<MelodeeModels.OperationResult<Library>> GetPodcastLibraryAsync(CancellationToken cancellationToken = default)
+    {
+        const int libraryType = (int)LibraryType.Podcast;
+        var result = await CacheManager.GetAsync(CacheKeyDetailLibraryByType.FormatSmart(libraryType), async () =>
+        {
+            var library = await LibraryByType(libraryType, cancellationToken);
+            if (library == null)
+            {
+                throw new Exception("Podcast library not found. A Library record must be setup with a type of '8' (Podcast).");
+            }
+
+            return library;
+        }, cancellationToken).ConfigureAwait(false);
+        return new MelodeeModels.OperationResult<Library>
+        {
+            Data = result
+        };
+    }
+
+    public virtual async Task<MelodeeModels.OperationResult<Library?>> GetThemeLibraryAsync(CancellationToken cancellationToken = default)
+    {
+        const int libraryType = (int)LibraryType.Theme;
+        var library = await LibraryByType(libraryType, cancellationToken);
+        return new MelodeeModels.OperationResult<Library?>
+        {
+            Data = library
+        };
+    }
+
     public async Task<MelodeeModels.OperationResult<Library?>> GetByApiKeyAsync(Guid apiKey, CancellationToken cancellationToken = default)
     {
         Guard.Against.Expression(_ => apiKey == Guid.Empty, apiKey, nameof(apiKey));

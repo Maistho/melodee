@@ -58,10 +58,13 @@ Experience Melodee before installing! Our official demo server is available at:
 - **⚡ Automatic Ingestion**: Drop files → play music (validated albums flow through automatically)
 - **🔄 Automated Jobs**: Cron-based scheduling with intelligent job chaining
 - **📝 User Requests**: Submit and track requests for missing albums/songs, with automatic completion when matches are detected
+- **🎙️ Podcast Support**: Subscribe to podcasts, auto-download episodes, playback tracking with resume positions
 - **🎵 OpenSubsonic API**: Compatible with popular Subsonic and OpenSubsonic clients
 - **🎬 Jellyfin API**: Compatible with Jellyfin music clients (Finamp, Feishin, Streamyfin)
 - **🌐 Melodee API**: Fast RESTful API for custom integrations
 - **🌐 Modern Web UI**: Blazor Server interface with Radzen UI components
+- **🎛️ Jukebox**: Server-side playback with queue/control support (OpenSubsonic jukeboxControl; MPV/MPD backends)
+- **🎉 Party Mode**: Shared listening sessions with a collaborative queue and DJ/Listener roles
 - **🐳 Container Ready**: Full Docker/Podman support with PostgreSQL
 
 ![Melodee Web Interface](graphics/Snapshot_2025-02-04_23-06-24.png)
@@ -292,6 +295,10 @@ Melodee includes a comprehensive job scheduling system powered by Quartz.NET:
 | **ChartUpdateJob** | Links chart entries to albums | Daily at 2 AM |
 | **MusicBrainzUpdateDatabaseJob** | Updates local MusicBrainz cache | Monthly |
 | **NowPlayingCleanupJob** | Cleans stale now-playing entries | Every 5 minutes |
+| **PodcastRefreshJob** | Fetches new episodes from subscribed podcasts | Every 30 minutes |
+| **PodcastDownloadJob** | Downloads queued podcast episodes | Every 5 minutes |
+| **PodcastCleanupJob** | Enforces retention policies on downloaded episodes | Daily at 3 AM |
+| **PodcastRecoveryJob** | Resets stuck downloads and cleans orphaned files | Every hour |
 
 Jobs can be manually triggered, paused, or monitored from the admin UI at `/admin/jobs`.
 
@@ -333,15 +340,15 @@ Melodee features comprehensive localization with support for 10 languages:
 | Language | Code | Status | RTL |
 |----------|------|--------|-----|
 | English (US) | en-US | ✅ 100% | - |
-| Arabic | ar-SA | 🔄 31% | ✅ |
-| Chinese (Simplified) | zh-CN | 🔄 38% | - |
-| French | fr-FR | 🔄 37% | - |
-| German | de-DE | 🔄 41% | - |
-| Italian | it-IT | 🔄 41% | - |
-| Japanese | ja-JP | 🔄 37% | - |
-| Portuguese (Brazil) | pt-BR | 🔄 42% | - |
-| Russian | ru-RU | 🔄 38% | - |
-| Spanish | es-ES | 🔄 38% | - |
+| Arabic | ar-SA | 🔄 29% | ✅ |
+| Chinese (Simplified) | zh-CN | 🔄 35% | - |
+| French | fr-FR | 🔄 34% | - |
+| German | de-DE | 🔄 39% | - |
+| Italian | it-IT | 🔄 38% | - |
+| Japanese | ja-JP | 🔄 34% | - |
+| Portuguese (Brazil) | pt-BR | 🔄 39% | - |
+| Russian | ru-RU | 🔄 35% | - |
+| Spanish | es-ES | 🔄 35% | - |
 
 - **Language Selector**: Available in the header for quick switching
 - **User Preference**: Language choice is saved to your user profile and persists across sessions
@@ -360,7 +367,7 @@ We welcome translation contributions from the community! Strings marked with `[N
 
 Resource files are standard .NET `.resx` XML format. You can edit them with any text editor or Visual Studio's resource editor.
 
-**Current translation needs:** ~850-1000 strings per language need native translations. See [Contributing Guide](CONTRIBUTING.md) for details.
+**Current translation needs:** ~965-1,123 strings per language need native translations (out of 1,577 total). See [Contributing Guide](CONTRIBUTING.md) for details.
 
 ### 🌐 OpenSubsonic API
 

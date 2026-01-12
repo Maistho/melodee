@@ -1,0 +1,734 @@
+@page "/jukebox"
+@using Melodee.Common.Services.Playback
+@using Melodee.Common.Services.Jukebox
+@using Melodee.Common.Models.OpenSubsonic.Responses.Jukebox
+@inherits MelodeeComponentBase
+@implements IDisposable
+
+@inject IPlaybackBackendService PlaybackBackendService
+@inject ISubsonicJukeboxService JukeboxService
+@inject NotificationService NotificationService
+@inject ILogger<Jukebox> Logger
+
+<PageTitle>@L("Jukebox.Title")</PageTitle>
+
+<RadzenStack Gap="1rem">
+    <RadzenText TextStyle="TextStyle.H4">@L("Jukebox.Title")</RadzenText>
+
+    @if (_isLoading)
+    {
+        <RadzenProgressBarCircular ShowValue="true" Mode="ProgressBarMode.Indeterminate" Size="ProgressBarCircularSize.Large"/>
+    }
+    else if (!_jukeboxEnabled)
+    {
+        <RadzenCard>
+            <RadzenStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Gap="1rem" Style="padding: 2rem;">
+                <RadzenIcon Icon="speaker" Style="font-size: 4rem; color: var(--rz-text-disabled-color);"/>
+                <RadzenText TextStyle="TextStyle.H6" Style="color: var(--rz-text-disabled-color);">@L("Jukebox.NotEnabled")</RadzenText>
+                <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-disabled-color);">@L("Jukebox.NotEnabledHint")</RadzenText>
+            </RadzenStack>
+        </RadzenCard>
+    }
+    else
+    {
+        <RadzenRow>
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenCard>
+                    <RadzenStack Gap="1rem">
+                        <RadzenText TextStyle="TextStyle.H6">@L("Jukebox.Status")</RadzenText>
+                        
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                            @if (_status?.IsConnected == true)
+                            {
+                                <RadzenBadge BadgeStyle="BadgeStyle.Success" Text="@L("Jukebox.Connected")" IsPill="true"/>
+                            }
+                            else
+                            {
+                                <RadzenBadge BadgeStyle="BadgeStyle.Danger" Text="@L("Jukebox.Disconnected")" IsPill="true"/>
+                            }
+                            
+                            @if (_status?.IsPlaying == true)
+                            {
+                                <RadzenBadge BadgeStyle="BadgeStyle.Info" Text="@L("Jukebox.Playing")" IsPill="true"/>
+                            }
+                            else if (_status?.IsConnected == true)
+                            {
+                                <RadzenBadge BadgeStyle="BadgeStyle.Light" Text="@L("Jukebox.Stopped")" IsPill="true"/>
+                            }
+                        </RadzenStack>
+
+                        @if (!string.IsNullOrEmpty(_capabilities?.BackendInfo))
+                        {
+                            <RadzenStack Gap="0.25rem">
+                                <RadzenText TextStyle="TextStyle.Overline">@L("Jukebox.Backend")</RadzenText>
+                                <RadzenText TextStyle="TextStyle.Body2">@_backendType?.ToUpperInvariant() - @_capabilities.BackendInfo</RadzenText>
+                            </RadzenStack>
+                        }
+
+                        @if (!string.IsNullOrEmpty(_status?.ErrorMessage))
+                        {
+                            <RadzenAlert AlertStyle="AlertStyle.Danger" Variant="Variant.Flat" Shade="Shade.Lighter" ShowIcon="true">
+                                @_status.ErrorMessage
+                            </RadzenAlert>
+                        }
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+
+            <RadzenColumn Size="12" SizeMD="6">
+                <RadzenCard>
+                    <RadzenStack Gap="1rem">
+                        <RadzenText TextStyle="TextStyle.H6">@L("Jukebox.Controls")</RadzenText>
+                        
+                        @if (CurrentUser?.IsAdmin() == true)
+                        {
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.Center">
+                                <RadzenButton Icon="skip_previous" 
+                                              ButtonStyle="ButtonStyle.Secondary" 
+                                              Size="ButtonSize.Large"
+                                              Disabled="@(!_canControl)"
+                                              title="@L("Jukebox.Previous")"
+                                              Click="@OnPreviousAsync"/>
+                                
+                                @if (_status?.IsPlaying == true)
+                                {
+                                    <RadzenButton Icon="pause" 
+                                                  ButtonStyle="ButtonStyle.Primary" 
+                                                  Size="ButtonSize.Large"
+                                                  Disabled="@(!_canControl)"
+                                                  title="@L("Jukebox.Pause")"
+                                                  Click="@OnPauseAsync"/>
+                                }
+                                else
+                                {
+                                    <RadzenButton Icon="play_arrow" 
+                                                  ButtonStyle="ButtonStyle.Primary" 
+                                                  Size="ButtonSize.Large"
+                                                  Disabled="@(!_canControl)"
+                                                  title="@L("Jukebox.Play")"
+                                                  Click="@OnPlayAsync"/>
+                                }
+                                
+                                <RadzenButton Icon="stop" 
+                                              ButtonStyle="ButtonStyle.Secondary" 
+                                              Size="ButtonSize.Large"
+                                              Disabled="@(!_canControl)"
+                                              title="@L("Jukebox.Stop")"
+                                              Click="@OnStopAsync"/>
+                                
+                                <RadzenButton Icon="skip_next" 
+                                              ButtonStyle="ButtonStyle.Secondary" 
+                                              Size="ButtonSize.Large"
+                                              Disabled="@(!_canControl)"
+                                              title="@L("Jukebox.Next")"
+                                              Click="@OnNextAsync"/>
+                            </RadzenStack>
+
+                            @if (_capabilities?.CanSetVolume == true)
+                            {
+                                <RadzenStack Gap="0.5rem">
+                                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                                        <RadzenIcon Icon="volume_down"/>
+                                        <RadzenSlider @bind-Value="_volume" 
+                                                      Min="0" 
+                                                      Max="100" 
+                                                      Step="1"
+                                                      Style="flex: 1;"
+                                                      Disabled="@(!_canControl)"
+                                                      Change="@((double value) => OnVolumeChange(value))"/>
+                                        <RadzenIcon Icon="volume_up"/>
+                                        <RadzenText TextStyle="TextStyle.Body2" Style="width: 40px; text-align: right;">@(_volume)%</RadzenText>
+                                    </RadzenStack>
+                                </RadzenStack>
+                            }
+                        }
+                        else
+                        {
+                            <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-disabled-color);">
+                                @L("Jukebox.AdminOnlyControls")
+                            </RadzenText>
+                        }
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+        </RadzenRow>
+
+        <RadzenRow>
+            <RadzenColumn Size="12">
+                <RadzenCard>
+                    <RadzenStack Gap="1rem">
+                        <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center">
+                            <RadzenText TextStyle="TextStyle.H6">@L("Jukebox.NowPlaying")</RadzenText>
+                            <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem">
+                                @if (CurrentUser?.IsAdmin() == true && _playlist?.Entries.Any() == true)
+                                {
+                                    <RadzenButton Icon="shuffle" 
+                                                  ButtonStyle="ButtonStyle.Light" 
+                                                  Size="ButtonSize.Small"
+                                                  Click="@OnShuffleAsync"
+                                                  title="@L("Jukebox.Shuffle")"/>
+                                    <RadzenButton Icon="delete_sweep" 
+                                                  ButtonStyle="ButtonStyle.Light" 
+                                                  Size="ButtonSize.Small"
+                                                  Click="@OnClearQueueAsync"
+                                                  title="@L("Jukebox.ClearQueue")"/>
+                                }
+                                <RadzenButton Icon="refresh" 
+                                              ButtonStyle="ButtonStyle.Light" 
+                                              Size="ButtonSize.Small"
+                                              Click="@OnRefreshClickAsync"
+                                              title="@L("Actions.Refresh")"/>
+                            </RadzenStack>
+                        </RadzenStack>
+                        
+                        @if (_playlist?.Entries.Any() == true)
+                        {
+                            <RadzenDataList Data="@_playlist.Entries" TItem="JukeboxEntryResponse">
+                                <Template Context="entry">
+                                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem" Style="padding: 0.5rem;">
+                                        <RadzenText TextStyle="TextStyle.Body2" Style="width: 30px; text-align: center; color: var(--rz-text-disabled-color);">
+                                            @((_playlist.Entries.ToList().IndexOf(entry) + 1))
+                                        </RadzenText>
+                                        <RadzenStack Gap="0.1rem" Style="flex: 1;">
+                                            <RadzenText TextStyle="TextStyle.Body1">@entry.Title</RadzenText>
+                                            <RadzenText TextStyle="TextStyle.Caption" Style="color: var(--rz-text-disabled-color);">
+                                                @entry.Artist - @entry.Album
+                                            </RadzenText>
+                                        </RadzenStack>
+                                        <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-disabled-color);">
+                                            @FormatTime(entry.Duration)
+                                        </RadzenText>
+                                        @if (CurrentUser?.IsAdmin() == true)
+                                        {
+                                            <RadzenButton Icon="close" 
+                                                          ButtonStyle="ButtonStyle.Light" 
+                                                          Size="ButtonSize.Small"
+                                                          Click="@(async () => await OnRemoveFromQueueAsync(GetEntryIndex(entry)))"
+                                                          title="@L("Actions.Remove")"/>
+                                        }
+                                    </RadzenStack>
+                                </Template>
+                            </RadzenDataList>
+                        }
+                        else
+                        {
+                            <RadzenText TextStyle="TextStyle.Body2" Style="color: var(--rz-text-disabled-color);">
+                                @L("Jukebox.NoTrackPlaying")
+                            </RadzenText>
+                        }
+                    </RadzenStack>
+                </RadzenCard>
+            </RadzenColumn>
+        </RadzenRow>
+
+        <RadzenCard>
+            <RadzenStack Gap="0.5rem">
+                <RadzenText TextStyle="TextStyle.H6">@L("Jukebox.Capabilities")</RadzenText>
+                <RadzenStack Orientation="Orientation.Horizontal" Wrap="FlexWrap.Wrap" Gap="0.5rem">
+                    <RadzenBadge BadgeStyle="@(_capabilities?.CanPlay == true ? BadgeStyle.Success : BadgeStyle.Light)" 
+                                 Text="@L("Jukebox.Play")" IsPill="true"/>
+                    <RadzenBadge BadgeStyle="@(_capabilities?.CanPause == true ? BadgeStyle.Success : BadgeStyle.Light)" 
+                                 Text="@L("Jukebox.Pause")" IsPill="true"/>
+                    <RadzenBadge BadgeStyle="@(_capabilities?.CanStop == true ? BadgeStyle.Success : BadgeStyle.Light)" 
+                                 Text="@L("Jukebox.Stop")" IsPill="true"/>
+                    <RadzenBadge BadgeStyle="@(_capabilities?.CanSeek == true ? BadgeStyle.Success : BadgeStyle.Light)" 
+                                 Text="Seek" IsPill="true"/>
+                    <RadzenBadge BadgeStyle="@(_capabilities?.CanSkip == true ? BadgeStyle.Success : BadgeStyle.Light)" 
+                                 Text="Skip" IsPill="true"/>
+                    <RadzenBadge BadgeStyle="@(_capabilities?.CanSetVolume == true ? BadgeStyle.Success : BadgeStyle.Light)" 
+                                 Text="Volume" IsPill="true"/>
+                    <RadzenBadge BadgeStyle="@(_capabilities?.CanReportPosition == true ? BadgeStyle.Success : BadgeStyle.Light)" 
+                                 Text="Position" IsPill="true"/>
+                </RadzenStack>
+            </RadzenStack>
+        </RadzenCard>
+    }
+</RadzenStack>
+
+@code {
+    private bool _isLoading = true;
+    private bool _jukeboxEnabled;
+    private string? _backendType;
+    private BackendStatus? _status;
+    private BackendCapabilities? _capabilities;
+    private JukeboxPlaylistResponse? _playlist;
+    private double _volume = 50;
+    private bool _canControl => _status?.IsConnected == true && _capabilities?.IsAvailable == true;
+    private Timer? _refreshTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        Logger.LogDebug("[Jukebox] OnInitializedAsync starting");
+        
+        _jukeboxEnabled = Configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled);
+        _backendType = Configuration.GetValue<string>(SettingRegistry.JukeboxBackendType);
+
+        Logger.LogDebug("[Jukebox] JukeboxEnabled={JukeboxEnabled}, BackendType={BackendType}", _jukeboxEnabled, _backendType);
+
+        if (_jukeboxEnabled)
+        {
+            // Use a timeout to prevent hanging if backend initialization fails
+            Logger.LogDebug("[Jukebox] Starting backend initialization with 10s timeout");
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            try
+            {
+                await InitializeBackendAsync(cts.Token);
+                await RefreshStatusAsync(cts.Token);
+                Logger.LogDebug("[Jukebox] Backend initialization completed successfully");
+            }
+            catch (OperationCanceledException)
+            {
+                Logger.LogWarning("[Jukebox] Backend initialization timed out after 10 seconds");
+                _status = new BackendStatus 
+                { 
+                    IsConnected = false, 
+                    ErrorMessage = "Initialization timed out - check backend configuration" 
+                };
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "[Jukebox] Error during backend initialization");
+                _status = new BackendStatus 
+                { 
+                    IsConnected = false, 
+                    ErrorMessage = ex.Message 
+                };
+            }
+            
+            Logger.LogDebug("[Jukebox] Starting status refresh timer (5s interval)");
+            _refreshTimer = new Timer(_ => _ = InvokeAsync(() => RefreshStatusAsync(CancellationToken.None)), null, TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(5));
+        }
+        else
+        {
+            Logger.LogDebug("[Jukebox] Jukebox is disabled, skipping backend initialization");
+        }
+
+        _isLoading = false;
+        Logger.LogDebug("[Jukebox] OnInitializedAsync completed, IsLoading={IsLoading}", _isLoading);
+    }
+
+    private async Task InitializeBackendAsync(CancellationToken cancellationToken = default)
+    {
+        Logger.LogDebug("[Jukebox] InitializeBackendAsync starting");
+        try
+        {
+            var initResult = await PlaybackBackendService.InitializeBackendAsync(cancellationToken);
+            if (!initResult.IsSuccess)
+            {
+                Logger.LogWarning("[Jukebox] Backend initialization failed: {Messages}", string.Join(", ", initResult.Messages ?? []));
+            }
+            else
+            {
+                Logger.LogDebug("[Jukebox] Backend initialization succeeded");
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            Logger.LogDebug("[Jukebox] InitializeBackendAsync cancelled");
+            throw; // Re-throw to let caller handle timeout
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "[Jukebox] Exception in InitializeBackendAsync");
+        }
+    }
+
+    private async Task RefreshStatusAsync(CancellationToken cancellationToken = default)
+    {
+        Logger.LogDebug("[Jukebox] RefreshStatusAsync starting");
+        try
+        {
+            // Use a short timeout for status refresh to prevent blocking
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            cts.CancelAfter(TimeSpan.FromSeconds(5));
+            
+            var statusTask = PlaybackBackendService.GetBackendStatusAsync(cts.Token);
+            var capabilitiesTask = PlaybackBackendService.GetBackendCapabilitiesAsync(cts.Token);
+            var playlistTask = JukeboxService.GetPlaylistAsync(CurrentUsersId, cts.Token);
+
+            await Task.WhenAll(statusTask, capabilitiesTask, playlistTask);
+
+            _status = statusTask.Result.Data;
+            _capabilities = capabilitiesTask.Result.Data;
+            
+            if (playlistTask.Result.IsSuccess)
+            {
+                _playlist = playlistTask.Result.Data?.Playlist;
+                Logger.LogDebug("[Jukebox] Playlist loaded with {Count} entries", _playlist?.Entries.Count ?? 0);
+            }
+
+            Logger.LogDebug("[Jukebox] Status refresh completed: IsConnected={IsConnected}, IsPlaying={IsPlaying}, BackendInfo={BackendInfo}", 
+                _status?.IsConnected, _status?.IsPlaying, _capabilities?.BackendInfo);
+
+            if (_status?.Volume.HasValue == true)
+            {
+                _volume = _status.Volume.Value * 100;
+            }
+
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (OperationCanceledException)
+        {
+            Logger.LogDebug("[Jukebox] Status refresh cancelled or timed out");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "[Jukebox] Error refreshing status");
+        }
+    }
+
+    private async Task OnRefreshClickAsync()
+    {
+        await RefreshStatusAsync(CancellationToken.None);
+    }
+
+    private async Task OnPlayAsync()
+    {
+        try
+        {
+            var result = await JukeboxService.StartAsync(CurrentUsersId);
+            if (result.IsSuccess)
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = L("Jukebox.Play"),
+                    Detail = L("Jukebox.PlaybackStarted"),
+                    Duration = ToastTime
+                });
+                await RefreshStatusAsync(CancellationToken.None);
+            }
+            else
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Warning,
+                    Summary = L("Jukebox.Play"),
+                    Detail = result.Messages?.FirstOrDefault() ?? L("Common.UnknownError"),
+                    Duration = ToastTime
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "[Jukebox] Error starting playback");
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = L("Jukebox.Play"),
+                Detail = ex.Message,
+                Duration = ToastTime
+            });
+        }
+    }
+
+    private async Task OnPauseAsync()
+    {
+        try
+        {
+            var result = await JukeboxService.StopAsync(CurrentUsersId);
+            if (result.IsSuccess)
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = L("Jukebox.Pause"),
+                    Detail = L("Jukebox.PlaybackPaused"),
+                    Duration = ToastTime
+                });
+                await RefreshStatusAsync(CancellationToken.None);
+            }
+            else
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Warning,
+                    Summary = L("Jukebox.Pause"),
+                    Detail = result.Messages?.FirstOrDefault() ?? L("Common.UnknownError"),
+                    Duration = ToastTime
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "[Jukebox] Error pausing playback");
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = L("Jukebox.Pause"),
+                Detail = ex.Message,
+                Duration = ToastTime
+            });
+        }
+    }
+
+    private async Task OnStopAsync()
+    {
+        try
+        {
+            var result = await JukeboxService.StopAsync(CurrentUsersId);
+            if (result.IsSuccess)
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = L("Jukebox.Stop"),
+                    Detail = L("Jukebox.PlaybackStopped"),
+                    Duration = ToastTime
+                });
+                await RefreshStatusAsync(CancellationToken.None);
+            }
+            else
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Warning,
+                    Summary = L("Jukebox.Stop"),
+                    Detail = result.Messages?.FirstOrDefault() ?? L("Common.UnknownError"),
+                    Duration = ToastTime
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "[Jukebox] Error stopping playback");
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = L("Jukebox.Stop"),
+                Detail = ex.Message,
+                Duration = ToastTime
+            });
+        }
+    }
+
+    private async Task OnPreviousAsync()
+    {
+        try
+        {
+            // Skip to previous by using negative offset
+            var result = await JukeboxService.SkipAsync(CurrentUsersId, null, -1);
+            if (result.IsSuccess)
+            {
+                await RefreshStatusAsync(CancellationToken.None);
+            }
+            else
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Warning,
+                    Summary = L("Jukebox.Previous"),
+                    Detail = result.Messages?.FirstOrDefault() ?? L("Common.UnknownError"),
+                    Duration = ToastTime
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "[Jukebox] Error skipping to previous");
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = L("Jukebox.Previous"),
+                Detail = ex.Message,
+                Duration = ToastTime
+            });
+        }
+    }
+
+    private async Task OnNextAsync()
+    {
+        try
+        {
+            var result = await JukeboxService.SkipAsync(CurrentUsersId, null, 1);
+            if (result.IsSuccess)
+            {
+                await RefreshStatusAsync(CancellationToken.None);
+            }
+            else
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Warning,
+                    Summary = L("Jukebox.Next"),
+                    Detail = result.Messages?.FirstOrDefault() ?? L("Common.UnknownError"),
+                    Duration = ToastTime
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "[Jukebox] Error skipping to next");
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = L("Jukebox.Next"),
+                Detail = ex.Message,
+                Duration = ToastTime
+            });
+        }
+    }
+
+    private async Task OnVolumeChange(double value)
+    {
+        try
+        {
+            var gain = value / 100.0;
+            var result = await JukeboxService.SetGainAsync(CurrentUsersId, gain);
+            if (!result.IsSuccess)
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Warning,
+                    Summary = L("Jukebox.Volume"),
+                    Detail = result.Messages?.FirstOrDefault() ?? L("Common.UnknownError"),
+                    Duration = ToastTime
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "[Jukebox] Error setting volume");
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = L("Jukebox.Volume"),
+                Detail = ex.Message,
+                Duration = ToastTime
+            });
+        }
+    }
+
+    private async Task OnShuffleAsync()
+    {
+        try
+        {
+            var result = await JukeboxService.ShuffleAsync(CurrentUsersId);
+            if (result.IsSuccess)
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = L("Jukebox.Shuffle"),
+                    Detail = L("Jukebox.QueueShuffled"),
+                    Duration = ToastTime
+                });
+                await RefreshStatusAsync(CancellationToken.None);
+            }
+            else
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Warning,
+                    Summary = L("Jukebox.Shuffle"),
+                    Detail = result.Messages?.FirstOrDefault() ?? L("Common.UnknownError"),
+                    Duration = ToastTime
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "[Jukebox] Error shuffling queue");
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = L("Jukebox.Shuffle"),
+                Detail = ex.Message,
+                Duration = ToastTime
+            });
+        }
+    }
+
+    private async Task OnClearQueueAsync()
+    {
+        try
+        {
+            var result = await JukeboxService.ClearAsync(CurrentUsersId);
+            if (result.IsSuccess)
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = L("Jukebox.ClearQueue"),
+                    Detail = L("Jukebox.QueueCleared"),
+                    Duration = ToastTime
+                });
+                await RefreshStatusAsync(CancellationToken.None);
+            }
+            else
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Warning,
+                    Summary = L("Jukebox.ClearQueue"),
+                    Detail = result.Messages?.FirstOrDefault() ?? L("Common.UnknownError"),
+                    Duration = ToastTime
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "[Jukebox] Error clearing queue");
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = L("Jukebox.ClearQueue"),
+                Detail = ex.Message,
+                Duration = ToastTime
+            });
+        }
+    }
+
+    private async Task OnRemoveFromQueueAsync(int index)
+    {
+        try
+        {
+            var result = await JukeboxService.RemoveAsync(CurrentUsersId, index);
+            if (result.IsSuccess)
+            {
+                await RefreshStatusAsync(CancellationToken.None);
+            }
+            else
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Warning,
+                    Summary = L("Actions.Remove"),
+                    Detail = result.Messages?.FirstOrDefault() ?? L("Common.UnknownError"),
+                    Duration = ToastTime
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "[Jukebox] Error removing from queue");
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = L("Actions.Remove"),
+                Detail = ex.Message,
+                Duration = ToastTime
+            });
+        }
+    }
+
+    private static string FormatTime(double seconds)
+    {
+        var ts = TimeSpan.FromSeconds(seconds);
+        return ts.Hours > 0 
+            ? $"{ts.Hours}:{ts.Minutes:D2}:{ts.Seconds:D2}" 
+            : $"{ts.Minutes}:{ts.Seconds:D2}";
+    }
+
+    private int GetEntryIndex(JukeboxEntryResponse entry)
+    {
+        return _playlist?.Entries.ToList().IndexOf(entry) ?? -1;
+    }
+
+    public void Dispose()
+    {
+        _refreshTimer?.Dispose();
+    }
+}

@@ -37,5 +37,15 @@ public enum LibraryType
     /// <summary>
     ///     Holds templates (email, custom blocks, etc.) organized by language (e.g., en-US, fr-FR), should be 1
     /// </summary>
-    Templates
+    Templates,
+
+    /// <summary>
+    ///     Holds podcast media files, should be 1
+    /// </summary>
+    Podcast,
+
+    /// <summary>
+    ///     Holds custom theme packs, should be 1
+    /// </summary>
+    Theme
 }

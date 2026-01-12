@@ -1,0 +1,197 @@
+@using Melodee.Blazor.Services
+@inject PartyModeService PartyModeService
+@inject IStringLocalizer<SharedResources> Localizer
+@inject ILogger<PartySessionEndpointSelector> Logger
+
+<div class="endpoint-selector">
+    @if (IsLoading)
+    {
+        <div class="loading">
+            <p>@Localizer["PartyMode.Endpoint.Loading"]</p>
+        </div>
+    }
+    else if (Endpoints != null && Endpoints.Any())
+    {
+        <div class="endpoints-list">
+            <h4>@Localizer["PartyMode.Endpoint.Available"]</h4>
+            
+            @foreach (var endpoint in Endpoints)
+            {
+                <div class="endpoint-item @(endpoint.IsActive ? "active" : "") @(endpoint.IsStale ? "stale" : "")">
+                    <div class="endpoint-info">
+                        <div class="endpoint-name">
+                            <span class="endpoint-icon">@GetEndpointIcon(endpoint.Type)</span>
+                            @endpoint.Name
+                            @if (endpoint.IsStale)
+                            {
+                                <span class="stale-badge" title="@Localizer["PartyMode.Endpoint.Stale"]">⚠️</span>
+                            }
+                        </div>
+                        <div class="endpoint-meta">
+                            <span class="endpoint-type">@endpoint.Type</span>
+                            @if (!string.IsNullOrEmpty(endpoint.Room))
+                            {
+                                <span class="endpoint-room">@endpoint.Room</span>
+                            }
+                        </div>
+                    </div>
+                    
+                    <div class="endpoint-actions">
+                        @if (endpoint.IsActive)
+                        {
+                            <span class="active-badge">@Localizer["PartyMode.Endpoint.Active"]</span>
+                            @if (CanDetach)
+                            {
+                                <button class="btn btn-sm btn-secondary" @onclick="() => DetachEndpoint(endpoint.ApiKey)">
+                                    @Localizer["PartyMode.Endpoint.Detach"]
+                                </button>
+                            }
+                        }
+                        else if (!endpoint.IsStale || CanAttachStale)
+                        {
+                            <button class="btn btn-sm btn-primary" 
+                                    @onclick="() => AttachEndpoint(endpoint.ApiKey)"
+                                    disabled="@(IsProcessing)">
+                                @Localizer["PartyMode.Endpoint.Attach"]
+                            </button>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="no-endpoints">
+            <p>@Localizer["PartyMode.Endpoint.NoAvailable"]</p>
+            <p class="hint">@Localizer["PartyMode.Endpoint.NoAvailableHint"]</p>
+        </div>
+    }
+    
+    @if (ErrorMessage != null)
+    {
+        <div class="error-message">
+            @ErrorMessage
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid SessionApiKey { get; set; }
+    [Parameter] public EventCallback OnEndpointChanged { get; set; }
+    [Parameter] public bool CanAttachStale { get; set; } = false;
+    [Parameter] public bool CanDetach { get; set; } = true;
+
+    private List<SessionEndpointDto>? Endpoints { get; set; }
+    private bool IsLoading { get; set; } = true;
+    private bool IsProcessing { get; set; }
+    private string? ErrorMessage { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadEndpoints();
+    }
+
+    public async Task RefreshEndpoints()
+    {
+        await LoadEndpoints();
+    }
+
+    private async Task LoadEndpoints()
+    {
+        try
+        {
+            IsLoading = true;
+            ErrorMessage = null;
+
+            var result = await PartyModeService.GetEndpointsForSessionAsync(SessionApiKey);
+            if (result != null && result.IsSuccess && result.Data != null)
+            {
+                Endpoints = result.Data.ToList();
+            }
+            else
+            {
+                ErrorMessage = Localizer["PartyMode.Endpoint.LoadError"];
+                Endpoints = new List<SessionEndpointDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading endpoints for session {SessionApiKey}", SessionApiKey);
+            ErrorMessage = Localizer["PartyMode.Endpoint.LoadError"];
+            Endpoints = new List<SessionEndpointDto>();
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task AttachEndpoint(Guid endpointApiKey)
+    {
+        try
+        {
+            IsProcessing = true;
+            ErrorMessage = null;
+
+            var result = await PartyModeService.AttachEndpointAsync(endpointApiKey, SessionApiKey);
+            if (result)
+            {
+                await LoadEndpoints();
+                await OnEndpointChanged.InvokeAsync();
+            }
+            else
+            {
+                ErrorMessage = Localizer["PartyMode.Endpoint.AttachError"];
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error attaching endpoint {EndpointApiKey} to session {SessionApiKey}", endpointApiKey, SessionApiKey);
+            ErrorMessage = Localizer["PartyMode.Endpoint.AttachError"];
+        }
+        finally
+        {
+            IsProcessing = false;
+        }
+    }
+
+    private async Task DetachEndpoint(Guid endpointApiKey)
+    {
+        try
+        {
+            IsProcessing = true;
+            ErrorMessage = null;
+
+            var result = await PartyModeService.DetachEndpointAsync(endpointApiKey);
+            if (result)
+            {
+                await LoadEndpoints();
+                await OnEndpointChanged.InvokeAsync();
+            }
+            else
+            {
+                ErrorMessage = Localizer["PartyMode.Endpoint.DetachError"];
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error detaching endpoint {EndpointApiKey}", endpointApiKey);
+            ErrorMessage = Localizer["PartyMode.Endpoint.DetachError"];
+        }
+        finally
+        {
+            IsProcessing = false;
+        }
+    }
+
+    private static string GetEndpointIcon(string type)
+    {
+        return type switch
+        {
+            "WebPlayer" => "🌐",
+            "MpvBackend" => "🎵",
+            _ => "📻"
+        };
+    }
+}

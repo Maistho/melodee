@@ -33,6 +33,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Controllers\Melodee\PartyEndpointsControllerTests.cs" />
+    <Compile Remove="Controllers\Melodee\PartyPlaybackControllerTests.cs" />
+    <Compile Remove="Controllers\Melodee\PartyQueueControllerTests.cs" />
+    <Compile Remove="Controllers\Melodee\PartySessionsControllerTests.cs" />
+    <Compile Remove="Controllers\Melodee\QueueControllerTests.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\Melodee.Blazor\Melodee.Blazor.csproj" />
     <ProjectReference Include="..\..\src\Melodee.Common\Melodee.Common.csproj" />
   </ItemGroup>

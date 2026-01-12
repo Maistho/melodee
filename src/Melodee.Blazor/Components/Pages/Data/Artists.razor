@@ -221,7 +221,7 @@
     }
 
     readonly Func<ArtistDataInfo, RadzenDropZone<ArtistDataInfo>, bool> _itemSelector = (item, zone)
-        => (ArtistMergeState)(item.State ?? ArtistMergeState.ToBeMerged) == (ArtistMergeState)zone.Value;
+        => (ArtistMergeState)(item.State ?? ArtistMergeState.ToBeMerged) == (ArtistMergeState)(zone.Value ?? 0);
 
     readonly Func<RadzenDropZoneItemEventArgs<ArtistDataInfo>, bool> _canDrop = _
         => true;
@@ -230,13 +230,13 @@
     {
         if (args.FromZone != args.ToZone)
         {
-            args.Item.State = (ArtistMergeState)args.ToZone.Value;
+            args.Item!.State = (ArtistMergeState)(args.ToZone?.Value ?? 0);
         }
 
         if (args.ToItem != null && args.ToItem != args.Item)
         {
-            _selectedArtistDataInfos.Remove(args.Item);
-            _selectedArtistDataInfos.Insert(_selectedArtistDataInfos.IndexOf(args.ToItem), args.Item);
+            _selectedArtistDataInfos.Remove(args.Item!);
+            _selectedArtistDataInfos.Insert(_selectedArtistDataInfos.IndexOf(args.ToItem), args.Item!);
         }
     }
 
@@ -259,9 +259,9 @@
         try
         {
             Dictionary<string, string>? sorting = null;
-            if (args.Sorts.Any())
+            if (args.Sorts?.Any() == true)
             {
-                sorting = args.Sorts.ToDictionary(x => x.Property, x => x.SortOrder == SortOrder.Ascending ? PagedRequest.OrderAscDirection : PagedRequest.OrderDescDirection);
+                sorting = args.Sorts.ToDictionary(x => x.Property ?? string.Empty, x => x.SortOrder == SortOrder.Ascending ? PagedRequest.OrderAscDirection : PagedRequest.OrderDescDirection);
             }
 
             FilterOperatorInfo[]? filters = null;
@@ -273,7 +273,7 @@
                     new FilterOperatorInfo(nameof(Artist.AlternateNames), FilterOperator.Contains, _debounceInputValue.ToNormalizedString() ?? _debounceInputValue, FilterOperatorInfo.OrJoinOperator)
                 ];
             }
-            else if (args.Filters.Any())
+            else if (args.Filters?.Any() == true)
             {
                 filters = args.Filters.Select(x => x.ToFilterOperatorInfo()).ToArray();
             }

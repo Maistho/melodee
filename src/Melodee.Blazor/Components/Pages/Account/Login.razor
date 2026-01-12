@@ -18,6 +18,7 @@
 @inject IOptions<GoogleAuthOptions> GoogleAuthOptions
 @inject IHttpClientFactory HttpClientFactory
 @inject ILocalizationService LocalizationService
+@inject IThemeService ThemeService
 
 @implements IAsyncDisposable
 
@@ -30,6 +31,7 @@
         align-items: center;
         justify-content: center;
         padding: 2rem;
+        background-color: var(--rz-body-background-color, var(--rz-base-background-color));
     }
     
     .login-card {
@@ -133,12 +135,12 @@
     .login-footer {
         text-align: center;
         padding: 1.5rem 2rem;
-        background: var(--rz-base-200);
+        background: var(--rz-base-background-color);
         border-top: 1px solid var(--rz-border-color);
     }
     
     .login-footer-text {
-        color: var(--rz-text-secondary-color);
+        color: var(--rz-text-color);
         font-size: 0.9rem;
     }
     
@@ -421,8 +423,27 @@ else
                     var user = await UserService.GetByApiKeyAsync(Guid.Parse(authResponse.User.ApiKey!));
                     if (user.IsSuccess && user.Data != null)
                     {
-                        // Apply user's preferred theme by setting cookie directly
-                        var theme = user.Data.PreferredTheme ?? "default";
+                        // Apply user's preferred theme by setting cookie directly, fallback to system default
+                        var systemDefaultTheme = config.GetValue<string>(Melodee.Common.Constants.SettingRegistry.SystemDefaultTheme) ?? "dark";
+                        var theme = systemDefaultTheme;
+                        
+                        // Check if user's preferred theme exists, if not reset it to null
+                        if (!string.IsNullOrEmpty(user.Data.PreferredTheme))
+                        {
+                            var availableThemes = await ThemeService.DiscoverThemePacksAsync();
+                            var themeExists = availableThemes.Any(t => t.Id.Equals(user.Data.PreferredTheme, StringComparison.OrdinalIgnoreCase));
+                            if (themeExists)
+                            {
+                                theme = user.Data.PreferredTheme;
+                            }
+                            else
+                            {
+                                // Theme no longer exists, clear the user's preference
+                                user.Data.PreferredTheme = null;
+                                await UserService.UpdateAsync(user.Data, user.Data);
+                            }
+                        }
+                        
                         await JsRuntime.InvokeVoidAsync("eval", 
                             $"document.cookie = 'melodee_ui_theme={theme}; path=/; max-age=31536000; samesite=lax'");
 
@@ -497,8 +518,28 @@ else
                 return;
             }
 
-            // Apply user's preferred theme by setting cookie directly
-            var theme = user.Data.PreferredTheme ?? "default";
+            // Apply user's preferred theme by setting cookie directly, fallback to system default
+            var config = await ConfigurationFactory.GetConfigurationAsync();
+            var systemDefaultTheme = config.GetValue<string>(Melodee.Common.Constants.SettingRegistry.SystemDefaultTheme) ?? "dark";
+            var theme = systemDefaultTheme;
+            
+            // Check if user's preferred theme exists, if not reset it to null
+            if (!string.IsNullOrEmpty(user.Data.PreferredTheme))
+            {
+                var availableThemes = await ThemeService.DiscoverThemePacksAsync();
+                var themeExists = availableThemes.Any(t => t.Id.Equals(user.Data.PreferredTheme, StringComparison.OrdinalIgnoreCase));
+                if (themeExists)
+                {
+                    theme = user.Data.PreferredTheme;
+                }
+                else
+                {
+                    // Theme no longer exists, clear the user's preference
+                    user.Data.PreferredTheme = null;
+                    await UserService.UpdateAsync(user.Data, user.Data);
+                }
+            }
+            
             await JsRuntime.InvokeVoidAsync("eval", 
                 $"document.cookie = 'melodee_ui_theme={theme}; path=/; max-age=31536000; samesite=lax'");
 

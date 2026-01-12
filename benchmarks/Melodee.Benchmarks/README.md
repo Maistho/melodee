@@ -45,7 +45,7 @@ dotnet run -c Release --project benchmarks/Melodee.Benchmarks all -- --exporters
 ## Benchmark Categories
 
 ### 1. Streaming Benchmarks (`streaming`)
-**Addresses**: API_REVIEW_FIX.md streaming performance requirements
+**Addresses**: streaming performance requirements
 
 - **File Streaming Performance**: Tests different buffer sizes and streaming approaches
 - **Range Request Processing**: Benchmarks HTTP range header parsing and processing
@@ -58,7 +58,7 @@ dotnet run -c Release --project benchmarks/Melodee.Benchmarks all -- --exporters
 - Buffer size optimization (4KB to 256KB tested)
 
 ### 2. Database Query Benchmarks (`database`)
-**Addresses**: PERFORMANCE_REVIEW.md database performance concerns
+**Addresses**: database performance concerns
 
 - **Complex Query Patterns**: Tests nested Include().ThenInclude() chains
 - **Pagination Performance**: Compares paginated vs unbounded queries
@@ -71,7 +71,7 @@ dotnet run -c Release --project benchmarks/Melodee.Benchmarks all -- --exporters
 - Database connection pool efficiency
 
 ### 3. Cache Benchmarks (`cache`)
-**Addresses**: PERFORMANCE_REVIEW.md caching concerns
+**Addresses**: caching concerns
 
 - **Cache Hit/Miss Ratios**: Measures cache effectiveness under load
 - **Eviction Policies**: Tests LRU vs time-based eviction strategies
@@ -84,7 +84,7 @@ dotnet run -c Release --project benchmarks/Melodee.Benchmarks all -- --exporters
 - Concurrent access performance
 
 ### 4. Collection Operation Benchmarks (`collection`)
-**Addresses**: PERFORMANCE_REVIEW.md collection efficiency concerns
+**Addresses**: collection efficiency concerns
 
 - **LINQ Optimization**: Tests multiple ToList() calls vs optimized chains
 - **Playlist Reordering**: Benchmarks the inefficient PlaylistService patterns
@@ -210,5 +210,3 @@ benchmarks/artifacts/
 ## References
 
 - [BenchmarkDotNet Documentation](https://benchmarkdotnet.org/)
-- [API_REVIEW_FIX.md](../../prompts/API_REVIEW_FIX.md) - Streaming performance requirements
-- [PERFORMANCE_REVIEW.md](../../prompts/PERFORMANCE_REVIEW.md) - General performance concerns

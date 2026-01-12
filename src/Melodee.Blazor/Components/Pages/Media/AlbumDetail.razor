@@ -7,6 +7,7 @@
 @using Melodee.Common.Models.Extensions
 @using Melodee.Common.Models.SearchEngines
 @using Melodee.Common.Plugins.Validation
+@using Melodee.Common.Services.Jukebox
 @using Melodee.Common.Services.Scanning
 @using Melodee.Common.Services.SearchEngines
 @using Rebus.Bus
@@ -31,6 +32,7 @@
 @inject IHttpClientFactory HttpClientFactory
 @inject IJSRuntime JsRuntime
 @inject IBus Bus
+@inject ISubsonicJukeboxService SubsonicJukeboxService
 
 @attribute [Authorize(Roles = "Administrator,Editor")]
 
@@ -195,8 +197,8 @@
                                     <thead>
                                     <tr>
                                         <th scope="col" style="min-width:80px;">#</th>
-                                        <th scope="col" style="width:90%;">Title</th>
-                                        <th scope="col" style="min-width:125px;">Duration</th>
+                                        <th scope="col" style="width:85%;">Title</th>
+                                        <th scope="col" style="min-width:150px;">Duration</th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -211,6 +213,12 @@
                                             <td>@song.Title()</td>
                                             <td>
                                                 @CurrentUser!.FormatDuration(song.Duration().ToDuration())
+                                                @if (_jukeboxEnabled && CurrentUser?.IsAdmin() == true)
+                                                {
+                                                    <RadzenIcon IconColor="@Colors.Info" Style="cursor:pointer;"
+                                                                title="Add to Jukebox queue" Icon="queue_music"
+                                                                @onclick="@(() => AddSongToJukeboxAsync(song))"/>
+                                                }
                                                 <RadzenIcon IconColor="@Colors.Warning" Style="cursor:pointer;"
                                                             title="Delete Song" Icon="delete"
                                                             @onclick="@(() => DeleteSong(song))"/>
@@ -289,7 +297,7 @@
                                 {
                                     var imageDir = image.DirectoryInfo ?? _album.Directory;
                                     var imageFullPath = image.FileInfo != null ? image.FileInfo.FullName(imageDir) : null;
-                                    
+
                                     <RadzenColumn Size="12" SizeMD="6" SizeLG="4" Class="rz-p-2">
                                         <RadzenCard Style="height: 100%;">
                                             <RadzenStack Gap="0.5rem">
@@ -379,6 +387,8 @@
 
     string _coverImage = string.Empty;
 
+    bool _jukeboxEnabled;
+
     private enum ShowItem
     {
         Overview = 1,
@@ -464,6 +474,7 @@
 
         var configuration = await ConfigurationFactory.GetConfigurationAsync();
         _maxResults = configuration.GetValue<short?>(SettingRegistry.SearchEngineDefaultPageSize) ?? configuration.GetValue<short>(SettingRegistry.DefaultsPageSize);
+        _jukeboxEnabled = configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled);
     }
 
 
@@ -717,7 +728,7 @@
     {
         Console.WriteLine($"++ OnMenuItemClicked arg [{arg}]");
         OperationResult<bool>? result;
-        switch ((MenuItems)arg.Value)
+        switch ((MenuItems)(arg.Value ?? 0))
         {
             case MenuItems.RenumberSongs:
                 _album = await MediaEditService.RenumberSongsAsync(_album).ConfigureAwait(false);
@@ -948,6 +959,51 @@
         return selectedOption != null && libraryDict.ContainsKey(selectedOption)
             ? libraryDict[selectedOption]
             : null;
+    }
+
+    private async Task AddSongToJukeboxAsync(Song song)
+    {
+        try
+        {
+            Logger.Debug("[AlbumDetail] Adding song to Jukebox queue: {SongId} - {SongTitle}", song.Id, song.Title());
+
+            var result = await SubsonicJukeboxService.AddAsync(CurrentUsersId, [song.Id.ToString()]);
+
+            if (result.IsSuccess)
+            {
+                Logger.Debug("[AlbumDetail] Successfully added song to Jukebox queue: {SongTitle}", song.Title());
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = "Added to Jukebox",
+                    Detail = $"'{song.Title()}' added to the queue",
+                    Duration = ToastTime
+                });
+            }
+            else
+            {
+                Logger.Warning("[AlbumDetail] Failed to add song to Jukebox queue: {SongTitle}, Messages: {Messages}",
+                    song.Title(), string.Join(", ", result.Messages ?? []));
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Warning,
+                    Summary = "Failed to add to Jukebox",
+                    Detail = result.Messages?.FirstOrDefault() ?? "Unknown error",
+                    Duration = ToastTime
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "[AlbumDetail] Error adding song to Jukebox queue: {SongTitle}", song.Title());
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = "Error",
+                Detail = $"Failed to add song to Jukebox: {ex.Message}",
+                Duration = ToastTime
+            });
+        }
     }
 
 }

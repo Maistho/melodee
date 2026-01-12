@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO.Compression;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.RateLimiting;
 using Asp.Versioning;
@@ -7,6 +8,7 @@ using Blazored.SessionStorage;
 using Melodee.Blazor.Components;
 using Melodee.Blazor.Constants;
 using Melodee.Blazor.Filters;
+using Melodee.Blazor.Hubs;
 using Melodee.Blazor.Middleware;
 using Melodee.Blazor.Services;
 using Melodee.Common.Configuration;
@@ -26,6 +28,10 @@ using Melodee.Common.Plugins.SearchEngine.Spotify;
 using Melodee.Common.Serialization;
 using Melodee.Common.Services;
 using Melodee.Common.Services.Caching;
+using Melodee.Common.Services.Jukebox;
+using Melodee.Common.Services.PartyMode;
+using Melodee.Common.Services.Playback;
+using Melodee.Common.Services.Playback.Factory;
 using Melodee.Common.Services.Scanning;
 using Melodee.Common.Services.SearchEngines;
 using Melodee.Common.Services.Security;
@@ -224,7 +230,9 @@ builder.Services.Configure<GzipCompressionProviderOptions>(options =>
     options.Level = CompressionLevel.Optimal;
 });
 
-// Configure HSTS options (addresses Lighthouse: HSTS security)
+// SignalR for real-time party mode updates
+builder.Services.AddSignalR();
+
 builder.Services.AddHsts(options =>
 {
     options.MaxAge = TimeSpan.FromDays(365);
@@ -272,6 +280,7 @@ builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
 builder.Services.AddScoped<ILocalizationService, LocalizationService>();
+builder.Services.AddScoped<IThemeClientService, ThemeClientService>();
 
 // Email services
 builder.Services.AddScoped<Melodee.Blazor.Services.Email.IEmailSender, Melodee.Blazor.Services.Email.SmtpEmailSender>();
@@ -279,6 +288,11 @@ builder.Services.AddScoped<Melodee.Blazor.Services.Email.IEmailTemplateService, 
 
 // Doctor service for health checks and diagnostics
 builder.Services.AddScoped<IDoctorService, DoctorService>();
+
+// Playback backend services for Jukebox
+builder.Services.AddSingleton<PlaybackBackendFactory>();
+builder.Services.AddScoped<IPlaybackBackendService, PlaybackBackendService>();
+builder.Services.AddScoped<ISubsonicJukeboxService, SubsonicJukeboxService>();
 
 // Rate limiting service for Blazor UI
 builder.Services.AddSingleton<IRateLimiterService, RateLimiterService>();
@@ -360,6 +374,49 @@ builder.Services.AddRateLimiter(options =>
                 QueueLimit = 5
             });
     });
+
+    // Party mode rate limiting policies
+    options.AddPolicy("party-queue-add", context =>
+    {
+        // Rate limit: max 20 queue additions per minute per user per session
+        var userId = context.User.FindFirstValue(ClaimTypes.Sid) ?? "anonymous";
+        return RateLimitPartition.GetFixedWindowLimiter(userId,
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 20,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 5
+            });
+    });
+
+    options.AddPolicy("party-playback-control", context =>
+    {
+        // Rate limit: max 30 playback control actions per minute per user per session
+        var userId = context.User.FindFirstValue(ClaimTypes.Sid) ?? "anonymous";
+        return RateLimitPartition.GetFixedWindowLimiter(userId,
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 30,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 10
+            });
+    });
+
+    options.AddPolicy("party-volume", context =>
+    {
+        // Rate limit: max 20 volume changes per minute per user per session
+        var userId = context.User.FindFirstValue(ClaimTypes.Sid) ?? "anonymous";
+        return RateLimitPartition.GetFixedWindowLimiter(userId,
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 20,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 5
+            });
+    });
 });
 
 builder.Services.AddSingleton<IAppVersionProvider, AppVersionProvider>();
@@ -422,6 +479,7 @@ builder.Services
     .AddScoped<RequestAutoCompletionService>()
     .AddScoped<RadioStationService>()
     .AddScoped<PlaylistService>()
+    .AddScoped<Melodee.Common.Services.IThemeService, Melodee.Common.Services.ThemeService>()
     .AddScoped<ChartService>()
     .AddScoped<MelodeeMetadataMaker>()
     .AddScoped<AlbumRescanEventHandler>()
@@ -429,7 +487,25 @@ builder.Services
     .AddScoped<ILyricPlugin, LyricPlugin>()
     .AddScoped<UserQueueService>()
     .AddScoped<PlaybackSettingsService>()
-    .AddScoped<EqualizerPresetService>();
+    .AddScoped<EqualizerPresetService>()
+    .AddSingleton<ISsrfValidator, SsrfValidator>()
+    .AddSingleton<PodcastHttpClient>()
+    .AddScoped<PodcastService>()
+    .AddScoped<PodcastPlaybackService>()
+    .AddScoped<PodcastOpmlService>()
+    .AddScoped<PodcastDiscoveryService>()
+    .AddScoped<IPartySessionService, PartySessionService>()
+    .AddScoped<IPartyQueueService, PartyQueueService>()
+    .AddScoped<IPartyPlaybackService, PartyPlaybackService>()
+    .AddScoped<IPartyNotificationService, PartyNotificationService>()
+    .AddScoped<IPartySessionEndpointRegistryService, PartySessionEndpointRegistryService>();
+
+// Configure HttpClient for podcast discovery
+builder.Services.AddHttpClient("PodcastDiscovery", client =>
+{
+    client.DefaultRequestHeaders.Add("User-Agent", "Melodee/1.0 (Podcast Discovery)");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
 
 #endregion
 
@@ -441,6 +517,7 @@ builder.Services.AddScoped<MelodeeApiAuthFilter>();
 builder.Services.Configure<GoogleAuthOptions>(builder.Configuration.GetSection(GoogleAuthOptions.SectionName));
 builder.Services.Configure<AuthPolicyOptions>(builder.Configuration.GetSection(AuthPolicyOptions.SectionName));
 builder.Services.Configure<TokenOptions>(builder.Configuration.GetSection(TokenOptions.SectionName));
+builder.Services.Configure<PartyModeOptions>(builder.Configuration.GetSection(PartyModeOptions.SectionName));
 builder.Services.AddSingleton<IClock>(SystemClock.Instance);
 builder.Services.AddScoped<IGoogleTokenService, GoogleTokenService>();
 builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
@@ -729,6 +806,62 @@ if (!isQuartzDisabled)
                 .StartNow()
                 .Build());
     }
+
+    var podcastRefreshCronExpression = melodeeConfiguration.GetValue<string>(SettingRegistry.JobsPodcastRefreshCronExpression);
+    if (podcastRefreshCronExpression.Nullify() != null)
+    {
+        await quartzScheduler.ScheduleJob(
+            JobBuilder.Create<PodcastRefreshJob>()
+                .WithIdentity(JobKeyRegistry.PodcastRefreshJobKey)
+                .Build(),
+            TriggerBuilder.Create()
+                .WithIdentity("PodcastRefreshJob-trigger")
+                .WithCronSchedule(podcastRefreshCronExpression!)
+                .StartNow()
+                .Build());
+    }
+
+    var podcastDownloadCronExpression = melodeeConfiguration.GetValue<string>(SettingRegistry.JobsPodcastDownloadCronExpression);
+    if (podcastDownloadCronExpression.Nullify() != null)
+    {
+        await quartzScheduler.ScheduleJob(
+            JobBuilder.Create<PodcastDownloadJob>()
+                .WithIdentity(JobKeyRegistry.PodcastDownloadJobKey)
+                .Build(),
+            TriggerBuilder.Create()
+                .WithIdentity("PodcastDownloadJob-trigger")
+                .WithCronSchedule(podcastDownloadCronExpression!)
+                .StartNow()
+                .Build());
+    }
+
+    var podcastCleanupCronExpression = melodeeConfiguration.GetValue<string>(SettingRegistry.JobsPodcastCleanupCronExpression);
+    if (podcastCleanupCronExpression.Nullify() != null)
+    {
+        await quartzScheduler.ScheduleJob(
+            JobBuilder.Create<PodcastCleanupJob>()
+                .WithIdentity(JobKeyRegistry.PodcastCleanupJobKey)
+                .Build(),
+            TriggerBuilder.Create()
+                .WithIdentity("PodcastCleanupJob-trigger")
+                .WithCronSchedule(podcastCleanupCronExpression!)
+                .StartNow()
+                .Build());
+    }
+
+    var podcastRecoveryCronExpression = melodeeConfiguration.GetValue<string>(SettingRegistry.JobsPodcastRecoveryCronExpression);
+    if (podcastRecoveryCronExpression.Nullify() != null)
+    {
+        await quartzScheduler.ScheduleJob(
+            JobBuilder.Create<PodcastRecoveryJob>()
+                .WithIdentity(JobKeyRegistry.PodcastRecoveryJobKey)
+                .Build(),
+            TriggerBuilder.Create()
+                .WithIdentity("PodcastRecoveryJob-trigger")
+                .WithCronSchedule(podcastRecoveryCronExpression!)
+                .StartNow()
+                .Build());
+    }
 }
 
 #endregion
@@ -785,6 +918,9 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.UseMelodeeBlazorHeader();
+
+// Map SignalR hub for real-time party updates
+app.MapHub<Melodee.Blazor.Hubs.PartyHub>("/party-hub");
 
 app.MapControllers();
 

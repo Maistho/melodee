@@ -152,7 +152,8 @@ public class MqlFieldRegistryTests
         types.Should().Contain("songs");
         types.Should().Contain("albums");
         types.Should().Contain("artists");
-        types.Count().Should().Be(3);
+        types.Should().Contain("podcasts");
+        types.Count().Should().Be(4);
     }
 
     [Fact]

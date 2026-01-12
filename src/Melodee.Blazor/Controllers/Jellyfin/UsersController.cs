@@ -375,12 +375,15 @@ public class UsersController(
         }
 
         // Validate itemId to prevent open redirect vulnerability
-        if (!Guid.TryParse(itemId, out _))
+        // Use strict GUID parsing and reconstruct URL from the parsed value
+        if (!Guid.TryParse(itemId, out var validatedItemId))
         {
             return BadRequest(new { error = "Invalid item ID format" });
         }
 
-        return RedirectPreserveMethod($"/Items/{itemId}");
+        // Use validated GUID to construct redirect URL (not the original user input)
+        // lgtm[cs/web/unvalidated-url-redirection]
+        return RedirectPreserveMethod($"/Items/{validatedItemId}");
     }
 
     /// <summary>

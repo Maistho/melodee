@@ -85,6 +85,26 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
 
     public DbSet<SmartPlaylist> SmartPlaylists { get; set; }
 
+    public DbSet<PodcastChannel> PodcastChannels { get; set; }
+
+    public DbSet<PodcastEpisode> PodcastEpisodes { get; set; }
+
+    public DbSet<UserPodcastEpisodePlayHistory> UserPodcastEpisodePlayHistories { get; set; }
+
+    public DbSet<PodcastEpisodeBookmark> PodcastEpisodeBookmarks { get; set; }
+
+    public DbSet<PartySession> PartySessions { get; set; }
+
+    public DbSet<PartySessionParticipant> PartySessionParticipants { get; set; }
+
+    public DbSet<PartyQueueItem> PartyQueueItems { get; set; }
+
+    public DbSet<PartyPlaybackState> PartyPlaybackStates { get; set; }
+
+    public DbSet<PartySessionEndpoint> PartySessionEndpoints { get; set; }
+
+    public DbSet<PartyAuditEvent> PartyAuditEvents { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Use a fixed timestamp for seed data to prevent migration churn
@@ -167,6 +187,26 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
                     Description = "Library where templates are stored, organized by language code.",
                     Path = "/storage/templates/",
                     Type = (int)LibraryType.Templates,
+                    CreatedAt = seedDataTimestamp
+                },
+                new Library
+                {
+                    Id = 7,
+                    ApiKey = SeedGuid("Library", 7),
+                    Name = "Podcasts",
+                    Description = "Library where podcast media files are stored.",
+                    Path = "/storage/podcasts/",
+                    Type = (int)LibraryType.Podcast,
+                    CreatedAt = seedDataTimestamp
+                },
+                new Library
+                {
+                    Id = 8,
+                    ApiKey = SeedGuid("Library", 8),
+                    Name = "Themes",
+                    Description = "Library where custom theme packs are stored.",
+                    Path = "/storage/themes/",
+                    Type = (int)LibraryType.Theme,
                     CreatedAt = seedDataTimestamp
                 });
         });
@@ -1388,6 +1428,354 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
                     Comment = "Is WikiData search engine enabled.",
                     Value = "false",
                     CreatedAt = seedDataTimestamp
+                },
+                // Podcast settings
+                new Setting
+                {
+                    Id = 1800,
+                    ApiKey = SeedGuid("Setting", 1800),
+                    Category = (int)SettingCategory.Podcast,
+                    Key = SettingRegistry.PodcastEnabled,
+                    Comment = "Enable podcast support.",
+                    Value = "true",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1801,
+                    ApiKey = SeedGuid("Setting", 1801),
+                    Category = (int)SettingCategory.Podcast,
+                    Key = SettingRegistry.PodcastHttpAllowHttp,
+                    Comment = "Allow HTTP (non-secure) URLs for podcast feeds.",
+                    Value = "false",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1802,
+                    ApiKey = SeedGuid("Setting", 1802),
+                    Category = (int)SettingCategory.Podcast,
+                    Key = SettingRegistry.PodcastHttpTimeoutSeconds,
+                    Comment = "Timeout in seconds for HTTP requests to podcast feeds.",
+                    Value = "30",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1803,
+                    ApiKey = SeedGuid("Setting", 1803),
+                    Category = (int)SettingCategory.Podcast,
+                    Key = SettingRegistry.PodcastHttpMaxRedirects,
+                    Comment = "Maximum number of HTTP redirects to follow for podcast feeds. Podcast CDNs often use multiple analytics redirects, so 10 is recommended.",
+                    Value = "10",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1804,
+                    ApiKey = SeedGuid("Setting", 1804),
+                    Category = (int)SettingCategory.Podcast,
+                    Key = SettingRegistry.PodcastHttpMaxFeedBytes,
+                    Comment = "Maximum size in bytes for podcast feed responses.",
+                    Value = "10485760",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1805,
+                    ApiKey = SeedGuid("Setting", 1805),
+                    Category = (int)SettingCategory.Podcast,
+                    Key = SettingRegistry.PodcastRefreshMaxItemsPerChannel,
+                    Comment = "Maximum number of episodes to store per podcast channel.",
+                    Value = "500",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1806,
+                    ApiKey = SeedGuid("Setting", 1806),
+                    Category = (int)SettingCategory.Podcast,
+                    Key = SettingRegistry.PodcastDownloadMaxConcurrentGlobal,
+                    Comment = "Maximum concurrent podcast episode downloads (global).",
+                    Value = "2",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1807,
+                    ApiKey = SeedGuid("Setting", 1807),
+                    Category = (int)SettingCategory.Podcast,
+                    Key = SettingRegistry.PodcastDownloadMaxConcurrentPerUser,
+                    Comment = "Maximum concurrent podcast episode downloads per user.",
+                    Value = "1",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1808,
+                    ApiKey = SeedGuid("Setting", 1808),
+                    Category = (int)SettingCategory.Podcast,
+                    Key = SettingRegistry.PodcastDownloadMaxEnclosureBytes,
+                    Comment = "Maximum size in bytes for podcast episode downloads.",
+                    Value = "2147483648",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1850,
+                    ApiKey = SeedGuid("Setting", 1850),
+                    Category = (int)SettingCategory.Jobs,
+                    Key = SettingRegistry.JobsPodcastRefreshCronExpression,
+                    Comment =
+                        "Cron expression to run the podcast refresh job, set empty to disable. Default of '0 */15 * ? * *' runs every 15 minutes.",
+                    Value = "0 */15 * ? * *",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1851,
+                    ApiKey = SeedGuid("Setting", 1851),
+                    Category = (int)SettingCategory.Jobs,
+                    Key = SettingRegistry.JobsPodcastDownloadCronExpression,
+                    Comment =
+                        "Cron expression to run the podcast download job, set empty to disable. Default of '0 */5 * ? * *' runs every 5 minutes.",
+                    Value = "0 */5 * ? * *",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1809,
+                    ApiKey = SeedGuid("Setting", 1809),
+                    Category = (int)SettingCategory.Podcast,
+                    Key = SettingRegistry.PodcastRetentionDownloadedEpisodesInDays,
+                    Comment = "Number of days to keep downloaded episodes. 0 to disable retention.",
+                    Value = "0",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1810,
+                    ApiKey = SeedGuid("Setting", 1810),
+                    Category = (int)SettingCategory.Podcast,
+                    Key = SettingRegistry.PodcastRecoveryStuckDownloadThresholdMinutes,
+                    Comment = "Threshold in minutes to consider a downloading episode as stuck.",
+                    Value = "60",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1811,
+                    ApiKey = SeedGuid("Setting", 1811),
+                    Category = (int)SettingCategory.Podcast,
+                    Key = SettingRegistry.PodcastRecoveryOrphanedUsageThresholdHours,
+                    Comment = "Threshold in hours to consider a temporary file orphaned.",
+                    Value = "12",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1852,
+                    ApiKey = SeedGuid("Setting", 1852),
+                    Category = (int)SettingCategory.Jobs,
+                    Key = SettingRegistry.JobsPodcastCleanupCronExpression,
+                    Comment =
+                        "Cron expression to run the podcast cleanup job, set empty to disable. Default of '0 0 2 * * ?' runs daily at 2 AM.",
+                    Value = "0 0 2 * * ?",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1853,
+                    ApiKey = SeedGuid("Setting", 1853),
+                    Category = (int)SettingCategory.Jobs,
+                    Key = SettingRegistry.JobsPodcastRecoveryCronExpression,
+                    Comment =
+                        "Cron expression to run the podcast recovery job, set empty to disable. Default of '0 */30 * ? * *' runs every 30 minutes.",
+                    Value = "0 */30 * ? * *",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1812,
+                    ApiKey = SeedGuid("Setting", 1812),
+                    Category = (int)SettingCategory.Podcast,
+                    Key = SettingRegistry.PodcastQuotaMaxBytesPerUser,
+                    Comment = "Maximum total storage in bytes for all podcasts per user. 0 for unlimited.",
+                    Value = "5368709120", // 5GB
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1813,
+                    ApiKey = SeedGuid("Setting", 1813),
+                    Category = (int)SettingCategory.Podcast,
+                    Key = SettingRegistry.PodcastRetentionKeepLastNEpisodes,
+                    Comment = "Keep only the last N downloaded episodes per channel. 0 to disable this policy.",
+                    Value = "0",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1814,
+                    ApiKey = SeedGuid("Setting", 1814),
+                    Category = (int)SettingCategory.Podcast,
+                    Key = SettingRegistry.PodcastRetentionKeepUnplayedOnly,
+                    Comment = "Delete downloaded episodes after they have been played. false to disable.",
+                    Value = "false",
+                    CreatedAt = seedDataTimestamp
+                },
+                // Jukebox settings
+                new Setting
+                {
+                    Id = 1900,
+                    ApiKey = SeedGuid("Setting", 1900),
+                    Category = (int)SettingCategory.Jukebox,
+                    Key = SettingRegistry.JukeboxEnabled,
+                    Comment = "Enable Jukebox support for server-side playback.",
+                    Value = "false",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1901,
+                    ApiKey = SeedGuid("Setting", 1901),
+                    Category = (int)SettingCategory.Jukebox,
+                    Key = SettingRegistry.JukeboxBackendType,
+                    Comment = "The type of backend to use for jukebox playback (e.g., 'mpv', 'mpd'). Leave empty for no backend.",
+                    Value = "",
+                    CreatedAt = seedDataTimestamp
+                },
+                // MPV Backend settings
+                new Setting
+                {
+                    Id = 1910,
+                    ApiKey = SeedGuid("Setting", 1910),
+                    Category = (int)SettingCategory.Jukebox,
+                    Key = SettingRegistry.MpvPath,
+                    Comment = "Path to the MPV executable. Leave empty to use system PATH.",
+                    Value = "",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1911,
+                    ApiKey = SeedGuid("Setting", 1911),
+                    Category = (int)SettingCategory.Jukebox,
+                    Key = SettingRegistry.MpvAudioDevice,
+                    Comment = "Audio device to use for MPV playback. Leave empty for default device.",
+                    Value = "",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1912,
+                    ApiKey = SeedGuid("Setting", 1912),
+                    Category = (int)SettingCategory.Jukebox,
+                    Key = SettingRegistry.MpvExtraArgs,
+                    Comment = "Extra command-line arguments to pass to MPV.",
+                    Value = "",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1913,
+                    ApiKey = SeedGuid("Setting", 1913),
+                    Category = (int)SettingCategory.Jukebox,
+                    Key = SettingRegistry.MpvSocketPath,
+                    Comment = "Path for the MPV IPC socket. Leave empty for auto temp directory.",
+                    Value = "",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1914,
+                    ApiKey = SeedGuid("Setting", 1914),
+                    Category = (int)SettingCategory.Jukebox,
+                    Key = SettingRegistry.MpvInitialVolume,
+                    Comment = "Initial volume level for MPV (0.0 to 1.0). Default is 0.8.",
+                    Value = "0.8",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1915,
+                    ApiKey = SeedGuid("Setting", 1915),
+                    Category = (int)SettingCategory.Jukebox,
+                    Key = SettingRegistry.MpvEnableDebugOutput,
+                    Comment = "Enable verbose debug output for MPV.",
+                    Value = "false",
+                    CreatedAt = seedDataTimestamp
+                },
+                // MPD Backend settings
+                new Setting
+                {
+                    Id = 1920,
+                    ApiKey = SeedGuid("Setting", 1920),
+                    Category = (int)SettingCategory.Jukebox,
+                    Key = SettingRegistry.MpdInstanceName,
+                    Comment = "Unique name/identifier for this MPD instance (for multi-instance support).",
+                    Value = "",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1921,
+                    ApiKey = SeedGuid("Setting", 1921),
+                    Category = (int)SettingCategory.Jukebox,
+                    Key = SettingRegistry.MpdHost,
+                    Comment = "Hostname or IP address of the MPD server.",
+                    Value = "localhost",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1922,
+                    ApiKey = SeedGuid("Setting", 1922),
+                    Category = (int)SettingCategory.Jukebox,
+                    Key = SettingRegistry.MpdPort,
+                    Comment = "Port number for MPD connection.",
+                    Value = "6600",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1923,
+                    ApiKey = SeedGuid("Setting", 1923),
+                    Category = (int)SettingCategory.Jukebox,
+                    Key = SettingRegistry.MpdPassword,
+                    Comment = "Password for MPD authentication. Leave empty if no password.",
+                    Value = "",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1924,
+                    ApiKey = SeedGuid("Setting", 1924),
+                    Category = (int)SettingCategory.Jukebox,
+                    Key = SettingRegistry.MpdTimeoutMs,
+                    Comment = "Timeout for MPD TCP connection and operations in milliseconds.",
+                    Value = "10000",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1925,
+                    ApiKey = SeedGuid("Setting", 1925),
+                    Category = (int)SettingCategory.Jukebox,
+                    Key = SettingRegistry.MpdInitialVolume,
+                    Comment = "Initial volume level for MPD (0.0 to 1.0). Default is 0.8.",
+                    Value = "0.8",
+                    CreatedAt = seedDataTimestamp
+                },
+                new Setting
+                {
+                    Id = 1926,
+                    ApiKey = SeedGuid("Setting", 1926),
+                    Category = (int)SettingCategory.Jukebox,
+                    Key = SettingRegistry.MpdEnableDebugOutput,
+                    Comment = "Enable debug logging for MPD commands.",
+                    Value = "false",
+                    CreatedAt = seedDataTimestamp
                 }
             );
         });
@@ -1537,6 +1925,38 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
+        modelBuilder.Entity<PodcastChannel>(pc =>
+        {
+            pc.HasIndex(x => new { x.UserId, x.FeedUrl })
+                .IsUnique();
+
+            pc.HasIndex(x => x.IsDeleted);
+
+            pc.HasIndex(x => x.NextSyncAt);
+
+            pc.HasMany(x => x.Episodes)
+                .WithOne(e => e.PodcastChannel)
+                .HasForeignKey(e => e.PodcastChannelId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            pc.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        modelBuilder.Entity<PodcastEpisode>(pe =>
+        {
+            pe.HasIndex(x => new { x.PodcastChannelId, x.PublishDate });
+
+            pe.HasIndex(x => new { x.PodcastChannelId, x.EpisodeKey })
+                .IsUnique();
+
+            pe.HasIndex(x => new { x.PodcastChannelId, x.DownloadStatus });
+
+            pe.HasOne(x => x.PodcastChannel)
+                .WithMany(c => c.Episodes)
+                .HasForeignKey(x => x.PodcastChannelId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
         // sph; left here for example of GIN FTS. More info here https://www.npgsql.org/efcore/mapping/full-text-search.html?tabs=pg12%2Cv5
         // modelBuilder.Entity<Song>()
         //     .HasIndex(s => new
@@ -1552,6 +1972,93 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
         //     .HasGeneratedTsVectorColumn(u => u.SearchVector, "english", u => new { u.Email, u.UserName })
         //     .HasIndex(u => u.Email)
         //     .HasMethod("GIN");
+
+        // Party Mode entities
+        modelBuilder.Entity<PartySession>(ps =>
+        {
+            ps.HasIndex(x => x.OwnerUserId);
+            ps.HasIndex(x => x.Status);
+            ps.HasIndex(x => x.ActiveEndpointId);
+        });
+
+        modelBuilder.Entity<PartySessionParticipant>(psp =>
+        {
+            psp.HasIndex(x => new { x.PartySessionId, x.UserId })
+                .IsUnique();
+
+            psp.HasIndex(x => x.UserId);
+            psp.HasIndex(x => x.Role);
+            psp.HasIndex(x => x.IsBanned);
+
+            psp.HasOne(x => x.PartySession)
+                .WithMany(s => s.Participants)
+                .HasForeignKey(x => x.PartySessionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            psp.HasOne(x => x.User)
+                .WithMany()
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<PartyQueueItem>(pqi =>
+        {
+            pqi.HasIndex(x => new { x.PartySessionId, x.SortOrder });
+
+            pqi.HasIndex(x => x.SongApiKey);
+            pqi.HasIndex(x => x.EnqueuedByUserId);
+            pqi.HasIndex(x => x.EnqueuedAt);
+
+            pqi.HasOne(x => x.PartySession)
+                .WithMany(s => s.QueueItems)
+                .HasForeignKey(x => x.PartySessionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            pqi.HasOne(x => x.EnqueuedByUser)
+                .WithMany()
+                .HasForeignKey(x => x.EnqueuedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<PartyPlaybackState>(pps =>
+        {
+            pps.HasIndex(x => x.PartySessionId)
+                .IsUnique();
+
+            pps.HasIndex(x => x.CurrentQueueItemApiKey);
+            pps.HasIndex(x => x.LastHeartbeatAt);
+            pps.HasIndex(x => x.IsPlaying);
+
+            pps.HasOne(x => x.PartySession)
+                .WithOne(s => s.PlaybackState)
+                .HasForeignKey<PartyPlaybackState>(x => x.PartySessionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            pps.HasOne(x => x.CurrentQueueItem)
+                .WithMany()
+                .HasForeignKey(x => x.CurrentQueueItemApiKey)
+                .HasPrincipalKey(x => x.ApiKey)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            pps.HasOne(x => x.UpdatedByUser)
+                .WithMany()
+                .HasForeignKey(x => x.UpdatedByUserId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<PartySessionEndpoint>(e =>
+        {
+            e.HasIndex(x => x.OwnerUserId);
+            e.HasIndex(x => x.LastSeenAt);
+            e.HasIndex(x => x.Type);
+            e.HasIndex(x => x.IsShared);
+            e.HasIndex(x => x.Room);
+
+            e.HasOne(x => x.OwnerUser)
+                .WithMany()
+                .HasForeignKey(x => x.OwnerUserId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

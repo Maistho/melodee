@@ -265,9 +265,9 @@
         try
         {
             Dictionary<string, string>? sorting = null;
-            if (args.Sorts.Any())
+            if (args.Sorts?.Any() == true)
             {
-                sorting = args.Sorts.ToDictionary(x => x.Property, x => x.SortOrder == SortOrder.Ascending ? PagedRequest.OrderAscDirection : PagedRequest.OrderDescDirection);
+                sorting = args.Sorts.ToDictionary(x => x.Property ?? string.Empty, x => x.SortOrder == SortOrder.Ascending ? PagedRequest.OrderAscDirection : PagedRequest.OrderDescDirection);
             }
 
             FilterOperatorInfo[]? filters = null;
@@ -280,11 +280,11 @@
                     new FilterOperatorInfo(nameof(Setting.Value), FilterOperator.Contains, _debounceInputValue, FilterOperatorInfo.OrJoinOperator)
                 ];
             }
-            else if (args.Filters.Any())
+            else if (args.Filters?.Any() == true)
             {
-                filters = args.Filters.Select(x => new FilterOperatorInfo(x.Property,
+                filters = args.Filters.Select(x => new FilterOperatorInfo(x.Property ?? string.Empty,
                         SafeParser.ToEnum<FilterOperator>(x.FilterOperator.ToDictionary()),
-                        x.FilterValue))
+                        x.FilterValue ?? string.Empty))
                     .ToArray();
             }
 

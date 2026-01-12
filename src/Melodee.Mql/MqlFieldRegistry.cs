@@ -58,6 +58,14 @@ public static class MqlFieldRegistry
             ["added"] = new("added", [], MqlFieldType.Date, "Artist.CreatedAt", false, "Date added to library"),
             ["songcount"] = new("songCount", [], MqlFieldType.Number, "Artist.SongCount", false, "Number of songs"),
             ["albumcount"] = new("albumCount", [], MqlFieldType.Number, "Artist.AlbumCount", false, "Number of albums")
+        },
+        ["podcasts"] = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["channel"] = new("channel", [], MqlFieldType.String, "PodcastEpisode.PodcastChannel.Title", false, "Channel name", DefaultOperator: "contains"),
+            ["title"] = new("title", [], MqlFieldType.String, "PodcastEpisode.Title", false, "Episode title", DefaultOperator: "contains"),
+            ["published"] = new("published", ["date"], MqlFieldType.Date, "PodcastEpisode.PublishDate", false, "Publish date"),
+            ["downloaded"] = new("downloaded", [], MqlFieldType.Boolean, "PodcastEpisode.DownloadStatus", false, "Is downloaded"),
+            ["duration"] = new("duration", [], MqlFieldType.Number, "PodcastEpisode.Duration", false, "Duration in seconds", 1000)
         }
     };
 

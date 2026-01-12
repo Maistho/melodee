@@ -5,7 +5,7 @@ using BenchmarkDotNet.Jobs;
 namespace Melodee.Benchmarks;
 
 /// <summary>
-/// Benchmarks for streaming operations addressing API_REVIEW_FIX.md requirements
+/// Benchmarks for streaming operations addressing streaming performance requirements
 /// </summary>
 [SimpleJob(RuntimeMoniker.HostProcess)]
 [MemoryDiagnoser]

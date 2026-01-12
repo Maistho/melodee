@@ -59,7 +59,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
 
-<data name="Navigation.Dashboard" xml:space="preserve">
+  <data name="Navigation.Dashboard" xml:space="preserve">
     <value>Pannello di controllo</value>
   </data>
   <data name="Navigation.Library" xml:space="preserve">
@@ -111,7 +111,7 @@
     <value>Impostazioni di sistema</value>
   </data>
   <data name="Navigation.Account" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Account</value>
+    <value>Account</value>
   </data>
   <data name="Navigation.Profile" xml:space="preserve">
     <value>Profilo</value>
@@ -149,8 +149,6 @@
   <data name="Admin.YouAreEditor" xml:space="preserve">
     <value>Sei un Editore!</value>
   </data>
-
-
   <data name="Actions.Save" xml:space="preserve">
     <value>Salva</value>
   </data>
@@ -242,10 +240,8 @@
     <value>Sì</value>
   </data>
   <data name="Actions.No" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] No</value>
+    <value>No</value>
   </data>
-
-
   <data name="Common.Name" xml:space="preserve">
     <value>Nome</value>
   </data>
@@ -310,13 +306,13 @@
     <value>[NEEDS TRANSLATION] Never</value>
   </data>
   <data name="Common.None" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] None</value>
+    <value>Nessuno</value>
   </data>
   <data name="Common.Yes" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Yes</value>
+    <value>Sì</value>
   </data>
   <data name="Common.No" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] No</value>
+    <value>No</value>
   </data>
   <data name="Common.Size" xml:space="preserve">
     <value>Dimensione</value>
@@ -327,8 +323,6 @@
   <data name="Common.Bitrate" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Bitrate</value>
   </data>
-
-
   <data name="Auth.Login" xml:space="preserve">
     <value>Accedi</value>
   </data>
@@ -339,10 +333,10 @@
     <value>Nome utente</value>
   </data>
   <data name="Auth.Email" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Email</value>
+    <value>Email</value>
   </data>
   <data name="Auth.Password" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Password</value>
+    <value>Password</value>
   </data>
   <data name="Auth.ConfirmPassword" xml:space="preserve">
     <value>Conferma password</value>
@@ -503,8 +497,6 @@
   <data name="Auth.EmailAddress" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Email address</value>
   </data>
-
-
   <data name="Messages.Loading" xml:space="preserve">
     <value>Caricamento...</value>
   </data>
@@ -550,8 +542,6 @@
   <data name="Messages.UnsavedChanges" xml:space="preserve">
     <value>[NEEDS TRANSLATION] You have unsaved changes. Do you want to continue?</value>
   </data>
-
-
   <data name="Dashboard.Welcome" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Welcome to Melodee</value>
   </data>
@@ -618,8 +608,6 @@
   <data name="Dashboard.When" xml:space="preserve">
     <value>[NEEDS TRANSLATION] When</value>
   </data>
-
-
   <data name="Library.BrowseArtists" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Browse Artists</value>
   </data>
@@ -630,16 +618,14 @@
     <value>[NEEDS TRANSLATION] Browse Songs</value>
   </data>
   <data name="Library.FilterByGenre" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Filter by Genre</value>
+    <value>Filtra per genere</value>
   </data>
   <data name="Library.FilterByYear" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Filter by Year</value>
+    <value>Filtra per anno</value>
   </data>
   <data name="Library.SortBy" xml:space="preserve">
     <value>Ordina per</value>
   </data>
-
-
   <data name="Player.NowPlaying" xml:space="preserve">
     <value>In riproduzione</value>
   </data>
@@ -647,7 +633,7 @@
     <value>Coda</value>
   </data>
   <data name="Player.Volume" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Volume</value>
+    <value>Volume</value>
   </data>
   <data name="Player.Repeat" xml:space="preserve">
     <value>Ripeti</value>
@@ -656,18 +642,16 @@
     <value>Casuale</value>
   </data>
   <data name="Player.ClearQueue" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Clear Queue</value>
+    <value>Svuota coda</value>
   </data>
-
-
   <data name="Settings.General" xml:space="preserve">
     <value>Generale</value>
   </data>
   <data name="Settings.Appearance" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Appearance</value>
+    <value>Aspetto</value>
   </data>
   <data name="Settings.Language" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Language</value>
+    <value>Lingua</value>
   </data>
   <data name="Settings.Theme" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Theme</value>
@@ -676,16 +660,14 @@
     <value>Preferenze</value>
   </data>
   <data name="Settings.Account" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Account</value>
+    <value>Account</value>
   </data>
   <data name="Settings.Security" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Security</value>
+    <value>Sicurezza</value>
   </data>
   <data name="Settings.Privacy" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Privacy</value>
+    <value>Privacy</value>
   </data>
-
-
   <data name="About.Title" xml:space="preserve">
     <value>[NEEDS TRANSLATION] About {0}</value>
   </data>
@@ -746,8 +728,6 @@
   <data name="About.GitHub" xml:space="preserve">
     <value>GitHub</value>
   </data>
-
-
   <data name="Data.Statistics" xml:space="preserve">
     <value>Statistiche</value>
   </data>
@@ -929,7 +909,7 @@
     <value>[NEEDS TRANSLATION] Username is required</value>
   </data>
   <data name="Profile.Email" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Email</value>
+    <value>Email</value>
   </data>
   <data name="Profile.EmailRequired" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Email is required</value>
@@ -1039,8 +1019,6 @@
   <data name="Profile.UnlinkingError" xml:space="preserve">
     <value>[NEEDS TRANSLATION] An error occurred while unlinking. Please try again.</value>
   </data>
-
-
   <data name="RequestNew.PageTitle" xml:space="preserve">
     <value>[NEEDS TRANSLATION] New Request</value>
   </data>
@@ -1065,8 +1043,6 @@
   <data name="RequestNew.ErrorCreatingRequest" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Error creating request</value>
   </data>
-
-
   <data name="RequestDetail.PageTitle" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Request Detail</value>
   </data>
@@ -1121,8 +1097,6 @@
   <data name="RequestDetail.ErrorPosting" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Error posting comment</value>
   </data>
-
-
   <data name="RequestEdit.PageTitle" xml:space="preserve">
     <value>Modifica richiesta</value>
   </data>
@@ -1153,8 +1127,6 @@
   <data name="RequestEdit.ErrorUpdating" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Error updating request</value>
   </data>
-
-
   <data name="Validation.Required" xml:space="preserve">
     <value>[NEEDS TRANSLATION] This field is required</value>
   </data>
@@ -1167,8 +1139,6 @@
   <data name="Validation.PasswordsDoNotMatch" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Passwords do not match</value>
   </data>
-
-
   <data name="Stats.PageTitle" xml:space="preserve">
     <value>Statistiche</value>
   </data>
@@ -1226,8 +1196,6 @@
   <data name="Stats.LibraryScansPerDay" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Library scans per day</value>
   </data>
-
-
   <data name="Search.PageTitle" xml:space="preserve">
     <value>Risultati di ricerca</value>
   </data>
@@ -1261,8 +1229,6 @@
   <data name="Search.PlaySong" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Play song</value>
   </data>
-
-
   <data name="NowPlaying.PageTitle" xml:space="preserve">
     <value>In riproduzione</value>
   </data>
@@ -1272,8 +1238,6 @@
   <data name="NowPlaying.NoSongsPlaying" xml:space="preserve">
     <value>[NEEDS TRANSLATION] No songs are currently playing.</value>
   </data>
-
-
   <data name="Users.PageTitle" xml:space="preserve">
     <value>Utenti</value>
   </data>
@@ -1286,8 +1250,6 @@
   <data name="Users.Delete" xml:space="preserve">
     <value>Elimina</value>
   </data>
-
-
   <data name="Shares.PageTitle" xml:space="preserve">
     <value>Condivisioni</value>
   </data>
@@ -1300,8 +1262,6 @@
   <data name="Shares.Delete" xml:space="preserve">
     <value>Elimina</value>
   </data>
-
-
   <data name="RadioStations.PageTitle" xml:space="preserve">
     <value>Stazioni radio</value>
   </data>
@@ -1314,8 +1274,6 @@
   <data name="RadioStations.Delete" xml:space="preserve">
     <value>Elimina</value>
   </data>
-
-
   <data name="Nav.Back" xml:space="preserve">
     <value>Indietro</value>
   </data>
@@ -1361,8 +1319,6 @@
   <data name="Nav.Libraries" xml:space="preserve">
     <value>Librerie</value>
   </data>
-
-
   <data name="Actions.SelectAll" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Select All</value>
   </data>
@@ -1498,8 +1454,6 @@
   <data name="Actions.ViewAll" xml:space="preserve">
     <value>Visualizza tutto</value>
   </data>
-
-
   <data name="Label.Name" xml:space="preserve">
     <value>Nome</value>
   </data>
@@ -1630,10 +1584,10 @@
     <value>Nome utente</value>
   </data>
   <data name="Label.Email" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Email</value>
+    <value>Email</value>
   </data>
   <data name="Label.Password" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Password</value>
+    <value>Password</value>
   </data>
   <data name="Label.AlbumType" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Album Type</value>
@@ -1782,8 +1736,6 @@
   <data name="Status.Complete" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Complete</value>
   </data>
-
-
   <data name="Dialog.AreYouSure" xml:space="preserve">
     <value>Sei sicuro?</value>
   </data>
@@ -1808,8 +1760,6 @@
   <data name="Dialog.StartScan" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Start scan</value>
   </data>
-
-
   <data name="TableHeader.Hash" xml:space="preserve">
     <value>#</value>
   </data>
@@ -1918,8 +1868,6 @@
   <data name="TableHeader.SpotifyId" xml:space="preserve">
     <value>[NEEDS TRANSLATION] SpotifyId</value>
   </data>
-
-
   <data name="Message.DisplayingPage" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Displaying page {0} of {1} (total {2} records)</value>
   </data>
@@ -1956,8 +1904,6 @@
   <data name="Message.DeletingLibraries" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Deleting Libraries</value>
   </data>
-
-
   <data name="ArtistDetail.DeleteArtistWarning" xml:space="preserve">
     <value>Elimina l’artista, tutti i suoi album e tutti i file dell’album. ATTENZIONE!</value>
   </data>
@@ -2072,8 +2018,6 @@
   <data name="ArtistDetail.DeletedArtistAlbums" xml:space="preserve">
     <value>[NEEDS TRANSLATION] deleted artist albums</value>
   </data>
-
-
   <data name="AlbumDetail.DeleteAlbum" xml:space="preserve">
     <value>Elimina l’album e tutti i file dell’album. ATTENZIONE!</value>
   </data>
@@ -2176,13 +2120,9 @@
   <data name="AlbumDetail.SetSongRating" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Set song rating</value>
   </data>
-
-
   <data name="SongDetail.DetailsGoHere" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Details go here for {0}</value>
   </data>
-
-
   <data name="Libraries.PageTitle" xml:space="preserve">
     <value>Librerie</value>
   </data>
@@ -2195,8 +2135,6 @@
   <data name="Libraries.SelectItem" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Select item</value>
   </data>
-
-
   <data name="LibraryDetail.CleanLibrary" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Clean library, removing any empty folders.</value>
   </data>
@@ -2338,8 +2276,6 @@
   <data name="Message.UpdatedLibraryAggregates" xml:space="preserve">
     <value>[NEEDS TRANSLATION] updated library aggregates</value>
   </data>
-
-
   <data name="PlaylistDetail.UnlockPlaylist" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Unlock playlist, will allow modifications.</value>
   </data>
@@ -2373,8 +2309,6 @@
   <data name="Message.TogglingPin" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Toggling Pin</value>
   </data>
-
-
   <data name="Requests.PageTitle" xml:space="preserve">
     <value>Richieste</value>
   </data>
@@ -2405,21 +2339,15 @@
   <data name="RequestStatus.Rejected" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Rejected</value>
   </data>
-
-
   <data name="RequestNew.HttpsPlaceholder" xml:space="preserve">
     <value>[NEEDS TRANSLATION] https://...</value>
   </data>
-
-
   <data name="RequestDetail.DeleteRequestConfirm" xml:space="preserve">
     <value>Sei sicuro di voler eliminare questa richiesta?</value>
   </data>
   <data name="RequestEdit.OnlyEditOwnRequests" xml:space="preserve">
     <value>Puoi modificare solo le tue richieste</value>
   </data>
-
-
   <data name="RequestCategory.AddAlbum" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Add Album</value>
   </data>
@@ -2435,8 +2363,6 @@
   <data name="RequestCategory.General" xml:space="preserve">
     <value>Generale</value>
   </data>
-
-
   <data name="ArtistEdit.PageTitle" xml:space="preserve">
     <value>Aggiungi/modifica artista</value>
   </data>
@@ -2467,8 +2393,6 @@
   <data name="ArtistEdit.EnterValue" xml:space="preserve">
     <value>[NEEDS TRANSLATION] enter value</value>
   </data>
-
-
   <data name="AlbumEdit.PageTitle" xml:space="preserve">
     <value>Aggiungi/modifica album</value>
   </data>
@@ -2481,8 +2405,6 @@
   <data name="AlbumEdit.ExternalSearchDetails" xml:space="preserve">
     <value>[NEEDS TRANSLATION] This feature allows searching external providers for album information.</value>
   </data>
-
-
   <data name="LibraryEdit.PageTitle" xml:space="preserve">
     <value>Modifica libreria</value>
   </data>
@@ -2546,8 +2468,6 @@
   <data name="LibraryType.Chart" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Chart</value>
   </data>
-
-
   <data name="UserEdit.PageTitle" xml:space="preserve">
     <value>Modifica utente</value>
   </data>
@@ -2570,10 +2490,10 @@
     <value>Nome utente</value>
   </data>
   <data name="UserEdit.EmailPlaceholder" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Email</value>
+    <value>Email</value>
   </data>
   <data name="UserEdit.PasswordPlaceholder" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Password</value>
+    <value>Password</value>
   </data>
   <data name="Message.UserSaved" xml:space="preserve">
     <value>[NEEDS TRANSLATION] User saved</value>
@@ -2581,8 +2501,6 @@
   <data name="Message.AvatarUpdated" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Avatar updated</value>
   </data>
-
-
   <data name="Charts.PageTitle" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Curated Charts</value>
   </data>
@@ -2610,8 +2528,6 @@
   <data name="Charts.DeleteCharts" xml:space="preserve">
     <value>Elimina classifiche</value>
   </data>
-
-
   <data name="ChartsRankedReport.PageTitle" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Ranked Report</value>
   </data>
@@ -2648,8 +2564,6 @@
   <data name="ChartsRankedReport.NotFound" xml:space="preserve">
     <value>Non trovato</value>
   </data>
-
-
   <data name="ChartsMissingReport.PageTitle" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Missing Report</value>
   </data>
@@ -2668,8 +2582,6 @@
   <data name="ChartsMissingReport.IdentifyMissingAlbum" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Identify Missing Album</value>
   </data>
-
-
   <data name="AdminDashboard.PageTitle" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Admin Dashboard</value>
   </data>
@@ -2757,8 +2669,6 @@
   <data name="AdminDashboard.APIDocs" xml:space="preserve">
     <value>[NEEDS TRANSLATION] API Docs</value>
   </data>
-
-
   <data name="AdminJobs.PageTitle" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Background Jobs</value>
   </data>
@@ -2933,8 +2843,6 @@
   <data name="AdminJobs.ErrorLoadingJobs" xml:space="preserve">
     <value>Errore durante il caricamento dei lavori</value>
   </data>
-
-
   <data name="AdminSettings.PageTitle" xml:space="preserve">
     <value>Impostazioni</value>
   </data>
@@ -2953,8 +2861,6 @@
   <data name="AdminSettings.SuccessfullyUpdated" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Successfully updated setting!</value>
   </data>
-
-
   <data name="ChartEditor.EditChart" xml:space="preserve">
     <value>Modifica classifica: {0}</value>
   </data>
@@ -3132,8 +3038,6 @@
   <data name="ChartEditor.ConfirmDeleteImageTitle" xml:space="preserve">
     <value>Conferma eliminazione</value>
   </data>
-
-
   <data name="ChartDetail.PageTitle" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Chart Details</value>
   </data>
@@ -3173,8 +3077,6 @@
   <data name="ChartDetail.ChartItems" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Chart Items ({0})</value>
   </data>
-
-
   <data name="ChartImportDialog.JSONImportSchema" xml:space="preserve">
     <value>[NEEDS TRANSLATION] JSON Import Schema:</value>
   </data>
@@ -3220,8 +3122,6 @@
   <data name="ChartImportDialog.NA" xml:space="preserve">
     <value>[NEEDS TRANSLATION] N/A</value>
   </data>
-
-
   <data name="ChartItemResolveDialog.CurrentEntry" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Current Entry</value>
   </data>
@@ -3240,13 +3140,9 @@
   <data name="ChartItemResolveDialog.LinkedTo" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Linked to: {0} - {1}</value>
   </data>
-
-
   <data name="MissingAlbumIdentifyDialog.TypeToFilter" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Type to filter artists...</value>
   </data>
-
-
   <data name="MediaLibrary.PageTitle" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Media Albums</value>
   </data>
@@ -3316,8 +3212,6 @@
   <data name="MediaLibrary.Select" xml:space="preserve">
     <value>Seleziona</value>
   </data>
-
-
   <data name="MediaArtists.PageTitle" xml:space="preserve">
     <value>Artisti multimediali</value>
   </data>
@@ -3327,8 +3221,6 @@
   <data name="MediaArtists.RefreshAlbums" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Refresh Albums</value>
   </data>
-
-
   <data name="MediaAlbumDetail.AddArtist" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Add Artist</value>
   </data>
@@ -3389,24 +3281,18 @@
   <data name="MediaAlbumDetail.NoImagesAdded" xml:space="preserve">
     <value>[NEEDS TRANSLATION] No images were added to the album. Likely the image you selected was invalid.</value>
   </data>
-
-
   <data name="MediaAlbumEdit.PageTitle" xml:space="preserve">
     <value>Aggiungi/modifica album multimediale</value>
   </data>
   <data name="MediaAlbumEdit.ImageSearch" xml:space="preserve">
     <value>Ricerca immagini album multimediale</value>
   </data>
-
-
   <data name="MediaArtistEdit.PageTitle" xml:space="preserve">
     <value>Aggiungi/modifica artista multimediale</value>
   </data>
   <data name="MediaArtistEdit.MediaArtists" xml:space="preserve">
     <value>Artisti multimediali</value>
   </data>
-
-
   <data name="Notification.RequestNotFound" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Request not found</value>
   </data>
@@ -3542,8 +3428,6 @@
   <data name="Notification.ScanningLibraryWarning" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Scanning a library updates the library with media found. This could overwrite artists, albums and songs.</value>
   </data>
-
-
   <data name="Charts.SelectAllItems" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Select all items</value>
   </data>
@@ -3565,8 +3449,6 @@
   <data name="Charts.ChartsDeleted" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Charts Deleted</value>
   </data>
-
-
   <data name="ChartsRankedReport.Header" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Ranked Albums Report</value>
   </data>
@@ -3579,8 +3461,6 @@
   <data name="AlbumEdit.Editing" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Editing</value>
   </data>
-
-
   <data name="UserDetail.PageTitle" xml:space="preserve">
     <value>[NEEDS TRANSLATION] User - {0}</value>
   </data>
@@ -3624,7 +3504,7 @@
     <value>[NEEDS TRANSLATION] Pinned Items</value>
   </data>
   <data name="UserDetail.Email" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Email</value>
+    <value>Email</value>
   </data>
   <data name="UserDetail.TimeZone" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Time Zone</value>
@@ -3641,8 +3521,6 @@
   <data name="UserDetail.Description" xml:space="preserve">
     <value>Descrizione</value>
   </data>
-
-
   <data name="UserDetail.Stats.ArtistsStarred" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Artists Starred</value>
   </data>
@@ -3676,8 +3554,6 @@
   <data name="UserDetail.Stats.Bookmarks" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Bookmarks</value>
   </data>
-
-
   <data name="UserRole.Admin" xml:space="preserve">
     <value>Amministrazione</value>
   </data>
@@ -3720,16 +3596,12 @@
   <data name="UserRole.Share" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Share</value>
   </data>
-
-
   <data name="Message.ClearedCache" xml:space="preserve">
     <value>[NEEDS TRANSLATION] cleared cache</value>
   </data>
   <data name="Message.ClearedNowPlaying" xml:space="preserve">
     <value>[NEEDS TRANSLATION] cleared now playing</value>
   </data>
-
-
   <data name="ChartImportDialog.ValidationErrors" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Validation Errors:</value>
   </data>
@@ -3802,16 +3674,12 @@
   <data name="ChartImportDialog.ImageDownloadErrorDetail" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Could not download image from URL</value>
   </data>
-
-
   <data name="ChartItemResolveDialog.SearchAndSelect" xml:space="preserve">
     <value>Cerca e seleziona album</value>
   </data>
   <data name="ChartItemResolveDialog.FailedToLink" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Failed to link album</value>
   </data>
-
-
   <data name="MissingAlbumIdentifyDialog.Artists" xml:space="preserve">
     <value>Artisti</value>
   </data>
@@ -3830,8 +3698,6 @@
   <data name="MissingAlbumIdentifyDialog.FailedToIdentify" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Failed to identify album</value>
   </data>
-
-
   <data name="AlbumEdit.AddingAlbum" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Adding Album</value>
   </data>
@@ -3847,8 +3713,6 @@
   <data name="Message.Huzzah" xml:space="preserve">
     <value>[NEEDS TRANSLATION] HUZZAH!</value>
   </data>
-
-
   <data name="UploadAlbum.Title" xml:space="preserve">
     <value>Carica album</value>
   </data>
@@ -3909,7 +3773,7 @@
   <data name="UploadAlbum.InvalidZip" xml:space="preserve">
     <value>Il file caricato non è un archivio ZIP valido.</value>
   </data>
-    <data name="AdminSettings.AddNew" xml:space="preserve">
+  <data name="AdminSettings.AddNew" xml:space="preserve">
     <value>Aggiungi nuova impostazione</value>
   </data>
   <data name="AdminSettings.AddNewSetting" xml:space="preserve">
@@ -4320,16 +4184,16 @@
   <data name="AdminDoctor.MusicBrainzDatabaseEmpty" xml:space="preserve">
     <value>Il database MusicBrainz è vuoto e deve essere popolato</value>
   </data>
-<data name="AdminDoctor.GenerateMusicBrainzDatabase" xml:space="preserve">
+  <data name="AdminDoctor.GenerateMusicBrainzDatabase" xml:space="preserve">
     <value>Genera database MusicBrainz locale</value>
   </data>
-<data name="AdminDoctor.MusicBrainzJobRunning" xml:space="preserve">
+  <data name="AdminDoctor.MusicBrainzJobRunning" xml:space="preserve">
     <value>Aggiornamento database MusicBrainz</value>
   </data>
-<data name="AdminDoctor.JobStarted" xml:space="preserve">
+  <data name="AdminDoctor.JobStarted" xml:space="preserve">
     <value>Attività avviata con successo</value>
   </data>
-<data name="AdminDoctor.JobFailed" xml:space="preserve">
+  <data name="AdminDoctor.JobFailed" xml:space="preserve">
     <value>Impossibile avviare l'attività</value>
   </data>
   <data name="AdminDoctor.Check.DiskSpace" xml:space="preserve">
@@ -4435,7 +4299,7 @@
     <value>[NEEDS TRANSLATION] Username</value>
   </data>
   <data name="Common.Email" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Email</value>
+    <value>Email</value>
   </data>
   <data name="Common.LastLogin" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Last Login</value>
@@ -4456,16 +4320,16 @@
     <value>[NEEDS TRANSLATION] Favorites: Artists</value>
   </data>
   <data name="Stats.Albums" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Albums</value>
+    <value>Album</value>
   </data>
   <data name="Stats.Artists" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Artists</value>
+    <value>Artisti</value>
   </data>
   <data name="Stats.Songs" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Songs</value>
+    <value>Brani</value>
   </data>
   <data name="Stats.Users" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Users</value>
+    <value>Utenti</value>
   </data>
   <data name="Common.Normalized" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Normalized</value>
@@ -4483,13 +4347,13 @@
     <value>[NEEDS TRANSLATION] Status Reasons</value>
   </data>
   <data name="Common.Songs" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Songs</value>
+    <value>Brani</value>
   </data>
   <data name="Statistic.Albums" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Albums</value>
+    <value>Album</value>
   </data>
   <data name="Statistic.Artists" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Artists</value>
+    <value>Artisti</value>
   </data>
   <data name="Statistic.Contributors" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Contributors</value>
@@ -4501,22 +4365,22 @@
     <value>[NEEDS TRANSLATION] Libraries</value>
   </data>
   <data name="Statistic.Playlists" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Playlists</value>
+    <value>Playlist</value>
   </data>
   <data name="Statistic.RadioStations" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Radio Stations</value>
+    <value>Stazioni radio</value>
   </data>
   <data name="Statistic.Shares" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Shares</value>
   </data>
   <data name="Statistic.Songs" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Songs</value>
+    <value>Brani</value>
   </data>
   <data name="Statistic.SongsPlayedCount" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Songs: Played count</value>
   </data>
   <data name="Statistic.Users" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Users</value>
+    <value>Utenti</value>
   </data>
   <data name="Statistic.UsersFavoritedArtists" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Users: Favorited artists</value>
@@ -4840,13 +4704,283 @@
     <value>[NEEDS TRANSLATION] All</value>
   </data>
   <data name="Common.Artists" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Artists</value>
+    <value>Artisti</value>
   </data>
   <data name="Common.Albums" xml:space="preserve">
-    <value>[NEEDS TRANSLATION] Albums</value>
+    <value>Album</value>
   </data>
   <data name="ArtistLookup.SelectToMerge" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Select one or more results to merge their provider IDs</value>
+  </data>
+  <data name="Navigation.Podcasts" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Podcasts</value>
+  </data>
+  <data name="Common.Actions" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Actions</value>
+  </data>
+  <data name="Common.Episodes" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Episodes</value>
+  </data>
+  <data name="Podcast.AddChannel" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Add Podcast Channel</value>
+  </data>
+  <data name="Podcast.FeedUrl" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Podcast Feed URL</value>
+  </data>
+  <data name="Podcast.LastSync" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Last Sync</value>
+  </data>
+  <data name="Podcast.FeatureDisabled" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Podcast feature is currently disabled. Please contact your administrator to enable it.</value>
+  </data>
+  <data name="Podcast.ChannelAdded" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Podcast channel added successfully</value>
+  </data>
+  <data name="Podcast.ChannelRefreshed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Podcast channel refreshed successfully</value>
+  </data>
+  <data name="Podcast.ChannelDeleted" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Podcast channel deleted successfully</value>
+  </data>
+  <data name="Podcast.AllChannelsRefreshed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] All podcast channels refreshed successfully</value>
+  </data>
+  <data name="Podcast.DeleteChannelConfirm" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Are you sure you want to delete this podcast channel? All downloaded episodes will be removed.</value>
+  </data>
+  <data name="Podcast.ChannelNotFound" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Podcast channel not found</value>
+  </data>
+  <data name="Podcast.VisitWebsite" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Visit Website</value>
+  </data>
+  <data name="Podcast.DeleteEpisodeConfirm" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Are you sure you want to delete this episode?</value>
+  </data>
+  <data name="Podcast.EpisodeDeleted" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Episode deleted successfully</value>
+  </data>
+  <data name="Podcast.EpisodeQueued" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Episode queued for download</value>
+  </data>
+  <data name="Podcast.StatusNone" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Not Downloaded</value>
+  </data>
+  <data name="Podcast.StatusQueued" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Queued</value>
+  </data>
+  <data name="Podcast.StatusDownloading" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Downloading</value>
+  </data>
+  <data name="Podcast.StatusDownloaded" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Downloaded</value>
+  </data>
+  <data name="Podcast.StatusFailed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed</value>
+  </data>
+  <data name="Podcast.UnplayedEpisodes" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Unplayed episodes</value>
+  </data>
+  <data name="Podcast.BookmarkPosition" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Bookmark Position</value>
+  </data>
+  <data name="Podcast.BookmarkTitle" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Bookmark Title</value>
+  </data>
+  <data name="Podcast.EpisodeNotPlayed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Not Played</value>
+  </data>
+  <data name="Podcast.EpisodePlayed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Played</value>
+  </data>
+  <data name="Podcast.EpisodePlayedCount" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Play Count</value>
+  </data>
+  <data name="Podcast.LastPlayedAt" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Last Played</value>
+  </data>
+  <data name="Podcast.NoBookmark" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No bookmark</value>
+  </data>
+  <data name="Podcast.NoPlayHistory" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No play history</value>
+  </data>
+  <data name="Podcast.PlayHistory" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Play History</value>
+  </data>
+  <data name="Podcast.Position" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Position</value>
+  </data>
+  <data name="Podcast.UnknownEpisode" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Unknown Episode</value>
+  </data>
+  <data name="Podcast.ViewBookmark" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] View Bookmark</value>
+  </data>
+  <data name="Podcast.AutoDownloadEnabled" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Auto-download new episodes</value>
+  </data>
+  <data name="Podcast.AutoDownloadDescription" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] When enabled, new episodes will be automatically downloaded when the channel is refreshed</value>
+  </data>
+  <data name="Podcast.RefreshIntervalHours" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Refresh interval (hours)</value>
+  </data>
+  <data name="Podcast.RefreshIntervalDescription" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] How often to check for new episodes (0 = use global schedule)</value>
+  </data>
+  <data name="Podcast.RefreshSettings" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Refresh Settings</value>
+  </data>
+  <data name="Podcast.MaxDownloadedEpisodes" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Max downloaded episodes</value>
+  </data>
+  <data name="Podcast.MaxStorageMB" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Max storage (MB)</value>
+  </data>
+  <data name="Podcast.StorageLimits" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Storage Limits</value>
+  </data>
+  <data name="Podcast.StorageLimitsDescription" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Limit the number of downloaded episodes and total storage used</value>
+  </data>
+  <data name="Podcast.ChannelSettings" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Channel Settings</value>
+  </data>
+  <data name="Podcast.Settings" xml:space="preserve">
+    <value>Impostazioni</value>
+  </data>
+  <data name="Podcast.SettingsSaved" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Settings saved successfully</value>
+  </data>
+  <data name="Podcast.UseGlobalSchedule" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Use global schedule</value>
+  </data>
+  <data name="Common.Unlimited" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Unlimited</value>
+  </data>
+  <data name="Podcast.OpmlImportExport" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] OPML Import/Export</value>
+  </data>
+  <data name="Podcast.OpmlExport" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Export</value>
+  </data>
+  <data name="Podcast.OpmlImport" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Import</value>
+  </data>
+  <data name="Podcast.OpmlExportDescription" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Export all your podcast subscriptions to an OPML file</value>
+  </data>
+  <data name="Podcast.OpmlImportDescription" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Import podcast subscriptions from an OPML file or paste OPML content</value>
+  </data>
+  <data name="Podcast.DownloadOpml" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Download OPML</value>
+  </data>
+  <data name="Podcast.ImportOpml" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Import OPML</value>
+  </data>
+  <data name="Podcast.OpmlContent" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] OPML Content</value>
+  </data>
+  <data name="Podcast.OpmlPasteHere" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Paste OPML content here...</value>
+  </data>
+  <data name="Podcast.ChooseOpmlFile" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Choose OPML File</value>
+  </data>
+  <data name="Podcast.OpmlExported" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] OPML file exported successfully</value>
+  </data>
+  <data name="Podcast.OpmlImportedCount" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Successfully imported {0} podcast(s)</value>
+  </data>
+  <data name="Podcast.ImportResults" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Import Results</value>
+  </data>
+  <data name="Podcast.Imported" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Imported</value>
+  </data>
+  <data name="Podcast.Skipped" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Skipped</value>
+  </data>
+  <data name="Podcast.Failed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed</value>
+  </data>
+  <data name="Podcast.DuplicatesSkipped" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Duplicates skipped</value>
+  </data>
+  <data name="Podcast.Errors" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Errors</value>
+  </data>
+  <data name="Podcast.FileReadError" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Error reading file</value>
+  </data>
+  <data name="Podcast.Discover" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Discover</value>
+  </data>
+  <data name="Podcast.DiscoverPodcasts" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Discover Podcasts</value>
+  </data>
+  <data name="Podcast.DiscoverDescription" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Search the iTunes directory to find and subscribe to new podcasts</value>
+  </data>
+  <data name="Podcast.SearchPodcasts" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Search Podcasts</value>
+  </data>
+  <data name="Podcast.SearchPlaceholder" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Search for podcasts...</value>
+  </data>
+  <data name="Podcast.SearchResultsCount" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] {0} podcast(s) found</value>
+  </data>
+  <data name="Podcast.NoSearchResults" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No podcasts found</value>
+  </data>
+  <data name="Podcast.Searching" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Searching...</value>
+  </data>
+  <data name="Podcast.EpisodeCountFormat" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] {0} episodes</value>
+  </data>
+  <data name="Podcast.Subscribe" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Subscribe</value>
+  </data>
+  <data name="Podcast.Subscribed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Subscribed</value>
+  </data>
+  <data name="Podcast.SubscribedTo" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Subscribed to {0}</value>
+  </data>
+  <data name="Podcast.EpisodeSearch" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Episode Search</value>
+  </data>
+  <data name="Podcast.SearchEpisodes" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Search Episodes</value>
+  </data>
+  <data name="Podcast.SearchEpisodesPlaceholder" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Search episode titles and descriptions...</value>
+  </data>
+  <data name="Podcast.SearchEpisodesDescription" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Search across all episodes in your subscribed podcasts</value>
+  </data>
+  <data name="Podcast.SearchEpisodesHint" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Enter at least 3 characters to search</value>
+  </data>
+  <data name="Podcast.SearchResultsFound" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] {0} episode(s) found</value>
+  </data>
+  <data name="Podcast.NoEpisodesFound" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No episodes found</value>
+  </data>
+  <data name="Podcast.NoResultsFor" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No results for '{0}'</value>
+  </data>
+  <data name="Podcast.GoToChannel" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Go to Channel</value>
+  </data>
+  <data name="Podcast.Channel" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Channel</value>
   </data>
   <data name="ArtistLookup.AllEnabledProviders" xml:space="preserve">
     <value>[NEEDS TRANSLATION] All enabled providers</value>
@@ -4889,5 +5023,768 @@
   </data>
   <data name="ArtistLookup.Title" xml:space="preserve">
     <value>[NEEDS TRANSLATION] Artist Lookup</value>
+  </data>
+  <data name="Message.Error" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Error</value>
+  </data>
+  <data name="Message.Success" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Success</value>
+  </data>
+  <data name="Message.Warning" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Warning</value>
+  </data>
+  <data name="Actions.Pin" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Pin</value>
+  </data>
+  <data name="Actions.OpenExternal" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Open External</value>
+  </data>
+  <data name="Actions.View" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] View</value>
+  </data>
+  <data name="PartyMode.Title" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Party Mode</value>
+  </data>
+  <data name="PartyMode.NowPlaying" xml:space="preserve">
+    <value>In riproduzione</value>
+  </data>
+  <data name="PartyMode.NoTrackPlaying" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No track playing</value>
+  </data>
+  <data name="PartyMode.NotConnected" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Not connected to party session</value>
+  </data>
+  <data name="PartyMode.Queue" xml:space="preserve">
+    <value>Coda</value>
+  </data>
+  <data name="PartyMode.Refresh" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Refresh queue</value>
+  </data>
+  <data name="PartyMode.ClearQueue" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Clear queue</value>
+  </data>
+  <data name="PartyMode.LoadingQueue" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Loading queue...</value>
+  </data>
+  <data name="PartyMode.QueueEmpty" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Queue is empty</value>
+  </data>
+  <data name="PartyMode.QueueEmptyHint" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Add songs to start the party!</value>
+  </data>
+  <data name="PartyMode.ByUser" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] by User</value>
+  </data>
+  <data name="PartyMode.Remove" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Remove from queue</value>
+  </data>
+  <data name="PartyMode.Participants" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Participants</value>
+  </data>
+  <data name="PartyMode.Loading" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Loading party session...</value>
+  </data>
+  <data name="PartyMode.SessionNotFound" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Party session not found</value>
+  </data>
+  <data name="PartyMode.GoHome" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Go to Home</value>
+  </data>
+  <data name="PartyMode.CopyInviteLink" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Copy invite link</value>
+  </data>
+  <data name="PartyMode.LeaveSession" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Leave session</value>
+  </data>
+  <data name="PartyMode.LeaveConfirm" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Are you sure you want to leave this party session?</value>
+  </data>
+  <data name="PartyMode.CreateSession" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Create Party Session</value>
+  </data>
+  <data name="PartyMode.JoinSession" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Join Party Session</value>
+  </data>
+  <data name="PartyMode.SessionName" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Session Name</value>
+  </data>
+  <data name="PartyMode.JoinCode" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Join Code (optional)</value>
+  </data>
+  <data name="PartyMode.Create" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Create</value>
+  </data>
+  <data name="PartyMode.Join" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Join</value>
+  </data>
+  <data name="PartyMode.EndSession" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] End Session</value>
+  </data>
+  <data name="PartyMode.EndSessionConfirm" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Are you sure you want to end this party session? This cannot be undone.</value>
+  </data>
+  <data name="PartyMode.InvalidJoinCode" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Invalid join code</value>
+  </data>
+  <data name="PartyMode.SessionEnded" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] This party session has ended</value>
+  </data>
+  <data name="PartyMode.Conflict" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Someone else modified the queue. Refreshing...</value>
+  </data>
+  <data name="PartyMode.AddToQueue" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Add to Queue</value>
+  </data>
+  <data name="PartyMode.AddSelectedToQueue" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Add Selected to Queue</value>
+  </data>
+  <data name="PartyMode.PlaybackControls" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Playback Controls</value>
+  </data>
+  <data name="PartyMode.Volume" xml:space="preserve">
+    <value>Volume</value>
+  </data>
+  <data name="PartyMode.Mute" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Mute</value>
+  </data>
+  <data name="PartyMode.Unmute" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Unmute</value>
+  </data>
+  <data name="PartyMode.ShareSession" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Share Party Session</value>
+  </data>
+  <data name="PartyMode.SessionCode" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Session Code</value>
+  </data>
+  <data name="PartyMode.ConnectedUsers" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Connected Users</value>
+  </data>
+  <data name="PartyMode.ErrorCreatingSession" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Error creating party session</value>
+  </data>
+  <data name="PartyMode.ErrorJoiningSession" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Error joining party session</value>
+  </data>
+  <data name="PartyMode.MaxParticipants" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Maximum participants reached</value>
+  </data>
+  <data name="PartyMode.PlaybackError" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Error controlling playback</value>
+  </data>
+  <data name="PartyMode.QueueError" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Error updating queue</value>
+  </data>
+  <data name="PartyMode.ReorderHint" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Drag to reorder</value>
+  </data>
+  <data name="PartyMode.PlayingNext" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Playing next</value>
+  </data>
+  <data name="PartyMode.AddMoreSongs" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Add more songs to keep the party going!</value>
+  </data>
+  <data name="PartyMode.HostControls" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Host Controls</value>
+  </data>
+  <data name="PartyMode.SkipTrack" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Skip Track</value>
+  </data>
+  <data name="PartyMode.PausePlayback" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Pause</value>
+  </data>
+  <data name="PartyMode.ResumePlayback" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Resume</value>
+  </data>
+  <data name="PartyMode.CurrentSession" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Current Party Session</value>
+  </data>
+  <data name="PartyMode.NoActiveSession" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No active party session</value>
+  </data>
+  <data name="PartyMode.StartParty" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Start a Party</value>
+  </data>
+  <data name="PartyMode.JoinParty" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Join a Party</value>
+  </data>
+  <data name="PartyMode.EnterSessionCode" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Enter session code</value>
+  </data>
+  <data name="PartyMode.OrSelectFromList" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Or select from recent sessions</value>
+  </data>
+  <data name="PartyMode.RecentSessions" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Recent Sessions</value>
+  </data>
+  <data name="PartyMode.SessionCreatedBy" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Created by</value>
+  </data>
+  <data name="PartyMode.SessionStartedAt" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Started at</value>
+  </data>
+  <data name="PartyMode.QuickAdd" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Quick Add</value>
+  </data>
+  <data name="PartyMode.SearchSongs" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Search for songs to add</value>
+  </data>
+  <data name="PartyMode.AddAllFromAlbum" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Add all from album</value>
+  </data>
+  <data name="PartyMode.AddAllFromArtist" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Add all from artist</value>
+  </data>
+  <data name="PartyMode.AddAllFromPlaylist" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Add all from playlist</value>
+  </data>
+  <data name="PartyMode.PrivateSession" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Private Session</value>
+  </data>
+  <data name="PartyMode.PublicSession" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Public Session</value>
+  </data>
+  <data name="PartyMode.RequireJoinCode" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Require join code</value>
+  </data>
+  <data name="PartyMode.SessionSettings" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Session Settings</value>
+  </data>
+  <data name="PartyMode.EnableVoting" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Enable voting</value>
+  </data>
+  <data name="PartyMode.VotingEnabled" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Voting enabled</value>
+  </data>
+  <data name="PartyMode.AllowGuestSkip" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Allow guests to skip</value>
+  </data>
+  <data name="PartyMode.GuestSkipAllowed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Guest skip allowed</value>
+  </data>
+  <data name="PartyMode.Endpoint.Title" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Playback Device</value>
+  </data>
+  <data name="PartyMode.Endpoint.NoEndpoint" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No playback device attached</value>
+  </data>
+  <data name="PartyMode.Endpoint.Attach" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Attach Device</value>
+  </data>
+  <data name="PartyMode.Endpoint.Detach" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Detach Device</value>
+  </data>
+  <data name="PartyMode.Endpoint.Attaching" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Attaching device...</value>
+  </data>
+  <data name="PartyMode.Endpoint.Detaching" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Detaching device...</value>
+  </data>
+  <data name="PartyMode.Endpoint.AttachSuccess" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Device attached successfully</value>
+  </data>
+  <data name="PartyMode.Endpoint.DetachSuccess" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Device detached</value>
+  </data>
+  <data name="PartyMode.Endpoint.AttachError" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to attach device</value>
+  </data>
+  <data name="PartyMode.Endpoint.DetachError" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to detach device</value>
+  </data>
+  <data name="PartyMode.Endpoint.Offline" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Offline</value>
+  </data>
+  <data name="PartyMode.Endpoint.Online" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Online</value>
+  </data>
+  <data name="PartyMode.Endpoint.Stale" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Connection unstable</value>
+  </data>
+  <data name="PartyMode.Endpoint.LastSeen" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Last seen</value>
+  </data>
+  <data name="PartyMode.Endpoint.Available" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Available Devices</value>
+  </data>
+  <data name="PartyMode.Endpoint.Current" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Current Device</value>
+  </data>
+  <data name="PartyMode.Endpoint.Capabilities" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Capabilities</value>
+  </data>
+  <data name="PartyMode.Endpoint.Capability.Play" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Play</value>
+  </data>
+  <data name="PartyMode.Endpoint.Capability.Pause" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Pause</value>
+  </data>
+  <data name="PartyMode.Endpoint.Capability.Skip" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Skip</value>
+  </data>
+  <data name="PartyMode.Endpoint.Capability.Seek" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Seek</value>
+  </data>
+  <data name="PartyMode.Endpoint.Capability.Volume" xml:space="preserve">
+    <value>Volume</value>
+  </data>
+  <data name="PartyMode.Endpoint.Capability.Position" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Position</value>
+  </data>
+  <data name="PartyMode.Endpoint.OfflineWarning" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Playback device is offline. Music may not play.</value>
+  </data>
+  <data name="PartyMode.Endpoint.SelectDevice" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Select a playback device</value>
+  </data>
+  <data name="PartyMode.Endpoint.WebPlayer" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Web Player</value>
+  </data>
+  <data name="PartyMode.Endpoint.SystemBackend" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] System Audio</value>
+  </data>
+  <data name="Jukebox.Disabled" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Jukebox is disabled</value>
+  </data>
+  <data name="Jukebox.Backend.Mpv" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] MPV Audio Backend</value>
+  </data>
+  <data name="Jukebox.Backend.MpvNotFound" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] MPV executable not found. Please install MPV to use the audio backend.</value>
+  </data>
+  <data name="Jukebox.Backend.Status" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Backend Status</value>
+  </data>
+  <data name="Jukebox.Backend.Connected" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Connected</value>
+  </data>
+  <data name="Jukebox.Backend.Disconnected" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Disconnected</value>
+  </data>
+  <data name="Jukebox.Backend.Running" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Running</value>
+  </data>
+  <data name="Jukebox.Backend.NotRunning" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Not Running</value>
+  </data>
+  <data name="Jukebox.Backend.Error" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Error: {0}</value>
+  </data>
+  <data name="Jukebox.Backend.Initialize" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Initialize Backend</value>
+  </data>
+  <data name="Jukebox.Backend.Shutdown" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Shutdown Backend</value>
+  </data>
+  <data name="Jukebox.Backend.RegisterEndpoint" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Register as Endpoint</value>
+  </data>
+  <data name="Jukebox.Backend.EndpointRegistered" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Backend registered as system endpoint</value>
+  </data>
+  <data name="Jukebox.Backend.Initializing" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Initializing backend...</value>
+  </data>
+  <data name="Jukebox.Backend.ShuttingDown" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Shutting down backend...</value>
+  </data>
+  <data name="Jukebox.Backend.PlaybackInfo" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Now Playing: {0}</value>
+  </data>
+  <data name="Jukebox.Backend.Position" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Position: {0}</value>
+  </data>
+
+  <data name="Jukebox.Error.FailedToAddSongs" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to add songs to jukebox</value>
+  </data>
+  <data name="Jukebox.Error.FailedToClear" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to clear jukebox playlist</value>
+  </data>
+  <data name="Jukebox.Error.FailedToGetPlaylist" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to get jukebox playlist</value>
+  </data>
+  <data name="Jukebox.Error.FailedToGetStatus" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to get jukebox status</value>
+  </data>
+  <data name="Jukebox.Error.FailedToRemove" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to remove song from jukebox</value>
+  </data>
+  <data name="Jukebox.Error.FailedToSetGain" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to set volume</value>
+  </data>
+  <data name="Jukebox.Error.FailedToShuffle" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to shuffle jukebox playlist</value>
+  </data>
+  <data name="Jukebox.Error.FailedToSkip" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to skip to track</value>
+  </data>
+  <data name="Jukebox.Error.FailedToStart" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to start playback</value>
+  </data>
+  <data name="Jukebox.Error.FailedToStop" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to stop playback</value>
+  </data>
+  <data name="Jukebox.Error.InvalidIndex" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Invalid track index</value>
+  </data>
+  <data name="Jukebox.Error.NoSongIds" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No song IDs provided</value>
+  </data>
+  <data name="Jukebox.Error.OperationFailed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Jukebox operation failed: {0}</value>
+  </data>
+  <data name="Jukebox.NotConfigured" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Jukebox is not configured. Enable Jukebox in settings to use this feature.</value>
+  </data>
+  <data name="Jukebox.Backend.Mpd" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] MPD</value>
+  </data>
+  <data name="Jukebox.Backend.MpdHost" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] MPD Host</value>
+  </data>
+  <data name="Jukebox.Backend.MpdPort" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] MPD Port</value>
+  </data>
+  <data name="Jukebox.Backend.MpdPassword" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] MPD Password</value>
+  </data>
+  <data name="Jukebox.Backend.MpdInstanceName" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Instance Name</value>
+  </data>
+  <data name="Jukebox.Backend.MpdConnecting" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Connecting to MPD...</value>
+  </data>
+  <data name="Jukebox.Backend.MpdConnected" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Connected to MPD</value>
+  </data>
+  <data name="Jukebox.Backend.MpdDisconnected" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Disconnected from MPD</value>
+  </data>
+  <data name="Jukebox.Backend.MpdConnectionFailed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to connect to MPD</value>
+  </data>
+  <data name="Jukebox.Backend.MpdVersion" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] MPD Version: {0}</value>
+  </data>
+  <data name="Jukebox.Backend.MpdAuthFailed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] MPD authentication failed</value>
+  </data>
+  <data name="Jukebox.Backend.MpdTimeout" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] MPD connection timeout</value>
+  </data>
+  <data name="Jukebox.Backend.MpdError" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] MPD error: {0}</value>
+  </data>
+  <data name="Navigation.Jukebox" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Jukebox</value>
+  </data>
+  <data name="Jukebox.Title" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Jukebox Control</value>
+  </data>
+  <data name="Jukebox.Status" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Status</value>
+  </data>
+  <data name="Jukebox.Backend" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Backend</value>
+  </data>
+  <data name="Jukebox.Volume" xml:space="preserve">
+    <value>Volume</value>
+  </data>
+  <data name="Jukebox.Position" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Position</value>
+  </data>
+  <data name="Jukebox.NowPlaying" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] NowPlaying</value>
+  </data>
+  <data name="Jukebox.Queue" xml:space="preserve">
+    <value>Coda</value>
+  </data>
+  <data name="Jukebox.NotEnabled" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] NotEnabled</value>
+  </data>
+  <data name="Jukebox.NotConnected" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] NotConnected</value>
+  </data>
+  <data name="Jukebox.Connected" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Connected</value>
+  </data>
+  <data name="Jukebox.Playing" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Playing</value>
+  </data>
+  <data name="Jukebox.Paused" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Paused</value>
+  </data>
+  <data name="Jukebox.Stopped" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Stopped</value>
+  </data>
+  <data name="Jukebox.Idle" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Idle</value>
+  </data>
+  <data name="Jukebox.AdminOnlyControls" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Playback controls are only available to administrators</value>
+  </data>
+  <data name="AdminDoctor.Check.JukeboxConfiguration" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Jukebox Configuration</value>
+  </data>
+  <data name="AdminDoctor.Check.PodcastConfiguration" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Podcast Configuration</value>
+  </data>
+  <data name="Navigation.PartyMode" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Party Mode</value>
+  </data>
+  <data name="PartyMode.NotEnabled" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Party Mode is not enabled</value>
+  </data>
+  <data name="PartyMode.NotEnabledHint" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Contact your administrator to enable Party Mode</value>
+  </data>
+  <data name="PartyMode.CreateSessionDescription" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Create a new party session and invite friends to listen together</value>
+  </data>
+  <data name="PartyMode.SessionNamePlaceholder" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Enter session name...</value>
+  </data>
+  <data name="PartyMode.JoinCodePlaceholder" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Enter join code...</value>
+  </data>
+  <data name="PartyMode.CreateButton" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Create Session</value>
+  </data>
+  <data name="PartyMode.JoinSessionDescription" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Join an existing session using a session code</value>
+  </data>
+  <data name="PartyMode.JoinButton" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Join</value>
+  </data>
+  <data name="PartyMode.MySessions" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] My Sessions</value>
+  </data>
+  <data name="PartyMode.ActiveSessions" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Public Sessions</value>
+  </data>
+  <data name="PartyMode.ActiveSessionsDescription" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Join a public session that anyone can participate in</value>
+  </data>
+  <data name="PartyMode.Status" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Status</value>
+  </data>
+  <data name="PartyMode.Actions" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Actions</value>
+  </data>
+  <data name="PartyMode.OpenSession" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Open session</value>
+  </data>
+  <data name="PartyMode.LoadError" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to load party mode data</value>
+  </data>
+  <data name="PartyMode.SessionCreated" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Session created successfully</value>
+  </data>
+  <data name="PartyMode.CreateFailed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to create session</value>
+  </data>
+  <data name="PartyMode.InvalidSessionCode" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Invalid session code format</value>
+  </data>
+  <data name="PartyMode.JoinFailed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to join session</value>
+  </data>
+  <data name="Jukebox.Capabilities" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Capabilities</value>
+  </data>
+  <data name="Jukebox.Controls" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Controls</value>
+  </data>
+  <data name="Jukebox.CurrentTrack" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Current Track</value>
+  </data>
+  <data name="Jukebox.Disconnected" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Disconnected</value>
+  </data>
+  <data name="Jukebox.Next" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Next</value>
+  </data>
+  <data name="Jukebox.NotEnabledHint" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Enable Jukebox in Settings to use server-side playback.</value>
+  </data>
+  <data name="Jukebox.NoTrackPlaying" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No track currently playing</value>
+  </data>
+  <data name="Jukebox.Pause" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Pause</value>
+  </data>
+  <data name="Jukebox.Play" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Play</value>
+  </data>
+  <data name="Jukebox.Previous" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Previous</value>
+  </data>
+  <data name="Jukebox.Stop" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Stop</value>
+  </data>
+  <data name="AlbumDetail.AddToJukebox" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Add to Jukebox queue</value>
+  </data>
+  <data name="AlbumDetail.AddedToJukebox" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Added to Jukebox</value>
+  </data>
+  <data name="AlbumDetail.AddedToQueue" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] added to the queue</value>
+  </data>
+  <data name="AlbumDetail.JukeboxError" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to add to Jukebox</value>
+  </data>
+  <data name="Common.UnknownError" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] An unknown error occurred</value>
+  </data>
+  <data name="Jukebox.ClearQueue" xml:space="preserve">
+    <value>Svuota coda</value>
+  </data>
+  <data name="Jukebox.PlaybackPaused" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Playback paused</value>
+  </data>
+  <data name="Jukebox.PlaybackStarted" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Playback started</value>
+  </data>
+  <data name="Jukebox.PlaybackStopped" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Playback stopped</value>
+  </data>
+  <data name="Jukebox.QueueCleared" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Queue cleared</value>
+  </data>
+  <data name="Jukebox.QueueShuffled" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Queue shuffled</value>
+  </data>
+  <data name="Jukebox.Shuffle" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Shuffle</value>
+  </data>
+  <data name="Navigation.Themes" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Themes</value>
+  </data>
+  <data name="AdminThemes.PageTitle" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Theme Management</value>
+  </data>
+  <data name="AdminThemes.Title" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Themes</value>
+  </data>
+  <data name="AdminThemes.DefaultTheme" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Site Default Theme</value>
+  </data>
+  <data name="AdminThemes.NoThemes" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No themes found.</value>
+  </data>
+  <data name="AdminThemes.Name" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Name</value>
+  </data>
+  <data name="AdminThemes.Author" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Author</value>
+  </data>
+  <data name="AdminThemes.Version" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Version</value>
+  </data>
+  <data name="AdminThemes.Description" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Description</value>
+  </data>
+  <data name="AdminThemes.Type" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Type</value>
+  </data>
+  <data name="AdminThemes.BuiltIn" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Built-in</value>
+  </data>
+  <data name="AdminThemes.Custom" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Custom</value>
+  </data>
+  <data name="AdminThemes.Status" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Status</value>
+  </data>
+  <data name="AdminThemes.Warnings" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Warnings</value>
+  </data>
+  <data name="AdminThemes.Valid" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Valid</value>
+  </data>
+  <data name="AdminThemes.Default" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Default</value>
+  </data>
+  <data name="AdminThemes.ViewWarnings" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] View Warnings</value>
+  </data>
+  <data name="AdminThemes.Export" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Export</value>
+  </data>
+  <data name="AdminThemes.Import" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Import Theme</value>
+  </data>
+  <data name="AdminThemes.ImportDescription" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Upload a theme pack (.zip) containing theme.json and theme.css files.</value>
+  </data>
+  <data name="AdminThemes.SelectFile" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Select File</value>
+  </data>
+  <data name="AdminThemes.InvalidFileType" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Please select a .zip file.</value>
+  </data>
+  <data name="AdminThemes.ImportSuccess" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Theme '{0}' imported successfully.</value>
+  </data>
+  <data name="AdminThemes.ImportFailed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to import theme.</value>
+  </data>
+  <data name="AdminThemes.ExportSuccess" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Theme exported successfully.</value>
+  </data>
+  <data name="AdminThemes.ExportFailed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to export theme.</value>
+  </data>
+  <data name="AdminThemes.DeleteConfirmTitle" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Delete Theme</value>
+  </data>
+  <data name="AdminThemes.DeleteConfirmMessage" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Are you sure you want to delete the theme '{0}'? This action cannot be undone.</value>
+  </data>
+  <data name="AdminThemes.DeleteSuccess" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Theme deleted successfully.</value>
+  </data>
+  <data name="AdminThemes.DeleteFailed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to delete theme.</value>
+  </data>
+  <data name="AdminThemes.RescanComplete" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Theme scan complete.</value>
+  </data>
+  <data name="AdminThemes.DefaultThemeUpdated" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Default theme updated.</value>
+  </data>
+  <data name="AdminThemes.NoLibraryTitle" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Theme Library Not Configured</value>
+  </data>
+  <data name="AdminThemes.NoLibraryMessage" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] No Theme library has been set up. Without a Theme library, only the built-in Light and Dark themes are available. To use custom themes, create a Theme library.</value>
+  </data>
+  <data name="AdminThemes.CreateLibrary" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Create Theme Library</value>
+  </data>
+  <data name="AdminThemes.CreateLibraryTitle" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Create Theme Library</value>
+  </data>
+  <data name="AdminThemes.CreateLibraryPrompt" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Enter the path where custom themes will be stored:</value>
+  </data>
+  <data name="AdminThemes.LibraryPath" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Library Path</value>
+  </data>
+  <data name="AdminThemes.PathRequired" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Please enter a valid path</value>
+  </data>
+  <data name="AdminThemes.LibraryCreated" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Theme library created successfully</value>
+  </data>
+  <data name="AdminThemes.LibraryCreateFailed" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Failed to create theme library</value>
+  </data>
+  <data name="Common.Close" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Close</value>
+  </data>
+  <data name="Common.Success" xml:space="preserve">
+    <value>[NEEDS TRANSLATION] Success</value>
   </data>
 </root>

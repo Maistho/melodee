@@ -47,6 +47,29 @@ public static class SettingRegistry
     public const string OpenSubsonicServerLicenseEmail = "openSubsonicServer.openSubsonicServerLicenseEmail";
     public const string OpenSubsonicServerSupportedVersion = "openSubsonicServer.openSubsonic.serverSupportedVersion";
     public const string OpenSubsonicServerType = "openSubsonicServer.openSubsonicServer.type";
+    public const string PartyModeEnabled = "partyMode.enabled";
+
+    // Jukebox settings
+    public const string JukeboxEnabled = "jukebox.enabled";
+    public const string JukeboxBackendType = "jukebox.backendType";
+
+    // MPV Backend settings
+    public const string MpvPath = "mpv.path";
+    public const string MpvAudioDevice = "mpv.audioDevice";
+    public const string MpvExtraArgs = "mpv.extraArgs";
+    public const string MpvSocketPath = "mpv.socketPath";
+    public const string MpvInitialVolume = "mpv.initialVolume";
+    public const string MpvEnableDebugOutput = "mpv.enableDebugOutput";
+
+    // MPD Backend settings
+    public const string MpdInstanceName = "mpd.instanceName";
+    public const string MpdHost = "mpd.host";
+    public const string MpdPort = "mpd.port";
+    public const string MpdPassword = "mpd.password";
+    public const string MpdTimeoutMs = "mpd.timeoutMs";
+    public const string MpdInitialVolume = "mpd.initialVolume";
+    public const string MpdEnableDebugOutput = "mpd.enableDebugOutput";
+
     public const string PlaylistDynamicPlaylistsDisabled = "playlist.dynamicPlaylist.disabled";
     public const string PlaylistMaximumAllowedPageSize = "playlist.maximumAllowedPageSize";
     public const string PluginEnabledCueSheet = "plugin.cueSheet.enabled";
@@ -54,6 +77,28 @@ public static class SettingRegistry
     public const string PluginEnabledNfo = "plugin.nfo.enabled";
     public const string PluginEnabledSimpleFileVerification = "plugin.simpleFileVerification.enabled";
     public const string ProcessingAlbumTitleRemovals = "processing.albumTitleRemovals";
+
+    // Podcast settings
+    public const string PodcastEnabled = "podcast.enabled";
+    public const string PodcastHttpAllowHttp = "podcast.http.allowHttp";
+    public const string PodcastHttpTimeoutSeconds = "podcast.http.timeoutSeconds";
+    public const string PodcastHttpMaxRedirects = "podcast.http.maxRedirects";
+    public const string PodcastHttpMaxFeedBytes = "podcast.http.maxFeedBytes";
+    public const string PodcastRefreshMaxItemsPerChannel = "podcast.refresh.maxItemsPerChannel";
+    public const string PodcastDownloadMaxConcurrentGlobal = "podcast.download.maxConcurrent.global";
+    public const string PodcastDownloadMaxConcurrentPerUser = "podcast.download.maxConcurrent.perUser";
+    public const string PodcastDownloadMaxEnclosureBytes = "podcast.download.maxEnclosureBytes";
+    public const string PodcastQuotaMaxBytesPerUser = "podcast.quota.maxBytesPerUser";
+    public const string PodcastRetentionDownloadedEpisodesInDays = "podcast.retention.downloadedEpisodesInDays";
+    public const string PodcastRetentionKeepLastNEpisodes = "podcast.retention.keepLastNEpisodes";
+    public const string PodcastRetentionKeepUnplayedOnly = "podcast.retention.keepUnplayedOnly";
+    public const string PodcastRecoveryStuckDownloadThresholdMinutes = "podcast.recovery.stuckDownloadThresholdMinutes";
+    public const string PodcastRecoveryOrphanedUsageThresholdHours = "podcast.recovery.orphanedUsageThresholdHours";
+    public const string JobsPodcastRefreshCronExpression = "jobs.podcastRefresh.cronExpression";
+    public const string JobsPodcastDownloadCronExpression = "jobs.podcastDownload.cronExpression";
+    public const string JobsPodcastCleanupCronExpression = "jobs.podcastCleanup.cronExpression";
+    public const string JobsPodcastRecoveryCronExpression = "jobs.podcastRecovery.cronExpression";
+
     public const string ProcessingArtistNameReplacements = "processing.artistNameReplacements";
     public const string ProcessingConvertedExtension = "processing.convertedExtension";
     public const string ProcessingDoContinueOnDirectoryProcessingErrors = "processing.doContinueOnDirectoryProcessingErrors";
@@ -155,4 +200,10 @@ public static class SettingRegistry
     public const string JellyfinRateLimitApiRequestsPerPeriod = "jellyfin.rateLimit.apiRequestsPerPeriod";
     public const string JellyfinRateLimitApiPeriodSeconds = "jellyfin.rateLimit.apiPeriodSeconds";
     public const string JellyfinRateLimitStreamConcurrentPerUser = "jellyfin.rateLimit.streamConcurrentPerUser";
+
+    // Theme settings
+    public const string ThemeLibraryPath = "theme.libraryPath";
+    public const string SystemDefaultTheme = "system.defaultTheme";
+    public const string ThemeMaxUploadSizeMb = "theme.maxUploadSizeMb";
+    public const string ThemeEnforceContrastValidation = "theme.enforceContrastValidation";
 }

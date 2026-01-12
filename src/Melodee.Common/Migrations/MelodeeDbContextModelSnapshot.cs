@@ -965,12 +965,36 @@ namespace Melodee.Common.Migrations
                             Id = 6,
                             ApiKey = new Guid("62453b56-402b-8f9e-073b-e2d31e9f7cf9"),
                             CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
-                            Description = "Library where email templates are stored, organized by language code.",
+                            Description = "Library where templates are stored, organized by language code.",
                             IsLocked = false,
                             Name = "Templates",
                             Path = "/storage/templates/",
                             SortOrder = 0,
                             Type = 7
+                        },
+                        new
+                        {
+                            Id = 7,
+                            ApiKey = new Guid("01d52713-b3cf-48fa-f085-7704baee6dc5"),
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            Description = "Library where podcast media files are stored.",
+                            IsLocked = false,
+                            Name = "Podcasts",
+                            Path = "/storage/podcasts/",
+                            SortOrder = 0,
+                            Type = 8
+                        },
+                        new
+                        {
+                            Id = 8,
+                            ApiKey = new Guid("f718b349-eccc-ff93-f992-c190e1ed2616"),
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            Description = "Library where custom theme packs are stored.",
+                            IsLocked = false,
+                            Name = "Themes",
+                            Path = "/storage/themes/",
+                            SortOrder = 0,
+                            Type = 9
                         });
                 });
 
@@ -1011,6 +1035,408 @@ namespace Melodee.Common.Migrations
                     b.HasIndex("LibraryId");
 
                     b.ToTable("LibraryScanHistories");
+                });
+
+            modelBuilder.Entity("Melodee.Common.Data.Models.PartyAuditEvent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("ApiKey")
+                        .HasColumnType("uuid");
+
+                    b.Property<Instant>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(62000)
+                        .HasColumnType("character varying(62000)");
+
+                    b.Property<int>("EventType")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsLocked")
+                        .HasColumnType("boolean");
+
+                    b.Property<Instant?>("LastUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<int>("PartySessionId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PayloadJson")
+                        .HasMaxLength(62000)
+                        .HasColumnType("character varying(62000)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Tags")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApiKey")
+                        .IsUnique();
+
+                    b.HasIndex("PartySessionId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PartyAuditEvents");
+                });
+
+            modelBuilder.Entity("Melodee.Common.Data.Models.PartyPlaybackState", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("ApiKey")
+                        .HasColumnType("uuid");
+
+                    b.Property<Instant>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CurrentQueueItemApiKey")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(62000)
+                        .HasColumnType("character varying(62000)");
+
+                    b.Property<bool>("IsLocked")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsPlaying")
+                        .HasColumnType("boolean");
+
+                    b.Property<Instant?>("LastHeartbeatAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Instant?>("LastUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<int>("PartySessionId")
+                        .HasColumnType("integer");
+
+                    b.Property<double>("PositionSeconds")
+                        .HasColumnType("double precision");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Tags")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<int?>("UpdatedByUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<double?>("Volume")
+                        .HasColumnType("double precision");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApiKey")
+                        .IsUnique();
+
+                    b.HasIndex("CurrentQueueItemApiKey");
+
+                    b.HasIndex("IsPlaying");
+
+                    b.HasIndex("LastHeartbeatAt");
+
+                    b.HasIndex("PartySessionId")
+                        .IsUnique();
+
+                    b.HasIndex("UpdatedByUserId");
+
+                    b.ToTable("PartyPlaybackStates");
+                });
+
+            modelBuilder.Entity("Melodee.Common.Data.Models.PartyQueueItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("ApiKey")
+                        .HasColumnType("uuid");
+
+                    b.Property<Instant>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(62000)
+                        .HasColumnType("character varying(62000)");
+
+                    b.Property<Instant>("EnqueuedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("EnqueuedByUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsLocked")
+                        .HasColumnType("boolean");
+
+                    b.Property<Instant?>("LastUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<int>("PartySessionId")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("SongApiKey")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Source")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Tags")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApiKey")
+                        .IsUnique();
+
+                    b.HasIndex("EnqueuedAt");
+
+                    b.HasIndex("EnqueuedByUserId");
+
+                    b.HasIndex("SongApiKey");
+
+                    b.HasIndex("PartySessionId", "SortOrder");
+
+                    b.ToTable("PartyQueueItems");
+                });
+
+            modelBuilder.Entity("Melodee.Common.Data.Models.PartySession", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid?>("ActiveEndpointId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("ActiveEndpointId1")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("ApiKey")
+                        .HasColumnType("uuid");
+
+                    b.Property<Instant>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(62000)
+                        .HasColumnType("character varying(62000)");
+
+                    b.Property<bool>("IsEndpointOffline")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsLocked")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsQueueLocked")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("JoinCodeHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Instant?>("LastUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<int>("OwnerUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("PlaybackRevision")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("QueueRevision")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Tags")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActiveEndpointId");
+
+                    b.HasIndex("ActiveEndpointId1");
+
+                    b.HasIndex("ApiKey")
+                        .IsUnique();
+
+                    b.HasIndex("OwnerUserId");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("PartySessions");
+                });
+
+            modelBuilder.Entity("Melodee.Common.Data.Models.PartySessionEndpoint", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("ApiKey")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CapabilitiesJson")
+                        .HasMaxLength(62000)
+                        .HasColumnType("character varying(62000)");
+
+                    b.Property<Instant>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(62000)
+                        .HasColumnType("character varying(62000)");
+
+                    b.Property<bool>("IsLocked")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsShared")
+                        .HasColumnType("boolean");
+
+                    b.Property<Instant?>("LastSeenAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Instant?>("LastUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<int?>("OwnerUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Room")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Tags")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApiKey")
+                        .IsUnique();
+
+                    b.HasIndex("IsShared");
+
+                    b.HasIndex("LastSeenAt");
+
+                    b.HasIndex("OwnerUserId");
+
+                    b.HasIndex("Room");
+
+                    b.HasIndex("Type");
+
+                    b.ToTable("PartySessionEndpoints");
+                });
+
+            modelBuilder.Entity("Melodee.Common.Data.Models.PartySessionParticipant", b =>
+                {
+                    b.Property<int>("PartySessionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsBanned")
+                        .HasColumnType("boolean");
+
+                    b.Property<Instant>("JoinedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Instant?>("LastSeenAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("integer");
+
+                    b.HasKey("PartySessionId", "UserId");
+
+                    b.HasIndex("IsBanned");
+
+                    b.HasIndex("Role");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("PartySessionId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("PartySessionParticipants");
                 });
 
             modelBuilder.Entity("Melodee.Common.Data.Models.PlayQueue", b =>
@@ -1264,6 +1690,266 @@ namespace Melodee.Common.Migrations
                         .IsUnique();
 
                     b.ToTable("PlaylistSong");
+                });
+
+            modelBuilder.Entity("Melodee.Common.Data.Models.PodcastChannel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("ApiKey")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("AutoDownloadEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("ConsecutiveFailureCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("CoverArtLocalPath")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<Instant>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(62000)
+                        .HasColumnType("character varying(62000)");
+
+                    b.Property<string>("Etag")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("FeedUrl")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsLocked")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("LastModified")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Instant?>("LastSyncAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Instant?>("LastSyncAttemptAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastSyncError")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<Instant?>("LastUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("MaxDownloadedEpisodes")
+                        .HasColumnType("integer");
+
+                    b.Property<long?>("MaxStorageBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<Instant?>("NextSyncAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<int?>("RefreshIntervalHours")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SiteUrl")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Tags")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("TitleNormalized")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApiKey")
+                        .IsUnique();
+
+                    b.HasIndex("IsDeleted");
+
+                    b.HasIndex("NextSyncAt");
+
+                    b.HasIndex("UserId", "FeedUrl")
+                        .IsUnique();
+
+                    b.ToTable("PodcastChannels");
+                });
+
+            modelBuilder.Entity("Melodee.Common.Data.Models.PodcastEpisode", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("ApiKey")
+                        .HasColumnType("uuid");
+
+                    b.Property<Instant>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(62000)
+                        .HasColumnType("character varying(62000)");
+
+                    b.Property<string>("DownloadError")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<int>("DownloadStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<TimeSpan?>("Duration")
+                        .HasColumnType("interval");
+
+                    b.Property<long?>("EnclosureLength")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("EnclosureUrl")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("EpisodeKey")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("Guid")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<bool>("IsLocked")
+                        .HasColumnType("boolean");
+
+                    b.Property<Instant?>("LastUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long?>("LocalFileSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("LocalPath")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("MimeType")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<int>("PodcastChannelId")
+                        .HasColumnType("integer");
+
+                    b.Property<Instant?>("PublishDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Instant?>("QueuedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Tags")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("TitleNormalized")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApiKey")
+                        .IsUnique();
+
+                    b.HasIndex("PodcastChannelId", "DownloadStatus");
+
+                    b.HasIndex("PodcastChannelId", "EpisodeKey")
+                        .IsUnique();
+
+                    b.HasIndex("PodcastChannelId", "PublishDate");
+
+                    b.ToTable("PodcastEpisodes");
+                });
+
+            modelBuilder.Entity("Melodee.Common.Data.Models.PodcastEpisodeBookmark", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<Instant>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("PodcastEpisodeId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PositionSeconds")
+                        .HasColumnType("integer");
+
+                    b.Property<Instant>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PodcastEpisodeId");
+
+                    b.HasIndex("UserId", "PodcastEpisodeId")
+                        .IsUnique();
+
+                    b.ToTable("PodcastEpisodeBookmarks");
                 });
 
             modelBuilder.Entity("Melodee.Common.Data.Models.RadioStation", b =>
@@ -3134,6 +3820,450 @@ namespace Melodee.Common.Migrations
                             Key = "jellyfin.rateLimit.streamConcurrentPerUser",
                             SortOrder = 0,
                             Value = "2"
+                        },
+                        new
+                        {
+                            Id = 1709,
+                            ApiKey = new Guid("c7b11e69-6582-e227-97ae-37435339e58e"),
+                            Category = 9,
+                            Comment = "Is Discogs search engine enabled.",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "searchEngine.discogs.enabled",
+                            SortOrder = 0,
+                            Value = "false"
+                        },
+                        new
+                        {
+                            Id = 1710,
+                            ApiKey = new Guid("33a0d80a-8a65-e692-30a9-e3d571759efe"),
+                            Category = 9,
+                            Comment = "Discogs API user token for authentication.",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "searchEngine.discogs.userToken",
+                            SortOrder = 0,
+                            Value = ""
+                        },
+                        new
+                        {
+                            Id = 1711,
+                            ApiKey = new Guid("21837867-a824-2a66-fa7c-3583974874e4"),
+                            Category = 9,
+                            Comment = "Is WikiData search engine enabled.",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "searchEngine.wikidata.enabled",
+                            SortOrder = 0,
+                            Value = "false"
+                        },
+                        new
+                        {
+                            Id = 1800,
+                            ApiKey = new Guid("8ee4c50d-9a7a-a4ef-66f1-74614a24313e"),
+                            Category = 15,
+                            Comment = "Enable podcast support.",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "podcast.enabled",
+                            SortOrder = 0,
+                            Value = "true"
+                        },
+                        new
+                        {
+                            Id = 1801,
+                            ApiKey = new Guid("c3d99d92-ab8d-bdca-ab08-3cc6ea2d2860"),
+                            Category = 15,
+                            Comment = "Allow HTTP (non-secure) URLs for podcast feeds.",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "podcast.http.allowHttp",
+                            SortOrder = 0,
+                            Value = "false"
+                        },
+                        new
+                        {
+                            Id = 1802,
+                            ApiKey = new Guid("93b35ab7-14d0-0814-0d66-fe040e3ae4b8"),
+                            Category = 15,
+                            Comment = "Timeout in seconds for HTTP requests to podcast feeds.",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "podcast.http.timeoutSeconds",
+                            SortOrder = 0,
+                            Value = "30"
+                        },
+                        new
+                        {
+                            Id = 1803,
+                            ApiKey = new Guid("6b35ba44-07ac-645d-b2a3-9cadaa60ff3d"),
+                            Category = 15,
+                            Comment = "Maximum number of HTTP redirects to follow for podcast feeds. Podcast CDNs often use multiple analytics redirects, so 10 is recommended.",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "podcast.http.maxRedirects",
+                            SortOrder = 0,
+                            Value = "10"
+                        },
+                        new
+                        {
+                            Id = 1804,
+                            ApiKey = new Guid("13168117-a286-23b5-5858-9f91485c6432"),
+                            Category = 15,
+                            Comment = "Maximum size in bytes for podcast feed responses.",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "podcast.http.maxFeedBytes",
+                            SortOrder = 0,
+                            Value = "10485760"
+                        },
+                        new
+                        {
+                            Id = 1805,
+                            ApiKey = new Guid("1fceaf81-79eb-433c-de79-eabe193c46f8"),
+                            Category = 15,
+                            Comment = "Maximum number of episodes to store per podcast channel.",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "podcast.refresh.maxItemsPerChannel",
+                            SortOrder = 0,
+                            Value = "500"
+                        },
+                        new
+                        {
+                            Id = 1806,
+                            ApiKey = new Guid("525bb5dc-989c-5154-0c7e-7f4b336032e3"),
+                            Category = 15,
+                            Comment = "Maximum concurrent podcast episode downloads (global).",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "podcast.download.maxConcurrent.global",
+                            SortOrder = 0,
+                            Value = "2"
+                        },
+                        new
+                        {
+                            Id = 1807,
+                            ApiKey = new Guid("380ed177-9320-92a0-5a93-48bdcc040d35"),
+                            Category = 15,
+                            Comment = "Maximum concurrent podcast episode downloads per user.",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "podcast.download.maxConcurrent.perUser",
+                            SortOrder = 0,
+                            Value = "1"
+                        },
+                        new
+                        {
+                            Id = 1808,
+                            ApiKey = new Guid("2d5158e7-495e-44a6-e06a-b5f1359f8ea2"),
+                            Category = 15,
+                            Comment = "Maximum size in bytes for podcast episode downloads.",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "podcast.download.maxEnclosureBytes",
+                            SortOrder = 0,
+                            Value = "2147483648"
+                        },
+                        new
+                        {
+                            Id = 1850,
+                            ApiKey = new Guid("dc79ceff-cd68-f412-8f99-7529615cb3e8"),
+                            Category = 14,
+                            Comment = "Cron expression to run the podcast refresh job, set empty to disable. Default of '0 */15 * ? * *' runs every 15 minutes.",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "jobs.podcastRefresh.cronExpression",
+                            SortOrder = 0,
+                            Value = "0 */15 * ? * *"
+                        },
+                        new
+                        {
+                            Id = 1851,
+                            ApiKey = new Guid("d29b11cc-d892-271a-9e2a-5eeacb795e39"),
+                            Category = 14,
+                            Comment = "Cron expression to run the podcast download job, set empty to disable. Default of '0 */5 * ? * *' runs every 5 minutes.",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "jobs.podcastDownload.cronExpression",
+                            SortOrder = 0,
+                            Value = "0 */5 * ? * *"
+                        },
+                        new
+                        {
+                            Id = 1809,
+                            ApiKey = new Guid("908afec1-3a49-5e62-26f5-d6977ef6b00c"),
+                            Category = 15,
+                            Comment = "Number of days to keep downloaded episodes. 0 to disable retention.",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "podcast.retention.downloadedEpisodesInDays",
+                            SortOrder = 0,
+                            Value = "0"
+                        },
+                        new
+                        {
+                            Id = 1810,
+                            ApiKey = new Guid("6f86302a-1d6d-b574-c77a-b6cfbefb5e0a"),
+                            Category = 15,
+                            Comment = "Threshold in minutes to consider a downloading episode as stuck.",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "podcast.recovery.stuckDownloadThresholdMinutes",
+                            SortOrder = 0,
+                            Value = "60"
+                        },
+                        new
+                        {
+                            Id = 1811,
+                            ApiKey = new Guid("8d257a4b-b566-e0af-1044-9658d5ac27ea"),
+                            Category = 15,
+                            Comment = "Threshold in hours to consider a temporary file orphaned.",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "podcast.recovery.orphanedUsageThresholdHours",
+                            SortOrder = 0,
+                            Value = "12"
+                        },
+                        new
+                        {
+                            Id = 1852,
+                            ApiKey = new Guid("3b2df55c-cd9c-a51b-2c4c-8f566bf7b6d8"),
+                            Category = 14,
+                            Comment = "Cron expression to run the podcast cleanup job, set empty to disable. Default of '0 0 2 * * ?' runs daily at 2 AM.",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "jobs.podcastCleanup.cronExpression",
+                            SortOrder = 0,
+                            Value = "0 0 2 * * ?"
+                        },
+                        new
+                        {
+                            Id = 1853,
+                            ApiKey = new Guid("17b25fcb-6a54-291d-5927-28ade4b15a93"),
+                            Category = 14,
+                            Comment = "Cron expression to run the podcast recovery job, set empty to disable. Default of '0 */30 * ? * *' runs every 30 minutes.",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "jobs.podcastRecovery.cronExpression",
+                            SortOrder = 0,
+                            Value = "0 */30 * ? * *"
+                        },
+                        new
+                        {
+                            Id = 1812,
+                            ApiKey = new Guid("737e544b-7490-d53e-a092-3fd6e2b629b4"),
+                            Category = 15,
+                            Comment = "Maximum total storage in bytes for all podcasts per user. 0 for unlimited.",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "podcast.quota.maxBytesPerUser",
+                            SortOrder = 0,
+                            Value = "5368709120"
+                        },
+                        new
+                        {
+                            Id = 1813,
+                            ApiKey = new Guid("153a12d4-77b4-ccc3-1584-f3685d6c9e2e"),
+                            Category = 15,
+                            Comment = "Keep only the last N downloaded episodes per channel. 0 to disable this policy.",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "podcast.retention.keepLastNEpisodes",
+                            SortOrder = 0,
+                            Value = "0"
+                        },
+                        new
+                        {
+                            Id = 1814,
+                            ApiKey = new Guid("3da9402e-9566-c883-66e5-d232de677199"),
+                            Category = 15,
+                            Comment = "Delete downloaded episodes after they have been played. false to disable.",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "podcast.retention.keepUnplayedOnly",
+                            SortOrder = 0,
+                            Value = "false"
+                        },
+                        new
+                        {
+                            Id = 1900,
+                            ApiKey = new Guid("541a397c-740c-8b9d-f1ed-5f990cab92a1"),
+                            Category = 16,
+                            Comment = "Enable Jukebox support for server-side playback.",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "jukebox.enabled",
+                            SortOrder = 0,
+                            Value = "false"
+                        },
+                        new
+                        {
+                            Id = 1901,
+                            ApiKey = new Guid("4c886427-ffc2-d277-5950-6cf4b880b7be"),
+                            Category = 16,
+                            Comment = "The type of backend to use for jukebox playback (e.g., 'mpv', 'mpd'). Leave empty for no backend.",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "jukebox.backendType",
+                            SortOrder = 0,
+                            Value = ""
+                        },
+                        new
+                        {
+                            Id = 1910,
+                            ApiKey = new Guid("e39d8312-cae1-ee40-266d-533077dbfdbb"),
+                            Category = 16,
+                            Comment = "Path to the MPV executable. Leave empty to use system PATH.",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "mpv.path",
+                            SortOrder = 0,
+                            Value = ""
+                        },
+                        new
+                        {
+                            Id = 1911,
+                            ApiKey = new Guid("945df58f-0546-2e6c-ccc8-210b41e719b7"),
+                            Category = 16,
+                            Comment = "Audio device to use for MPV playback. Leave empty for default device.",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "mpv.audioDevice",
+                            SortOrder = 0,
+                            Value = ""
+                        },
+                        new
+                        {
+                            Id = 1912,
+                            ApiKey = new Guid("7b99ed1d-9c95-3a2a-9aa7-aca68cda0223"),
+                            Category = 16,
+                            Comment = "Extra command-line arguments to pass to MPV.",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "mpv.extraArgs",
+                            SortOrder = 0,
+                            Value = ""
+                        },
+                        new
+                        {
+                            Id = 1913,
+                            ApiKey = new Guid("45dfa023-d926-4364-33d1-245a9623dece"),
+                            Category = 16,
+                            Comment = "Path for the MPV IPC socket. Leave empty for auto temp directory.",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "mpv.socketPath",
+                            SortOrder = 0,
+                            Value = ""
+                        },
+                        new
+                        {
+                            Id = 1914,
+                            ApiKey = new Guid("ac4199ff-57a6-9ded-7a8b-037b9df29a7f"),
+                            Category = 16,
+                            Comment = "Initial volume level for MPV (0.0 to 1.0). Default is 0.8.",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "mpv.initialVolume",
+                            SortOrder = 0,
+                            Value = "0.8"
+                        },
+                        new
+                        {
+                            Id = 1915,
+                            ApiKey = new Guid("7893e826-0cc8-a0a2-12dc-5c2556212c4a"),
+                            Category = 16,
+                            Comment = "Enable verbose debug output for MPV.",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "mpv.enableDebugOutput",
+                            SortOrder = 0,
+                            Value = "false"
+                        },
+                        new
+                        {
+                            Id = 1920,
+                            ApiKey = new Guid("bfcce639-8b21-dcc7-b54f-ce1d3ad074f0"),
+                            Category = 16,
+                            Comment = "Unique name/identifier for this MPD instance (for multi-instance support).",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "mpd.instanceName",
+                            SortOrder = 0,
+                            Value = ""
+                        },
+                        new
+                        {
+                            Id = 1921,
+                            ApiKey = new Guid("275a59ef-fe5d-c2b8-28df-a7bc4a04abdb"),
+                            Category = 16,
+                            Comment = "Hostname or IP address of the MPD server.",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "mpd.host",
+                            SortOrder = 0,
+                            Value = "localhost"
+                        },
+                        new
+                        {
+                            Id = 1922,
+                            ApiKey = new Guid("515116f0-99ba-30cc-4b18-d722da60cd7f"),
+                            Category = 16,
+                            Comment = "Port number for MPD connection.",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "mpd.port",
+                            SortOrder = 0,
+                            Value = "6600"
+                        },
+                        new
+                        {
+                            Id = 1923,
+                            ApiKey = new Guid("dbc39d88-00c0-0710-201e-dd387d745589"),
+                            Category = 16,
+                            Comment = "Password for MPD authentication. Leave empty if no password.",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "mpd.password",
+                            SortOrder = 0,
+                            Value = ""
+                        },
+                        new
+                        {
+                            Id = 1924,
+                            ApiKey = new Guid("d1d4df5f-fb55-011e-ad6a-c29db5896073"),
+                            Category = 16,
+                            Comment = "Timeout for MPD TCP connection and operations in milliseconds.",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "mpd.timeoutMs",
+                            SortOrder = 0,
+                            Value = "10000"
+                        },
+                        new
+                        {
+                            Id = 1925,
+                            ApiKey = new Guid("416030fd-3e69-d30e-789f-9203464ebc86"),
+                            Category = 16,
+                            Comment = "Initial volume level for MPD (0.0 to 1.0). Default is 0.8.",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "mpd.initialVolume",
+                            SortOrder = 0,
+                            Value = "0.8"
+                        },
+                        new
+                        {
+                            Id = 1926,
+                            ApiKey = new Guid("5819d3ec-0b14-1731-2179-69ab1328140b"),
+                            Category = 16,
+                            Comment = "Enable debug logging for MPD commands.",
+                            CreatedAt = NodaTime.Instant.FromUnixTimeTicks(0L),
+                            IsLocked = false,
+                            Key = "mpd.enableDebugOutput",
+                            SortOrder = 0,
+                            Value = "false"
                         });
                 });
 
@@ -3241,6 +4371,87 @@ namespace Melodee.Common.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("ShareActivities");
+                });
+
+            modelBuilder.Entity("Melodee.Common.Data.Models.SmartPlaylist", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("ApiKey")
+                        .HasColumnType("uuid");
+
+                    b.Property<Instant>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(62000)
+                        .HasColumnType("character varying(62000)");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<bool>("IsLocked")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsPublic")
+                        .HasColumnType("boolean");
+
+                    b.Property<Instant?>("LastEvaluatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("LastResultCount")
+                        .HasColumnType("integer");
+
+                    b.Property<Instant?>("LastUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("MqlQuery")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("NormalizedQuery")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Tags")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApiKey")
+                        .IsUnique();
+
+                    b.HasIndex("IsPublic");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("SmartPlaylists");
                 });
 
             modelBuilder.Entity("Melodee.Common.Data.Models.Song", b =>
@@ -3920,6 +5131,57 @@ namespace Melodee.Common.Migrations
                     b.ToTable("UserPlaybackSettings");
                 });
 
+            modelBuilder.Entity("Melodee.Common.Data.Models.UserPodcastEpisodePlayHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ByUserAgent")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Client")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<bool>("IsNowPlaying")
+                        .HasColumnType("boolean");
+
+                    b.Property<Instant?>("LastHeartbeatAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Instant>("PlayedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("PodcastEpisodeId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("SecondsPlayed")
+                        .HasColumnType("integer");
+
+                    b.Property<short>("Source")
+                        .HasColumnType("smallint");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PodcastEpisodeId", "PlayedAt");
+
+                    b.HasIndex("UserId", "PodcastEpisodeId", "PlayedAt");
+
+                    b.ToTable("UserPodcastEpisodePlayHistories");
+                });
+
             modelBuilder.Entity("Melodee.Common.Data.Models.UserSocialLogin", b =>
                 {
                     b.Property<int>("Id")
@@ -4251,6 +5513,116 @@ namespace Melodee.Common.Migrations
                     b.Navigation("Library");
                 });
 
+            modelBuilder.Entity("Melodee.Common.Data.Models.PartyAuditEvent", b =>
+                {
+                    b.HasOne("Melodee.Common.Data.Models.PartySession", "PartySession")
+                        .WithMany()
+                        .HasForeignKey("PartySessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Melodee.Common.Data.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PartySession");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Melodee.Common.Data.Models.PartyPlaybackState", b =>
+                {
+                    b.HasOne("Melodee.Common.Data.Models.PartyQueueItem", "CurrentQueueItem")
+                        .WithMany()
+                        .HasForeignKey("CurrentQueueItemApiKey")
+                        .HasPrincipalKey("ApiKey")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Melodee.Common.Data.Models.PartySession", "PartySession")
+                        .WithOne("PlaybackState")
+                        .HasForeignKey("Melodee.Common.Data.Models.PartyPlaybackState", "PartySessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Melodee.Common.Data.Models.User", "UpdatedByUser")
+                        .WithMany()
+                        .HasForeignKey("UpdatedByUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("CurrentQueueItem");
+
+                    b.Navigation("PartySession");
+
+                    b.Navigation("UpdatedByUser");
+                });
+
+            modelBuilder.Entity("Melodee.Common.Data.Models.PartyQueueItem", b =>
+                {
+                    b.HasOne("Melodee.Common.Data.Models.User", "EnqueuedByUser")
+                        .WithMany()
+                        .HasForeignKey("EnqueuedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Melodee.Common.Data.Models.PartySession", "PartySession")
+                        .WithMany("QueueItems")
+                        .HasForeignKey("PartySessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("EnqueuedByUser");
+
+                    b.Navigation("PartySession");
+                });
+
+            modelBuilder.Entity("Melodee.Common.Data.Models.PartySession", b =>
+                {
+                    b.HasOne("Melodee.Common.Data.Models.PartySessionEndpoint", "ActiveEndpoint")
+                        .WithMany()
+                        .HasForeignKey("ActiveEndpointId1");
+
+                    b.HasOne("Melodee.Common.Data.Models.User", "OwnerUser")
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ActiveEndpoint");
+
+                    b.Navigation("OwnerUser");
+                });
+
+            modelBuilder.Entity("Melodee.Common.Data.Models.PartySessionEndpoint", b =>
+                {
+                    b.HasOne("Melodee.Common.Data.Models.User", "OwnerUser")
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("OwnerUser");
+                });
+
+            modelBuilder.Entity("Melodee.Common.Data.Models.PartySessionParticipant", b =>
+                {
+                    b.HasOne("Melodee.Common.Data.Models.PartySession", "PartySession")
+                        .WithMany("Participants")
+                        .HasForeignKey("PartySessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Melodee.Common.Data.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PartySession");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Melodee.Common.Data.Models.PlayQueue", b =>
                 {
                     b.HasOne("Melodee.Common.Data.Models.Song", "Song")
@@ -4313,6 +5685,36 @@ namespace Melodee.Common.Migrations
                     b.Navigation("Playlist");
 
                     b.Navigation("Song");
+                });
+
+            modelBuilder.Entity("Melodee.Common.Data.Models.PodcastEpisode", b =>
+                {
+                    b.HasOne("Melodee.Common.Data.Models.PodcastChannel", "PodcastChannel")
+                        .WithMany("Episodes")
+                        .HasForeignKey("PodcastChannelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PodcastChannel");
+                });
+
+            modelBuilder.Entity("Melodee.Common.Data.Models.PodcastEpisodeBookmark", b =>
+                {
+                    b.HasOne("Melodee.Common.Data.Models.PodcastEpisode", "PodcastEpisode")
+                        .WithMany()
+                        .HasForeignKey("PodcastEpisodeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Melodee.Common.Data.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PodcastEpisode");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Melodee.Common.Data.Models.RefreshToken", b =>
@@ -4426,6 +5828,17 @@ namespace Melodee.Common.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Melodee.Common.Data.Models.SmartPlaylist", b =>
+                {
+                    b.HasOne("Melodee.Common.Data.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Melodee.Common.Data.Models.Song", b =>
                 {
                     b.HasOne("Melodee.Common.Data.Models.Album", "Album")
@@ -4504,6 +5917,25 @@ namespace Melodee.Common.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Melodee.Common.Data.Models.UserPodcastEpisodePlayHistory", b =>
+                {
+                    b.HasOne("Melodee.Common.Data.Models.PodcastEpisode", "PodcastEpisode")
+                        .WithMany()
+                        .HasForeignKey("PodcastEpisodeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Melodee.Common.Data.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PodcastEpisode");
 
                     b.Navigation("User");
                 });
@@ -4587,9 +6019,23 @@ namespace Melodee.Common.Migrations
                     b.Navigation("ScanHistories");
                 });
 
+            modelBuilder.Entity("Melodee.Common.Data.Models.PartySession", b =>
+                {
+                    b.Navigation("Participants");
+
+                    b.Navigation("PlaybackState");
+
+                    b.Navigation("QueueItems");
+                });
+
             modelBuilder.Entity("Melodee.Common.Data.Models.Playlist", b =>
                 {
                     b.Navigation("Songs");
+                });
+
+            modelBuilder.Entity("Melodee.Common.Data.Models.PodcastChannel", b =>
+                {
+                    b.Navigation("Episodes");
                 });
 
             modelBuilder.Entity("Melodee.Common.Data.Models.Request", b =>

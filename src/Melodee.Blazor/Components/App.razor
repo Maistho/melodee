@@ -1,7 +1,13 @@
 @* @rendermode must be InteractiveServer for RadzenTheme to work properly *@
 @implements IDisposable
+@using Melodee.Common.Configuration
+@using Melodee.Common.Constants
+@using Microsoft.Extensions.Logging
 @inject IHttpContextAccessor HttpContextAccessor
 @inject Radzen.ThemeService RadzenThemeService
+@inject Melodee.Common.Services.IThemeService ThemeService
+@inject IMelodeeConfigurationFactory ConfigurationFactory
+@inject ILogger<App> Logger
 
 <!DOCTYPE html>
 <html lang="en">
@@ -22,11 +28,12 @@
     <link href="/_content/PSC.Blazor.Components.MarkdownEditor/css/easymde.min.css" rel="stylesheet"/>
     <link rel="icon" type="image/ico" href="favicon.ico"/>
     <title>Melodee - Music Library Management System</title>
-    @if (IsCustomTheme(_currentTheme))
+    
+    @if (!string.IsNullOrEmpty(_customCssPath))
     {
-        <!-- For custom themes: load Radzen base CSS + our custom overrides -->
-        <link rel="stylesheet" href="@($"_content/Radzen.Blazor/css/{GetBaseTheme(_currentTheme)}.css")" />
-        <link rel="stylesheet" href="@($"{_currentTheme}.css")" />
+        <!-- For custom or dynamic themes: load Radzen base CSS + our custom overrides -->
+        <link rel="stylesheet" href="@($"_content/Radzen.Blazor/css/{_baseThemeName}.css")" />
+        <link rel="stylesheet" href="@_customCssPath" />
     }
     else
     {
@@ -39,10 +46,8 @@
 <body>
 <Routes @rendermode="InteractiveServer"/>
 
-<!-- Load Blazor framework first without defer to ensure it's available for reconnect script -->
+<!-- Blazor framework - handles reconnection automatically -->
 <script src="_framework/blazor.web.js"></script>
-<!-- Load reconnect script with defer - it will wait for Blazor to be initialized -->
-<script src="js/blazorReconnect.js" defer></script>
 <script defer>
     window.getUserAgent = () => {
         return navigator.userAgent;
@@ -69,66 +74,138 @@
 <script src="/_content/PSC.Blazor.Components.MarkdownEditor/js/markdownEditor.js" defer></script>
 <script src="/_content/PSC.Blazor.Components.MarkdownEditor/js/easymde.min.js" defer></script>
 <script src="js/googleAuth.js" defer></script>
+<script src="js/themeManager.js" defer></script>
 </body>
 
 </html>
 
 @code {
     private const string ThemeCookieName = "melodee_ui_theme";
+    private const string DefaultThemeId = "dark";  // Radzen dark theme as fallback default
     
-    // Radzen built-in themes
+    // Radzen built-in themes - these work correctly out of the box
+    // Note: "light" and "dark" are Melodee aliases that map to Radzen's "default" and "dark" themes
     private static readonly string[] RadzenThemes = 
     [
         "default", "standard", "humanistic", "software", "material",
-        "default-dark", "standard-dark", "humanistic-dark", "software-dark", "material-dark"
+        "dark", "standard-dark", "humanistic-dark", "software-dark", "material-dark"
     ];
     
-    // Custom themes map to their Radzen base CSS file name (without .css extension)
-    private static readonly Dictionary<string, string> CustomThemes = new()
+    // Melodee theme aliases - map user-friendly names to Radzen theme names
+    private static readonly Dictionary<string, string> ThemeAliases = new()
     {
-        { "melodee", "default-base" },
-        { "melodee-dark", "dark-base" },
-        { "synthwave", "dark-base" },
-        { "ocean-breeze", "default-base" },
-        { "forest", "default-base" },
-        { "midnight-galaxy", "dark-base" },
-        { "sunset-vibes", "default-base" }
+        { "light", "default" },  // Melodee "light" = Radzen "default"
+        { "dark", "dark" }       // Melodee "dark" = Radzen "dark"
     };
     
-    private string _currentTheme = "default";
+    private string _currentTheme = DefaultThemeId;
+    private string? _customCssPath = null;  // No custom CSS by default - use Radzen theme
+    private string _baseThemeName = "dark";
 
     protected override void OnInitialized()
     {
+        // Synchronously check for theme cookie during initial render
         var httpContext = HttpContextAccessor.HttpContext;
         if (httpContext?.Request.Cookies.TryGetValue(ThemeCookieName, out var cookieTheme) == true 
-            && !string.IsNullOrEmpty(cookieTheme)
-            && IsValidTheme(cookieTheme))
+            && !string.IsNullOrEmpty(cookieTheme))
         {
-            _currentTheme = cookieTheme;
+            // If it's a built-in theme (Radzen or Melodee alias), map it to Radzen theme name
+            if (IsBuiltInTheme(cookieTheme))
+            {
+                _currentTheme = GetRadzenThemeName(cookieTheme);
+                _customCssPath = null;
+            }
+            else
+            {
+                _currentTheme = cookieTheme;
+            }
+            // For custom themes, we'll resolve the CSS path in OnInitializedAsync
         }
+        // else: use field defaults (dark theme)
         
-        RadzenThemeService.ThemeChanged += OnThemeChanged;
         base.OnInitialized();
     }
 
-    private void OnThemeChanged()
+    protected override async Task OnInitializedAsync()
+    {
+        // Get the system default theme from configuration if no cookie was set
+        var httpContext = HttpContextAccessor.HttpContext;
+        var hasCookie = httpContext?.Request.Cookies.TryGetValue(ThemeCookieName, out var cookieTheme) == true 
+                        && !string.IsNullOrEmpty(cookieTheme);
+        
+        if (!hasCookie)
+        {
+            // No cookie - get the configured system default
+            var config = await ConfigurationFactory.GetConfigurationAsync();
+            var systemDefaultTheme = config.GetValue<string>(SettingRegistry.SystemDefaultTheme) ?? DefaultThemeId;
+            _currentTheme = systemDefaultTheme;
+        }
+        
+        // Resolve the actual theme CSS path (handles both built-in and custom themes)
+        await ResolveCustomThemeAsync(_currentTheme);
+        RadzenThemeService.ThemeChanged += OnThemeChanged;
+        await base.OnInitializedAsync();
+    }
+
+    private async void OnThemeChanged()
     {
         _currentTheme = RadzenThemeService.Theme ?? "default";
-        StateHasChanged();
+        
+        // Resolve the theme (handles both built-in and custom themes)
+        await ResolveCustomThemeAsync(_currentTheme);
+        
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ResolveCustomThemeAsync(string themeId)
+    {
+        // Check if this is a built-in Radzen theme (including Melodee aliases like "light"/"dark")
+        if (IsBuiltInTheme(themeId))
+        {
+            // Map Melodee aliases to actual Radzen theme names
+            _currentTheme = GetRadzenThemeName(themeId);
+            _customCssPath = null;
+            return;
+        }
+        
+        // Not a built-in theme - try to load from Theme library
+        try
+        {
+            var theme = await ThemeService.GetThemePackAsync(themeId);
+            if (theme != null)
+            {
+                _customCssPath = theme.ThemeCssPath;
+                // Use full theme CSS (dark.css/default.css) not base CSS (dark-base.css/default-base.css)
+                // The full theme CSS includes semantic variable assignments needed for proper styling
+                _baseThemeName = theme.Metadata?.BaseTheme == "dark" ? "dark" : "default";
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Failed to load theme {ThemeId}, falling back to Radzen dark theme", themeId);
+        }
+        
+        // Theme library not configured or theme not found - fall back to Radzen dark
+        _customCssPath = null;
+        _currentTheme = "dark";
     }
     
-    private static bool IsValidTheme(string theme) => 
-        RadzenThemes.Contains(theme) || CustomThemes.ContainsKey(theme);
+    /// <summary>
+    /// Checks if a theme is a built-in Radzen theme or a Melodee alias for one.
+    /// </summary>
+    private static bool IsBuiltInTheme(string theme) => 
+        RadzenThemes.Contains(theme) || ThemeAliases.ContainsKey(theme);
     
-    private static bool IsCustomTheme(string theme) => 
-        CustomThemes.ContainsKey(theme);
-    
-    private static string GetBaseTheme(string theme) => 
-        CustomThemes.TryGetValue(theme, out var baseTheme) ? baseTheme : "default-base";
+    /// <summary>
+    /// Maps a theme name to the actual Radzen theme name.
+    /// Handles Melodee aliases like "light" -> "default".
+    /// </summary>
+    private static string GetRadzenThemeName(string theme) =>
+        ThemeAliases.TryGetValue(theme, out var radzenTheme) ? radzenTheme : theme;
 
     public void Dispose()
     {
         RadzenThemeService.ThemeChanged -= OnThemeChanged;
     }
 }
-

@@ -5,7 +5,7 @@ using BenchmarkDotNet.Jobs;
 namespace Melodee.Benchmarks;
 
 /// <summary>
-/// Benchmarks for collection operations addressing PERFORMANCE_REVIEW.md requirements
+/// Benchmarks for collection operations addressing collection performance requirements
 /// </summary>
 [SimpleJob(RuntimeMoniker.HostProcess)]
 [MemoryDiagnoser]

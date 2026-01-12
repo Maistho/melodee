@@ -1,0 +1,148 @@
+@inherits MelodeeComponentBase
+@using Melodee.Common.Services
+@using Microsoft.AspNetCore.Components.Forms
+
+@inject IThemeService ThemeService
+@inject NotificationService NotificationService
+
+<RadzenStack Gap="1rem">
+    <RadzenText TextStyle="TextStyle.Body1">@L("AdminThemes.ImportDescription")</RadzenText>
+
+    <RadzenUpload Accept=".zip"
+                  ChooseText="@L("AdminThemes.SelectFile")"
+                  Style="width: 100%;"
+                  Change="@OnFileSelected"
+                  InputAttributes="@(new Dictionary<string, object> { { "aria-label", L("AdminThemes.SelectFile") } })"/>
+
+    @if (_selectedFile != null)
+    {
+        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+            <RadzenIcon Icon="folder_zip"/>
+            <RadzenText>@_selectedFileName (@FormatFileSize(_selectedFileSize))</RadzenText>
+        </RadzenStack>
+    }
+
+    @if (_isUploading)
+    {
+        <RadzenProgressBarCircular ShowValue="false" Mode="ProgressBarMode.Indeterminate"/>
+    }
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Shade="Shade.Light" AllowClose="false">
+            @_errorMessage
+        </RadzenAlert>
+    }
+
+    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.End">
+        <RadzenButton Text="@L("Actions.Cancel")" ButtonStyle="ButtonStyle.Light" Click="@Cancel"/>
+        <RadzenButton Text="@L("AdminThemes.Import")" ButtonStyle="ButtonStyle.Primary" 
+                      Disabled="@(_selectedFile == null || _isUploading)" 
+                      Click="@ImportAsync"/>
+    </RadzenStack>
+</RadzenStack>
+
+@code {
+    [CascadingParameter]
+    public required DialogService DialogService { get; set; }
+
+    private IBrowserFile? _selectedFile;
+    private string? _selectedFileName;
+    private long _selectedFileSize;
+    private bool _isUploading;
+    private string? _errorMessage;
+
+    private void OnFileSelected(UploadChangeEventArgs args)
+    {
+        var file = args.Files?.FirstOrDefault();
+        _errorMessage = null;
+
+        if (file != null)
+        {
+            if (!file.Name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+            {
+                _errorMessage = L("AdminThemes.InvalidFileType");
+                _selectedFile = null;
+                _selectedFileName = null;
+                _selectedFileSize = 0;
+            }
+            else
+            {
+                _selectedFile = file;
+                _selectedFileName = file.Name;
+                _selectedFileSize = file.Size;
+            }
+        }
+        else
+        {
+            _selectedFile = null;
+            _selectedFileName = null;
+            _selectedFileSize = 0;
+        }
+    }
+
+    private async Task ImportAsync()
+    {
+        if (_selectedFile == null)
+        {
+            return;
+        }
+
+        _isUploading = true;
+        _errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            using var memoryStream = new MemoryStream();
+            await using var stream = _selectedFile.OpenReadStream(maxAllowedSize: 100 * 1024 * 1024);
+            await stream.CopyToAsync(memoryStream);
+            memoryStream.Position = 0;
+
+            var (success, themeId, error) = await ThemeService.ImportThemePackAsync(memoryStream);
+
+            if (success)
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = L("Common.Success"),
+                    Detail = L("AdminThemes.ImportSuccess", themeId ?? ""),
+                    Duration = 3000
+                });
+                DialogService.Close(true);
+            }
+            else
+            {
+                _errorMessage = error ?? L("AdminThemes.ImportFailed");
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _isUploading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void Cancel()
+    {
+        DialogService?.Close(false);
+    }
+
+    private static string FormatFileSize(long bytes)
+    {
+        string[] sizes = ["B", "KB", "MB", "GB"];
+        var order = 0;
+        double size = bytes;
+        while (size >= 1024 && order < sizes.Length - 1)
+        {
+            order++;
+            size /= 1024;
+        }
+        return $"{size:0.##} {sizes[order]}";
+    }
+}

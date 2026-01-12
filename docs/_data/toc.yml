@@ -29,6 +29,12 @@
       url: "charts"
     - title: "Playlists"
       url: "playlists"
+    - title: "Jukebox"
+      url: "jukebox"
+    - title: "Party Mode"
+      url: "party-mode"
+    - title: "Podcasts"
+      url: "podcasts"
     - title: "Query Language (MQL)"
       url: "mql"
     - title: "Requests"
@@ -37,6 +43,8 @@
       url: "scrobbling"
     - title: "Shares"
       url: "shares"
+    - title: "Theming"
+      url: "theming"
 
 - title: Tools & Interfaces
   links:

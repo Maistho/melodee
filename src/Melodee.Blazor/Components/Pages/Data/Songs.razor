@@ -246,12 +246,15 @@
         {
             var filterParts = Filter.Split("_");
             var column = _grid.ColumnsCollection.FirstOrDefault(x => x.Property == filterParts[0]);
-            if (column != null)
+            if (column != null && column.FilterPropertyType != null)
             {
                 var val = SafeParser.ChangeType(column.FilterPropertyType, filterParts[1]);
-                await column.SetFilterValueAsync(val);
-                column.SetFilterOperator(Radzen.FilterOperator.Equals);
-                await _grid.RefreshDataAsync();
+                if (val != null)
+                {
+                    await column.SetFilterValueAsync(val);
+                    column.SetFilterOperator(Radzen.FilterOperator.Equals);
+                    await _grid.RefreshDataAsync();
+                }
             }
         }
     }
@@ -263,9 +266,10 @@
         try
         {
             Dictionary<string, string>? sorting = null;
-            if (args.Sorts.Any())
+            if (args.Sorts != null && args.Sorts.Any())
             {
-                sorting = args.Sorts.ToDictionary(x => x.Property, x => x.SortOrder == SortOrder.Ascending ? PagedRequest.OrderAscDirection : PagedRequest.OrderDescDirection);
+                sorting = args.Sorts.Where(x => x.Property != null && x.SortOrder != null)
+                    .ToDictionary(x => x.Property!, x => x.SortOrder == SortOrder.Ascending ? PagedRequest.OrderAscDirection : PagedRequest.OrderDescDirection);
             }
 
             FilterOperatorInfo[]? filters = null;
@@ -276,7 +280,7 @@
                     new FilterOperatorInfo(nameof(SongDataInfo.TitleNormalized), FilterOperator.Contains, _debounceInputValue.ToNormalizedString() ?? _debounceInputValue)
                 ];
             }
-            else if (args.Filters.Any())
+            else if (args.Filters != null && args.Filters.Any())
             {
                 filters = args.Filters.Select(x => x.ToFilterOperatorInfo()).ToArray();
             }
@@ -401,5 +405,4 @@
     }
 
 }
-
 

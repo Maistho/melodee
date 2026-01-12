@@ -30,6 +30,7 @@ public class UserServiceTests : ServiceTestBase
             GetAlbumService(),
             GetSongService(),
             GetPlaylistService(),
+            GetPodcastService(),
             bus ?? MockBus());
     }
 
@@ -1089,6 +1090,7 @@ public class UserServiceTests : ServiceTestBase
             GetAlbumService(),
             GetSongService(),
             GetPlaylistService(),
+            GetPodcastService(),
             busMock.Object);
 
         // Create test user with known encrypted password
@@ -1165,4 +1167,259 @@ public class UserServiceTests : ServiceTestBase
             IsLocked = false
         };
     }
+
+    #region Podcast Channel Pinning Tests
+
+    [Fact]
+    public async Task IsPinned_WithInvalidUserId_ThrowsArgumentException()
+    {
+        var userService = GetUserService();
+        var userId = 0;
+        var pinId = 1;
+
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            userService.IsPinned(userId, UserPinType.PodcastChannel, pinId));
+    }
+
+    [Fact]
+    public async Task IsPinned_WithPodcastChannel_WhenNotPinned_ReturnsFalse()
+    {
+        var userService = GetUserService();
+
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            var user = CreateTestUser(201, "pinuser1", "pinuser1@example.com");
+            context.Users.Add(user);
+            await context.SaveChangesAsync();
+        }
+
+        var result = await userService.IsPinned(201, UserPinType.PodcastChannel, 999);
+
+        Assert.False(result);
+    }
+
+    [Fact]
+    public async Task IsPinned_WithPodcastChannel_WhenPinned_ReturnsTrue()
+    {
+        var userService = GetUserService();
+        var now = Instant.FromDateTimeUtc(DateTime.UtcNow);
+
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            var user = CreateTestUser(202, "pinuser2", "pinuser2@example.com");
+            context.Users.Add(user);
+            await context.SaveChangesAsync();
+
+            var userPin = new UserPin
+            {
+                UserId = 202,
+                PinType = (int)UserPinType.PodcastChannel,
+                PinId = 100,
+                CreatedAt = now
+            };
+            context.UserPins.Add(userPin);
+            await context.SaveChangesAsync();
+        }
+
+        var result = await userService.IsPinned(202, UserPinType.PodcastChannel, 100);
+
+        Assert.True(result);
+    }
+
+    [Fact]
+    public async Task TogglePinnedAsync_WithInvalidUserId_ThrowsArgumentException()
+    {
+        var userService = GetUserService();
+        var userId = 0;
+        var pinId = 1;
+
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            userService.TogglePinnedAsync(userId, UserPinType.PodcastChannel, pinId));
+    }
+
+    [Fact]
+    public async Task TogglePinnedAsync_WithPodcastChannel_WhenNotPinned_CreatesPin()
+    {
+        var userService = GetUserService();
+
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            var user = CreateTestUser(203, "pinuser3", "pinuser3@example.com");
+            context.Users.Add(user);
+            await context.SaveChangesAsync();
+        }
+
+        var result = await userService.TogglePinnedAsync(203, UserPinType.PodcastChannel, 101);
+
+        Assert.True(result.IsSuccess);
+        Assert.True(result.Data);
+
+        await using (var verifyContext = await MockFactory().CreateDbContextAsync())
+        {
+            var pin = await verifyContext.UserPins
+                .FirstOrDefaultAsync(p => p.UserId == 203 && p.PinId == 101 && p.PinType == (int)UserPinType.PodcastChannel);
+            Assert.NotNull(pin);
+        }
+    }
+
+    [Fact]
+    public async Task TogglePinnedAsync_WithPodcastChannel_WhenAlreadyPinned_RemovesPin()
+    {
+        var userService = GetUserService();
+        var now = Instant.FromDateTimeUtc(DateTime.UtcNow);
+
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            var user = CreateTestUser(204, "pinuser4", "pinuser4@example.com");
+            context.Users.Add(user);
+            await context.SaveChangesAsync();
+
+            var userPin = new UserPin
+            {
+                UserId = 204,
+                PinType = (int)UserPinType.PodcastChannel,
+                PinId = 102,
+                CreatedAt = now
+            };
+            context.UserPins.Add(userPin);
+            await context.SaveChangesAsync();
+        }
+
+        var result = await userService.TogglePinnedAsync(204, UserPinType.PodcastChannel, 102);
+
+        Assert.True(result.IsSuccess);
+        Assert.True(result.Data);
+
+        await using (var verifyContext = await MockFactory().CreateDbContextAsync())
+        {
+            var pin = await verifyContext.UserPins
+                .FirstOrDefaultAsync(p => p.UserId == 204 && p.PinId == 102 && p.PinType == (int)UserPinType.PodcastChannel);
+            Assert.Null(pin);
+        }
+    }
+
+    [Fact]
+    public async Task TogglePinnedAsync_WithPodcastChannel_TogglesCorrectly()
+    {
+        var userService = GetUserService();
+
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            var user = CreateTestUser(205, "pinuser5", "pinuser5@example.com");
+            context.Users.Add(user);
+            await context.SaveChangesAsync();
+        }
+
+        var firstToggle = await userService.TogglePinnedAsync(205, UserPinType.PodcastChannel, 103);
+        Assert.True(firstToggle.IsSuccess);
+
+        var isPinnedAfterFirst = await userService.IsPinned(205, UserPinType.PodcastChannel, 103);
+        Assert.True(isPinnedAfterFirst);
+
+        var secondToggle = await userService.TogglePinnedAsync(205, UserPinType.PodcastChannel, 103);
+        Assert.True(secondToggle.IsSuccess);
+
+        var isPinnedAfterSecond = await userService.IsPinned(205, UserPinType.PodcastChannel, 103);
+        Assert.False(isPinnedAfterSecond);
+    }
+
+    [Fact]
+    public async Task IsPinned_WithDifferentPinTypes_ReturnsCorrectResults()
+    {
+        var userService = GetUserService();
+        var now = Instant.FromDateTimeUtc(DateTime.UtcNow);
+
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            var user = CreateTestUser(206, "pinuser6", "pinuser6@example.com");
+            context.Users.Add(user);
+            await context.SaveChangesAsync();
+
+            var podcastPin = new UserPin
+            {
+                UserId = 206,
+                PinType = (int)UserPinType.PodcastChannel,
+                PinId = 104,
+                CreatedAt = now
+            };
+            context.UserPins.Add(podcastPin);
+            await context.SaveChangesAsync();
+        }
+
+        var isPodcastPinned = await userService.IsPinned(206, UserPinType.PodcastChannel, 104);
+        var isArtistPinned = await userService.IsPinned(206, UserPinType.Artist, 104);
+        var isAlbumPinned = await userService.IsPinned(206, UserPinType.Album, 104);
+
+        Assert.True(isPodcastPinned);
+        Assert.False(isArtistPinned);
+        Assert.False(isAlbumPinned);
+    }
+
+    [Fact]
+    public async Task TogglePinnedAsync_WithMultiplePodcastChannels_PinsIndependently()
+    {
+        var userService = GetUserService();
+
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            var user = CreateTestUser(207, "pinuser7", "pinuser7@example.com");
+            context.Users.Add(user);
+            await context.SaveChangesAsync();
+        }
+
+        await userService.TogglePinnedAsync(207, UserPinType.PodcastChannel, 105);
+        await userService.TogglePinnedAsync(207, UserPinType.PodcastChannel, 106);
+        await userService.TogglePinnedAsync(207, UserPinType.PodcastChannel, 107);
+
+        var isChannel105Pinned = await userService.IsPinned(207, UserPinType.PodcastChannel, 105);
+        var isChannel106Pinned = await userService.IsPinned(207, UserPinType.PodcastChannel, 106);
+        var isChannel107Pinned = await userService.IsPinned(207, UserPinType.PodcastChannel, 107);
+
+        Assert.True(isChannel105Pinned);
+        Assert.True(isChannel106Pinned);
+        Assert.True(isChannel107Pinned);
+
+        await userService.TogglePinnedAsync(207, UserPinType.PodcastChannel, 106);
+
+        isChannel105Pinned = await userService.IsPinned(207, UserPinType.PodcastChannel, 105);
+        isChannel106Pinned = await userService.IsPinned(207, UserPinType.PodcastChannel, 106);
+        isChannel107Pinned = await userService.IsPinned(207, UserPinType.PodcastChannel, 107);
+
+        Assert.True(isChannel105Pinned);
+        Assert.False(isChannel106Pinned);
+        Assert.True(isChannel107Pinned);
+    }
+
+    [Fact]
+    public async Task TogglePinnedAsync_WithDifferentUsers_PinsIndependently()
+    {
+        var userService = GetUserService();
+
+        await using (var context = await MockFactory().CreateDbContextAsync())
+        {
+            var user1 = CreateTestUser(208, "pinuser8", "pinuser8@example.com");
+            var user2 = CreateTestUser(209, "pinuser9", "pinuser9@example.com");
+            context.Users.AddRange(user1, user2);
+            await context.SaveChangesAsync();
+        }
+
+        await userService.TogglePinnedAsync(208, UserPinType.PodcastChannel, 108);
+        await userService.TogglePinnedAsync(209, UserPinType.PodcastChannel, 108);
+
+        var isUser1Pinned = await userService.IsPinned(208, UserPinType.PodcastChannel, 108);
+        var isUser2Pinned = await userService.IsPinned(209, UserPinType.PodcastChannel, 108);
+
+        Assert.True(isUser1Pinned);
+        Assert.True(isUser2Pinned);
+
+        await userService.TogglePinnedAsync(208, UserPinType.PodcastChannel, 108);
+
+        isUser1Pinned = await userService.IsPinned(208, UserPinType.PodcastChannel, 108);
+        isUser2Pinned = await userService.IsPinned(209, UserPinType.PodcastChannel, 108);
+
+        Assert.False(isUser1Pinned);
+        Assert.True(isUser2Pinned);
+    }
+
+    #endregion
 }

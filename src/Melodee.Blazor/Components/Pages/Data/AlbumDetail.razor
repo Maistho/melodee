@@ -9,8 +9,11 @@
 @using Album = Melodee.Common.Data.Models.Album
 @using Artist = Melodee.Common.Data.Models.Artist
 @using Song = Melodee.Common.Data.Models.Song
+@using Melodee.Common.Services.Jukebox
 
 @inject MainLayoutProxyService MainLayoutProxyService
+@inject ISubsonicJukeboxService SubsonicJukeboxService
+@inject IMelodeeConfigurationFactory ConfigurationFactory
 @inject AlbumService AlbumService
 @inject UserService UserService
 @inject SettingService SettingService
@@ -277,9 +280,9 @@
                                     <thead>
                                     <tr>
                                         <th scope="col">@L("TableHeader.Hash")</th>
-                                        <th scope="col" style="width:90%;">@L("TableHeader.Title")</th>
+                                        <th scope="col" style="width:88%;">@L("TableHeader.Title")</th>
                                         <th scope="col">@L("Label.Duration")</th>
-                                        <th scope="col" style="min-width:140px;">@L("TableHeader.Actions")</th>
+                                        <th scope="col" style="min-width:160px;">@L("TableHeader.Actions")</th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -297,6 +300,16 @@
                                                     title="@L("AlbumDetail.PlaySong")"
                                                     @onclick="@(() => PlaySong(song))"
                                                     Style="cursor:pointer;font-size:14px;"/>
+                                                @if (_jukeboxEnabled && CurrentUser?.IsAdmin() == true)
+                                                {
+                                                    <RadzenIcon
+                                                        Icon="queue_music"
+                                                        class="filled-icon"
+                                                        IconColor="@Colors.Info"
+                                                        title="@L("AlbumDetail.AddToJukebox")"
+                                                        @onclick="@(() => AddSongToJukeboxAsync(song))"
+                                                        Style="cursor:pointer;font-size:14px;"/>
+                                                }
                                                 <RadzenIcon
                                                     Icon="thumb_down"
                                                     class="filled-icon"
@@ -518,6 +531,7 @@
 
     bool _isLoading = true;
     bool _isPinned;
+    bool _jukeboxEnabled;
 
     private enum ShowItem
     {
@@ -594,6 +608,9 @@
         {
             _library = libraryResult.Data;
         }
+
+        var configuration = await ConfigurationFactory.GetConfigurationAsync();
+        _jukeboxEnabled = configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled);
     }
 
     protected override async Task OnParametersSetAsync()
@@ -1146,6 +1163,51 @@
         public string ChartTitle { get; init; } = string.Empty;
         public string? SourceName { get; init; }
         public int? Year { get; init; }
+    }
+
+    private async Task AddSongToJukeboxAsync(Song song)
+    {
+        try
+        {
+            Logger.Debug("[AlbumDetail] Adding song to Jukebox queue: {SongApiKey} - {SongTitle}", song.ApiKey, song.Title);
+
+            var result = await SubsonicJukeboxService.AddAsync(CurrentUsersId, [song.ApiKey.ToString()]);
+
+            if (result.IsSuccess)
+            {
+                Logger.Debug("[AlbumDetail] Successfully added song to Jukebox queue: {SongTitle}", song.Title);
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = L("AlbumDetail.AddedToJukebox"),
+                    Detail = $"'{song.Title}' {L("AlbumDetail.AddedToQueue")}",
+                    Duration = ToastTime
+                });
+            }
+            else
+            {
+                Logger.Warning("[AlbumDetail] Failed to add song to Jukebox queue: {SongTitle}, Messages: {Messages}",
+                    song.Title, string.Join(", ", result.Messages ?? []));
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Warning,
+                    Summary = L("AlbumDetail.JukeboxError"),
+                    Detail = result.Messages?.FirstOrDefault() ?? L("Common.UnknownError"),
+                    Duration = ToastTime
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "[AlbumDetail] Error adding song to Jukebox queue: {SongTitle}", song.Title);
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = L("Common.Error"),
+                Detail = $"{L("AlbumDetail.JukeboxError")}: {ex.Message}",
+                Duration = ToastTime
+            });
+        }
     }
 
 }

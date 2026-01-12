@@ -1,0 +1,135 @@
+@inherits MelodeeComponentBase
+
+@inject DialogService DialogService
+@inject PodcastService PodcastService
+@inject NotificationService NotificationService
+@inject ILogger Logger
+
+<RadzenStack Gap="1rem" Class="rz-p-4">
+    <RadzenFieldset Text="@L("Podcast.ChannelSettings")">
+        <RadzenStack Gap="1rem">
+            <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem">
+                <RadzenCheckBox @bind-Value="_autoDownloadEnabled" Name="autoDownload" />
+                <RadzenLabel Text="@L("Podcast.AutoDownloadEnabled")" Component="autoDownload" />
+            </RadzenStack>
+            <RadzenText TextStyle="TextStyle.Caption" Class="rz-text-secondary-color">
+                @L("Podcast.AutoDownloadDescription")
+            </RadzenText>
+        </RadzenStack>
+    </RadzenFieldset>
+
+    <RadzenFieldset Text="@L("Podcast.RefreshSettings")">
+        <RadzenStack Gap="0.5rem">
+            <RadzenFormField Text="@L("Podcast.RefreshIntervalHours")" Variant="Variant.Outlined" Style="width: 100%;">
+                <RadzenNumeric @bind-Value="_refreshIntervalHours" Min="0" Max="168" Placeholder="@L("Podcast.UseGlobalSchedule")" Style="width: 100%;" />
+            </RadzenFormField>
+            <RadzenText TextStyle="TextStyle.Caption" Class="rz-text-secondary-color">
+                @L("Podcast.RefreshIntervalDescription")
+            </RadzenText>
+        </RadzenStack>
+    </RadzenFieldset>
+
+    <RadzenFieldset Text="@L("Podcast.StorageLimits")">
+        <RadzenStack Gap="1rem">
+            <RadzenFormField Text="@L("Podcast.MaxDownloadedEpisodes")" Variant="Variant.Outlined" Style="width: 100%;">
+                <RadzenNumeric @bind-Value="_maxDownloadedEpisodes" Min="0" Max="1000" Placeholder="@L("Common.Unlimited")" Style="width: 100%;" />
+            </RadzenFormField>
+            <RadzenFormField Text="@L("Podcast.MaxStorageMB")" Variant="Variant.Outlined" Style="width: 100%;">
+                <RadzenNumeric @bind-Value="_maxStorageMB" Min="0" Max="102400" Placeholder="@L("Common.Unlimited")" Style="width: 100%;" />
+            </RadzenFormField>
+            <RadzenText TextStyle="TextStyle.Caption" Class="rz-text-secondary-color">
+                @L("Podcast.StorageLimitsDescription")
+            </RadzenText>
+        </RadzenStack>
+    </RadzenFieldset>
+
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+        <RadzenButton Text="@L("Actions.Cancel")" ButtonStyle="ButtonStyle.Light" Click="@Cancel" />
+        <RadzenButton Text="@L("Actions.Save")" ButtonStyle="ButtonStyle.Primary" Click="@Save" IsBusy="@_isSaving" />
+    </RadzenStack>
+</RadzenStack>
+
+@code {
+    [Parameter] public int ChannelId { get; set; }
+    [Parameter] public int UserId { get; set; }
+    [Parameter] public bool AutoDownloadEnabled { get; set; }
+    [Parameter] public int? RefreshIntervalHours { get; set; }
+    [Parameter] public int? MaxDownloadedEpisodes { get; set; }
+    [Parameter] public long? MaxStorageBytes { get; set; }
+
+    private bool _autoDownloadEnabled;
+    private int? _refreshIntervalHours;
+    private int? _maxDownloadedEpisodes;
+    private int? _maxStorageMB;
+    private bool _isSaving;
+
+    protected override void OnParametersSet()
+    {
+        _autoDownloadEnabled = AutoDownloadEnabled;
+        _refreshIntervalHours = RefreshIntervalHours;
+        _maxDownloadedEpisodes = MaxDownloadedEpisodes;
+        _maxStorageMB = MaxStorageBytes.HasValue ? (int?)(MaxStorageBytes.Value / (1024 * 1024)) : null;
+    }
+
+    private void Cancel()
+    {
+        DialogService.Close(false);
+    }
+
+    private async Task Save()
+    {
+        _isSaving = true;
+
+        try
+        {
+            var maxStorageBytes = _maxStorageMB.HasValue && _maxStorageMB > 0 
+                ? (long?)(_maxStorageMB.Value * 1024L * 1024L) 
+                : null;
+
+            var result = await PodcastService.UpdateChannelAsync(
+                ChannelId,
+                UserId,
+                _autoDownloadEnabled,
+                _refreshIntervalHours,
+                _maxDownloadedEpisodes,
+                maxStorageBytes);
+
+            if (result.IsSuccess)
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Success,
+                    Summary = L("Message.Success"),
+                    Detail = L("Podcast.SettingsSaved"),
+                    Duration = 4000
+                });
+                DialogService.Close(true);
+            }
+            else
+            {
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = L("Message.Error"),
+                    Detail = string.Join(", ", result.Messages ?? Array.Empty<string>()),
+                    Duration = 6000
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "[PodcastChannelSettingsDialog] Error saving settings for channel {ChannelId}", ChannelId);
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = L("Message.Error"),
+                Detail = ex.Message,
+                Duration = 6000
+            });
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+}

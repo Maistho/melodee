@@ -23,6 +23,12 @@ group :jekyll_plugins do
   gem "jekyll-feed", "~> 0.17"
 end
 
+# Ruby 3.4+ compatibility - these are now bundled gems
+gem "erb"
+gem "base64"
+gem "bigdecimal"
+gem "csv"
+
 # Lock `http_parser.rb` gem to `v0.6.x` on JRuby builds since newer versions of the gem
 # do not have a Java counterpart.
 gem "http_parser.rb", "~> 0.6.0", :platforms => [:jruby]

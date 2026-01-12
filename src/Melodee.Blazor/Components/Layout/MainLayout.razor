@@ -13,6 +13,7 @@
 @inject IMelodeeConfigurationFactory MelodeeConfigurationFactory
 @inject RequestActivityService RequestActivityService
 @inject ILocalizationService LocalizationService
+@inject PodcastService PodcastService
 
 <RadzenComponents @rendermode="InteractiveServer"/>
 
@@ -82,17 +83,30 @@
             </RadzenHeader>
             <RadzenSidebar Style="width:160px;" @bind-Expanded="@_sidebarExpanded">
                 <RadzenPanelMenu>
-                    <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Dashboard")" Path="/" Icon="dashboard"/>
-                    <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Stats")" Path="/stats" Icon="bar_chart"/>
-                    <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Artists")" Path="/data/artists" Icon="artist"/>
-                    <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Albums")" Path="/data/albums" Icon="album"/>
-                    <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Charts")" Path="/charts" Icon="format_list_numbered"/>
-                    <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Libraries")" Path="/data/libraries" Icon="library_music"
+                    <RadzenPanelMenuItem data-nav-item-id="dashboard" Text="@LocalizationService.Localize("Navigation.Dashboard")" Path="/" Icon="dashboard"/>
+                    <RadzenPanelMenuItem data-nav-item-id="stats" Text="@LocalizationService.Localize("Navigation.Stats")" Path="/stats" Icon="bar_chart"/>
+                    <RadzenPanelMenuItem data-nav-item-id="artists" Text="@LocalizationService.Localize("Navigation.Artists")" Path="/data/artists" Icon="artist"/>
+                    <RadzenPanelMenuItem data-nav-item-id="albums" Text="@LocalizationService.Localize("Navigation.Albums")" Path="/data/albums" Icon="album"/>
+                    <RadzenPanelMenuItem data-nav-item-id="charts" Text="@LocalizationService.Localize("Navigation.Charts")" Path="/charts" Icon="format_list_numbered"/>
+                    <RadzenPanelMenuItem data-nav-item-id="libraries" Text="@LocalizationService.Localize("Navigation.Libraries")" Path="/data/libraries" Icon="library_music"
                                          Visible="@AuthService.IsAdmin"/>
-                    <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.NowPlaying")" Path="/activity/nowplaying" Icon="sound_sampler"/>
-                    <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Playlists")" Path="/data/playlists" Icon="playlist_play"/>
-                    <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.RadioStations")" Path="/data/radiostations" Icon="radio"/>
-                    <RadzenPanelMenuItem Path="/requests" Icon="assignment">
+                    <RadzenPanelMenuItem data-nav-item-id="nowplaying" Text="@LocalizationService.Localize("Navigation.NowPlaying")" Path="/activity/nowplaying" Icon="sound_sampler"/>
+                    <RadzenPanelMenuItem data-nav-item-id="jukebox" Text="@LocalizationService.Localize("Navigation.Jukebox")" Path="/jukebox" Icon="speaker" Visible="@_jukeboxEnabled"/>
+                    <RadzenPanelMenuItem data-nav-item-id="party" Text="@LocalizationService.Localize("Navigation.PartyMode")" Path="/party" Icon="celebration" Visible="@_partyModeEnabled"/>
+                    <RadzenPanelMenuItem data-nav-item-id="playlists" Text="@LocalizationService.Localize("Navigation.Playlists")" Path="/data/playlists" Icon="playlist_play"/>
+                    <RadzenPanelMenuItem data-nav-item-id="podcasts" Path="/data/podcasts" Icon="podcasts" Visible="@_podcastEnabled">
+                      <Template>
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem">
+                          <span>@LocalizationService.Localize("Navigation.Podcasts")</span>
+                          @if (_unplayedPodcastCount > 0)
+                          {
+                            <RadzenBadge BadgeStyle="BadgeStyle.Info" IsPill="true" Text="@(_unplayedPodcastCount > 99 ? "99+" : _unplayedPodcastCount.ToString())" Style="font-size: 0.65rem; padding: 2px 6px;"/>
+                          }
+                        </RadzenStack>
+                      </Template>
+                    </RadzenPanelMenuItem>
+                    <RadzenPanelMenuItem data-nav-item-id="radiostations" Text="@LocalizationService.Localize("Navigation.RadioStations")" Path="/data/radiostations" Icon="radio"/>
+                    <RadzenPanelMenuItem data-nav-item-id="requests" Path="/requests" Icon="assignment">
                       <Template>
                         <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem">
                           <span>@LocalizationService.Localize("Navigation.Requests")</span>
@@ -103,10 +117,10 @@
                         </RadzenStack>
                       </Template>
                     </RadzenPanelMenuItem>
-                    <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Songs")" Path="/data/songs" Icon="music_note"/>
-                    <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Shares")" Path="/data/shares" Icon="share"/>
-                    <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Users")" Path="/data/users" Icon="group"/>
-                    <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Admin")" Icon="admin_panel_settings" IconColor="@Colors.Danger"
+                    <RadzenPanelMenuItem data-nav-item-id="songs" Text="@LocalizationService.Localize("Navigation.Songs")" Path="/data/songs" Icon="music_note"/>
+                    <RadzenPanelMenuItem data-nav-item-id="shares" Text="@LocalizationService.Localize("Navigation.Shares")" Path="/data/shares" Icon="share"/>
+                    <RadzenPanelMenuItem data-nav-item-id="users" Text="@LocalizationService.Localize("Navigation.Users")" Path="/data/users" Icon="group"/>
+                    <RadzenPanelMenuItem data-nav-item-id="admin" Text="@LocalizationService.Localize("Navigation.Admin")" Icon="admin_panel_settings" IconColor="@Colors.Danger"
                                          Visible="@AuthService.IsAdmin">
                         <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Dashboard")" Path="/admin/dashboard" Icon="dashboard"/>
                         <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Media")" Icon="perm_media">
@@ -118,9 +132,10 @@
                         </RadzenPanelMenuItem>
                         <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.MediaArtists")" Path="/admin/mediaartists" Icon="artist"/>
                         <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Jobs")" Path="/admin/jobs" Icon="checklist"/>
+                        <RadzenPanelMenuItem data-nav-item-id="themes" Text="@LocalizationService.Localize("Navigation.Themes")" Path="/admin/themes" Icon="palette"/>
                         <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.Settings")" Path="/admin/settings" Icon="settings"/>
                     </RadzenPanelMenuItem>
-                    <RadzenPanelMenuItem Text="@LocalizationService.Localize("Navigation.About")" Path="/about" Icon="info" IconColor="@Colors.Secondary"/>
+                    <RadzenPanelMenuItem data-nav-item-id="about" Text="@LocalizationService.Localize("Navigation.About")" Path="/about" Icon="info" IconColor="@Colors.Secondary"/>
                 </RadzenPanelMenu>
             </RadzenSidebar>
             <RadzenBody Style="margin: 10px; padding:3px;">
@@ -134,8 +149,12 @@
     bool _sidebarExpanded = true;
     string _siteTitle = string.Empty;
     bool _hasUnreadRequests;
+    int _unplayedPodcastCount;
     Timer? _activityTimer;
     bool _isRtl = false;
+    bool _podcastEnabled = false;
+    bool _jukeboxEnabled = false;
+    bool _partyModeEnabled = false;
 
     string _debounceInputValue = "";
 
@@ -208,8 +227,8 @@
 
             MainLayoutProxyService.ShowSpinner = false;
 
-            await CheckUnreadRequestsAsync();
-            _activityTimer = new Timer(async _ => await CheckUnreadRequestsAsync(), null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
+            await CheckActivityAsync();
+            _activityTimer = new Timer(async _ => await CheckActivityAsync(), null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
 
             StateHasChanged();
         }
@@ -219,6 +238,15 @@
     {
         var configuration = await MelodeeConfigurationFactory.GetConfigurationAsync();
         _siteTitle = configuration.GetValue<string>(SettingRegistry.SystemSiteName) ?? SettingDefaults.DefaultSiteName;
+        _podcastEnabled = configuration.GetValue<bool>(SettingRegistry.PodcastEnabled);
+        _jukeboxEnabled = configuration.GetValue<bool>(SettingRegistry.JukeboxEnabled);
+        _partyModeEnabled = configuration.GetValue<bool>(SettingRegistry.PartyModeEnabled);
+    }
+
+    private async Task CheckActivityAsync()
+    {
+        await CheckUnreadRequestsAsync();
+        await CheckUnplayedPodcastsAsync();
     }
 
     private async Task CheckUnreadRequestsAsync()
@@ -229,6 +257,25 @@
             if (userId > 0)
             {
                 _hasUnreadRequests = await RequestActivityService.HasUnreadAsync(userId);
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch
+        {
+            // Silently ignore errors in background polling
+        }
+    }
+
+    private async Task CheckUnplayedPodcastsAsync()
+    {
+        try
+        {
+            if (!_podcastEnabled) return;
+            
+            var userId = AuthService.CurrentUser?.UserId() ?? 0;
+            if (userId > 0)
+            {
+                _unplayedPodcastCount = await PodcastService.GetUnplayedDownloadedEpisodeCountAsync(userId);
                 await InvokeAsync(StateHasChanged);
             }
         }

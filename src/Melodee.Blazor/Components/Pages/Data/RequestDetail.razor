@@ -290,7 +290,7 @@ else
                 {
                     Severity = NotificationSeverity.Error,
                     Summary = L("RequestDetail.ErrorDeleting"),
-                    Detail = result.Messages?.FirstOrDefault()
+                    Detail = result.Messages?.FirstOrDefault() ?? string.Empty
                 });
             }
         }
@@ -309,14 +309,14 @@ else
             await LoadRequestAsync();
         }
         else
-        {
-            NotificationService.Notify(new NotificationMessage
             {
-                Severity = NotificationSeverity.Error,
-                Summary = L("RequestDetail.ErrorCompleting"),
-                Detail = result.Messages?.FirstOrDefault()
-            });
-        }
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = L("RequestDetail.ErrorDeletingRequestLink"),
+                    Detail = result.Messages?.FirstOrDefault() ?? string.Empty
+                });
+            }
     }
 
     void ReplyToComment(RequestComment comment)
@@ -342,14 +342,14 @@ else
             StateHasChanged();
         }
         else
-        {
-            NotificationService.Notify(new NotificationMessage
             {
-                Severity = NotificationSeverity.Error,
-                Summary = L("RequestDetail.ErrorPosting"),
-                Detail = result.Messages?.FirstOrDefault()
-            });
-        }
+                NotificationService.Notify(new NotificationMessage
+                {
+                    Severity = NotificationSeverity.Error,
+                    Summary = L("RequestDetail.ErrorResolving"),
+                    Detail = result.Messages?.FirstOrDefault() ?? string.Empty
+                });
+            }
     }
 
     static string RenderMarkdown(string text)

@@ -14,11 +14,13 @@ public enum SearchInclude
     RadioStations = 1 << 8,
     Shares = 1 << 9,
     Contributors = 1 << 10,
+    PodcastChannels = 1 << 11,
+    PodcastEpisodes = 1 << 12,
 
-    Data = Albums | Artists | Songs | Contributors | Playlists,
+    Data = Albums | Artists | Songs | Contributors | Playlists | PodcastChannels | PodcastEpisodes,
 
     MetaData = MusicBrainz,
 
     Everything = Albums | Artists | Genres | Playlists | Songs | MusicBrainz | Users | RadioStations | Shares |
-                 Contributors
+                 Contributors | PodcastChannels | PodcastEpisodes
 }
