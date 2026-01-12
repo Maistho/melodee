@@ -71,7 +71,8 @@ RUN groupadd -r melodee && useradd -r -g melodee -m melodee
 
 # Create volume directories
 # These serve as mount points; the actual volumes will overlay them
-RUN mkdir -p /app/storage /app/inbound /app/staging /app/user-images /app/playlists /app/templates /app/Logs \
+# Note: podcasts and themes are subdirectories of storage (/app/storage/podcasts, /app/storage/themes)
+RUN mkdir -p /app/storage /app/storage/podcasts /app/storage/themes /app/inbound /app/staging /app/user-images /app/playlists /app/templates /app/Logs \
     && chown -R melodee:melodee /app
 
 # Set environment variables
