@@ -133,7 +133,7 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
                 Name = "Inbound",
                 Description =
                         "Files in this directory are scanned and Album information is gathered via processing.",
-                Path = "/storage/inbound/",
+                Path = "/app/inbound/",
                 Type = (int)LibraryType.Inbound,
                 CreatedAt = seedDataTimestamp
             },
@@ -144,7 +144,7 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
                     Name = "Staging",
                     Description =
                         "The staging directory to place processed files into (Inbound -> Staging -> Library).",
-                    Path = "/storage/staging/",
+                    Path = "/app/staging/",
                     Type = (int)LibraryType.Staging,
                     CreatedAt = seedDataTimestamp
                 },
@@ -155,7 +155,7 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
                     Name = "Storage",
                     Description =
                         "The library directory to place processed, reviewed and ready to use music files into.",
-                    Path = "/storage/library/",
+                    Path = "/app/storage/",
                     Type = (int)LibraryType.Storage,
                     CreatedAt = seedDataTimestamp
                 },
@@ -165,7 +165,7 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
                     ApiKey = SeedGuid("Library", 4),
                     Name = "User Images",
                     Description = "Library where user images are stored.",
-                    Path = "/storage/images/users/",
+                    Path = "/app/user-images/",
                     Type = (int)LibraryType.UserImages,
                     CreatedAt = seedDataTimestamp
                 },
@@ -175,7 +175,7 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
                     ApiKey = SeedGuid("Library", 5),
                     Name = "Playlist Data",
                     Description = "Library where playlist data is stored.",
-                    Path = "/storage/playlists/",
+                    Path = "/app/playlists/",
                     Type = (int)LibraryType.Playlist,
                     CreatedAt = seedDataTimestamp
                 },
@@ -185,7 +185,7 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
                     ApiKey = SeedGuid("Library", 6),
                     Name = "Templates",
                     Description = "Library where templates are stored, organized by language code.",
-                    Path = "/storage/templates/",
+                    Path = "/app/templates/",
                     Type = (int)LibraryType.Templates,
                     CreatedAt = seedDataTimestamp
                 },
@@ -195,7 +195,7 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
                     ApiKey = SeedGuid("Library", 7),
                     Name = "Podcasts",
                     Description = "Library where podcast media files are stored.",
-                    Path = "/storage/podcasts/",
+                    Path = "/app/podcasts/",
                     Type = (int)LibraryType.Podcast,
                     CreatedAt = seedDataTimestamp
                 },
@@ -205,7 +205,7 @@ public class MelodeeDbContext(DbContextOptions<MelodeeDbContext> options) : DbCo
                     ApiKey = SeedGuid("Library", 8),
                     Name = "Themes",
                     Description = "Library where custom theme packs are stored.",
-                    Path = "/storage/themes/",
+                    Path = "/app/themes/",
                     Type = (int)LibraryType.Theme,
                     CreatedAt = seedDataTimestamp
                 });
