@@ -318,13 +318,35 @@ public sealed class MpdPlaybackBackend : IPlaybackBackend, IDisposable
         return _tcpClient?.Connected == true && _networkStream != null;
     }
 
+    /// <summary>
+    /// Returns a version of the command that is safe to log by masking sensitive data.
+    /// </summary>
+    /// <param name="command">The raw MPD command.</param>
+    /// <returns>A sanitized/masked representation of the command for logging.</returns>
+    private static string GetSafeCommandForLogging(string? command)
+    {
+        if (string.IsNullOrEmpty(command))
+        {
+            return command ?? string.Empty;
+        }
+
+        // Mask password commands to avoid logging sensitive data
+        if (command.StartsWith("password ", StringComparison.OrdinalIgnoreCase))
+        {
+            return "password ***";
+        }
+
+        return LogSanitizer.Sanitize(command) ?? command;
+    }
+
     private Task ExecuteCommandAsync(string command, CancellationToken cancellationToken)
     {
+        var safeCommand = GetSafeCommandForLogging(command);
         try
         {
             if (!IsConnected())
             {
-                _logger.Warning("[MpdPlaybackBackend] Not connected to MPD, cannot execute command: {Command}", command);
+                _logger.Warning("[MpdPlaybackBackend] Not connected to MPD, cannot execute command: {Command}", safeCommand);
                 return Task.CompletedTask;
             }
 
@@ -334,13 +356,13 @@ public sealed class MpdPlaybackBackend : IPlaybackBackend, IDisposable
 
             if (_enableDebugOutput)
             {
-                _logger.Debug("[MpdPlaybackBackend] Sent command: {Command}", command);
+                _logger.Debug("[MpdPlaybackBackend] Sent command: {Command}", safeCommand);
             }
 
             var response = ReadResponse();
             if (response.StartsWith("ACK"))
             {
-                _logger.Warning("[MpdPlaybackBackend] MPD command failed: {Command} -> {Response}", command, response);
+                _logger.Warning("[MpdPlaybackBackend] MPD command failed: {Command} -> {Response}", safeCommand, response);
             }
             else if (_enableDebugOutput)
             {
@@ -349,7 +371,7 @@ public sealed class MpdPlaybackBackend : IPlaybackBackend, IDisposable
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "[MpdPlaybackBackend] Error executing command: {Command}", command);
+            _logger.Error(ex, "[MpdPlaybackBackend] Error executing command: {Command}", safeCommand);
         }
 
         return Task.CompletedTask;
@@ -358,10 +380,7 @@ public sealed class MpdPlaybackBackend : IPlaybackBackend, IDisposable
     private string ExecuteCommand(string command, out bool isError)
     {
         isError = false;
-        // Mask password commands to avoid logging sensitive data
-        var safeCommand = command.StartsWith("password ", StringComparison.OrdinalIgnoreCase)
-            ? "password ***"
-            : LogSanitizer.Sanitize(command);
+        var safeCommand = GetSafeCommandForLogging(command);
         try
         {
             if (!IsConnected())
