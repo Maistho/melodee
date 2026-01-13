@@ -476,4 +476,10 @@ curl "http://your-server:port/rest/search3?query=love&u=username&t=$TOKEN&s=$SAL
 
 ---
 
+## Compatibility Matrix
+
+For a detailed compatibility matrix including endpoint support status, client compatibility notes, and known limitations, see the [OpenSubsonic Compatibility Matrix](/opensubsonic-matrix/).
+
+---
+
 For the complete OpenSubsonic specification, visit [opensubsonic.netlify.app](https://opensubsonic.netlify.app/).
