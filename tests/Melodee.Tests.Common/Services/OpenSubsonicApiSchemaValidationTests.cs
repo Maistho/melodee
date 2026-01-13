@@ -1,14 +1,9 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Melodee.Common.Data.Models;
 using Melodee.Common.Enums;
 using Melodee.Common.Models.OpenSubsonic.Enums;
 using Melodee.Common.Models.OpenSubsonic.Requests;
-using Melodee.Common.Services;
-using Melodee.Common.Utility;
 using Microsoft.EntityFrameworkCore;
-using NodaTime;
-using Xunit;
 
 namespace Melodee.Tests.Common.Services;
 

@@ -381,6 +381,92 @@ public static class SubsonicSchemaValidator
                 ["album"] = new FieldDefinition { Type = FieldType.Array, ItemType = "AlbumChild" },
                 ["song"] = new FieldDefinition { Type = FieldType.Array, ItemType = "Child" }
             }
+        },
+        ["podcasts"] = new ElementDefinition
+        {
+            TypeName = "Podcasts",
+            Children = new Dictionary<string, FieldDefinition>
+            {
+                ["channel"] = new FieldDefinition { Type = FieldType.Array, ItemType = "PodcastChannel" }
+            }
+        },
+        ["PodcastChannel"] = new ElementDefinition
+        {
+            TypeName = "PodcastChannel",
+            Attributes = new Dictionary<string, FieldType>
+            {
+                ["id"] = FieldType.String,
+                ["title"] = FieldType.String,
+                ["description"] = FieldType.String,
+                ["url"] = FieldType.String,
+                ["coverArt"] = FieldType.String,
+                ["originalImageUrl"] = FieldType.String,
+                ["status"] = FieldType.String,
+                ["errorMessage"] = FieldType.String
+            },
+            Children = new Dictionary<string, FieldDefinition>
+            {
+                ["episode"] = new FieldDefinition { Type = FieldType.Array, ItemType = "PodcastEpisode" }
+            },
+            RequiredAttributes = new[] { "id", "title", "url" }
+        },
+        ["PodcastEpisode"] = new ElementDefinition
+        {
+            TypeName = "PodcastEpisode",
+            Attributes = new Dictionary<string, FieldType>
+            {
+                ["id"] = FieldType.String,
+                ["channelId"] = FieldType.String,
+                ["title"] = FieldType.String,
+                ["description"] = FieldType.String,
+                ["duration"] = FieldType.Integer,
+                ["year"] = FieldType.Integer,
+                ["genre"] = FieldType.String,
+                ["coverArt"] = FieldType.String,
+                ["size"] = FieldType.Long,
+                ["contentType"] = FieldType.String,
+                ["suffix"] = FieldType.String,
+                ["path"] = FieldType.String,
+                ["isDir"] = FieldType.Boolean,
+                ["isVideo"] = FieldType.Boolean,
+                ["playCount"] = FieldType.Integer,
+                ["created"] = FieldType.DateTime,
+                ["status"] = FieldType.String,
+                ["album"] = FieldType.String,
+                ["artist"] = FieldType.String,
+                ["track"] = FieldType.Integer,
+                ["bitRate"] = FieldType.Integer,
+                ["discNumber"] = FieldType.Integer
+            },
+            RequiredAttributes = new[] { "id", "title" }
+        },
+        ["newestPodcasts"] = new ElementDefinition
+        {
+            TypeName = "NewestPodcasts",
+            Children = new Dictionary<string, FieldDefinition>
+            {
+                ["episode"] = new FieldDefinition { Type = FieldType.Array, ItemType = "PodcastEpisode" }
+            }
+        },
+        ["jukeboxStatus"] = new ElementDefinition
+        {
+            TypeName = "JukeboxStatus",
+            Attributes = new Dictionary<string, FieldType>
+            {
+                ["currentIndex"] = FieldType.Integer,
+                ["playing"] = FieldType.Boolean,
+                ["gain"] = FieldType.Double,
+                ["position"] = FieldType.Integer
+            },
+            RequiredAttributes = new[] { "currentIndex", "playing", "gain" }
+        },
+        ["jukeboxPlaylist"] = new ElementDefinition
+        {
+            TypeName = "JukeboxPlaylist",
+            Children = new Dictionary<string, FieldDefinition>
+            {
+                ["entry"] = new FieldDefinition { Type = FieldType.Array, ItemType = "Child" }
+            }
         }
     };
 
@@ -473,6 +559,10 @@ public static class SubsonicSchemaValidator
                     fieldValue.GetValueKind() != JsonValueKind.False)
                     return $"Field '{elementName}/{fieldName}' should be a boolean";
                 break;
+            case FieldType.Double:
+                if (fieldValue.GetValueKind() != JsonValueKind.Number)
+                    return $"Field '{elementName}/{fieldName}' should be a double";
+                break;
             case FieldType.DateTime:
                 var dateStr = fieldValue.ToString();
                 if (!DateTime.TryParse(dateStr, out _))
@@ -504,5 +594,6 @@ public enum FieldType
     Long,
     Boolean,
     DateTime,
+    Double,
     Array
 }

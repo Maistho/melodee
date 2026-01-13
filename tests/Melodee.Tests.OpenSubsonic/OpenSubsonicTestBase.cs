@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Melodee.Common.Configuration;
 using Melodee.Common.Constants;
+using Melodee.Common.Data;
 using Melodee.Common.Data.Models;
 using Melodee.Common.Enums;
 using Melodee.Common.Models.OpenSubsonic.Requests;
@@ -9,6 +10,7 @@ using Melodee.Common.Utility;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using NodaTime;
 using Xunit;
 using Xunit.Abstractions;
@@ -33,14 +35,19 @@ public abstract class OpenSubsonicTestBase : IAsyncLifetime
             {
                 builder.ConfigureServices(services =>
                 {
-                    var descriptor = services.SingleOrDefault(
-                        d => d.ServiceType == typeof(DbContextOptions<Melodee.Common.Data.MelodeeDbContext>));
-                    if (descriptor != null)
+                    // Find and remove the existing DbContext registration
+                    var descriptorsToRemove = services.Where(d =>
+                        d.ServiceType == typeof(DbContextOptions<MelodeeDbContext>) ||
+                        d.ServiceType == typeof(MelodeeDbContext))
+                    .ToList();
+
+                    foreach (var descriptor in descriptorsToRemove)
                     {
                         services.Remove(descriptor);
                     }
 
-                    services.AddDbContext<Melodee.Common.Data.MelodeeDbContext>(options =>
+                    // Add DbContext with in-memory database
+                    services.AddDbContext<MelodeeDbContext>(options =>
                     {
                         options.UseInMemoryDatabase("OpenSubsonicTestDb");
                     });
@@ -185,5 +192,12 @@ public abstract class OpenSubsonicTestBase : IAsyncLifetime
         var errors = SubsonicSchemaValidator.ValidateResponseElement(expectedResponseElement, responseElement);
         Assert.True(errors.Count == 0,
             $"Response from {endpoint} does not conform to Subsonic XSD schema:\n{string.Join("\n", errors)}");
+    }
+
+    protected async Task<HttpResponseMessage> GetAsyncWithRange(string url, string rangeHeader)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, $"/rest/{url}&u={TestUserName}&t={AuthToken}&s={AuthSalt}&v=1.16.1&c=test&f=json");
+        request.Headers.Add("Range", rangeHeader);
+        return await Client.SendAsync(request);
     }
 }
