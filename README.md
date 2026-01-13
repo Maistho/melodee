@@ -305,6 +305,10 @@ Full compatibility with Subsonic 1.16.1 and OpenSubsonic specifications:
 - Album art and metadata serving
 - Scrobbling support (Last.fm)
 
+#### OpenSubsonic Compatibility Matrix
+
+See the [OpenSubsonic Compatibility Matrix](https://melodee.org/opensubsonic-matrix) for detailed endpoint support, client compatibility, and known limitations.
+
 #### Tested OpenSubsonic Clients
 
 - [MeloAmp (desktop)](https://github.com/melodee-project/meloamp)

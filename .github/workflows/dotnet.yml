@@ -27,6 +27,28 @@ jobs:
       run: dotnet restore
     - name: Validate localization resources
       run: bash scripts/validate-resources.sh
+    - name: Validate OpenSubsonic compatibility matrix
+      run: |
+        if [ ! -f "docs/pages/opensubsonic-matrix.md" ]; then
+          echo "ERROR: docs/pages/opensubsonic-matrix.md not found!"
+          exit 1
+        fi
+        if ! grep -q "OpenSubsonic Compatibility Matrix" docs/pages/opensubsonic-matrix.md; then
+          echo "ERROR: opensubsonic-matrix.md is missing title!"
+          exit 1
+        fi
+        if ! grep -q "Last updated" docs/pages/opensubsonic-matrix.md; then
+          echo "ERROR: opensubsonic-matrix.md is missing last updated date!"
+          exit 1
+        fi
+        echo "OpenSubsonic compatibility matrix validated successfully"
+    - name: Validate matrix link in README
+      run: |
+        if ! grep -q "opensubsonic-matrix" README.md; then
+          echo "ERROR: README.md is missing link to opensubsonic-matrix.md!"
+          exit 1
+        fi
+        echo "README.md link validated successfully"
     - name: Build
       run: dotnet build --no-restore
     - name: Test with coverage

@@ -56,6 +56,8 @@
       url: "apis"
     - title: API Reference
       url: "api"
+    - title: OpenSubsonic Compatibility Matrix
+      url: "opensubsonic-matrix"
 
 - title: About
   url: "about"
