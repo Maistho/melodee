@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Melodee.Common.Data.Constants;
 using Melodee.Common.Data.Validators;
+using Melodee.Common.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace Melodee.Common.Data.Models;
@@ -27,6 +28,18 @@ public class Playlist : DataModelBase
     [RequiredGreaterThanZero] public int UserId { get; set; }
 
     public User User { get; set; } = null!;
+
+    /// <summary>
+    /// Source type of the playlist (Manual, M3UImport, Dynamic)
+    /// </summary>
+    public PlaylistSourceType SourceType { get; set; } = PlaylistSourceType.Manual;
+
+    /// <summary>
+    /// Reference to the uploaded file if this playlist was created from an import
+    /// </summary>
+    public int? PlaylistUploadedFileId { get; set; }
+
+    public PlaylistUploadedFile? PlaylistUploadedFile { get; set; }
 
     public bool IsPublic { get; set; }
 
