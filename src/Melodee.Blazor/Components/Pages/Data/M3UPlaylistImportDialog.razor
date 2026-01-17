@@ -19,8 +19,8 @@
         <RadzenText TextStyle="TextStyle.Body2">
             <strong>@L("M3UImportDialog.SupportedFormats"):</strong>
             <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
-                <li>.m3u - @L("M3UImportDialog.M3UFormat")</li>
-                <li>.m3u8 - @L("M3UImportDialog.M3U8Format")</li>
+                <li>.m3u</li>
+                <li>.m3u8</li>
             </ul>
         </RadzenText>
     </RadzenAlert>
@@ -86,7 +86,7 @@
     private string _fileSize = string.Empty;
     private IBrowserFile? _selectedFile;
     private bool _isUploading;
-    private List<string> _validationErrors = new();
+    private readonly List<string> _validationErrors = new();
     private PlaylistImportResponse? _importResult;
 
     private const long MaxFileSize = 10 * 1024 * 1024; // 10MB
@@ -174,7 +174,7 @@
             {
                 Severity = NotificationSeverity.Success,
                 Summary = L("M3UImportDialog.ImportSuccess"),
-                Detail = string.Format(L("M3UImportDialog.ImportSummary"), _importResult.MatchedEntries, _importResult.TotalEntries),
+                Detail = L("M3UImportDialog.ImportSummary", _importResult.MatchedEntries.ToString(), _importResult.TotalEntries.ToString()),
                 Duration = 5000
             });
         }

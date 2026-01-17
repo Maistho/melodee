@@ -109,14 +109,19 @@ public sealed class SongMatchingService(
                 normalizedReference.Split('/').Last() // Just filename
             };
 
-            foreach (var candidatePath in candidatePaths)
-            {
-                var song = await context.Songs
+            var songsMatchingPaths = candidatePaths
+                .Select(candidatePath => context.Songs
                     .Include(s => s.Album)
                         .ThenInclude(a => a.Artist)
-                    .FirstOrDefaultAsync(s => s.FileName.Replace('\\', '/').EndsWith(candidatePath), cancellationToken)
-                    .ConfigureAwait(false);
+                    .FirstOrDefaultAsync(s => 
+                        s.FileName.Replace('\\', '/').EndsWith("/" + candidatePath) || 
+                        s.FileName.Replace('\\', '/') == candidatePath, 
+                        cancellationToken))
+                .ToList();
 
+            foreach (var songTask in songsMatchingPaths)
+            {
+                var song = await songTask.ConfigureAwait(false);
                 if (song != null)
                 {
                     return song;
@@ -142,9 +147,6 @@ public sealed class SongMatchingService(
             {
                 return null;
             }
-
-            // Remove file extension from filename for matching
-            var filenameWithoutExt = Path.GetFileNameWithoutExtension(entry.FileName);
 
             var query = context.Songs
                 .Include(s => s.Album)
@@ -317,17 +319,17 @@ public sealed class SongMatchingService(
     }
 }
 
-public sealed class SongMatchResult
-{
-    public Song? Song { get; init; }
-    public MatchStrategy MatchStrategy { get; init; }
-    public decimal Confidence { get; init; }
-}
-
 public enum MatchStrategy
 {
     None = 0,
     ExactPath = 1,
     FilenameWithHints = 2,
     Metadata = 3
+}
+
+public sealed class SongMatchResult
+{
+    public Song? Song { get; init; }
+    public MatchStrategy MatchStrategy { get; init; }
+    public decimal Confidence { get; init; }
 }

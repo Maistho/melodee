@@ -115,8 +115,12 @@ public sealed class PlaylistReconciliationJob(
 
                             playlist.Songs.Add(playlistSong);
                             playlist.SongCount = (short)playlist.Songs.Count;
-                            playlist.Duration = playlist.Songs.Sum(ps => 
-                                dbContext.Songs.First(s => s.Id == ps.SongId).Duration);
+                            
+                            // Efficiently calculate duration by loading song from matchResult instead of querying
+                            var currentDuration = playlist.Songs
+                                .Where(ps => ps.SongId != matchResult.Song.Id)
+                                .Sum(ps => dbContext.Songs.First(s => s.Id == ps.SongId).Duration);
+                            playlist.Duration = currentDuration + matchResult.Song.Duration;
 
                             Logger.Debug("[{JobName}] Resolved missing item for playlist [{PlaylistId}]: {Reference}",
                                 nameof(PlaylistReconciliationJob), playlist.Id, item.NormalizedReference);

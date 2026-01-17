@@ -1359,7 +1359,7 @@ public class PlaylistService(
             // Create song matching service
             var songMatcher = new SongMatchingService(Logger, CacheManager, ContextFactory);
 
-            // Match songs
+            // Match songs and track results
             var matchedSongs = new List<Data.Models.Song>();
             var missingItems = new List<PlaylistUploadedFileItem>();
             var matchedCount = 0;
