@@ -1,0 +1,231 @@
+@inherits MelodeeComponentBase
+@using Melodee.Blazor.Controllers.Melodee.Models
+@using Melodee.Common.Models
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.Extensions.Logging
+
+@inject PlaylistService PlaylistService
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+@inject IJSRuntime JS
+@inject ILogger<M3UPlaylistImportDialog> Logger
+
+<RadzenStack Gap="1rem">
+    <RadzenAlert AlertStyle="AlertStyle.Info" Shade="Shade.Lighter" AllowClose="false">
+        <RadzenText TextStyle="TextStyle.Subtitle2">@L("M3UImportDialog.Title")</RadzenText>
+        <RadzenText TextStyle="TextStyle.Body2">
+            @L("M3UImportDialog.Description")
+        </RadzenText>
+        <RadzenText TextStyle="TextStyle.Body2">
+            <strong>@L("M3UImportDialog.SupportedFormats"):</strong>
+            <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                <li>.m3u - @L("M3UImportDialog.M3UFormat")</li>
+                <li>.m3u8 - @L("M3UImportDialog.M3U8Format")</li>
+            </ul>
+        </RadzenText>
+    </RadzenAlert>
+
+    <RadzenFormField Text="@L("M3UImportDialog.SelectFile")" Variant="Variant.Outlined" Style="width: 100%;">
+        <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" AlignItems="AlignItems.Center">
+            <InputFile OnChange="@OnFileSelected" accept=".m3u,.m3u8" style="display: none;" id="m3uFileInput"/>
+            <RadzenButton Text="@L("Actions.Upload")" Icon="upload_file" ButtonStyle="ButtonStyle.Primary" Click="@TriggerFileInput" Disabled="@_isUploading"/>
+            @if (!string.IsNullOrEmpty(_fileName))
+            {
+                <RadzenText TextStyle="TextStyle.Body2" Style="align-self: center;">@_fileName</RadzenText>
+                <RadzenText TextStyle="TextStyle.Caption" Style="align-self: center;">(@_fileSize)</RadzenText>
+            }
+        </RadzenStack>
+    </RadzenFormField>
+
+    @if (_isUploading)
+    {
+        <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" Style="margin-top: 1rem;"/>
+        <RadzenText TextStyle="TextStyle.Body2" Style="text-align: center;">@L("M3UImportDialog.Uploading")</RadzenText>
+    }
+
+    @if (_validationErrors.Any())
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Danger" Shade="Shade.Lighter" AllowClose="false">
+            <RadzenText TextStyle="TextStyle.Subtitle2">@L("M3UImportDialog.ValidationErrors")</RadzenText>
+            <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                @foreach (var error in _validationErrors)
+                {
+                    <li><RadzenText TextStyle="TextStyle.Body2">@error</RadzenText></li>
+                }
+            </ul>
+        </RadzenAlert>
+    }
+
+    @if (_importResult != null)
+    {
+        <RadzenAlert AlertStyle="AlertStyle.Success" Shade="Shade.Lighter" AllowClose="false">
+            <RadzenText TextStyle="TextStyle.Subtitle2">@L("M3UImportDialog.ImportSuccess")</RadzenText>
+            <RadzenText TextStyle="TextStyle.Body2">
+                <strong>@L("Common.Name"):</strong> @_importResult.PlaylistName<br/>
+                <strong>@L("M3UImportDialog.TotalEntries"):</strong> @_importResult.TotalEntries<br/>
+                <strong>@L("M3UImportDialog.MatchedSongs"):</strong> @_importResult.MatchedEntries (@GetMatchPercentage()%)<br/>
+                <strong>@L("M3UImportDialog.MissingSongs"):</strong> @_importResult.MissingEntries<br/>
+            </RadzenText>
+            @if (_importResult.MissingEntries > 0)
+            {
+                <RadzenText TextStyle="TextStyle.Caption" Style="margin-top: 0.5rem;">
+                    @L("M3UImportDialog.MissingItemsNote")
+                </RadzenText>
+            }
+        </RadzenAlert>
+    }
+
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.End" Gap="0.5rem">
+        <RadzenButton Text="@L("Actions.Cancel")" ButtonStyle="ButtonStyle.Light" Click="@CancelClick"/>
+        <RadzenButton Text="@L("Actions.Close")" ButtonStyle="ButtonStyle.Primary" Click="@CloseClick" Visible="@(_importResult != null)"/>
+    </RadzenStack>
+</RadzenStack>
+
+@code {
+    private string _fileName = string.Empty;
+    private string _fileSize = string.Empty;
+    private IBrowserFile? _selectedFile;
+    private bool _isUploading;
+    private List<string> _validationErrors = new();
+    private PlaylistImportResponse? _importResult;
+
+    private const long MaxFileSize = 10 * 1024 * 1024; // 10MB
+
+    private async Task TriggerFileInput()
+    {
+        await JS.InvokeVoidAsync("document.getElementById('m3uFileInput').click");
+    }
+
+    private async Task OnFileSelected(InputFileChangeEventArgs e)
+    {
+        _selectedFile = e.File;
+        _fileName = _selectedFile.Name;
+        _fileSize = FormatFileSize(_selectedFile.Size);
+        _validationErrors.Clear();
+        _importResult = null;
+
+        // Validate file
+        var extension = Path.GetExtension(_fileName).ToLowerInvariant();
+        if (extension != ".m3u" && extension != ".m3u8")
+        {
+            _validationErrors.Add(L("M3UImportDialog.InvalidFileType"));
+            _selectedFile = null;
+            _fileName = string.Empty;
+            _fileSize = string.Empty;
+            StateHasChanged();
+            return;
+        }
+
+        if (_selectedFile.Size > MaxFileSize)
+        {
+            _validationErrors.Add(L("M3UImportDialog.FileTooLarge"));
+            _selectedFile = null;
+            _fileName = string.Empty;
+            _fileSize = string.Empty;
+            StateHasChanged();
+            return;
+        }
+
+        // Auto-upload if validation passes
+        await UploadFile();
+    }
+
+    private async Task UploadFile()
+    {
+        if (_selectedFile == null || _isUploading)
+        {
+            return;
+        }
+
+        try
+        {
+            _isUploading = true;
+            _validationErrors.Clear();
+            StateHasChanged();
+
+            using var stream = _selectedFile.OpenReadStream(MaxFileSize);
+            using var memoryStream = new MemoryStream();
+            await stream.CopyToAsync(memoryStream);
+            memoryStream.Position = 0;
+
+            var result = await PlaylistService.ImportPlaylistAsync(
+                CurrentUser!.UserId(),
+                memoryStream,
+                _selectedFile.Name,
+                CancellationToken.None);
+
+            if (!result.IsSuccess || result.Data == null)
+            {
+                var errorMessage = result.Errors?.FirstOrDefault()?.Message ?? L("M3UImportDialog.ImportFailed");
+                _validationErrors.Add(errorMessage);
+                return;
+            }
+
+            _importResult = new PlaylistImportResponse
+            {
+                PlaylistId = result.Data.PlaylistApiKey,
+                PlaylistName = result.Data.PlaylistName,
+                TotalEntries = result.Data.TotalEntries,
+                MatchedEntries = result.Data.MatchedEntries,
+                MissingEntries = result.Data.MissingEntries
+            };
+
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Success,
+                Summary = L("M3UImportDialog.ImportSuccess"),
+                Detail = string.Format(L("M3UImportDialog.ImportSummary"), _importResult.MatchedEntries, _importResult.TotalEntries),
+                Duration = 5000
+            });
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to import M3U playlist");
+            _validationErrors.Add(L("M3UImportDialog.ImportFailed") + ": " + ex.Message);
+            NotificationService.Notify(new NotificationMessage
+            {
+                Severity = NotificationSeverity.Error,
+                Summary = L("M3UImportDialog.ImportFailed"),
+                Detail = ex.Message,
+                Duration = 8000
+            });
+        }
+        finally
+        {
+            _isUploading = false;
+            StateHasChanged();
+        }
+    }
+
+    private string FormatFileSize(long bytes)
+    {
+        string[] sizes = { "B", "KB", "MB", "GB" };
+        double len = bytes;
+        int order = 0;
+        while (len >= 1024 && order < sizes.Length - 1)
+        {
+            order++;
+            len = len / 1024;
+        }
+        return $"{len:0.##} {sizes[order]}";
+    }
+
+    private string GetMatchPercentage()
+    {
+        if (_importResult == null || _importResult.TotalEntries == 0)
+        {
+            return "0";
+        }
+        return ((double)_importResult.MatchedEntries / _importResult.TotalEntries * 100).ToString("0.#");
+    }
+
+    private void CancelClick()
+    {
+        DialogService.Close(false);
+    }
+
+    private void CloseClick()
+    {
+        DialogService.Close(true);
+    }
+}
