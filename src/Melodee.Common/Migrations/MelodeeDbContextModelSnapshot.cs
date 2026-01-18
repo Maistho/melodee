@@ -908,7 +908,7 @@ namespace Melodee.Common.Migrations
                             Description = "Files in this directory are scanned and Album information is gathered via processing.",
                             IsLocked = false,
                             Name = "Inbound",
-                            Path = "/app/inbound/",
+                            Path = "/storage/inbound/",
                             SortOrder = 0,
                             Type = 1
                         },
@@ -920,7 +920,7 @@ namespace Melodee.Common.Migrations
                             Description = "The staging directory to place processed files into (Inbound -> Staging -> Library).",
                             IsLocked = false,
                             Name = "Staging",
-                            Path = "/app/staging/",
+                            Path = "/storage/staging/",
                             SortOrder = 0,
                             Type = 2
                         },
@@ -932,7 +932,7 @@ namespace Melodee.Common.Migrations
                             Description = "The library directory to place processed, reviewed and ready to use music files into.",
                             IsLocked = false,
                             Name = "Storage",
-                            Path = "/app/storage/",
+                            Path = "/storage/library/",
                             SortOrder = 0,
                             Type = 3
                         },
@@ -944,7 +944,7 @@ namespace Melodee.Common.Migrations
                             Description = "Library where user images are stored.",
                             IsLocked = false,
                             Name = "User Images",
-                            Path = "/app/user-images/",
+                            Path = "/storage/images/users/",
                             SortOrder = 0,
                             Type = 4
                         },
@@ -956,7 +956,7 @@ namespace Melodee.Common.Migrations
                             Description = "Library where playlist data is stored.",
                             IsLocked = false,
                             Name = "Playlist Data",
-                            Path = "/app/playlists/",
+                            Path = "/storage/playlists/",
                             SortOrder = 0,
                             Type = 5
                         },
@@ -968,7 +968,7 @@ namespace Melodee.Common.Migrations
                             Description = "Library where templates are stored, organized by language code.",
                             IsLocked = false,
                             Name = "Templates",
-                            Path = "/app/templates/",
+                            Path = "/storage/templates/",
                             SortOrder = 0,
                             Type = 7
                         },
@@ -980,7 +980,7 @@ namespace Melodee.Common.Migrations
                             Description = "Library where podcast media files are stored.",
                             IsLocked = false,
                             Name = "Podcasts",
-                            Path = "/app/podcasts/",
+                            Path = "/storage/podcasts/",
                             SortOrder = 0,
                             Type = 8
                         },
@@ -992,7 +992,7 @@ namespace Melodee.Common.Migrations
                             Description = "Library where custom theme packs are stored.",
                             IsLocked = false,
                             Name = "Themes",
-                            Path = "/app/themes/",
+                            Path = "/storage/themes/",
                             SortOrder = 0,
                             Type = 9
                         });
@@ -1639,9 +1639,6 @@ namespace Melodee.Common.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
 
-                    b.Property<int?>("PlaylistUploadedFileId")
-                        .HasColumnType("integer");
-
                     b.Property<short?>("SongCount")
                         .HasColumnType("smallint");
 
@@ -1650,9 +1647,6 @@ namespace Melodee.Common.Migrations
 
                     b.Property<int>("SortOrder")
                         .HasColumnType("integer");
-
-                    b.Property<short>("SourceType")
-                        .HasColumnType("smallint");
 
                     b.Property<string>("Tags")
                         .HasMaxLength(2000)
@@ -1665,8 +1659,6 @@ namespace Melodee.Common.Migrations
 
                     b.HasIndex("ApiKey")
                         .IsUnique();
-
-                    b.HasIndex("PlaylistUploadedFileId");
 
                     b.HasIndex("SongId");
 
@@ -1698,116 +1690,6 @@ namespace Melodee.Common.Migrations
                         .IsUnique();
 
                     b.ToTable("PlaylistSong");
-                });
-
-            modelBuilder.Entity("Melodee.Common.Data.Models.PlaylistUploadedFile", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<Guid>("ApiKey")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("ContentType")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<Instant>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(62000)
-                        .HasColumnType("character varying(62000)");
-
-                    b.Property<byte[]>("FileData")
-                        .HasColumnType("bytea");
-
-                    b.Property<bool>("IsLocked")
-                        .HasColumnType("boolean");
-
-                    b.Property<Instant?>("LastUpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<long>("Length")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(4000)
-                        .HasColumnType("character varying(4000)");
-
-                    b.Property<string>("OriginalFileName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Tags")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ApiKey")
-                        .IsUnique();
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("PlaylistUploadedFiles");
-                });
-
-            modelBuilder.Entity("Melodee.Common.Data.Models.PlaylistUploadedFileItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("HintsJson")
-                        .HasMaxLength(4000)
-                        .HasColumnType("character varying(4000)");
-
-                    b.Property<Instant?>("LastAttemptUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("NormalizedReference")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<int>("PlaylistUploadedFileId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("RawReference")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<int?>("SongId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("integer");
-
-                    b.Property<short>("Status")
-                        .HasColumnType("smallint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SongId");
-
-                    b.HasIndex("PlaylistUploadedFileId", "SortOrder");
-
-                    b.ToTable("PlaylistUploadedFileItems");
                 });
 
             modelBuilder.Entity("Melodee.Common.Data.Models.PodcastChannel", b =>
@@ -5773,10 +5655,6 @@ namespace Melodee.Common.Migrations
 
             modelBuilder.Entity("Melodee.Common.Data.Models.Playlist", b =>
                 {
-                    b.HasOne("Melodee.Common.Data.Models.PlaylistUploadedFile", "PlaylistUploadedFile")
-                        .WithMany()
-                        .HasForeignKey("PlaylistUploadedFileId");
-
                     b.HasOne("Melodee.Common.Data.Models.Song", null)
                         .WithMany("Playlists")
                         .HasForeignKey("SongId");
@@ -5786,8 +5664,6 @@ namespace Melodee.Common.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("PlaylistUploadedFile");
 
                     b.Navigation("User");
                 });
@@ -5807,34 +5683,6 @@ namespace Melodee.Common.Migrations
                         .IsRequired();
 
                     b.Navigation("Playlist");
-
-                    b.Navigation("Song");
-                });
-
-            modelBuilder.Entity("Melodee.Common.Data.Models.PlaylistUploadedFile", b =>
-                {
-                    b.HasOne("Melodee.Common.Data.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Melodee.Common.Data.Models.PlaylistUploadedFileItem", b =>
-                {
-                    b.HasOne("Melodee.Common.Data.Models.PlaylistUploadedFile", "PlaylistUploadedFile")
-                        .WithMany("Items")
-                        .HasForeignKey("PlaylistUploadedFileId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Melodee.Common.Data.Models.Song", "Song")
-                        .WithMany()
-                        .HasForeignKey("SongId");
-
-                    b.Navigation("PlaylistUploadedFile");
 
                     b.Navigation("Song");
                 });
@@ -6183,11 +6031,6 @@ namespace Melodee.Common.Migrations
             modelBuilder.Entity("Melodee.Common.Data.Models.Playlist", b =>
                 {
                     b.Navigation("Songs");
-                });
-
-            modelBuilder.Entity("Melodee.Common.Data.Models.PlaylistUploadedFile", b =>
-                {
-                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("Melodee.Common.Data.Models.PodcastChannel", b =>

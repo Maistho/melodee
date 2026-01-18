@@ -73,61 +73,6 @@ You can create playlists through:
 
 - **Melodee UI**: Navigate to Playlists and click "Create New Playlist"
 - **Music Clients**: Most Subsonic-compatible clients support playlist creation
-- **M3U Import**: Upload existing M3U/M3U8 playlist files (see below)
-
-### Importing M3U/M3U8 Playlists
-
-Melodee can import your existing M3U or M3U8 playlist files, making it easy to migrate from other music players.
-
-**Supported formats:**
-- `.m3u` - Standard M3U playlists
-- `.m3u8` - UTF-8 encoded M3U playlists
-
-**How it works:**
-
-1. **Upload your playlist file** via the Melodee API or UI
-2. **Automatic song matching** - Melodee tries to match each entry to songs in your library using:
-   - Exact file path matching (highest priority)
-   - Filename with artist/album folder hints
-   - Song metadata matching (title + artist + album)
-3. **Instant playability** - Matched songs are immediately available in your new playlist
-4. **Background reconciliation** - Missing songs are tracked and automatically added as you add music to your library
-
-**Import via API:**
-```bash
-curl -X POST https://your-melodee-server/api/v1/playlists/import \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -F "file=@my-playlist.m3u8"
-```
-
-**Response includes:**
-- Playlist ID and name
-- Total entries found
-- Successfully matched songs
-- Missing songs (tracked for future reconciliation)
-
-**Example response:**
-```json
-{
-  "playlistId": "abc123...",
-  "playlistName": "My Favorite Mix",
-  "totalEntries": 25,
-  "matchedEntries": 20,
-  "missingEntries": 5
-}
-```
-
-**Background reconciliation:**
-
-Missing playlist items are automatically resolved when:
-- New music is added to your library
-- The reconciliation job runs periodically (hourly by default)
-
-The reconciliation process:
-- Re-attempts matching for missing items
-- Adds newly found songs to the playlist
-- Maintains the original sort order
-- Runs idempotently (no duplicates)
 
 ### Managing Playlists via Clients
 
@@ -225,13 +170,6 @@ POST /api/v1/Songs/starred/{songId}/{isStarred}
 
 # Set rating
 POST /api/v1/Songs/setrating/{songId}/{rating}
-
-# Import M3U/M3U8 playlist
-POST /api/v1/playlists/import
-Content-Type: multipart/form-data
-Body: file=<M3U/M3U8 file>
-
-# Response includes match statistics and playlist ID
 ```
 
 ## Best Practices
