@@ -1292,4 +1292,182 @@ public class PlaylistService(
             Data = returnPrefixedApiKey ? newPlaylist.ToApiKey() : newPlaylist.ApiKey.ToString()
         };
     }
+
+    /// <summary>
+    /// Import an M3U/M3U8 playlist file into the system
+    /// </summary>
+    public async Task<OperationResult<PlaylistImportResult>> ImportPlaylistAsync(
+        int userId,
+        Stream fileStream,
+        string fileName,
+        CancellationToken cancellationToken = default)
+    {
+        await using var scopedContext = await ContextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        try
+        {
+            var now = SystemClock.Instance.GetCurrentInstant();
+
+            // Read file bytes for storage
+            using var memoryStream = new MemoryStream();
+            await fileStream.CopyToAsync(memoryStream, cancellationToken).ConfigureAwait(false);
+            var fileBytes = memoryStream.ToArray();
+
+            // Parse the M3U file
+            memoryStream.Position = 0;
+            var parser = new Parsing.M3UParser(Logger);
+            var parseResult = await parser.ParseAsync(memoryStream, fileName, cancellationToken).ConfigureAwait(false);
+
+            if (parseResult.Entries.Count == 0)
+            {
+                return new OperationResult<PlaylistImportResult>
+                {
+                    Data = new PlaylistImportResult
+                    {
+                        PlaylistId = 0,
+                        PlaylistApiKey = Guid.Empty,
+                        TotalEntries = 0,
+                        MatchedEntries = 0,
+                        MissingEntries = 0,
+                        PlaylistName = string.Empty
+                    },
+                    Type = OperationResponseType.Error,
+                    Errors = new[] { new Exception("Playlist file contains no valid entries") }
+                };
+            }
+
+            // Create uploaded file record
+            var uploadedFile = new PlaylistUploadedFile
+            {
+                UserId = userId,
+                OriginalFileName = fileName,
+                ContentType = fileName.EndsWith(".m3u8", StringComparison.OrdinalIgnoreCase)
+                    ? "audio/x-mpegurl; charset=utf-8"
+                    : "audio/x-mpegurl",
+                Length = fileBytes.Length,
+                FileData = fileBytes,
+                CreatedAt = now
+            };
+
+            await scopedContext.PlaylistUploadedFiles.AddAsync(uploadedFile, cancellationToken).ConfigureAwait(false);
+            await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            // Get library path for matching (use first storage library)
+            var librariesResult = await libraryService.GetStorageLibrariesAsync(cancellationToken).ConfigureAwait(false);
+            var libraryPath = librariesResult.Data?.FirstOrDefault()?.Path;
+
+            // Create song matching service
+            var songMatcher = new SongMatchingService(Logger, CacheManager, ContextFactory);
+
+            // Match songs and track results
+            var matchedSongs = new List<Data.Models.Song>();
+            var missingItems = new List<PlaylistUploadedFileItem>();
+            var matchedCount = 0;
+
+            foreach (var entry in parseResult.Entries)
+            {
+                var matchResult = await songMatcher.MatchEntryAsync(entry, libraryPath, cancellationToken).ConfigureAwait(false);
+
+                var item = new PlaylistUploadedFileItem
+                {
+                    PlaylistUploadedFileId = uploadedFile.Id,
+                    SongId = matchResult.Song?.Id,
+                    SortOrder = entry.SortOrder,
+                    Status = matchResult.Song != null ? Enums.PlaylistItemStatus.Resolved : Enums.PlaylistItemStatus.Missing,
+                    RawReference = entry.RawReference,
+                    NormalizedReference = entry.NormalizedReference,
+                    HintsJson = serializer.Serialize(new
+                    {
+                        FileName = entry.FileName,
+                        ArtistFolder = entry.ArtistFolder,
+                        AlbumFolder = entry.AlbumFolder,
+                        MatchStrategy = matchResult.MatchStrategy.ToString(),
+                        Confidence = matchResult.Confidence
+                    }),
+                    LastAttemptUtc = now
+                };
+
+                if (matchResult.Song != null)
+                {
+                    matchedSongs.Add(matchResult.Song);
+                    matchedCount++;
+                }
+                else
+                {
+                    missingItems.Add(item);
+                }
+
+                await scopedContext.PlaylistUploadedFileItems.AddAsync(item, cancellationToken).ConfigureAwait(false);
+            }
+
+            // Create the playlist
+            var playlistName = Path.GetFileNameWithoutExtension(fileName);
+            var playlist = new Playlist
+            {
+                CreatedAt = now,
+                Name = playlistName,
+                Comment = $"Imported from {fileName}",
+                IsPublic = false,
+                UserId = userId,
+                SourceType = Enums.PlaylistSourceType.M3UImport,
+                PlaylistUploadedFileId = uploadedFile.Id,
+                SongCount = SafeParser.ToNumber<short>(matchedSongs.Count),
+                Duration = matchedSongs.Sum(x => x.Duration),
+                Songs = matchedSongs.Select((song, index) => new PlaylistSong
+                {
+                    SongId = song.Id,
+                    SongApiKey = song.ApiKey,
+                    PlaylistOrder = index
+                }).ToArray()
+            };
+
+            await scopedContext.Playlists.AddAsync(playlist, cancellationToken).ConfigureAwait(false);
+            await scopedContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            Logger.Information(
+                "Playlist imported from [{FileName}] for user [{UserId}]. Matched: {Matched}/{Total} songs",
+                fileName, userId, matchedCount, parseResult.Entries.Count);
+
+            return new OperationResult<PlaylistImportResult>
+            {
+                Data = new PlaylistImportResult
+                {
+                    PlaylistId = playlist.Id,
+                    PlaylistApiKey = playlist.ApiKey,
+                    TotalEntries = parseResult.Entries.Count,
+                    MatchedEntries = matchedCount,
+                    MissingEntries = parseResult.Entries.Count - matchedCount,
+                    PlaylistName = playlist.Name
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Error importing playlist from file [{FileName}]", fileName);
+            return new OperationResult<PlaylistImportResult>
+            {
+                Data = new PlaylistImportResult
+                {
+                    PlaylistId = 0,
+                    PlaylistApiKey = Guid.Empty,
+                    TotalEntries = 0,
+                    MatchedEntries = 0,
+                    MissingEntries = 0,
+                    PlaylistName = string.Empty
+                },
+                Type = OperationResponseType.Error,
+                Errors = new[] { ex }
+            };
+        }
+    }
+}
+
+public sealed class PlaylistImportResult
+{
+    public int PlaylistId { get; init; }
+    public Guid PlaylistApiKey { get; init; }
+    public int TotalEntries { get; init; }
+    public int MatchedEntries { get; init; }
+    public int MissingEntries { get; init; }
+    public required string PlaylistName { get; init; }
 }

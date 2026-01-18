@@ -619,4 +619,68 @@ public sealed class PlaylistsController(
 
         return Ok();
     }
+
+    /// <summary>
+    /// Import an M3U/M3U8 playlist file.
+    /// </summary>
+    [HttpPost]
+    [Route("import")]
+    [ProducesResponseType(typeof(PlaylistImportResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiError), StatusCodes.Status400BadRequest)]
+    [RequestSizeLimit(10_000_000)] // 10MB limit for playlist files
+    public async Task<IActionResult> ImportPlaylist(IFormFile file, CancellationToken cancellationToken = default)
+    {
+        if (!ApiRequest.IsAuthorized)
+        {
+            return ApiUnauthorized();
+        }
+
+        var user = await ResolveUserAsync(userService, cancellationToken).ConfigureAwait(false);
+        if (user == null)
+        {
+            return ApiUnauthorized();
+        }
+
+        if (user.IsLocked)
+        {
+            return ApiUserLocked();
+        }
+
+        if (file == null || file.Length == 0)
+        {
+            return ApiBadRequest("No file uploaded.");
+        }
+
+        var fileName = file.FileName;
+        var isValidExtension = fileName.EndsWith(".m3u", StringComparison.OrdinalIgnoreCase) ||
+                              fileName.EndsWith(".m3u8", StringComparison.OrdinalIgnoreCase);
+
+        if (!isValidExtension)
+        {
+            return ApiBadRequest("File must be an M3U or M3U8 playlist file.");
+        }
+
+        await using var stream = file.OpenReadStream();
+        var importResult = await playlistService.ImportPlaylistAsync(
+            user.Id,
+            stream,
+            fileName,
+            cancellationToken).ConfigureAwait(false);
+
+        if (!importResult.IsSuccess || importResult.Data == null)
+        {
+            var errorMessage = importResult.Messages?.FirstOrDefault() ?? "Failed to import playlist.";
+            return ApiBadRequest(errorMessage);
+        }
+
+        return Ok(new PlaylistImportResponse
+        {
+            PlaylistId = importResult.Data.PlaylistApiKey,
+            PlaylistName = importResult.Data.PlaylistName,
+            TotalEntries = importResult.Data.TotalEntries,
+            MatchedEntries = importResult.Data.MatchedEntries,
+            MissingEntries = importResult.Data.MissingEntries
+        });
+    }
 }

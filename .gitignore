@@ -515,3 +515,7 @@ compose.override.yml
 secrets.json
 *.secrets.json
 .aider*
+
+# Exclude build artifacts with unusual path separators
+**/bin\\*
+**/obj\\*

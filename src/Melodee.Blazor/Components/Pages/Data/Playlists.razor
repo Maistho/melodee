@@ -32,6 +32,10 @@
                 AlignItems="AlignItems.Center"
                 JustifyContent="JustifyContent.End"
                 Gap="0.5rem">
+                <RadzenButton Icon="playlist_add" Text="@L("Actions.ImportM3UPlaylist")"
+                              Click="@ImportM3UPlaylistButtonClick"
+                              Size="ButtonSize.Small"
+                              ButtonStyle="ButtonStyle.Success"/>
                 <RadzenButton Icon="upload" Text="@L("Actions.ImportDynamicPlaylist")"
                               Click="@ImportDynamicPlaylistButtonClick"
                               Size="ButtonSize.Small"
@@ -206,6 +210,19 @@
             L("Actions.ImportDynamicPlaylist"),
             null,
             new DialogOptions { Width = "800px", Height = "600px", Resizable = true, Draggable = true });
+
+        if (result is true)
+        {
+            await _grid.RefreshDataAsync();
+        }
+    }
+
+    private async Task ImportM3UPlaylistButtonClick()
+    {
+        var result = await DialogService.OpenAsync<M3UPlaylistImportDialog>(
+            L("M3UImportDialog.Title"),
+            null,
+            new DialogOptions { Width = "700px", Height = "auto", Resizable = true, Draggable = true });
 
         if (result is true)
         {
