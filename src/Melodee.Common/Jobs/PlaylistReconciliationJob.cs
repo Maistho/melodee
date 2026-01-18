@@ -1,5 +1,4 @@
 using Melodee.Common.Configuration;
-using Melodee.Common.Constants;
 using Melodee.Common.Data;
 using Melodee.Common.Enums;
 using Melodee.Common.Services;
@@ -30,7 +29,7 @@ public sealed class PlaylistReconciliationJob(
 
         // Find all missing playlist items that haven't been attempted recently
         var retryThreshold = SystemClock.Instance.GetCurrentInstant().Minus(Duration.FromHours(1));
-        
+
         var missingItems = await dbContext.PlaylistUploadedFileItems
             .Where(x => x.Status == PlaylistItemStatus.Missing)
             .Where(x => x.LastAttemptUtc == null || x.LastAttemptUtc < retryThreshold)
@@ -47,14 +46,14 @@ public sealed class PlaylistReconciliationJob(
             return;
         }
 
-        Logger.Information("[{JobName}] Attempting to reconcile {ItemCount} missing playlist items.", 
+        Logger.Information("[{JobName}] Attempting to reconcile {ItemCount} missing playlist items.",
             nameof(PlaylistReconciliationJob), missingItems.Count);
 
         // Get library path for matching
         var librariesResult = await libraryService.GetStorageLibrariesAsync(context.CancellationToken).ConfigureAwait(false);
         var libraryPath = librariesResult.Data?.FirstOrDefault()?.Path;
 
-        var songMatcher = new SongMatchingService(logger, cacheManager, contextFactory);
+        var songMatcher = new SongMatchingService(Logger, cacheManager, contextFactory);
 
         var resolvedCount = 0;
         var now = SystemClock.Instance.GetCurrentInstant();
@@ -90,7 +89,7 @@ public sealed class PlaylistReconciliationJob(
                     // Find the associated playlist and add the song
                     var playlist = await dbContext.Playlists
                         .Include(p => p.Songs)
-                        .FirstOrDefaultAsync(p => p.PlaylistUploadedFileId == item.PlaylistUploadedFileId, 
+                        .FirstOrDefaultAsync(p => p.PlaylistUploadedFileId == item.PlaylistUploadedFileId,
                             context.CancellationToken)
                         .ConfigureAwait(false);
 
@@ -104,7 +103,7 @@ public sealed class PlaylistReconciliationJob(
                         {
                             // Add song to playlist maintaining sort order
                             var maxOrder = playlist.Songs.Any() ? playlist.Songs.Max(ps => ps.PlaylistOrder) : -1;
-                            
+
                             var playlistSong = new Data.Models.PlaylistSong
                             {
                                 PlaylistId = playlist.Id,
@@ -115,7 +114,7 @@ public sealed class PlaylistReconciliationJob(
 
                             playlist.Songs.Add(playlistSong);
                             playlist.SongCount = (short)playlist.Songs.Count;
-                            
+
                             // Efficiently calculate duration by loading song from matchResult instead of querying
                             var currentDuration = playlist.Songs
                                 .Where(ps => ps.SongId != matchResult.Song.Id)
@@ -130,7 +129,7 @@ public sealed class PlaylistReconciliationJob(
             }
             catch (Exception ex)
             {
-                Logger.Warning(ex, "[{JobName}] Error reconciling item: {Reference}", 
+                Logger.Warning(ex, "[{JobName}] Error reconciling item: {Reference}",
                     nameof(PlaylistReconciliationJob), item.NormalizedReference);
                 item.LastAttemptUtc = now;
             }

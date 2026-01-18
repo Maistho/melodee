@@ -113,9 +113,9 @@ public sealed class SongMatchingService(
                 .Select(candidatePath => context.Songs
                     .Include(s => s.Album)
                         .ThenInclude(a => a.Artist)
-                    .FirstOrDefaultAsync(s => 
-                        s.FileName.Replace('\\', '/').EndsWith("/" + candidatePath) || 
-                        s.FileName.Replace('\\', '/') == candidatePath, 
+                    .FirstOrDefaultAsync(s =>
+                        s.FileName.Replace('\\', '/').EndsWith("/" + candidatePath) ||
+                        s.FileName.Replace('\\', '/') == candidatePath,
                         cancellationToken))
                 .ToList();
 
@@ -214,7 +214,7 @@ public sealed class SongMatchingService(
             }
 
             var potentialTitle = Path.GetFileNameWithoutExtension(entry.FileName);
-            
+
             // Remove common track number prefixes (01 - Title, 01. Title, etc.)
             potentialTitle = System.Text.RegularExpressions.Regex.Replace(potentialTitle, @"^\d+[\s\.\-_]+", "");
 

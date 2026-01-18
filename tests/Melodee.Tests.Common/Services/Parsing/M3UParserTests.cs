@@ -1,6 +1,5 @@
 using System.Text;
 using Melodee.Common.Services.Parsing;
-using Serilog;
 using Serilog.Core;
 
 namespace Melodee.Tests.Common.Services.Parsing;
@@ -21,7 +20,7 @@ public class M3UParserTests
             Artist/Album/01 - Song One.flac
             Artist/Album/02 - Song Two.flac
             """;
-        
+
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(content));
         var result = await parser.ParseAsync(stream, "test.m3u");
 
@@ -42,7 +41,7 @@ public class M3UParserTests
             
             Artist/Album/Song2.flac
             """;
-        
+
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(content));
         var result = await parser.ParseAsync(stream, "test.m3u");
 
@@ -60,7 +59,7 @@ public class M3UParserTests
             # This is a comment
             Artist/Album/Song2.flac
             """;
-        
+
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(content));
         var result = await parser.ParseAsync(stream, "test.m3u");
 
@@ -72,7 +71,7 @@ public class M3UParserTests
     {
         var parser = CreateParser();
         var content = @"D:\Music\Artist\Album\Song.mp3";
-        
+
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(content));
         var result = await parser.ParseAsync(stream, "test.m3u");
 
@@ -85,7 +84,7 @@ public class M3UParserTests
     {
         var parser = CreateParser();
         var content = "Artist/Album/Song%20With%20Spaces.flac";
-        
+
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(content));
         var result = await parser.ParseAsync(stream, "test.m3u");
 
@@ -101,7 +100,7 @@ public class M3UParserTests
             "Artist/Album/Song.flac"
             'Artist/Album/Song2.flac'
             """;
-        
+
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(content));
         var result = await parser.ParseAsync(stream, "test.m3u");
 
@@ -115,7 +114,7 @@ public class M3UParserTests
     {
         var parser = CreateParser();
         var content = "Pink Floyd/The Wall/02 - Another Brick in the Wall.flac";
-        
+
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(content));
         var result = await parser.ParseAsync(stream, "test.m3u");
 
@@ -131,7 +130,7 @@ public class M3UParserTests
     {
         var parser = CreateParser();
         var content = "/mnt/music/Artist/Album/Song.flac";
-        
+
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(content));
         var result = await parser.ParseAsync(stream, "test.m3u");
 
@@ -147,7 +146,7 @@ public class M3UParserTests
     {
         var parser = CreateParser();
         var content = "song.flac";
-        
+
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(content));
         var result = await parser.ParseAsync(stream, "test.m3u");
 
@@ -163,7 +162,7 @@ public class M3UParserTests
     {
         var parser = CreateParser();
         var content = "Artist/Album/日本語のタイトル.flac";
-        
+
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(content));
         var result = await parser.ParseAsync(stream, "test.m3u8");
 
@@ -182,7 +181,7 @@ public class M3UParserTests
             Second.flac
             Third.flac
             """;
-        
+
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(content));
         var result = await parser.ParseAsync(stream, "test.m3u");
 
@@ -197,7 +196,7 @@ public class M3UParserTests
     {
         var parser = CreateParser();
         var content = "http://example.com/stream.mp3";
-        
+
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(content));
         var result = await parser.ParseAsync(stream, "test.m3u");
 
@@ -212,7 +211,7 @@ public class M3UParserTests
     {
         var parser = CreateParser();
         var content = "Artist/Album [2024]/Song (Remastered).flac";
-        
+
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(content));
         var result = await parser.ParseAsync(stream, "test.m3u");
 

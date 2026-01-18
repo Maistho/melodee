@@ -1312,7 +1312,7 @@ public class PlaylistService(
             using var memoryStream = new MemoryStream();
             await fileStream.CopyToAsync(memoryStream, cancellationToken).ConfigureAwait(false);
             var fileBytes = memoryStream.ToArray();
-            
+
             // Parse the M3U file
             memoryStream.Position = 0;
             var parser = new Parsing.M3UParser(Logger);
@@ -1341,8 +1341,8 @@ public class PlaylistService(
             {
                 UserId = userId,
                 OriginalFileName = fileName,
-                ContentType = fileName.EndsWith(".m3u8", StringComparison.OrdinalIgnoreCase) 
-                    ? "audio/x-mpegurl; charset=utf-8" 
+                ContentType = fileName.EndsWith(".m3u8", StringComparison.OrdinalIgnoreCase)
+                    ? "audio/x-mpegurl; charset=utf-8"
                     : "audio/x-mpegurl",
                 Length = fileBytes.Length,
                 FileData = fileBytes,

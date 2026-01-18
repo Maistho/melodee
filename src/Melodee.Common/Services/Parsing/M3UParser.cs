@@ -23,19 +23,19 @@ public sealed class M3UParser
     {
         var isM3U8 = fileName.EndsWith(".m3u8", StringComparison.OrdinalIgnoreCase);
         var encoding = isM3U8 ? Encoding.UTF8 : DetectEncoding(fileStream);
-        
+
         fileStream.Position = 0;
-        
+
         var entries = new List<M3UEntry>();
         var lineNumber = 0;
 
         using var reader = new StreamReader(fileStream, encoding, detectEncodingFromByteOrderMarks: true, leaveOpen: true);
-        
+
         string? line;
         while ((line = await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false)) != null && !cancellationToken.IsCancellationRequested)
         {
             lineNumber++;
-            
+
             if (string.IsNullOrWhiteSpace(line))
             {
                 continue;
@@ -166,7 +166,7 @@ public sealed class M3UParser
 
             // Split path into segments
             var segments = normalizedPath.Split('/', StringSplitOptions.RemoveEmptyEntries);
-            
+
             if (segments.Length == 0)
             {
                 return (normalizedPath, null, null);
